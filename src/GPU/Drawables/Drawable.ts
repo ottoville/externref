@@ -4,8 +4,7 @@ import { Buffer, type VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 
 import type { Engine } from "../../engine.js";
 import { BindGroup } from "../BindGroup.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
-import { RenderPipeline2 } from "../RenderPipeline2.js";
+import { RenderPipeline } from "../RenderPipeline2.js";
 declare const engine: Engine;
 
 
@@ -13,7 +12,7 @@ export abstract class Drawable {
     abstract label: string;
     #vertexBuffers: Map<number, { buffer: VertexBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
-    public renderPipeline: Readonly<RenderPipeline | RenderPipeline2>;
+    public renderPipeline: Readonly<RenderPipeline>;
     #renderPasses: Set<RenderPass>;
     #dynamicBindGroups: [BindGroup, number][]
     constructor(
@@ -23,7 +22,7 @@ export abstract class Drawable {
             dynamicBindGroups = [],
             vertexBuffers = []
         }: {
-            renderPipeline: Readonly<RenderPipeline | RenderPipeline2>;
+            renderPipeline: Readonly<RenderPipeline>;
             renderPasses: Set<RenderPass> | undefined;
             dynamicBindGroups?: [BindGroup, number][];
             vertexBuffers: (ArrayBufferView | VertexBuffer)[] | undefined;

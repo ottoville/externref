@@ -1,9 +1,7 @@
 ﻿import { BindGroup } from "./BindGroup.js";
-import { BGLayout, BindGroupLayoutEntry, GPUBindingGroupLayoytEntryStrict, MapToGPUBindGroupEntry } from "./BindGroupLayout.js";
-import { VertexShader } from "./RenderPipeline.js";
-import type { VertexShader as VertexShader2 } from "./Shaders/VertexShader.js";
-import { RenderPipeline, RenderPipelineProps } from "./RenderPipeline.js";
-import { RenderPipeline2, type RenderPipelineProps2 } from "./RenderPipeline2.js";
+import type { BGLayout, BindGroupLayoutEntry, GPUBindingGroupLayoytEntryStrict, MapToGPUBindGroupEntry } from "./BindGroupLayout.js";
+import { RenderPipeline, type RenderPipelineProps } from "./RenderPipeline2.js";
+import type { VertexShader } from "./Shaders/VertexShader.js";
 type extractGeneric<Type> = Type extends BGLayout<infer X> ? MapToGPUBindGroupEntry<X> : never
 type Last<T extends BGLayout[]> = T extends [...BGLayout[], infer R] ? R : never
 
@@ -32,7 +30,7 @@ export class PipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]>
     }
 }
 export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]> extends PipelineLayout<B> {
-    renderPipeLines: Set<RenderPipeline | RenderPipeline2> = new Set();
+    renderPipeLines: Set<RenderPipeline> = new Set();
     subBindGroups: RenderPipelineLayout[] = [];
     bindGroupLayout: BGLayout;
 
@@ -83,11 +81,11 @@ export class SharedPipelineLayout<B extends BGLayout[]> extends RenderPipelineLa
         props: PipeLineLayoutProps<B>) {
         super(props);
     }
-    addRenderPipeline<V extends VertexShader2>(
-        props: Omit<RenderPipelineProps2<V>, 'bindgroupdrawable'>,
+    addRenderPipeline<V extends VertexShader>(
+        props: Omit<RenderPipelineProps<V>, 'bindgroupdrawable'>,
         bindGroups: (bindGroup: BindGroup) => extractGeneric<Last<B>>
     ) {
-        const RP:RenderPipeline2<V> = new RenderPipeline2<V>({
+        const RP:RenderPipeline<V> = new RenderPipeline<V>({
             ...props,
             bindgroupdrawable: this
         })
@@ -108,21 +106,11 @@ export class BindablePipelineLayout<B extends readonly BGLayout[] = readonly BGL
         sharedBindgroup?: BindGroup | undefined) {
         super(props, sharedBindgroup);
     }
-    addRenderPipeline<V extends VertexShader>(
+    addRenderPipeline2<V extends VertexShader>(
         props: Omit<RenderPipelineProps<V>, 'bindgroupdrawable'>,
-    ): RenderPipeline<V> {
-        const d = new RenderPipeline<V>({
-            ...props,
-            bindgroupdrawable: this
-        })
-        this.renderPipeLines.add(d);
-        return d;
-    }
-    addRenderPipeline2<V extends VertexShader2>(
-        props: Omit<RenderPipelineProps2<V>, 'bindgroupdrawable'>,
 
-    ): RenderPipeline2<V> {
-        const d = new RenderPipeline2({
+    ): RenderPipeline<V> {
+        const d = new RenderPipeline({
             ...props,
             bindgroupdrawable: this
         })

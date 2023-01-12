@@ -4,8 +4,9 @@ import { Angle } from "../Math.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import type { Engine } from "../engine.js";
 import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
-import type { VertexShader, RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js"
+import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import type { SunVertShader } from "../GPU/Shaders/Sun.vert.js";
 declare const engine:Engine;
 
 //const sundistance = 149600000000;
@@ -49,7 +50,7 @@ export class Sun2 extends MainNode {
         this.update_dynamic_buffer();
 
     }
-    drawable: DrawableSimple<RenderPipeline<VertexShader<[]>>> | undefined;
+    drawable: DrawableSimple<RenderPipeline<SunVertShader>> | undefined;
     constructor(gpu: GPU, scenes: Scene[]) {
         super({ positionsCount: 14, directional_light: 1,label: 'sun', scenes});
         const renderPipeline = gpu.createRenderPipeline(SunRenderPipeline, {

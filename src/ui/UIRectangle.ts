@@ -1,4 +1,3 @@
-import type { VertexShader } from "../GPU/RenderPipeline.js";
 import type { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
 import { Buffer, GPUBufferUsage } from "../GPU/Buffer/Buffer.js";
 import { TextureView } from "../GPU/TextureView.js";
@@ -7,8 +6,7 @@ import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { Texture, TextureUsageEnums, TextureUsageValue } from "../GPU/Texture.js";
 import { Texture2D, type Texture2dSize } from "../GPU/Texture2D.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
-import { RenderPipeline } from "../GPU/RenderPipeline.js";
-import type { RenderPipeline2 } from "../GPU/RenderPipeline2.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
 declare const engine: Engine;
 
@@ -157,7 +155,7 @@ function createVertexBuffer(
     return vertices;
 }
 export type UIRectangleProps = {
-    canvaspipeline: RenderPipeline2<UIVertShader>,
+    canvaspipeline: RenderPipeline<UIVertShader>,
     renderPass: RenderPass,
     label: string,
     /*
@@ -193,15 +191,7 @@ export class UIRectangle /*extends UINode*/ {
     label: string;
     positions_count: number;
 
-    drawable: DrawableSimple<RenderPipeline<VertexShader<[{
-        arrayStride: number;
-        stepMode: "vertex";
-        attributes: {
-            shaderLocation: number;
-            offset: number;
-            format: "float32x2";
-        }[];
-    }]>>>;
+    drawable: DrawableSimple<RenderPipeline<UIVertShader>>;
     #renderPass: RenderPass;
     #boundingBox = {
         left: 0,

@@ -19,8 +19,7 @@ import { BGLayout, BindGroupLayoutEntry, BufLayout, SampLayout, TextLayout } fro
 import { UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
 import { Clusters } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
-import type { RenderPipeline } from "./GPU/RenderPipeline.js";
-import { RenderPipeline2 } from "./GPU/RenderPipeline2.js";
+import { RenderPipeline } from "./GPU/RenderPipeline2.js";
 import { MeshUniforms, Scene, Time, UIUniforms, Uniforms } from "./GPU/Shaders/structs/Structs.js";
 import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 declare const engine: Engine;
@@ -106,17 +105,17 @@ export class GPU {
     readonly shaderModules = {} as { [K in keyof typeof shaders]: GPUShaderModule }
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
     readonly sizeBindGroupLayout: BGLayout<[BufLayout]>;
-    static readonly #renderPipelines: Map<string, RenderPipeline | RenderPipeline2> = new Map();
+    static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     readonly bindGroupTextureWater: SharedPipelineLayout<[BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>, BGLayout<[BufLayout]>, BGLayout<[SampLayout, TextLayout]>]>;
     readonly #ro: ResizeObserver;
     readonly #canvasRootLayout: BindablePipelineLayout<readonly [BGLayout<[BufLayout, TextLayout]>]>
-    readonly UIPipeline: RenderPipeline2<UIVertShader>
+    readonly UIPipeline: RenderPipeline<UIVertShader>
 
     readonly updateViewShader: UpdateView;
-    createRenderPipeline<R extends (RenderPipeline | RenderPipeline2)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
-    createRenderPipeline<R extends (RenderPipeline | RenderPipeline2)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
-    createRenderPipeline<R extends (RenderPipeline | RenderPipeline2)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive?: Omit<GPUPrimitiveState, 'topology'>): R
-    createRenderPipeline<R extends (RenderPipeline | RenderPipeline2)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState = {}): R {
+    createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
+    createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
+    createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive?: Omit<GPUPrimitiveState, 'topology'>): R
+    createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState = {}): R {
         const primitiveWithDefaults: GPUPrimitiveState = {
             topology: 'triangle-list',
             frontFace: 'cw',

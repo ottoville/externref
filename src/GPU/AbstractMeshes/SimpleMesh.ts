@@ -4,21 +4,13 @@ import { DrawableSimple } from "../Drawables/DrawableSimple.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { Buffer, VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
-import { VertexShader } from "../RenderPipeline.js";
-import type { RenderPipeline } from "GPU/RenderPipeline.js";
+import type { RenderPipeline } from "../RenderPipeline2.js";
+import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
 
 declare const engine:Engine;
 
 export abstract class SimpleMesh extends BoundableNodeSimple {
-    drawable: DrawableSimple<RenderPipeline<VertexShader<[{
-        arrayStride: number;
-        stepMode: "vertex";
-        attributes: {
-            shaderLocation: number;
-            offset: number;
-            format: "float32x3";
-        }[];
-    }]>>> | undefined;
+    drawable: DrawableSimple<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
         vBufferCPU: Float32Array,
         label:string,

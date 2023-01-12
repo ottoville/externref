@@ -2,7 +2,7 @@ import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
 import { RenderPass, RenderPassProps } from "./RenderPass.js";
 import type { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
+import type { RenderPipeline } from "../RenderPipeline2.js";
 
 export class DepthRenderPass<T extends {
     [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;

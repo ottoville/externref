@@ -1,26 +1,16 @@
 import { MainNode } from "../../../MainNode.js";
 import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
-
 import { BoundingBoxPipeline } from "../../RenderPipeLines/Boundingbox.js";
-
 import type { Engine } from "../../../engine.js";
-import { VertexShader } from "../../RenderPipeline.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
-import type { RenderPipeline } from "../../RenderPipeline.js";
+import type { RenderPipeline } from "../../RenderPipeline2.js";
+import type { DebugBoundingBoxVertShader } from "../../Shaders/debug_boundingbox.vert.js";
 declare const engine:Engine;
 
 
 export class BoundingBoxMesh extends MainNode {
-    drawable: DrawableSimple<RenderPipeline<VertexShader<[{
-        arrayStride: number;
-        stepMode: "vertex";
-        attributes: {
-            shaderLocation: number;
-            offset: number;
-            format: "float32x3";
-        }[];
-    }]>>> | undefined;
+    drawable: DrawableSimple<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
     constructor(targetNode: DrawableIndexed) {         
         super({positionsCount: 26, label: 'BoundingBoxDebug'});
 

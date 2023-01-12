@@ -5,10 +5,10 @@ import type { Engine, rust_pointer } from "../../engine.js";
 import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
 declare const engine:Engine;
 import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer/Buffer.js";
-import { VertexShader } from "GPU/RenderPipeline.js";
 import { NormalsMesh } from "./helpers/normals.js";
-import { TextureView } from "GPU/TextureView.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
+import type { TextureView } from "../TextureView.js";
+import type { GroundVertShader } from "../Shaders/Ground.vert.js";
+import type { RenderPipeline } from "../RenderPipeline2.js";
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
@@ -23,19 +23,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
             }]
         });
     }
-    drawable: DrawableIndexed<RenderPipeline<VertexShader<[{
-        arrayStride: number;
-        stepMode: "vertex";
-        attributes: ({
-            shaderLocation: number;
-            offset: number;
-            format: "float32x3";
-        } | {
-            shaderLocation: number;
-            offset: number;
-            format: "float32x2";
-        })[];
-    }]>>> | undefined;
+    drawable: DrawableIndexed<RenderPipeline<GroundVertShader>> | undefined;
     override create_collider(): rust_pointer<"collider"> {
         return engine.rust.create_trimesh_collider(this.ptr);
     }

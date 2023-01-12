@@ -1,15 +1,14 @@
-import type { VertexShader } from "../RenderPipeline.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect } from "./DrawableDirect.js";
 import { type DrawableNode, MainNode } from "../../MainNode.js";
 import type { BindGroup } from "../BindGroup.js";
 import type { VertexBuffer } from "../Buffer/Buffer.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
-import { RenderPipeline2 } from "../RenderPipeline2.js";
+import { RenderPipeline } from "../RenderPipeline2.js";
+import { VertexShader } from "../Shaders/VertexShader.js";
 declare const engine: Engine;
 
-export class DrawableSimple<R extends RenderPipeline | RenderPipeline2 > extends DrawableDirect {
+export class DrawableSimple<R extends RenderPipeline > extends DrawableDirect {
     #firstVertex = 0;
     #firstInstance = 0;
     node: DrawableNode;
@@ -35,7 +34,8 @@ export class DrawableSimple<R extends RenderPipeline | RenderPipeline2 > extends
                 //extract VertexShader
                 R extends RenderPipeline<infer VERTEX_SHADER> ? (
                     //extract VertexBuffers
-                    VERTEX_SHADER extends VertexShader<infer VERTEX_BUFFERS> ? (
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    VERTEX_SHADER extends VertexShader<infer _E, infer VERTEX_BUFFERS> ? (
                         {
                             [Property in keyof VERTEX_BUFFERS]: ArrayBufferView | VertexBuffer;
                         }

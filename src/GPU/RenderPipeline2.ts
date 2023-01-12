@@ -14,7 +14,7 @@ export class Shader {
         this.module = module;
     }
 }
-export type RenderPipelineProps2<V extends VertexShader> = {
+export type RenderPipelineProps<V extends VertexShader> = {
     label: string,
     vertexShader: V,
     fragmentShader: Shader,
@@ -24,12 +24,12 @@ export type RenderPipelineProps2<V extends VertexShader> = {
     },
     bindgroupdrawable: RenderPipelineLayout
 }
-export class RenderPipeline2<V extends VertexShader = VertexShader> {
+export class RenderPipeline<V extends VertexShader = VertexShader> {
 
     dynamicBindGroupOffset: number[] = [];
     public createSharedBindGroups?: () => Set<BindGroup>;
     constructor(
-        public props: Readonly<RenderPipelineProps2<V>>,
+        public props: Readonly<RenderPipelineProps<V>>,
     ) {
     }
     destroy(): void {

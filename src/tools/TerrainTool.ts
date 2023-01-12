@@ -2,14 +2,14 @@
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";
-import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { Shader} from "../GPU/RenderPipeline.js";
 import { type GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
 import type { Engine, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
@@ -109,7 +109,7 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState> {
 }
 export class TerrainTool extends MainNode {
     elevator: rust_pointer<"elevator">
-    drawable: DrawableSimple<RenderPipeline<VertexShader<[]>>>;
+    drawable: DrawableSimple<RenderPipeline<HelperVertShader>>;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
     scene: Scene;
 

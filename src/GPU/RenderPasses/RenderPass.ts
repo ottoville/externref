@@ -7,9 +7,7 @@ import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";
 import { RenderPipelineLayout } from "../PipelineLayout.js";
-import { RenderPipeline } from "../RenderPipeline.js";
-import { RenderPipeline2 } from "../RenderPipeline2.js";
-import { VertexShader } from "../Shaders/VertexShader.js";
+import type { RenderPipeline } from "../RenderPipeline2.js";
 
 
 interface RenderPipelineVariant2 {
@@ -38,7 +36,7 @@ export class RenderPass<U extends {
     readonly perspectiveCameras: Set<TerraCamera> = new Set();
 
     readonly bundles: RenderBundleEncoder[] = [];
-    readonly renderPipelines: Map<Readonly<RenderPipeline | RenderPipeline2>, RenderPipelineVariant2 | Promise<RenderPipelineVariant2>> = new Map();
+    readonly renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2 | Promise<RenderPipelineVariant2>> = new Map();
     readonly sizeBindGroup: () => BindGroup;
     #sizeBuffer: BindUniformBuffer;
     readonly colorRenderTargets = {} as U
@@ -119,7 +117,7 @@ export class RenderPass<U extends {
 
         return this.#sizeBuffer;
     }
-    getVariant(renderPipeline: Readonly<RenderPipeline | RenderPipeline2>) {
+    getVariant(renderPipeline: Readonly<RenderPipeline>) {
         let variant = this.renderPipelines.get(renderPipeline);
         if (!variant) {
             const variantP = this.gpu.device.createRenderPipelineAsync(
@@ -130,7 +128,7 @@ export class RenderPass<U extends {
                     label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label
                 }
             ).catch((err: unknown) => {
-                console.error('createRenderPipelineAsync failed, wgsl:', (renderPipeline.props.vertexShader as VertexShader).wgsl, { cause: err })
+                console.error('createRenderPipelineAsync failed, wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err })
                 throw (new Error('createRenderPipelineAsync failed', { cause: err }));
             }).then((variantPipeline) => {
                 variant = {
@@ -148,7 +146,7 @@ export class RenderPass<U extends {
         return variant;
     }
 
-    protected onDecoratePipeline(renderpipeline: Readonly<RenderPipeline | RenderPipeline2>): Omit<GPURenderPipelineDescriptor, 'layout'> {
+    protected onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>): Omit<GPURenderPipelineDescriptor, 'layout'> {
         const renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'layout'> = {
             vertex: {
                 ...renderpipeline.props.vertexShader,

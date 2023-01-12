@@ -1,8 +1,8 @@
 import type { IndirectBuffer, VertexBuffer } from "../Buffer/Buffer.js";
 import { Drawable } from "./Drawable.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
-import type { VertexShader } from "../RenderPipeline.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
+import type { VertexShader } from "../Shaders/VertexShader.js";
+import type { RenderPipeline } from "../RenderPipeline2.js";
 
 export class DrawableIndirect<R extends RenderPipeline = RenderPipeline> extends Drawable {
     readonly buffer: IndirectBuffer;
@@ -24,7 +24,8 @@ export class DrawableIndirect<R extends RenderPipeline = RenderPipeline> extends
             //extract VertexShader
             R extends RenderPipeline<infer VERTEX_SHADER> ? (
                 //extract VertexBuffers
-                VERTEX_SHADER extends VertexShader<infer VERTEX_BUFFERS> ? (
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                VERTEX_SHADER extends VertexShader<infer _E, infer VERTEX_BUFFERS> ? (
                     {
                         [Property in keyof VERTEX_BUFFERS]: ArrayBufferView | VertexBuffer;
                     }

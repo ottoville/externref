@@ -4,20 +4,12 @@ import { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { Buffer, IndexBuffer, VertexBuffer, GPUBufferUsage } from "../../GPU/Buffer/Buffer.js";
-import { VertexShader } from "GPU/RenderPipeline.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
+import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
+import type { RenderPipeline } from "../RenderPipeline2.js";
 declare const engine:Engine;
 
 export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
-    drawable: DrawableIndexed<RenderPipeline<VertexShader<[{
-        arrayStride: number;
-        stepMode: "vertex";
-        attributes: {
-            shaderLocation: number;
-            offset: number;
-            format: "float32x3";
-        }[];
-    }]>>> | undefined;
+    drawable: DrawableIndexed<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
         vBufferCPU: Float32Array,
         indicesView: Uint32Array,

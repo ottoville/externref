@@ -1,14 +1,13 @@
-import type { VertexShader } from "../RenderPipeline.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { Buffer, type VertexBuffer, type IndexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect } from "./DrawableDirect.js";
 import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
-import { RenderPipeline2 } from "../RenderPipeline2.js";
+import type { RenderPipeline } from "../RenderPipeline2.js";
+import type { VertexShader } from "../Shaders/VertexShader.js";
 declare const engine: Engine;
 
-export class DrawableIndexed<R extends RenderPipeline | RenderPipeline2 = RenderPipeline> extends DrawableDirect {
+export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends DrawableDirect {
     node: BoundableNodeIndexed;
     #indexBuffer: IndexBuffer | undefined
     #baseVertex: number;
@@ -42,7 +41,8 @@ export class DrawableIndexed<R extends RenderPipeline | RenderPipeline2 = Render
             //extract VertexShader
             R extends RenderPipeline<infer VERTEX_SHADER> ? (
                 //extract VertexBuffers
-                VERTEX_SHADER extends VertexShader<infer VERTEX_BUFFERS> ? (
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                VERTEX_SHADER extends VertexShader<infer _E, infer VERTEX_BUFFERS> ? (
                     {
                         [Property in keyof VERTEX_BUFFERS]: ArrayBufferView | VertexBuffer;
                     }

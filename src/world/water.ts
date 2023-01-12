@@ -3,20 +3,12 @@ import type { Scene } from "../Scene.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { WaterRenderPipeline } from "../GPU/RenderPipeLines/Water.js";
 import type { Engine } from "../engine.js";
-import { VertexShader } from "../GPU/RenderPipeline.js";
-import { RenderPipeline } from "../GPU/RenderPipeline.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import type { WaterVertShader } from "../GPU/Shaders/Water.vert.js";
 declare const engine:Engine;
 
 export class Sea extends BoundableNodeSimple {
-    drawable: DrawableSimple<RenderPipeline<VertexShader<[{
-        arrayStride: number;
-        stepMode: "vertex";
-        attributes: {
-            shaderLocation: number;
-            offset: number;
-            format: "float32x3";
-        }[];
-    }]>>> | undefined;
+    drawable: DrawableSimple<RenderPipeline<WaterVertShader>> | undefined;
     override create_collider() {
         return engine.rust.create_cuboid_collider(50000,3,50000,0, false);
      }
