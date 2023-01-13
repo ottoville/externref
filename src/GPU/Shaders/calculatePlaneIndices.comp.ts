@@ -22,7 +22,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 }
 `;
 export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout }> {
-    bindLayouts: readonly [BGLayout<[BufLayout]>,
+  bindLayouts: readonly [BGLayout<[BufLayout]>,
     BGLayout<[BufLayout]>];
   constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     const bindLayouts = [
@@ -43,8 +43,13 @@ export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout 
       label: 'calculatePlaneIndicesPipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(pipelineLayout, wgsl, "calculatePlaneIndices.comp", {
-      main: pipelineLayout
+    super({
+      pipelineLayout,
+      wgsl,
+      label: "calculatePlaneIndices.comp",
+      entryPoints: {
+        main: pipelineLayout
+      }
     })
     this.bindLayouts = bindLayouts;
   }

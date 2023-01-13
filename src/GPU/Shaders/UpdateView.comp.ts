@@ -4,8 +4,8 @@ import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 import { Clusters, Lights, MeshArray, ViewUniforms } from './structs/Structs.js';
 
-    /////////////////
-    const wgsl = /* wgsl */ `     
+/////////////////
+const wgsl = /* wgsl */ `     
           fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
             var sqDist = 0.0;
             // const minAABB : vec3<f32> = clusters.bounds[tileIndex].minAABB;
@@ -69,13 +69,13 @@ import { Clusters, Lights, MeshArray, ViewUniforms } from './structs/Structs.js'
         }
         
       `;
-    ///////////////////////////
+///////////////////////////
 
 export class UpdateView extends ComputeShader<
   { main: PipelineLayout }> {
-    bindLayouts: readonly [
-      BGLayout<[BufLayout, BufLayout, BufLayout]>,
-      BGLayout<[BufLayout, BufLayout]>]
+  bindLayouts: readonly [
+    BGLayout<[BufLayout, BufLayout, BufLayout]>,
+    BGLayout<[BufLayout, BufLayout]>]
   constructor(
     gpu: GPU) {
     const bindLayouts = [
@@ -134,8 +134,13 @@ export class UpdateView extends ComputeShader<
       label: 'UpdateViewPipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(pipelineLayout, wgsl, "UpdateView.comp", {
-      main: pipelineLayout
+    super({
+      pipelineLayout,
+      wgsl,
+      label: "UpdateView.comp",
+      entryPoints: {
+        main: pipelineLayout
+      }
     });
     this.bindLayouts = bindLayouts;
 

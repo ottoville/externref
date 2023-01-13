@@ -1,3 +1,5 @@
+//TODO: Make actual shading to diverse this shader from color.frag
+
 import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
@@ -33,18 +35,23 @@ fn pick(
   return output;
 }
   `;
-  //////////////
+//////////////
 type BindLayouts = readonly [
   BGLayout<[BufLayout]>,
   BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
   BGLayout<[BufLayout]>]
 
 export class SimpleFragShader extends FragmentShader<
-{ main: PipelineLayout }> {
+  { main: PipelineLayout, pick: PipelineLayout }> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
-    super(pipelineLayout, wgsl, {
-      main: pipelineLayout
-    }, 'Simple.frag');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints: {
+        main: pipelineLayout,
+        pick: pipelineLayout
+      }, label: 'Simple.frag'
+    });
 
   }
 }

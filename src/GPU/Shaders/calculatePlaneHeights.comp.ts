@@ -1,4 +1,4 @@
-import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
@@ -102,8 +102,13 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
       label: 'calculatePlaneHeightsPipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(pipelineLayout, wgsl, "calculatePlaneHeights.comp", {
-      main: pipelineLayout
+    super({
+      pipelineLayout,
+      wgsl,
+      label: "calculatePlaneHeights.comp",
+      entryPoints: {
+        main: pipelineLayout
+      }
     })
     this.bindLayouts = bindLayouts;
 

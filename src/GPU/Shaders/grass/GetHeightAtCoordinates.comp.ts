@@ -188,8 +188,13 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
       label: 'GetHeightAtCoordinatesPipeLine',
       bindGroupLayouts: bindLayouts
     });
-    super(pipelineLayout, wgsl, "GetHeightAtCoordinates.comp", {
-      main: pipelineLayout
+    super({
+      pipelineLayout,
+      wgsl,
+      label: "GetHeightAtCoordinates.comp",
+      entryPoints: {
+        main: pipelineLayout
+      }
     });
     this.bindLayouts = bindLayouts
   }

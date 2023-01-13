@@ -1,9 +1,9 @@
 import type { PipelineLayout } from "../PipelineLayout.js";
-import { Shader } from "./Shader.js";
+import { Shader, ShaderParams } from "./Shader.js";
 export abstract class ComputeShader<E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout }
 > extends Shader<E> {
-    constructor(pipelineLayout: PipelineLayout, wgsl: string, label:string, entryPoints: E) {
-        super(pipelineLayout, wgsl, entryPoints, label, GPUShaderStage.COMPUTE)
+    constructor(params: ShaderParams<E>) {
+        super(params, GPUShaderStage.COMPUTE)
 
     }
     createComputePipeline(entryPoint: keyof E) {

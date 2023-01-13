@@ -2,9 +2,9 @@ import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 
- //////////////////////////////////
+//////////////////////////////////
 
- const wgsl = /* wgsl */ `
+const wgsl = /* wgsl */ `
 
 struct Output {
   @builtin(position) Position : vec4<f32>,
@@ -27,20 +27,25 @@ fn main(@location(0) position : vec3<f32>,
    `;
 
 
- //////////////////////////////////
- 
- type BindLayouts = readonly [
+//////////////////////////////////
+
+type BindLayouts = readonly [
   BGLayout<[BufLayout]>,
   BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
   BGLayout<[BufLayout]>];
-  
+
 export class DebugNormalsVertShader extends VertexShader<
-{ main: PipelineLayout },
-[GPUVertexBufferLayout]> {
+  { main: PipelineLayout },
+  [GPUVertexBufferLayout]> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
     const entryPoints = {
       main: pipelineLayout
     }
-    super(pipelineLayout, [buffers], wgsl, entryPoints,'debug_normals.vert');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints,
+      label: 'debug_normals.vert'
+    }, [buffers]);
   }
 }

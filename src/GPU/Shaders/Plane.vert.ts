@@ -54,6 +54,12 @@ export class PlaneVertShader extends VertexShader<
     const entryPoints = {
       main: pipelineLayout
     }
-    super(pipelineLayout, [buffers], wgsl, entryPoints, 'plane.vert');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints,
+      label: 'plane.vert'
+    },
+      [buffers]);
   }
 }

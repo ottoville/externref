@@ -1,4 +1,4 @@
-import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer, TextLayout } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
@@ -134,12 +134,12 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
  return;
 }
   `;
-  //////////////////
+//////////////////
 
 export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }> {
   bindLayouts: readonly [BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout]>,
-  BGLayout<[TextLayout]>]
+    BGLayout<[BufLayout, BufLayout]>,
+    BGLayout<[TextLayout]>]
   constructor(
     settingsLayout: BGLayout<[BufLayout]>,
     slopesLayout: BGLayout<[BufLayout, BufLayout]>) {
@@ -162,8 +162,13 @@ export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }
       label: 'CreateTerrainTexturePipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(pipelineLayout, wgsl, "CreateTerrainTexture.comp", {
-      main: pipelineLayout
+    super({
+      pipelineLayout,
+      wgsl,
+      label: "CreateTerrainTexture.comp",
+      entryPoints: {
+        main: pipelineLayout
+      }
     });
     this.bindLayouts = bindLayouts;
   }

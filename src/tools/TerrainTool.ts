@@ -2,7 +2,6 @@
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";
-import { Shader} from "../GPU/RenderPipeline.js";
 import { type GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
 import type { Engine, rust_pointer } from "../engine.js";
@@ -10,6 +9,7 @@ import type { Scene } from "../Scene.js";
 import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
@@ -119,7 +119,7 @@ export class TerrainTool extends MainNode {
         super({ positionsCount: 4, label: 'TerrainTool' });
 
 
-        const getRenderPipeline = ['TerrainToolRenderpipeline', function getRenderPipelinef(gpu: GPU, label: string, primitive: GPUPrimitiveState,
+        const getRenderPipeline = ['TerrainToolRenderpipeline', function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState,
         ) {
             const helperVertShader = new HelperVertShader(terrain.TerrainHeightsbindGroupTree);
             
@@ -127,7 +127,7 @@ export class TerrainTool extends MainNode {
                 {
                     label,
                     vertexShader: helperVertShader,
-                    fragmentShader: new Shader(gpu, 'UIColor.frag.wgsl'),
+                    fragmentShader: new ColorFragShader(terrain.TerrainHeightsbindGroupTree),
                     renderPipeline: {
                         primitive
                     }

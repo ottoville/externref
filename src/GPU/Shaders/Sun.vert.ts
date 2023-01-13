@@ -47,20 +47,25 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> Output {
   return output;
 }
   `;
-  //////////////
+//////////////
 type BindLayouts = readonly [
   BGLayout<[BufLayout]>,
   BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
   BGLayout<[BufLayout]>]
 
 export class SunVertShader extends VertexShader<
-{ main: PipelineLayout },
-[]> {
+  { main: PipelineLayout },
+  []> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
 
-    super(pipelineLayout, [], wgsl, {
-      main: pipelineLayout
-    }, 'Sun.vert');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'Sun.vert'
+    }, []);
 
   }
 }

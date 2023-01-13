@@ -1,9 +1,9 @@
 import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-  //////////////////////////////////
+//////////////////////////////////
 
-  const wgsl = /* wgsl */ `
+const wgsl = /* wgsl */ `
   
  //let PI:f32 = 3.1415926535897932384626433832795;
  const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
@@ -58,7 +58,7 @@ import { VertexShader } from './VertexShader.js';
  }
     `;
 
-  //////////////////////////////////
+//////////////////////////////////
 
 type BindLayouts = readonly [
   BGLayout<[BufLayout]>,
@@ -67,13 +67,19 @@ type BindLayouts = readonly [
   BGLayout<[BufLayout, BufLayout, BufLayout]>,
 ];
 export class HelperVertShader extends VertexShader<
-{ main: PipelineLayout },
+  { main: PipelineLayout },
   []> {
   constructor(
     pipelineLayout: PipelineLayout<BindLayouts>) {
 
-    super(pipelineLayout, [], wgsl,{
-      main: pipelineLayout
-    }, 'helper.vert');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'helper.vert'
+    },
+      []);
   }
 }

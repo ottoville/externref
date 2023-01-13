@@ -1,5 +1,5 @@
 import { PipelineLayout } from "../PipelineLayout.js";
-import { Shader } from "./Shader.js";
+import { Shader, ShaderParams } from "./Shader.js";
 
 export type VertexBuffers = [GPUVertexBufferLayout]
     | [GPUVertexBufferLayout, GPUVertexBufferLayout]
@@ -11,13 +11,10 @@ export abstract class VertexShader<
     BU extends VertexBuffers = VertexBuffers,
 > extends Shader<E> {
     constructor(
-        pipelineLayout: PipelineLayout,
+        params: ShaderParams<E>,
         //Comsumed by GPURenderPipelineDescriptor
         public buffers: BU,
-        wgsl: string,
-        entryPoints: E,
-        label: string,
         ) {
-            super(pipelineLayout, wgsl, entryPoints, label, GPUShaderStage.VERTEX)
+            super(params, GPUShaderStage.VERTEX)
     }
 }

@@ -4,8 +4,8 @@ import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 
-       /////////////////
-       const wgsl = /* wgsl */ `         
+/////////////////
+const wgsl = /* wgsl */ `
          @compute @workgroup_size(1, 1, 1)
          fn main(
              @builtin(global_invocation_id) global_id : vec3<u32>
@@ -15,11 +15,11 @@ import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
              depth_and_mesh.mesh=textureLoad(mesh_texture, mouse.position, 0).r;
          }  
              `;
-               ///////////////////////////
+///////////////////////////
 
 export class ReadDepth extends ComputeShader<{ main: PipelineLayout }> {
     bindLayouts: readonly [BGLayout<[BufLayout]>,
-    BGLayout<[TextLayout, TextLayout, BufLayout]>];
+        BGLayout<[TextLayout, TextLayout, BufLayout]>];
     constructor(gpu: GPU) {
         const bindLayouts = [
             new BGLayout(gpu, 'DepthAndMeshLayout',
@@ -61,14 +61,19 @@ export class ReadDepth extends ComputeShader<{ main: PipelineLayout }> {
                     }, 'mouse', Mouse)
             )
         ] as const;
-        
- 
+
+
         const pipelineLayout = new PipelineLayout({
             label: 'ReadDepthPipeline',
             bindGroupLayouts: bindLayouts
         });
-        super(pipelineLayout, wgsl, "ReadDepth.comp", {
-            main: pipelineLayout
+        super({
+            pipelineLayout,
+            wgsl,
+            label: "ReadDepth.comp",
+            entryPoints: {
+                main: pipelineLayout
+            }
         });
         this.bindLayouts = bindLayouts;
     }

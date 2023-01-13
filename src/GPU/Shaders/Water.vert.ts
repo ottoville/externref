@@ -27,7 +27,7 @@ fn main(@location(0) position : vec3<f32>) -> Output {
   return output;
 }
   `;
-  //////////////
+//////////////
 type BindLayouts = [
   BGLayout<[BufLayout]>,
   BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
@@ -35,12 +35,17 @@ type BindLayouts = [
   BGLayout<[SampLayout, TextLayout]>];
 
 export class WaterVertShader extends VertexShader<
-{ main: PipelineLayout },
-[GPUVertexBufferLayout]> {
+  { main: PipelineLayout },
+  [GPUVertexBufferLayout]> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-    super(pipelineLayout, [buffers], wgsl, {
-      main: pipelineLayout
-    }, 'water.vert');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'water.vert'
+    }, [buffers]);
 
   }
 }

@@ -1,6 +1,6 @@
-import { Shader } from "../RenderPipeline.js";
 import { GPU } from "../../GPU.js";
 import { GrassVertShader } from "../Shaders/Grass.vert.js";
+import { ColorFragShader } from "../Shaders/Color.frag.js";
 
 export const PlantsRenderPipeline = ['PlantsRenderPipeline', function PlantsRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
     const grassVertShader = new GrassVertShader(gpu.rootCameralayout, [
@@ -38,7 +38,7 @@ export const PlantsRenderPipeline = ['PlantsRenderPipeline', function PlantsRend
         {
             label,
             vertexShader: grassVertShader,
-            fragmentShader: new Shader(gpu, 'color.frag.wgsl'),
+            fragmentShader: new ColorFragShader(gpu.rootCameralayout),
             renderPipeline: {
                 primitive
             }

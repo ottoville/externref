@@ -1,6 +1,6 @@
-import { Shader } from "../RenderPipeline.js";
 import { GPU } from "../../GPU.js";
 import { DebugNormalsVertShader } from "../Shaders/debug_normals.vert.js";
+import { ColorFragShader } from "../Shaders/Color.frag.js";
 
 export const NormalsPipeline = ['NormalsPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
     const debugNormalsVertShader = new DebugNormalsVertShader(gpu.positionBindGroupTimeWGSL,{
@@ -24,7 +24,7 @@ export const NormalsPipeline = ['NormalsPipeline', function create(gpu: GPU, lab
         {
             label,
             vertexShader: debugNormalsVertShader,
-            fragmentShader: new Shader(gpu, 'color.frag.wgsl'),
+            fragmentShader: new ColorFragShader(gpu.positionBindGroupTimeWGSL),
             renderPipeline: {
                 primitive
             }

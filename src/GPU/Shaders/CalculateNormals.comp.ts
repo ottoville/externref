@@ -1,4 +1,4 @@
-import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { FloatArray } from './structs/Structs.js';
@@ -69,11 +69,11 @@ const wgsl = /* wgsl */ `
 
 export class CalculateNormals extends ComputeShader<
   { main: PipelineLayout }> {
-    bindLayouts: readonly [
-      BGLayout<[BufLayout]>,
-      BGLayout<[BufLayout]>,
-      BGLayout<[BufLayout, BufLayout]>,
-    ]
+  bindLayouts: readonly [
+    BGLayout<[BufLayout]>,
+    BGLayout<[BufLayout]>,
+    BGLayout<[BufLayout, BufLayout]>,
+  ]
   constructor(
     settingsLayout: BGLayout<[BufLayout]>,
     slopesLayout: BGLayout<[BufLayout, BufLayout]>
@@ -98,8 +98,13 @@ export class CalculateNormals extends ComputeShader<
       bindGroupLayouts: bindLayouts
     });
 
-    super(pipelineLayout, wgsl, 'CalculateNormals.comp', {
-      main: pipelineLayout
+    super({
+      pipelineLayout,
+      wgsl,
+      label: 'CalculateNormals.comp',
+      entryPoints: {
+        main: pipelineLayout
+      }
     });
     this.bindLayouts = bindLayouts
   }

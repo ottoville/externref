@@ -4,8 +4,8 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Clusters, Projection } from './structs/Structs.js';
 
-   /////////////////
-   const wgsl = /* wgsl */ `
+/////////////////
+const wgsl = /* wgsl */ `
     
 fn clipToView(clip : vec4<f32>) -> vec4<f32> {
 //View space transform
@@ -100,15 +100,20 @@ export class ClustersComp extends ComputeShader<{ main: PipelineLayout }> {
           }, 'screentoview', Projection)
       )
     ] as const;
- 
+
     const pipelineLayout = new PipelineLayout({
       label: 'ClustersPipeline',
       bindGroupLayouts: bindLayouts
     });
 
-      super(pipelineLayout, wgsl, "Clusters.comp", {
+    super({
+      pipelineLayout,
+      wgsl,
+      label: "Clusters.comp",
+      entryPoints: {
         main: pipelineLayout
-      });
-      this.bindLayouts = bindLayouts
+      }
+    });
+    this.bindLayouts = bindLayouts
   }
 }

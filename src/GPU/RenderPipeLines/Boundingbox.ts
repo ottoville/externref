@@ -1,6 +1,6 @@
-import { Shader } from "../RenderPipeline.js";
 import { GPU } from "../../GPU.js";
 import { DebugBoundingBoxVertShader } from "../Shaders/debug_boundingbox.vert.js";
+import { ColorFragShader } from "../Shaders/Color.frag.js";
 
 export const BoundingBoxPipeline = ['BoundingBoxPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
     const shader = new DebugBoundingBoxVertShader(gpu.positionBindGroupTimeWGSL, {
@@ -18,7 +18,7 @@ export const BoundingBoxPipeline = ['BoundingBoxPipeline', function create(gpu: 
         {
             label,
             vertexShader: shader,
-            fragmentShader: new Shader(gpu, 'color.frag.wgsl'),
+            fragmentShader: new ColorFragShader(gpu.positionBindGroupTimeWGSL),
             renderPipeline: {
                 primitive
             }

@@ -48,7 +48,7 @@ fn pick(@location(0) position : vec3<f32>,
   return output;
 }
   `;
-  //////////////
+//////////////
 type BindLayouts = readonly [
   BGLayout<[BufLayout]>,
   BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
@@ -56,13 +56,18 @@ type BindLayouts = readonly [
   BGLayout<[SampLayout, TextLayout]>]
 
 export class GroundVertShader extends VertexShader<
-{ main: PipelineLayout },
-[GPUVertexBufferLayout]> {
+  { main: PipelineLayout },
+  [GPUVertexBufferLayout]> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
 
-    super(pipelineLayout, [buffers], wgsl, {
-      main: pipelineLayout
-    }, 'Ground.vert');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'Ground.vert'
+    }, [buffers]);
 
   }
 }

@@ -22,17 +22,22 @@ fn main(
 
 }
   `;
-  //////////////
+//////////////
 type BindLayouts = readonly [BGLayout<[BufLayout, TextLayout]>]
 
 export class UIVertShader extends VertexShader<
-{ main: PipelineLayout },
-[GPUVertexBufferLayout]> {
+  { main: PipelineLayout },
+  [GPUVertexBufferLayout]> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
 
-    super(pipelineLayout, [buffers], wgsl, {
-      main: pipelineLayout
-    }, 'UI.vert');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'UI.vert'
+    }, [buffers]);
 
   }
 }

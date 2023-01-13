@@ -110,17 +110,22 @@ fn main(
     return output;
 }
   `;
-  //////////////
+//////////////
 type BindLayouts = readonly [BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>]
 
 export class GrassVertShader extends VertexShader<
-{ main: PipelineLayout },
-[GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]> {
+  { main: PipelineLayout },
+  [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]) {
 
-    super(pipelineLayout, buffers, wgsl, {
-      main: pipelineLayout
-    }, 'grass.vert');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'grass.vert'
+    }, buffers);
 
   }
 }

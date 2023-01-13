@@ -55,21 +55,27 @@ fn pick(
   return output;
 }
   `;
-  //////////////
+//////////////
 type BindLayouts = readonly [
   BGLayout<[BufLayout]>,
   BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
   BGLayout<[BufLayout]>]
 
 export class SimpleVertShader extends VertexShader<
-{ main: PipelineLayout,
-  pick: PipelineLayout },
-[GPUVertexBufferLayout]> {
+  {
+    main: PipelineLayout,
+    pick: PipelineLayout
+  },
+  [GPUVertexBufferLayout]> {
   constructor(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-  
-    super(pipelineLayout, [buffers], wgsl, {
-      main: pipelineLayout,
-      pick: pipelineLayout
-    }, 'Simple.vert');
+    super({
+      pipelineLayout,
+      wgsl,
+      entryPoints: {
+        main: pipelineLayout,
+        pick: pipelineLayout
+      },
+      label: 'Simple.vert'
+    }, [buffers]);
   }
 }

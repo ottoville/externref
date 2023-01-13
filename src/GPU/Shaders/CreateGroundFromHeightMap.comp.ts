@@ -3,8 +3,8 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Vertices } from './structs/Structs.js';
 
-    //////////////////////////
-    const wgsl = /* wgsl */ `
+//////////////////////////
+const wgsl = /* wgsl */ `
     const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0); 
     
     @compute @workgroup_size(1)
@@ -30,41 +30,46 @@ import { Vertices } from './structs/Structs.js';
        return;
     }
       `;
-    ///////////////
+///////////////
 
 export class CreateGroundFromHeightMap extends ComputeShader<
-{ main: PipelineLayout }> {
+  { main: PipelineLayout }> {
   bindLayouts: readonly [BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, TextLayout]>];
+    BGLayout<[BufLayout, TextLayout]>];
   constructor(settingsLayout: BGLayout<[BufLayout]>) {
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'indicesBindGroupLayout',
-      new BufLayout(
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "storage",
-          hasDynamicOffset: false,
-          minBindingSize: 48
-        }
-      }, 'positions', Vertices),
-      new TextLayout(
-      {
-          visibility: GPUShaderStage.COMPUTE,
-          texture: {
-              
-          }
-          
-        }, 'pixels', 'texture_2d<f32>'))
+        new BufLayout(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 48
+            }
+          }, 'positions', Vertices),
+        new TextLayout(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            texture: {
+
+            }
+
+          }, 'pixels', 'texture_2d<f32>'))
     ] as const
 
     const pipelineLayout = new PipelineLayout({
       label: 'CreateGroundFromHeightMapPipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(pipelineLayout, wgsl, "CreateGroundFromHeightMap.comp", {
-      main: pipelineLayout
+    super({
+      pipelineLayout,
+      wgsl,
+      label: "CreateGroundFromHeightMap.comp",
+      entryPoints: {
+        main: pipelineLayout
+      }
     });
     this.bindLayouts = bindLayouts
   }

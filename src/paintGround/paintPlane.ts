@@ -2,7 +2,6 @@
 import type { Terrain } from "../world/terrain.js";
 import { PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
-import { Shader} from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
@@ -11,6 +10,7 @@ import type { Engine } from "../engine.js";
 import { BoundableNodeIndexed } from "../nodes/BoundableNodeIndexed.js";
 import { PlaneVertShader } from "../GPU/Shaders/Plane.vert.js";
 import { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 declare const engine: Engine;
 
 
@@ -61,7 +61,7 @@ export class paintPlane extends paintGround {
                 {
                     label: 'paintPlaneRenderpipeline',
                     vertexShader: planeVertShader,
-                    fragmentShader: new Shader(scene.gpu, 'UIColor.frag.wgsl'),
+                    fragmentShader: new ColorFragShader(ground.TerrainHeightsbindGroupTree),
                     renderPipeline: {
                         primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint32' },
                     }
