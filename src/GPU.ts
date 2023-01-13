@@ -434,7 +434,7 @@ export class GPU {
             label: 'canvasRootLayout',
             bindGroupLayouts: [BindGroupLayoutCanvas]
         });
-        const uiVertShader = new UIVertShader(this.#canvasRootLayout.bindGroupLayouts, {
+        const uiVertShader = new UIVertShader(this.#canvasRootLayout, {
             arrayStride: 4 * 4,
             stepMode: "vertex",
             attributes: [{

@@ -36,16 +36,9 @@ type BindLayouts = [
 
 export class WaterVertShader extends VertexShader<
 { main: PipelineLayout },
-[GPUVertexBufferLayout],
-BindLayouts> {
-  constructor(bindLayouts: BindLayouts, buffers: GPUVertexBufferLayout) {
-
-  const pipelineLayout = new PipelineLayout({
-    label: 'calculateNormalsPipeline',
-    bindGroupLayouts: bindLayouts
-  });
-
-    super(bindLayouts[0].gpu, bindLayouts, [buffers], wgsl, {
+[GPUVertexBufferLayout]> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+    super(pipelineLayout, [buffers], wgsl, {
       main: pipelineLayout
     }, 'water.vert');
 

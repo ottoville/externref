@@ -3,7 +3,7 @@ import { GPU } from "../../GPU.js";
 import { DebugNormalsVertShader } from "../Shaders/debug_normals.vert.js";
 
 export const NormalsPipeline = ['NormalsPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-    const debugNormalsVertShader = new DebugNormalsVertShader(gpu.positionBindGroupTimeWGSL.bindGroupLayouts,{
+    const debugNormalsVertShader = new DebugNormalsVertShader(gpu.positionBindGroupTimeWGSL,{
         arrayStride: 48,
         stepMode: "vertex",
         attributes: [{

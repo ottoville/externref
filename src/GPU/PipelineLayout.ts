@@ -2,6 +2,7 @@
 import type { BGLayout, BindGroupLayoutEntry, GPUBindingGroupLayoytEntryStrict, MapToGPUBindGroupEntry } from "./BindGroupLayout.js";
 import { RenderPipeline, type RenderPipelineProps } from "./RenderPipeline2.js";
 import type { VertexShader } from "./Shaders/VertexShader.js";
+import type { GPU } from "../GPU.js"
 type extractGeneric<Type> = Type extends BGLayout<infer X> ? MapToGPUBindGroupEntry<X> : never
 type Last<T extends BGLayout[]> = T extends [...BGLayout[], infer R] ? R : never
 
@@ -12,6 +13,7 @@ export type PipeLineLayoutProps<B extends readonly BGLayout[]> = {
 export class PipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]> {
     bindGroupLayouts: B;
     layout: GPUPipelineLayout;
+    gpu: GPU;
     constructor(
         {
             label,
@@ -20,6 +22,7 @@ export class PipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]>
         if (!bindGroupLayouts[0]) {
             throw new Error('pipelineLayout needs bindgrouplayouts');
         }
+        this.gpu = bindGroupLayouts[0].gpu;
         this.bindGroupLayouts = bindGroupLayouts;
         this.layout = bindGroupLayouts[0].gpu.device.createPipelineLayout(
             {

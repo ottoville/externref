@@ -27,16 +27,10 @@ type BindLayouts = readonly [BGLayout<[BufLayout, TextLayout]>]
 
 export class UIVertShader extends VertexShader<
 { main: PipelineLayout },
-[GPUVertexBufferLayout],
-BindLayouts> {
-  constructor(bindLayouts: BindLayouts, buffers: GPUVertexBufferLayout) {
+[GPUVertexBufferLayout]> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
 
-  const pipelineLayout = new PipelineLayout({
-    label: 'calculateNormalsPipeline',
-    bindGroupLayouts: bindLayouts
-  });
-
-    super(bindLayouts[0].gpu, bindLayouts, [buffers], wgsl, {
+    super(pipelineLayout, [buffers], wgsl, {
       main: pipelineLayout
     }, 'UI.vert');
 

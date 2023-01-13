@@ -9,7 +9,7 @@ export const WaterRenderPipeline = ['WaterRenderPipeline', function create(gpu: 
         mipmapFilter: "nearest"
     });
 
-    const waterVertShader = new WaterVertShader(gpu.bindGroupTextureWater.bindGroupLayouts, {
+    const waterVertShader = new WaterVertShader(gpu.bindGroupTextureWater, {
         arrayStride: 12,
         stepMode: 'vertex',
         attributes: [{

@@ -58,14 +58,13 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
   }
   `;
 
-export class CalculatePlaneHeights extends ComputeShader<
-  [
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-  ],
-  { main: PipelineLayout }> {
-  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout }> {
+  bindLayouts: readonly [
+    BGLayout<[BufLayout]>,
+    BGLayout<[BufLayout]>,
+    BGLayout<[BufLayout, BufLayout]>,
+  ];
+  constructor(settingsLayout: BGLayout<[BufLayout]>) {
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'verticesBindGroupLayout',
@@ -103,9 +102,10 @@ export class CalculatePlaneHeights extends ComputeShader<
       label: 'calculatePlaneHeightsPipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(settingsLayout.gpu, bindLayouts, wgsl, "calculatePlaneHeights.comp", {
+    super(pipelineLayout, wgsl, "calculatePlaneHeights.comp", {
       main: pipelineLayout
     })
+    this.bindLayouts = bindLayouts;
 
   }
 }

@@ -72,9 +72,8 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
  `;
 ///////////////////////////
 
-export class ClustersComp extends ComputeShader<
-  [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>, BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
-  { main: PipelineLayout }> {
+export class ClustersComp extends ComputeShader<{ main: PipelineLayout }> {
+  bindLayouts: readonly [BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayout]>];
   constructor(
     sizeGroup: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
   ) {
@@ -107,8 +106,9 @@ export class ClustersComp extends ComputeShader<
       bindGroupLayouts: bindLayouts
     });
 
-      super(sizeGroup.gpu, bindLayouts, wgsl, "Clusters.comp", {
+      super(pipelineLayout, wgsl, "Clusters.comp", {
         main: pipelineLayout
       });
+      this.bindLayouts = bindLayouts
   }
 }

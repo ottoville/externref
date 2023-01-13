@@ -17,10 +17,9 @@ import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
              `;
                ///////////////////////////
 
-export class ReadDepth extends ComputeShader<
-    [BGLayout<[BufLayout]>,
-        BGLayout<[TextLayout, TextLayout, BufLayout]>],
-    { main: PipelineLayout }> {
+export class ReadDepth extends ComputeShader<{ main: PipelineLayout }> {
+    bindLayouts: readonly [BGLayout<[BufLayout]>,
+    BGLayout<[TextLayout, TextLayout, BufLayout]>];
     constructor(gpu: GPU) {
         const bindLayouts = [
             new BGLayout(gpu, 'DepthAndMeshLayout',
@@ -68,8 +67,9 @@ export class ReadDepth extends ComputeShader<
             label: 'ReadDepthPipeline',
             bindGroupLayouts: bindLayouts
         });
-        super(gpu, bindLayouts, wgsl, "ReadDepth.comp", {
+        super(pipelineLayout, wgsl, "ReadDepth.comp", {
             main: pipelineLayout
         });
+        this.bindLayouts = bindLayouts;
     }
 }

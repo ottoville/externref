@@ -33,9 +33,9 @@ import { Vertices } from './structs/Structs.js';
     ///////////////
 
 export class CreateGroundFromHeightMap extends ComputeShader<
-[BGLayout<[BufLayout]>,
-BGLayout<[BufLayout, TextLayout]>],
 { main: PipelineLayout }> {
+  bindLayouts: readonly [BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, TextLayout]>];
   constructor(settingsLayout: BGLayout<[BufLayout]>) {
     const bindLayouts = [
       settingsLayout,
@@ -63,8 +63,9 @@ BGLayout<[BufLayout, TextLayout]>],
       label: 'CreateGroundFromHeightMapPipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(settingsLayout.gpu, bindLayouts, wgsl, "CreateGroundFromHeightMap.comp", {
+    super(pipelineLayout, wgsl, "CreateGroundFromHeightMap.comp", {
       main: pipelineLayout
     });
+    this.bindLayouts = bindLayouts
   }
 }

@@ -1,5 +1,5 @@
 import { BGLayout, BufLayout } from '../BindGroupLayout.js';
-import { PipelineLayout } from '../PipelineLayout.js';
+import { BindablePipelineLayout, PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 
 //////////////////////////////////
@@ -62,19 +62,14 @@ type BindLayouts = readonly [
   BGLayout<[BufLayout]>]
 
 export class SimpleVertShader extends VertexShader<
-{ main: PipelineLayout },
-[GPUVertexBufferLayout],
-BindLayouts> {
-  constructor(bindLayouts: BindLayouts, buffers: GPUVertexBufferLayout) {
-
-  const pipelineLayout = new PipelineLayout({
-    label: 'calculateNormalsPipeline',
-    bindGroupLayouts: bindLayouts
-  });
-
-    super(bindLayouts[0].gpu, bindLayouts, [buffers], wgsl, {
-      main: pipelineLayout
+{ main: PipelineLayout,
+  pick: PipelineLayout },
+[GPUVertexBufferLayout]> {
+  constructor(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+  
+    super(pipelineLayout, [buffers], wgsl, {
+      main: pipelineLayout,
+      pick: pipelineLayout
     }, 'Simple.vert');
-
   }
 }

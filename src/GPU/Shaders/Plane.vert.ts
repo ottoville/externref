@@ -49,16 +49,11 @@ type BindLayouts = readonly [
 ];
 export class PlaneVertShader extends VertexShader<
   { main: PipelineLayout },
-  [GPUVertexBufferLayout],
-  BindLayouts> {
-  constructor(bindLayouts: BindLayouts, buffers: GPUVertexBufferLayout) {
-    const pipelineLayout = new PipelineLayout({
-      label: 'debugBoundingBoxPipeline',
-      bindGroupLayouts: bindLayouts
-    });
+  [GPUVertexBufferLayout]> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
     const entryPoints = {
       main: pipelineLayout
     }
-    super(bindLayouts[0].gpu, bindLayouts, [buffers], wgsl, entryPoints, 'plane.vert');
+    super(pipelineLayout, [buffers], wgsl, entryPoints, 'plane.vert');
   }
 }

@@ -68,15 +68,14 @@ const wgsl = /* wgsl */ `
 /////////////////////////////////
 
 export class CalculateNormals extends ComputeShader<
-  [
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-  ]
-  ,
   { main: PipelineLayout }> {
+    bindLayouts: readonly [
+      BGLayout<[BufLayout]>,
+      BGLayout<[BufLayout]>,
+      BGLayout<[BufLayout, BufLayout]>,
+    ]
   constructor(
-    settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    settingsLayout: BGLayout<[BufLayout]>,
     slopesLayout: BGLayout<[BufLayout, BufLayout]>
   ) {
     const bindLayouts = [
@@ -99,9 +98,9 @@ export class CalculateNormals extends ComputeShader<
       bindGroupLayouts: bindLayouts
     });
 
-    super(settingsLayout.gpu, bindLayouts, wgsl, 'CalculateNormals.comp', {
+    super(pipelineLayout, wgsl, 'CalculateNormals.comp', {
       main: pipelineLayout
     });
-
+    this.bindLayouts = bindLayouts
   }
 }

@@ -136,11 +136,10 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
   `;
   //////////////////
 
-export class CreateTerrainTexture extends ComputeShader<
-  [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[TextLayout]>],
-  { main: PipelineLayout }> {
+export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }> {
+  bindLayouts: readonly [BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout]>,
+  BGLayout<[TextLayout]>]
   constructor(
     settingsLayout: BGLayout<[BufLayout]>,
     slopesLayout: BGLayout<[BufLayout, BufLayout]>) {
@@ -163,8 +162,9 @@ export class CreateTerrainTexture extends ComputeShader<
       label: 'CreateTerrainTexturePipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(settingsLayout.gpu, bindLayouts, wgsl, "CreateTerrainTexture.comp", {
+    super(pipelineLayout, wgsl, "CreateTerrainTexture.comp", {
       main: pipelineLayout
     });
+    this.bindLayouts = bindLayouts;
   }
 }

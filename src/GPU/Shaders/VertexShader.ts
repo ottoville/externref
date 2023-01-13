@@ -1,6 +1,4 @@
-import type { BGLayout } from "../BindGroupLayout.js";
 import { PipelineLayout } from "../PipelineLayout.js";
-import type { GPU } from "../../GPU.js"
 import { Shader } from "./Shader.js";
 
 export type VertexBuffers = [GPUVertexBufferLayout]
@@ -11,17 +9,15 @@ export type VertexBuffers = [GPUVertexBufferLayout]
 export abstract class VertexShader<
     E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
     BU extends VertexBuffers = VertexBuffers,
-    B extends readonly BGLayout[] = readonly BGLayout[],
-> extends Shader<E, B> {
+> extends Shader<E> {
     constructor(
-        gpu: GPU,
-        bindLayouts: Readonly<B>,
+        pipelineLayout: PipelineLayout,
         //Comsumed by GPURenderPipelineDescriptor
         public buffers: BU,
         wgsl: string,
         entryPoints: E,
         label: string,
         ) {
-            super(gpu, bindLayouts, wgsl, entryPoints, label, GPUShaderStage.VERTEX)
+            super(pipelineLayout, wgsl, entryPoints, label, GPUShaderStage.VERTEX)
     }
 }

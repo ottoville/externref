@@ -4,7 +4,7 @@ import { GroundVertShader } from "../Shaders/Ground.vert.js";
 
 
 export const TerrainRenderPipeline = ['TerrainRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-    const groundVertShader = new GroundVertShader(gpu.lightsBindGroupTexture2.bindGroupLayouts,
+    const groundVertShader = new GroundVertShader(gpu.lightsBindGroupTexture2,
         {
             arrayStride: 48,
             stepMode: "vertex",

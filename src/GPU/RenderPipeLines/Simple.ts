@@ -3,7 +3,7 @@ import { SimpleVertShader } from "../Shaders/Simple.vert.js";
 import { SimpleFragShader } from "../Shaders/Simple.frag.js";
 
 export const SimpleRenderPipeline = ['SimpleRenderPipeline', function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-    const simpleVertShader = new SimpleVertShader(gpu.positionBindGroupTimeWGSL.bindGroupLayouts,
+    const simpleVertShader = new SimpleVertShader(gpu.positionBindGroupTimeWGSL,
         {
             arrayStride: 6 * 4,
             stepMode: "vertex",
@@ -19,7 +19,7 @@ export const SimpleRenderPipeline = ['SimpleRenderPipeline', function SimpleRend
                 format: "float32x3"
             }]
         });
-    const simpleFragShader = new SimpleFragShader(gpu.positionBindGroupTimeWGSL.bindGroupLayouts);
+    const simpleFragShader = new SimpleFragShader(gpu.positionBindGroupTimeWGSL);
     return gpu.positionBindGroupTimeWGSL.addRenderPipeline(
         {
             label,

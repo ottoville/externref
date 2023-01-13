@@ -3,7 +3,7 @@ import { GPU } from "../../GPU.js";
 import { GrassVertShader } from "../Shaders/Grass.vert.js";
 
 export const PlantsRenderPipeline = ['PlantsRenderPipeline', function PlantsRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-    const grassVertShader = new GrassVertShader(gpu.rootCameralayout.bindGroupLayouts, [
+    const grassVertShader = new GrassVertShader(gpu.rootCameralayout, [
         {
             arrayStride: 4 * 4,
             stepMode: "instance",

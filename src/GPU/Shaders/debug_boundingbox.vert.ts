@@ -31,16 +31,10 @@ type BindLayouts = readonly [
 
 export class DebugBoundingBoxVertShader extends VertexShader<
 { main: PipelineLayout },
-  [GPUVertexBufferLayout],
-  BindLayouts
+  [GPUVertexBufferLayout]
   > {
-  constructor(bindLayouts: BindLayouts, buffers: GPUVertexBufferLayout) {
-    const pipelineLayout = new PipelineLayout({
-      label: 'debugBoundingBoxPipeline',
-      bindGroupLayouts: bindLayouts
-    });
-
-    super(bindLayouts[0].gpu, bindLayouts, [buffers], wgsl, {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+    super(pipelineLayout, [buffers], wgsl, {
       main: pipelineLayout
     }, 'debug_boundingBox.vert');
 

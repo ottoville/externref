@@ -68,15 +68,11 @@ type BindLayouts = readonly [
 ];
 export class HelperVertShader extends VertexShader<
 { main: PipelineLayout },
-  [],
-  BindLayouts> {
+  []> {
   constructor(
-    bindLayouts: BindLayouts) {
-    const pipelineLayout = new PipelineLayout({
-      label: 'calculateNormalsPipeline',
-      bindGroupLayouts: bindLayouts
-    });
-    super(bindLayouts[0].gpu, bindLayouts, [], wgsl,{
+    pipelineLayout: PipelineLayout<BindLayouts>) {
+
+    super(pipelineLayout, [], wgsl,{
       main: pipelineLayout
     }, 'helper.vert');
   }

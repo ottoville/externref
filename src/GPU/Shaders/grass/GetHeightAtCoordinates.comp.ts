@@ -123,13 +123,12 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 }
   `;
 
-export class getHeightAtCoordinates extends ComputeShader<
-  [
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-  ],
-  { main: PipelineLayout }> {
+export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout }> {
+  bindLayouts: readonly [
+    BGLayout<[BufLayout]>,
+    BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout]>,
+    BGLayout<[BufLayout]>,
+  ]
   constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     //TODO: set actual minBindingSize values other than 32
     const bindLayouts = [
@@ -189,8 +188,9 @@ export class getHeightAtCoordinates extends ComputeShader<
       label: 'GetHeightAtCoordinatesPipeLine',
       bindGroupLayouts: bindLayouts
     });
-    super(settingsLayout.gpu, bindLayouts, wgsl, "GetHeightAtCoordinates.comp", {
+    super(pipelineLayout, wgsl, "GetHeightAtCoordinates.comp", {
       main: pipelineLayout
     });
+    this.bindLayouts = bindLayouts
   }
 }

@@ -46,7 +46,7 @@ export class paintPlane extends paintGround {
         let renderPipeline = renderPipelines.get(scene.gpu);
         if (!renderPipeline) {
             const planeVertShader = new PlaneVertShader(
-                ground.TerrainHeightsbindGroupTree.bindGroupLayouts, {
+                ground.TerrainHeightsbindGroupTree, {
                     arrayStride: 4 * 2,
                     stepMode: "vertex" as GPUVertexStepMode,
                     attributes: [{

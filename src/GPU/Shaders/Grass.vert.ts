@@ -115,16 +115,10 @@ type BindLayouts = readonly [BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayo
 
 export class GrassVertShader extends VertexShader<
 { main: PipelineLayout },
-[GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout],
-BindLayouts> {
-  constructor(bindLayouts: BindLayouts, buffers: [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]) {
+[GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]) {
 
-  const pipelineLayout = new PipelineLayout({
-    label: 'calculateNormalsPipeline',
-    bindGroupLayouts: bindLayouts
-  });
-
-    super(bindLayouts[0].gpu, bindLayouts, buffers, wgsl, {
+    super(pipelineLayout, buffers, wgsl, {
       main: pipelineLayout
     }, 'grass.vert');
 

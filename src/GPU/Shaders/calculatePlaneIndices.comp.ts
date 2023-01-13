@@ -21,10 +21,9 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
   return;
 }
 `;
-export class CalculatePlaneIndices extends ComputeShader<
-  [BGLayout<[BufLayout]>,
-    BGLayout<[BufLayout]>],
-  { main: PipelineLayout }> {
+export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout }> {
+    bindLayouts: readonly [BGLayout<[BufLayout]>,
+    BGLayout<[BufLayout]>];
   constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     const bindLayouts = [
       settingsLayout,
@@ -44,9 +43,9 @@ export class CalculatePlaneIndices extends ComputeShader<
       label: 'calculatePlaneIndicesPipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(settingsLayout.gpu, bindLayouts, wgsl, "calculatePlaneIndices.comp", {
+    super(pipelineLayout, wgsl, "calculatePlaneIndices.comp", {
       main: pipelineLayout
     })
-
+    this.bindLayouts = bindLayouts;
   }
 }

@@ -1,26 +1,21 @@
-import { BGLayout, BufLayout, Struct } from "../BindGroupLayout.js";
+import { BufLayout, Struct } from "../BindGroupLayout.js";
 import { PipelineLayout } from "../PipelineLayout.js";
-import type { GPU } from "../../GPU.js"
-
-
 
 export abstract class Shader<
-    E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
-    B extends readonly BGLayout[] = readonly BGLayout[],
+    E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout }
 > {
 
     readonly module: GPUShaderModule;
     readonly wgsl: string;
     constructor(
-        public gpu: GPU,
-        public readonly bindLayouts: Readonly<B>,
+        protected pipelineLayout: PipelineLayout,
         wgsl: string,
         public readonly entryPoints: E,
         label: string,
         shaderFlag: typeof GPUShaderStage.VERTEX | typeof GPUShaderStage.FRAGMENT | typeof GPUShaderStage.COMPUTE,
     ) {
         const structs:Set<Struct> = new Set();
-        const groups = bindLayouts.reduce((groupstring, group, gi) => {
+        const groups = pipelineLayout.bindGroupLayouts.reduce((groupstring, group, gi) => {
             return group.entries.reduce((acc, binding, bi) => {
                 if ((binding.entry.visibility & shaderFlag) === 0) {
                     return acc;
@@ -50,7 +45,7 @@ export abstract class Shader<
         , '')
         //
         this.wgsl = groups + structString +  wgsl;
-        this.module = gpu.device.createShaderModule(
+        this.module = pipelineLayout.gpu.device.createShaderModule(
             {
                 code: this.wgsl,
                 label,

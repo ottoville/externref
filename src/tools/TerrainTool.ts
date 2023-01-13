@@ -121,7 +121,7 @@ export class TerrainTool extends MainNode {
 
         const getRenderPipeline = ['TerrainToolRenderpipeline', function getRenderPipelinef(gpu: GPU, label: string, primitive: GPUPrimitiveState,
         ) {
-            const helperVertShader = new HelperVertShader(terrain.TerrainHeightsbindGroupTree.bindGroupLayouts);
+            const helperVertShader = new HelperVertShader(terrain.TerrainHeightsbindGroupTree);
             
             const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
                 {

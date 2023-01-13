@@ -36,16 +36,11 @@ fn main(@location(0) position : vec3<f32>,
   
 export class DebugNormalsVertShader extends VertexShader<
 { main: PipelineLayout },
-[GPUVertexBufferLayout],
-BindLayouts> {
-  constructor(bindLayouts: BindLayouts, buffers: GPUVertexBufferLayout) {
-    const pipelineLayout = new PipelineLayout({
-      label: 'debugBoundingBoxPipeline',
-      bindGroupLayouts: bindLayouts
-    });
+[GPUVertexBufferLayout]> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
     const entryPoints = {
       main: pipelineLayout
     }
-    super(bindLayouts[0].gpu, bindLayouts, [buffers], wgsl, entryPoints,'debug_normals.vert');
+    super(pipelineLayout, [buffers], wgsl, entryPoints,'debug_normals.vert');
   }
 }

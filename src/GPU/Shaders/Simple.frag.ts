@@ -40,16 +40,9 @@ type BindLayouts = readonly [
   BGLayout<[BufLayout]>]
 
 export class SimpleFragShader extends FragmentShader<
-{ main: PipelineLayout },
-BindLayouts> {
-  constructor(bindLayouts: BindLayouts) {
-
-  const pipelineLayout = new PipelineLayout({
-    label: 'calculateNormalsPipeline',
-    bindGroupLayouts: bindLayouts
-  });
-
-    super(bindLayouts[0].gpu, bindLayouts, wgsl, {
+{ main: PipelineLayout }> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
+    super(pipelineLayout, wgsl, {
       main: pipelineLayout
     }, 'Simple.frag');
 

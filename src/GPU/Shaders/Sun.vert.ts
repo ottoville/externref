@@ -55,16 +55,10 @@ type BindLayouts = readonly [
 
 export class SunVertShader extends VertexShader<
 { main: PipelineLayout },
-[],
-BindLayouts> {
-  constructor(bindLayouts: BindLayouts) {
+[]> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
 
-  const pipelineLayout = new PipelineLayout({
-    label: 'calculateNormalsPipeline',
-    bindGroupLayouts: bindLayouts
-  });
-
-    super(bindLayouts[0].gpu, bindLayouts, [], wgsl, {
+    super(pipelineLayout, [], wgsl, {
       main: pipelineLayout
     }, 'Sun.vert');
 

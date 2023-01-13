@@ -1,4 +1,4 @@
-import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
@@ -72,8 +72,10 @@ import { Clusters, Lights, MeshArray, ViewUniforms } from './structs/Structs.js'
     ///////////////////////////
 
 export class UpdateView extends ComputeShader<
-  [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>, BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
   { main: PipelineLayout }> {
+    bindLayouts: readonly [
+      BGLayout<[BufLayout, BufLayout, BufLayout]>,
+      BGLayout<[BufLayout, BufLayout]>]
   constructor(
     gpu: GPU) {
     const bindLayouts = [
@@ -132,9 +134,10 @@ export class UpdateView extends ComputeShader<
       label: 'UpdateViewPipeline',
       bindGroupLayouts: bindLayouts
     });
-    super(gpu, bindLayouts, wgsl, "UpdateView.comp", {
+    super(pipelineLayout, wgsl, "UpdateView.comp", {
       main: pipelineLayout
     });
+    this.bindLayouts = bindLayouts;
 
   }
 }
