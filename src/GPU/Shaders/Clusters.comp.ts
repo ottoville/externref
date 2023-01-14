@@ -1,5 +1,5 @@
 import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
-import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Clusters, Projection } from './structs/Structs.js';
@@ -75,7 +75,7 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
 export class ClustersComp extends ComputeShader<{ main: PipelineLayout }> {
   bindLayouts: readonly [BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayout]>];
   constructor(
-    sizeGroup: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    sizeGroup: BGLayout<[BufLayout]>,
   ) {
     const bindLayouts = [
       sizeGroup,

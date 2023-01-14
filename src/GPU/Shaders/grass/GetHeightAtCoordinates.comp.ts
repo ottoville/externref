@@ -1,4 +1,4 @@
-import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../../BindGroupLayout.js'
+import { BGLayout, BufLayout } from '../../BindGroupLayout.js'
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
 import { FloatArray, IntArray, PlaneArray, PositionAndRotateArray, Vec2Array } from '../structs/Structs.js';
@@ -129,7 +129,7 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
     BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout]>,
     BGLayout<[BufLayout]>,
   ]
-  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+  constructor(settingsLayout: BGLayout<[BufLayout]>) {
     //TODO: set actual minBindingSize values other than 32
     const bindLayouts = [
       settingsLayout,

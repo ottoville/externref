@@ -28,7 +28,8 @@ export const Time = {
 export const Uniforms = {
     name: 'Uniforms',
     struct: /* wgsl */ `
-        screenDimensions : vec2<f32>`
+        screenDimensions : vec2<f32>,
+        screendimensions_ratio:vec2<f32>`
 }
 export const ClusterBounds = {
     name: 'ClusterBounds',

@@ -22,7 +22,7 @@ export type GPUBindingGroupLayoytEntryStrict =
         | GPUBindGroupLayoutEntryStorageTexture 
         | GPUBindGroupLayoutEntrySampler)
 
-export class BindGroupLayoutEntry<T extends GPUBindingGroupLayoytEntryStrict = GPUBindingGroupLayoytEntryStrict> {
+export abstract class BindGroupLayoutEntry<T extends GPUBindingGroupLayoytEntryStrict = GPUBindingGroupLayoytEntryStrict> {
     constructor(
         public entry: T,
         public variableName: string,
@@ -42,12 +42,25 @@ export class TextLayout extends BindGroupLayoutEntry {
     constructor(
         public override entry: GPUBindGroupLayoutEntryTexture | GPUBindGroupLayoutEntryStorageTexture,
         variableName: string,
-        structName: string) {
+        structName:
+        'texture_depth_multisampled_2d'
+        | 'texture_2d<u32>'
+        | 'texture_2d<f32>'
+        | 'texture_storage_2d<rgba8unorm,write>'
+        ) {
             super(entry, variableName, structName)
     }
 }
 
-export type SampLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntrySampler>
+export class SampLayout extends BindGroupLayoutEntry {
+    constructor(
+        public override entry: GPUBindGroupLayoutEntrySampler,
+        variableName: string,
+        structName: 'sampler' | 'sampler_comparison'
+        ) {
+            super(entry, variableName, structName)
+    }
+}
 
 export class BGLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]> {
     layout: GPUBindGroupLayout;

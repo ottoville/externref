@@ -1,4 +1,4 @@
-import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Indices } from './structs/Structs.js';
@@ -24,7 +24,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout }> {
   bindLayouts: readonly [BGLayout<[BufLayout]>,
     BGLayout<[BufLayout]>];
-  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+  constructor(settingsLayout: BGLayout<[BufLayout]>) {
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'calculateIndicesBindGroupLayout',

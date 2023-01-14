@@ -1,6 +1,6 @@
-import { Shader } from "../RenderPipeline.js";
 import type { GPU } from "../../GPU";
 import { GroundVertShader } from "../Shaders/Ground.vert.js";
+import { GroundFragShader } from "../Shaders/Ground.frag.js";
 
 
 export const TerrainRenderPipeline = ['TerrainRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
@@ -34,7 +34,7 @@ export const TerrainRenderPipeline = ['TerrainRenderPipeline', function create(g
         {
             label,
             vertexShader: groundVertShader,
-            fragmentShader: new Shader(gpu, 'ground.frag.wgsl'),
+            fragmentShader: new GroundFragShader(gpu.lightsBindGroupTexture2),
             renderPipeline: {
                 primitive
             }

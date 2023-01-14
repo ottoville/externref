@@ -15,7 +15,7 @@ import { DepthRenderTarget } from "./GPU/RenderTargets/DepthRenderTarget.js";
 import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { TextureUsageEnums, TextureUsageType } from "./GPU/Texture.js";
-import { BGLayout, BindGroupLayoutEntry, BufLayout, SampLayout, TextLayout } from "./GPU/BindGroupLayout.js";
+import { BGLayout, BufLayout, SampLayout, TextLayout } from "./GPU/BindGroupLayout.js";
 import { UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
 import { ClustersComp } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
@@ -252,32 +252,32 @@ export class GPU {
         this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.createAppendedLayout('lightsBindGroupTexture2Layout',
             new BGLayout(this,
                 'lightsBindGroupTexture2',
-                new BindGroupLayoutEntry(
+                new SampLayout(
                     {
                         visibility: GPUShaderStage.FRAGMENT,
                         sampler: {
                         },
-                    }, 'TODOVAR', 'TODOSTRUCTNAME'),
+                    }, 'mySampler', 'sampler'),
                 new TextLayout(
                     {
                         visibility: GPUShaderStage.FRAGMENT,
                         texture: {}
-                    }, 'TODOVAR', 'TODOTEXTURE')
+                    }, 'myTexture', 'texture_2d<f32>')
             ));
         this.bindGroupTextureWater = this.positionBindGroupTimeWGSL.createSharedLayout('lightsBindGroupTexture2PipelineLayout',
             new BGLayout(this,
                 'lightsBindGroupTexture2water',
-                new BindGroupLayoutEntry(
+                new SampLayout(
                     {
                         visibility: GPUShaderStage.FRAGMENT,
                         sampler: {
                         },
-                    }, 'TODOVAR', 'TODOSTRUCTNAME') as SampLayout,
-                new BindGroupLayoutEntry(
+                    }, 'mySampler', 'sampler'),
+                new TextLayout(
                     {
                         visibility: GPUShaderStage.FRAGMENT,
                         texture: {}
-                    }, 'TODOVAR', 'TODOSTRUCTNAME') as TextLayout
+                    }, 'diffuseTexture', 'texture_2d<f32>')
             ));
 
         this.pickRenderPass = new RenderPass({
@@ -427,7 +427,7 @@ export class GPU {
                     visibility: GPUShaderStage.FRAGMENT,
                     texture: {
                     }
-                }, 'TODOVAR', 'TODOSTRUCTNAME')
+                }, 'texture', 'texture_2d<f32>')
         )
 
         this.#canvasRootLayout = new BindablePipelineLayout({

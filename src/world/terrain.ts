@@ -10,7 +10,7 @@ import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import { CalculatePlaneIndices } from "../GPU/Shaders/calculatePlaneIndices.comp.js";
 import { CalculatePlaneHeights } from "../GPU/Shaders/calculatePlaneHeights.comp.js";
 import { CalculateNormals } from "../GPU/Shaders/CalculateNormals.comp.js";
-import { BGLayout, BindGroupLayoutEntry, BufLayout, type GPUBindGroupLayoutEntryBuffer } from "../GPU/BindGroupLayout.js";
+import { BGLayout, BufLayout } from "../GPU/BindGroupLayout.js";
 import { CreateGroundFromHeightMap } from "../GPU/Shaders/CreateGroundFromHeightMap.comp.js";
 import type { GPU } from '../GPU.js'
 import { CreateTerrainTexture } from "../GPU/Shaders/CreateTerrainTexture.comp.js";
@@ -260,7 +260,7 @@ TODO
     constructor(
         public gpu: GPU,
         public scenes: Scene[],
-        public settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+        public settingsLayout: BGLayout<[BufLayout]>,
         slopesLayout: BGLayout<[BufLayout, BufLayout]>,
         public settingsGPU: BindUniformBuffer & BindStorageBuffer,
         calculatePlaneIndicesShader: CalculatePlaneIndices,
