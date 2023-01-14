@@ -14,7 +14,7 @@ export abstract class Shader<
     readonly module: GPUShaderModule;
     readonly wgsl: string;
     protected pipelineLayout: PipelineLayout
-    public readonly entryPoints: E
+    public readonly entryPoints: E;
     constructor(
         { 
             pipelineLayout,

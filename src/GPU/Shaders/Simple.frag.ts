@@ -1,3 +1,4 @@
+// Pickable single color shader where color is set from vertice
 //TODO: Make actual shading to diverse this shader from color.frag
 
 import { BGLayout, BufLayout } from '../BindGroupLayout.js';

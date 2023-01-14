@@ -235,7 +235,7 @@ export class GPU {
             'BindGroupLayoutPosition',
             new BufLayout(
                 {
-                    visibility: GPUShaderStage.VERTEX,
+                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                     buffer: {
                         type: "uniform",
                         hasDynamicOffset: true,

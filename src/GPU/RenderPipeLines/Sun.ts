@@ -1,6 +1,6 @@
-import { Shader } from "../RenderPipeline.js";
 import { GPU } from "../../GPU.js";
 import { SunVertShader } from "../Shaders/Sun.vert.js";
+import { SingleColorFragShader } from "../Shaders/SingleColor.frag.js";
 
 export const SunRenderPipeline = ['SunRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
     const sunVertShader = new SunVertShader(gpu.positionBindGroupTimeWGSL)
@@ -8,7 +8,7 @@ export const SunRenderPipeline = ['SunRenderPipeline', function create(gpu: GPU,
         {
             label,
             vertexShader: sunVertShader,
-            fragmentShader: new Shader(gpu, 'sun.frag.wgsl'),
+            fragmentShader: new SingleColorFragShader(gpu.positionBindGroupTimeWGSL),
             renderPipeline: {
                 primitive
             },

@@ -1,3 +1,7 @@
+// Non pickable single color shader where color is set from vertice
+// See Simple.frag.ts for pickable counterpart
+// See SingleColor.frag.ts for pickable shared single color for all vertices
+
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 

@@ -43,7 +43,7 @@ export class Sun2 extends MainNode {
         const ambientR = this.#clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
         const ambientGB = this.#clamp((sunPositionY + 0.1) * 0.4 - 0.1, 0.05, 0.3);
 
-
+        this.color=[1,1,1,1];
         //earth shadow
         this.ambient = [ambientR, ambientGB, ambientGB];
         this.shadow = this.#clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
