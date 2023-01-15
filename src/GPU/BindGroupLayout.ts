@@ -25,7 +25,7 @@ export type GPUBindingGroupLayoytEntryStrict =
 export abstract class BindGroupLayoutEntry<T extends GPUBindingGroupLayoytEntryStrict = GPUBindingGroupLayoytEntryStrict> {
     constructor(
         public entry: T,
-        public variableName: string,
+        public readonly variableName: string,
         public structName: string) {
     }
 }
@@ -34,8 +34,8 @@ export class BufLayout extends BindGroupLayoutEntry {
     constructor(
         public override entry: GPUBindGroupLayoutEntryBuffer,
         variableName: string,
-        public struct?: Struct) {
-            super(entry, variableName, struct?.name ?? '')
+        public struct: Struct) {
+            super(entry, variableName, struct.name)
     }
 }
 export class TextLayout extends BindGroupLayoutEntry {

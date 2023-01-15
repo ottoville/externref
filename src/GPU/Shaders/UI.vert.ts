@@ -2,9 +2,25 @@ import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 
-//////////////////////////////////
+type BindLayouts = readonly [BGLayout<[BufLayout, TextLayout]>]
 
-const wgsl = /* wgsl */ `
+export class UIVertShader extends VertexShader<
+  { main: PipelineLayout },
+  [GPUVertexBufferLayout],
+  PipelineLayout<BindLayouts>> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+
+    super({
+      pipelineLayout,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'UI.vert'
+    }, [buffers]);
+    this.createWGSL(([uniforms, /*texture*/]) => {
+      //////////////////////////////////
+
+      return /* wgsl */ `
 struct Output {
   @builtin(position) Position : vec4<f32>,
   @location(0) v_uv : vec2<f32>,
@@ -16,28 +32,14 @@ fn main(
   @location(1) uv : vec2<f32>
   ) -> Output {
   var output : Output;   
-  output.Position = vec4<f32>(uniforms.translate + position, 1.0, 1.0);
+  output.Position = vec4<f32>(${uniforms.variableName}.translate + position, 1.0, 1.0);
   output.v_uv=uv;
   return output;
 
 }
   `;
-//////////////
-type BindLayouts = readonly [BGLayout<[BufLayout, TextLayout]>]
+      //////////////
 
-export class UIVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout]> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-
-    super({
-      pipelineLayout,
-      wgsl,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'UI.vert'
-    }, [buffers]);
-
+    })
   }
 }

@@ -2,9 +2,26 @@ import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 
+type BindLayouts = readonly [BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>]
+
+export class GrassVertShader extends VertexShader<
+  { main: PipelineLayout },
+  [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout],
+  PipelineLayout<BindLayouts>> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]) {
+
+    super({
+      pipelineLayout,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'grass.vert'
+    }, buffers);
+    this.createWGSL(([/*uniform*/,],[scene, time, /*clusters_array, meshes, projection*/]) => {
+
 //////////////////////////////////
 
-const wgsl = /* wgsl */ `
+return /* wgsl */ `
 
 
 
@@ -67,7 +84,7 @@ fn main(
   //How fast wind direction and intensivy change
 
 
-  var windIntensivy:f32 =(cos((f32(time.time)*0.01 + positions.x)*0.1)+1.0)*0.5;
+  var windIntensivy:f32 =(cos((f32(${time.variableName}.time)*0.01 + positions.x)*0.1)+1.0)*0.5;
 //  float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
 
   var leanAndBaseCurve:f32 = shape.y + vertice.y*shape.z;
@@ -99,33 +116,18 @@ fn main(
 
    
    var worldPos:vec4<f32> = vec4<f32>(positions.xyz, 1.0) + vec4<f32>(scaled.x, scaled.y, scaled.z, 0.0);
-   var viewDirectionW:vec3<f32> = normalize(scene.viewPosition - worldPos.xyz);
+   var viewDirectionW:vec3<f32> = normalize(${scene.variableName}.viewPosition - worldPos.xyz);
    //normal = normal * sign(dot(viewDirectionW, normal));
 
    //var diffuse:f32 = dot(normal, lights.sunDirection)*lights.shadow;
 
-   output.Position = scene.modelViewProjection * worldPos;
+   output.Position = ${scene.variableName}.modelViewProjection * worldPos;
 
    output.color = vec3<f32>(clamp(shape.w,0.0,1.0),1.0,0.0);//*diffuse;
     return output;
 }
   `;
 //////////////
-type BindLayouts = readonly [BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>]
-
-export class GrassVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]) {
-
-    super({
-      pipelineLayout,
-      wgsl,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'grass.vert'
-    }, buffers);
-
+    })
   }
 }

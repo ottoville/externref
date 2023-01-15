@@ -2,9 +2,33 @@ import { BGLayout, BufLayout, SampLayout, TextLayout } from '../BindGroupLayout.
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 
-//////////////////////////////////
+type BindLayouts = readonly [
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
+  BGLayout<[BufLayout]>,
+  BGLayout<[SampLayout, TextLayout]>]
 
-const wgsl = /* wgsl */ `
+
+
+
+export class GroundFragShader extends FragmentShader<
+  { main: PipelineLayout, pick: PipelineLayout }, PipelineLayout<BindLayouts>> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
+    super({
+      pipelineLayout,
+      entryPoints: {
+        main: pipelineLayout,
+        pick: pipelineLayout
+      },
+      label: 'Ground.frag',
+    });
+    this.createWGSL((
+      [uniforms],
+      [/*scene*/, /*time*/, clusters_array, meshes, projection],
+      [/*world*/,],
+      [mySampler, myTexture]) => {
+      //////////////////////////////////
+      return /* wgsl */ `
 struct Output {
   @location(0) Diffuse : vec4<f32>
 };
@@ -13,15 +37,15 @@ struct OutputPick {
 };
 
 fn linearDepth(depthSample : f32) -> f32 {
-  return projection.z_near_multiplied_far / fma(depthSample, projection.z_near_substracted_far, projection.zNear);
+  return projection.z_near_multiplied_far / fma(depthSample, ${projection.variableName}.z_near_substracted_far, ${projection.variableName}.zNear);
 }
 fn getTile(fragCoord : vec3<f32>) -> vec3<u32> {
   // TODO: move to uniform
   let tileCount : vec3<f32> = vec3<f32>(32.0, 18.0, 48.0);
   
   //TODO: zTile lookup can be hardcoded for speed
-  let zTile : u32 = u32(max(fma(log2(linearDepth(fragCoord.z)),projection.slice_scale,projection.slice_bias), 0.0));
-  let pos: vec2<f32> = fragCoord.xy / uniforms.screendimensions_ratio;
+  let zTile : u32 = u32(max(fma(log2(linearDepth(fragCoord.z)),${projection.variableName}.slice_scale,${projection.variableName}.slice_bias), 0.0));
+  let pos: vec2<f32> = fragCoord.xy / ${uniforms.variableName}.screendimensions_ratio;
   return vec3<u32>(u32(pos.x),u32(pos.y),zTile);
 
 }
@@ -58,7 +82,7 @@ fn main(
 //  output.Normals=vec4<f32>(normal.xyz, bitcast<f32>(id));
 
   //outPositions=vec4<f32>(position.xyz, 1.0);
-  output.Diffuse = textureSample(myTexture, mySampler, v_uv);
+  output.Diffuse = textureSample(${myTexture.variableName}, ${mySampler.variableName}, v_uv);
   //output.Diffuse.w=0.0;
 
 
@@ -69,7 +93,7 @@ fn main(
 
 
     let cluster_index = getClusterIndex2(vec4<f32>(fragCoord.xyz, 1.0));
-    let cluster_lights_count=clusters_array.lightsCount[cluster_index];
+    let cluster_lights_count=${clusters_array.variableName}.lightsCount[cluster_index];
     var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);
 
   var shading:f32;
@@ -77,8 +101,8 @@ fn main(
 
     if(cluster_lights_count>0u) {
       for (var light_pointer_index : u32 = 0u; light_pointer_index < cluster_lights_count; light_pointer_index = light_pointer_index + 1u) {
-        let light_index:u32 = clusters_array.lights[cluster_index*63u + light_pointer_index];
-        let light = meshes.mesh[light_index];
+        let light_index:u32 = ${clusters_array.variableName}.lights[cluster_index*63u + light_pointer_index];
+        let light = ${meshes.variableName}.mesh[light_index];
         if((scenes & light.scenes) != 0u) {
           let light_position:vec3<f32> = light.transformation[3].xyz;
           if(light.point_light_squared > 0.0) {
@@ -114,24 +138,7 @@ fn pick(
 
   }
   `;
-//////////////
-type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>,
-  BGLayout<[SampLayout, TextLayout]>]
-
-export class GroundFragShader extends FragmentShader<
-  { main: PipelineLayout, pick: PipelineLayout }> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
-    super({
-      pipelineLayout,
-      wgsl,
-      entryPoints: {
-        main: pipelineLayout,
-        pick: pipelineLayout
-      }, label: 'Ground.frag'
+      //////////////
     });
-
   }
 }

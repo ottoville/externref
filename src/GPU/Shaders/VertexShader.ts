@@ -9,9 +9,10 @@ export type VertexBuffers = [GPUVertexBufferLayout]
 export abstract class VertexShader<
     E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
     BU extends VertexBuffers = VertexBuffers,
-> extends Shader<E> {
+    P extends PipelineLayout = PipelineLayout
+> extends Shader<E, P> {
     constructor(
-        params: ShaderParams<E>,
+        params: ShaderParams<E, P>,
         //Comsumed by GPURenderPipelineDescriptor
         public buffers: BU,
         ) {

@@ -4,22 +4,10 @@ import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 
-/////////////////
-const wgsl = /* wgsl */ `
-         @compute @workgroup_size(1, 1, 1)
-         fn main(
-             @builtin(global_invocation_id) global_id : vec3<u32>
-         ) {
-         
-             depth_and_mesh.depth=textureLoad(depth_texture, mouse.position, 1);
-             depth_and_mesh.mesh=textureLoad(mesh_texture, mouse.position, 0).r;
-         }  
-             `;
-///////////////////////////
-
-export class ReadDepth extends ComputeShader<{ main: PipelineLayout }> {
-    bindLayouts: readonly [BGLayout<[BufLayout]>,
-        BGLayout<[TextLayout, TextLayout, BufLayout]>];
+type BindLayouts = readonly [BGLayout<[BufLayout]>,
+    BGLayout<[TextLayout, TextLayout, BufLayout]>]
+export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, PipelineLayout<BindLayouts>> {
+    bindLayouts: BindLayouts;
     constructor(gpu: GPU) {
         const bindLayouts = [
             new BGLayout(gpu, 'DepthAndMeshLayout',
@@ -69,12 +57,25 @@ export class ReadDepth extends ComputeShader<{ main: PipelineLayout }> {
         });
         super({
             pipelineLayout,
-            wgsl,
             label: "ReadDepth.comp",
             entryPoints: {
                 main: pipelineLayout
             }
         });
         this.bindLayouts = bindLayouts;
+        this.createWGSL(([/*depth_and_mesh*/,], [depth_texture, mesh_texture, mouse]) => {
+            ///////////////////////////
+            return /* wgsl */ `
+                     @compute @workgroup_size(1, 1, 1)
+                     fn main(
+                         @builtin(global_invocation_id) global_id : vec3<u32>
+                     ) {
+                     
+                         depth_and_mesh.depth=textureLoad(${depth_texture.variableName}, ${mouse.variableName}.position, 1);
+                         depth_and_mesh.mesh=textureLoad(${mesh_texture.variableName}, ${mouse.variableName}.position, 0).r;
+                     }  
+                         `;
+            ///////////////////////////
+        })
     }
 }

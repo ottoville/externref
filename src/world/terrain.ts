@@ -183,24 +183,24 @@ TODO
             }
 
             const slopesLayout = new BGLayout(gpu, 'slopesAndFacesBindGroupLayoutReadOnly',
-            new BufLayout(
-                {
-                    visibility: GPUShaderStage.COMPUTE,
-                    buffer: {
-                        type: "read-only-storage",
-                        hasDynamicOffset: false,
-                        minBindingSize: 32
-                    },
-                }, 'slopes', Slopes),
-            new BufLayout(
-                {
-                    visibility: GPUShaderStage.COMPUTE,
-                    buffer: {
-                        type: "read-only-storage",
-                        hasDynamicOffset: false,
-                        minBindingSize: 32
-                    }
-                }, 'facet12', PlaneArray));
+                new BufLayout(
+                    {
+                        visibility: GPUShaderStage.COMPUTE,
+                        buffer: {
+                            type: "read-only-storage",
+                            hasDynamicOffset: false,
+                            minBindingSize: 32
+                        },
+                    }, 'slopes', Slopes),
+                new BufLayout(
+                    {
+                        visibility: GPUShaderStage.COMPUTE,
+                        buffer: {
+                            type: "read-only-storage",
+                            hasDynamicOffset: false,
+                            minBindingSize: 32
+                        }
+                    }, 'facet12', PlaneArray));
 
 
             const calculatePlaneIndicesShader = new CalculatePlaneIndices(settingsLayout);
@@ -214,8 +214,8 @@ TODO
                 calculateNormalsShader.createComputePipeline('main'),
                 createTextureShader.createComputePipeline('main')
             ]);
-    
-            const terrain = new Terrain(gpu, scenes, settingsLayout,slopesLayout, settingsGPU, calculatePlaneIndicesShader,computePlaneHeightsShader, calculateNormalsShader,createTextureShader, terrainPositionAndUvsAndNormalsGPU, computePipelineIndices, computePlaneHeights, computePipelineNormals, createTexturePipeline);
+
+            const terrain = new Terrain(gpu, scenes, settingsLayout, slopesLayout, settingsGPU, calculatePlaneIndicesShader, computePlaneHeightsShader, calculateNormalsShader, createTextureShader, terrainPositionAndUvsAndNormalsGPU, computePipelineIndices, computePlaneHeights, computePipelineNormals, createTexturePipeline);
             await terrain.#ready;
             return terrain;
 
@@ -344,7 +344,7 @@ TODO
         const commandEncoder = gpu.device.createCommandEncoder({ label: 'terrain_encoder' });
         const passEncoder = commandEncoder.beginComputePass({ label: 'terrain_pass_encoder' });
 
-        
+
         const terrainPositionAndUvsAndNormalsGPU_bgroup = (bindGroup: BindGroup) => [
             {
                 binding: 0,

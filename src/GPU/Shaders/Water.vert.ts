@@ -1,10 +1,33 @@
 import { BGLayout, BufLayout, SampLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
+type BindLayouts = [
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
+  BGLayout<[BufLayout]>,
+  BGLayout<[SampLayout, TextLayout]>];
 
-//////////////////////////////////
+export class WaterVertShader extends VertexShader<
+  { main: PipelineLayout },
+  [GPUVertexBufferLayout],
+  PipelineLayout<BindLayouts>> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+    super({
+      pipelineLayout,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'water.vert'
+    }, [buffers]);
+    this.createWGSL((
+      [/*uniforms*/,],
+      [scene, /*time, clusters_array, meshes, projection*/],
+      [/*world*/,],
+      [/*mySampler, diffuseTexture*/,]) => {
 
-const wgsl = /* wgsl */ `
+      //////////////////////////////////
+
+      return /* wgsl */ `
 
 //[[location(1)]] var<out> ambient : vec3<f32>;
 struct Output {
@@ -17,7 +40,7 @@ struct Output {
 @vertex
 fn main(@location(0) position : vec3<f32>) -> Output {
   var output:Output;
-  output.Position = scene.modelViewProjection * vec4<f32>(position, 1.0);
+  output.Position = ${scene.variableName}.modelViewProjection * vec4<f32>(position, 1.0);
   output.v_uv = output.Position;
   output.position=position;
   output.id=world.id;
@@ -27,25 +50,8 @@ fn main(@location(0) position : vec3<f32>) -> Output {
   return output;
 }
   `;
-//////////////
-type BindLayouts = [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>,
-  BGLayout<[SampLayout, TextLayout]>];
+      //////////////
 
-export class WaterVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout]> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-    super({
-      pipelineLayout,
-      wgsl,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'water.vert'
-    }, [buffers]);
-
+    })
   }
 }

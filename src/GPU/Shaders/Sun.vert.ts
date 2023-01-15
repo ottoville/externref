@@ -2,9 +2,31 @@ import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 
-//////////////////////////////////
+type BindLayouts = readonly [
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
+  BGLayout<[BufLayout]>]
 
-const wgsl = /* wgsl */ `
+export class SunVertShader extends VertexShader<
+  { main: PipelineLayout },
+  [], PipelineLayout<BindLayouts>> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
+
+    super({
+      pipelineLayout,
+      entryPoints: {
+        main: pipelineLayout
+      },
+      label: 'Sun.vert'
+    }, []);
+    this.createWGSL((
+      [/*uniforms*/,],
+      [scene, /*time, clusters_array, meshes, projection*/],
+      [world]) => {
+
+      //////////////////////////////////
+
+      return /* wgsl */ `
 
 const sunDistance: f32= 1495000.0;  //divided by 100000 correct one
 
@@ -32,11 +54,11 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> Output {
     );
 
   var output:Output;
-  let curPos: vec3<f32> = world.transformation[3].xyz;
+  let curPos: vec3<f32> = ${world.variableName}.transformation[3].xyz;
 
   let transform : vec3<f32> = curPos * sunDistance;
-  let CameraRight_worldspace : vec3<f32> = vec3<f32>(scene.view[0].x, scene.view[1].x, scene.view[2].x);
-  let CameraUp_worldspace : vec3<f32>  = vec3<f32>(scene.view[0].y, scene.view[1].y, scene.view[2].y);
+  let CameraRight_worldspace : vec3<f32> = vec3<f32>(${scene.variableName}.view[0].x, ${scene.variableName}.view[1].x, ${scene.variableName}.view[2].x);
+  let CameraUp_worldspace : vec3<f32>  = vec3<f32>(${scene.variableName}.view[0].y, ${scene.variableName}.view[1].y, ${scene.variableName}.view[2].y);
  
  
   let transformbill : vec3<f32> =  transform  + CameraRight_worldspace * vertices[VertexIndex].x + CameraUp_worldspace * vertices[VertexIndex].y;
@@ -47,25 +69,7 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> Output {
   return output;
 }
   `;
-//////////////
-type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>]
-
-export class SunVertShader extends VertexShader<
-  { main: PipelineLayout },
-  []> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
-
-    super({
-      pipelineLayout,
-      wgsl,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'Sun.vert'
-    }, []);
-
+      //////////////
+    })
   }
 }

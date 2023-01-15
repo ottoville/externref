@@ -3,27 +3,69 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { FloatArray } from './structs/Structs.js';
 
-/////////////////
+type BindLayouts = readonly [
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout]>,
+]
+export class CalculateNormals extends ComputeShader<
+  { main: PipelineLayout },
+  PipelineLayout<BindLayouts>> {
+  bindLayouts: BindLayouts
+  constructor(
+    settingsLayout: BGLayout<[BufLayout]>,
+    slopesLayout: BGLayout<[BufLayout, BufLayout]>
+  ) {
+    const bindLayouts = [
+      settingsLayout,
+      new BGLayout(settingsLayout.gpu, 'normalsBindGroupLayout',
+        new BufLayout(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            }
+          }, 'normals', FloatArray)),
+      slopesLayout
+    ] as const
 
-const wgsl = /* wgsl */ `
+    const pipelineLayout = new PipelineLayout({
+      label: 'calculateNormalsPipeline',
+      bindGroupLayouts: bindLayouts
+    });
+
+    super({
+      pipelineLayout,
+      label: 'CalculateNormals.comp',
+      entryPoints: {
+        main: pipelineLayout
+      }
+    });
+    this.bindLayouts = bindLayouts
+    this.createWGSL(([settings], [normals], [/*slopes*/, facet12]) => {
+      /////////////////
+
+      return /* wgsl */ `
    @compute @workgroup_size(1)
    fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
        let stride : u32 = 12u;
-       let facetSize : u32 = settings.subdivisions * settings.subdivisions; //250*250* 4;
+       let facetSize : u32 = ${settings.variableName}.subdivisions * ${settings.variableName}.subdivisions; //250*250* 4;
    
        let i:u32 = GlobalInvocationID.y * stride;
-       let j:u32 = GlobalInvocationID.x * (settings.subdivisions + 1u) * stride;
+       let j:u32 = GlobalInvocationID.x * (${settings.variableName}.subdivisions + 1u) * stride;
    
-       let rows:u32 = GlobalInvocationID.x * settings.subdivisions;
+       let rows:u32 = GlobalInvocationID.x * ${settings.variableName}.subdivisions;
        let last_y:u32=GlobalInvocationID.y - 1u;
        
-       let norm1:vec3<f32> = facet12.plane[rows +  GlobalInvocationID.y].norm;
-       let norm2:vec3<f32> = facet12.plane[facetSize +  (rows +  GlobalInvocationID.y)].norm;
-       let norm4:vec3<f32> = facet12.plane[facetSize +  rows +  last_y].norm;
+       let norm1:vec3<f32> = ${facet12.variableName}.plane[rows +  GlobalInvocationID.y].norm;
+       let norm2:vec3<f32> = ${facet12.variableName}.plane[facetSize +  (rows +  GlobalInvocationID.y)].norm;
+       let norm4:vec3<f32> = ${facet12.variableName}.plane[facetSize +  rows +  last_y].norm;
        let last_x:u32 = GlobalInvocationID.x - 1u;
-       let norm5:vec3<f32> = facet12.plane[last_x * settings.subdivisions +  GlobalInvocationID.y].norm;
-       let norm7:vec3<f32> = facet12.plane[last_x * settings.subdivisions +  last_y].norm;
-       let norm8:vec3<f32> = facet12.plane[facetSize + last_x * settings.subdivisions +  last_y].norm;
+       let norm5:vec3<f32> = ${facet12.variableName}.plane[last_x * ${settings.variableName}.subdivisions +  GlobalInvocationID.y].norm;
+       let norm7:vec3<f32> = ${facet12.variableName}.plane[last_x * ${settings.variableName}.subdivisions +  last_y].norm;
+       let norm8:vec3<f32> = ${facet12.variableName}.plane[facetSize + last_x * ${settings.variableName}.subdivisions +  last_y].norm;
    
        let normalized:vec3<f32> = normalize(norm1 + norm2 + norm4 + norm5 + norm7 + norm8);
        
@@ -57,55 +99,15 @@ const wgsl = /* wgsl */ `
        //7 and 8   far
        
    
-       normals.numbers[j + i + 4u]=normalized.x;
-       normals.numbers[j + i + 5u]=normalized.y;
-       normals.numbers[j + i + 6u]=normalized.z;
+       ${normals.variableName}.numbers[j + i + 4u]=normalized.x;
+       ${normals.variableName}.numbers[j + i + 5u]=normalized.y;
+       ${normals.variableName}.numbers[j + i + 6u]=normalized.z;
       
        return;
     }
       `;
 
-/////////////////////////////////
-
-export class CalculateNormals extends ComputeShader<
-  { main: PipelineLayout }> {
-  bindLayouts: readonly [
-    BGLayout<[BufLayout]>,
-    BGLayout<[BufLayout]>,
-    BGLayout<[BufLayout, BufLayout]>,
-  ]
-  constructor(
-    settingsLayout: BGLayout<[BufLayout]>,
-    slopesLayout: BGLayout<[BufLayout, BufLayout]>
-  ) {
-    const bindLayouts = [
-      settingsLayout,
-      new BGLayout(settingsLayout.gpu, 'normalsBindGroupLayout',
-        new BufLayout(
-          {
-            visibility: GPUShaderStage.COMPUTE,
-            buffer: {
-              type: "storage",
-              hasDynamicOffset: false,
-              minBindingSize: 32
-            }
-          }, 'normals', FloatArray)),
-      slopesLayout
-    ] as const
-
-    const pipelineLayout = new PipelineLayout({
-      label: 'calculateNormalsPipeline',
-      bindGroupLayouts: bindLayouts
+      /////////////////////////////////
     });
-
-    super({
-      pipelineLayout,
-      wgsl,
-      label: 'CalculateNormals.comp',
-      entryPoints: {
-        main: pipelineLayout
-      }
-    });
-    this.bindLayouts = bindLayouts
   }
 }

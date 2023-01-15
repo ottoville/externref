@@ -2,9 +2,33 @@ import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 
-//////////////////////////////////
 
-const wgsl = /* wgsl */ `
+type BindLayouts = readonly [
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
+  BGLayout<[BufLayout]>];
+
+export class DebugNormalsVertShader extends VertexShader<
+  { main: PipelineLayout },
+  [GPUVertexBufferLayout],
+  PipelineLayout<BindLayouts>> {
+  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+    const entryPoints = {
+      main: pipelineLayout
+    }
+    super({
+      pipelineLayout,
+      entryPoints,
+      label: 'debug_normals.vert'
+    }, [buffers]);
+    this.createWGSL((
+      [/*uniforms*/,],
+      [scene, /*time, clusters_array, meshes, projection*/],
+      [/*world*/,]) => {
+
+      //////////////////////////////////
+
+      return /* wgsl */ `
 
 struct Output {
   @builtin(position) Position : vec4<f32>,
@@ -20,32 +44,14 @@ fn main(@location(0) position : vec3<f32>,
     if(gl_VertexIndex % 2u == 1u) {
         vertexPosition = vertexPosition + vec4<f32>(normal*30.0, 0.0);
     }
-    output.Position = scene.modelViewProjection * vertexPosition;
+    output.Position = ${scene.variableName}.modelViewProjection * vertexPosition;
     output.color=vec3<f32>(0.0,1.0,0.0);
     return output;
   }
    `;
 
 
-//////////////////////////////////
-
-type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>];
-
-export class DebugNormalsVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout]> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-    const entryPoints = {
-      main: pipelineLayout
-    }
-    super({
-      pipelineLayout,
-      wgsl,
-      entryPoints,
-      label: 'debug_normals.vert'
-    }, [buffers]);
+      //////////////////////////////////
+    })
   }
 }

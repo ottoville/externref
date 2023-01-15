@@ -2,8 +2,45 @@ import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
-/////////////////
-const wgsl = /* wgsl */ `
+type BindLayouts = readonly [BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout]>,
+  BGLayout<[TextLayout]>];
+export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }, PipelineLayout<BindLayouts>> {
+  bindLayouts: BindLayouts
+  constructor(
+    settingsLayout: BGLayout<[BufLayout]>,
+    slopesLayout: BGLayout<[BufLayout, BufLayout]>) {
+    const bindLayouts = [
+      settingsLayout,
+      slopesLayout,
+      new BGLayout(settingsLayout.gpu, 'TerrainTextureLayout',
+        new TextLayout(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            storageTexture: {
+              access: 'write-only',
+              format: 'rgba8unorm'
+            }
+          }, 'ground_texture', 'texture_storage_2d<rgba8unorm,write>'
+        ))
+    ] as const
+
+    const pipelineLayout = new PipelineLayout({
+      label: 'CreateTerrainTexturePipeline',
+      bindGroupLayouts: bindLayouts
+    });
+    super({
+      pipelineLayout,
+      label: "CreateTerrainTexture.comp",
+      entryPoints: {
+        main: pipelineLayout
+      }
+    });
+    this.bindLayouts = bindLayouts;
+    this.createWGSL(([settings], [slopes, facet12], [ground_texture]) => {
+
+      /////////////////
+      return /* wgsl */ `
 
 fn mod289(x:f32) -> f32 {
 return x - floor(x * (1. / 289.)) * 289.;
@@ -104,72 +141,37 @@ fn snoise2(v:vec3<f32>) -> f32 {
 
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
- let facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
+ let facetSize:u32 = ${settings.variableName}.subdivisions * settings.subdivisions; // 250 * 250;
 
- let cx:i32 = i32(f32(GlobalInvocationID.x) * (f32(settings.size.x)/f32(settings.textureSize.x)) - f32(settings.size.x/u32(2)));
- let cz:i32 = i32(f32(GlobalInvocationID.y) * (f32(settings.size.y)/f32(settings.textureSize.y)) - f32(settings.size.y/u32(2)));
+ let cx:i32 = i32(f32(GlobalInvocationID.x) * (f32(${settings.variableName}.size.x)/f32(${settings.variableName}.textureSize.x)) - f32(${settings.variableName}.size.x/u32(2)));
+ let cz:i32 = i32(f32(GlobalInvocationID.y) * (f32(${settings.variableName}.size.y)/f32(${settings.variableName}.textureSize.y)) - f32(${settings.variableName}.size.y/u32(2)));
 
- let col:u32 = u32(floor(f32((cx + settings.max.x) * i32(settings.subdivisions)) / f32(settings.size.x)));
- let row:u32 = u32(floor(- f32((cz + settings.max.y) * i32(settings.subdivisions)) / f32(settings.size.y) + f32(settings.subdivisions)));
- let slope:i32 = slopes.numbers[row * settings.subdivisions + col];
+ let col:u32 = u32(floor(f32((cx + ${settings.variableName}.max.x) * i32(${settings.variableName}.subdivisions)) / f32(${settings.variableName}.size.x)));
+ let row:u32 = u32(floor(- f32((cz + ${settings.variableName}.max.y) * i32(${settings.variableName}.subdivisions)) / f32(${settings.variableName}.size.y) + f32(${settings.variableName}.subdivisions)));
+ let slope:i32 = ${slopes.variableName}.numbers[row * ${settings.variableName}.subdivisions + col];
  var norm:vec3<f32>;
  var d:f32;
  if(cz < -1 * cx + slope) {
-     norm = facet12.plane[row * settings.subdivisions + col].norm;
-     d = facet12.plane[row * settings.subdivisions + col].d;
+     norm = ${facet12.variableName}.plane[row * ${settings.variableName}.subdivisions + col].norm;
+     d = ${facet12.variableName}.plane[row * ${settings.variableName}.subdivisions + col].d;
  } else {
-     let index:u32 = facetSize + (row * settings.subdivisions + col);
-     norm = facet12.plane[index].norm;
-     d = facet12.plane[index].d;
+     let index:u32 = facetSize + (row * ${settings.variableName}.subdivisions + col);
+     norm = ${facet12.variableName}.plane[index].norm;
+     d = ${facet12.variableName}.plane[index].d;
  }
 
  let y:f32 = -(norm.x * f32(cx) + norm.z * f32(cz) + d) / norm.y;
  if( y > 3.0 ) {
    let r = (snoise2(vec3<f32>(vec2<f32>(GlobalInvocationID.xy),y))+1.0)*0.5;
    let b = (snoise2(vec3<f32>(vec2<f32>(GlobalInvocationID.yx),y))+1.0)*0.5;
-     textureStore(ground_texture, vec2<i32>(GlobalInvocationID.xy), vec4<f32>(r,1.0,b,1.0));
+     textureStore(${ground_texture.variableName}, vec2<i32>(GlobalInvocationID.xy), vec4<f32>(r,1.0,b,1.0));
   } else {
-     textureStore(ground_texture, vec2<i32>(GlobalInvocationID.xy), vec4<f32>(1.0,1.0,0.0,1.0));
+     textureStore(${ground_texture.variableName}, vec2<i32>(GlobalInvocationID.xy), vec4<f32>(1.0,1.0,0.0,1.0));
   }
  return;
 }
   `;
-//////////////////
-
-export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }> {
-  bindLayouts: readonly [BGLayout<[BufLayout]>,
-    BGLayout<[BufLayout, BufLayout]>,
-    BGLayout<[TextLayout]>]
-  constructor(
-    settingsLayout: BGLayout<[BufLayout]>,
-    slopesLayout: BGLayout<[BufLayout, BufLayout]>) {
-    const bindLayouts = [
-      settingsLayout,
-      slopesLayout,
-      new BGLayout(settingsLayout.gpu, 'TerrainTextureLayout',
-        new TextLayout(
-          {
-            visibility: GPUShaderStage.COMPUTE,
-            storageTexture: {
-              access: 'write-only',
-              format: 'rgba8unorm'
-            }
-          }, 'ground_texture', 'texture_storage_2d<rgba8unorm,write>'
-        ))
-    ] as const
-
-    const pipelineLayout = new PipelineLayout({
-      label: 'CreateTerrainTexturePipeline',
-      bindGroupLayouts: bindLayouts
-    });
-    super({
-      pipelineLayout,
-      wgsl,
-      label: "CreateTerrainTexture.comp",
-      entryPoints: {
-        main: pipelineLayout
-      }
-    });
-    this.bindLayouts = bindLayouts;
+      //////////////////
+    })
   }
 }

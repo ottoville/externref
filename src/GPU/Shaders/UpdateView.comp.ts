@@ -4,78 +4,12 @@ import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 import { Clusters, Lights, MeshArray, ViewUniforms } from './structs/Structs.js';
 
-/////////////////
-const wgsl = /* wgsl */ `     
-          fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
-            var sqDist = 0.0;
-            // const minAABB : vec3<f32> = clusters.bounds[tileIndex].minAABB;
-            // const maxAABB : vec3<f32> = clusters.bounds[tileIndex].maxAABB;
-        
-            // Wait, does this actually work? Just porting code, but it seems suspect?
-            for(var i = 0; i < 3; i = i + 1) {
-              let v = position[i];
-              if(v < minAABB[i]){
-                sqDist = sqDist + (minAABB[i] - v) * (minAABB[i] - v);
-              }
-              if(v > maxAABB[i]){
-                sqDist = sqDist + (v - maxAABB[i]) * (v - maxAABB[i]);
-              }
-            }
-        
-            return sqDist;
-          }
-        const tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
-        
-        @compute @workgroup_size(4, 2, 4)
-        fn main(
-            @builtin(global_invocation_id) global_id : vec3<u32>
-        ) {
-        
-          let tileIndex = global_id.x +
-                          global_id.y * tileCount.x +
-                          global_id.z * tileCount.x * tileCount.y;
-        
-          
-          var lightCount=0u;
-          for(var pointerIndex:u32=0u; pointerIndex < directional_lights.length; pointerIndex = pointerIndex + 1u) {
-            let meshIndex = directional_lights.pointers[pointerIndex];
-            let mesh=meshes.mesh[meshIndex];
-            clusters.lights[tileIndex*63u + lightCount] = meshIndex;
-            lightCount=lightCount+1u;
-            if(lightCount==63u) {
-              break;
-            }
-          }
-          let cluster=clusters.bounds[tileIndex];
-          for(var pointerIndex:u32=0u; pointerIndex < point_lights.length; pointerIndex = pointerIndex + 1u) {
-            let meshIndex = point_lights.pointers[pointerIndex];
-            let mesh=meshes.mesh[meshIndex];
-            // TODO: Preselect lights with CPU
-            let lightViewPos = viewUniforms.view * vec4<f32>(mesh.transformation[3].xyz, 1.0);
-            let sqDist = sqDistPointAABB(lightViewPos.xyz, cluster.minAABB.xyz, cluster.maxAABB.xyz);
-        
-            if (sqDist <= mesh.point_light_squared) {
-              // Light affects this cluster. Add it to the list.
-              clusters.lights[tileIndex*63u + lightCount] = meshIndex;
-              lightCount=lightCount+1u;
-              //TODO: lightCount might already be max because of directional lights
-              if(lightCount==63u) {
-                break;
-              }
-            }
-        
-          }
-          clusters.lightsCount[tileIndex] = lightCount;
-        }
-        
-      `;
-///////////////////////////
-
+type BindLayouts = readonly [
+  BGLayout<[BufLayout, BufLayout, BufLayout]>,
+  BGLayout<[BufLayout, BufLayout]>];
 export class UpdateView extends ComputeShader<
-  { main: PipelineLayout }> {
-  bindLayouts: readonly [
-    BGLayout<[BufLayout, BufLayout, BufLayout]>,
-    BGLayout<[BufLayout, BufLayout]>]
+  { main: PipelineLayout }, PipelineLayout<BindLayouts>> {
+  bindLayouts: BindLayouts
   constructor(
     gpu: GPU) {
     const bindLayouts = [
@@ -136,13 +70,80 @@ export class UpdateView extends ComputeShader<
     });
     super({
       pipelineLayout,
-      wgsl,
       label: "UpdateView.comp",
       entryPoints: {
         main: pipelineLayout
       }
     });
     this.bindLayouts = bindLayouts;
+    this.createWGSL(([meshes, point_lights, directional_lights], [clusters, viewUniforms]) => {
 
+      /////////////////
+      return /* wgsl */ `     
+          fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
+            var sqDist = 0.0;
+            // const minAABB : vec3<f32> = clusters.bounds[tileIndex].minAABB;
+            // const maxAABB : vec3<f32> = clusters.bounds[tileIndex].maxAABB;
+        
+            // Wait, does this actually work? Just porting code, but it seems suspect?
+            for(var i = 0; i < 3; i = i + 1) {
+              let v = position[i];
+              if(v < minAABB[i]){
+                sqDist = sqDist + (minAABB[i] - v) * (minAABB[i] - v);
+              }
+              if(v > maxAABB[i]){
+                sqDist = sqDist + (v - maxAABB[i]) * (v - maxAABB[i]);
+              }
+            }
+        
+            return sqDist;
+          }
+        const tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
+        
+        @compute @workgroup_size(4, 2, 4)
+        fn main(
+            @builtin(global_invocation_id) global_id : vec3<u32>
+        ) {
+        
+          let tileIndex = global_id.x +
+                          global_id.y * tileCount.x +
+                          global_id.z * tileCount.x * tileCount.y;
+        
+          
+          var lightCount=0u;
+          for(var pointerIndex:u32=0u; pointerIndex < ${directional_lights.variableName}.length; pointerIndex = pointerIndex + 1u) {
+            let meshIndex = ${directional_lights.variableName}.pointers[pointerIndex];
+            let mesh=${meshes.variableName}.mesh[meshIndex];
+            ${clusters.variableName}.lights[tileIndex*63u + lightCount] = meshIndex;
+            lightCount=lightCount+1u;
+            if(lightCount==63u) {
+              break;
+            }
+          }
+          let cluster=${clusters.variableName}.bounds[tileIndex];
+          for(var pointerIndex:u32=0u; pointerIndex < ${point_lights.variableName}.length; pointerIndex = pointerIndex + 1u) {
+            let meshIndex = ${point_lights.variableName}.pointers[pointerIndex];
+            let mesh=${meshes.variableName}.mesh[meshIndex];
+            // TODO: Preselect lights with CPU
+            let lightViewPos = ${viewUniforms.variableName}.view * vec4<f32>(mesh.transformation[3].xyz, 1.0);
+            let sqDist = sqDistPointAABB(lightViewPos.xyz, cluster.minAABB.xyz, cluster.maxAABB.xyz);
+        
+            if (sqDist <= mesh.point_light_squared) {
+              // Light affects this cluster. Add it to the list.
+              ${clusters.variableName}.lights[tileIndex*63u + lightCount] = meshIndex;
+              lightCount=lightCount+1u;
+              //TODO: lightCount might already be max because of directional lights
+              if(lightCount==63u) {
+                break;
+              }
+            }
+        
+          }
+          ${clusters.variableName}.lightsCount[tileIndex] = lightCount;
+        }
+        
+      `;
+      ///////////////////////////
+    })
   }
 }
