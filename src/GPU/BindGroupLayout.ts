@@ -22,9 +22,9 @@ export type GPUBindingGroupLayoytEntryStrict =
         | GPUBindGroupLayoutEntryStorageTexture 
         | GPUBindGroupLayoutEntrySampler)
 
-export abstract class BindGroupLayoutEntry<T extends GPUBindingGroupLayoytEntryStrict = GPUBindingGroupLayoytEntryStrict> {
+export abstract class BindGroupLayoutEntry {
     constructor(
-        public entry: T,
+        public entry: GPUBindingGroupLayoytEntryStrict,
         public readonly variableName: string,
         public structName: string) {
     }

@@ -43,7 +43,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
         super(props);
         this.bindGroupLayout = props.bindGroupLayouts.at(-1)!;
     }
-    createSharedLayout<T extends BGLayout<BindGroupLayoutEntry<GPUBindingGroupLayoytEntryStrict>[]>>(label: string, layout: T) {
+    createSharedLayout<T extends BGLayout<BindGroupLayoutEntry[]>>(label: string, layout: T) {
         const p = new SharedPipelineLayout({
             label,
             bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
@@ -51,7 +51,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
         this.subBindGroups.push(p);
         return p;
     }
-    createAppendedLayout<T extends BGLayout<BindGroupLayoutEntry<GPUBindingGroupLayoytEntryStrict>[]>>(label: string, layout: T) {
+    createAppendedLayout<T extends BGLayout<BindGroupLayoutEntry[]>>(label: string, layout: T) {
         const p = new BindablePipelineLayout({
             label,
             bindGroupLayouts: [...this.bindGroupLayouts, layout] as const,
