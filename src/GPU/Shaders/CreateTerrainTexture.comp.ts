@@ -1,22 +1,22 @@
-import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
-type BindLayouts = readonly [BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout]>,
-  BGLayout<[TextLayout]>];
-export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }, PipelineLayout<BindLayouts>> {
-  bindLayouts: BindLayouts
+type BindLayouts = readonly [
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[TextLayout<ShaderStage.COMPUTE>]>];
+export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
   constructor(
-    settingsLayout: BGLayout<[BufLayout]>,
-    slopesLayout: BGLayout<[BufLayout, BufLayout]>) {
+    settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+    slopesLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>) {
     const bindLayouts = [
       settingsLayout,
       slopesLayout,
       new BGLayout(settingsLayout.gpu, 'TerrainTextureLayout',
         new TextLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             storageTexture: {
               access: 'write-only',
               format: 'rgba8unorm'
@@ -30,13 +30,12 @@ export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }
       bindGroupLayouts: bindLayouts
     });
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       label: "CreateTerrainTexture.comp",
       entryPoints: {
         main: pipelineLayout
       }
     });
-    this.bindLayouts = bindLayouts;
     this.createWGSL(([settings], [slopes, facet12], [ground_texture]) => {
 
       /////////////////

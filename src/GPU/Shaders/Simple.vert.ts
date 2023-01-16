@@ -1,11 +1,8 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { BindablePipelineLayout, PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
+import { GPU } from '../../GPU.js'
 
-type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>]
+type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"]
 
 export class SimpleVertShader extends VertexShader<
   {
@@ -13,10 +10,10 @@ export class SimpleVertShader extends VertexShader<
     pick: PipelineLayout
   },
   [GPUVertexBufferLayout],
-  PipelineLayout<BindLayouts>> {
+  BindLayouts> {
   constructor(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout,
         pick: pipelineLayout

@@ -9,7 +9,7 @@ export class ColorFragShader extends FragmentShader<
   { main: PipelineLayout }> {
   constructor(pipelineLayout: PipelineLayout) {
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout
       }, label: 'Color.frag'

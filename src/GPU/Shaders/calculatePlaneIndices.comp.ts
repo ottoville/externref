@@ -1,19 +1,18 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Indices } from './structs/Structs.js';
 
-type BindLayouts = readonly [BGLayout<[BufLayout]>,
-BGLayout<[BufLayout]>];
-export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout }, PipelineLayout<BindLayouts>> {
-  bindLayouts: BindLayouts;
-  constructor(settingsLayout: BGLayout<[BufLayout]>) {
+type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+BGLayout<[BufLayout<ShaderStage.COMPUTE>]>];
+export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
+  constructor(settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>) {
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'calculateIndicesBindGroupLayout',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "storage",
               hasDynamicOffset: false,
@@ -27,13 +26,12 @@ export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout 
       bindGroupLayouts: bindLayouts
     });
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       label: "calculatePlaneIndices.comp",
       entryPoints: {
         main: pipelineLayout
       }
     })
-    this.bindLayouts = bindLayouts;
     this.createWGSL(([settings],[indices]) => {
       return /* wgsl */ `
 

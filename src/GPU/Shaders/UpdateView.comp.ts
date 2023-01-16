@@ -1,22 +1,21 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 import { Clusters, Lights, MeshArray, ViewUniforms } from './structs/Structs.js';
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout, BufLayout]>];
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>];
 export class UpdateView extends ComputeShader<
-  { main: PipelineLayout }, PipelineLayout<BindLayouts>> {
-  bindLayouts: BindLayouts
+  { main: PipelineLayout }, BindLayouts> {
   constructor(
     gpu: GPU) {
     const bindLayouts = [
       new BGLayout(gpu, 'UpdateViewLayout',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "read-only-storage",
               hasDynamicOffset: false,
@@ -25,7 +24,7 @@ export class UpdateView extends ComputeShader<
           }, 'meshes', MeshArray),
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "read-only-storage",
               hasDynamicOffset: false,
@@ -34,7 +33,7 @@ export class UpdateView extends ComputeShader<
           }, 'point_lights', Lights),
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "read-only-storage",
               hasDynamicOffset: false,
@@ -45,7 +44,7 @@ export class UpdateView extends ComputeShader<
       new BGLayout(gpu, 'UpdateClustersLayout',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "storage",
               hasDynamicOffset: false,
@@ -54,7 +53,7 @@ export class UpdateView extends ComputeShader<
           }, 'clusters', Clusters),
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: 'uniform',
               hasDynamicOffset: false,
@@ -69,15 +68,13 @@ export class UpdateView extends ComputeShader<
       bindGroupLayouts: bindLayouts
     });
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       label: "UpdateView.comp",
       entryPoints: {
         main: pipelineLayout
       }
     });
-    this.bindLayouts = bindLayouts;
     this.createWGSL(([meshes, point_lights, directional_lights], [clusters, viewUniforms]) => {
-
       /////////////////
       return /* wgsl */ `     
           fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {

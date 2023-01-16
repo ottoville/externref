@@ -1,19 +1,18 @@
-import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 
-type BindLayouts = readonly [BGLayout<[BufLayout]>,
-    BGLayout<[TextLayout, TextLayout, BufLayout]>]
-export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, PipelineLayout<BindLayouts>> {
-    bindLayouts: BindLayouts;
+type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+    BGLayout<[TextLayout<ShaderStage.COMPUTE>, TextLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>]
+export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
     constructor(gpu: GPU) {
         const bindLayouts = [
             new BGLayout(gpu, 'DepthAndMeshLayout',
                 new BufLayout(
                     {
-                        visibility: GPUShaderStage.COMPUTE,
+                        visibility: ShaderStage.COMPUTE,
                         buffer: {
                             type: "storage",
                             hasDynamicOffset: false,
@@ -24,7 +23,7 @@ export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, PipelineL
             new BGLayout(gpu, 'DepthTextureLayout',
                 new TextLayout(
                     {
-                        visibility: GPUShaderStage.COMPUTE,
+                        visibility: ShaderStage.COMPUTE,
                         texture: {
                             multisampled: true,
                             sampleType: 'depth'
@@ -32,7 +31,7 @@ export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, PipelineL
                     }, 'depth_texture', 'texture_depth_multisampled_2d'),
                 new TextLayout(
                     {
-                        visibility: GPUShaderStage.COMPUTE,
+                        visibility: ShaderStage.COMPUTE,
                         texture: {
                             multisampled: false,
                             sampleType: 'uint'
@@ -40,7 +39,7 @@ export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, PipelineL
                     }, 'mesh_texture', 'texture_2d<u32>'),
                 new BufLayout(
                     {
-                        visibility: GPUShaderStage.COMPUTE,
+                        visibility: ShaderStage.COMPUTE,
                         buffer: {
                             type: 'uniform',
                             hasDynamicOffset: false,
@@ -56,13 +55,12 @@ export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, PipelineL
             bindGroupLayouts: bindLayouts
         });
         super({
-            pipelineLayout,
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             label: "ReadDepth.comp",
             entryPoints: {
                 main: pipelineLayout
             }
         });
-        this.bindLayouts = bindLayouts;
         this.createWGSL(([/*depth_and_mesh*/,], [depth_texture, mesh_texture, mouse]) => {
             ///////////////////////////
             return /* wgsl */ `

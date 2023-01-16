@@ -1,21 +1,20 @@
-import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Vertices } from './structs/Structs.js';
 
 
-type BindLayouts = readonly [BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, TextLayout]>];
+type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>, TextLayout<ShaderStage.COMPUTE>]>];
 export class CreateGroundFromHeightMap extends ComputeShader<
-  { main: PipelineLayout }, PipelineLayout<BindLayouts>> {
-  bindLayouts: BindLayouts;
-  constructor(settingsLayout: BGLayout<[BufLayout]>) {
+  { main: PipelineLayout }, BindLayouts> {
+  constructor(settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>) {
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'indicesBindGroupLayout',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "storage",
               hasDynamicOffset: false,
@@ -24,7 +23,7 @@ export class CreateGroundFromHeightMap extends ComputeShader<
           }, 'positions', Vertices),
         new TextLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             texture: {
 
             }
@@ -37,13 +36,12 @@ export class CreateGroundFromHeightMap extends ComputeShader<
       bindGroupLayouts: bindLayouts
     });
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       label: "CreateGroundFromHeightMap.comp",
       entryPoints: {
         main: pipelineLayout
       }
     });
-    this.bindLayouts = bindLayouts
     this.createWGSL(([settings], [positions, pixels]) => {
       //////////////////////////
       return /* wgsl */ `

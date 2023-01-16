@@ -1,23 +1,22 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
 
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
 ];
-export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout }, PipelineLayout<BindLayouts>> {
-  bindLayouts: BindLayouts;
-  constructor(settingsLayout: BGLayout<[BufLayout]>) {
+export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
+  constructor(settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>) {
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'verticesBindGroupLayout',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "read-only-storage",
               hasDynamicOffset: false,
@@ -27,7 +26,7 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
       new BGLayout(settingsLayout.gpu, 'slopesAndFacesBindGroupLayout',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "storage",
               hasDynamicOffset: false,
@@ -36,7 +35,7 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
           }, 'slopes', IntArray),
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "storage",
               hasDynamicOffset: false,
@@ -50,13 +49,12 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
       bindGroupLayouts: bindLayouts
     });
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       label: "calculatePlaneHeights.comp",
       entryPoints: {
         main: pipelineLayout
       }
     })
-    this.bindLayouts = bindLayouts;
     this.createWGSL(([settings], [vertices], [slopes, facet12]) => {
       return /* wgsl */ `
       const cd: f32 = -1.0;

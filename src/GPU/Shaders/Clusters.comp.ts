@@ -1,21 +1,21 @@
 import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
-import { BGLayout, BufLayout } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Clusters, Projection } from './structs/Structs.js';
-
-type BindLayouts = readonly [BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayout]>];
-export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, PipelineLayout<BindLayouts>> {
-  bindLayouts: BindLayouts;
+import type { GPU } from '../../GPU.js'
+type BindLayouts = readonly [GPU["sizeBindGroupLayout"],
+BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>];
+export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
   constructor(
-    sizeGroup: BGLayout<[BufLayout]>,
+    sizeGroup: GPU["sizeBindGroupLayout"],
   ) {
     const bindLayouts = [
       sizeGroup,
       new BGLayout(sizeGroup.gpu, 'CreateClustersLayout2',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "storage",
               hasDynamicOffset: false,
@@ -24,7 +24,7 @@ export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, Pipeli
           }, 'clusters', Clusters),
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: 'uniform',
               hasDynamicOffset: false,
@@ -40,13 +40,12 @@ export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, Pipeli
     });
 
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       label: "Clusters.comp",
       entryPoints: {
         main: pipelineLayout
       }
     });
-    this.bindLayouts = bindLayouts;
     this.createWGSL(([uniforms], [clusters, screentoview]) => {
       /////////////////
       return /* wgsl */ `

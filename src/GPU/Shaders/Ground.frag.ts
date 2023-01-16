@@ -1,21 +1,15 @@
-import { BGLayout, BufLayout, SampLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
+import { GPU } from 'GPU.js'
 
-type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>,
-  BGLayout<[SampLayout, TextLayout]>]
-
-
+type BindLayouts = GPU["lightsBindGroupTexture2"]["bindGroupLayouts"]
 
 
 export class GroundFragShader extends FragmentShader<
-  { main: PipelineLayout, pick: PipelineLayout }, PipelineLayout<BindLayouts>> {
+  { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout,
         pick: pipelineLayout
@@ -24,7 +18,7 @@ export class GroundFragShader extends FragmentShader<
     });
     this.createWGSL((
       [uniforms],
-      [/*scene*/, /*time*/, clusters_array, meshes, projection],
+      [/*scene*/, clusters_array, meshes, projection],
       [/*world*/,],
       [mySampler, myTexture]) => {
       //////////////////////////////////

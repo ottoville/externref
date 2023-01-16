@@ -93,13 +93,13 @@ export class Plants {
             
             const computePipeline = await getHeightAtCoordinatesShader.createComputePipeline('main');
             
-            const settingsBindGroup = getHeightAtCoordinatesShader.bindLayouts[0].createBindGroup('bindGroup0', bindGroup0 => [
+            const settingsBindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup0', bindGroup0 => [
                 {
                     binding: 0,
                     resource: terrain.settingsGPU.getStorageBinding(bindGroup0)
                 }
             ])
-            const bindGroup = getHeightAtCoordinatesShader.bindLayouts[1].createBindGroup('bindGroup1', bindGroup1 => [
+            const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup1', bindGroup1 => [
                 {
                     binding: 0,
                     resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1)
@@ -127,7 +127,7 @@ export class Plants {
                     const worldSetArr = buffer.getMappedRange();
                     new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
                 });
-                const bindGroup2 = getHeightAtCoordinatesShader.bindLayouts[2].createBindGroup('bindGroup2', bg => [{
+                const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[2].createBindGroup('bindGroup2', bg => [{
                     binding: 0,
                     resource: worldCopyGPU.getStorageBinding(bg)
                 }]);

@@ -1,27 +1,26 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { FloatArray } from './structs/Structs.js';
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
 ]
 export class CalculateNormals extends ComputeShader<
   { main: PipelineLayout },
-  PipelineLayout<BindLayouts>> {
-  bindLayouts: BindLayouts
+  BindLayouts> {
   constructor(
-    settingsLayout: BGLayout<[BufLayout]>,
-    slopesLayout: BGLayout<[BufLayout, BufLayout]>
+    settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+    slopesLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>
   ) {
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'normalsBindGroupLayout',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "storage",
               hasDynamicOffset: false,
@@ -37,13 +36,12 @@ export class CalculateNormals extends ComputeShader<
     });
 
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       label: 'CalculateNormals.comp',
       entryPoints: {
         main: pipelineLayout
       }
     });
-    this.bindLayouts = bindLayouts
     this.createWGSL(([settings], [normals], [/*slopes*/, facet12]) => {
       /////////////////
 

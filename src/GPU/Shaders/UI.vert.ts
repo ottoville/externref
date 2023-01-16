@@ -1,17 +1,16 @@
-import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-
-type BindLayouts = readonly [BGLayout<[BufLayout, TextLayout]>]
+import type { GPU } from '../../GPU.js'
+type BindLayouts = readonly [GPU["BindGroupLayoutCanvas"]]
 
 export class UIVertShader extends VertexShader<
   { main: PipelineLayout },
   [GPUVertexBufferLayout],
-  PipelineLayout<BindLayouts>> {
+  BindLayouts> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
 
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout
       },

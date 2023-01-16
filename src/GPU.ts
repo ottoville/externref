@@ -15,7 +15,7 @@ import { DepthRenderTarget } from "./GPU/RenderTargets/DepthRenderTarget.js";
 import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { TextureUsageEnums, TextureUsageType } from "./GPU/Texture.js";
-import { BGLayout, BufLayout, SampLayout, TextLayout } from "./GPU/BindGroupLayout.js";
+import { BGLayout, BufLayout, SampLayout, TextLayout, ShaderStage } from "./GPU/BindGroupLayout.js";
 import { UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
 import { ClustersComp } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
@@ -63,15 +63,17 @@ export class GPU {
     readonly #GPUPointLights: CopyDstBuffer & BindStorageBuffer & BindUniformBuffer;
     readonly #GPUDirectionalLights: CopyDstBuffer & BindStorageBuffer
     readonly positionBindGroupTimeWGSL: BindablePipelineLayout<readonly [
-        BGLayout<[BufLayout]>,
-        BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-        BGLayout<[BufLayout]>]>;
+        typeof this.sizeBindGroupLayout,
+        typeof this.uniformBindGroupLayoutWithTime,
+        BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>
+        ]>
+    ]>;
 
     readonly lightsBindGroupTexture2: BindablePipelineLayout<readonly [
-        BGLayout<[BufLayout]>,
-        BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-        BGLayout<[BufLayout]>,
-        BGLayout<[SampLayout, TextLayout]>]>;
+        typeof this.sizeBindGroupLayout,
+        typeof this.uniformBindGroupLayoutWithTime,
+        BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+        BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>]>;
 
     readonly BindGroupPosition: BindGroup;
     readonly timeBuffer: CopyDstBuffer & BindUniformBuffer
@@ -100,18 +102,32 @@ export class GPU {
     readonly #CLUSTER_WORKGROUP_SIZE: [number, number, number] = [4, 2, 4];
     readonly CLUSTER_DISPATCH_SIZE: [number, number, number] = this.clustersInRow.map((v, i) => Math.ceil(v / this.#CLUSTER_WORKGROUP_SIZE[i]!)) as [number, number, number];
     // readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = [1,1,1];
-    readonly uniformBindGroupLayoutWithTime: BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>;
+    readonly uniformBindGroupLayoutWithTime: BGLayout<[
+        BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>,
+        BufLayout<ShaderStage.VERTEX>,
+        BufLayout<ShaderStage.FRAGMENT>,
+        BufLayout<ShaderStage.FRAGMENT>,
+        BufLayout<ShaderStage.FRAGMENT>
+    ]>;
+
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
     readonly shaderModules = {} as { [K in keyof typeof shaders]: GPUShaderModule }
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
-    readonly sizeBindGroupLayout: BGLayout<[BufLayout]>;
+    readonly sizeBindGroupLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE_AND_FRAGMENT>]>
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
-    readonly bindGroupTextureWater: SharedPipelineLayout<[BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>, BGLayout<[BufLayout]>, BGLayout<[SampLayout, TextLayout]>]>;
+    readonly bindGroupTextureWater: SharedPipelineLayout<[
+        typeof this.sizeBindGroupLayout,
+        typeof this.uniformBindGroupLayoutWithTime,
+        BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+        BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>]>;
+
+
     readonly #ro: ResizeObserver;
-    readonly #canvasRootLayout: BindablePipelineLayout<readonly [BGLayout<[BufLayout, TextLayout]>]>
+    readonly #canvasRootLayout: BindablePipelineLayout<readonly [BGLayout<[BufLayout<ShaderStage.VERTEX>, TextLayout<ShaderStage.FRAGMENT>]>]>;
     readonly UIPipeline: RenderPipeline<UIVertShader>
 
     readonly updateViewShader: UpdateView;
+    readonly BindGroupLayoutCanvas: BGLayout<[BufLayout<ShaderStage.VERTEX>, TextLayout<ShaderStage.FRAGMENT>]>;
     createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
     createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
     createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive?: Omit<GPUPrimitiveState, 'topology'>): R
@@ -162,7 +178,7 @@ export class GPU {
         this.#GPUDirectionalLights = Buffer.create(this, 63 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'GPUDirectionalLights')
 
 
-        this.#updateViewBindGroup = this.updateViewShader.bindLayouts[0].createBindGroup('updateViewBindGroup', bindGroup => [{
+        this.#updateViewBindGroup = this.updateViewShader.props.bindGroupLayouts[0].createBindGroup('updateViewBindGroup', bindGroup => [{
             binding: 0,
             resource: this.GPUMeshes.getStorageBinding(bindGroup),
         },
@@ -177,7 +193,7 @@ export class GPU {
         this.uniformBindGroupLayoutWithTime = new BGLayout(this, 'uniformBindGroupLayoutWithTime',
             new BufLayout(
                 {
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    visibility: ShaderStage.VERTEX_AND_FRAGMENT,
                     buffer: {
                         type: "uniform",
                         minBindingSize: 144
@@ -185,7 +201,7 @@ export class GPU {
                 }, 'scene', Scene),
             new BufLayout(
                 {
-                    visibility: GPUShaderStage.VERTEX,
+                    visibility: ShaderStage.VERTEX,
                     buffer: {
                         type: "uniform",
                         minBindingSize: 8
@@ -194,7 +210,7 @@ export class GPU {
             new BufLayout(
                 {
                     //clusters
-                    visibility: GPUShaderStage.FRAGMENT,
+                    visibility: ShaderStage.FRAGMENT,
                     buffer: {
                         type: 'read-only-storage',
                         minBindingSize: 7962624 //Must be in sync with Struct Clusters in shader
@@ -202,7 +218,7 @@ export class GPU {
                 }, 'clusters_array', Clusters),
             new BufLayout(
                 {   // mesh array for lights
-                    visibility: GPUShaderStage.FRAGMENT,
+                    visibility: ShaderStage.FRAGMENT,
                     buffer: {
                         type: "read-only-storage",
                         minBindingSize: 512
@@ -210,7 +226,7 @@ export class GPU {
                 }, 'meshes', MeshArray),
             new BufLayout(
                 {   //projection
-                    visibility: GPUShaderStage.FRAGMENT,
+                    visibility: ShaderStage.FRAGMENT,
                     buffer: {
                         type: "uniform",
                         minBindingSize: PROJECTION_BUFFER_SIZE
@@ -220,7 +236,7 @@ export class GPU {
         this.sizeBindGroupLayout = new BGLayout(this, 'sizeBindGroupLayout',
             new BufLayout(
                 {
-                    visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+                    visibility: ShaderStage.FRAGMENT | ShaderStage.COMPUTE,
                     buffer: {
                         type: 'uniform',
                         minBindingSize: 16
@@ -235,7 +251,7 @@ export class GPU {
             'BindGroupLayoutPosition',
             new BufLayout(
                 {
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    visibility: ShaderStage.VERTEX_AND_FRAGMENT,
                     buffer: {
                         type: "uniform",
                         hasDynamicOffset: true,
@@ -254,13 +270,13 @@ export class GPU {
                 'lightsBindGroupTexture2',
                 new SampLayout(
                     {
-                        visibility: GPUShaderStage.FRAGMENT,
+                        visibility: ShaderStage.FRAGMENT,
                         sampler: {
                         },
                     }, 'mySampler', 'sampler'),
                 new TextLayout(
                     {
-                        visibility: GPUShaderStage.FRAGMENT,
+                        visibility: ShaderStage.FRAGMENT,
                         texture: {}
                     }, 'myTexture', 'texture_2d<f32>')
             ));
@@ -269,13 +285,13 @@ export class GPU {
                 'lightsBindGroupTexture2water',
                 new SampLayout(
                     {
-                        visibility: GPUShaderStage.FRAGMENT,
+                        visibility: ShaderStage.FRAGMENT,
                         sampler: {
                         },
                     }, 'mySampler', 'sampler'),
                 new TextLayout(
                     {
-                        visibility: GPUShaderStage.FRAGMENT,
+                        visibility: ShaderStage.FRAGMENT,
                         texture: {}
                     }, 'diffuseTexture', 'texture_2d<f32>')
             ));
@@ -413,10 +429,10 @@ export class GPU {
             usage: GPUTextureUsage.RENDER_ATTACHMENT
         });
 
-        const BindGroupLayoutCanvas = new BGLayout(this, 'BindGroupLayoutUI',
+        this.BindGroupLayoutCanvas = new BGLayout(this, 'BindGroupLayoutUI',
             new BufLayout(
                 {
-                    visibility: GPUShaderStage.VERTEX,
+                    visibility: ShaderStage.VERTEX,
                     buffer: {
                         type: "uniform",
                         minBindingSize: 8
@@ -424,15 +440,14 @@ export class GPU {
                 }, 'uniforms', UIUniforms),
             new TextLayout(
                 {
-                    visibility: GPUShaderStage.FRAGMENT,
+                    visibility: ShaderStage.FRAGMENT,
                     texture: {
                     }
                 }, 'texture', 'texture_2d<f32>')
         )
-
         this.#canvasRootLayout = new BindablePipelineLayout({
             label: 'canvasRootLayout',
-            bindGroupLayouts: [BindGroupLayoutCanvas]
+            bindGroupLayouts: [this.BindGroupLayoutCanvas] as const
         });
         const uiVertShader = new UIVertShader(this.#canvasRootLayout, {
             arrayStride: 4 * 4,
@@ -560,7 +575,7 @@ export class GPU {
                         renderPass.resize(canvas.width, canvas.height);
                         passEncoder.setBindGroup(0, renderPass.sizeBindGroup().bindGroup);
                         renderPass.perspectiveCameras.forEach(camera => {
-                            camera.updateClusters(passEncoder, ClustersShader.bindLayouts[1])
+                            camera.updateClusters(passEncoder, ClustersShader.props.bindGroupLayouts[1])
                         });
                     });
                     // Call onResize after all renderPasses have resizes so callbacks

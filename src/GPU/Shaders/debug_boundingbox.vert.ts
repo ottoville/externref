@@ -1,19 +1,16 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>];
+import { GPU } from '../../GPU.js'
+type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"];
 
 export class DebugBoundingBoxVertShader extends VertexShader<
   { main: PipelineLayout },
   [GPUVertexBufferLayout],
-  PipelineLayout<BindLayouts>
+  BindLayouts
 > {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout
       },

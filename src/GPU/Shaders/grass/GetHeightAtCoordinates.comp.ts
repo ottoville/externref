@@ -1,24 +1,23 @@
-import { BGLayout, BufLayout } from '../../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage } from '../../BindGroupLayout.js'
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
 import { FloatArray, IntArray, PlaneArray, PositionAndRotateArray, Vec2Array } from '../structs/Structs.js';
 
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
+  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
 ];
-export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout }, PipelineLayout<BindLayouts>> {
-  bindLayouts: BindLayouts
-  constructor(settingsLayout: BGLayout<[BufLayout]>) {
+export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
+  constructor(settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>) {
     //TODO: set actual minBindingSize values other than 32
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'slopesBindGroupLayout',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "read-only-storage",
               hasDynamicOffset: false,
@@ -27,7 +26,7 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
           }, 'slopes', IntArray),
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "read-only-storage",
               hasDynamicOffset: false,
@@ -36,7 +35,7 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
           }, 'facet12', PlaneArray),
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "storage",
               hasDynamicOffset: false,
@@ -45,7 +44,7 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
           }, 'positionAndRotate', PositionAndRotateArray),
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "storage",
               hasDynamicOffset: false,
@@ -56,7 +55,7 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
       new BGLayout(settingsLayout.gpu, 'positionsBindGroupLayout',
         new BufLayout(
           {
-            visibility: GPUShaderStage.COMPUTE,
+            visibility: ShaderStage.COMPUTE,
             buffer: {
               type: "read-only-storage",
               hasDynamicOffset: false,
@@ -71,13 +70,12 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
       bindGroupLayouts: bindLayouts
     });
     super({
-      pipelineLayout,
+      bindGroupLayouts: bindLayouts,
       label: "GetHeightAtCoordinates.comp",
       entryPoints: {
         main: pipelineLayout
       }
     });
-    this.bindLayouts = bindLayouts
     this.createWGSL(([settings], [slopes, facet12, positionAndRotate, shapes], [positions]) => {
       return /* wgsl */ `
 

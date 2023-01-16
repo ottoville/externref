@@ -1,22 +1,26 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-
+import { GPU } from '../../GPU.js'
 type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout]>,
-];
+  GPU["sizeBindGroupLayout"],
+  GPU["uniformBindGroupLayoutWithTime"],
+  BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+  BGLayout<[
+    BufLayout<ShaderStage.VERTEX>,
+    BufLayout<ShaderStage.VERTEX>,
+    BufLayout<ShaderStage.VERTEX>
+  ]>
+]
 export class HelperVertShader extends VertexShader<
   { main: PipelineLayout },
   [],
-  PipelineLayout<BindLayouts>> {
+  BindLayouts> {
   constructor(
     pipelineLayout: PipelineLayout<BindLayouts>) {
 
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout
       },

@@ -1,21 +1,16 @@
-import { BGLayout, BufLayout, SampLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-
-type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>,
-  BGLayout<[SampLayout, TextLayout]>]
+import type { GPU } from '../../GPU.js'
+type BindLayouts = GPU["lightsBindGroupTexture2"]["bindGroupLayouts"]
 
 export class GroundVertShader extends VertexShader<
   { main: PipelineLayout },
   [GPUVertexBufferLayout],
-  PipelineLayout<BindLayouts>> {
+  BindLayouts> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
 
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout
       },
@@ -24,8 +19,7 @@ export class GroundVertShader extends VertexShader<
     this.createWGSL((
       [/*uniforms*/,],
       [scene, /*time, clusters_array, meshes, projection*/],
-      [world],
-      [/*mySampler, myTexture*/,]) => {
+      [world]) => {
 
 
       //////////////////////////////////

@@ -1,18 +1,18 @@
-import { BGLayout, BufLayout, SampLayout, TextLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, SampLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
-
+import type { GPU } from "GPU.js"
 type BindLayouts = [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>,
-  BGLayout<[SampLayout, TextLayout]>];
+  GPU["sizeBindGroupLayout"],
+  GPU["uniformBindGroupLayoutWithTime"],
+  BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+  BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>];
 
 export class WaterFragShader extends FragmentShader<
-  { main: PipelineLayout, pick: PipelineLayout }, PipelineLayout<BindLayouts>> {
+  { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout,
         pick: pipelineLayout

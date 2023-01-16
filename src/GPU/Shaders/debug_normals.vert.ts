@@ -1,23 +1,21 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
+import { GPU } from '../../GPU.js'
 
 
-type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>];
+type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"];
+
 
 export class DebugNormalsVertShader extends VertexShader<
   { main: PipelineLayout },
   [GPUVertexBufferLayout],
-  PipelineLayout<BindLayouts>> {
+  BindLayouts> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
     const entryPoints = {
       main: pipelineLayout
     }
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints,
       label: 'debug_normals.vert'
     }, [buffers]);

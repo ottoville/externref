@@ -1,5 +1,5 @@
 ﻿import { BindGroup } from "./BindGroup.js";
-import type { BGLayout, BindGroupLayoutEntry, GPUBindingGroupLayoytEntryStrict, MapToGPUBindGroupEntry } from "./BindGroupLayout.js";
+import type { BGLayout, BindGroupLayoutEntry, MapToGPUBindGroupEntry } from "./BindGroupLayout.js";
 import { RenderPipeline, type RenderPipelineProps } from "./RenderPipeline2.js";
 import type { VertexShader } from "./Shaders/VertexShader.js";
 import type { GPU } from "../GPU.js"

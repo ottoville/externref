@@ -1,20 +1,16 @@
 // Non pickable shared single color for all vertices
 // TODO: Make actual shading
 
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
-
-type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>]
+import type { GPU } from '../../GPU.js'
+type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"]
 
 export class SingleColorFragShader extends FragmentShader<
-  { main: PipelineLayout }, PipelineLayout<BindLayouts>> {
+  { main: PipelineLayout }, BindLayouts> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout,
       }, label: 'SingleColor.frag'

@@ -11,10 +11,10 @@ type BindLayouts = readonly [
   BGLayout<[BufLayout]>]
 
 export class SimpleFragShader extends FragmentShader<
-  { main: PipelineLayout, pick: PipelineLayout }, PipelineLayout<BindLayouts>> {
+  { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
   constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
     super({
-      pipelineLayout,
+      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
       entryPoints: {
         main: pipelineLayout,
         pick: pipelineLayout

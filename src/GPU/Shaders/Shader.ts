@@ -1,25 +1,24 @@
-import { BufLayout, Struct } from "../BindGroupLayout.js";
+import { BGLayout, BufLayout, Struct } from "../BindGroupLayout.js";
 import { PipelineLayout } from "../PipelineLayout.js";
 
 export type ShaderParams<E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
-    P extends PipelineLayout = PipelineLayout> = {
-        pipelineLayout: P,
+    B extends readonly BGLayout[] = readonly BGLayout[]> = {
+        bindGroupLayouts: B,
         entryPoints: E,
         label: string,
     }
-
 export abstract class Shader<
     E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
-    P extends PipelineLayout = PipelineLayout
+    B extends readonly BGLayout[] = readonly BGLayout[]
 > {
     module!: GPUShaderModule;
     wgsl: string;
     constructor(
-        protected props: ShaderParams<E, P>,
-        shaderFlag: typeof GPUShaderStage.VERTEX | typeof GPUShaderStage.FRAGMENT | typeof GPUShaderStage.COMPUTE,
+        public props: ShaderParams<E, B>,
+        private shaderFlag: typeof GPUShaderStage.VERTEX | typeof GPUShaderStage.FRAGMENT | typeof GPUShaderStage.COMPUTE,
     ) {
         const structs: Set<Struct> = new Set();
-        const groups = props.pipelineLayout.bindGroupLayouts.reduce((groupstring, group, gi) => {
+        const groups = props.bindGroupLayouts.reduce((groupstring, group, gi) => {
             return group.entries.reduce((acc, binding, bi) => {
                 if ((binding.entry.visibility & shaderFlag) === 0) {
                     return acc;
@@ -50,11 +49,18 @@ export abstract class Shader<
         //
         this.wgsl = groups + structString;
     }
-    //@ts-expect-error
-    protected createWGSL<B extends P["bindGroupLayouts"]>(cb: (...args: { [K in keyof B]: B[K]["entries"] }) => string) {
+    protected createWGSL(cb: (...args: { [K in keyof B]: B[K]["entries"] }) => string) {
+
+        const entries = this.props.bindGroupLayouts.map(bl => bl.entries) as unknown as { [K in keyof B]: B[K]["entries"] };
+        
+        const filtered = entries.map((e) => {
+            return e.filter(ee => {
+                return (ee.entry.visibility & this.shaderFlag) !== 0
+            })
+        })
         //@ts-expect-error https://stackoverflow.com/a/57913509
-        this.wgsl += cb(...this.props.pipelineLayout.bindGroupLayouts.map(bl => bl.entries));
-        this.module = this.props.pipelineLayout.gpu.device.createShaderModule(
+        this.wgsl += cb(...filtered);
+        this.module = this.props.bindGroupLayouts[0]!.gpu.device.createShaderModule(
             {
                 code: this.wgsl,
                 label: this.props.label,
