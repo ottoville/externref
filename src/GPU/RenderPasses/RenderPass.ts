@@ -133,7 +133,6 @@ export class RenderPass<U extends {
                         console.error('createRenderPipelineAsync failed, vertex wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err })
                     }
                     if(err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
-                        //@ts-expect-error
                         console.error('createRenderPipelineAsync failed, fragment wgsl:', renderPipeline.props.fragmentShader.wgsl, { cause: err })
                     }
                 }

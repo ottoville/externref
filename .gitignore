@@ -46,7 +46,6 @@ bld/
 wwwroot/js/**/*.js
 wwwroot/js/**/*.d.ts
 wwwroot/js/**/*.json
-src/shaders.json
 wwwroot/workers
 wwwroot/webworkers
 wwwroot/sw.js

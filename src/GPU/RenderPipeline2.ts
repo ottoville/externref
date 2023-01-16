@@ -1,19 +1,9 @@
 ﻿import type { RenderPass } from "./RenderPasses/RenderPass.js";
-import type { GPU } from "../GPU.js";
-import type shaders from "../shaders.json";
 import type { BindGroup } from "./BindGroup.js";
 import type { RenderPipelineLayout } from "./PipelineLayout.js";
 import type { VertexShader } from "./Shaders/VertexShader.js";
+import type { Shader } from "./Shaders/Shader.js";
 
-export class Shader {
-    module: GPUShaderModule;
-    constructor(gpu: GPU, shader: keyof typeof shaders) {
-        const module = gpu.shaderModules[shader];
-        if (!module)
-            throw (new Error('shader ' + shader + ' not found'));
-        this.module = module;
-    }
-}
 export type RenderPipelineProps<V extends VertexShader> = {
     label: string,
     vertexShader: V,

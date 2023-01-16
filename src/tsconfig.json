@@ -40,7 +40,7 @@
     },
     "allowSyntheticDefaultImports": true,
   },
-  "include": [ "shaders.json", "**/*.ts", "**/*.tsx", "./rustwasm/*.js", "code.tsx" ],
+  "include": ["**/*.ts", "**/*.tsx", "./rustwasm/*.js", "code.tsx" ],
   "exclude": [
     "node_modules",
     "jestWorker.ts",

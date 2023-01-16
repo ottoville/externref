@@ -3,9 +3,7 @@ import { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
 
 import { ColorRenderTarget } from "./GPU/RenderTargets/ColorRenderTarget.js";
 import { Projection, PROJECTION_BUFFER_SIZE } from "./GPU/Projection.js";
-import shaders from "./shaders.json" assert { type: "json" };
 import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
-import { Shader } from "./GPU/RenderPipeline.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer, GPUBufferUsage } from "./GPU/Buffer/Buffer.js";
 
@@ -22,6 +20,7 @@ import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayo
 import { RenderPipeline } from "./GPU/RenderPipeline2.js";
 import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, Projection as ProjectionStruct } from "./GPU/Shaders/structs/Structs.js";
 import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
+import { UIFragShader } from "./GPU/Shaders/UI.frag.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -111,7 +110,6 @@ export class GPU {
     ]>;
 
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-    readonly shaderModules = {} as { [K in keyof typeof shaders]: GPUShaderModule }
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
     readonly sizeBindGroupLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE_AND_FRAGMENT>]>
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
@@ -165,10 +163,6 @@ export class GPU {
         public canvas: HTMLCanvasElement,
         public device: GPUDevice,
         private GPUDataSizeBytes: number) {
-        for (const key in shaders) {
-            const k = key as keyof typeof shaders;
-            this.shaderModules[k] = device.createShaderModule({ code: shaders[k], label: k });
-        }
         const totalClusters = this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
         this.clusterSizeinBytes = totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
         this.updateViewShader = new UpdateView(this)
@@ -469,7 +463,7 @@ export class GPU {
             {
                 label: 'UIRenderPipeline',
                 vertexShader: uiVertShader,
-                fragmentShader: new Shader(this, 'deferred/UI.frag.wgsl'),
+                fragmentShader: new UIFragShader(this.#canvasRootLayout),
                 renderPipeline: {
                     primitive: {
                         topology: 'triangle-list',
