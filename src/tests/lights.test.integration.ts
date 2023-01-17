@@ -25,6 +25,7 @@ const browser=globalThis.__BROWSER_GLOBAL__ as Browser;
       it('should render boxes', async () => {
         const [greenPixel, redPixel] = await page.evaluate(async function () {
           //@ts-expect-error
+          // eslint-disable-next-line import/extensions
           const Box:typeof Box2  = (await import('/js/GPU/Meshes/Box.js')).Box;
           //@ts-expect-error
           const engine:Engine = window.engine;

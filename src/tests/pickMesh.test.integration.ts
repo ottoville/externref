@@ -27,6 +27,7 @@ describe('Pick box ', function () {
   it('should pick', async () => {
     const [pickInfo0, pickInfo, boxId] = await page.evaluate(async function () {
       //@ts-expect-error
+      // eslint-disable-next-line import/extensions
       const Box: typeof Box2 = (await import('/js/GPU/Meshes/Box.js')).Box;
       //@ts-expect-error
       const engine: Engine = window.engine;
