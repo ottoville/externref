@@ -1,19 +1,18 @@
 import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
+import type { Terrain } from '../../world/terrain.js';
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
   BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
   BGLayout<[TextLayout<ShaderStage.COMPUTE>]>];
 export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
   constructor(
-    settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+    settings: typeof Terrain.settings,
     slopesLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>) {
     const bindLayouts = [
-      settingsLayout,
       slopesLayout,
-      new BGLayout(settingsLayout.gpu, 'TerrainTextureLayout',
+      new BGLayout(slopesLayout.gpu, 'TerrainTextureLayout',
         new TextLayout(
           {
             visibility: ShaderStage.COMPUTE,
@@ -36,7 +35,9 @@ export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }
         main: pipelineLayout
       }
     });
-    this.createWGSL(([settings], [slopes, facet12], [ground_texture]) => {
+    const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
+
+    this.createWGSL(([slopes, facet12], [ground_texture]) => {
 
       /////////////////
       return /* wgsl */ `
@@ -140,21 +141,20 @@ fn snoise2(v:vec3<f32>) -> f32 {
 
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
- let facetSize:u32 = ${settings.variableName}.subdivisions * settings.subdivisions; // 250 * 250;
 
- let cx:i32 = i32(f32(GlobalInvocationID.x) * (f32(${settings.variableName}.size.x)/f32(${settings.variableName}.textureSize.x)) - f32(${settings.variableName}.size.x/u32(2)));
- let cz:i32 = i32(f32(GlobalInvocationID.y) * (f32(${settings.variableName}.size.y)/f32(${settings.variableName}.textureSize.y)) - f32(${settings.variableName}.size.y/u32(2)));
+ let cx:i32 = i32(f32(GlobalInvocationID.x) * (${settings.size[0]}/${settings.textureSize.width}) - f32(${settings.size[0]}/u32(2)));
+ let cz:i32 = i32(f32(GlobalInvocationID.y) * (${settings.size[1]}/${settings.textureSize.height}) - f32(${settings.size[1]}/u32(2)));
 
- let col:u32 = u32(floor(f32((cx + ${settings.variableName}.max.x) * i32(${settings.variableName}.subdivisions)) / f32(${settings.variableName}.size.x)));
- let row:u32 = u32(floor(- f32((cz + ${settings.variableName}.max.y) * i32(${settings.variableName}.subdivisions)) / f32(${settings.variableName}.size.y) + f32(${settings.variableName}.subdivisions)));
- let slope:i32 = ${slopes.variableName}.numbers[row * ${settings.variableName}.subdivisions + col];
+ let col:u32 = u32(floor(f32((cx + ${settings.maxXZ[0]}) * ${settings.subdivisions[0]}) / ${settings.size[0]}));
+ let row:u32 = u32(floor(- f32((cz + ${settings.maxXZ[1]}) * ${settings.subdivisions[1]}) / ${settings.size[1]} + ${settings.subdivisions[0]}));
+ let slope:i32 = ${slopes.variableName}.numbers[row * ${settings.subdivisions[0]} + col];
  var norm:vec3<f32>;
  var d:f32;
  if(cz < -1 * cx + slope) {
-     norm = ${facet12.variableName}.plane[row * ${settings.variableName}.subdivisions + col].norm;
-     d = ${facet12.variableName}.plane[row * ${settings.variableName}.subdivisions + col].d;
+     norm = ${facet12.variableName}.plane[row * ${settings.subdivisions[0]} + col].norm;
+     d = ${facet12.variableName}.plane[row * ${settings.subdivisions[0]} + col].d;
  } else {
-     let index:u32 = facetSize + (row * ${settings.variableName}.subdivisions + col);
+     let index:u32 = ${facetSize} + (row * ${settings.subdivisions[0]} + col);
      norm = ${facet12.variableName}.plane[index].norm;
      d = ${facet12.variableName}.plane[index].d;
  }

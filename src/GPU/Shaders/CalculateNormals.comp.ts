@@ -2,9 +2,9 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { FloatArray } from './structs/Structs.js';
+import type { Terrain } from '../../world/terrain.js';
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
   BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
   BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
 ]
@@ -12,12 +12,11 @@ export class CalculateNormals extends ComputeShader<
   { main: PipelineLayout },
   BindLayouts> {
   constructor(
-    settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+    settings: typeof Terrain.settings,
     slopesLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>
   ) {
     const bindLayouts = [
-      settingsLayout,
-      new BGLayout(settingsLayout.gpu, 'normalsBindGroupLayout',
+      new BGLayout(slopesLayout.gpu, 'normalsBindGroupLayout',
         new BufLayout(
           {
             visibility: ShaderStage.COMPUTE,
@@ -42,28 +41,28 @@ export class CalculateNormals extends ComputeShader<
         main: pipelineLayout
       }
     });
-    this.createWGSL(([settings], [normals], [/*slopes*/, facet12]) => {
+    const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
+    this.createWGSL(([normals], [/*slopes*/, facet12]) => {
       /////////////////
 
       return /* wgsl */ `
    @compute @workgroup_size(1)
    fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
        let stride : u32 = 12u;
-       let facetSize : u32 = ${settings.variableName}.subdivisions * ${settings.variableName}.subdivisions; //250*250* 4;
    
        let i:u32 = GlobalInvocationID.y * stride;
-       let j:u32 = GlobalInvocationID.x * (${settings.variableName}.subdivisions + 1u) * stride;
+       let j:u32 = GlobalInvocationID.x * ${settings.subdivisions[0] +1 } * stride;
    
-       let rows:u32 = GlobalInvocationID.x * ${settings.variableName}.subdivisions;
+       let rows:u32 = GlobalInvocationID.x * ${settings.subdivisions[0]};
        let last_y:u32=GlobalInvocationID.y - 1u;
        
        let norm1:vec3<f32> = ${facet12.variableName}.plane[rows +  GlobalInvocationID.y].norm;
-       let norm2:vec3<f32> = ${facet12.variableName}.plane[facetSize +  (rows +  GlobalInvocationID.y)].norm;
-       let norm4:vec3<f32> = ${facet12.variableName}.plane[facetSize +  rows +  last_y].norm;
+       let norm2:vec3<f32> = ${facet12.variableName}.plane[${facetSize } +  (rows +  GlobalInvocationID.y)].norm;
+       let norm4:vec3<f32> = ${facet12.variableName}.plane[${facetSize } +  rows +  last_y].norm;
        let last_x:u32 = GlobalInvocationID.x - 1u;
-       let norm5:vec3<f32> = ${facet12.variableName}.plane[last_x * ${settings.variableName}.subdivisions +  GlobalInvocationID.y].norm;
-       let norm7:vec3<f32> = ${facet12.variableName}.plane[last_x * ${settings.variableName}.subdivisions +  last_y].norm;
-       let norm8:vec3<f32> = ${facet12.variableName}.plane[facetSize + last_x * ${settings.variableName}.subdivisions +  last_y].norm;
+       let norm5:vec3<f32> = ${facet12.variableName}.plane[last_x * ${settings.subdivisions[0]} +  GlobalInvocationID.y].norm;
+       let norm7:vec3<f32> = ${facet12.variableName}.plane[last_x * ${settings.subdivisions[0]} +  last_y].norm;
+       let norm8:vec3<f32> = ${facet12.variableName}.plane[${facetSize } + last_x * ${settings.subdivisions[0]} +  last_y].norm;
    
        let normalized:vec3<f32> = normalize(norm1 + norm2 + norm4 + norm5 + norm7 + norm8);
        

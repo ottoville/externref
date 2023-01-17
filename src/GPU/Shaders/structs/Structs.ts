@@ -94,16 +94,6 @@ export const Slopes = {
     struct: /* wgsl */ `
         numbers: array<i32>`
 }
-export const Settings = {
-    name: 'Settings',
-    struct: /* wgsl */ `
-        size : vec2<u32>,
-        bufferSize : vec2<u32>,
-        subdivisions : u32,
-        heightMinMax : vec2<i32>,
-        max : vec2<i32>,
-        textureSize: vec2<u32>`
-}
 export const Vertice = {
     name: 'Vertice',
     struct: /* wgsl */ `

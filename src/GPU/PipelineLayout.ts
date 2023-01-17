@@ -62,8 +62,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
     /*
         Bind group is shared with sub-bindgroups
     */
-    addChildBindGroupLayout<T extends BindGroup>(label: string, sharedBindgroup: T): BindablePipelineLayout<readonly [...B, T extends BindGroup<infer X> ? X : never]>
-    {
+    addChildBindGroupLayout<T extends BindGroup>(label: string, sharedBindgroup: T): BindablePipelineLayout<readonly [...B, T extends BindGroup<infer X> ? X : never]> {
         for (const bg of this.subBindGroups) {
             if (bg.sharedBindgroup === sharedBindgroup && bg instanceof BindablePipelineLayout) {
                 return bg;
@@ -88,7 +87,7 @@ export class SharedPipelineLayout<B extends BGLayout[]> extends RenderPipelineLa
         props: Omit<RenderPipelineProps<V>, 'bindgroupdrawable'>,
         bindGroups: (bindGroup: BindGroup) => extractGeneric<Last<B>>
     ) {
-        const RP:RenderPipeline<V> = new RenderPipeline<V>({
+        const RP: RenderPipeline<V> = new RenderPipeline<V>({
             ...props,
             bindgroupdrawable: this
         })

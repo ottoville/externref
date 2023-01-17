@@ -1,7 +1,9 @@
 import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-import { GPU } from '../../GPU.js'
+import type { GPU } from '../../GPU.js'
+import type { Terrain } from '../../world/terrain.js';
+import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 type BindLayouts = readonly [
   GPU["sizeBindGroupLayout"],
   GPU["uniformBindGroupLayoutWithTime"],
@@ -9,7 +11,6 @@ type BindLayouts = readonly [
   BGLayout<[
     BufLayout<ShaderStage.VERTEX>,
     BufLayout<ShaderStage.VERTEX>,
-    BufLayout<ShaderStage.VERTEX>
   ]>
 ]
 export class HelperVertShader extends VertexShader<
@@ -17,6 +18,7 @@ export class HelperVertShader extends VertexShader<
   [],
   BindLayouts> {
   constructor(
+    settings: typeof Terrain.settings,
     pipelineLayout: PipelineLayout<BindLayouts>) {
 
     super({
@@ -31,7 +33,7 @@ export class HelperVertShader extends VertexShader<
       [/*uniforms*/,],
       [scene, time, /*clusters_array, meshes, projection*/],
       [world],
-      [slopes, facet12, settings]) => {
+      [slopes, facet12]) => {
 
       //////////////////////////////////
 
@@ -39,23 +41,8 @@ export class HelperVertShader extends VertexShader<
   
  //let PI:f32 = 3.1415926535897932384626433832795;
  const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
- 
- fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
-     let col:u32 = u32(floor((xz.x + f32(${settings.variableName}.max.x)) * f32(${settings.variableName}.subdivisions) / f32(${settings.variableName}.size.x)));
-     let row:u32 = u32(floor(- (xz.y + f32(${settings.variableName}.max.y)) * f32(${settings.variableName}.subdivisions) / f32(${settings.variableName}.size.x) + f32(${settings.variableName}.subdivisions)));
-     let slope:f32 = f32(${slopes.variableName}.numbers[row * ${settings.variableName}.subdivisions + col]);
-     var norm:vec3<f32>;
-     var d:f32;
-     if(xz.y < -1.0 * xz.x + slope) {
-         norm = ${facet12.variableName}.plane[row * ${settings.variableName}.subdivisions + col].norm;
-         d = ${facet12.variableName}.plane[row * ${settings.variableName}.subdivisions + col].d;
-     } else {
-         var index:u32=facetSize + u32(row * settings.subdivisions + col);
-         norm = ${facet12.variableName}.plane[index].norm;
-         d = ${facet12.variableName}.plane[index].d;
-     }
-     return -(norm.x * f32(xz.x) + norm.z * f32(xz.y) + d) / norm.y;
-  };
+ ${getHeightAtCoordinates(settings, slopes, facet12)}
+
  struct Output {
    @location(0) color : vec3<f32>,
    @builtin(position) Position : vec4<f32>
@@ -72,7 +59,6 @@ export class HelperVertShader extends VertexShader<
    @builtin(vertex_index) VertexIndex : u32) -> Output {
  
      var output:Output;
-     let facetSize:u32 = ${settings.variableName}.subdivisions * ${settings.variableName}.subdivisions; //250 * 250;
  
      var angle:f32 = (f32(${time.variableName}.time) * 0.001) + f32(instanceIdx) * angleStep;
      var c:f32 = cos(angle);
@@ -83,7 +69,7 @@ export class HelperVertShader extends VertexShader<
  
  
      var worldPos:vec4<f32> = ${world.variableName}.transformation * vec4<f32>(offset.x, position.y, offset.y, 1.0);
-     worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz, facetSize) + 3.0;
+     worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 3.0;
      output.Position = ${scene.variableName}.modelViewProjection * worldPos;
      output.color = vec3<f32>(1.0,1.0,1.0);
      return output;

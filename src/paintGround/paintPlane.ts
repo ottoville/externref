@@ -1,5 +1,5 @@
 ﻿import { paintGround } from "./paintGround.js";
-import type { Terrain } from "../world/terrain.js";
+import { Terrain } from "../world/terrain.js";
 import { PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
 import type { GPU } from "../GPU.js";
@@ -55,7 +55,7 @@ export class paintPlane extends paintGround {
                         offset: 0,
                         format: "float32x2"
                     }]
-                }
+                }, Terrain.settings
             )
             renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline(
                 {

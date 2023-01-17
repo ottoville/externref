@@ -2,18 +2,18 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
+import type { GPU } from '../../GPU.js'
+import type { Terrain } from '../../world/terrain.js';
 
 
 type BindLayouts = readonly [
   BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
-  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
   BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
 ];
 export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
-  constructor(settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>) {
+  constructor(gpu: GPU, settings: typeof Terrain.settings) {
     const bindLayouts = [
-      settingsLayout,
-      new BGLayout(settingsLayout.gpu, 'verticesBindGroupLayout',
+      new BGLayout(gpu, 'verticesBindGroupLayout',
         new BufLayout(
           {
             visibility: ShaderStage.COMPUTE,
@@ -23,7 +23,7 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
               minBindingSize: 48
             }
           }, 'vertices', Vertices)),
-      new BGLayout(settingsLayout.gpu, 'slopesAndFacesBindGroupLayout',
+      new BGLayout(gpu, 'slopesAndFacesBindGroupLayout',
         new BufLayout(
           {
             visibility: ShaderStage.COMPUTE,
@@ -55,26 +55,26 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
         main: pipelineLayout
       }
     })
-    this.createWGSL(([settings], [vertices], [slopes, facet12]) => {
+    const subdivisions_plus_one = settings.subdivisions[0]+1;
+    const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
+    this.createWGSL(([vertices], [slopes, facet12]) => {
       return /* wgsl */ `
       const cd: f32 = -1.0;
       @compute @workgroup_size(1)
       fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
-        let subdivisions_plus_one:u32 = ${settings.variableName}.subdivisions + u32(1);
-        let facetSize:u32 = ${settings.variableName}.subdivisions * ${settings.variableName}.subdivisions; // 250 * 250;
       
           let next:vec2<u32> = vec2<u32>(GlobalInvocationID.x + u32(1),GlobalInvocationID.y + u32(1));
       
-          let idx1:u32 = (next.x + next.y * subdivisions_plus_one);
-          let idx2:u32 = (next.x + GlobalInvocationID.y * subdivisions_plus_one);
-          let idx3:u32 = (GlobalInvocationID.x + GlobalInvocationID.y * subdivisions_plus_one);
-          let idx4:u32 = (GlobalInvocationID.x + next.y * subdivisions_plus_one);
+          let idx1:u32 = (next.x + next.y * ${subdivisions_plus_one});
+          let idx2:u32 = (next.x + GlobalInvocationID.y * ${subdivisions_plus_one});
+          let idx3:u32 = (GlobalInvocationID.x + GlobalInvocationID.y * ${subdivisions_plus_one});
+          let idx4:u32 = (GlobalInvocationID.x + next.y * ${subdivisions_plus_one});
       
       
           //calculateHeightSquad(row, col);
           let i:u32 = GlobalInvocationID.y;
-          let j:u32 = GlobalInvocationID.x * subdivisions_plus_one;
-          let k:u32 = next.x * subdivisions_plus_one;
+          let j:u32 = GlobalInvocationID.x * ${subdivisions_plus_one};
+          let k:u32 = next.x * ${subdivisions_plus_one};
       
       
           let v1arr:vec3<f32> = ${vertices.variableName}.vert[j + i].position;
@@ -98,13 +98,13 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
           let norm2:vec3<f32> = normalize(cross(v1v2, v1v4));
       
       
-          ${slopes.variableName}.numbers[GlobalInvocationID.x * ${settings.variableName}.subdivisions + GlobalInvocationID.y] = h;
+          ${slopes.variableName}.numbers[GlobalInvocationID.x * ${settings.subdivisions[0]} + GlobalInvocationID.y] = h;
       
-          ${facet12.variableName}.plane[(GlobalInvocationID.x * ${settings.variableName}.subdivisions +  GlobalInvocationID.y)].norm = norm1;
-          ${facet12.variableName}.plane[(GlobalInvocationID.x * ${settings.variableName}.subdivisions +  GlobalInvocationID.y)].d = dot(norm1,v1arr) * -1.0;
+          ${facet12.variableName}.plane[(GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].norm = norm1;
+          ${facet12.variableName}.plane[(GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].d = dot(norm1,v1arr) * -1.0;
       
-          ${facet12.variableName}.plane[facetSize +  (GlobalInvocationID.x * ${settings.variableName}.subdivisions +  GlobalInvocationID.y)].norm = norm2;
-          ${facet12.variableName}.plane[facetSize + (GlobalInvocationID.x * ${settings.variableName}.subdivisions +  GlobalInvocationID.y)].d = dot(norm2,v2arr) * -1.0;
+          ${facet12.variableName}.plane[${facetSize} +  (GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].norm = norm2;
+          ${facet12.variableName}.plane[${facetSize} + (GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].d = dot(norm2,v2arr) * -1.0;
       
           return;
         }

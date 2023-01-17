@@ -6,7 +6,7 @@ import { type GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
 import type { Engine, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
-import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
+import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
@@ -121,7 +121,7 @@ export class TerrainTool extends MainNode {
 
         const getRenderPipeline = ['TerrainToolRenderpipeline', function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState,
         ) {
-            const helperVertShader = new HelperVertShader(terrain.TerrainHeightsbindGroupTree);
+            const helperVertShader = new HelperVertShader(terrain.settings, terrain.TerrainHeightsbindGroupTree);
             
             const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
                 {

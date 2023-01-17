@@ -10,7 +10,7 @@ import { Buffer, GPUBufferUsage } from "../GPU/Buffer/Buffer.js";
 
 import type { Engine } from "../engine.js";
 import { DrawableIndirect } from "../GPU/Drawables/DrawableIndirect.js";
-import { getHeightAtCoordinates } from "../GPU/Shaders/grass/getHeightAtCoordinates.comp.js";
+import { GrassHeightAtCoordinates } from "../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js";
 declare const engine: Engine;
 
 /**
@@ -89,17 +89,11 @@ export class Plants {
                 shape: shapes,
                 noises: noises,
             }, []);
-            const getHeightAtCoordinatesShader = new getHeightAtCoordinates(terrain.settingsLayout);
+            const getHeightAtCoordinatesShader = new GrassHeightAtCoordinates(Terrain.settings, scene.gpu);
             
             const computePipeline = await getHeightAtCoordinatesShader.createComputePipeline('main');
             
-            const settingsBindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup0', bindGroup0 => [
-                {
-                    binding: 0,
-                    resource: terrain.settingsGPU.getStorageBinding(bindGroup0)
-                }
-            ])
-            const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup1', bindGroup1 => [
+            const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1', bindGroup1 => [
                 {
                     binding: 0,
                     resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1)
@@ -127,14 +121,13 @@ export class Plants {
                     const worldSetArr = buffer.getMappedRange();
                     new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
                 });
-                const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[2].createBindGroup('bindGroup2', bg => [{
+                const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup2', bg => [{
                     binding: 0,
                     resource: worldCopyGPU.getStorageBinding(bg)
                 }]);
 
-                passEncoder.setBindGroup(0, settingsBindGroup.bindGroup);
-                passEncoder.setBindGroup(1, bindGroup.bindGroup);
-                passEncoder.setBindGroup(2, bindGroup2.bindGroup);
+                passEncoder.setBindGroup(0, bindGroup.bindGroup);
+                passEncoder.setBindGroup(1, bindGroup2.bindGroup);
                 passEncoder.dispatchWorkgroups(numBlades);
                 passEncoder.end();
 

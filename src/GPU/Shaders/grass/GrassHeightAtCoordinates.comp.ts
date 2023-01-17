@@ -2,19 +2,19 @@ import { BGLayout, BufLayout, ShaderStage } from '../../BindGroupLayout.js'
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
 import { FloatArray, IntArray, PlaneArray, PositionAndRotateArray, Vec2Array } from '../structs/Structs.js';
-
+import type { Terrain } from '../../../world/terrain.js';
+import type { GPU } from '../../../GPU.js';
+import { getHeightAtCoordinates } from '../getHeightAtCoordinates.js';
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
   BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
   BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
 ];
-export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
-  constructor(settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>) {
+export class GrassHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
+  constructor(settings: typeof Terrain.settings, gpu: GPU) {
     //TODO: set actual minBindingSize values other than 32
     const bindLayouts = [
-      settingsLayout,
-      new BGLayout(settingsLayout.gpu, 'slopesBindGroupLayout',
+      new BGLayout(gpu, 'slopesBindGroupLayout',
         new BufLayout(
           {
             visibility: ShaderStage.COMPUTE,
@@ -52,7 +52,7 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
             },
           }, 'shapes', FloatArray),
       ),
-      new BGLayout(settingsLayout.gpu, 'positionsBindGroupLayout',
+      new BGLayout(gpu, 'positionsBindGroupLayout',
         new BufLayout(
           {
             visibility: ShaderStage.COMPUTE,
@@ -76,7 +76,8 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
         main: pipelineLayout
       }
     });
-    this.createWGSL(([settings], [slopes, facet12, positionAndRotate, shapes], [positions]) => {
+
+    this.createWGSL(([slopes, facet12, positionAndRotate, shapes], [positions]) => {
       return /* wgsl */ `
 
       const PI:f32 = 3.141592653589793;
@@ -160,32 +161,17 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
       fn rand(co:vec2<f32>) -> f32 {
           return fract(sin(dot(co.xy ,vec2<f32>(12.9898,78.233))) * 43758.5453);
       }
-      fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
-          let col:u32 = u32(floor((xz.x + f32(${settings.variableName}.max.x)) * f32(${settings.variableName}.subdivisions) / f32(${settings.variableName}.size.x)));
-          let row:u32 = u32(floor(- (xz.y + f32(${settings.variableName}.max.y)) * f32(${settings.variableName}.subdivisions) / f32(${settings.variableName}.size.y) + f32(${settings.variableName}.subdivisions)));
-          let slope:f32 = f32(${slopes.variableName}.numbers[row * ${settings.variableName}.subdivisions + col]);
-          var norm:vec3<f32>;
-          var d:f32;
-          if(xz.y < -1.0 * xz.x + slope) {
-              norm = ${facet12.variableName}.plane[row * ${settings.variableName}.subdivisions + col].norm;
-              d = ${facet12.variableName}.plane[row * ${settings.variableName}.subdivisions + col].d;
-          } else {
-              var index:u32=facetSize + u32(row * ${settings.variableName}.subdivisions + col);
-              norm = ${facet12.variableName}.plane[index].norm;
-              d = ${facet12.variableName}.plane[index].d;
-          }
-          return -(norm.x * f32(xz.x) + norm.z * f32(xz.y) + d) / norm.y;
-       };
+      ${getHeightAtCoordinates(settings, slopes, facet12)}
+
       
       
       
       @compute @workgroup_size(1)
       fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
-          let facetSize:u32 = ${settings.variableName}.subdivisions * ${settings.variableName}.subdivisions; //250 * 250;
       
       
           let flatpos:vec2<f32> = ${positions.variableName}.vectors[GlobalInvocationID.x]; 
-          let y:f32 = getHeightAtCoordinates(flatpos, facetSize);
+          let y:f32 = getHeightAtCoordinates(flatpos);
           ${positionAndRotate.variableName}.arr[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
           ${positionAndRotate.variableName}.arr[GlobalInvocationID.x].rotation = 3.145 * rand(flatpos);
           var index:u32 = GlobalInvocationID.x * u32(4);

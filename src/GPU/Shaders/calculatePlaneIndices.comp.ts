@@ -2,14 +2,14 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Indices } from './structs/Structs.js';
+import type { GPU } from '../../GPU.js'
+import type { Terrain } from '../../world/terrain.js';
 
-type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
-BGLayout<[BufLayout<ShaderStage.COMPUTE>]>];
+type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>]>];
 export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
-  constructor(settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>) {
+  constructor(gpu: GPU, settings: typeof Terrain.settings) {
     const bindLayouts = [
-      settingsLayout,
-      new BGLayout(settingsLayout.gpu, 'calculateIndicesBindGroupLayout',
+      new BGLayout(gpu, 'calculateIndicesBindGroupLayout',
         new BufLayout(
           {
             visibility: ShaderStage.COMPUTE,
@@ -32,16 +32,16 @@ export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout 
         main: pipelineLayout
       }
     })
-    this.createWGSL(([settings],[indices]) => {
+    this.createWGSL(([indices]) => {
       return /* wgsl */ `
 
       @compute @workgroup_size(1)
       fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
-        let idx1: u32 = (GlobalInvocationID.x + u32(1) + (GlobalInvocationID.y + u32(1)) * (${settings.variableName}.subdivisions + u32(1)));
-        let idx2: u32 = (GlobalInvocationID.x + u32(1) + GlobalInvocationID.y * (${settings.variableName}.subdivisions + u32(1)));
-        let idx3: u32 = (GlobalInvocationID.x + GlobalInvocationID.y * (${settings.variableName}.subdivisions + u32(1)));
-        let idx4: u32 = (GlobalInvocationID.x + (GlobalInvocationID.y + u32(1)) * (${settings.variableName}.subdivisions + u32(1)));
-        let index:u32 = GlobalInvocationID.y*${settings.variableName}.subdivisions*u32(6) + GlobalInvocationID.x*u32(6);
+        let idx1: u32 = (GlobalInvocationID.x + u32(1) + (GlobalInvocationID.y + u32(1)) * (${settings.subdivisions[0]} + u32(1)));
+        let idx2: u32 = (GlobalInvocationID.x + u32(1) + GlobalInvocationID.y * (${settings.subdivisions[1]} + u32(1)));
+        let idx3: u32 = (GlobalInvocationID.x + GlobalInvocationID.y * (${settings.subdivisions[0]} + u32(1)));
+        let idx4: u32 = (GlobalInvocationID.x + (GlobalInvocationID.y + u32(1)) * (${settings.subdivisions[1]} + u32(1)));
+        let index:u32 = GlobalInvocationID.y*${settings.subdivisions[0]}*u32(6) + GlobalInvocationID.x*u32(6);
         ${indices.variableName}.numbers[index] = idx1;
         ${indices.variableName}.numbers[index+u32(1)]=idx2;
         ${indices.variableName}.numbers[index+u32(2)]=idx3;

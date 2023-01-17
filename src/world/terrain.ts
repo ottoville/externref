@@ -2,7 +2,7 @@
 import { TerrainTool } from "../tools/TerrainTool.js";
 import { TerrainMesh } from "../GPU/Meshes/Terrain.js";
 import type { Engine } from "../engine.js";
-import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindUniformBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer/Buffer.js";
+import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer/Buffer.js";
 import type { BindGroup } from "../GPU/BindGroup.js";
 import { TextureUsageEnums } from "../GPU/Texture.js";
 import { TextureView } from "../GPU/TextureView.js";
@@ -15,11 +15,12 @@ import { CreateGroundFromHeightMap } from "../GPU/Shaders/CreateGroundFromHeight
 import type { GPU } from '../GPU.js'
 import { CreateTerrainTexture } from "../GPU/Shaders/CreateTerrainTexture.comp.js";
 import { BindablePipelineLayout } from "../GPU/PipelineLayout.js";
-import { IntArray, PlaneArray, Settings, Slopes } from "../GPU/Shaders/structs/Structs.js";
+import { IntArray, PlaneArray, Slopes } from "../GPU/Shaders/structs/Structs.js";
 declare const engine: Engine;
 
 
-
+const terrainSize = [10000, 10000] as const;
+const subdivisions = [64, 64] as const
 export class Terrain {
     /*
 TODO
@@ -30,9 +31,18 @@ TODO
     // 1000 * 1000: 40 - 50ms when no collision
     static readonly #subdivisions = [64, 64] as const;
     static readonly size = [10000, 10000] as const;
-    static readonly #maxXZ = [Terrain.size[0] / 2.0, Terrain.size[1] / 2.0] as const;
-    static readonly #minmax = [-2, 500] as const;
     static readonly #textureSize = { width: 8192, height: 8192 } as const;
+
+
+    static readonly settings = {
+        subdivisions: subdivisions,
+        size: terrainSize,
+        minmax: [-2, 500] as const,
+        maxXZ: [terrainSize[0] / 2.0, terrainSize[1] / 2.0] as const,
+        textureSize:  { width: 8192, height: 8192 } as const,
+        facetSize: subdivisions[0] * subdivisions[1]
+    } as const
+    settings = Terrain.settings;
 
     readonly slopeArrGPUBuffer: BindStorageBuffer;
     //TODO: Remove copy_src
@@ -58,7 +68,6 @@ TODO
     heightsLayout: BGLayout<[
         BufLayout<ShaderStage.VERTEX>,
         BufLayout<ShaderStage.VERTEX>,
-        BufLayout<ShaderStage.VERTEX>
     ]>;
 
     public static fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
@@ -105,25 +114,6 @@ TODO
     }
 
     static async loadFromTexture(gpu: GPU, scenes: Scene[]): Promise<Terrain> {
-        const settingsLayout = new BGLayout(gpu, 'settingsBindGroupLayout',
-            new BufLayout(
-                {
-                    visibility: ShaderStage.COMPUTE,
-                    buffer: {
-                        type: "uniform",
-                        hasDynamicOffset: false,
-                        minBindingSize: 48
-                    }
-                }, 'settings', Settings));
-        const settingsGPU = Buffer.create(gpu, 48, [GPUBufferUsage.STORAGE, GPUBufferUsage.UNIFORM], 'settingsGPU', b => {
-            const sourcearrSettings = b.getMappedRange();
-            new Uint32Array(sourcearrSettings).set(this.size);   // terrain width and height
-            new Uint32Array(sourcearrSettings, 8).set(Terrain.#subdivisions);
-            new Uint32Array(sourcearrSettings, 16).set([Terrain.#subdivisions[0]]);       //subdivisions
-            new Int32Array(sourcearrSettings, 24).set(Terrain.#minmax); //min and max height,
-            new Int32Array(sourcearrSettings, 32).set(Terrain.#maxXZ); //maxX, maxZ
-            new Int32Array(sourcearrSettings, 40).set([Terrain.#textureSize.width, Terrain.#textureSize.height]); //texture size
-        });
         const positionsCount = ((size: number) => {
             while (size % 4 !== 0)
                 size++;
@@ -143,7 +133,7 @@ TODO
                         new Uint8Array(b.getMappedRange()).set(new Uint8Array(cachedBuffer));
                     })
             } else {
-                const CreateGroundFromHeightMapShader = new CreateGroundFromHeightMap(settingsLayout);
+                const CreateGroundFromHeightMapShader = new CreateGroundFromHeightMap(gpu, this.settings);
 
                 const computePipelineP = CreateGroundFromHeightMapShader.createComputePipeline('main')
 
@@ -157,16 +147,10 @@ TODO
                 })
                 gpu.device.queue.copyExternalImageToTexture({ source: bitmap }, { texture }, [bitmap.width, bitmap.height]);
 
-
-                const bindGroupSettings = CreateGroundFromHeightMapShader.props.bindGroupLayouts[0].createBindGroup('bindGroupSettings', (bindGroup) => [{
-                    binding: 0,
-                    resource: settingsGPU.getUniformBinding(bindGroup)
-                }]);
                 const commandEncoder = gpu.device.createCommandEncoder({ label: 'loadFromTexture_encoder' });
                 const passEncoder = commandEncoder.beginComputePass({ label: 'loadFromTexture_encoder_pass_encoder' });
-                passEncoder.setBindGroup(0, bindGroupSettings.bindGroup);
                 var terrainPositionAndUvsAndNormalsGPU = Buffer.create(gpu, verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'terrainPositionAndUvsAndNormalsGPU')
-                const sourceBindGroup = CreateGroundFromHeightMapShader.props.bindGroupLayouts[1].createBindGroup('sourceBindGroup', (bindGroup) => [
+                const sourceBindGroup = CreateGroundFromHeightMapShader.props.bindGroupLayouts[0].createBindGroup('sourceBindGroup', (bindGroup) => [
                     {
                         binding: 0,
                         resource: terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup)
@@ -177,7 +161,7 @@ TODO
                     }
                 ]);
                 passEncoder.setPipeline(await computePipelineP);
-                passEncoder.setBindGroup(1, sourceBindGroup.bindGroup);
+                passEncoder.setBindGroup(0, sourceBindGroup.bindGroup);
                 passEncoder.dispatchWorkgroups(Terrain.#subdivisions[0] + 1, Terrain.#subdivisions[1] + 1);
                 passEncoder.end();
                 gpu.device.queue.submit([commandEncoder.finish()]);
@@ -204,10 +188,10 @@ TODO
                     }, 'facet12', PlaneArray));
 
 
-            const calculatePlaneIndicesShader = new CalculatePlaneIndices(settingsLayout);
-            const computePlaneHeightsShader = new CalculatePlaneHeights(settingsLayout);
-            const calculateNormalsShader = new CalculateNormals(settingsLayout, slopesLayout);
-            const createTextureShader = new CreateTerrainTexture(settingsLayout, slopesLayout)
+            const calculatePlaneIndicesShader = new CalculatePlaneIndices(gpu, this.settings);
+            const computePlaneHeightsShader = new CalculatePlaneHeights(gpu, this.settings);
+            const calculateNormalsShader = new CalculateNormals(this.settings, slopesLayout);
+            const createTextureShader = new CreateTerrainTexture(this.settings, slopesLayout)
 
             const [computePipelineIndices, computePlaneHeights, computePipelineNormals, createTexturePipeline] = await Promise.all([
                 calculatePlaneIndicesShader.createComputePipeline('main'),
@@ -216,7 +200,7 @@ TODO
                 createTextureShader.createComputePipeline('main')
             ]);
 
-            const terrain = new Terrain(gpu, scenes, settingsLayout, slopesLayout, settingsGPU, calculatePlaneIndicesShader, computePlaneHeightsShader, calculateNormalsShader, createTextureShader, terrainPositionAndUvsAndNormalsGPU, computePipelineIndices, computePlaneHeights, computePipelineNormals, createTexturePipeline);
+            const terrain = new Terrain(gpu, scenes, slopesLayout, calculatePlaneIndicesShader, computePlaneHeightsShader, calculateNormalsShader, createTextureShader, terrainPositionAndUvsAndNormalsGPU, computePipelineIndices, computePlaneHeights, computePipelineNormals, createTexturePipeline);
             await terrain.#ready;
             return terrain;
 
@@ -261,9 +245,7 @@ TODO
     constructor(
         public gpu: GPU,
         public scenes: Scene[],
-        public settingsLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
         slopesLayout: BGLayout<[BufLayout, BufLayout]>,
-        public settingsGPU: BindUniformBuffer & BindStorageBuffer,
         calculatePlaneIndicesShader: CalculatePlaneIndices,
         computePlaneHeightsShader: CalculatePlaneHeights,
         calculateNormalsShader: CalculateNormals,
@@ -310,15 +292,7 @@ TODO
                         type: "read-only-storage",
                         minBindingSize: 32
                     }
-                }, 'facet12', PlaneArray),
-            new BufLayout(
-                {
-                    visibility: ShaderStage.VERTEX,
-                    buffer: {
-                        type: "read-only-storage",
-                        minBindingSize: 48
-                    }
-                }, 'settings', Settings)
+                }, 'facet12', PlaneArray)
         )
         this.TerrainHeightsbindGroupTree = gpu.positionBindGroupTimeWGSL.addChildBindGroupLayout('terrainPipelineLayout',
             this.heightsLayout.createBindGroup('TerrainHeightsbindGroupTree', bindGroup => [
@@ -329,10 +303,6 @@ TODO
                 {
                     binding: 1,
                     resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup)
-                },
-                {
-                    binding: 2,
-                    resource: this.settingsGPU.getStorageBinding(bindGroup)
                 }
             ]));
         const positionsCount = ((size: number) => {
@@ -357,14 +327,7 @@ TODO
 
         passEncoder.setPipeline(computePipelineIndices);
 
-        const settingsGPUBindGroup = settingsLayout.createBindGroup('settingsGPU',
-            (bindGroup) => [{
-                binding: 0,
-                resource: this.settingsGPU.getUniformBinding(bindGroup)
-            }])
-        passEncoder.setBindGroup(0, settingsGPUBindGroup.bindGroup);
-
-        passEncoder.setBindGroup(1, calculatePlaneIndicesShader.props.bindGroupLayouts[1].createBindGroup('terrainIndicesGPU',
+        passEncoder.setBindGroup(0, calculatePlaneIndicesShader.props.bindGroupLayouts[0].createBindGroup('terrainIndicesGPU',
             (bindGroup) => [{
                 binding: 0,
                 resource: terrainIndicesGPU.getStorageBinding(bindGroup)
@@ -374,17 +337,15 @@ TODO
         passEncoder.dispatchWorkgroups(...Terrain.#subdivisions);
 
         passEncoder.setPipeline(computePlaneHeights);
-        passEncoder.setBindGroup(0, settingsGPUBindGroup.bindGroup);
-        passEncoder.setBindGroup(1, computePlaneHeightsShader.props.bindGroupLayouts[1].createBindGroup('terrainPositionAndUvsAndNormalsGPU', terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup);
+        passEncoder.setBindGroup(0, computePlaneHeightsShader.props.bindGroupLayouts[0].createBindGroup('terrainPositionAndUvsAndNormalsGPU', terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup);
 
-        passEncoder.setBindGroup(2, computePlaneHeightsShader.props.bindGroupLayouts[2].createBindGroup('_heightsBindGroupEntries', _heightsBindGroupEntries).bindGroup)
+        passEncoder.setBindGroup(1, computePlaneHeightsShader.props.bindGroupLayouts[1].createBindGroup('_heightsBindGroupEntries', _heightsBindGroupEntries).bindGroup)
         passEncoder.dispatchWorkgroups(...Terrain.#subdivisions);
 
         passEncoder.setPipeline(computePipelineNormals);
 
-        passEncoder.setBindGroup(0, settingsGPUBindGroup.bindGroup)
-        passEncoder.setBindGroup(1, calculateNormalsShader.props.bindGroupLayouts[1].createBindGroup('terrainPositionAndUvsAndNormalsGPU_bgroup', terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup)
-        passEncoder.setBindGroup(2, slopesLayout.createBindGroup('bindGroupHeightsRead2', _heightsBindGroupEntries).bindGroup)
+        passEncoder.setBindGroup(0, calculateNormalsShader.props.bindGroupLayouts[0].createBindGroup('terrainPositionAndUvsAndNormalsGPU_bgroup', terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup)
+        passEncoder.setBindGroup(1, slopesLayout.createBindGroup('bindGroupHeightsRead2', _heightsBindGroupEntries).bindGroup)
         passEncoder.dispatchWorkgroups(Terrain.#subdivisions[0] + 1, Terrain.#subdivisions[1] + 1);
         const textureView = new TextureView(this.texture);
 
@@ -400,7 +361,7 @@ TODO
                 this.texture.copyFromExternalImage({ source: bitmap }, {}, Terrain.#textureSize);
                 gpu.device.queue.submit([commandEncoder.finish()]);
             } else {
-                const bindGroup1 = createTextureShader.props.bindGroupLayouts[2].createBindGroup('writableTexture', (bindGroup) => [
+                const bindGroup1 = createTextureShader.props.bindGroupLayouts[1].createBindGroup('writableTexture', (bindGroup) => [
                     {
                         binding: 0,
                         resource: textureView.getTextureBinding(bindGroup),
@@ -409,8 +370,8 @@ TODO
                 passEncoder.setPipeline(createTexturePipeline);
                 const bindGroupHeightsRead = slopesLayout.createBindGroup('bindGroupHeightsRead', _heightsBindGroupEntries)
 
-                passEncoder.setBindGroup(1, bindGroupHeightsRead.bindGroup);
-                passEncoder.setBindGroup(2, bindGroup1.bindGroup);
+                passEncoder.setBindGroup(0, bindGroupHeightsRead.bindGroup);
+                passEncoder.setBindGroup(1, bindGroup1.bindGroup);
                 passEncoder.dispatchWorkgroups(Terrain.#textureSize.width, Terrain.#textureSize.height);
                 passEncoder.end();
 
