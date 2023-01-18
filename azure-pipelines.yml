@@ -22,7 +22,7 @@ jobs:
       command: custom
       workingDir: src
       verbose: false
-      customCommand: audit
+      customCommand: audit --audit-level=high
   - task: Npm@1
     displayName: npm install
     inputs:
