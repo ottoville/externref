@@ -15,10 +15,42 @@ export class PlantsUI extends UIRectangleNode {
     constructor(props: UIRectangleNodeProps,
     ) {
         super(props);
-        props.onClick = () => this.activateDraw();
         if (!this.scene) {
             throw (new Error('no scene'));
         }
+    }
+    #inputListener = (e: KeyboardEvent) => {
+        if (e.code === "Digit1") {
+            this.activateDraw()
+        }
+    }
+    #wasOpen = false;
+    override render() {
+        super.render();
+        if (this.props.open) {
+            this.#wasOpen = true
+            engine.addInputListener('keydown', this, this.#inputListener);
+            return [{
+                ctr: UIRectangleNode,
+                props: {
+                    gpu: this.props.gpu,
+                    terrain: this.props.terrain,
+                    bitmap: this.props.bitmap,
+                    label: 'createGrassButton',
+                    scale: { min_width: 0.15, y: 0.07 },
+                    translate: { x: -0.8, y: 0.8 },
+                    open: true,
+                    text: 'Create grass (1)',
+                    menuTree: this.props.menuTree,
+                    onClick: () => this.activateDraw()
+                }
+            }]
+        } else if(this.#wasOpen) {
+            this.#wasOpen = false;
+            this.PT?.destroy();
+            engine.clearInputListeners(this);
+        }
+        return null;
     }
     activateDraw = () => {
         try {
@@ -29,8 +61,9 @@ export class PlantsUI extends UIRectangleNode {
             console.error(e);
         }
     }
-    override destroy() {
-        this.PT?.destroy();
+    override destroy(): void {
         super.destroy();
+        this.PT?.destroy();
+        engine.clearInputListeners(this);
     }
 }

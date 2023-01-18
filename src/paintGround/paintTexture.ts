@@ -21,7 +21,7 @@ export class paintTexture extends paintGround {
     constructor(
         scene: Scene,
         ground: Terrain,
-        protected zonedt: Texture2D<"rgba8unorm", 23>,
+        protected readonly zonedt: Texture2D<"rgba8unorm", 23>,
         private textureWidth: number,
         private textureHeight: number,
         private ratio:number,

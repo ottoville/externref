@@ -2,6 +2,12 @@
 type returnNode<T extends UINode> = { ctr: new (props: any) => T, props: object }
 
 export abstract class UINode<P extends object = object, S extends object = object> {
+    static createCtrProps<P extends object, C extends typeof UINode<P>>(ctr: C, props: P) {
+        return {
+            ctr,
+            props
+        }
+    }
     #children: (UINode | null)[] = [];
     //@ts-expect-error
     state: Readonly<S> = {};

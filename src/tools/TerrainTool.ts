@@ -10,18 +10,13 @@ import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNod
 import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
+import { UINode } from "../ui/UINode.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
 
 type TerrainToolButtonState = { subMenu: 'lower' | 'raise' | undefined };
 export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState> {
-    static createCtrPropsTerrainToolButton(props: UIRectangleNodeProps) {
-        return {
-            ctr: TerrainToolButton,
-            props
-        }
-    }
     #wasOpen = false;
     constructor(
         props: UIRectangleNodeProps,
@@ -32,19 +27,16 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState> {
         }
     }
     #inputListener = (e: KeyboardEvent) => {
-        if (this.state.subMenu === undefined) {
-            if (e.code === "Digit1") {
-                console.log('lower pressed')
-                this.setState({
-                    subMenu: 'lower'
-                })
-            } else if (e.code === "Digit2") {
-                console.log('raise pressed')
-                this.setState({
-                    subMenu: 'raise'
-                })
-            }
-        } else if (e.code === 'Backspace') {
+        if (e.code === "Digit1") {
+            this.setState({
+                subMenu: 'lower'
+            })
+        } else if (e.code === "Digit2") {
+            this.setState({
+                subMenu: 'raise'
+            })
+        }
+        else if (e.code === 'Backspace') {
             this.props.menuTree.level = 1;
             this.setState({
                 subMenu: undefined
@@ -62,12 +54,13 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState> {
             this.#tool?.raise()
             this.props.menuTree.level = 2;
         }
-        if (this.props.open && !this.#wasOpen) {
-            this.#wasOpen = true;
-            console.log('addInputListener keydown')
+        if (this.props.open) {
+            if (!this.#wasOpen) {
+                this.#wasOpen = true;
+                this.#tool = new TerrainTool(this.props.terrain);
+            }
             engine.addInputListener('keydown', this, this.#inputListener);
-            this.#tool = new TerrainTool(this.props.terrain);
-            return [UIRectangleNode.createCtrProps({
+            return [UINode.createCtrProps(UIRectangleNode,{
                 menuTree: this.props.menuTree,
                 gpu: this.props.gpu,
                 terrain: this.props.terrain,
@@ -82,7 +75,7 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState> {
                         subMenu: 'lower'
                     })
                 }
-            }), UIRectangleNode.createCtrProps({
+            }), UINode.createCtrProps(UIRectangleNode, {
                 menuTree: this.props.menuTree,
                 gpu: this.props.gpu,
                 terrain: this.props.terrain,
@@ -118,11 +111,9 @@ export class TerrainTool extends MainNode {
     ) {
         super({ positionsCount: 4, label: 'TerrainTool' });
 
-
         const getRenderPipeline = ['TerrainToolRenderpipeline', function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState,
         ) {
             const helperVertShader = new HelperVertShader(terrain.settings, terrain.TerrainHeightsbindGroupTree);
-            
             const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
                 {
                     label,

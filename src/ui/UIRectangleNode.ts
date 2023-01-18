@@ -13,19 +13,13 @@ export type UIRectangleNodeProps = {
     text: string,
     open: boolean,
     menuTree: {level: number}
-    onClick?: (menuName: string) => void
+    onClick: (menuName?: string) => void
     children?: ({
         ctr: new(props:UIRectangleNodeProps) => UIRectangleNode;
         props: UIRectangleNodeProps;
     } | null)[] | null
 }
 export class UIRectangleNode<S extends object = object> extends UINode<UIRectangleNodeProps, S> {
-    static createCtrProps(props: UIRectangleNodeProps) {
-        return {
-            ctr: UIRectangleNode,
-            props
-        }
-    }
     static instances: Map<UINode, UIRectangleNode> = new Map()
     static getInstance<P extends UIRectangleNodeProps>(host: UINode, props: P): UIRectangleNode {
         let instance = UIRectangleNode.instances.get(host);
