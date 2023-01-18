@@ -17,6 +17,13 @@ jobs:
   - checkout: self
     submodules: true
   - task: Npm@1
+    displayName: npm audit
+    inputs:
+      command: custom
+      workingDir: src
+      verbose: false
+      customCommand: audit
+  - task: Npm@1
     displayName: npm install
     inputs:
       command: custom
