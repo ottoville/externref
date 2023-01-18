@@ -61,7 +61,7 @@ export class Canvas extends TerraCompoment {
         const terraEngine = await Engine.initEngine(this.#canvasElem, (e) => {
             errors.push(e);
             this.showError();
-        }, {rust:  fetch('/js/engine/wasm32-unknown-unknown/debug/engine.wasm'), collider: fetch('../collider/colliderSimdO.wasm')});
+        }, {rust:  fetch('/engine.wasm'), collider: fetch('../collider/colliderSimdO.wasm')});
         if(!terraEngine)
             return;
         this.progress = 15;
