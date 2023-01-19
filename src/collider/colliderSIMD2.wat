@@ -1,4 +1,5 @@
 (module
+  (import "rust" "collision_found" (func $collision_found (param i32 f32 f32 f32 f32 f32 i32 i32)))
   (import "console" "log" (func $log (param f32)))
   (import "console" "error" (func $console.error (param i32)))
   (import "env" "memory" (memory 16))
@@ -40,6 +41,8 @@
 
   (global $isConstructed (mut i32) (i32.const 0))
 
+  (global $rust_collider_ptr (mut i32) (i32.const 0))
+
   (global $collidedPointInTrianglePointer (mut i32) (i32.const 0))
   (func $construct
       (param $collisionNotFoundPointer i32)
@@ -49,7 +52,13 @@
       (param $velocityPointer i32)
       (param $basePointPointer i32)
       (param $collidedPointInTrianglePointer i32)
+      (param $rust_collider_ptr i32)
       
+
+      (global.set $rust_collider_ptr
+        (local.get $rust_collider_ptr)
+      )
+
       (global.set $isConstructed
         (i32.const 1)  
       )
@@ -479,52 +488,65 @@
 
     global.get $found
     if
-
-
-
-
-      i32.const 1
-      (f32.lt
-        (local.tee $distToCollisionSquared
-          (f32.mul 
-            (global.get $lowestRoot)
-            (f32.mul
-              (global.get $lowestRoot)
-              (global.get $velocitySquared)
-            )
-          )
+      (call $collision_found
+        (global.get $rust_collider_ptr)
+        (global.get $lowestRoot)
+        (global.get $velocitySquared)
+        (f32x4.extract_lane 0
+          (global.get $collisionPoint)
         )
-        (f32.load
-          (global.get $nearestDistanceSquaredPointer)
+        (f32x4.extract_lane 1
+          (global.get $collisionPoint)
         )
+        (f32x4.extract_lane 2
+          (global.get $collisionPoint)
+        )
+        (local.get $collidedPointInTriangle)
+        (local.get $planePosition)
       )
 
-      (i32.load
-        (global.get $collisionNotFoundPointer)
-      )
-      select
-      if
-        global.get $intersectionPointer
-        global.get $collisionPoint
-        v128.store
-        global.get $nearestDistanceSquaredPointer
-        local.get $distToCollisionSquared
-        f32.store
-        global.get $collisionNotFoundPointer
-        i32.const 0
-        i32.store
 
-        global.get $collidedMeshPointer
-        local.get $meshID
-        i32.store
 
-        global.get $collidedPointInTrianglePointer
-        local.get $planePosition
-        i32.const 0
-        local.get $collidedPointInTriangle
-        select
-        i32.store
-      end
+    ;;  i32.const 1
+    ;;  (f32.lt
+    ;;    (local.tee $distToCollisionSquared
+    ;;      (f32.mul 
+    ;;        (global.get $lowestRoot)
+    ;;        (f32.mul
+    ;;          (global.get $lowestRoot)
+    ;;          (global.get $velocitySquared)
+    ;;        )
+    ;;      )
+    ;;    )
+    ;;    (f32.load
+    ;;      (global.get $nearestDistanceSquaredPointer)
+    ;;    )
+    ;;  )
+    ;;  (i32.load
+    ;;    (global.get $collisionNotFoundPointer)
+    ;;  )
+    ;;  select
+    ;;  if
+    ;;    global.get $intersectionPointer
+    ;;    global.get $collisionPoint
+    ;;    v128.store
+    ;;    global.get $nearestDistanceSquaredPointer
+    ;;    local.get $distToCollisionSquared
+    ;;    f32.store
+    ;;    global.get $collisionNotFoundPointer
+    ;;    i32.const 0
+    ;;    i32.store
+    ;;    global.get $collidedMeshPointer
+    ;;    local.get $meshID
+    ;;    i32.store
+;;
+    ;;    global.get $collidedPointInTrianglePointer
+    ;;    local.get $planePosition
+    ;;    i32.const 0
+    ;;    local.get $collidedPointInTriangle
+    ;;    select
+    ;;    i32.store
+    ;;  end
     end
   )
   (func $checkForLowestRoot2

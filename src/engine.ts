@@ -48,7 +48,17 @@ export type rustWasm = {
     scaled_position_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     scaled_velocity_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     collided_mesh_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
-    collided_point_in_triangle_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    collided_point_in_triangle_pointer(collider_ptr: rust_pointer<"legacy_collider">): rust_pointer<'Plane'>
+    //set_collided_point_in_triangle_pointer(collider_ptr: rust_pointer<"legacy_collider">, plane: rust_pointer<'Plane'>): void
+    collision_found(
+        collider_ptr: rust_pointer<"legacy_collider">,
+        t: number,
+        velocitySquaredLength:number,
+        collision_point_x:number,
+        collision_point_y:number,
+        collision_point_z:number,
+        collided_point_in_triangle: boolean,
+        collided_plane: number): void,
     set_speed(collider_ptr: rust_pointer<"legacy_collider">, speed: number): void
     basepoint_world_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     renderloop(): void,
@@ -166,7 +176,14 @@ interface EarthDatabase extends IDBDatabase {
     createObjectStore(name: ObjectStore, optionalParameters?: IDBObjectStoreParameters): IDBObjectStore;
 }
 export interface ColliderWasm {
-    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number, collidedPointInTrianglePointer: number): void;
+    construct(collisionFound: number,
+        intersectionPointer: number,
+        nearestDistanceSquaredPointer: number,
+        collidedMeshPointer: number,
+        velocity: number,
+        basePoint: number,
+        collidedPointInTrianglePointer: number,
+        rust_collider_ptr: rust_pointer<'legacy_collider'>): void;
     memory: WebAssembly.Memory
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
     testTriangles: (position: rust_pointer<"collider_faces">, positionParallel: rust_pointer<"collider_planes_parallel_pointer">, length: number, meshID: number) => void
@@ -317,6 +334,7 @@ export class Engine {
 
 
             const colliderExportObj = {
+                rust: rust.instance.exports,
                 console: {
                     log: function (arg: string) {
                         console.log(arg);
@@ -577,8 +595,8 @@ export class Engine {
             engine.rust.collided_mesh_pointer(this.collider.collider_ptr),
             engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),
             engine.rust.scaled_position_pointer(this.collider.collider_ptr),
-            engine.rust.collided_point_in_triangle_pointer(this.collider.collider_ptr))
-
+            engine.rust.collided_point_in_triangle_pointer(this.collider.collider_ptr),
+            this.collider.collider_ptr)
     }
     #getFinalPosition(sphere: Ellipsoid, scaledPosition: TerraVector3, scaledVelocity: TerraVector3): [number, number, number] | TerraVector3 {
         this.collider.didCollide = false;

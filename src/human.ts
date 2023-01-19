@@ -21,7 +21,7 @@ export class Human extends Box {
     readonly closeDistanceVector: [number, number, number] = [closeDistance / this.#radius[0], closeDistance / this.#radius[1], closeDistance / this.#radius[2]];
 
     constructor(properties: { scenes: Scene[], inputEnabled: boolean }) {
-        super({ ...properties, point_light: 400, can_collide: false, label: 'human' });
+        super({ ...properties, point_light: 400, can_collide: false, label: 'human', color: [0,0,1,0] });
         //@ts-expect-error
         window.debug_bounding_box=() => {
             new BoundingBoxMesh(this.drawable!)

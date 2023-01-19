@@ -87,8 +87,7 @@ export class Canvas extends TerraCompoment {
             engine.mainCamera.attachControllerForCamera(archRotateController);
             const human = new Human({scenes: [terrascene], inputEnabled:true});
             // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
-            human.translation = [-239.37437438964844, 200, 910.1807250976562];
-
+            human.translation = [403.4, 1000, 23];
             document.addEventListener('keydown', e => {
                 if(e.key === 'Tab') {
                     if(engine.inputManager === human.inputManager) {
@@ -155,18 +154,18 @@ export class Canvas extends TerraCompoment {
         b.update_scale(100, 5, 100);
         b.translation = [123, 300, 123];
     */
-       /* const b2 = new Box(undefined, 400, true, 'gravitygreenbox2', [0, 1, 0, 0]);
-        b2.translation = [23, 500, -100];
-        b2.hasGravity = true;
-    console.log('b2 id is',b2.id)*/
 
-      /*  const slope = new Triangle('slopeTriangle',undefined,true);
+      /*  const b2 = new Box({point_light: 400, can_collide: true, label: 'gravitygreenbox2', color: [0, 1, 0, 0]});
+        b2.translation = [23, 500, -100];
+        b2.hasGravity = true;*/
+
+     /*   const slope = new Triangle('slopeTriangle',undefined,true);
         slope.update_scale(0, 400, 400);
 
      //   slope.update_euler_angles(0,0,Math.PI*-0.5);
         slope.update_euler_angles(0,0,Math.PI*-0.4);
-        slope.translation = [23,600,23];
-*/
+        slope.translation = [23,600,23];*/
+
 
 
 

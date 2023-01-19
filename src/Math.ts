@@ -1,4 +1,4 @@
-﻿import type { Engine } from "./engine";
+﻿import type { Engine, rust_pointer } from "./engine";
 declare const engine:Engine;
 
 export class TerraMatrix extends Float32Array {
@@ -381,6 +381,7 @@ export class Triangle {
         const normal_x = yz * invPyth
         const normal_y = xz * invPyth
         const normal_z = xy * invPyth;
+        //Plane struct in rust
         this.planeCollider.set([
             normal_x,
             normal_y,
@@ -391,7 +392,7 @@ export class Triangle {
     #planeCollider: TerraVector4;
     get planeCollider() {
         if(this.#planeCollider.byteLength === 0) {
-            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.pointerToVector4); 
+            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.PlanePtrToVector4); 
         }
         return this.#planeCollider;
     }
@@ -409,14 +410,14 @@ export class Triangle {
     }
     constructor(
         private vectorsPointers: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],
-        private pointerToVector4: number
+        private PlanePtrToVector4: rust_pointer<'Plane'>
         ) {
             this.#vectors = [
                 new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
                 new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
                 new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
             ]
-            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.pointerToVector4);
+            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.PlanePtrToVector4);
     }
 
 }
