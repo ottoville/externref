@@ -151,6 +151,7 @@ pub unsafe extern "C" fn physic_tick() {
         &mut e.joint_set,
         &mut multi_joint_set,
         &mut e.ccd_solver,
+        None,
         &physics_hooks,
         &event_handler,
     );
