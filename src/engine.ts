@@ -53,10 +53,10 @@ export type rustWasm = {
     collision_found(
         collider_ptr: rust_pointer<"legacy_collider">,
         t: number,
-        velocitySquaredLength:number,
-        collision_point_x:number,
-        collision_point_y:number,
-        collision_point_z:number,
+        velocitySquaredLength: number,
+        collision_point_x: number,
+        collision_point_y: number,
+        collision_point_z: number,
         collided_point_in_triangle: boolean,
         collided_plane: number): void,
     set_speed(collider_ptr: rust_pointer<"legacy_collider">, speed: number): void
@@ -364,9 +364,9 @@ export class Engine {
     readonly cameras: Set<TerraCamera> = new Set();
 
     showError(e: unknown) {
-        if(e instanceof DOMException) {
-            if(
-                (e.message.includes("Device") && e.message.includes("is lost")) || 
+        if (e instanceof DOMException) {
+            if (
+                (e.message.includes("Device") && e.message.includes("is lost")) ||
                 (e.cause instanceof DOMException && e.cause.message.includes("Device") && e.cause.message.includes("is lost"))
             ) {
                 //When device is lost new device will be set in GPU.ts
@@ -386,7 +386,7 @@ export class Engine {
             console.log('Getting adapter, fallback:', forceFallbackAdapter)
             adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter })
             if (!adapter) {
-                if(forceFallbackAdapter) {
+                if (forceFallbackAdapter) {
                     throw new Error('Could not get adapter');
                 }
                 console.log('Failed to get adapter')
@@ -399,7 +399,7 @@ export class Engine {
             } catch (e) {
                 console.error(e);
                 console.log('Failed to get device');
-                if(forceFallbackAdapter) {
+                if (forceFallbackAdapter) {
                     throw new Error('Could not get device');
                 }
                 forceFallbackAdapter = true;
@@ -553,7 +553,7 @@ export class Engine {
                     const once = eventType + 'Once' as `${typeof eventType}Once`;
                     this.#inputMaps[once].forEach(cbs => cbs.forEach(cb => cb(e)))
                     this.#inputMaps[once].clear();
-                });
+                }, { passive: false });
             });
 
             this.GPUReady = this.createGPU(GPUDataSize, gpu => {
