@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "serve": "npm run publish && http-server ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
-    "buildRust":      "cargo rustc --features webgpu           --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown --target-dir ../rust -- -C target-feature=+simd128 && pwsh -Command cp ../rust/wasm32-unknown-unknown/debug/engine.wasm ../wwwroot/engine.wasm",
+    "buildRust":      "cargo rustc --features webgpu           --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown --target-dir ../rust -- -C target-feature=+simd128 && ls ../rust/wasm32-unknown-unknown/debug/ && pwsh -Command cp ../rust/wasm32-unknown-unknown/debug/engine.wasm ../wwwroot/engine.wasm",
     "buildRust-prod": "cargo rustc --features webgpu --release --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown --target-dir ../rust -- -C target-feature=+simd128 && pwsh -Command cp ../rust/wasm32-unknown-unknown/debug/engine.wasm ../wwwroot/engine.wasm",
     "buildRust-test": "cargo rustc --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown --target-dir ../node -- -C target-feature=+simd128",
     "buildWasm": "wat2wasm.exe collider\\collider.wat --debug-names -o ..\\wwwroot\\collider\\colliderO.wasm",
