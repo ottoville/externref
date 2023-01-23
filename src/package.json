@@ -2,7 +2,7 @@
   "name": "terrasim",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "code.tsx",
   "scripts": {
     "serve": "npm run publish && http-server ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
     "buildRust":      "cargo rustc --features webgpu           --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown --target-dir ../rust -- -C target-feature=+simd128 && pwsh -Command cp ../rust/wasm32-unknown-unknown/debug/engine.wasm ../wwwroot/engine.wasm",
@@ -22,8 +22,8 @@
     "test-wasm": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs"
 
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Otto-Ville Lamminpää",
+  "license": "All rights reserved",
   "dependencies": {
     "@types/offscreencanvas": "2019.7.0",
     "@webgpu/types": "0.1.24",
@@ -31,7 +31,7 @@
     "wasm-opt": "1.3.0"
   },
   "devDependencies": {
-    "@azure/static-web-apps-cli": "1.0.4",
+    "@azure/static-web-apps-cli": "1.0.6",
     "@types/node": "18.11.18",
     "@typescript-eslint/eslint-plugin": "5.48.2",
     "@typescript-eslint/parser": "5.48.2",
