@@ -7,7 +7,6 @@ pub use crate::engine::Engine;
 pub use crate::engine::ENGINE;
 pub use crate::GPUMesh;
 use crate::engine::Engine2;
-use crate::engine::jslog_string;
 pub use crate::geometry::Geometry;
 pub use crate::geometry::Plane;
 pub use crate::geometry::ColliderPlane;
@@ -361,7 +360,6 @@ impl Mesh {
             vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
             vertices.push(Point::new(i[0] * self.scaling.x - 0.1, i[1] * self.scaling.y, i[2] * self.scaling.z));
         });
-        jslog_string(vec!["convex hull".to_string(), self.label.to_string(), format!["{:?}",vertices]]);
         let hull = ColliderBuilder::convex_hull(&vertices);
         match hull {
             Some(h) => {
@@ -389,9 +387,6 @@ impl Mesh {
             // TODO: ensure simd
             vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
         });
-        if self.label == "human" {
-            jslog_string(vec!["human vertices".to_string(), format!("{:?}", vertices)]);
-        }
         let mut indices:Vec<[u32; 3]>;
         if geometry.indices.len() == 0 {
             if self.strip {
@@ -430,7 +425,6 @@ impl Mesh {
         strip:bool) {
         self.geometry=Some(Geometry::new(has_bounding, vertices_stride, static_faces,strip));
     }
-
     pub unsafe fn add_collider<'a>(
         &'static mut self,
         collider:Collider,
@@ -444,7 +438,6 @@ impl Mesh {
                     let old = self.collider_handle.replace(engine2.collider_set.insert_with_parent(collider, rigid_body_handle, &mut engine2.rigid_body_set));
                     match old {
                         Some(handle) => {
-                            jslog_string(vec!["remove old collider".to_string()]);
                             engine2.collider_set.remove(handle, &mut engine2.island_manager, &mut engine2.rigid_body_set, true);
                         }
                         _ => ()

@@ -48,7 +48,6 @@
     "lib",
     "service-worker.ts",
     "service-worker.published.ts",
-    "test-build",
     "runTest.ts",
     "**/*.test.integration.ts",
     "**/*.test.ts",

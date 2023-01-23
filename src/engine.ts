@@ -59,6 +59,7 @@ export type rustWasm = {
         collision_point_z: number,
         collided_point_in_triangle: boolean,
         collided_plane: number): void,
+    get_lowest_root(a: number, b: number, c: number, maxR: number): number
     set_speed(collider_ptr: rust_pointer<"legacy_collider">, speed: number): void
     basepoint_world_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     renderloop(): void,
@@ -184,7 +185,6 @@ export interface ColliderWasm {
         collidedPointInTrianglePointer: number,
         rust_collider_ptr: rust_pointer<'legacy_collider'>): void;
     memory: WebAssembly.Memory
-    getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
     testTriangles: (position: rust_pointer<"collider_faces">, positionParallel: rust_pointer<"collider_planes_parallel_pointer">, length: number, meshID: number) => void
     _initialize: () => void
 }

@@ -16,8 +16,8 @@ abstract class TerraCompoment {
     abstract render(props: { [index: string]: unknown }): HTMLElement
 }
 
-interface propsI { //@ts-ignore testem
-    'onClick'?: () => void,  //@ts-ignore testem
+interface propsI {
+    'onClick'?: () => void,
     'onChange'?: () => void,
     [index: string]:    string |
                         boolean |

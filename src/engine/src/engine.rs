@@ -14,9 +14,13 @@ extern "C" {
     fn handle_gpu_queue(pointerVec: *const [u32; 2], length: usize);
     #[cfg(feature = "webgpu")]
     fn updateAllocatedMemory(ptr: *const u32, length: usize);
+    #[cfg(target_arch = "wasm32")]
     fn jspanic(number: *const u8);
+    #[cfg(target_arch = "wasm32")]
     fn jslog(number: *const u8);
+    #[cfg(target_arch = "wasm32")]
     fn mesh_on_collide(number: u32, status: bool);
+    #[cfg(target_arch = "wasm32")]
     fn mesh_on_physic_tick(number: u32);
 }
 pub struct Engine {
@@ -73,6 +77,7 @@ pub fn create_js_string(mut str: String) -> *const u8 {
     std::mem::forget(log_str);
     return ptr;
 }
+#[cfg(target_arch = "wasm32")]
 pub fn jslog_string(strings: Vec<String>) {
     let mut newstr = String::new();
     for str in strings.iter() {
@@ -84,6 +89,7 @@ pub fn jslog_string(strings: Vec<String>) {
     }
 }
 #[no_mangle]
+#[cfg(target_arch = "wasm32")]
 pub extern "C" fn init_engine2() -> usize {
     panic::set_hook(Box::new(|panic_info| unsafe {
         jspanic(create_js_string(panic_info.to_string()));
@@ -122,6 +128,7 @@ unsafe fn collider_to_mesh(e:&Engine2, collider_handle: ColliderHandle) -> Optio
     };
 }
 #[no_mangle]
+#[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn physic_tick() {
     //  jslog_number(&(ENGINE.physic_engine().meshes[0]) as *const Mesh as u32);
     let gravity = vector![0.0, -9.81, 0.0];

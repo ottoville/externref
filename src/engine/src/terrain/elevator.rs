@@ -25,6 +25,7 @@ pub unsafe extern "C" fn mouse_position_pointer(elevator_ptr:*const Elevator) ->
 }
 
 #[no_mangle]
+#[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn elevate(elevator_ptr:*mut Elevator,mesh_ptr:*mut Mesh,radius:f32,height:f32) {
     (*elevator_ptr)._elevate(&mut (*mesh_ptr),radius,height)
 }
@@ -37,6 +38,7 @@ pub unsafe extern "C" fn get_offset(elevator_ptr:*const Elevator) -> usize {
     (*elevator_ptr).offset
 }
 impl Elevator {
+    #[cfg(target_arch = "wasm32")]
     unsafe fn normalize(v:std::arch::wasm32::v128) -> std::arch::wasm32::v128 {
         use std::arch::wasm32::*;
         let squared=f32x4_mul(v,v);
@@ -46,6 +48,7 @@ impl Elevator {
         let scale = f32x4_splat(1.0/f32::sqrt(squared_x+squared_y+squared_z));
         f32x4_mul(v, scale)
     }
+    #[cfg(target_arch = "wasm32")]
     unsafe fn _elevate(&mut self, mesh:&mut Mesh, radius:f32, full_height:f32) {
         use std::arch::wasm32::*;
 
