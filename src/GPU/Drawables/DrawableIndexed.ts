@@ -1,10 +1,10 @@
-import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { Buffer, type VertexBuffer, type IndexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect } from "./DrawableDirect.js";
 import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
 import type { RenderPipeline } from "../RenderPipeline2.js";
 import type { VertexShader } from "../Shaders/VertexShader.js";
+import { DrawableProps } from "./Drawable.js";
 declare const engine: Engine;
 
 export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends DrawableDirect {
@@ -15,28 +15,8 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
     #firstInstance: number;
     #GPUIndexFormat: GPUIndexFormat;
     constructor(
-        {
-            renderPipeline,
-            node,
-            renderPasses,
-            indexBuffer,
-            baseVertex = 0,
-            instanceCount = 1,
-            firstIndex = 0,
-            firstInstance = 0,
-            GPUIndexFormat = 'uint16',
-            vertexBuffers
-        } :
-        {
-            renderPipeline: R;
-            node: BoundableNodeIndexed;
-            renderPasses?: Set<RenderPass>;
-            indexBuffer?: IndexBuffer;
-            baseVertex?: number;
-            instanceCount?: number;
-            firstIndex?: number;
-            firstInstance?: number;
-            GPUIndexFormat?: GPUIndexFormat;
+        drawableProps: Omit<DrawableProps, 'label'> & {
+            renderPipeline: R,
             vertexBuffers:
             //extract VertexShader
             R extends RenderPipeline<infer VERTEX_SHADER> ? (
@@ -48,16 +28,33 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
                     }
                     ) : never
             ) : never
+        },
+        {
+            node,
+            indexBuffer,
+            baseVertex = 0,
+            instanceCount = 1,
+            firstIndex = 0,
+            firstInstance = 0,
+            GPUIndexFormat = 'uint16',
+        } :
+        {
+            node: BoundableNodeIndexed;
+            indexBuffer?: IndexBuffer;
+            baseVertex?: number;
+            instanceCount?: number;
+            firstIndex?: number;
+            firstInstance?: number;
+            GPUIndexFormat?: GPUIndexFormat;
         }
     ) {
-        super(
+        super({
+            ...drawableProps,
+            label: node.label,
+            dynamicBindGroups: [[drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, engine.rust.gpu_alignment(node.ptr)]]
+        },
             {
-                renderPipeline,
-                dynamicBindGroups: [[renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, engine.rust.gpu_alignment(node.ptr)]],
-                label: node.label,
-                renderPasses,
                 instanceCount,
-                vertexBuffers
             });
         this.node = node;
         this.#indexBuffer = indexBuffer;

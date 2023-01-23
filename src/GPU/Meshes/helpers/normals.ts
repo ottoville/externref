@@ -24,10 +24,11 @@ export class NormalsMesh extends MainNode {
 
         const renderPipeline = gpu.createRenderPipeline(NormalsPipeline, { topology: 'line-list' });
         this.drawable = new DrawableSimple({
-            node: this,
             renderPipeline,
             renderPasses: undefined,
             vertexBuffers: [vertexBuffer]
+        }, {
+            node: this
         });
     }
 }

@@ -139,11 +139,12 @@ export class TerrainTool extends MainNode {
         this.elevator = engine.rust.create_elevator(terrain.mesh.ptr);
         this.drawable = new DrawableSimple({
             renderPipeline,
-            node: this,
-            instanceCount: 8,
-            firstVertex: 0,
-            vertexBuffers: [],
+            vertexBuffers: [] as [],
             renderPasses: undefined
+        }, {
+            node: this,
+            firstVertex: 0,
+            instanceCount: 8,
         })
         this.#pick = { position: new TerraVector3(engine.memory.buffer, engine.rust.mouse_position_pointer(this.elevator)), meshId: 0 };
         //scene.TerraCameras[0].subscribePickingRay();

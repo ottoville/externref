@@ -177,7 +177,6 @@ interface EarthDatabase extends IDBDatabase {
 }
 export interface ColliderWasm {
     construct(collisionFound: number,
-        intersectionPointer: number,
         nearestDistanceSquaredPointer: number,
         collidedMeshPointer: number,
         velocity: number,
@@ -589,8 +588,8 @@ export class Engine {
 
         //TODO: this does not work after memory grow
         this.#collidedMesh = new DataView(this.memory.buffer, engine.rust.collided_mesh_pointer(this.collider.collider_ptr), 4);
-        wasm.construct(engine.rust.collision_resolved_pointer(this.collider.collider_ptr),
-            engine.rust.intersection_point_pointer(this.collider.collider_ptr),
+        wasm.construct(
+            engine.rust.collision_resolved_pointer(this.collider.collider_ptr),
             engine.rust.nearest_distance_squared_pointer(this.collider.collider_ptr),
             engine.rust.collided_mesh_pointer(this.collider.collider_ptr),
             engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),

@@ -1,32 +1,77 @@
 ﻿import fs from 'fs'
 import WASI from 'wasi'
 const wasi = new WASI.WASI({
-  args: process.argv,
-  env: process.env
+    args: process.argv,
+    env: process.env
 });
 
 
-const memoryImport = new WebAssembly.Memory({ initial: 6000 });
+let instanceRust;
+const exportObj = {
+    env: {
+        now() {
+            return performance.now()
+        },
+        jspanic(ptr) {
+            if (!(instanceRust.exports.memory instanceof WebAssembly.Memory)) {
+                throw new Error('Webassembly module does not have memory');
+            }
+            console.error(new TextDecoder().decode(new Uint8Array(instanceRust.exports.memory.buffer, ptr, 512)).trimEnd())
+        },
+        jslog(ptr) {
+            if (!(instanceRust.exports.memory instanceof WebAssembly.Memory)) {
+                throw new Error('Webassembly module does not have memory');
+            }
+            console.log(new TextDecoder().decode(new Uint8Array(instanceRust.exports.memory.buffer, ptr, 512)).trimEnd())
+        },
+        jslog_number(number) {
+            console.log(number)
+        },
+        mesh_on_collide(mesh_id, started) {
+
+        },
+        mesh_on_physic_tick(mesh_id) {
+
+        },
+        handle_gpu_queue(pointerVec, length) {
+        },
+        updateAllocatedMemory(allocated_gpu_memory_ptr, length) {
+        },
+        update_directional_lights(pointer, length) {
+        },
+        update_point_lights(pointer, length) {
+        }
+    }
+}
+
+
+const wasmRust = await WebAssembly.compile(fs.readFileSync("../wwwroot/engine.wasm"));
+instanceRust = await WebAssembly.instantiate(wasmRust, exportObj);
+
 const importObject = {
     wasi_snapshot_preview1: wasi.wasiImport,
-        console: {
-                log: function (arg) {
-                    console.log(arg);
-                },
-                error: function (line) {
-                    console.error('Some error in webassembly on line', line)
-                    throw (new Error('Some error in webassembly on line ' + line));
-                }
-               
-            }, env: {
-                memory: memoryImport
-            }
-         };
+    console: {
+        log: function (arg) {
+            console.log(arg);
+        },
+        error: function (line) {
+            console.error('Some error in webassembly on line', line)
+            throw (new Error('Some error in webassembly on line ' + line));
+        }
+
+    },
+    rust: instanceRust.exports,
+    env: {
+        memory: instanceRust.exports.memory
+    }
+};
 
 const wasm = await WebAssembly.compile(fs.readFileSync("../wwwroot/collider/colliderSIMDO.wasm"));
 const instance = await WebAssembly.instantiate(wasm, importObject);
 
-const memory=instance.exports.memory.buffer
+
+
+const memory = instance.exports.memory
 
 //memory.set(pointers,21+4);
 
@@ -40,34 +85,44 @@ const memory=instance.exports.memory.buffer
 //f -38.078174470045326
 //nearestDistanceSquared: 14108.470703125
 
-const collisionNotFound=new Uint32Array(memory,0,1);
-const intersectionPointWasm=new Float32Array(memory,4,4);
-const nearestDistanceSquared=new Float32Array(memory, 20, 1);
-const collidedMesh=new Uint32Array(memory,24,1);
+const collider_ptr = instanceRust.exports.collider();
 
-const velocity=new Float32Array(memory,28, 4)
+
+
+const velocity = new Float32Array(memory.buffer, instanceRust.exports.scaled_velocity_pointer(collider_ptr), 4)
 velocity.set([3.71044921875, -174.03759765625, -0.5966796875]);
-const position=new Float32Array(memory,44, 4)
+const position = new Float32Array(memory.buffer, instanceRust.exports.scaled_position_pointer(collider_ptr), 4)
 position.set([3384.10498046875, 143.2760772705078, -5874.26806640625]);
 
 
-instance.exports.construct(collisionNotFound.byteOffset, intersectionPointWasm.byteOffset, nearestDistanceSquared.byteOffset, collidedMesh.byteOffset, velocity.byteOffset, position.byteOffset);
+instance.exports.construct(
+    instanceRust.exports.collision_resolved_pointer(collider_ptr),
+    instanceRust.exports.nearest_distance_squared_pointer(collider_ptr),
+    instanceRust.exports.collided_mesh_pointer(collider_ptr),
+    velocity.byteOffset,
+    position.byteOffset,
+    instanceRust.exports.collided_point_in_triangle_pointer(collider_ptr),
+    collider_ptr);
 
 instance.exports._initialize();
 
-new Float32Array(memory, 7872,4).set([0, 31.435291290283203, -10000, 0]);
-new Float32Array(memory, 7888,4).set([10000, 3.8745102882385254, -10000, 0]);
-new Float32Array(memory, 7824,4).set([0, 3.8745102882385254, 0, 0]);
+const collisionNotFound = new Uint32Array(memory.buffer, instanceRust.exports.collision_resolved_pointer(collider_ptr), 1);
+const nearestDistanceSquared = new Float32Array(memory.buffer, instanceRust.exports.nearest_distance_squared_pointer(collider_ptr), 1);
 
-new Float32Array(memory, 7776,4).set([0, 0, 0, 0]);
-new Float32Array(memory, 7760,4).set([0, 0, 0, 0]);
-new Float32Array(memory, 7808,4).set([0, 0, 0, 0]);
-new Float32Array(memory, 7840,4).set([0, 0, 0, 0]);
-new Float32Array(memory, 7792,4).set([0, 0, 0, 0]);
-new Float32Array(memory, 7792,4).set([0, 0, 0, 0]);
-new Float32Array(memory, 7856,4).set([0, 0, 0, 0]);
 
-const data=[
+new Float32Array(memory.buffer, 7872, 4).set([0, 31.435291290283203, -10000, 0]);
+new Float32Array(memory.buffer, 7888, 4).set([10000, 3.8745102882385254, -10000, 0]);
+new Float32Array(memory.buffer, 7824, 4).set([0, 3.8745102882385254, 0, 0]);
+
+new Float32Array(memory.buffer, 7776, 4).set([0, 0, 0, 0]);
+new Float32Array(memory.buffer, 7760, 4).set([0, 0, 0, 0]);
+new Float32Array(memory.buffer, 7808, 4).set([0, 0, 0, 0]);
+new Float32Array(memory.buffer, 7840, 4).set([0, 0, 0, 0]);
+new Float32Array(memory.buffer, 7792, 4).set([0, 0, 0, 0]);
+new Float32Array(memory.buffer, 7792, 4).set([0, 0, 0, 0]);
+new Float32Array(memory.buffer, 7856, 4).set([0, 0, 0, 0]);
+
+const data = [
     //norm +d
     2147483648, 1065353216, 0, 3229087738,
     //vectors
@@ -94,22 +149,22 @@ const data=[
     7888, 7840, 7824,
     993304311, 1065353089, 993304311, 3229087615,
     7872, 7888, 7824];
-const facesBufferCollider=new Uint32Array(memory,60, data.length);
+const facesBufferCollider = new Uint32Array(memory.buffer, 60, data.length);
 facesBufferCollider.set(data);
-const facesBufferColliderFloats=new Float32Array(memory,60, data.length);
-const facesBufferColliderParallel=new Float32Array(memory,60+facesBufferCollider.byteLength, 32);
+const facesBufferColliderFloats = new Float32Array(memory.buffer, 60, data.length);
+const facesBufferColliderParallel = new Float32Array(memory.buffer, 60 + facesBufferCollider.byteLength, 32);
 
 facesBufferColliderParallel.set([
-    facesBufferColliderFloats[0],   facesBufferColliderFloats[7],  facesBufferColliderFloats[14],  facesBufferColliderFloats[21],
-    facesBufferColliderFloats[1],   facesBufferColliderFloats[8],  facesBufferColliderFloats[15],  facesBufferColliderFloats[22],
-    facesBufferColliderFloats[2],   facesBufferColliderFloats[9],  facesBufferColliderFloats[16],  facesBufferColliderFloats[23],
-    facesBufferColliderFloats[3],   facesBufferColliderFloats[10],  facesBufferColliderFloats[17],  facesBufferColliderFloats[24],
+    facesBufferColliderFloats[0], facesBufferColliderFloats[7], facesBufferColliderFloats[14], facesBufferColliderFloats[21],
+    facesBufferColliderFloats[1], facesBufferColliderFloats[8], facesBufferColliderFloats[15], facesBufferColliderFloats[22],
+    facesBufferColliderFloats[2], facesBufferColliderFloats[9], facesBufferColliderFloats[16], facesBufferColliderFloats[23],
+    facesBufferColliderFloats[3], facesBufferColliderFloats[10], facesBufferColliderFloats[17], facesBufferColliderFloats[24],
 
 
-    facesBufferColliderFloats[28],   facesBufferColliderFloats[35],  facesBufferColliderFloats[42],  facesBufferColliderFloats[49],
-    facesBufferColliderFloats[29],   facesBufferColliderFloats[36],  facesBufferColliderFloats[43],  facesBufferColliderFloats[50],
-    facesBufferColliderFloats[30],   facesBufferColliderFloats[37],  facesBufferColliderFloats[44],  facesBufferColliderFloats[51],
-    facesBufferColliderFloats[31],   facesBufferColliderFloats[38],  facesBufferColliderFloats[45],  facesBufferColliderFloats[52]
+    facesBufferColliderFloats[28], facesBufferColliderFloats[35], facesBufferColliderFloats[42], facesBufferColliderFloats[49],
+    facesBufferColliderFloats[29], facesBufferColliderFloats[36], facesBufferColliderFloats[43], facesBufferColliderFloats[50],
+    facesBufferColliderFloats[30], facesBufferColliderFloats[37], facesBufferColliderFloats[44], facesBufferColliderFloats[51],
+    facesBufferColliderFloats[31], facesBufferColliderFloats[38], facesBufferColliderFloats[45], facesBufferColliderFloats[52]
 ])
 
 
@@ -117,17 +172,18 @@ instance.exports.testTriangles(
     facesBufferCollider.byteOffset,
     facesBufferColliderParallel.byteOffset,
     facesBufferCollider.byteLength,
-    8*7*4);
-if(!collisionNotFound[0]===0) {
-    console.error('faulty collisionNotFound',collisionNotFound)
+    8 * 7 * 4);
+if (!collisionNotFound[0] === 0) {
+    console.error('faulty collisionNotFound', collisionNotFound)
     process.exit(1)
 }
-if(intersectionPointWasm[0]!==3386.90673828125 || intersectionPointWasm[1] !== 10.731124877929688 || intersectionPointWasm[2] !== -5874.72216796875) {
-    console.error('faulty intersectionPointWasm',intersectionPointWasm);
+const intersectionPointWasm = new Float32Array(instanceRust.exports.memory.buffer, instanceRust.exports.intersection_point_pointer(collider_ptr), 4);
+if (intersectionPointWasm[0] !== 3386.90673828125 || intersectionPointWasm[1] !== 10.731124877929688 || intersectionPointWasm[2] !== -5874.72216796875) {
+    console.error('faulty intersectionPointWasm', intersectionPointWasm);
     process.exit(1)
 }
-if(nearestDistanceSquared[0] !== 17312.14453125) {
-    console.error('faulty nearesDistanceSquared',nearestDistanceSquared[0])
+if (nearestDistanceSquared[0] !== 17312.142578125) {
+    console.error('faulty nearesDistanceSquared', nearestDistanceSquared[0])
     process.exit(1)
 }
 

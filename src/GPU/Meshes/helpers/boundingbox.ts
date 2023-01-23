@@ -62,8 +62,9 @@ export class BoundingBoxMesh extends MainNode {
             this.drawable = new DrawableSimple({
                 renderPipeline,
                 renderPasses: undefined,
-                node: this,
                 vertexBuffers: [debug_render_boundingbox_vertexBuffer]
+            }, {
+                node: this
             })
         }
     }

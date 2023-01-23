@@ -56,8 +56,6 @@ export class Plants {
             const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline, { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' });
             new DrawableIndirect({
                 renderPipeline,
-                label: 'Plants',
-                buffer: indirectBuffer,
                 vertexBuffers: [positionGPU, shapeGPU, new Float32Array([
                     0.02, 0.0,
                     -0.02, 0.0,
@@ -66,8 +64,9 @@ export class Plants {
                     0.007, 0.57,
                     -0.007, 0.57,
                     0.0, 1.0
-                ])]
-            })
+                ])],
+                label: 'Plants',
+            }, indirectBuffer);
         }
 
         const shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * numBlades);

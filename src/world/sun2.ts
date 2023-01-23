@@ -59,10 +59,11 @@ export class Sun2 extends MainNode {
             stripIndexFormat:'uint16'
         });
         this.drawable = new DrawableSimple({
-            node: this,
             renderPipeline,
             renderPasses: undefined,
-            vertexBuffers: []
+            vertexBuffers: [] as []
+        }, {
+            node: this,
         })
         
         engine.physics.movables.push(this);

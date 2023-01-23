@@ -50,7 +50,6 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
         )
     }
     async toBitmap(depth = 0) {
-        //   const texture = this.resolveTexture ?? this;
 
         /*  if (this.renderPass.sampleCount > 1 && !this.resolveTexture) {
               throw (new Error('Printing MSAA swap target is not supported'))

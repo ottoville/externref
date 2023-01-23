@@ -8,7 +8,6 @@
   ;;(import "env" "memory" (memory $mem 31 32))
 
   (global $collisionPoint (mut v128) (v128.const i32x4 0 0 0 0))
-  (global $intersectionPointer (mut i32) (i32.const 0))
   (global $nearestDistanceSquaredPointer (mut i32) (i32.const 0))
 
   (global $velocity (mut v128) (v128.const i32x4 0 0 0 0))
@@ -46,7 +45,6 @@
   (global $collidedPointInTrianglePointer (mut i32) (i32.const 0))
   (func $construct
       (param $collisionNotFoundPointer i32)
-      (param $interSectionPoint i32)
       (param $nearestDistanceSquared i32)
       (param $collidedMesh i32)
       (param $velocityPointer i32)
@@ -63,9 +61,6 @@
         (i32.const 1)  
       )
 
-      (global.set $intersectionPointer
-        (local.get $interSectionPoint)
-      )
      (global.set $collisionNotFoundPointer
         (local.get $collisionNotFoundPointer)
       )

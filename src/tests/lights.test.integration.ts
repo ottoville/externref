@@ -39,7 +39,8 @@ const browser=globalThis.__BROWSER_GLOBAL__ as Browser;
           //@ts-expect-error
           const control=engine!.mainCamera.attachControllerForCamera({
             attachCameraController:() => undefined,
-            deAttachCameraController:() => undefined
+            deAttachCameraController:() => undefined,
+            serialize: () => undefined
             });
             control.updatePosition(position => position.set([5000,400,0]));
           control.updateDirection((direction) => {

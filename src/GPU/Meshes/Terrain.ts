@@ -51,8 +51,10 @@ export class TerrainMesh extends BoundableNodeIndexed {
             this.drawable = new DrawableIndexed({
                 renderPipeline,
                 renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]),
-                node: this,
+                
                 vertexBuffers: [this.vBuffer]
+            }, {
+                node: this,
             })
             //@ts-expect-error
             window.debugTerrain=() => new NormalsMesh(this.drawable);

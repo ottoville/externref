@@ -26,13 +26,14 @@ export class Sea extends BoundableNodeSimple {
             });
             this.drawable = new DrawableSimple({
                 renderPipeline,
-                node: this,
                 vertexBuffers: [new Float32Array([-50000.0, 3.0, -50000.0,
                     50000.0, 3.0, -50000.0,
                     -50000.0, 3.0, 50000.0,
                     50000.0, 3.0, 50000.0]),
                 ],
                 renderPasses: undefined
+            }, {
+                node: this,
             });
         }
     }

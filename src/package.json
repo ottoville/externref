@@ -18,7 +18,7 @@
     "eslint": "eslint --ext .ts,.tsx --quiet ./",
     "swa": "swa start ../wwwroot/ --ssl --ssl-cert=\"../server.crt\" --ssl-key=\"../server.key\"",
     "test-wasm": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
-    "test": "npm run test-unit && npm run test-integration",
+    "test": "npm run test-unit && npm run test-integration && npm run testWasm",
     "test-unit": "npm run buildRust-test && node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js --forceExit --detectOpenHandles --runInBand --silent=false",
     "test-integration": "npm run buildRust && start npm run swa && node --experimental-vm-modules node_modules/jest/bin/jest.js  --forceExit --detectOpenHandles --runInBand --silent=false --config=jest.integration.config.js",
     "testem": "npm run build-test && testem --file testem_config.json"

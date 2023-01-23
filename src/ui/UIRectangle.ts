@@ -9,7 +9,6 @@ import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
 declare const engine: Engine;
-
 export type ButtonSize = { min_width: number, y: number }
 
 function createVertexBuffer(
@@ -66,14 +65,14 @@ function createVertexBuffer(
     } else {
         vertices.set(
             [
-            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
-            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
-            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+                -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+                content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+                -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
 
-            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
-            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
-            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV
-            
+                -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+                content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+                content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV
+
             ]);
     }
 
@@ -81,75 +80,75 @@ function createVertexBuffer(
         //Left content_size
         vertices.set(
             [
-            -outer_sizeX, -content_sizeY, 0, container_topUV,
-            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
-            -outer_sizeX, content_sizeY, 0, container_bottomUV,
-            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
-            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
-            -outer_sizeX, content_sizeY, 0, container_bottomUV,
+                -outer_sizeX, -content_sizeY, 0, container_topUV,
+                -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+                -outer_sizeX, content_sizeY, 0, container_bottomUV,
+                -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+                -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+                -outer_sizeX, content_sizeY, 0, container_bottomUV,
 
 
-        //right content_size
+                //right content_size
 
-            outer_sizeX, -content_sizeY, textureSize.width, container_topUV,
-            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
-            outer_sizeX, content_sizeY, textureSize.width, container_bottomUV,
-            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
-            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
-            outer_sizeX, content_sizeY, textureSize.width, container_bottomUV,
-        //bottom content_size
+                outer_sizeX, -content_sizeY, textureSize.width, container_topUV,
+                content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+                outer_sizeX, content_sizeY, textureSize.width, container_bottomUV,
+                content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+                content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+                outer_sizeX, content_sizeY, textureSize.width, container_bottomUV,
+                //bottom content_size
 
-            -content_sizeX, -outer_sizeY, container_rightUV, textureSize.height,
-            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
-            content_sizeX, -outer_sizeY, conteiner_leftUV, textureSize.height,
-            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
-            content_sizeX, -outer_sizeY, conteiner_leftUV, textureSize.height,
-            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
-        
-        //top content_size
+                -content_sizeX, -outer_sizeY, container_rightUV, textureSize.height,
+                -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+                content_sizeX, -outer_sizeY, conteiner_leftUV, textureSize.height,
+                -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+                content_sizeX, -outer_sizeY, conteiner_leftUV, textureSize.height,
+                content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
 
-            -content_sizeX, outer_sizeY, container_rightUV, 0,
-            content_sizeX, outer_sizeY, conteiner_leftUV, 0,
-            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
-            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
-            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
-            -content_sizeX, outer_sizeY, container_rightUV, 0,
-        
-        //top left corner
+                //top content_size
 
-            -outer_sizeX, outer_sizeY, 0, 0,
-            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
-            -content_sizeX, outer_sizeY, container_rightUV, 0,
-            -outer_sizeX, outer_sizeY, 0, 0,
-            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
-            -outer_sizeX, content_sizeY, 0, container_bottomUV,
-        
-        //bottom left corner
+                -content_sizeX, outer_sizeY, container_rightUV, 0,
+                content_sizeX, outer_sizeY, conteiner_leftUV, 0,
+                content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+                -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+                content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+                -content_sizeX, outer_sizeY, container_rightUV, 0,
 
-            -outer_sizeX, -outer_sizeY, 0, textureSize.height,
-            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
-            -content_sizeX, -outer_sizeY, container_rightUV, textureSize.height,
-            -outer_sizeX, -outer_sizeY, 0, textureSize.height,
-            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
-            -outer_sizeX, -content_sizeY, 0, container_topUV,
-        
-        //top right corner
+                //top left corner
 
-            outer_sizeX, outer_sizeY, textureSize.width, 0,
-            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
-            content_sizeX, outer_sizeY, conteiner_leftUV, 0,
-            outer_sizeX, outer_sizeY, textureSize.width, 0,
-            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
-            outer_sizeX, content_sizeY, textureSize.width, container_bottomUV,
-        
-        //bottom right corner
+                -outer_sizeX, outer_sizeY, 0, 0,
+                -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+                -content_sizeX, outer_sizeY, container_rightUV, 0,
+                -outer_sizeX, outer_sizeY, 0, 0,
+                -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+                -outer_sizeX, content_sizeY, 0, container_bottomUV,
 
-            outer_sizeX, -outer_sizeY, textureSize.width, textureSize.height,
-            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
-            content_sizeX, -outer_sizeY, conteiner_leftUV, textureSize.height,
-            outer_sizeX, -outer_sizeY, textureSize.width, textureSize.height,
-            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
-            outer_sizeX, -content_sizeY, textureSize.width,container_topUV,
+                //bottom left corner
+
+                -outer_sizeX, -outer_sizeY, 0, textureSize.height,
+                -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+                -content_sizeX, -outer_sizeY, container_rightUV, textureSize.height,
+                -outer_sizeX, -outer_sizeY, 0, textureSize.height,
+                -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+                -outer_sizeX, -content_sizeY, 0, container_topUV,
+
+                //top right corner
+
+                outer_sizeX, outer_sizeY, textureSize.width, 0,
+                content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+                content_sizeX, outer_sizeY, conteiner_leftUV, 0,
+                outer_sizeX, outer_sizeY, textureSize.width, 0,
+                content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+                outer_sizeX, content_sizeY, textureSize.width, container_bottomUV,
+
+                //bottom right corner
+
+                outer_sizeX, -outer_sizeY, textureSize.width, textureSize.height,
+                content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+                content_sizeX, -outer_sizeY, conteiner_leftUV, textureSize.height,
+                outer_sizeX, -outer_sizeY, textureSize.width, textureSize.height,
+                content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+                outer_sizeX, -content_sizeY, textureSize.width, container_topUV,
             ], 24)
     }
     return vertices;
@@ -158,24 +157,24 @@ export type UIRectangleProps = {
     canvaspipeline: RenderPipeline<UIVertShader>,
     renderPass: RenderPass,
     label: string,
-    /*
-        BorderSize
-            width: Relative width of borders to viewport, value between 0 and 1
-            height: Relative height of borders to viewport, value between 0 and 1
-                    If "auto", it is calculated to be same than width
-            texture_width: Relative width of border in texture UV mapping, between 0 and 1
-            texture_height: Relative height of border in texture UV mapping, between 0 and 1
+    /**
+        width: Relative width of borders to viewport, value between 0 and 1
+        height: Relative height of borders to viewport, value between 0 and 1
+                If "auto", it is calculated to be same than width
+        texture_width: Relative width of border in texture UV mapping, between 0 and 1
+        texture_height: Relative height of border in texture UV mapping, between 0 and 1
     */
     borderSize: {
-        width: number, height: number | 'auto',
-        texture_width: number, texture_height: number
+        width: number,
+        height: number | 'auto',
+        texture_width: number,
+        texture_height: number
     },
     backgroundTexture: ImageBitmap | TextureView<Texture2D>,
     text?: string,
-    /*
-        Scale:
-            Size of the button relative to viewport size, value between 0 and 1.
-            Border size is taken account to scale.
+    /**
+        Size of the button relative to viewport size, value between 0 and 1.
+        Border size is taken account to scale.
     */
     scale: ButtonSize,
     translate: { x: number, y: number },
@@ -187,7 +186,7 @@ export type UIRectangleProps = {
 /*
     Draws rectangle.
 */
-export class UIRectangle /*extends UINode*/ {
+export class UIRectangle {
     label: string;
     positions_count: number;
 
@@ -209,9 +208,10 @@ export class UIRectangle /*extends UINode*/ {
         translate,
         originalAspectRatio,
         events,
-        text } : UIRectangleProps) {
+        text }: UIRectangleProps) {
+
         this.positions_count = (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6;
-        this.label = label;
+        this.label = label + '_UIRectangle';
         //super({ positionsCount: (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6, label });
         this.#renderPass = renderPass;
         let textureView: TextureView<Texture<GPUTextureFormat, TextureUsageValue>>
@@ -223,7 +223,7 @@ export class UIRectangle /*extends UINode*/ {
         ]
         // this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([renderPass]))
         if (backgroundTexture instanceof ImageBitmap) {
-            var backgroundSize:Texture2dSize = { width: backgroundTexture.width, height: backgroundTexture.height };
+            var backgroundSize: Texture2dSize = { width: backgroundTexture.width, height: backgroundTexture.height };
             let copySource: ImageBitmap | OffscreenCanvas = backgroundTexture;
 
             // Create texture for text
@@ -234,21 +234,21 @@ export class UIRectangle /*extends UINode*/ {
                     throw new Error('Cant get 2d context for texture text');
                 }
                 const font = '48px serif';
-                ctx.textBaseline ="top";
+                ctx.textBaseline = "top";
                 ctx.font = font;
                 const measuredSize = ctx.measureText(text)
-                const textSize = { width: measuredSize.width, height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent                }
+                const textSize = { width: measuredSize.width, height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent }
 
                 const originalTextHeight = textSize.height;
-                if(originalAspectRatio) {
+                if (originalAspectRatio) {
                     //Keep text aspect ratio normal
                     const textAspectRatio = textSize.height / textSize.width;
-                    if(textAspectRatio > originalAspectRatio) {
+                    if (textAspectRatio > originalAspectRatio) {
                         //need to add borders to left and right
-                        textSize.width = textSize.height/originalAspectRatio
-                    } else if(textAspectRatio < originalAspectRatio) {
+                        textSize.width = textSize.height / originalAspectRatio
+                    } else if (textAspectRatio < originalAspectRatio) {
                         //need to add borders to top and bottom
-                        textSize.height = textSize.width*originalAspectRatio
+                        textSize.height = textSize.width * originalAspectRatio
                     }
                 }
                 const extendedSize = {
@@ -260,33 +260,33 @@ export class UIRectangle /*extends UINode*/ {
                 ctx.drawImage(backgroundTexture, 0, 0);
 
                 const borderSizeInPixel = {
-                    width: backgroundSize.width*borderSize.texture_width,
-                    height: backgroundSize.height*borderSize.texture_height
+                    width: backgroundSize.width * borderSize.texture_width,
+                    height: backgroundSize.height * borderSize.texture_height
                 }
 
                 const contentSize = {
-                    width: backgroundSize.width - borderSizeInPixel.width*2,
-                    height: backgroundSize.height - borderSizeInPixel.height*2,
+                    width: backgroundSize.width - borderSizeInPixel.width * 2,
+                    height: backgroundSize.height - borderSizeInPixel.height * 2,
                 }
 
                 ctx.drawImage(
                     backgroundTexture,
                     borderSizeInPixel.width,
                     borderSizeInPixel.height,
-                    contentSize.width,contentSize.height,
-                    0,backgroundSize.height,
+                    contentSize.width, contentSize.height,
+                    0, backgroundSize.height,
                     extendedSize.width, textSize.height)
                 ctx.font = font;
                 ctx.textAlign = "center";
-                ctx.textBaseline ="top";
+                ctx.textBaseline = "top";
                 const verticalTextMargin = textSize.height - originalTextHeight;
                 ctx.fillText(
                     text,
-                    extendedSize.width*0.5,
-                    backgroundSize.height + measuredSize.actualBoundingBoxAscent + verticalTextMargin*0.5);
-                if(label === 'createGrassButton') {
+                    extendedSize.width * 0.5,
+                    backgroundSize.height + measuredSize.actualBoundingBoxAscent + verticalTextMargin * 0.5);
+                if (label === 'createGrassButton') {
                     // eslint-disable-next-line promise/catch-or-return
-                    copySource.convertToBlob().then(b => {console.log(URL.createObjectURL(b!))})
+                    copySource.convertToBlob().then(b => { console.log(URL.createObjectURL(b!)) })
                 }
 
                 textUV = [
@@ -314,7 +314,7 @@ export class UIRectangle /*extends UINode*/ {
                         y: 0
                     }
                 },
-                {width: copySource.width, height: copySource.height})
+                { width: copySource.width, height: copySource.height })
             textureView = new TextureView(texture);
         } else {
             var backgroundSize = backgroundTexture.texture.size;
@@ -337,14 +337,14 @@ export class UIRectangle /*extends UINode*/ {
             }
             let pointerDown = false;
             engine.addInputListener('pointerup', this, (e) => {
-                if(pointerDown && checkClickArea(e)) {
+                if (pointerDown && checkClickArea(e)) {
                     onClick(e);
                     return true;
                 }
                 return false;
             }, true)
             engine.addInputListener('pointerdown', this, (e) => {
-                if(checkClickArea(e)) {
+                if (checkClickArea(e)) {
                     pointerDown = true;
                     return true;
                 }
@@ -369,7 +369,7 @@ export class UIRectangle /*extends UINode*/ {
             this.#boundingBox.left = offsetXPixels - halfWidth;
             this.#boundingBox.right = offsetXPixels + halfWidth;
 
-            return createVertexBuffer(scale, renderPass.size, borderSize, backgroundSize, label, textUV, text);            
+            return createVertexBuffer(scale, renderPass.size, borderSize, backgroundSize, label, textUV, text);
         }
         renderPass.onResize.set(this, () => {
             const newVertices = updateBoundingBoxAndVertices();
@@ -380,12 +380,13 @@ export class UIRectangle /*extends UINode*/ {
 
         this.drawable = new DrawableSimple({
             renderPipeline: canvaspipeline,
-            node: this,
             renderPasses: new Set([renderPass]),
+            vertexBuffers: [vertices]
+        }, {
+            node: this,
             instanceCount: 1,
             firstVertex: 0,
             firstInstance: 0,
-            vertexBuffers: [vertices]
         });
 
         this.drawable.setStaticBindGroup('UI_bindgroup_' + label, (bindGroup) => {

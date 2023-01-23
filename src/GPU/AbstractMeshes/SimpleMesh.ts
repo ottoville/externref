@@ -7,33 +7,34 @@ import { Buffer, VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { RenderPipeline } from "../RenderPipeline2.js";
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
 
-declare const engine:Engine;
+declare const engine: Engine;
 
 export abstract class SimpleMesh extends BoundableNodeSimple {
     drawable: DrawableSimple<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
         vBufferCPU: Float32Array,
-        label:string,
+        label: string,
         can_collide: boolean,
         vBufferGPU?: VertexBuffer,
         scenes?: Scene[],
         fixed = false,
         point_light = 0) {
-        super(vBufferCPU, 6, false,label,can_collide, scenes, fixed, undefined, point_light);
-        if(engine.gpu) {
-            if(!vBufferGPU) {
-                vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX], 'vertex_'+label, b => {
+        super(vBufferCPU, 6, false, label, can_collide, scenes, fixed, undefined, point_light);
+        if (engine.gpu) {
+            if (!vBufferGPU) {
+                vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX], 'SimpleMeshVertex_' + label, b => {
                     new Float32Array(b.getMappedRange()).set(vBufferCPU);
                 });
             }
             const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline);
             this.drawable = new DrawableSimple({
                 renderPipeline,
-                node: this,
                 vertexBuffers: [vBufferGPU],
                 renderPasses: undefined
+            }, {
+                node: this,
             })
         }
-        
+
     }
 }
