@@ -1,6 +1,7 @@
 import type { GPU } from "../GPU.js";
 import { BindGroup } from "./BindGroup.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
+import { Struct } from "./Shaders/structs/Structs.js";
 
 
 export interface GPUBindGroupTextureEntry {
@@ -31,16 +32,19 @@ export abstract class BindGroupLayoutEntry<V extends ShaderStage = ShaderStage> 
         public structName: string) {
     }
 }
-export type Struct = {name: string, struct: string, depedencies?: Struct[]}
-export class BufLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
+export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = Struct> extends BindGroupLayoutEntry<V> {
     constructor(
         public override entry: BindGroupLayoutEntryProps<V> & {
             buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 }
         },
         variableName: string,
-        public struct: Struct,
+        public struct: S,
         ) {
+            
             super(entry, variableName, struct.name)
+    }
+    prop(member:keyof S["properties"] & string) {
+        return `${this.variableName}.${member}`
     }
 }
 export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {

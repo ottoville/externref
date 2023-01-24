@@ -149,6 +149,13 @@ export class ArcRotateCamera extends CameraController {
         engine.addInputListenerOnce('pointerup',this, onceUp)
     
     }
+    startTooling(): void {
+        engine.removeInputListener('pointerdown', this, this.#cameraPointerDown);
+        engine.removeInputListener('pointermove', this, this.#cameraMove);
+    }
+    stopTooling(): void {
+        engine.addInputListener('pointerdown', this, this.#cameraPointerDown);
+    }
     deAttachCameraController() {
         engine.clearInputListeners(this);
         this.serialize();
@@ -156,6 +163,14 @@ export class ArcRotateCamera extends CameraController {
     attachCameraController() {
         engine.addInputListener('wheel', this, this.#cameraWheel);
         engine.addInputListener('pointerdown', this, this.#cameraPointerDown);
+        engine.addInputListener('pointermove', this, (e) => {
+            if(this.camera.gpu) {
+                const gpu = this.camera.gpu
+                Atomics.store(gpu.mousePosition, 0, e.clientX * gpu.scale.x)
+                Atomics.store(gpu.mousePosition, 1, e.clientY * gpu.scale.y)
+                Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
+            }
+        });
     }
     #calculatePosition() {
         let sinb = Math.sin(this.#beta);

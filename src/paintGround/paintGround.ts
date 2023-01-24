@@ -50,6 +50,9 @@ export abstract class paintGround {
                 this.#drawVector[0] = this.#start_position[0] - this.#end_position[0];
                 this.#drawVector[1] = (this.#start_position[1] - this.#end_position[1]) * -1
 
+                if(this.#drawVector[0] === 0) {
+                    return;
+                }
                 this.#size.height = Math.sqrt(this.#drawVector[0] * this.#drawVector[0] + this.#drawVector[1] * this.#drawVector[1])
 
                 const rad = Math.atan(Math.abs(this.#drawVector[1]) / Math.abs(this.#drawVector[0]));
@@ -69,8 +72,6 @@ export abstract class paintGround {
         }).catch(err => {
             engine.showError(err);
         })
-
-
     }
 
     abstract onMainPointerDown(startingPoint: Float32Array): void;
@@ -124,7 +125,7 @@ export abstract class paintGround {
     }
     #pointerUp = () => {
         engine.removeInputListener('pointermove', this, this.#drawArea)
-        engine.inputManager?.attachCameraController();
+        engine.inputManager?.stopTooling();
         //fix race condition
         if (this.#end_position[0] == 0)
             return;
@@ -151,7 +152,7 @@ export abstract class paintGround {
             if (pickInfo) {
                 this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
                 this.onMainPointerDown(this.#start_position);
-                engine.inputManager?.deAttachCameraController();
+                engine.inputManager?.startTooling();
                 engine.addInputListener('pointermove', this, this.#drawArea);
                 engine.addInputListenerOnce('pointerup', this, this.#pointerUp)
             } else {

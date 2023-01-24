@@ -39,8 +39,8 @@ window.resetDebugNumber = () => {
 export class GPU {
     #maxInstances = 10;
 
-    readonly #mousePositionBuffer = new SharedArrayBuffer(4);
-    readonly mousePosition = new Uint16Vector2(this.#mousePositionBuffer);
+    readonly mousePositionBuffer = new SharedArrayBuffer(4);
+    readonly mousePosition = new Uint16Vector2(this.mousePositionBuffer);
 
 
     static readonly gpu_memory_index_size = 256;
@@ -79,7 +79,7 @@ export class GPU {
 
     readonly #renderPasses: RenderPass[];
 
-    readonly #scale = {
+    readonly scale = {
         x: 1,
         y: 1
     }
@@ -552,8 +552,8 @@ export class GPU {
                         canvas.width = canvas.height * aspectRatio;
                     }
 
-                    this.#scale.x = canvas.width / entry.contentRect.width;
-                    this.#scale.y = canvas.height / entry.contentRect.height;
+                    this.scale.x = canvas.width / entry.contentRect.width;
+                    this.scale.y = canvas.height / entry.contentRect.height;
                     // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
                     context.configure({
                         device: this.device,
@@ -590,11 +590,6 @@ export class GPU {
             throw new Error('Canvas must have parent element');
         }
         this.#ro.observe(canvas.parentElement);
-        canvas.addEventListener('pointermove', (e) => {
-            Atomics.store(this.mousePosition, 0, e.clientX * this.#scale.x)
-            Atomics.store(this.mousePosition, 1, e.clientY * this.#scale.y)
-            Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
-        });
     }
     readonly #queue_map = new Map<number, number>();
 

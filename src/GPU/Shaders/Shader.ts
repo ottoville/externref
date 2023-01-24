@@ -1,5 +1,6 @@
-import { BGLayout, BufLayout, Struct } from "../BindGroupLayout.js";
+import { BGLayout, BufLayout, ShaderStage } from "../BindGroupLayout.js";
 import { PipelineLayout } from "../PipelineLayout.js";
+import { Struct } from "./structs/Structs.js";
 
 export type ShaderParams<E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
     B extends readonly BGLayout[] = readonly BGLayout[]> = {
@@ -25,26 +26,33 @@ export abstract class Shader<
                 }
                 let qualifiers = '';
                 if (binding instanceof BufLayout) {
-                    if (binding.entry.buffer.type === 'uniform') {
+                    //Bug in TS?
+                    const binding2 = binding as BufLayout<ShaderStage, Struct>
+                    if (binding2.entry.buffer.type === 'uniform') {
                         qualifiers = '<uniform>';
                     }
-                    else if (binding.entry.buffer.type === 'read-only-storage') {
+                    else if (binding2.entry.buffer.type === 'read-only-storage') {
                         qualifiers = '<storage, read>';
                     } else {
                         qualifiers = '<storage, read_write>';
                     }
-                    if (binding.struct.depedencies) {
-                        binding.struct.depedencies.forEach(depedency => {
+                    if (binding2.struct.depedencies) {
+                        binding2.struct.depedencies.forEach(depedency => {
                             structs.add(depedency);
                         })
                     }
-                    structs.add(binding.struct);
+                    structs.add(binding2.struct);
                 }
                 return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${binding.variableName} : ${binding.structName};\n`
             }, groupstring)
         }, '\n');
-        const structString = [...structs].reduce((s, struct) =>
-            `${s}struct ${struct.name} {\n${struct.struct}\n}\n`
+        const structString = [...structs].reduce((s, struct) => {
+            let properties = '';
+            for (const property in struct.properties) {
+                properties += `${struct.properties[property]![0]} ${property}: ${struct.properties[property]![1]},\n`
+            }
+            return `${s}struct ${struct.name} {\n${properties}}\n`;
+        }
             , '')
         //
         this.wgsl = groups + structString;
@@ -52,7 +60,7 @@ export abstract class Shader<
     protected createWGSL(cb: (...args: { [K in keyof B]: B[K]["entries"] }) => string) {
 
         const entries = this.props.bindGroupLayouts.map(bl => bl.entries) as unknown as { [K in keyof B]: B[K]["entries"] };
-        
+
         const filtered = entries.map((e) => {
             return e.filter(ee => {
                 return (ee.entry.visibility & this.shaderFlag) !== 0

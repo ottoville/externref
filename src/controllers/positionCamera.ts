@@ -14,11 +14,17 @@ const enum ARROW_KEYS  {
     LEFT_AND_RIGHT = ARROW_KEYS.RIGHT|ARROW_KEYS.LEFT
 }
 
-/*
+/**
     This camera is used for camera that can be moved with keyboard
     without being attached to any mesh
 */
 export class PositionCamera extends CameraController {
+    startTooling(): void {
+        throw new Error("Method not implemented.");
+    }
+    stopTooling(): void {
+        throw new Error("Method not implemented.");
+    }
     name='PositionCamera';
     #angle=Math.PI;
     #position=new TerraVector3([-3000,300,0]);

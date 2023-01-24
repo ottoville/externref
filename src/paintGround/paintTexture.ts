@@ -61,17 +61,18 @@ export class paintTexture extends paintGround {
         const maxZ = Math.max(...translated.map(t => t[1])) | 0;
 
         const cwidth = maxX - minX;
+        const cheight = maxZ - minZ;
+        if(cwidth === 0 || cheight === 0) {
+            return;
+        }
         const missAlignment = (cwidth * 4) % 256;
         const alignment = missAlignment ? 256 - missAlignment : 0
-        const c = document.createElement('canvas');
-        c.width=cwidth + alignment / 4
-        c.height=maxZ - minZ;
+        const c = new OffscreenCanvas(cwidth + alignment / 4, cheight);
         const buffersize = c.width * c.height * 4
 
         const ctx = c.getContext("2d");
         if (!ctx)
             throw (new Error('cannot get 2D context'));
-
         let imageData = ctx.createImageData(c.width, c.height);
 
         const tempBuffer = this.scene.gpu.device.createBuffer({
@@ -84,7 +85,6 @@ export class paintTexture extends paintGround {
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
         });
         const encoder = this.scene.gpu.device.createCommandEncoder({label: 'drawSubImage_encoder'});
-
         encoder.copyTextureToTexture(
             { texture: this.zonedt.texture, origin: { x: minX, y: minZ } },
             { texture: tempTexture },

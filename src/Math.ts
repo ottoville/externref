@@ -311,7 +311,11 @@ export class Quaternion extends TerraVector4 {
 }
 const fullRad = Math.PI * 2
 export class Angle {
-    constructor(private _rad: number, private _deg?: number) { }
+    constructor(private _rad: number, private _deg?: number) {
+        if(Number.isNaN(_rad)) {
+            throw new Error('Radian is NaN')
+        }
+    }
     get deg(): number {
         if (typeof (this._deg) === 'number')
             return this._deg;
