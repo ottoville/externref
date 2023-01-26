@@ -123,13 +123,15 @@ export class RenderPass<U extends {
     getVariant(renderPipeline: Readonly<RenderPipeline>) {
         let variant = this.renderPipelines.get(renderPipeline);
         if (!variant) {
+            const params = {
+                ...renderPipeline.props.renderPipeline,
+                layout: renderPipeline.props.bindgroupdrawable.layout,
+                ...this.onDecoratePipeline(renderPipeline),
+                label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label
+            };
+            console.debug('Create renderpipeline ',params)
             const variantP = this.gpu.device.createRenderPipelineAsync(
-                {
-                    ...renderPipeline.props.renderPipeline,
-                    layout: renderPipeline.props.bindgroupdrawable.layout,
-                    ...this.onDecoratePipeline(renderPipeline),
-                    label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label
-                }
+                params
             ).catch((err: unknown) => {
                 if (err instanceof DOMException) {
                     if (err.message.includes(renderPipeline.props.vertexShader.module.label)) {

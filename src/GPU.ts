@@ -18,7 +18,7 @@ import { UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
 import { ClustersComp } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderPipeline } from "./GPU/RenderPipeline2.js";
-import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, Projection as ProjectionStruct } from "./GPU/Shaders/structs/Structs.js";
+import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, Projection as ProjectionStruct, Struct } from "./GPU/Shaders/structs/Structs.js";
 import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 import { UIFragShader } from "./GPU/Shaders/UI.frag.js";
 declare const engine: Engine;
@@ -52,7 +52,10 @@ export class GPU {
     readonly pendingCommandBuffers: Set<GPUCommandBuffer> = new Set();
     readonly tempGPUBuffers: GPUBuffer[] = [];
 
-    readonly rootCameralayout: BindablePipelineLayout<readonly [typeof this.sizeBindGroupLayout, typeof this.uniformBindGroupLayoutWithTime]>;
+    readonly rootCameralayout: BindablePipelineLayout<readonly [
+        typeof this.sizeBindGroupLayout,
+        typeof this.uniformBindGroupLayoutWithTime
+    ]>;
 
     readonly projections: Set<Projection> = new Set();
     readonly cameras: TerraCamera[] = []
@@ -101,12 +104,33 @@ export class GPU {
     readonly #CLUSTER_WORKGROUP_SIZE: [number, number, number] = [4, 2, 4];
     readonly CLUSTER_DISPATCH_SIZE: [number, number, number] = this.clustersInRow.map((v, i) => Math.ceil(v / this.#CLUSTER_WORKGROUP_SIZE[i]!)) as [number, number, number];
     // readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = [1,1,1];
+
     readonly uniformBindGroupLayoutWithTime: BGLayout<[
-        BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>,
-        BufLayout<ShaderStage.VERTEX>,
-        BufLayout<ShaderStage.FRAGMENT>,
-        BufLayout<ShaderStage.FRAGMENT>,
-        BufLayout<ShaderStage.FRAGMENT>
+        BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, Struct<{
+            modelViewProjection: [string, string];
+            view: [string, string];
+            viewPosition: [string, string]; }>>,
+        BufLayout<ShaderStage.VERTEX, Struct<{
+            time: [string, string];
+            delta: [string, string]; }>>,
+        BufLayout<ShaderStage.FRAGMENT, Struct<{
+            bounds: [string, string];
+            lightsCount: [string, string];
+            lights: [string, string]; }>>,
+        BufLayout<ShaderStage.FRAGMENT, Struct<{
+            length: [string, string];
+            pointers: [string, string];
+            mesh: [string, string]; }>>,
+        BufLayout<ShaderStage.FRAGMENT,Struct<{
+            inversed_projection: [string, string];
+            reversed_projection: [string, string];
+            projectionFarPlane: [string, string];
+            zNear: [string, string];
+            zFar: [string, string];
+            z_near_multiplied_far: [string, string];
+            z_near_substracted_far: [string, string];
+            slice_scale: [string, string];
+            slice_bias: [string, string]; }>>
     ]>;
 
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();

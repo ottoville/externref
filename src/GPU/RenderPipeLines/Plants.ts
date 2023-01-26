@@ -27,14 +27,14 @@ export const PlantsRenderPipeline = [
                     }
                 ]
             }, {
-                arrayStride: 12,
+                arrayStride: 8,
                 stepMode: 'vertex',
                 attributes: [
                     {
                         // vertex position
                         shaderLocation: 2,
                         offset: 0,
-                        format: "float32x3"
+                        format: "float32x2"
                     }
                 ]
             }

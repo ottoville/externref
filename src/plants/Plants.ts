@@ -53,7 +53,13 @@ export class Plants {
         const positionGPUSwap = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'positionGPUSwap');
         const shapeGPUSwap = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'shapeGPUSwap');
         if (engine.gpu) {
-            const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline, { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' });
+            const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline,
+                {
+                    topology: 'triangle-strip',
+                    cullMode: 'none',
+                    stripIndexFormat: 'uint16'
+                }
+            );
             new DrawableIndirect({
                 renderPipeline,
                 vertexBuffers: [
@@ -85,33 +91,9 @@ export class Plants {
         }
 
         this.#ready = terrainP.then(async terrain => {
-            await this.#worker.message(WorkerReturn.Promise, 'init', {
-                //  positions: this.offset,
-                shape: shapes,
-                noises: noises,
-            }, []);
             const getHeightAtCoordinatesShader = new GrassHeightAtCoordinates(Terrain.settings, scene.gpu);
 
             const computePipeline = await getHeightAtCoordinatesShader.createComputePipeline('main');
-
-            const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1', bindGroup1 => [
-                {
-                    binding: 0,
-                    resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1)
-                },
-                {
-                    binding: 1,
-                    resource: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1)
-                },
-                {
-                    binding: 2,
-                    resource: positionGPUSwap.getStorageBinding(bindGroup1)
-                },
-                {
-                    binding: 3,
-                    resource: shapeGPUSwap.getStorageBinding(bindGroup1)
-                },
-            ]);
 
             this.#worker.subscribe('updated', (data: { buffer: SharedArrayBuffer }) => {
                 const commandEncoder = scene.gpu.device.createCommandEncoder({ label: 'plants_encoder' });
@@ -137,66 +119,33 @@ export class Plants {
                 positionGPUSwap.copyTo(commandEncoder, positionGPU, 0, 0, numBlades * 4 * 4);
 
                 shapeGPUSwap.copyTo(commandEncoder, shapeGPU, 0, 0, numBlades * 4 * 4);
-
                 indirectBuffer.updateBufferRaw(commandEncoder, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
                 scene.gpu.pendingCommandBuffers.add(commandEncoder.finish());
             });
-        }).catch(err => engine.showError(err))
+            await this.#worker.message(WorkerReturn.Promise, 'init', {
+                //  positions: this.offset,
+                shape: shapes,
+                noises: noises,
+            }, []);
 
-
-        return;
-
-
-        //continue from here;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //Empty array to contain calculated values or normals added
-
-        /*   this.mat.setTexture("map", new Texture("./images/grass2.jpg", scene));
-           this.mat.setColor3("grassColor", new Color3(0.45, 0.46, 0.19));
-           this.mat.setColor3("fogColor", new Color3(0.74, 0.77, 0.91));
-           let LIGHT_DIR = new Vector3(1, 0, 0)
-           LIGHT_DIR = LIGHT_DIR.normalize();
-           LIGHT_DIR.z *= 0.5
-           LIGHT_DIR = LIGHT_DIR.normalize();
-           this.mat.setVector3("lightPos", new Vector3(20, 4000, 2));
-           this.mat.setVector3("lightDir", LIGHT_DIR);
-           let timed = new Date();
-           scene.registerBeforeRender(() => {
-               this.mat.setFloat("time", (timed.getTime() - new Date().getTime()) / 1000);
-               this.mat.setVector3("camDir", camera.position);
-           });
-           //FIX
-
-           this.mat.setFloat("windIntensity", 1.5);
-           //fix
-           this.mat.setFloat("fogFar", 1200.0);
-           this.mat.setFloat("fogNear", 1.0);
-           this.mat.setFloat("BLADESEGS", BLADE_SEGS);
-           this.mat.setFloat("BLADEVERTS", (BLADE_SEGS + 1) * 2);
-           //depth*2 fix
-           this.mat.setFloat("grassFogFar", 1600);
-           //this.mat.backFaceCulling = false;
-
-           Poaceae.material = this.mat;
-           Poaceae.alwaysSelectAsActiveMesh = true;
-
-
-           this.mat.backFaceCulling = false;*/
-
-        // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
-
+            const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1', bindGroup1 => [
+                {
+                    binding: 0,
+                    resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1)
+                },
+                {
+                    binding: 1,
+                    resource: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1)
+                },
+                {
+                    binding: 2,
+                    resource: positionGPUSwap.getStorageBinding(bindGroup1)
+                },
+                {
+                    binding: 3,
+                    resource: shapeGPUSwap.getStorageBinding(bindGroup1)
+                },
+            ]);
+        }).catch(err => engine.showError(err));
     }
 }
