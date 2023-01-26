@@ -23,10 +23,11 @@ class PlaneMesh extends BoundableNodeIndexed {
             new Uint32Array(),
             false, false, undefined, undefined, 'plane', undefined, undefined, false, false, false);
         //super({ positionsCount: verticesCount, label: 'plane'});
-        this.drawable = new DrawableIndexed({
-            renderPipeline,
-            vertexBuffers: [vertexBuffer]
-        },
+        this.drawable = new DrawableIndexed(
+            {
+                renderPipeline,
+                vertexBuffers: [vertexBuffer]
+            },
             {
                 node: this,
             });
@@ -48,16 +49,19 @@ export class paintPlane extends paintGround {
         let renderPipeline = renderPipelines.get(scene.gpu);
         if (!renderPipeline) {
             const planeVertShader = new PlaneVertShader(
-                ground.TerrainHeightsbindGroupTree, {
-                arrayStride: 4 * 2,
-                stepMode: "vertex" as GPUVertexStepMode,
-                attributes: [{
-                    // position
-                    shaderLocation: 0,
-                    offset: 0,
-                    format: "float32x2"
-                }]
-            }, Terrain.settings
+                ground.TerrainHeightsbindGroupTree,
+                {
+                    arrayStride: 4 * 2,
+                    stepMode: "vertex" as GPUVertexStepMode,
+                    attributes: [
+                        {
+                            // position
+                            shaderLocation: 0,
+                            offset: 0,
+                            format: "float32x2"
+                        }
+                    ]
+                }, Terrain.settings
             )
             renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline(
                 {

@@ -4,7 +4,7 @@ import { RenderPassTarget, RenderPassTargetOptions } from "./RenderPassTarget.js
 
 export type ColorRenderTargetParams = {
     clearValue: GPUColor,
-    blend: GPUBlendState | undefined, 
+    blend: GPUBlendState | undefined,
 }
 
 export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
@@ -24,7 +24,7 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
                 clearValue,
                 blend
             }
-            return new ColorRenderTarget<F, U>(textureOptions, 
+            return new ColorRenderTarget<F, U>(textureOptions,
                 {
                     writeMask,
                     context,
@@ -54,6 +54,5 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
         }
         return obj;
     }
-    
 }
 

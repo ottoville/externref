@@ -3,30 +3,30 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from "GPU.js"
 type BindLayouts = [
-  GPU["sizeBindGroupLayout"],
-  GPU["uniformBindGroupLayoutWithTime"],
-  BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
-  BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>];
+    GPU["sizeBindGroupLayout"],
+    GPU["uniformBindGroupLayoutWithTime"],
+    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+    BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>];
 
 export class WaterFragShader extends FragmentShader<
-  { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout,
-        pick: pipelineLayout
-      }, label: 'Simple.frag'
-    });
-    this.createWGSL((
-      [/*uniforms*/,],
-      [/*scene, time, clusters_array, meshes, projection*/,],
-      [/*world*/,],
-      [mySampler, diffuseTexture,]) => {
+    { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout,
+                pick: pipelineLayout
+            }, label: 'Simple.frag'
+        });
+        this.createWGSL((
+            [/*uniforms*/,],
+            [/*scene, time, clusters_array, meshes, projection*/,],
+            [/*world*/,],
+            [mySampler, diffuseTexture,]) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return  /* wgsl */ `
+            return  /* wgsl */ `
       struct Output {
         @location(0) Diffuse : vec4<f32>
       };
@@ -46,7 +46,7 @@ export class WaterFragShader extends FragmentShader<
         return output;
       }
   `;
-      //////////////
-    })
-  }
+            //////////////
+        })
+    }
 }

@@ -199,7 +199,7 @@ export class Canvas extends TerraCompoment {
 
         /*   const slope = new Triangle('slopeTriangle',undefined,true);
            slope.update_scale(0, 400, 400);
-   
+
         //   slope.update_euler_angles(0,0,Math.PI*-0.5);
            slope.update_euler_angles(0,0,Math.PI*-0.4);
            slope.translation = [23,600,23];*/

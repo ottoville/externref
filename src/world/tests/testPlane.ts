@@ -1,5 +1,5 @@
 ﻿import type { Scene } from "../../Scene.js";
-import type {  BoundableNodeSimple } from "../../nodes/BoundableNodeSimple.js";
+import type { BoundableNodeSimple } from "../../nodes/BoundableNodeSimple.js";
 const vertices = new Float32Array([
     0, 0, 0,
     1, 0, 0,
@@ -7,19 +7,20 @@ const vertices = new Float32Array([
     1, 1, 0,
     0, 2, 0,
     1, 2, 0,
-    0, 3, 0]);
+    0, 3, 0
+]);
 
 //@ts-ignore
 export class testPlane extends BoundableNodeSimple {
 
     constructor(scene: Scene) {
         //@ts-ignore
-        super(new SharedArrayBuffer(7 * 3 * 4),7,undefined,undefined,false,scene)
+        super(new SharedArrayBuffer(7 * 3 * 4), 7, undefined, undefined, false, scene)
         //this.boundingBox.box.set([0, 0, 0, 200, 200, 0])
         this.set_vertices(vertices);
-       /* this.updateVertices(buffer =>
-            new Float32Array(buffer).set(vertices)
-         )*/
+        /* this.updateVertices(buffer =>
+             new Float32Array(buffer).set(vertices)
+          )*/
         //@ts-ignore
         const vBuffer = scene.gpu.createGPUBuffer(this.verticesBuffesSize, [GPUBufferUsage.VERTEX], true);
         new Float32Array(vBuffer.getMappedRange()).set(vertices);

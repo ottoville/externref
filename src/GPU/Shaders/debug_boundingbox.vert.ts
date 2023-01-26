@@ -4,26 +4,26 @@ import { GPU } from '../../GPU.js'
 type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"];
 
 export class DebugBoundingBoxVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout],
-  BindLayouts
+    { main: PipelineLayout },
+    [GPUVertexBufferLayout],
+    BindLayouts
 > {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'debug_boundingBox.vert'
-    }, [buffers]);
-    this.createWGSL((
-      [/*uniforms*/,],
-      [scene, /*time, clusters_array, meshes, projection*/],
-      [/*world*/,]) => {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout
+            },
+            label: 'debug_boundingBox.vert'
+        }, [buffers]);
+        this.createWGSL((
+            [/*uniforms*/,],
+            [scene,/*time, clusters_array, meshes, projection*/],
+            [/*world*/,]) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return /* wgsl */ `
+            return /* wgsl */ `
   struct Output {
     @builtin(position) Position : vec4<f32>,
     @location(0) color : vec3<f32>
@@ -41,9 +41,9 @@ export class DebugBoundingBoxVertShader extends VertexShader<
    `;
 
 
-      //////////////////////////////////
+            //////////////////////////////////
 
 
-    })
-  }
+        })
+    }
 }

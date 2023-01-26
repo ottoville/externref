@@ -6,17 +6,17 @@ import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
 import type { RenderPipeline } from "../../RenderPipeline2.js";
 import type { DebugBoundingBoxVertShader } from "../../Shaders/debug_boundingbox.vert.js";
-declare const engine:Engine;
+declare const engine: Engine;
 
 
 export class BoundingBoxMesh extends MainNode {
     drawable: DrawableSimple<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
-    constructor(targetNode: DrawableIndexed) {         
-        super({positionsCount: 26, label: 'BoundingBoxDebug'});
+    constructor(targetNode: DrawableIndexed) {
+        super({ positionsCount: 26, label: 'BoundingBoxDebug' });
 
 
 
-        if(!(targetNode.node instanceof MainNode)) {
+        if (!(targetNode.node instanceof MainNode)) {
             console.warn("Cannot debug_bounding_box on UI elements")
             return;
         }
@@ -57,8 +57,8 @@ export class BoundingBoxMesh extends MainNode {
             view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 5 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 24 * 4);
             view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 25 * 4);
         });
-        if(engine.gpu) {
-            const renderPipeline = engine.gpu.createRenderPipeline(BoundingBoxPipeline,{ topology: 'line-strip', stripIndexFormat:'uint32' });
+        if (engine.gpu) {
+            const renderPipeline = engine.gpu.createRenderPipeline(BoundingBoxPipeline, { topology: 'line-strip', stripIndexFormat: 'uint32' });
             this.drawable = new DrawableSimple({
                 renderPipeline,
                 renderPasses: undefined,

@@ -16,7 +16,7 @@ export class LazyEval {
     #timerStart: number | null = null;
     #timeoutID = 0;
     constructor(
-         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         private callback: (...args: any[]) => void) {
     }
     eval(timeout: number, ...args: (Event)[]) {
@@ -32,7 +32,7 @@ export class LazyEval {
                 this.#timeoutID = setTimeout(() => this.run(args), lazyTimer);
         }
     }
-    run(args:Event[]) {
+    run(args: Event[]) {
         this.#timerStart = null;
         this.callback(...args);
     }

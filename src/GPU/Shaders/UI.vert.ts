@@ -4,22 +4,22 @@ import type { GPU } from '../../GPU.js'
 type BindLayouts = readonly [GPU["BindGroupLayoutCanvas"]]
 
 export class UIVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout],
-  BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+    { main: PipelineLayout },
+    [GPUVertexBufferLayout],
+    BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
 
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'UI.vert'
-    }, [buffers]);
-    this.createWGSL(([uniforms, /*texture*/]) => {
-      //////////////////////////////////
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout
+            },
+            label: 'UI.vert'
+        }, [buffers]);
+        this.createWGSL(([uniforms,/*texture*/]) => {
+            //////////////////////////////////
 
-      return /* wgsl */ `
+            return /* wgsl */ `
 struct Output {
   @builtin(position) Position : vec4<f32>,
   @location(0) v_uv : vec2<f32>,
@@ -37,8 +37,8 @@ fn main(
 
 }
   `;
-      //////////////
+            //////////////
 
-    })
-  }
+        })
+    }
 }

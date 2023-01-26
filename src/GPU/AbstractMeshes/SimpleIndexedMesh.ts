@@ -36,11 +36,12 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
             }
             const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline, primitiveState);
 
-            this.drawable = new DrawableIndexed({
-                renderPipeline,
-                renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]),
-                vertexBuffers: [vBufferGPU]
-            },
+            this.drawable = new DrawableIndexed(
+                {
+                    renderPipeline,
+                    renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]),
+                    vertexBuffers: [vBufferGPU]
+                },
                 {
                     node: this,
                 }

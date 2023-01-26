@@ -266,7 +266,7 @@ export abstract class DataNode extends MainNode {
         if (!this.intersect_box_aa_sphere(engine.collider, max)) {
             return;
         }
-        // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix 
+        // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix
         this.get_transformation().multiplyToRef(sphere.collisionsScalingMatrix, this.#myCollisionsTransformMatrix);
         if (!this.#lastColliderTransformMatrix.equals(this.#myCollisionsTransformMatrix)) {
             this.#lastColliderTransformMatrix = this.#myCollisionsTransformMatrix.clone();
@@ -283,12 +283,12 @@ export abstract class DataNode extends MainNode {
              for(let i=0; i<trLength; i++) {
                  collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
              }*/
-          /*   const scaledPosition=collider.scaledPosition;
-             const scaledVelocity=collider.scaledVelocity
-             const trLength=this.#triangleFaces.length;
-             for(let i=0; i<trLength; i++) {
-                 collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
-             }*/
+            /*   const scaledPosition=collider.scaledPosition;
+               const scaledVelocity=collider.scaledVelocity
+               const trLength=this.#triangleFaces.length;
+               for(let i=0; i<trLength; i++) {
+                   collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
+               }*/
         } else {
 
             //   TODO: Use wasm when this.faces_count % 4 == 0
@@ -297,13 +297,13 @@ export abstract class DataNode extends MainNode {
                 engine.rust.collider_planes_parallel_pointer(this.ptr),
                 this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
                 this.id);
-                /*
-               const scaledPosition=collider.scaledPosition;
-               const scaledVelocity=collider.scaledVelocity
-               const trLength=this.#triangleFaces.length;
-               for(let i=0; i<trLength; i++) {
-                   collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
-               }*/
+            /*
+           const scaledPosition=collider.scaledPosition;
+           const scaledVelocity=collider.scaledVelocity
+           const trLength=this.#triangleFaces.length;
+           for(let i=0; i<trLength; i++) {
+               collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
+           }*/
         }
     }
     protected buildFaces() {

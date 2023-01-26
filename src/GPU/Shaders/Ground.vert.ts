@@ -4,27 +4,27 @@ import type { GPU } from '../../GPU.js'
 type BindLayouts = GPU["lightsBindGroupTexture2"]["bindGroupLayouts"]
 
 export class GroundVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout],
-  BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+    { main: PipelineLayout },
+    [GPUVertexBufferLayout],
+    BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
 
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'Ground.vert'
-    }, [buffers]);
-    this.createWGSL((
-      [/*uniforms*/,],
-      [scene, /*time, clusters_array, meshes, projection*/],
-      [world]) => {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout
+            },
+            label: 'Ground.vert'
+        }, [buffers]);
+        this.createWGSL((
+            [/*uniforms*/,],
+            [scene,/*time, clusters_array, meshes, projection*/],
+            [world]) => {
 
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return /* wgsl */ `
+            return /* wgsl */ `
 struct Output {
   @builtin(position) Position : vec4<f32>,
   @location(0) v_uv : vec2<f32>,
@@ -68,8 +68,8 @@ fn pick(@location(0) position : vec3<f32>,
   return output;
 }
   `;
-      //////////////
+            //////////////
 
-    })
-  }
+        })
+    }
 }

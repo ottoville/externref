@@ -52,8 +52,7 @@ export abstract class Shader<
                 properties += `${struct.properties[property]![0]} ${property}: ${struct.properties[property]![1]},\n`
             }
             return `${s}struct ${struct.name} {\n${properties}}\n`;
-        }
-            , '')
+        }, '')
         //
         this.wgsl = groups + structString;
     }

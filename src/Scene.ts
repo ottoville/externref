@@ -14,6 +14,5 @@ export class Scene {
         engine.scenes.set(name, this);
         this.ready = onRenderStart(this);
     }
-    
 }
 

@@ -1,5 +1,5 @@
 ﻿import type { Engine, rust_pointer } from "./engine";
-declare const engine:Engine;
+declare const engine: Engine;
 
 export class TerraMatrix extends Float32Array {
     view64: Float64Array;
@@ -71,10 +71,10 @@ export class TerraMatrix extends Float32Array {
             this.view64[2] == om.view64[2] && this.view64[3] == om.view64[3] &&
             this.view64[4] == om.view64[4] && this.view64[5] == om.view64[5] &&
             this.view64[6] == om.view64[6] && this.view64[7] == om.view64[7]
-            )
+        )
     }
     clone() {
-        return new TerraMatrix(this.buffer.slice(this.byteOffset, this.byteOffset+64));
+        return new TerraMatrix(this.buffer.slice(this.byteOffset, this.byteOffset + 64));
     }
     invertToRef(other: TerraMatrix): TerraMatrix {
         // the inverse of a Matrix is the transpose of cofactor matrix divided by the determinant
@@ -144,7 +144,7 @@ export class TerraMatrix extends Float32Array {
 export class Uint16Vector2 extends Uint16Array {
     declare 0: number
     declare 1: number
-} 
+}
 export class TerraVector2 extends Float32Array {
     declare 0: number
     declare 1: number
@@ -154,8 +154,8 @@ export class TerraVector3 extends Float32Array {
     declare 0: number
     declare 1: number
     declare 2: number
-    static override of(x:number, y:number, z:number) {
-        return super.of(x,y,z) as TerraVector3;
+    static override of(x: number, y: number, z: number) {
+        return super.of(x, y, z) as TerraVector3;
     }
     constructor(Arr?: ArrayBufferLike, offset?: number)
     constructor(Arr?: number[])
@@ -170,27 +170,27 @@ export class TerraVector3 extends Float32Array {
             super(Arr, offset, 3);
         }
     }
-    toQuaternionToRef(angle: number, result: Quaternion ) {
+    toQuaternionToRef(angle: number, result: Quaternion) {
         // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
         // assumes axis is normalized
-      
+
         const halfAngle = angle * 0.5
-        const s = Math.sin( halfAngle );
+        const s = Math.sin(halfAngle);
         result[0] = this[0] * s;
         result[1] = this[1] * s;
         result[2] = this[2] * s;
-        result[3] = Math.cos( halfAngle )
+        result[3] = Math.cos(halfAngle)
         return result;
-    }   
+    }
     LerpToRef(end: TerraVector3, amount: number, result: TerraVector3): void {
         result[0] = this[0] + ((end[0] - this[0]) * amount);
         result[1] = this[1] + ((end[1] - this[1]) * amount);
         result[2] = this[2] + ((end[2] - this[2]) * amount);
     }
     clone() {
-        return new TerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset+12));
+        return new TerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset + 12));
     }
-    multiply2Ref(m: TerraMatrix, ref: TerraVector3|TerraVector4): void {
+    multiply2Ref(m: TerraMatrix, ref: TerraVector3 | TerraVector4): void {
         var rx = this[0] * m[0] + this[1] * m[4] + this[2] * m[8] + m[12];
         var ry = this[0] * m[1] + this[1] * m[5] + this[2] * m[9] + m[13];
         var rz = this[0] * m[2] + this[1] * m[6] + this[2] * m[10] + m[14];
@@ -213,15 +213,15 @@ export class TerraVector3 extends Float32Array {
         this[2] *= scale;
         return this;
     }
-    override set(arr:[number,number,number] | TerraVector3 | ({0:number, 1:number, 2:number} & Float32Array)) {
+    override set(arr: [number, number, number] | TerraVector3 | ({ 0: number, 1: number, 2: number } & Float32Array)) {
         this[0] = arr[0];
         this[1] = arr[1];
         this[2] = arr[2];
     }
-    dot(vector:TerraVector3|[number,number,number]) {
+    dot(vector: TerraVector3 | [number, number, number]) {
         return this[0] * vector[0] + this[1] * vector[1] + this[2] * vector[2];
     }
-    CrossToRef(vector:TerraVector3|[number,number,number], ref: TerraVector3) {
+    CrossToRef(vector: TerraVector3 | [number, number, number], ref: TerraVector3) {
         ref[0] = this[1] * vector[2] - this[2] * vector[1];
         ref[1] = this[2] * vector[0] - this[0] * vector[2];
         ref[2] = this[0] * vector[1] - this[1] * vector[0];
@@ -229,10 +229,10 @@ export class TerraVector3 extends Float32Array {
     }
 
     applyRotationQuaternionToRef<T extends TerraVector3>(q: Quaternion, result: T): T {
-        const q0=q[0], q1=q[1], q2=q[2], q3=q[3]; 
-        const t0=this[0], t1=this[1], t2=this[2]
+        const q0 = q[0], q1 = q[1], q2 = q[2], q3 = q[3];
+        const t0 = this[0], t1 = this[1], t2 = this[2]
         const ix = q3 * t0 + q1 * t2 - q2 * t1;
-        const iy = q3 * t1+ q2 * t0 - q0 * t2;
+        const iy = q3 * t1 + q2 * t0 - q0 * t2;
         const iz = q3 * t2 + q0 * t1 - q1 * t0;
         const iw = -q0 * t0 - q1 * t1 - q2 * t2;
 
@@ -247,11 +247,11 @@ export class ReadOnlyTerraVector3 extends TerraVector3 {
     declare readonly 0: number
     declare readonly 1: number
     declare readonly 2: number
-    static override of(x:number, y:number, z:number) {
-        return super.of(x,y,z) as ReadOnlyTerraVector3;
+    static override of(x: number, y: number, z: number) {
+        return super.of(x, y, z) as ReadOnlyTerraVector3;
     }
     override set(): never {
-        throw(new Error('Cannot use "set" in ReadOnly vector, use setter instead'));
+        throw (new Error('Cannot use "set" in ReadOnly vector, use setter instead'));
     }
 }
 
@@ -260,8 +260,8 @@ export class TerraVector4 extends Float32Array {
     declare 1: number
     declare 2: number
     declare 3: number
-    static override of(x:number, y:number, z:number, w:number) {
-        return super.of(x,y,z,w) as TerraVector4;
+    static override of(x: number, y: number, z: number, w: number) {
+        return super.of(x, y, z, w) as TerraVector4;
     }
     constructor(Arr?: ArrayBufferLike, offset?: number)
     constructor(Arr?: number[])
@@ -279,8 +279,8 @@ export class TerraVector4 extends Float32Array {
 
 }
 export class Quaternion extends TerraVector4 {
-    static override of(i:number, j:number, k:number, w:number) {
-        return super.of(i,j,k,w) as Quaternion;
+    static override of(i: number, j: number, k: number, w: number) {
+        return super.of(i, j, k, w) as Quaternion;
     }
     /**
      * Creates a new rotation from the given Euler float angles (y, x, z) and stores it in the target quaternion
@@ -312,7 +312,7 @@ export class Quaternion extends TerraVector4 {
 const fullRad = Math.PI * 2
 export class Angle {
     constructor(private _rad: number, private _deg?: number) {
-        if(Number.isNaN(_rad)) {
+        if (Number.isNaN(_rad)) {
             throw new Error('Radian is NaN')
         }
     }
@@ -395,15 +395,15 @@ export class Triangle {
     }
     #planeCollider: TerraVector4;
     get planeCollider() {
-        if(this.#planeCollider.byteLength === 0) {
-            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.PlanePtrToVector4); 
+        if (this.#planeCollider.byteLength === 0) {
+            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.PlanePtrToVector4);
         }
         return this.#planeCollider;
     }
-    #vectors: [TerraVector4,TerraVector4,TerraVector4];
+    #vectors: [TerraVector4, TerraVector4, TerraVector4];
 
-    get vectors():[TerraVector4,TerraVector4,TerraVector4] {
-        if(this.#vectors[0].byteLength === 0) {
+    get vectors(): [TerraVector4, TerraVector4, TerraVector4] {
+        if (this.#vectors[0].byteLength === 0) {
             this.#vectors = [
                 new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
                 new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
@@ -413,15 +413,15 @@ export class Triangle {
         return this.#vectors
     }
     constructor(
-        private vectorsPointers: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],
+        private vectorsPointers: [pointerToVec4: number, pointerToVec4: number, pointerToVec4: number],
         private PlanePtrToVector4: rust_pointer<'Plane'>
-        ) {
-            this.#vectors = [
-                new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
-                new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
-                new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
-            ]
-            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.PlanePtrToVector4);
+    ) {
+        this.#vectors = [
+            new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
+            new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
+            new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
+        ]
+        this.#planeCollider = new TerraVector4(engine.memory.buffer, this.PlanePtrToVector4);
     }
 
 }

@@ -6,25 +6,25 @@ type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"]
 
 
 export class SunVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [], BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
+    { main: PipelineLayout },
+    [], BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
 
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'Sun.vert'
-    }, []);
-    this.createWGSL((
-      [/*uniforms*/,],
-      [scene, /*time, clusters_array, meshes, projection*/],
-      [world]) => {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout
+            },
+            label: 'Sun.vert'
+        }, []);
+        this.createWGSL((
+            [/*uniforms*/,],
+            [scene,/*time, clusters_array, meshes, projection*/],
+            [world]) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return /* wgsl */ `
+            return /* wgsl */ `
 
 const sunDistance: f32= 1495000.0;  //divided by 100000 correct one
 
@@ -67,7 +67,7 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> Output {
   return output;
 }
   `;
-      //////////////
-    })
-  }
+            //////////////
+        })
+    }
 }

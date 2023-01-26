@@ -7,26 +7,26 @@ type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"];
 
 
 export class DebugNormalsVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout],
-  BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-    const entryPoints = {
-      main: pipelineLayout
-    }
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints,
-      label: 'debug_normals.vert'
-    }, [buffers]);
-    this.createWGSL((
-      [/*uniforms*/,],
-      [scene, /*time, clusters_array, meshes, projection*/],
-      [/*world*/,]) => {
+    { main: PipelineLayout },
+    [GPUVertexBufferLayout],
+    BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+        const entryPoints = {
+            main: pipelineLayout
+        }
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints,
+            label: 'debug_normals.vert'
+        }, [buffers]);
+        this.createWGSL((
+            [/*uniforms*/,],
+            [scene,/*time, clusters_array, meshes, projection*/],
+            [/*world*/,]) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return /* wgsl */ `
+            return /* wgsl */ `
 
 struct Output {
   @builtin(position) Position : vec4<f32>,
@@ -49,7 +49,7 @@ fn main(@location(0) position : vec3<f32>,
    `;
 
 
-      //////////////////////////////////
-    })
-  }
+            //////////////////////////////////
+        })
+    }
 }

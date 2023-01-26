@@ -34,10 +34,10 @@ module.exports = {
         "promise/catch-or-return": "error",
         "no-var": "off",
         "no-cond-assign": "off",
-        "no-this-alias":"off",
-        "require-await":2,
-        "require-atomic-updates":2,
-        "no-promise-executor-return":2,
+        "no-this-alias": "off",
+        "require-await": 2,
+        "require-atomic-updates": 2,
+        "no-promise-executor-return": 2,
         "no-self-compare": 2,
         "no-throw-literal": 2,
         "valid-typeof": 2,
@@ -45,7 +45,14 @@ module.exports = {
         "import/extensions": 2,
         "prefer-promise-reject-errors": 2,
         "no-unused-expressions": 2,
-        "no-loop-func": 2
+        "no-loop-func": 2,
+
+
+        "array-bracket-newline": 2,
+        "array-bracket-spacing": 2,
+        "object-curly-spacing": [2, "always"],
+        "no-trailing-spaces": 2,
+        "indent": ["error", 4, { "SwitchCase": 1 }]
     },
     settings: {
         "import/resolver": {
@@ -56,6 +63,6 @@ module.exports = {
             ".js",
             ".jsx",
             ".ts"
-          ]
+        ]
     }
 };

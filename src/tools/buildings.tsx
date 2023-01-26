@@ -1,13 +1,14 @@
 ﻿import { Engine } from "../engine.js";
-declare const engine:Engine;
+declare const engine: Engine;
 
 export class BuildingsUI {
-    static menuElem = <div><legend style="background-color:white">
-        Buildings
-</legend>
+    static menuElem = <div>
+        <legend style="background-color:white">
+            Buildings
+        </legend>
         <button class="w3-bar-item w3-button">Create house</button>
-</div>;
-    activate: () => void= () => null;
+    </div>;
+    activate: () => void = () => null;
     destroy: () => void = () => {
         engine.clearInputListeners(this);
     };
@@ -38,26 +39,26 @@ export class BuildingsUI {
                             []
                         );
                         //@ts-ignore
-                        const building = new TerraMesh('building', new Float32Array(positions),indices,normals)
+                        const building = new TerraMesh('building', new Float32Array(positions), indices, normals)
                         building.checkCollisions = true;
                         building.position.x = pickInfo.pickedPoint.x;
                         building.position.z = pickInfo.pickedPoint.z;
                         building.position.y = pickInfo.pickedPoint.y + (height * 0.5) - 0.5
-                       // var myBox = BABYLON.MeshBuilder.CreateBox("myBox", { height: height, width: 200, depth: 200 }, scene);
-                       /* let orgcheckCollision = myBox._checkCollision;
-                        myBox._checkCollision = function (collider) {
-                            let r = orgcheckCollision.call(myBox, collider);
-                            debugger;
-                            return r;
-                        }*/
-                        
-                       /* myBox.position.x = pickInfo.pickedPoint.x;
-                        myBox.position.z = pickInfo.pickedPoint.z;
-                        myBox.position.y = pickInfo.pickedPoint.y + (height * 0.5) - 0.5;*/
-                     /*  myBox.position.x = 0;
-                        myBox.position.z = 0;
-                        myBox.position.y = 0
-                        myBox.checkCollisions=true*/
+                        // var myBox = BABYLON.MeshBuilder.CreateBox("myBox", { height: height, width: 200, depth: 200 }, scene);
+                        /* let orgcheckCollision = myBox._checkCollision;
+                         myBox._checkCollision = function (collider) {
+                             let r = orgcheckCollision.call(myBox, collider);
+                             debugger;
+                             return r;
+                         }*/
+
+                        /* myBox.position.x = pickInfo.pickedPoint.x;
+                         myBox.position.z = pickInfo.pickedPoint.z;
+                         myBox.position.y = pickInfo.pickedPoint.y + (height * 0.5) - 0.5;*/
+                        /*  myBox.position.x = 0;
+                           myBox.position.z = 0;
+                           myBox.position.y = 0
+                           myBox.checkCollisions=true*/
                         console.log(pickInfo);
                     }
                 }

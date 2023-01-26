@@ -12,11 +12,11 @@ type MenuState = {
 
 export class createSettingsMenu extends UINode<{ gpu: GPU }, MenuState> {
     static addKeydownListener(gpu: GPU) {
-        document.addEventListener('keydown', function openSettings (e:KeyboardEvent) {
-            if(e.code === 'Escape') {
+        document.addEventListener('keydown', function openSettings(e: KeyboardEvent) {
+            if (e.code === 'Escape') {
                 document.removeEventListener('keydown', openSettings);
-                if(!gpu.destroyed)
-                    new createSettingsMenu({gpu});
+                if (!gpu.destroyed)
+                    new createSettingsMenu({ gpu });
             }
         });
     }
@@ -64,7 +64,7 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }, MenuState> {
                     this.destroy();
                 }
             })
-            ];
+        ];
     }
     setActiveMenu = (menuName?: string) => {
         this.setState({

@@ -147,7 +147,6 @@ export class ArcRotateCamera extends CameraController {
         }
         engine.addInputListenerOnce('pointerleave', this, onceLeace);
         engine.addInputListenerOnce('pointerup',this, onceUp)
-    
     }
     startTooling(): void {
         engine.removeInputListener('pointerdown', this, this.#cameraPointerDown);
@@ -228,7 +227,6 @@ export class ArcRotateCamera extends CameraController {
         this.cameraControl?.updatePosition(position => position.set(this.#calculatePosition()))
 
         this.#calculateDirection();
-        
 
     }
     #calculateDirection() {

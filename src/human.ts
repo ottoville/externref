@@ -8,7 +8,7 @@ import { BoundingBoxMesh } from "./GPU/Meshes/helpers/boundingbox.js";
 declare const engine: Engine;
 const maxAcceleration = 10;
 export const closeDistance = 0.0022
-const maxSpeedSquared=1.4*1.4
+const maxSpeedSquared = 1.4 * 1.4
 export class Human extends Box {
     inputManager: MeshCamera;
     radius: { 0: number; 1: number; 2: number; };
@@ -17,13 +17,14 @@ export class Human extends Box {
         1.0 / this.#radius[0], 0.0, 0.0, 0.0,
         0.0, 1.0 / this.#radius[1], 0.0, 0.0,
         0.0, 0.0, 1.0 / this.#radius[2], 0.0,
-        0.0, 0.0, 0.0, 1.0]);
+        0.0, 0.0, 0.0, 1.0
+    ]);
     readonly closeDistanceVector: [number, number, number] = [closeDistance / this.#radius[0], closeDistance / this.#radius[1], closeDistance / this.#radius[2]];
 
     constructor(properties: { scenes: Scene[], inputEnabled: boolean }) {
-        super({ ...properties, point_light: 400, can_collide: false, label: 'human', color: [0,0,1,0] });
+        super({ ...properties, point_light: 400, can_collide: false, label: 'human', color: [0, 0, 1, 0] });
         //@ts-expect-error
-        window.debug_bounding_box=() => {
+        window.debug_bounding_box = () => {
             new BoundingBoxMesh(this.drawable!)
         }
         engine.physics.tickables.push(this);
@@ -219,7 +220,7 @@ export class Human extends Box {
         scaledVelocity[2] = velocityPerDelta[2] / this.radius[2];
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
-        engine.collideWithWorld(this,scaledPosition, scaledVelocity);
+        engine.collideWithWorld(this, scaledPosition, scaledVelocity);
         if (!engine.collider.collision_resolved) {
             //console.log('cant solve collision', this.label)
         }

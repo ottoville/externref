@@ -13,33 +13,33 @@ interface pickInfo {
 }
 class Mesh {
 
-   /* static async collissionCheck(rayFunction: (mesh: Mesh) => any, boundables: IterableIterator<Mesh>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: Mesh) => boolean): Promise<PickingInfo | null> {
-        let boundableMesh: Mesh;
-        do {
-            const boundable = boundables.next();
-            if (boundable.done)
-                return new Promise(res => res(pickResult));
-            boundableMesh = boundable.value;
+    /* static async collissionCheck(rayFunction: (mesh: Mesh) => any, boundables: IterableIterator<Mesh>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: Mesh) => boolean): Promise<PickingInfo | null> {
+         let boundableMesh: Mesh;
+         do {
+             const boundable = boundables.next();
+             if (boundable.done)
+                 return new Promise(res => res(pickResult));
+             boundableMesh = boundable.value;
 
-        } while (predicate ? !predicate(boundableMesh) : false);
+         } while (predicate ? !predicate(boundableMesh) : false);
 
-        const ray = rayFunction(boundableMesh);
-        const result = await boundableMesh.intersects(ray.origin, ray.direction);
-        if (!result || !result.hit)
-            return this.collissionCheck(rayFunction, boundables, pickResult, fastCheck, predicate);
-        if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
-            return this.collissionCheck(rayFunction, boundables, pickResult, fastCheck, predicate);
-        pickResult = result;
-        if (fastCheck)
-            return result;
-        else
-            return this.collissionCheck(rayFunction, boundables, pickResult);
-    }*/
+         const ray = rayFunction(boundableMesh);
+         const result = await boundableMesh.intersects(ray.origin, ray.direction);
+         if (!result || !result.hit)
+             return this.collissionCheck(rayFunction, boundables, pickResult, fastCheck, predicate);
+         if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
+             return this.collissionCheck(rayFunction, boundables, pickResult, fastCheck, predicate);
+         pickResult = result;
+         if (fastCheck)
+             return result;
+         else
+             return this.collissionCheck(rayFunction, boundables, pickResult);
+     }*/
 
 
     readonly #positionsView: Float32Array;
     readonly #indicesView: Uint32Array | undefined;
-    readonly #boundingBox:Float32Array;
+    readonly #boundingBox: Float32Array;
     #pickingPoint: Float32Array;
     #pickingDistance: Float32Array;
     constructor(
@@ -50,7 +50,7 @@ class Mesh {
         private readonly boundingBoxBuffer: SharedArrayBuffer,
         readonly pickingBuffer: SharedArrayBuffer
     ) {
-        this.#boundingBox=new Float32Array(this.boundingBoxBuffer);
+        this.#boundingBox = new Float32Array(this.boundingBoxBuffer);
         this.#positionsView = new Float32Array(positions);
         this.#pickingPoint = new Float32Array(pickingBuffer, 0, 3);
         this.#pickingDistance = new Float32Array(pickingBuffer, 3 * 4, 1);
@@ -58,7 +58,7 @@ class Mesh {
         if (indices)
             this.#indicesView = new Uint32Array(indices);
     }
-    intersectsRay(rayArrBuff:ArrayBuffer, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): void {
+    intersectsRay(rayArrBuff: ArrayBuffer, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): void {
 
         //boundingBox: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number } },
         // let boundingBox = { min: { x: this.boundingBox[0], y: this.boundingBox[1], z: this.boundingBox[2] }, max: { x: this.boundingBox[3], y: this.boundingBox[4], z: this.boundingBox[5] } }
@@ -71,14 +71,14 @@ class Mesh {
 
         //const boundingInfo = this._boundingInfo;
         const ray = new Ray(new Float32Array(rayArrBuff, 0, 3) as unknown as [number, number, number], new Float32Array(rayArrBuff, 3 * 4) as unknown as [number, number, number]);
-        
+
         if (!ray.intersectsBoxMinMax({ x: this.#boundingBox[0], y: this.#boundingBox[1], z: this.#boundingBox[2] }, { x: this.#boundingBox[3], y: this.#boundingBox[4], z: this.#boundingBox[5] })) {
             return; // pickingInfo;
         }
         var intersectInfo: IntersectionInfo | null = null;
 
         // Triangles test
-        const p0: [number, number, number] = [0,0,0]
+        const p0: [number, number, number] = [0, 0, 0]
         const p1: [number, number, number] = [0, 0, 0]
         const p2: [number, number, number] = [0, 0, 0]
         if (!this.#indicesView) {
@@ -126,28 +126,28 @@ class Mesh {
             direction[2] = ray.direction[2] * intersectInfo.distance
 
             //const worldDirection = Vector3.TransformNormal(direction, world);
-          //  const pickedPoint = direction.addInPlace(ray.origin);
+            //  const pickedPoint = direction.addInPlace(ray.origin);
             direction[0] += ray.origin[0]
             direction[1] += ray.origin[1]
             direction[2] += ray.origin[2]
             const pickedPoint = direction
             // Return result
             this.#pickingPoint.set([pickedPoint[0], pickedPoint[1], pickedPoint[2]]);
-           // this.#pickingDistance.set([Vector3.Distance(ray.origin, pickedPoint)]);
-            const x= ray.origin[0] - pickedPoint[0]
-            const y= ray.origin[1] - pickedPoint[1]
+            // this.#pickingDistance.set([Vector3.Distance(ray.origin, pickedPoint)]);
+            const x = ray.origin[0] - pickedPoint[0]
+            const y = ray.origin[1] - pickedPoint[1]
             const z = ray.origin[2] - pickedPoint[2]
 
             this.#pickingDistance.set([Math.sqrt(x * x + y * y + z * z)]);
 
 
-           /* pickingInfo.hit = true;
-            pickingInfo.distance = Vector3.Distance(ray.origin, pickedPoint);
-            pickingInfo.pickedPoint = pickedPoint;
-            pickingInfo.pickMesh = this.uniqueID;
-            pickingInfo.bu = intersectInfo.bu || 0;
-            pickingInfo.bv = intersectInfo.bv || 0;
-            pickingInfo.faceId = intersectInfo.faceId;*/
+            /* pickingInfo.hit = true;
+             pickingInfo.distance = Vector3.Distance(ray.origin, pickedPoint);
+             pickingInfo.pickedPoint = pickedPoint;
+             pickingInfo.pickMesh = this.uniqueID;
+             pickingInfo.bu = intersectInfo.bu || 0;
+             pickingInfo.bv = intersectInfo.bv || 0;
+             pickingInfo.faceId = intersectInfo.faceId;*/
             //pickingInfo.subMeshId = intersectInfo.subMeshId;
 
             return; //pickingInfo;
@@ -176,7 +176,7 @@ class Mesh {
           facetNormals?: any, facetPositions?: any, facetPartitioning?: any, ratio?: number, bInfo?: any, bbSize?: Vector3, subDiv?: any,
           useRightHandedSystem?: boolean, depthSort?: boolean, distanceTo?: { x: number, y: number, z: number }, depthSortedFacets?: any
       }): SharedArrayBuffer {
-  
+
           if (this.normals === null) {
               this.normals = new SharedArrayBuffer(this.positionsView.byteLength);
           }
@@ -224,7 +224,7 @@ class Mesh {
                   var depthSortedFacets = options.depthSortedFacets;
               }
           }
-  
+
           // facetPartitioning reinit if needed
           let xSubRatio = 0;
           let ySubRatio = 0;
@@ -247,7 +247,7 @@ class Mesh {
               var block_idx_v1 = 0;       // v1 vertex block index
               var block_idx_v2 = 0;       // v2 vertex block index
               var block_idx_v3 = 0;       // v3 vertex block index
-  
+
               var bbSizeMax = (options.bbSize.x > options.bbSize.y) ? options.bbSize.x : options.bbSize.y;
               bbSizeMax = (bbSizeMax > options.bbSize.z) ? bbSizeMax : options.bbSize.z;
               xSubRatio = options.subDiv.X * ratio / options.bbSize.x;
@@ -256,17 +256,17 @@ class Mesh {
               subSq = options.subDiv.max * options.subDiv.max;
               options.facetPartitioning.length = 0;
           }
-  
+
           // reset the normals
           for (index = 0; index < this.positionsView.length; index++) {
               normalsView[index] = 0.0;
           }
-  
+
           // Loop : 1 indice triplet = 1 facet
-  
+
           var nbFaces = (this.indicesView.length / 3) | 0;
           for (index = 0; index < nbFaces; index++) {
-  
+
               // get the indexes of the coordinates of each vertex of the facet
               v1x = this.indicesView[index * 3] * 3;
               v1y = v1x + 1;
@@ -277,15 +277,15 @@ class Mesh {
               v3x = this.indicesView[index * 3 + 2] * 3;
               v3y = v3x + 1;
               v3z = v3x + 2;
-  
+
               p1p2x = this.positionsView[v1x] - this.positionsView[v2x];          // compute two vectors per facet : p1p2 and p3p2
               p1p2y = this.positionsView[v1y] - this.positionsView[v2y];
               p1p2z = this.positionsView[v1z] - this.positionsView[v2z];
-  
+
               p3p2x = this.positionsView[v3x] - this.positionsView[v2x];
               p3p2y = this.positionsView[v3y] - this.positionsView[v2y];
               p3p2z = this.positionsView[v3z] - this.positionsView[v2z];
-  
+
               // compute the face normal with the cross product
               faceNormalx = faceNormalSign * (p1p2y * p3p2z - p1p2z * p3p2y);
               faceNormaly = faceNormalSign * (p1p2z * p3p2x - p1p2x * p3p2z);
@@ -296,20 +296,20 @@ class Mesh {
               faceNormalx /= length;
               faceNormaly /= length;
               faceNormalz /= length;
-  
+
               if (computeFacetNormals && options) {
                   options.facetNormals[index].x = faceNormalx;
                   options.facetNormals[index].y = faceNormaly;
                   options.facetNormals[index].z = faceNormalz;
               }
-  
+
               if (computeFacetPositions && options) {
                   // compute and the facet barycenter coordinates in the array facetPositions
                   options.facetPositions[index].x = (this.positionsView[v1x] + this.positionsView[v2x] + this.positionsView[v3x]) / 3.0;
                   options.facetPositions[index].y = (this.positionsView[v1y] + this.positionsView[v2y] + this.positionsView[v3y]) / 3.0;
                   options.facetPositions[index].z = (this.positionsView[v1z] + this.positionsView[v2z] + this.positionsView[v3z]) / 3.0;
               }
-  
+
               if (computeFacetPartitioning && options) {
                   // store the facet indexes in arrays in the main facetPartitioning array :
                   // compute each facet vertex (+ facet barycenter) index in the partiniong array
@@ -325,17 +325,17 @@ class Mesh {
                   b3x = Math.floor((this.positionsView[v3x] - options.bInfo.minimum.x * ratio) * xSubRatio);
                   b3y = Math.floor((this.positionsView[v3y] - options.bInfo.minimum.y * ratio) * ySubRatio);
                   b3z = Math.floor((this.positionsView[v3z] - options.bInfo.minimum.z * ratio) * zSubRatio);
-  
+
                   block_idx_v1 = b1x + options.subDiv.max * b1y + subSq * b1z;
                   block_idx_v2 = b2x + options.subDiv.max * b2y + subSq * b2z;
                   block_idx_v3 = b3x + options.subDiv.max * b3y + subSq * b3z;
                   block_idx_o = ox + options.subDiv.max * oy + subSq * oz;
-  
+
                   options.facetPartitioning[block_idx_o] = options.facetPartitioning[block_idx_o] ? options.facetPartitioning[block_idx_o] : new Array();
                   options.facetPartitioning[block_idx_v1] = options.facetPartitioning[block_idx_v1] ? options.facetPartitioning[block_idx_v1] : new Array();
                   options.facetPartitioning[block_idx_v2] = options.facetPartitioning[block_idx_v2] ? options.facetPartitioning[block_idx_v2] : new Array();
                   options.facetPartitioning[block_idx_v3] = options.facetPartitioning[block_idx_v3] ? options.facetPartitioning[block_idx_v3] : new Array();
-  
+
                   // push each facet index in each block containing the vertex
                   options.facetPartitioning[block_idx_v1].push(index);
                   if (block_idx_v2 != block_idx_v1) {
@@ -348,19 +348,19 @@ class Mesh {
                       options.facetPartitioning[block_idx_o].push(index);
                   }
               }
-  
+
               if (computeDepthSort && options && options.facetPositions) {
                   var dsf = depthSortedFacets[index];
                   dsf.ind = index * 3;
                   //dsf.sqDistance = Vector3.DistanceSquared(options.facetPositions[index], distanceTo!);
-  
+
                   var x = options.facetPositions[index].x - distanceTo!.x;
                   var y = options.facetPositions[index].y - distanceTo!.y;
                   var z = options.facetPositions[index].z - distanceTo!.z;
-  
+
                   dsf.sqDistance = (x * x) + (y * y) + (z * z);
-  
-  
+
+
               }
               // compute the normals anyway
               normalsView[v1x] += faceNormalx;                         // accumulate all the normals per face
@@ -378,13 +378,13 @@ class Mesh {
               faceNormalx = normalsView[index * 3];
               faceNormaly = normalsView[index * 3 + 1];
               faceNormalz = normalsView[index * 3 + 2];
-  
+
               length = Math.sqrt(faceNormalx * faceNormalx + faceNormaly * faceNormaly + faceNormalz * faceNormalz);
               length = (length === 0) ? 1.0 : length;
               faceNormalx /= length;
               faceNormaly /= length;
               faceNormalz /= length;
-  
+
               normalsView[index * 3] = faceNormalx;
               normalsView[index * 3 + 1] = faceNormaly;
               normalsView[index * 3 + 2] = faceNormalz;

@@ -62,8 +62,7 @@ export const PositionAndRotate = new Struct('PositionAndRotate', {
 })
 export const PositionAndRotateArray = new Struct('PositionAndRotateArray', {
     arr: ['', 'array<PositionAndRotate>']
-},
-    [PositionAndRotate])
+}, [PositionAndRotate])
 export const FloatArray = new Struct('FloatArray', {
     numbers: ['', 'array<f32>']
 })
@@ -80,8 +79,7 @@ export const Vertice = new Struct('Vertice', {
 })
 export const Vertices = new Struct('Vertices', {
     vert: ['', 'array<Vertice>']
-},
-    [Vertice]
+}, [Vertice]
 )
 export const Indices = new Struct('Indices', {
     numbers: ['', 'array<u32>']

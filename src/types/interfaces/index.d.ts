@@ -1,5 +1,5 @@
 //type Angle={rad:number, deg:number}
-import type { TerraVector2} from "../../Math";
+import type { TerraVector2 } from "../../Math";
 
 
 type subTexture = {
@@ -18,7 +18,7 @@ type PTDresult =
             height: number
         }>
     }
-    type PTResultF= ( coords: PTDresult) => void;
+type PTResultF = (coords: PTDresult) => void;
 
 interface loginProvider {
     provider: string,

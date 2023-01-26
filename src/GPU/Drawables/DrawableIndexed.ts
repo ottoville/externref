@@ -26,7 +26,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
                     {
                         [Property in keyof VERTEX_BUFFERS]: ArrayBufferView | VertexBuffer;
                     }
-                    ) : never
+                ) : never
             ) : never
         },
         {
@@ -37,25 +37,27 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
             firstIndex = 0,
             firstInstance = 0,
             GPUIndexFormat = 'uint16',
-        } :
-        {
-            node: BoundableNodeIndexed;
-            indexBuffer?: IndexBuffer;
-            baseVertex?: number;
-            instanceCount?: number;
-            firstIndex?: number;
-            firstInstance?: number;
-            GPUIndexFormat?: GPUIndexFormat;
-        }
+        }:
+            {
+                node: BoundableNodeIndexed;
+                indexBuffer?: IndexBuffer;
+                baseVertex?: number;
+                instanceCount?: number;
+                firstIndex?: number;
+                firstInstance?: number;
+                GPUIndexFormat?: GPUIndexFormat;
+            }
     ) {
-        super({
-            ...drawableProps,
-            label: node.label,
-            dynamicBindGroups: [[drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, engine.rust.gpu_alignment(node.ptr)]]
-        },
+        super(
+            {
+                ...drawableProps,
+                label: node.label,
+                dynamicBindGroups: [[drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, engine.rust.gpu_alignment(node.ptr)]]
+            },
             {
                 instanceCount,
-            });
+            }
+        );
         this.node = node;
         this.#indexBuffer = indexBuffer;
         this.#baseVertex = baseVertex;
@@ -79,7 +81,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
         }
         if (buffer instanceof Buffer) {
             this.#indexBuffer = buffer;
-            if(GPUIndexFormat) {
+            if (GPUIndexFormat) {
                 this.#GPUIndexFormat = GPUIndexFormat
             }
         }

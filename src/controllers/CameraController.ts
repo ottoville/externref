@@ -6,14 +6,15 @@ export abstract class CameraController implements Ellipsoid {
     radius: { 0: number; 1: number; 2: number; }
     private readonly collisionRadius: [number, number, number] = [2, 2, 2];
     readonly collisionsScalingMatrix = new TerraMatrix([
-        1.0 / this.collisionRadius[0],   0.0,                   0.0,                    0.0,
-        0.0,                     1.0 / this.collisionRadius[1], 0.0,                    0.0,
-        0.0,                     0.0,                   1.0 / this.collisionRadius[2],  0.0,
-        0.0, 0.0, 0.0, 1.0]);
-    readonly closeDistanceVector:[number,number,number] = [closeDistance / this.collisionRadius[0], closeDistance / this.collisionRadius[1], closeDistance / this.collisionRadius[2]];
+        1.0 / this.collisionRadius[0], 0.0, 0.0, 0.0,
+        0.0, 1.0 / this.collisionRadius[1], 0.0, 0.0,
+        0.0, 0.0, 1.0 / this.collisionRadius[2], 0.0,
+        0.0, 0.0, 0.0, 1.0
+    ]);
+    readonly closeDistanceVector: [number, number, number] = [closeDistance / this.collisionRadius[0], closeDistance / this.collisionRadius[1], closeDistance / this.collisionRadius[2]];
     cameraControl?: CameraControl;
     constructor() {
-        const collisionRadius=this.collisionRadius;
+        const collisionRadius = this.collisionRadius;
         const collisionsScalingMatrix = this.collisionsScalingMatrix;
         const myCloseDistance = this.closeDistanceVector;
         this.radius = {
@@ -47,11 +48,11 @@ export abstract class CameraController implements Ellipsoid {
     abstract serialize(): void;
 
 
-    abstract attachCameraController() : void;
-    abstract deAttachCameraController() : void;
-    abstract startTooling() : void
-    abstract stopTooling() : void
-    abstract checkInputs() : boolean
+    abstract attachCameraController(): void;
+    abstract deAttachCameraController(): void;
+    abstract startTooling(): void
+    abstract stopTooling(): void
+    abstract checkInputs(): boolean
     abstract calculateCameraPositionAndTarget(): void
 
 }

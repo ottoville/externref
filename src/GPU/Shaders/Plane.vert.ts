@@ -6,41 +6,40 @@ import type { Terrain } from '../../world/terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 
 type BindLayouts = readonly [
-  GPU["sizeBindGroupLayout"],
-  GPU["uniformBindGroupLayoutWithTime"],
-  BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
-  BGLayout<[
-    BufLayout<ShaderStage.VERTEX>,
-    BufLayout<ShaderStage.VERTEX>,
-  ]>
+    GPU["sizeBindGroupLayout"],
+    GPU["uniformBindGroupLayoutWithTime"],
+    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+    BGLayout<[
+        BufLayout<ShaderStage.VERTEX>,
+        BufLayout<ShaderStage.VERTEX>,
+    ]>
 ]
 export class PlaneVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout],
-  BindLayouts> {
-  constructor(
-    pipelineLayout: PipelineLayout<BindLayouts>,
-    buffers: GPUVertexBufferLayout,
-    settings: typeof Terrain.settings) {
-    const entryPoints = {
-      main: pipelineLayout
-    }
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints,
-      label: 'plane.vert'
-    },
-      [buffers]);
+    { main: PipelineLayout },
+    [GPUVertexBufferLayout],
+    BindLayouts> {
+    constructor(
+        pipelineLayout: PipelineLayout<BindLayouts>,
+        buffers: GPUVertexBufferLayout,
+        settings: typeof Terrain.settings) {
+        const entryPoints = {
+            main: pipelineLayout
+        }
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints,
+            label: 'plane.vert'
+        }, [buffers]);
 
-    this.createWGSL((
-      [/*uniforms*/,],
-      [scene, /*time, clusters_array, meshes, projection*/],
-      [world],
-      [slopes, facet12]) => {
+        this.createWGSL((
+            [/*uniforms*/,],
+            [scene,/*time, clusters_array, meshes, projection*/],
+            [world],
+            [slopes, facet12]) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return /* wgsl */ `
+            return /* wgsl */ `
 
       ${getHeightAtCoordinates(settings, slopes, facet12)}
 
@@ -60,7 +59,7 @@ fn main(@location(0) position : vec3<f32>) -> Output {
    `;
 
 
-      //////////////////////////////////
-    })
-  }
+            //////////////////////////////////
+        })
+    }
 }

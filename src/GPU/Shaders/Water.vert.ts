@@ -4,32 +4,32 @@ import { VertexShader } from './VertexShader.js';
 import type { GPU } from "GPU.js"
 
 type BindLayouts = [
-  GPU["sizeBindGroupLayout"],
-  GPU["uniformBindGroupLayoutWithTime"],
-  BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
-  BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>];
+    GPU["sizeBindGroupLayout"],
+    GPU["uniformBindGroupLayoutWithTime"],
+    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+    BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>];
 
 export class WaterVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout],
-  BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'water.vert'
-    }, [buffers]);
-    this.createWGSL((
-      [/*uniforms*/,],
-      [scene, /*time, clusters_array, meshes, projection*/],
-      [/*world*/,],
-      [/*mySampler, diffuseTexture*/,]) => {
+    { main: PipelineLayout },
+    [GPUVertexBufferLayout],
+    BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout
+            },
+            label: 'water.vert'
+        }, [buffers]);
+        this.createWGSL((
+            [/*uniforms*/,],
+            [scene,/*time, clusters_array, meshes, projection*/],
+            [/*world*/,],
+            [/*mySampler, diffuseTexture*/,]) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return /* wgsl */ `
+            return /* wgsl */ `
 
 //[[location(1)]] var<out> ambient : vec3<f32>;
 struct Output {
@@ -52,8 +52,8 @@ fn main(@location(0) position : vec3<f32>) -> Output {
   return output;
 }
   `;
-      //////////////
+            //////////////
 
-    })
-  }
+        })
+    }
 }

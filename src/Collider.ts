@@ -368,26 +368,26 @@ export class ColliderJS {
             engine.rust.collision_found(this.collider_ptr, t, this.#velocitySquaredLength, this.#collisionPoint[0], this.#collisionPoint[1], this.#collisionPoint[2],
                 collidedPointInTriangle, triangle.planeCollider.byteOffset);
 
-                /*const ptr = engine.rust.collided_point_in_triangle_pointer(this.collider_ptr);
+            /*const ptr = engine.rust.collided_point_in_triangle_pointer(this.collider_ptr);
 
-                const trianglePtr = new Uint32Array(engine.memory.buffer, ptr, 1)[0];
-                console.log(trianglePtr, new Uint8Array(engine.memory.buffer,trianglePtr,1))*/
+            const trianglePtr = new Uint32Array(engine.memory.buffer, ptr, 1)[0];
+            console.log(trianglePtr, new Uint8Array(engine.memory.buffer,trianglePtr,1))*/
             //var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
             //  console.log(this.collisionFound);
-           /* var distToCollisionSquared = t * t * this.#velocitySquaredLength;
-            if (this.collision_resolved === 1 || distToCollisionSquared < this.nearest_distance_squared) {
-                console.log('set collided_point_in_triangle', collidedPointInTriangle ? triangle.planeCollider : undefined)
+            /* var distToCollisionSquared = t * t * this.#velocitySquaredLength;
+             if (this.collision_resolved === 1 || distToCollisionSquared < this.nearest_distance_squared) {
+                 console.log('set collided_point_in_triangle', collidedPointInTriangle ? triangle.planeCollider : undefined)
 
-                this.intersectionPointWasm.set(this.#collisionPoint);
-                this.nearest_distance_squared = distToCollisionSquared;
+                 this.intersectionPointWasm.set(this.#collisionPoint);
+                 this.nearest_distance_squared = distToCollisionSquared;
 
-                //  console.log('nearestDistanceSquared',this.#nearestDistanceSquared)
-                //this.collisionFound = true;
-                this.collision_resolved = 0;
-                //console.log('set collisionNotFound 0', this.collisionNotFound.getUint32(0,true))
-                this.collidedMesh = "hostMesh";
-                this.collided_point_in_triangle = collidedPointInTriangle ? triangle.planeCollider : undefined;
-            }*/
+                 //  console.log('nearestDistanceSquared',this.#nearestDistanceSquared)
+                 //this.collisionFound = true;
+                 this.collision_resolved = 0;
+                 //console.log('set collisionNotFound 0', this.collisionNotFound.getUint32(0,true))
+                 this.collidedMesh = "hostMesh";
+                 this.collided_point_in_triangle = collidedPointInTriangle ? triangle.planeCollider : undefined;
+             }*/
         }
     }
 }

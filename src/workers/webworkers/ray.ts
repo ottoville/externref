@@ -36,7 +36,7 @@ class PickingInfo {
     /**
      * The location of pick collision
      */
-    public pickedPoint: [number, number,number] | null = null;
+    public pickedPoint: [number, number, number] | null = null;
     /**
      * The mesh corresponding the the pick collision
      */
@@ -66,94 +66,93 @@ class PickingInfo {
      * @param useVerticesNormals If the vertices normals should be used to calculate the normal instead of the normal map
      * @returns The normal correspodning to the face the pick collided with
      */
-   /* public getNormal(useWorldCoordinates = false, useVerticesNormals = true): Nullable<Vector3> {
-        if (!this.pickedMesh || !this.pickedMesh.isVerticesDataPresent(VertexBuffer.NormalKind)) {
-            return null;
-        }
+    /* public getNormal(useWorldCoordinates = false, useVerticesNormals = true): Nullable<Vector3> {
+         if (!this.pickedMesh || !this.pickedMesh.isVerticesDataPresent(VertexBuffer.NormalKind)) {
+             return null;
+         }
 
-        var indices = this.pickedMesh.getIndices();
+         var indices = this.pickedMesh.getIndices();
 
-        if (!indices) {
-            return null;
-        }
+         if (!indices) {
+             return null;
+         }
 
-        var result: Vector3;
+         var result: Vector3;
 
-        if (useVerticesNormals) {
-            var normals = (<FloatArray>this.pickedMesh.getVerticesData(VertexBuffer.NormalKind));
+         if (useVerticesNormals) {
+             var normals = (<FloatArray>this.pickedMesh.getVerticesData(VertexBuffer.NormalKind));
 
-            var normal0 = Vector3.FromArray(normals, indices[this.faceId * 3] * 3);
-            var normal1 = Vector3.FromArray(normals, indices[this.faceId * 3 + 1] * 3);
-            var normal2 = Vector3.FromArray(normals, indices[this.faceId * 3 + 2] * 3);
+             var normal0 = Vector3.FromArray(normals, indices[this.faceId * 3] * 3);
+             var normal1 = Vector3.FromArray(normals, indices[this.faceId * 3 + 1] * 3);
+             var normal2 = Vector3.FromArray(normals, indices[this.faceId * 3 + 2] * 3);
 
-            normal0 = normal0.scale(this.bu);
-            normal1 = normal1.scale(this.bv);
-            normal2 = normal2.scale(1.0 - this.bu - this.bv);
+             normal0 = normal0.scale(this.bu);
+             normal1 = normal1.scale(this.bv);
+             normal2 = normal2.scale(1.0 - this.bu - this.bv);
 
-            result = new Vector3(normal0.x + normal1.x + normal2.x, normal0.y + normal1.y + normal2.y, normal0.z + normal1.z + normal2.z);
-        } else {
-            var positions = (<FloatArray>this.pickedMesh.getVerticesData(VertexBuffer.PositionKind));
+             result = new Vector3(normal0.x + normal1.x + normal2.x, normal0.y + normal1.y + normal2.y, normal0.z + normal1.z + normal2.z);
+         } else {
+             var positions = (<FloatArray>this.pickedMesh.getVerticesData(VertexBuffer.PositionKind));
 
-            var vertex1 = Vector3.FromArray(positions, indices[this.faceId * 3] * 3);
-            var vertex2 = Vector3.FromArray(positions, indices[this.faceId * 3 + 1] * 3);
-            var vertex3 = Vector3.FromArray(positions, indices[this.faceId * 3 + 2] * 3);
+             var vertex1 = Vector3.FromArray(positions, indices[this.faceId * 3] * 3);
+             var vertex2 = Vector3.FromArray(positions, indices[this.faceId * 3 + 1] * 3);
+             var vertex3 = Vector3.FromArray(positions, indices[this.faceId * 3 + 2] * 3);
 
-            var p1p2 = vertex1.subtract(vertex2);
-            var p3p2 = vertex3.subtract(vertex2);
+             var p1p2 = vertex1.subtract(vertex2);
+             var p3p2 = vertex3.subtract(vertex2);
 
-            result = Vector3.Cross(p1p2, p3p2);
-        }
+             result = Vector3.Cross(p1p2, p3p2);
+         }
 
-        if (useWorldCoordinates) {
-            let wm = this.pickedMesh.getWorldMatrix();
+         if (useWorldCoordinates) {
+             let wm = this.pickedMesh.getWorldMatrix();
 
-            if (this.pickedMesh.nonUniformScaling) {
-                TmpVectors.Matrix[0].copyFrom(wm);
-                wm = TmpVectors.Matrix[0];
-                wm.setTranslationFromFloats(0, 0, 0);
-                wm.invert();
-                wm.transposeToRef(TmpVectors.Matrix[1]);
+             if (this.pickedMesh.nonUniformScaling) {
+                 TmpVectors.Matrix[0].copyFrom(wm);
+                 wm = TmpVectors.Matrix[0];
+                 wm.setTranslationFromFloats(0, 0, 0);
+                 wm.invert();
+                 wm.transposeToRef(TmpVectors.Matrix[1]);
 
-                wm = TmpVectors.Matrix[1];
-            }
+                 wm = TmpVectors.Matrix[1];
+             }
 
-            result = Vector3.TransformNormal(result, wm);
-        }
+             result = Vector3.TransformNormal(result, wm);
+         }
+         result.normalize();
 
-        result.normalize();
-
-        return result;
-    }*/
+         return result;
+     }*/
 
     /**
      * Gets the texture coordinates of where the pick occured
      * @returns the vector containing the coordnates of the texture
      */
-   /* public getTextureCoordinates(): Nullable<Vector2> {
-        if (!this.pickedMesh || !this.pickedMesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-            return null;
-        }
+    /* public getTextureCoordinates(): Nullable<Vector2> {
+         if (!this.pickedMesh || !this.pickedMesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
+             return null;
+         }
 
-        var indices = this.pickedMesh.getIndices();
-        if (!indices) {
-            return null;
-        }
+         var indices = this.pickedMesh.getIndices();
+         if (!indices) {
+             return null;
+         }
 
-        var uvs = this.pickedMesh.getVerticesData(VertexBuffer.UVKind);
-        if (!uvs) {
-            return null;
-        }
+         var uvs = this.pickedMesh.getVerticesData(VertexBuffer.UVKind);
+         if (!uvs) {
+             return null;
+         }
 
-        var uv0 = Vector2.FromArray(uvs, indices[this.faceId * 3] * 2);
-        var uv1 = Vector2.FromArray(uvs, indices[this.faceId * 3 + 1] * 2);
-        var uv2 = Vector2.FromArray(uvs, indices[this.faceId * 3 + 2] * 2);
+         var uv0 = Vector2.FromArray(uvs, indices[this.faceId * 3] * 2);
+         var uv1 = Vector2.FromArray(uvs, indices[this.faceId * 3 + 1] * 2);
+         var uv2 = Vector2.FromArray(uvs, indices[this.faceId * 3 + 2] * 2);
 
-        uv0 = uv0.scale(this.bu);
-        uv1 = uv1.scale(this.bv);
-        uv2 = uv2.scale(1.0 - this.bu - this.bv);
+         uv0 = uv0.scale(this.bu);
+         uv1 = uv1.scale(this.bv);
+         uv2 = uv2.scale(1.0 - this.bu - this.bv);
 
-        return new Vector2(uv0.x + uv1.x + uv2.x, uv0.y + uv1.y + uv2.y);
-    }*/
+         return new Vector2(uv0.x + uv1.x + uv2.x, uv0.y + uv1.y + uv2.y);
+     }*/
 }
 class IntersectionInfo {
     public faceId = 0;
@@ -201,7 +200,7 @@ class Ray {
         edge1[1] = minimum.y - intersectionTreshold
         edge1[2] = minimum.z - intersectionTreshold
         const newMinimum = edge1
-       // const newMaximum = Ray.TmpVector3[1].copyFromFloats(maximum.x + intersectionTreshold, maximum.y + intersectionTreshold, maximum.z + intersectionTreshold);
+        // const newMaximum = Ray.TmpVector3[1].copyFromFloats(maximum.x + intersectionTreshold, maximum.y + intersectionTreshold, maximum.z + intersectionTreshold);
         edge2[0] = maximum.x + intersectionTreshold
         edge2[1] = maximum.y + intersectionTreshold
         edge2[2] = maximum.z + intersectionTreshold
@@ -305,7 +304,7 @@ class Ray {
      * @param intersectionTreshold extra extend to be added to the BoundingBox in all direction
      * @returns if the box was hit
      */
-    public intersectsBox(box: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number }}, intersectionTreshold = 0): boolean {
+    public intersectsBox(box: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number } }, intersectionTreshold = 0): boolean {
         return this.intersectsBoxMinMax(box.min, box.max, intersectionTreshold);
     }
 
@@ -319,9 +318,9 @@ class Ray {
      */
     public intersectsTriangle(vertex0: [number, number, number], vertex1: [number, number, number], vertex2: [number, number, number]): IntersectionInfo | null {
 
-        
 
-        
+
+
 
         const pvec: [number, number, number] = [0, 0, 0]
 
@@ -329,7 +328,7 @@ class Ray {
 
         const qvec: [number, number, number] = [0, 0, 0]
 
-       // vertex1.subtractToRef(vertex0, edge1);
+        // vertex1.subtractToRef(vertex0, edge1);
 
         edge1[0] = vertex1[0] - vertex0[0];
         edge1[1] = vertex1[1] - vertex0[1];
@@ -556,7 +555,7 @@ class Ray {
         this.unprojectRayToRef(x, y, viewportWidth, viewportHeight, world, view, projection);
         return this;
     }*/
-    
+
     // Statics
     /**
      * Creates a ray with origin and direction of 0,0,0

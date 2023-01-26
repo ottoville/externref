@@ -3,27 +3,27 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 
 type BindLayouts = readonly [
-  BGLayout<[
-    BufLayout<ShaderStage.VERTEX>,
-    TextLayout<ShaderStage.FRAGMENT>]>
-  ]
+    BGLayout<[
+        BufLayout<ShaderStage.VERTEX>,
+        TextLayout<ShaderStage.FRAGMENT>]>
+]
 
 export class UIFragShader extends FragmentShader<
-  { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout,
-        pick: pipelineLayout
-      }, label: 'UI.frag'
-    });
-    this.createWGSL((
-      [texture]) => {
+    { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout,
+                pick: pipelineLayout
+            }, label: 'UI.frag'
+        });
+        this.createWGSL((
+            [texture]) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return  /* wgsl */ `
+            return  /* wgsl */ `
       struct Output {
         @location(0) Color : vec4<f32>
       };
@@ -43,7 +43,7 @@ export class UIFragShader extends FragmentShader<
       }
       
   `;
-      //////////////
-    })
-  }
+            //////////////
+        })
+    }
 }

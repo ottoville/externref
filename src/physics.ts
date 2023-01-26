@@ -13,7 +13,7 @@ const GRAVITY = 9.80665;
  * Gametime is saved in minutes.
  * */
 
-const tmp_vector:[number,number,number]=[0,0,0];
+const tmp_vector: [number, number, number] = [0, 0, 0];
 export class Physics {
     #lastTickTimeMsInGameTime: number = new Date().getTime();
     #lastTickTimeMs: number = new Date().getTime();
@@ -42,7 +42,7 @@ export class Physics {
 
         return (this.tickTime + (delta / this.#realMSingameSecond));
     }
-    onPhysicTick: Set<(delta:number) => void> = new Set();
+    onPhysicTick: Set<(delta: number) => void> = new Set();
     /*
         There is a flaw in #tick function.
         When tab is background its not getting called and delta is growing very large.
@@ -52,12 +52,12 @@ export class Physics {
         const timestamp = Date.now();
         if (this.#lastStateChangeTime > this.#lastTickTimeMsInGameTime) {
             var realDeltaInGameTime = ((timestamp - this.#lastStateChangeTime) * this.#gameSpeed) + this.#tickDeltaWhenStateChange
-            if(realDeltaInGameTime < 0) {
+            if (realDeltaInGameTime < 0) {
                 throw new Error('Delta cannot be negative')
             }
         } else {
             var realDeltaInGameTime = (timestamp - this.#lastTickTimeMs) * this.#gameSpeed; // get the delta time since last tick
-            if(realDeltaInGameTime < 0) {
+            if (realDeltaInGameTime < 0) {
                 throw new Error('Delta cannot be negative')
             }
         }
@@ -70,17 +70,17 @@ export class Physics {
             }*/
         } else {
             var delta = realDeltaInGameTime;
-            this.#lastTickTimeMsInGameTime+=realDeltaInGameTime;
+            this.#lastTickTimeMsInGameTime += realDeltaInGameTime;
         }
         this.#lastTickTimeMs = timestamp;
 
 
         this.tickTime += (delta / this.#realMSingameSecond);
-      //  console.log('hours passed', this.tickTime/60/60)
+        //  console.log('hours passed', this.tickTime/60/60)
         const dt = delta / 1000;
-        const delta_multiplier =  1000 / delta;
-        const dt_half_sqrt=dt*dt*0.5;
-        const dt_half=dt*0.5;
+        const delta_multiplier = 1000 / delta;
+        const dt_half_sqrt = dt * dt * 0.5;
+        const dt_half = dt * 0.5;
         /*
             Min delta = 0,0166 = 60fps/s.
             If higher fps is wanted, then collider displacementVector must be updated to closer,
@@ -106,29 +106,29 @@ export class Physics {
             TODO:
              - acceleration etc setters update dynamic buffer. So it is updated multiple times on loop.
         */
-        for(let i = 0; i<this.tickables.length; i++) {
-            const tickable=this.tickables[i]!;
+        for (let i = 0; i < this.tickables.length; i++) {
+            const tickable = this.tickables[i]!;
             //if (tickable.onPhysicTick) //@ts-ignore
             //    tickable.onPhysicTick(delta);
 
             const velocity = tickable.velocity;
-           /* if(velocity[0] > 0 || velocity[1] > 0 || velocity[2] > 0) {
-                // TODO: take account to Y axis also.
-                let speed = Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
-                if(speed > 0)
-                tickable.velocity = [
-                    velocity[0] - 0.1,
-                    velocity[1],
-                    velocity[2] - 0.1
-                ]
-            }*/
-            const wantedVelocityPerDelta=tmp_vector;
-            wantedVelocityPerDelta[0]=velocity[0]*dt + tickable.acceleration2[0]*dt_half_sqrt 
-            wantedVelocityPerDelta[1]=velocity[1]*dt + tickable.acceleration2[1]*dt_half_sqrt
-            wantedVelocityPerDelta[2]=velocity[2]*dt + tickable.acceleration2[2]*dt_half_sqrt;
-            const motionFrictionAcceleration:[number,number,number]=[0,0,0]
-            const translation=tickable.translation;
-           if(wantedVelocityPerDelta[0] !== 0 || wantedVelocityPerDelta[1] !== 0 || wantedVelocityPerDelta[2] !== 0) {
+            /* if(velocity[0] > 0 || velocity[1] > 0 || velocity[2] > 0) {
+                 // TODO: take account to Y axis also.
+                 let speed = Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
+                 if(speed > 0)
+                 tickable.velocity = [
+                     velocity[0] - 0.1,
+                     velocity[1],
+                     velocity[2] - 0.1
+                 ]
+             }*/
+            const wantedVelocityPerDelta = tmp_vector;
+            wantedVelocityPerDelta[0] = velocity[0] * dt + tickable.acceleration2[0] * dt_half_sqrt
+            wantedVelocityPerDelta[1] = velocity[1] * dt + tickable.acceleration2[1] * dt_half_sqrt
+            wantedVelocityPerDelta[2] = velocity[2] * dt + tickable.acceleration2[2] * dt_half_sqrt;
+            const motionFrictionAcceleration: [number, number, number] = [0, 0, 0]
+            const translation = tickable.translation;
+            if (wantedVelocityPerDelta[0] !== 0 || wantedVelocityPerDelta[1] !== 0 || wantedVelocityPerDelta[2] !== 0) {
                 const finalPosition = tickable.checkCollide([
                     wantedVelocityPerDelta[0],
                     wantedVelocityPerDelta[1],
@@ -136,15 +136,15 @@ export class Physics {
                 ]);
                 if (tickable.colliding_character) {
                     tickable.onCollideCharacter(false)
-                    const newVelocityDelta:[number,number,number] = [
+                    const newVelocityDelta: [number, number, number] = [
                         (finalPosition[0] - translation[0]),
                         (finalPosition[1] - translation[1]),
                         (finalPosition[2] - translation[2])
                     ]
-                    if(newVelocityDelta[0] !== 0 || newVelocityDelta[1] !== 0 || newVelocityDelta[2] !== 0) {
-                        if(tickable.last_velocity[0] === 0 || tickable.last_velocity[1] === 0 || tickable.last_velocity[2] === 0) {
+                    if (newVelocityDelta[0] !== 0 || newVelocityDelta[1] !== 0 || newVelocityDelta[2] !== 0) {
+                        if (tickable.last_velocity[0] === 0 || tickable.last_velocity[1] === 0 || tickable.last_velocity[2] === 0) {
                             // Apply friction when object is not moving
-                           // friction=true;
+                            // friction=true;
                         }
                         tickable.last_velocity[0] = newVelocityDelta[0] * delta_multiplier;
                         tickable.last_velocity[1] = newVelocityDelta[1] * delta_multiplier;
@@ -169,43 +169,43 @@ export class Physics {
                         tickable.last_velocity[2] = 0;
                     }
                     // Calculate correct acceleration so new position can be forced throught velocity
-                    tickable.acceleration2[0] = (newVelocityDelta[0]-velocity[0]*dt)/dt_half_sqrt;
-                    tickable.acceleration2[1] = (newVelocityDelta[1]-velocity[1]*dt)/dt_half_sqrt;
-                    tickable.acceleration2[2] = (newVelocityDelta[2]-velocity[2]*dt)/dt_half_sqrt;
+                    tickable.acceleration2[0] = (newVelocityDelta[0] - velocity[0] * dt) / dt_half_sqrt;
+                    tickable.acceleration2[1] = (newVelocityDelta[1] - velocity[1] * dt) / dt_half_sqrt;
+                    tickable.acceleration2[2] = (newVelocityDelta[2] - velocity[2] * dt) / dt_half_sqrt;
 
-                /*
-                    TODO: friction is now set higher in x and z because human cannot brake otherwise.
-                */
-                    motionFrictionAcceleration[0] = -tickable.last_velocity[0]*tickable.grip;
-                    motionFrictionAcceleration[1] = -tickable.last_velocity[1]*tickable.grip;
-                    motionFrictionAcceleration[2] = -tickable.last_velocity[2]*tickable.grip;
+                    /*
+                        TODO: friction is now set higher in x and z because human cannot brake otherwise.
+                    */
+                    motionFrictionAcceleration[0] = -tickable.last_velocity[0] * tickable.grip;
+                    motionFrictionAcceleration[1] = -tickable.last_velocity[1] * tickable.grip;
+                    motionFrictionAcceleration[2] = -tickable.last_velocity[2] * tickable.grip;
                 } else {
                     tickable.last_velocity[0] = wantedVelocityPerDelta[0] * delta_multiplier;
                     tickable.last_velocity[1] = wantedVelocityPerDelta[1] * delta_multiplier;
                     tickable.last_velocity[2] = wantedVelocityPerDelta[2] * delta_multiplier;
                 }
-                tickable.translation=[
+                tickable.translation = [
                     finalPosition[0],
                     finalPosition[1],
                     finalPosition[2]
                 ];
             }
-            tickable.last_acceleration[0]=tickable.acceleration2[0];
-            tickable.last_acceleration[1]=tickable.acceleration2[1];
-            tickable.last_acceleration[2]=tickable.acceleration2[2];
+            tickable.last_acceleration[0] = tickable.acceleration2[0];
+            tickable.last_acceleration[1] = tickable.acceleration2[1];
+            tickable.last_acceleration[2] = tickable.acceleration2[2];
 
             tickable.acceleration2[0] = motionFrictionAcceleration[0] + tickable.impulse[0];
-            tickable.acceleration2[1] = motionFrictionAcceleration[1] + tickable.impulse[1] -(tickable.hasGravity?GRAVITY:0);
+            tickable.acceleration2[1] = motionFrictionAcceleration[1] + tickable.impulse[1] - (tickable.hasGravity ? GRAVITY : 0);
             tickable.acceleration2[2] = motionFrictionAcceleration[2] + tickable.impulse[2];
 
-            tickable.impulse[0]=0;
-            tickable.impulse[1]=0;
-            tickable.impulse[2]=0;
+            tickable.impulse[0] = 0;
+            tickable.impulse[1] = 0;
+            tickable.impulse[2] = 0;
 
-            tickable.velocity=[
-                velocity[0] + (tickable.last_acceleration[0]+tickable.acceleration2[0])*dt_half,
-                velocity[1] + (tickable.last_acceleration[1]+tickable.acceleration2[1])*dt_half,
-                velocity[2] + (tickable.last_acceleration[2]+tickable.acceleration2[2])*dt_half,
+            tickable.velocity = [
+                velocity[0] + (tickable.last_acceleration[0] + tickable.acceleration2[0]) * dt_half,
+                velocity[1] + (tickable.last_acceleration[1] + tickable.acceleration2[1]) * dt_half,
+                velocity[2] + (tickable.last_acceleration[2] + tickable.acceleration2[2]) * dt_half,
             ];
             //TODO: Update only if neeeded
             tickable.update_dynamic_buffer();
@@ -213,7 +213,7 @@ export class Physics {
         if (realDeltaInGameTime > MIN_TICK_DELTA) {
             // Withtimeout execution is returned to event loop, allowing inputs before next tick
             // TODO: nested timeout forces 4ms delay
-            setTimeout(this.#tick,0);
+            setTimeout(this.#tick, 0);
         } else {
             this.#interval = setTimeout(this.#tick, this.tickIntervalMs - (Date.now() - timestamp))
         }
@@ -235,12 +235,12 @@ export class Physics {
         return this.#lastStateChangeGameTime + BigInt(interval * 60 * this.gameSpeed);
     }
     set gameSpeed(value: number) {
-        if(Number.isNaN(value))
+        if (Number.isNaN(value))
             throw new Error('gameSpeed must be number')
         this.#lastStateChangeGameTime = this.gameTime;
         this.#lastStateChangeTime = new Date().getTime();
 
-        if(this.#interval) {
+        if (this.#interval) {
             clearTimeout(this.#interval);
         }
         this.#timeUntillTick = this.tickIntervalMs - this.#tickDeltaWhenStateChange;
@@ -254,7 +254,7 @@ export class Physics {
     get gameSpeed() {
         return this.#gameSpeed;
     }
-    constructor(private engine:Engine) {
+    constructor(private engine: Engine) {
         this.gameSpeed = 1;
     }
 

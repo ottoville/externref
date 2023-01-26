@@ -174,18 +174,20 @@ export class GPU {
         this.#GPUDirectionalLights = Buffer.create(this, 63 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'GPUDirectionalLights')
 
 
-        this.#updateViewBindGroup = this.updateViewShader.props.bindGroupLayouts[0].createBindGroup('updateViewBindGroup', bindGroup => [{
-            binding: 0,
-            resource: this.GPUMeshes.getStorageBinding(bindGroup),
-        },
-        {
-            binding: 1,
-            resource: this.#GPUPointLights.getStorageBinding(bindGroup),
-        },
-        {
-            binding: 2,
-            resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
-        }]);
+        this.#updateViewBindGroup = this.updateViewShader.props.bindGroupLayouts[0].createBindGroup('updateViewBindGroup', bindGroup => [
+            {
+                binding: 0,
+                resource: this.GPUMeshes.getStorageBinding(bindGroup),
+            },
+            {
+                binding: 1,
+                resource: this.#GPUPointLights.getStorageBinding(bindGroup),
+            },
+            {
+                binding: 2,
+                resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
+            }
+        ]);
         this.uniformBindGroupLayoutWithTime = new BGLayout(this, 'uniformBindGroupLayoutWithTime',
             new BufLayout(
                 {
@@ -259,7 +261,8 @@ export class GPU {
             {
                 binding: 0,
                 resource: this.GPUMeshes.getUniformBinding(bindGroup, 0, GPU.gpu_memory_index_size)
-            }]);
+            }
+        ]);
         this.positionBindGroupTimeWGSL = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot', BindGroupLayoutPosition)
         this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.createAppendedLayout('lightsBindGroupTexture2Layout',
             new BGLayout(this,
@@ -307,10 +310,11 @@ export class GPU {
                         writeMask: 0xF,
                         textureViewDescriptor: { baseArrayLayer: 0, arrayLayerCount: 1 },
                         context: undefined
-                    }, {
-                    clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-                    blend: undefined
-                })
+                    },
+                    {
+                        clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+                        blend: undefined
+                    })
             },
             sampleCount: 1,
             size: { width: canvas.width, height: canvas.height },
@@ -327,13 +331,14 @@ export class GPU {
             {
                 gpu: this,
                 colorRenderTargets: {
-                    gRenderTargetDiffuse: new MSAARenderTarget({
-                        gpu: this,
-                        format: "bgra8unorm",
-                        usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
-                        label: 'diffuseTexture',
-                        size: { width: 300, height: 300 }
-                    },
+                    gRenderTargetDiffuse: new MSAARenderTarget(
+                        {
+                            gpu: this,
+                            format: "bgra8unorm",
+                            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
+                            label: 'diffuseTexture',
+                            size: { width: 300, height: 300 }
+                        },
                         {
                             writeMask: 0xF,
                             textureViewDescriptor: undefined,
@@ -353,14 +358,15 @@ export class GPU {
                 rootLayout: this.rootCameralayout,
                 label: 'renderPassScreen'
             },
-            new DepthRenderTarget(0, {
-                format: 'depth32float',
-                usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
-                label: 'depthTexture_renderPassScreen',
-                initialSampleCount: 4,
-                size: { width: 300, height: 300 },
-                gpu: this
-            },
+            new DepthRenderTarget(0,
+                {
+                    format: 'depth32float',
+                    usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
+                    label: 'depthTexture_renderPassScreen',
+                    initialSampleCount: 4,
+                    size: { width: 300, height: 300 },
+                    gpu: this
+                },
                 {
                     writeMask: 0xF,
                     context: undefined,
@@ -379,11 +385,12 @@ export class GPU {
                             usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
                             label: 'diffuseTextureWater',
                             size: { width: 300, height: 300 }
-                        }, {
-                        textureViewDescriptor: undefined,
-                        writeMask: 0xF,
-                        context: undefined
-                    },
+                        },
+                        {
+                            textureViewDescriptor: undefined,
+                            writeMask: 0xF,
+                            context: undefined
+                        },
                         {
                             clearValue: { r: 0.023, g: 0.25, b: 0.45, a: 1.0 },
                             blend: undefined
@@ -448,18 +455,20 @@ export class GPU {
         const uiVertShader = new UIVertShader(this.#canvasRootLayout, {
             arrayStride: 4 * 4,
             stepMode: "vertex",
-            attributes: [{
-                // position
-                shaderLocation: 0,
-                offset: 0,
-                format: "float32x2",
-            },
-            {
-                // uv
-                shaderLocation: 1,
-                offset: 8,
-                format: "float32x2",
-            }]
+            attributes: [
+                {
+                    // position
+                    shaderLocation: 0,
+                    offset: 0,
+                    format: "float32x2",
+                },
+                {
+                    // uv
+                    shaderLocation: 1,
+                    offset: 8,
+                    format: "float32x2",
+                }
+            ]
         })
         this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
             {
@@ -477,17 +486,19 @@ export class GPU {
         this.renderPassCanvas = new RenderPass({
             gpu: this,
             colorRenderTargets: {
-                swap: new ColorRenderTarget({
-                    gpu: this,
-                    format: this.#presentationFormat,
-                    usages: TextureUsageEnums.RENDER_ATTACHMENT,
-                    label: 'canvasTexture',
-                    size: { width: 300, height: 300 }
-                }, {
-                    context: context,
-                    writeMask: 0xF,
-                    textureViewDescriptor: undefined
-                },
+                swap: new ColorRenderTarget(
+                    {
+                        gpu: this,
+                        format: this.#presentationFormat,
+                        usages: TextureUsageEnums.RENDER_ATTACHMENT,
+                        label: 'canvasTexture',
+                        size: { width: 300, height: 300 }
+                    },
+                    {
+                        context: context,
+                        writeMask: 0xF,
+                        textureViewDescriptor: undefined
+                    },
                     {
                         clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                         blend: {

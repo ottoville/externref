@@ -39,7 +39,7 @@ TODO
         size: terrainSize,
         minmax: [-2, 500] as const,
         maxXZ: [terrainSize[0] / 2.0, terrainSize[1] / 2.0] as const,
-        textureSize:  { width: 8192, height: 8192 } as const,
+        textureSize: { width: 8192, height: 8192 } as const,
         facetSize: subdivisions[0] * subdivisions[1]
     } as const
     settings = Terrain.settings;
@@ -231,7 +231,7 @@ TODO
              if (!ctx)
                  throw ('get 2d context failed');
              //disabled for now
-             
+
              ctx.putImageData(new ImageData(new Uint8ClampedArray(this.#vertices.buffer), c.width, c.height), 0, 0);
              let blob = await c.convertToBlob({ type: "image/webp", quality: 1 });
              const response = new Response(blob);
@@ -328,10 +328,11 @@ TODO
         passEncoder.setPipeline(computePipelineIndices);
 
         passEncoder.setBindGroup(0, calculatePlaneIndicesShader.props.bindGroupLayouts[0].createBindGroup('terrainIndicesGPU',
-            (bindGroup) => [{
-                binding: 0,
-                resource: terrainIndicesGPU.getStorageBinding(bindGroup)
-            }
+            (bindGroup) => [
+                {
+                    binding: 0,
+                    resource: terrainIndicesGPU.getStorageBinding(bindGroup)
+                }
             ]
         ).bindGroup);
         passEncoder.dispatchWorkgroups(...Terrain.#subdivisions);

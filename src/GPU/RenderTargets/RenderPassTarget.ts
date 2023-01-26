@@ -4,7 +4,7 @@ import { RenderTarget } from "./RenderTarget.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";
 
 export type RenderPassTargetOptions = {
-    textureViewDescriptor: GPUTextureViewDescriptor | undefined,   
+    textureViewDescriptor: GPUTextureViewDescriptor | undefined,
     writeMask: GPUColorWriteFlags;
     context: GPUCanvasContext | undefined;
 }

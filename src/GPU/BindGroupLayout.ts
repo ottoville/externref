@@ -8,19 +8,19 @@ export interface GPUBindGroupTextureEntry {
     texture: GPUTextureBindingLayout;
 }
 export type MapToGPUBindGroupEntry<T> = {
-    [K in keyof T]: T[K] extends TextLayout ? { binding: GPUIndex32, resource: GPUTextureView | GPUExternalTexture } : 
+    [K in keyof T]: T[K] extends TextLayout ? { binding: GPUIndex32, resource: GPUTextureView | GPUExternalTexture } :
     GPUBindGroupEntry };
 export type GPUBindGroupLayoutEntryBuffer = Omit<GPUBindGroupLayoutEntry, 'binding'> & {
     buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 }
 }
 
 export enum ShaderStage {
-    VERTEX= 1,
-    FRAGMENT= 2,
-    COMPUTE= 4,
-    VERTEX_AND_FRAGMENT= 3, //GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-    COMPUTE_AND_FRAGMENT= 6, // GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT
-    COMPUTE_AND_VERTEX= 5 // GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX
+    VERTEX = 1,
+    FRAGMENT = 2,
+    COMPUTE = 4,
+    VERTEX_AND_FRAGMENT = 3, //GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+    COMPUTE_AND_FRAGMENT = 6, // GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT
+    COMPUTE_AND_VERTEX = 5 // GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX
 }
 interface BindGroupLayoutEntryProps<V extends ShaderStage = ShaderStage> extends Omit<GPUBindGroupLayoutEntry, 'binding' | 'visibility'> {
     visibility: V
@@ -39,11 +39,11 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
         },
         variableName: string,
         public struct: S,
-        ) {
-            
-            super(entry, variableName, struct.name)
+    ) {
+
+        super(entry, variableName, struct.name)
     }
-    prop(member:keyof S["properties"] & string) {
+    prop(member: keyof S["properties"] & string) {
         return `${this.variableName}.${member}`
     }
 }
@@ -52,22 +52,22 @@ export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
         public override entry: BindGroupLayoutEntryProps<V> & ({ texture: NonNullable<GPUBindGroupLayoutEntry['texture']> } | { storageTexture: NonNullable<GPUBindGroupLayoutEntry['storageTexture']> }),
         variableName: string,
         structName:
-        'texture_depth_multisampled_2d'
-        | 'texture_2d<u32>'
-        | 'texture_2d<f32>'
-        | 'texture_storage_2d<rgba8unorm,write>'
-        ) {
-            super(entry, variableName, structName)
+            'texture_depth_multisampled_2d'
+            | 'texture_2d<u32>'
+            | 'texture_2d<f32>'
+            | 'texture_storage_2d<rgba8unorm,write>'
+    ) {
+        super(entry, variableName, structName)
     }
 }
 
 export class SampLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
     constructor(
-        public override entry: BindGroupLayoutEntryProps<V> & { sampler: NonNullable<GPUBindGroupLayoutEntry['sampler']>},
+        public override entry: BindGroupLayoutEntryProps<V> & { sampler: NonNullable<GPUBindGroupLayoutEntry['sampler']> },
         variableName: string,
         structName: 'sampler' | 'sampler_comparison',
-        ) {
-            super(entry, variableName, structName)
+    ) {
+        super(entry, variableName, structName)
     }
 }
 

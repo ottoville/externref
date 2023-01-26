@@ -3,8 +3,8 @@ import { RenderTargetTextureUsageValue, TextureUsageEnums } from "../Texture.js"
 
 
 export class RenderTarget<
-F extends GPUTextureFormat = GPUTextureFormat,
-U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
+    F extends GPUTextureFormat = GPUTextureFormat,
+    U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     extends Texture2D<F, U>
 {
     bytes_per_fixel: number;
@@ -28,21 +28,22 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     }
     copyFromExternalImage(
         source: GPUImageCopyExternalImage,
-        destination: Omit<GPUImageCopyTextureTagged, 'texture'> & { origin?: GPUOrigin3DDict},
+        destination: Omit<GPUImageCopyTextureTagged, 'texture'> & { origin?: GPUOrigin3DDict },
         copySize: GPUExtent3DDict,
-        
+
     ) {
-        if((this.usages & GPUTextureUsage.COPY_DST) === 0) {
+        if ((this.usages & GPUTextureUsage.COPY_DST) === 0) {
             throw new Error('copyFromExternalImage: texture must include COPY_DST.')
         }
-        if((destination.origin?.y ?? 0) + (copySize.height??0) > this.size.height) {
+        if ((destination.origin?.y ?? 0) + (copySize.height ?? 0) > this.size.height) {
             throw new Error('copyFromExternalImage height touches outside of texture ')
         }
-        if((destination.origin?.x ?? 0) + (copySize.width??0) > this.size.width) {
+        if ((destination.origin?.x ?? 0) + (copySize.width ?? 0) > this.size.width) {
             throw new Error('copyFromExternalImage width touches outside of texture ')
         }
         this.gpu.device.queue.copyExternalImageToTexture(
-            source, {
+            source,
+            {
                 ...destination,
                 texture: this.texture
             },
@@ -57,14 +58,14 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
 
         //Use for debugging purpose.
         //this.#debug = true;
-        let add_copy_src=false;
-        if((this.usages & TextureUsageEnums.COPY_SRC) === 0) {
-            add_copy_src=true;
+        let add_copy_src = false;
+        if ((this.usages & TextureUsageEnums.COPY_SRC) === 0) {
+            add_copy_src = true;
             this.createTexture(this.initialSampleCount, true);
             await new Promise(res => { requestAnimationFrame(res) });
             await new Promise(res => { requestAnimationFrame(res) });
         }
-            
+
         const encoder = this.gpu.device.createCommandEncoder({ label: 'texture_toBitmap_encoder' });
         let bytesPerRow = this.size.width * this.bytes_per_fixel;
         const missAlignment = bytesPerRow % 256;

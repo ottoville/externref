@@ -4,32 +4,33 @@ import { Bindable } from "./Bindable.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
 let n = 0;
 export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> = Texture<GPUTextureFormat, TextureUsageValue>> extends Bindable {
-    //To track when texture is assigned as render target 
-    readonly #renderPasses:Set<RenderPass>=new Set();
+    //To track when texture is assigned as render target
+    readonly #renderPasses: Set<RenderPass> = new Set();
 
     //TODO: set private
     view: GPUTextureView;
     readonly #descriptor: GPUTextureViewDescriptor
     constructor(public texture: T, descriptor?: GPUTextureViewDescriptor) {
         super();
-        this.#descriptor={
-            label: texture.label+'View',
+        this.#descriptor = {
+            label: texture.label + 'View',
             ...descriptor
         }
         this.view = this.reCreate();
         texture.views.add(this);
     }
-    reCreate(debug=false) {
+    reCreate(debug = false) {
         this.destroy();
         let label = this.#descriptor.label ?? '';
-        if(debug) {
-            label = (this.#descriptor.label!)+'debug'+n;
-            console.log('create textureview',label)
-            n+=1;
+        if (debug) {
+            label = (this.#descriptor.label!) + 'debug' + n;
+            console.log('create textureview', label)
+            n += 1;
         }
         this.view = this.texture.texture.createView(
-            {...this.#descriptor,
-                label:label
+            {
+                ...this.#descriptor,
+                label: label
             });
         return this.view;
     }

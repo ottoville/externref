@@ -9,23 +9,23 @@ export class DepthRenderPass<T extends {
 } = {
     [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
 }
-    > extends RenderPass<T> {
-    depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue> 
+> extends RenderPass<T> {
+    depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
     constructor(
-        renderPassProps: RenderPassProps<T> ,
+        renderPassProps: RenderPassProps<T>,
         depthRenderTargets: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
-        ) {
-            renderPassProps.GPURenderBundleEncoderDescriptor={depthStencilFormat: depthRenderTargets.format}
+    ) {
+        renderPassProps.GPURenderBundleEncoderDescriptor = { depthStencilFormat: depthRenderTargets.format }
         super(renderPassProps);
-            this.depthRenderTarget = depthRenderTargets;
+        this.depthRenderTarget = depthRenderTargets;
     }
     override resize(width: number, height: number) {
         super.resize(width, height);
-        this.depthRenderTarget.resize(this.size, this.sampleCount)    
+        this.depthRenderTarget.resize(this.size, this.sampleCount)
     }
     override get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const renderPassDescriptor = super.GPURenderPassDescriptor;
-        
+
         renderPassDescriptor.depthStencilAttachment = {
             view: this.depthRenderTarget.view.getAsRenderTarget(this),
             depthClearValue: this.depthRenderTarget.clearValue,

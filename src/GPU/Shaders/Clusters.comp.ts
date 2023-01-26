@@ -5,50 +5,50 @@ import { ComputeShader } from './ComputeShader.js';
 import { Clusters, Projection } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js'
 type BindLayouts = readonly [GPU["sizeBindGroupLayout"],
-BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>];
+    BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>];
 export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
-  constructor(
-    sizeGroup: GPU["sizeBindGroupLayout"],
-  ) {
-    const bindLayouts = [
-      sizeGroup,
-      new BGLayout(sizeGroup.gpu, 'CreateClustersLayout2',
-        new BufLayout(
-          {
-            visibility: ShaderStage.COMPUTE,
-            buffer: {
-              type: "storage",
-              hasDynamicOffset: false,
-              minBindingSize: 7962624
-            }
-          }, 'clusters', Clusters),
-        new BufLayout(
-          {
-            visibility: ShaderStage.COMPUTE,
-            buffer: {
-              type: 'uniform',
-              hasDynamicOffset: false,
-              minBindingSize: PROJECTION_BUFFER_SIZE
-            }
-          }, 'screentoview', Projection)
-      )
-    ] as const;
+    constructor(
+        sizeGroup: GPU["sizeBindGroupLayout"],
+    ) {
+        const bindLayouts = [
+            sizeGroup,
+            new BGLayout(sizeGroup.gpu, 'CreateClustersLayout2',
+                new BufLayout(
+                    {
+                        visibility: ShaderStage.COMPUTE,
+                        buffer: {
+                            type: "storage",
+                            hasDynamicOffset: false,
+                            minBindingSize: 7962624
+                        }
+                    }, 'clusters', Clusters),
+                new BufLayout(
+                    {
+                        visibility: ShaderStage.COMPUTE,
+                        buffer: {
+                            type: 'uniform',
+                            hasDynamicOffset: false,
+                            minBindingSize: PROJECTION_BUFFER_SIZE
+                        }
+                    }, 'screentoview', Projection)
+            )
+        ] as const;
 
-    const pipelineLayout = new PipelineLayout({
-      label: 'ClustersPipeline',
-      bindGroupLayouts: bindLayouts
-    });
+        const pipelineLayout = new PipelineLayout({
+            label: 'ClustersPipeline',
+            bindGroupLayouts: bindLayouts
+        });
 
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      label: "Clusters.comp",
-      entryPoints: {
-        main: pipelineLayout
-      }
-    });
-    this.createWGSL(([uniforms], [clusters, screentoview]) => {
-      /////////////////
-      return /* wgsl */ `
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            label: "Clusters.comp",
+            entryPoints: {
+                main: pipelineLayout
+            }
+        });
+        this.createWGSL(([uniforms], [clusters, screentoview]) => {
+            /////////////////
+            return /* wgsl */ `
     
 fn clipToView(clip : vec4<f32>) -> vec4<f32> {
 //View space transform
@@ -113,8 +113,8 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
 }
 
  `;
-      ///////////////////////////
+            ///////////////////////////
 
-    })
-  }
+        })
+    }
 }

@@ -15,8 +15,8 @@ export class paintTexture extends paintGround {
     #offsetX = 0;
     #offsetY = 0;
     onMainPointerDown(startingPoint: TerraVector2): void {
-        this.#offsetX = this.textureWidth*0.5 + startingPoint[0] / this.ratio;
-        this.#offsetY = this.textureHeight*0.5 + startingPoint[1] / this.ratio;
+        this.#offsetX = this.textureWidth * 0.5 + startingPoint[0] / this.ratio;
+        this.#offsetY = this.textureHeight * 0.5 + startingPoint[1] / this.ratio;
     }
     constructor(
         scene: Scene,
@@ -24,7 +24,7 @@ export class paintTexture extends paintGround {
         protected readonly zonedt: Texture2D<"rgba8unorm", 23>,
         private textureWidth: number,
         private textureHeight: number,
-        private ratio:number,
+        private ratio: number,
         callback: PTResultF
     ) {
         super(scene, ground, callback);
@@ -50,9 +50,11 @@ export class paintTexture extends paintGround {
         const cos = Math.cos(rad);
         const sin = Math.sin(rad);
 
-        const translated = coords.map<[x:number, y:number]>(coord => {
-            return [coord.x * cos + coord.y * sin + this.#offsetX,
-                coord.x * -sin + coord.y * cos + this.#offsetY];
+        const translated = coords.map<[x: number, y: number]>(coord => {
+            return [
+                coord.x * cos + coord.y * sin + this.#offsetX,
+                coord.x * -sin + coord.y * cos + this.#offsetY
+            ];
         });
 
         const minX = Math.min(...translated.map(t => t[0])) | 0;
@@ -62,7 +64,7 @@ export class paintTexture extends paintGround {
 
         const cwidth = maxX - minX;
         const cheight = maxZ - minZ;
-        if(cwidth === 0 || cheight === 0) {
+        if (cwidth === 0 || cheight === 0) {
             return;
         }
         const missAlignment = (cwidth * 4) % 256;
@@ -84,7 +86,7 @@ export class paintTexture extends paintGround {
             format: "rgba8unorm",
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
         });
-        const encoder = this.scene.gpu.device.createCommandEncoder({label: 'drawSubImage_encoder'});
+        const encoder = this.scene.gpu.device.createCommandEncoder({ label: 'drawSubImage_encoder' });
         encoder.copyTextureToTexture(
             { texture: this.zonedt.texture, origin: { x: minX, y: minZ } },
             { texture: tempTexture },
@@ -102,7 +104,7 @@ export class paintTexture extends paintGround {
                 const intersectionoffsetDestinationX = leftX - minX
                 const intersectionoffsetDestinationY = topY - minZ;
                 encoder.copyTextureToTexture(
-                    { texture: this.subTextureCache.imageData, origin: { x: intersectionoffsetSourceX, y: intersectionoffsetSourceY } }, //origin: [subX, subZ, 1] 
+                    { texture: this.subTextureCache.imageData, origin: { x: intersectionoffsetSourceX, y: intersectionoffsetSourceY } }, //origin: [subX, subZ, 1]
                     { texture: tempTexture, origin: { x: intersectionoffsetDestinationX, y: intersectionoffsetDestinationY } },
                     [rightX - leftX, bottomY - topY, 1]);
             } else {
@@ -112,7 +114,7 @@ export class paintTexture extends paintGround {
         encoder.copyTextureToBuffer({ texture: tempTexture }, { buffer: tempBuffer, bytesPerRow: (c.width * 4) }, [c.width, c.height, 1]);
 
         this.scene.gpu.device.queue.submit([encoder.finish()]);
-        const encoder2 = this.scene.gpu.device.createCommandEncoder({label: 'drawSubImage2_encoder'});
+        const encoder2 = this.scene.gpu.device.createCommandEncoder({ label: 'drawSubImage2_encoder' });
         const cacheImage = this.subTextureCache.imageData;
         if (cacheImage) {
             encoder2.copyTextureToTexture(

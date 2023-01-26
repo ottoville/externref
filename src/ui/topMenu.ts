@@ -65,10 +65,11 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
             onClick: this.setActiveMenu
         }
         keyBoardMap.length = 0;
-                const menus: {
+        const menus: {
             ctr: typeof PlantsUI | typeof TerrainToolButton | typeof Zones,
             props: UIRectangleNodeProps
-        }[] = [
+        }[] =
+            [
                 UINode.createCtrProps(PlantsUI, {
                     ...commonProps,
                     open: this.state.menuOpenName === 'Plants',

@@ -5,26 +5,26 @@ import { GPU } from '../../GPU.js'
 type BindLayouts = GPU["rootCameralayout"]["bindGroupLayouts"]
 
 export class GrassVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout],
-  BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]) {
+    { main: PipelineLayout },
+    [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout],
+    BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]) {
 
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'grass.vert'
-    }, buffers);
-    this.createWGSL((
-      [/*uniform*/,],
-      [scene, time, /*clusters_array, meshes, projection*/]
-    ) => {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout
+            },
+            label: 'grass.vert'
+        }, buffers);
+        this.createWGSL((
+            [/*uniform*/,],
+            [scene, time,/*clusters_array, meshes, projection*/]
+        ) => {
 
-//////////////////////////////////
+            //////////////////////////////////
 
-return /* wgsl */ `
+            return /* wgsl */ `
 
 
 
@@ -130,7 +130,7 @@ fn main(
     return output;
 }
   `;
-//////////////
-    })
-  }
+            //////////////
+        })
+    }
 }

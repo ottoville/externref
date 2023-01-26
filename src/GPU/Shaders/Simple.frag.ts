@@ -6,28 +6,28 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout]>,
-  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
-  BGLayout<[BufLayout]>]
+    BGLayout<[BufLayout]>,
+    BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
+    BGLayout<[BufLayout]>]
 
 export class SimpleFragShader extends FragmentShader<
-  { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout,
-        pick: pipelineLayout
-      }, label: 'Simple.frag'
-    });
-    this.createWGSL((/*
+    { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout,
+                pick: pipelineLayout
+            }, label: 'Simple.frag'
+        });
+        this.createWGSL((/*
       [uniforms],
       [scene, time, clusters_array, meshes, projection],
       [world]*/) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return  /* wgsl */ `
+            return  /* wgsl */ `
 struct Output {
   @location(0) Diffuse : vec4<f32>
 };
@@ -56,7 +56,7 @@ fn pick(
   return output;
 }
   `;
-      //////////////
-    })
-  }
+            //////////////
+        })
+    }
 }

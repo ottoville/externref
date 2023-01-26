@@ -5,29 +5,29 @@ import { GPU } from '../../GPU.js'
 type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"]
 
 export class SimpleVertShader extends VertexShader<
-  {
-    main: PipelineLayout,
-    pick: PipelineLayout
-  },
-  [GPUVertexBufferLayout],
-  BindLayouts> {
-  constructor(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout,
-        pick: pipelineLayout
-      },
-      label: 'Simple.vert'
-    }, [buffers]);
-    this.createWGSL((
-      [/*uniforms*/,],
-      [scene, /*time, clusters_array, meshes, projection*/],
-      [world]) => {
+    {
+        main: PipelineLayout,
+        pick: PipelineLayout
+    },
+    [GPUVertexBufferLayout],
+    BindLayouts> {
+    constructor(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout,
+                pick: pipelineLayout
+            },
+            label: 'Simple.vert'
+        }, [buffers]);
+        this.createWGSL((
+            [/*uniforms*/,],
+            [scene,/*time, clusters_array, meshes, projection*/],
+            [world]) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return /* wgsl */ `
+            return /* wgsl */ `
 
 struct Output {
   @builtin(position) Position : vec4<f32>,
@@ -78,7 +78,7 @@ fn pick(
   return output;
 }
   `;
-      //////////////
-    });
-  }
+            //////////////
+        });
+    }
 }

@@ -6,23 +6,23 @@ type BindLayouts = GPU["lightsBindGroupTexture2"]["bindGroupLayouts"]
 
 
 export class GroundFragShader extends FragmentShader<
-  { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
-  constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout,
-        pick: pipelineLayout
-      },
-      label: 'Ground.frag',
-    });
-    this.createWGSL((
-      [uniforms],
-      [/*scene*/, clusters_array, meshes, projection],
-      [/*world*/,],
-      [mySampler, myTexture]) => {
-      //////////////////////////////////
-      return /* wgsl */ `
+    { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
+    constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout,
+                pick: pipelineLayout
+            },
+            label: 'Ground.frag',
+        });
+        this.createWGSL((
+            [uniforms],
+            [/*scene*/, clusters_array, meshes, projection],
+            [/*world*/,],
+            [mySampler, myTexture]) => {
+            //////////////////////////////////
+            return /* wgsl */ `
 struct Output {
   @location(0) Diffuse : vec4<f32>
 };
@@ -132,7 +132,7 @@ fn pick(
 
   }
   `;
-      //////////////
-    });
-  }
+            //////////////
+        });
+    }
 }

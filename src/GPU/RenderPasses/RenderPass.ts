@@ -98,10 +98,12 @@ export class RenderPass<U extends {
         })
         this.bundles.push(renderBundle);
         this.#sizeBuffer = this.#updateSizeBindGroup(true);
-        this.sizeBindGroup = () => gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup', bindGroup => [{
-            binding: 0,
-            resource: this.#sizeBuffer.getUniformBinding(bindGroup, 0, 16)
-        }]);
+        this.sizeBindGroup = () => gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup', bindGroup => [
+            {
+                binding: 0,
+                resource: this.#sizeBuffer.getUniformBinding(bindGroup, 0, 16)
+            }
+        ]);
     }
     #updateSizeBindGroup(initial = false) {
         if (!initial)
@@ -112,7 +114,8 @@ export class RenderPass<U extends {
                 this.size.width,
                 this.size.height,
                 this.size.width / this.gpu.clustersInRow[0],
-                this.size.height / this.gpu.clustersInRow[1]]);
+                this.size.height / this.gpu.clustersInRow[1]
+            ]);
         });
 
         return this.#sizeBuffer;
@@ -128,11 +131,11 @@ export class RenderPass<U extends {
                     label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label
                 }
             ).catch((err: unknown) => {
-                if(err instanceof DOMException) {
-                    if(err.message.includes(renderPipeline.props.vertexShader.module.label)) {
+                if (err instanceof DOMException) {
+                    if (err.message.includes(renderPipeline.props.vertexShader.module.label)) {
                         console.error('createRenderPipelineAsync failed, vertex wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err })
                     }
-                    if(err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
+                    if (err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
                         console.error('createRenderPipelineAsync failed, fragment wgsl:', renderPipeline.props.fragmentShader.wgsl, { cause: err })
                     }
                 }

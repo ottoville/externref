@@ -8,7 +8,7 @@ const BLADE_WIDTH = 0.0025;
 const BLADE_HEIGHT_MIN = 0.3
 const BLADE_HEIGHT_MAX = 0.8
 const buffer = new SharedArrayBuffer(2 * 4);
-let grasspositions= new Float32Array(buffer);
+let grasspositions = new Float32Array(buffer);
 let noises: Float32Array;
 let bladecount = 0;
 const cacheP = caches.open('save');
@@ -29,7 +29,7 @@ const methods = {
     init: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
         this.postMessage({ id: data.id });
         caches.match(new Request('/grass')).then(response => {
-            if(response) {
+            if (response) {
                 return response.arrayBuffer();
             } else {
                 return fetch('/assets/grass').then(response2 => response2.arrayBuffer())
@@ -47,16 +47,16 @@ const methods = {
         grasspositions = newArray;
     },
     deGrowMemory: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
-        new Float32Array(data.data.positions,0,grasspositions.length).set(grasspositions);
+        new Float32Array(data.data.positions, 0, grasspositions.length).set(grasspositions);
         grasspositions = new Float32Array(data.data.positions);
     },
-    save: async (data: WMessage<{ angle: number, area: { size: {width:number, height:number}, coord: Float32Array } }>) => {
-        const grassPerSquareMeter=8
+    save: async (data: WMessage<{ angle: number, area: { size: { width: number, height: number }, coord: Float32Array } }>) => {
+        const grassPerSquareMeter = 8
         const amount = Math.abs(data.data.area.size.height * data.data.area.size.width) * grassPerSquareMeter
         if (amount === 0)
             return;
-       // var d = new Date().getTime();
-      //  var objstore = trans.objectStore("plantae");
+        // var d = new Date().getTime();
+        //  var objstore = trans.objectStore("plantae");
 
         //console.log('creating grass, amount', amount, data)
 
@@ -66,12 +66,12 @@ const methods = {
         const cos = Math.cos(data.data.angle);
         const sin = Math.sin(data.data.angle);
 
-      /*  let minX: number;
-        let minZ: number;
-        let maxX: number;
-        let maxZ: number;*/
+        /*  let minX: number;
+          let minZ: number;
+          let maxX: number;
+          let maxZ: number;*/
 
-        
+
         for (let i = 0; i < amount; ++i) {
             const posX = (Math.random() * data.data.area.size.height * -1);
             const posZ = (Math.random() * data.data.area.size.width * -1);
@@ -91,9 +91,9 @@ const methods = {
 
         }
 
-       /* if (amount > grasspositions.length / 2) {
-            methods.growMemory(amount * 2)
-        }*/
+        /* if (amount > grasspositions.length / 2) {
+             methods.growMemory(amount * 2)
+         }*/
         let memoryOffset = 0;
         grids2.forEach(grid => {
             if (memoryOffset + grid.length > grasspositions.length)
@@ -119,21 +119,21 @@ const methods = {
                 })
           //  }
         }*/
-      //  bladecount = Math.min(Math.max(bladecount, plantaes.length), grasspositions.length/2)
+        //  bladecount = Math.min(Math.max(bladecount, plantaes.length), grasspositions.length/2)
 
 
 
-      //  bladecount = clamp(bladecount, plantaes.length, grasspositions.length / 2)
-    
-       // for (let i = 0; i < Math.min(bladecount, plantaes.length); i++) {
-     /*   for (let i = 0; i < amount; i++) {
+        //  bladecount = clamp(bladecount, plantaes.length, grasspositions.length / 2)
 
-            grasspositions[i * 2] = plantaes[i].pos[0]
-            grasspositions[i * 2 + 1] = plantaes[i].pos[1]
-        }*/
+        // for (let i = 0; i < Math.min(bladecount, plantaes.length); i++) {
+        /*   for (let i = 0; i < amount; i++) {
+
+               grasspositions[i * 2] = plantaes[i].pos[0]
+               grasspositions[i * 2 + 1] = plantaes[i].pos[1]
+           }*/
         console.log('update grass, count', grasspositions.length / 2);
-        this.postMessage({ type: 'updated', count: grasspositions.length/2, buffer: grasspositions.buffer });
-        
+        this.postMessage({ type: 'updated', count: grasspositions.length / 2, buffer: grasspositions.buffer });
+
         const response = new Response(grasspositions);
         response.headers.set('content-length', grasspositions.buffer.byteLength.toString());
         response.headers.set('content-type', 'application/octet-stream');

@@ -1,10 +1,10 @@
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
 export class RenderBundleEncoder {
-    #renderBundle:GPURenderBundle | undefined
+    #renderBundle: GPURenderBundle | undefined
     GPURenderBundleEncoderDescriptor: GPURenderBundleEncoderDescriptor;
     renderBundleEncoder: GPURenderBundleEncoder;
     renderBundle() {
-        if(!this.#renderBundle) {
+        if (!this.#renderBundle) {
             this.record(this)
             this.#renderBundle = this.renderBundleEncoder.finish();
             // Create bundeEncoder ready for next time it is called
@@ -19,15 +19,15 @@ export class RenderBundleEncoder {
     }
     constructor(
         private renderPass: RenderPass,
-        renderBundleEncoderDescriptor:Partial<GPURenderBundleEncoderDescriptor> | undefined,
+        renderBundleEncoderDescriptor: Partial<GPURenderBundleEncoderDescriptor> | undefined,
         private record: (renderBundleEncoder: RenderBundleEncoder) => void) {
-            this.GPURenderBundleEncoderDescriptor = {
-                colorFormats: Object.values(renderPass.colorRenderTargets).map(rt => rt.texture.format),
-                sampleCount: renderPass.sampleCount,
-                label: renderPass.label,
-                ...renderBundleEncoderDescriptor
-            };
-            this.renderBundleEncoder = this.renderPass.gpu.device.createRenderBundleEncoder(this.GPURenderBundleEncoderDescriptor);
+        this.GPURenderBundleEncoderDescriptor = {
+            colorFormats: Object.values(renderPass.colorRenderTargets).map(rt => rt.texture.format),
+            sampleCount: renderPass.sampleCount,
+            label: renderPass.label,
+            ...renderBundleEncoderDescriptor
+        };
+        this.renderBundleEncoder = this.renderPass.gpu.device.createRenderBundleEncoder(this.GPURenderBundleEncoderDescriptor);
 
     }
 }

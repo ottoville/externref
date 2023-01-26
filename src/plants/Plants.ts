@@ -56,15 +56,17 @@ export class Plants {
             const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline, { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' });
             new DrawableIndirect({
                 renderPipeline,
-                vertexBuffers: [positionGPU, shapeGPU, new Float32Array([
-                    0.02, 0.0,
-                    -0.02, 0.0,
-                    0.014, 0.29,
-                    -0.014, 0.29,
-                    0.007, 0.57,
-                    -0.007, 0.57,
-                    0.0, 1.0
-                ])],
+                vertexBuffers: [
+                    positionGPU, shapeGPU, new Float32Array([
+                        0.02, 0.0,
+                        -0.02, 0.0,
+                        0.014, 0.29,
+                        -0.014, 0.29,
+                        0.007, 0.57,
+                        -0.007, 0.57,
+                        0.0, 1.0
+                    ])
+                ],
                 label: 'Plants',
             }, indirectBuffer);
         }
@@ -89,9 +91,9 @@ export class Plants {
                 noises: noises,
             }, []);
             const getHeightAtCoordinatesShader = new GrassHeightAtCoordinates(Terrain.settings, scene.gpu);
-            
+
             const computePipeline = await getHeightAtCoordinatesShader.createComputePipeline('main');
-            
+
             const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1', bindGroup1 => [
                 {
                     binding: 0,
@@ -109,7 +111,7 @@ export class Plants {
                     binding: 3,
                     resource: shapeGPUSwap.getStorageBinding(bindGroup1)
                 },
-                ]);
+            ]);
 
             this.#worker.subscribe('updated', (data: { buffer: SharedArrayBuffer }) => {
                 const commandEncoder = scene.gpu.device.createCommandEncoder({ label: 'plants_encoder' });
@@ -120,10 +122,12 @@ export class Plants {
                     const worldSetArr = buffer.getMappedRange();
                     new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
                 });
-                const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup2', bg => [{
-                    binding: 0,
-                    resource: worldCopyGPU.getStorageBinding(bg)
-                }]);
+                const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup2', bg => [
+                    {
+                        binding: 0,
+                        resource: worldCopyGPU.getStorageBinding(bg)
+                    }
+                ]);
 
                 passEncoder.setBindGroup(0, bindGroup.bindGroup);
                 passEncoder.setBindGroup(1, bindGroup2.bindGroup);
@@ -175,7 +179,7 @@ export class Plants {
                this.mat.setVector3("camDir", camera.position);
            });
            //FIX
-   
+
            this.mat.setFloat("windIntensity", 1.5);
            //fix
            this.mat.setFloat("fogFar", 1200.0);
@@ -185,11 +189,11 @@ export class Plants {
            //depth*2 fix
            this.mat.setFloat("grassFogFar", 1600);
            //this.mat.backFaceCulling = false;
-   
+
            Poaceae.material = this.mat;
            Poaceae.alwaysSelectAsActiveMesh = true;
-   
-   
+
+
            this.mat.backFaceCulling = false;*/
 
         // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);

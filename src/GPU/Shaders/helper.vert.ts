@@ -5,39 +5,38 @@ import type { GPU } from '../../GPU.js'
 import type { Terrain } from '../../world/terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 type BindLayouts = readonly [
-  GPU["sizeBindGroupLayout"],
-  GPU["uniformBindGroupLayoutWithTime"],
-  BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
-  BGLayout<[
-    BufLayout<ShaderStage.VERTEX>,
-    BufLayout<ShaderStage.VERTEX>,
-  ]>
+    GPU["sizeBindGroupLayout"],
+    GPU["uniformBindGroupLayoutWithTime"],
+    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+    BGLayout<[
+        BufLayout<ShaderStage.VERTEX>,
+        BufLayout<ShaderStage.VERTEX>,
+    ]>
 ]
 export class HelperVertShader extends VertexShader<
-  { main: PipelineLayout },
-  [],
-  BindLayouts> {
-  constructor(
-    settings: typeof Terrain.settings,
-    pipelineLayout: PipelineLayout<BindLayouts>) {
+    { main: PipelineLayout },
+    [],
+    BindLayouts> {
+    constructor(
+        settings: typeof Terrain.settings,
+        pipelineLayout: PipelineLayout<BindLayouts>) {
 
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      entryPoints: {
-        main: pipelineLayout
-      },
-      label: 'helper.vert'
-    },
-      []);
-    this.createWGSL((
-      [/*uniforms*/,],
-      [scene, time, /*clusters_array, meshes, projection*/],
-      [world],
-      [slopes, facet12]) => {
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            entryPoints: {
+                main: pipelineLayout
+            },
+            label: 'helper.vert'
+        }, []);
+        this.createWGSL((
+            [/*uniforms*/,],
+            [scene, time,/*clusters_array, meshes, projection*/],
+            [world],
+            [slopes, facet12]) => {
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-      return /* wgsl */ `
+            return /* wgsl */ `
   
  //let PI:f32 = 3.1415926535897932384626433832795;
  const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
@@ -76,8 +75,8 @@ export class HelperVertShader extends VertexShader<
  }
     `;
 
-      //////////////////////////////////
+            //////////////////////////////////
 
-    })
-  }
+        })
+    }
 }

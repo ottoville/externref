@@ -101,7 +101,7 @@ export class MeshCamera extends CameraController {
         if(gpu) {
             Atomics.store(gpu.mousePosition, 0, gpu.renderPassCanvas.size.width * 0.5)
             Atomics.store(gpu.mousePosition, 1, gpu.renderPassCanvas.size.height * 0.5)
-            Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0); 
+            Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
         }
     }
     #lockPointer = () => {

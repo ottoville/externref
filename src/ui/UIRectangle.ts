@@ -199,7 +199,6 @@ export type UIRectangleProps = {
     /**
      * Values between -1 and 1
      * Origin 0,0 is at center of the viewport
-     * 
      */
     translate: { x: number, y: number },
     originalAspectRatio?: number | undefined,

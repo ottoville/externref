@@ -7,58 +7,58 @@ import type { Terrain } from '../../world/terrain.js';
 
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
-  BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
+    BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+    BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
 ];
 export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
-  constructor(gpu: GPU, settings: typeof Terrain.settings) {
-    const bindLayouts = [
-      new BGLayout(gpu, 'verticesBindGroupLayout',
-        new BufLayout(
-          {
-            visibility: ShaderStage.COMPUTE,
-            buffer: {
-              type: "read-only-storage",
-              hasDynamicOffset: false,
-              minBindingSize: 48
-            }
-          }, 'vertices', Vertices)),
-      new BGLayout(gpu, 'slopesAndFacesBindGroupLayout',
-        new BufLayout(
-          {
-            visibility: ShaderStage.COMPUTE,
-            buffer: {
-              type: "storage",
-              hasDynamicOffset: false,
-              minBindingSize: 32
-            },
-          }, 'slopes', IntArray),
-        new BufLayout(
-          {
-            visibility: ShaderStage.COMPUTE,
-            buffer: {
-              type: "storage",
-              hasDynamicOffset: false,
-              minBindingSize: 32
-            }
-          }, 'facet12', PlaneArray))
-    ] as const
+    constructor(gpu: GPU, settings: typeof Terrain.settings) {
+        const bindLayouts = [
+            new BGLayout(gpu, 'verticesBindGroupLayout',
+                new BufLayout(
+                    {
+                        visibility: ShaderStage.COMPUTE,
+                        buffer: {
+                            type: "read-only-storage",
+                            hasDynamicOffset: false,
+                            minBindingSize: 48
+                        }
+                    }, 'vertices', Vertices)),
+            new BGLayout(gpu, 'slopesAndFacesBindGroupLayout',
+                new BufLayout(
+                    {
+                        visibility: ShaderStage.COMPUTE,
+                        buffer: {
+                            type: "storage",
+                            hasDynamicOffset: false,
+                            minBindingSize: 32
+                        },
+                    }, 'slopes', IntArray),
+                new BufLayout(
+                    {
+                        visibility: ShaderStage.COMPUTE,
+                        buffer: {
+                            type: "storage",
+                            hasDynamicOffset: false,
+                            minBindingSize: 32
+                        }
+                    }, 'facet12', PlaneArray))
+        ] as const
 
-    const pipelineLayout = new PipelineLayout({
-      label: 'calculatePlaneHeightsPipeline',
-      bindGroupLayouts: bindLayouts
-    });
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      label: "calculatePlaneHeights.comp",
-      entryPoints: {
-        main: pipelineLayout
-      }
-    })
-    const subdivisions_plus_one = settings.subdivisions[0]+1;
-    const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
-    this.createWGSL(([vertices], [slopes, facet12]) => {
-      return /* wgsl */ `
+        const pipelineLayout = new PipelineLayout({
+            label: 'calculatePlaneHeightsPipeline',
+            bindGroupLayouts: bindLayouts
+        });
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            label: "calculatePlaneHeights.comp",
+            entryPoints: {
+                main: pipelineLayout
+            }
+        })
+        const subdivisions_plus_one = settings.subdivisions[0] + 1;
+        const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
+        this.createWGSL(([vertices], [slopes, facet12]) => {
+            return /* wgsl */ `
       const cd: f32 = -1.0;
       @compute @workgroup_size(1)
       fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
@@ -109,6 +109,6 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
           return;
         }
         `;
-    })
-  }
+        })
+    }
 }

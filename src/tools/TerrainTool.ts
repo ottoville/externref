@@ -18,10 +18,10 @@ const terrainWorker = new WorkerThread('terrainWorker.js');
 
 type TerrainToolButtonState = { subMenu: 'lower' | 'raise' | undefined };
 export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
-UIRectangleNodeProps & { terrain: Terrain, menuTree: {level: number}, open: boolean }> {
+    UIRectangleNodeProps & { terrain: Terrain, menuTree: { level: number }, open: boolean }> {
     #wasOpen = false;
     constructor(
-        props: UIRectangleNodeProps & { terrain: Terrain, menuTree: {level: number}, open: boolean },
+        props: UIRectangleNodeProps & { terrain: Terrain, menuTree: { level: number }, open: boolean },
     ) {
         super(props);
         this.state = {
@@ -62,31 +62,33 @@ UIRectangleNodeProps & { terrain: Terrain, menuTree: {level: number}, open: bool
                 this.#tool = new TerrainTool(this.props.terrain);
             }
             engine.addInputListener('keydown', this, this.#inputListener);
-            return [UINode.createCtrProps(UIRectangleNode,{
-                gpu: this.props.gpu,
-                bitmap: this.props.bitmap,
-                label: 'Lower',
-                scale: { min_width: 0.10, y: 0.07, unit: SizeUnit["%"] },
-                translate: { x: -0.85, y: 0.8 },
-                text: 'Lower (1)',
-                onClick: () => {
-                    this.setState({
-                        subMenu: 'lower'
-                    })
-                }
-            }), UINode.createCtrProps(UIRectangleNode, {
-                gpu: this.props.gpu,
-                bitmap: this.props.bitmap,
-                label: 'Raise',
-                scale: { min_width: 0.10, y: 0.07, unit: SizeUnit["%"] },
-                translate: { x: -0.6, y: 0.8 },
-                text: 'Raise (2)',
-                onClick: () => {
-                    this.setState({
-                        subMenu: 'raise'
-                    })
-                }
-            })]
+            return [
+                UINode.createCtrProps(UIRectangleNode, {
+                    gpu: this.props.gpu,
+                    bitmap: this.props.bitmap,
+                    label: 'Lower',
+                    scale: { min_width: 0.10, y: 0.07, unit: SizeUnit["%"] },
+                    translate: { x: -0.85, y: 0.8 },
+                    text: 'Lower (1)',
+                    onClick: () => {
+                        this.setState({
+                            subMenu: 'lower'
+                        })
+                    }
+                }), UINode.createCtrProps(UIRectangleNode, {
+                    gpu: this.props.gpu,
+                    bitmap: this.props.bitmap,
+                    label: 'Raise',
+                    scale: { min_width: 0.10, y: 0.07, unit: SizeUnit["%"] },
+                    translate: { x: -0.6, y: 0.8 },
+                    text: 'Raise (2)',
+                    onClick: () => {
+                        this.setState({
+                            subMenu: 'raise'
+                        })
+                    }
+                })
+            ]
         } else if (!this.props.open && this.#wasOpen) {
             this.#wasOpen = false;
             this.#tool?.destroy();
@@ -107,21 +109,23 @@ export class TerrainTool extends MainNode {
     ) {
         super({ positionsCount: 4, label: 'TerrainTool' });
 
-        const getRenderPipeline = ['TerrainToolRenderpipeline', function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState,
-        ) {
-            const helperVertShader = new HelperVertShader(terrain.settings, terrain.TerrainHeightsbindGroupTree);
-            const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
-                {
-                    label,
-                    vertexShader: helperVertShader,
-                    fragmentShader: new ColorFragShader(terrain.TerrainHeightsbindGroupTree),
-                    renderPipeline: {
-                        primitive
+        const getRenderPipeline = [
+            'TerrainToolRenderpipeline', function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState,
+            ) {
+                const helperVertShader = new HelperVertShader(terrain.settings, terrain.TerrainHeightsbindGroupTree);
+                const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
+                    {
+                        label,
+                        vertexShader: helperVertShader,
+                        fragmentShader: new ColorFragShader(terrain.TerrainHeightsbindGroupTree),
+                        renderPipeline: {
+                            primitive
+                        }
                     }
-                }
-            )
-            return renderPipeline
-        }] as const
+                )
+                return renderPipeline
+            }
+        ] as const
 
         const renderPipeline = terrain.gpu.createRenderPipeline(getRenderPipeline, {
             topology: 'triangle-list',

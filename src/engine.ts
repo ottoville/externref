@@ -196,7 +196,7 @@ export class Engine {
     /*
         This is the distance that collision response will set the object after collide.
         It is the constraint that keeps objects together. So when force is applied, the collision occurs.
-        For gravity (at 60fps) it must be lower than   9.80665*0.016*0.016 = 0,0027240694444442 
+        For gravity (at 60fps) it must be lower than   9.80665*0.016*0.016 = 0,0027240694444442
         TODO: make other constraints for other forces than gravity
     */
 
@@ -232,7 +232,7 @@ export class Engine {
                 }
                 IDB.onupgradeneeded = function (e) {
                     console.log('IDBVersionChangeEvent', e);
-                    // Save the IDBDatabase interface 
+                    // Save the IDBDatabase interface
                     var db: EarthDatabase = this.result;
 
                     (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach((objstore) => {

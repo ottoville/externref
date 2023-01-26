@@ -4,43 +4,43 @@ import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/terrain.js';
 
 type BindLayouts = readonly [
-  BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
-  BGLayout<[TextLayout<ShaderStage.COMPUTE>]>];
+    BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
+    BGLayout<[TextLayout<ShaderStage.COMPUTE>]>];
 export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
-  constructor(
-    settings: typeof Terrain.settings,
-    slopesLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>) {
-    const bindLayouts = [
-      slopesLayout,
-      new BGLayout(slopesLayout.gpu, 'TerrainTextureLayout',
-        new TextLayout(
-          {
-            visibility: ShaderStage.COMPUTE,
-            storageTexture: {
-              access: 'write-only',
-              format: 'rgba8unorm'
+    constructor(
+        settings: typeof Terrain.settings,
+        slopesLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>) {
+        const bindLayouts = [
+            slopesLayout,
+            new BGLayout(slopesLayout.gpu, 'TerrainTextureLayout',
+                new TextLayout(
+                    {
+                        visibility: ShaderStage.COMPUTE,
+                        storageTexture: {
+                            access: 'write-only',
+                            format: 'rgba8unorm'
+                        }
+                    }, 'ground_texture', 'texture_storage_2d<rgba8unorm,write>'
+                ))
+        ] as const
+
+        const pipelineLayout = new PipelineLayout({
+            label: 'CreateTerrainTexturePipeline',
+            bindGroupLayouts: bindLayouts
+        });
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            label: "CreateTerrainTexture.comp",
+            entryPoints: {
+                main: pipelineLayout
             }
-          }, 'ground_texture', 'texture_storage_2d<rgba8unorm,write>'
-        ))
-    ] as const
+        });
+        const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
 
-    const pipelineLayout = new PipelineLayout({
-      label: 'CreateTerrainTexturePipeline',
-      bindGroupLayouts: bindLayouts
-    });
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      label: "CreateTerrainTexture.comp",
-      entryPoints: {
-        main: pipelineLayout
-      }
-    });
-    const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
+        this.createWGSL(([slopes, facet12], [ground_texture]) => {
 
-    this.createWGSL(([slopes, facet12], [ground_texture]) => {
-
-      /////////////////
-      return /* wgsl */ `
+            /////////////////
+            return /* wgsl */ `
 
 fn mod289(x:f32) -> f32 {
 return x - floor(x * (1. / 289.)) * 289.;
@@ -170,7 +170,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
  return;
 }
   `;
-      //////////////////
-    })
-  }
+            //////////////////
+        })
+    }
 }

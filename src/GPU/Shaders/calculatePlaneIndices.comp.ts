@@ -7,33 +7,33 @@ import type { Terrain } from '../../world/terrain.js';
 
 type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>]>];
 export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
-  constructor(gpu: GPU, settings: typeof Terrain.settings) {
-    const bindLayouts = [
-      new BGLayout(gpu, 'calculateIndicesBindGroupLayout',
-        new BufLayout(
-          {
-            visibility: ShaderStage.COMPUTE,
-            buffer: {
-              type: "storage",
-              hasDynamicOffset: false,
-              minBindingSize: 32
-            }
-          }, 'indices', Indices))
-    ] as const
+    constructor(gpu: GPU, settings: typeof Terrain.settings) {
+        const bindLayouts = [
+            new BGLayout(gpu, 'calculateIndicesBindGroupLayout',
+                new BufLayout(
+                    {
+                        visibility: ShaderStage.COMPUTE,
+                        buffer: {
+                            type: "storage",
+                            hasDynamicOffset: false,
+                            minBindingSize: 32
+                        }
+                    }, 'indices', Indices))
+        ] as const
 
-    const pipelineLayout = new PipelineLayout({
-      label: 'calculatePlaneIndicesPipeline',
-      bindGroupLayouts: bindLayouts
-    });
-    super({
-      bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-      label: "calculatePlaneIndices.comp",
-      entryPoints: {
-        main: pipelineLayout
-      }
-    })
-    this.createWGSL(([indices]) => {
-      return /* wgsl */ `
+        const pipelineLayout = new PipelineLayout({
+            label: 'calculatePlaneIndicesPipeline',
+            bindGroupLayouts: bindLayouts
+        });
+        super({
+            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+            label: "calculatePlaneIndices.comp",
+            entryPoints: {
+                main: pipelineLayout
+            }
+        })
+        this.createWGSL(([indices]) => {
+            return /* wgsl */ `
 
       @compute @workgroup_size(1)
       fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
@@ -52,6 +52,6 @@ export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout 
         return;
       }
       `;
-    })
-  }
+        })
+    }
 }
