@@ -47,11 +47,12 @@ module.exports = {
         "no-unused-expressions": 2,
         "no-loop-func": 2,
 
-
+        // Style rules
         "array-bracket-newline": 2,
         "array-bracket-spacing": 2,
         "object-curly-spacing": [2, "always"],
         "no-trailing-spaces": 2,
+        "key-spacing": ["error", { "afterColon": true }],
         "indent": ["error", 4, { "SwitchCase": 1 }]
     },
     settings: {

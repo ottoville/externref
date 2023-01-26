@@ -14,6 +14,7 @@
     "build": "npm run buildRust && tsc -b  && npm run buildWasmSimd",
     "build-prod": "npm run buildRust-prod && tsc -b  && npm run buildWasmSimd",
     "eslint": "eslint --ext .ts,.tsx --quiet ./",
+    "eslint-fix": "eslint --fix --ext .ts,.tsx --quiet ./",
     "swa": "swa start ../wwwroot/ --ssl --ssl-cert=\"../server.crt\" --ssl-key=\"../server.key\"",
     "test": "npm run test-unit && npm run test-integration && npm run test-wasm && npm run test-rust",
     "test-unit": "npm run buildRust-test && node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js --forceExit --detectOpenHandles --runInBand --silent=false",
