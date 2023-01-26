@@ -126,6 +126,7 @@ export class GPU {
 
     readonly updateViewShader: UpdateView;
     readonly BindGroupLayoutCanvas: BGLayout<[BufLayout<ShaderStage.VERTEX>, TextLayout<ShaderStage.FRAGMENT>]>;
+    destroyed = false;
     createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
     createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
     createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive?: Omit<GPUPrimitiveState, 'topology'>): R
@@ -158,6 +159,7 @@ export class GPU {
         })
         this.#ro.disconnect();
         cancelAnimationFrame(this.#renderFrame);
+        this.destroyed = true;
     }
     constructor(
         public canvas: HTMLCanvasElement,
@@ -679,7 +681,7 @@ export class GPU {
         const nowSecond = (Date.now() / 500) | 0;
         if (nowSecond !== curSecond) {
             //@ts-ignore
-            window.fps = framecount * 2;
+            window.fps = framecount * 2; // Update fps twice a second so framecount is for half second
             curSecond = nowSecond;
             framecount = 0;
         }

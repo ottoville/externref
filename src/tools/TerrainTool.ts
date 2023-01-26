@@ -11,15 +11,17 @@ import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import { UINode } from "../ui/UINode.js";
+import { SizeUnit } from "../ui/UIRectangle.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
 
 type TerrainToolButtonState = { subMenu: 'lower' | 'raise' | undefined };
-export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState> {
+export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
+UIRectangleNodeProps & { terrain: Terrain, menuTree: {level: number}, open: boolean }> {
     #wasOpen = false;
     constructor(
-        props: UIRectangleNodeProps,
+        props: UIRectangleNodeProps & { terrain: Terrain, menuTree: {level: number}, open: boolean },
     ) {
         super(props);
         this.state = {
@@ -61,14 +63,11 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState> {
             }
             engine.addInputListener('keydown', this, this.#inputListener);
             return [UINode.createCtrProps(UIRectangleNode,{
-                menuTree: this.props.menuTree,
                 gpu: this.props.gpu,
-                terrain: this.props.terrain,
                 bitmap: this.props.bitmap,
                 label: 'Lower',
-                scale: { min_width: 0.10, y: 0.07 },
+                scale: { min_width: 0.10, y: 0.07, unit: SizeUnit["%"] },
                 translate: { x: -0.85, y: 0.8 },
-                open: false,
                 text: 'Lower (1)',
                 onClick: () => {
                     this.setState({
@@ -76,14 +75,11 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState> {
                     })
                 }
             }), UINode.createCtrProps(UIRectangleNode, {
-                menuTree: this.props.menuTree,
                 gpu: this.props.gpu,
-                terrain: this.props.terrain,
                 bitmap: this.props.bitmap,
                 label: 'Raise',
-                scale: { min_width: 0.10, y: 0.07 },
+                scale: { min_width: 0.10, y: 0.07, unit: SizeUnit["%"] },
                 translate: { x: -0.6, y: 0.8 },
-                open: false,
                 text: 'Raise (2)',
                 onClick: () => {
                     this.setState({

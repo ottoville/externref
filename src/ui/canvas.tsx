@@ -28,8 +28,9 @@ import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
 //@ts-ignore
 import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
 import { ArcRotateCamera } from "../controllers/ArcRotateCamera.js";
-import { UIRectangle } from "./UIRectangle.js";
+import { SizeUnit, UIRectangle } from "./UIRectangle.js";
 import { createTopMenu } from "./topMenu.js";
+import { createSettingsMenu } from "./SettingsMenu.js";
 
 declare const engine: Engine;
 
@@ -113,6 +114,8 @@ export class Canvas extends TerraCompoment {
 
         this.setProgress(41);
 
+        createSettingsMenu.addKeydownListener(gpu);
+
         const mainScene = new Scene('main', gpu, [engine.mainCamera, waterCamera], (terrascene) => {
             new Sun2(gpu, [terrascene]);
             // Initial scene objects here
@@ -138,7 +141,6 @@ export class Canvas extends TerraCompoment {
                 errors.push(err)
                 this.showError();
             });
-
 
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
 
@@ -212,7 +214,7 @@ export class Canvas extends TerraCompoment {
             label: 'UICanvas',
             borderSize: { width: 0, height: 0, texture_width: 0, texture_height: 0 },
             backgroundTexture: gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
-            scale: { min_width: 1, y: 1 },
+            scale: { min_width: 1, y: 1, unit: SizeUnit["%"] },
             translate: { x: 0, y: 0 },
         });
 

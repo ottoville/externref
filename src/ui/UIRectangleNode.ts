@@ -1,25 +1,18 @@
-import { ButtonSize, UIRectangle } from "./UIRectangle.js";
-import type { Terrain } from "../world/terrain.js";
+import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
 import type { GPU } from "../GPU.js"
 import { UINode } from "./UINode.js";
 
 export type UIRectangleNodeProps = {
     gpu: GPU,
-    terrain: Terrain,
     bitmap: ImageBitmap,
-    label: string,
-    scale: ButtonSize,
-    translate: { x: number, y: number },
     text: string,
-    open: boolean,
-    menuTree: {level: number}
     onClick: (menuName?: string) => void
     children?: ({
         ctr: new(props:UIRectangleNodeProps) => UIRectangleNode;
         props: UIRectangleNodeProps;
     } | null)[] | null
-}
-export class UIRectangleNode<S extends object = object> extends UINode<UIRectangleNodeProps, S> {
+} & Pick<UIRectangleProps, 'scale' | 'translate' | 'label' | 'originalAspectRatio'>
+export class UIRectangleNode<S extends object = object, P extends UIRectangleNodeProps = UIRectangleNodeProps> extends UINode<P, S> {
     static instances: Map<UINode, UIRectangleNode> = new Map()
     static getInstance<P extends UIRectangleNodeProps>(host: UINode, props: P): UIRectangleNode {
         let instance = UIRectangleNode.instances.get(host);
@@ -29,11 +22,12 @@ export class UIRectangleNode<S extends object = object> extends UINode<UIRectang
         }
         return instance;
     }
-    constructor(props: UIRectangleNodeProps) {
+    constructor(props: P) {
         super(props);
     }
     #instance?: UIRectangle;
-    destroy() {
+    override destroy() {
+        super.destroy();
         this.#instance?.destroy();
     }
     render() {
@@ -47,7 +41,7 @@ export class UIRectangleNode<S extends object = object> extends UINode<UIRectang
                 backgroundTexture: props.bitmap,
                 scale: props.scale,
                 translate: props.translate,
-                originalAspectRatio: 0.3,
+                originalAspectRatio: props.originalAspectRatio,
                 events: {
                     onClick: () => {
                         if(this.props.onClick) {

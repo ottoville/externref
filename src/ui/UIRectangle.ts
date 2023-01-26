@@ -9,7 +9,18 @@ import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
 declare const engine: Engine;
-export type ButtonSize = { min_width: number, y: number }
+export const enum SizeUnit {
+    px,
+    '%'
+}
+export type ButtonSize = {
+    min_width: number,
+    /**
+     * Ignored if originalAspectRatio is set
+     */
+    y: number,
+    unit: SizeUnit
+}
 
 function createVertexBuffer(
     scale: ButtonSize,
@@ -32,10 +43,17 @@ function createVertexBuffer(
         const widthBorderPixels = renderPassSize.width * borderSize.width;
         borderSize.height = widthBorderPixels / renderPassSize.height;
     }
-    const outer_sizeX = scale.min_width
-    const outer_sizeY = scale.y
+    let outer_sizeX: number;
+    let outer_sizeY: number;
+    if(scale.unit === SizeUnit["%"]) {
+        outer_sizeX = scale.min_width
+        outer_sizeY = scale.y
+    } else {
+        outer_sizeX = scale.min_width / renderPassSize.width
+        outer_sizeY = scale.y / renderPassSize.height
+    }
 
-    const content_sizeX = outer_sizeX - borderSize.width
+    const content_sizeX = outer_sizeX - borderSize.width;
     const content_sizeY = outer_sizeY - ((typeof borderSize.height === 'number') ? borderSize.height : 0)
     if (content_sizeX <= 0 || content_sizeY <= 0) {
         console.warn('UI', label, 'element content size is 0 or below')
@@ -173,12 +191,18 @@ export type UIRectangleProps = {
     backgroundTexture: ImageBitmap | TextureView<Texture2D>,
     text?: string,
     /**
-        Size of the button relative to viewport size, value between 0 and 1.
+        Size of the button.
         Border size is taken account to scale.
+        Y is Ignored if originalAspectRatio is set.
     */
     scale: ButtonSize,
+    /**
+     * Values between -1 and 1
+     * Origin 0,0 is at center of the viewport
+     * 
+     */
     translate: { x: number, y: number },
-    originalAspectRatio?: number,
+    originalAspectRatio?: number | undefined,
     events?: {
         onClick?: (e: PointerEvent) => void,
     }
@@ -233,12 +257,15 @@ export class UIRectangle {
                 if (!ctx) {
                     throw new Error('Cant get 2d context for texture text');
                 }
-                const font = '48px serif';
+                const font = '80pt serif';
                 ctx.textBaseline = "top";
                 ctx.font = font;
-                const measuredSize = ctx.measureText(text)
-                const textSize = { width: measuredSize.width, height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent }
+                const measuredSize = ctx.measureText(text);
 
+                const textSize = {
+                    width: measuredSize.width,
+                    height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent
+                }
                 const originalTextHeight = textSize.height;
                 if (originalAspectRatio) {
                     //Keep text aspect ratio normal
@@ -248,7 +275,7 @@ export class UIRectangle {
                         textSize.width = textSize.height / originalAspectRatio
                     } else if (textAspectRatio < originalAspectRatio) {
                         //need to add borders to top and bottom
-                        textSize.height = textSize.width * originalAspectRatio
+                        textSize.height = textSize.width * originalAspectRatio;
                     }
                 }
                 const extendedSize = {
@@ -284,10 +311,10 @@ export class UIRectangle {
                     text,
                     extendedSize.width * 0.5,
                     backgroundSize.height + measuredSize.actualBoundingBoxAscent + verticalTextMargin * 0.5);
-                if (label === 'createGrassButton') {
+                /*if (label === 'MSAA' || label === 'Close') {
                     // eslint-disable-next-line promise/catch-or-return
                     copySource.convertToBlob().then(b => { console.log(URL.createObjectURL(b!)) })
-                }
+                }*/
 
                 textUV = [
                     [0, backgroundSize.height],
@@ -352,17 +379,31 @@ export class UIRectangle {
             }, true)
         }
         const updateBoundingBoxAndVertices = () => {
-            const widthPixels = renderPass.size.width * scale.min_width;
+            let widthPixels : number;
+            if(scale.unit === SizeUnit["%"]) {
+                widthPixels = renderPass.size.width * scale.min_width
+            } else {
+                widthPixels = scale.min_width
+            }
             const offsetXPixels = renderPass.size.width * ((translate.x + 1) * 0.5) * 1 / devicePixelRatio;
             const offsetYPixels = renderPass.size.height * ((-translate.y + 1) * 0.5) * 1 / devicePixelRatio;
             const halfWidth = widthPixels * 0.5 * 1 / devicePixelRatio
             let halfHeight: number;
             if (originalAspectRatio) {
                 const heightPixels = widthPixels * originalAspectRatio;
-                scale.y = heightPixels / renderPass.size.height;
+                if(scale.unit === SizeUnit["%"]) {
+                    scale.y = heightPixels / renderPass.size.height;
+                } else {
+                    scale.y = heightPixels;
+                }
                 halfHeight = halfWidth * originalAspectRatio;
             } else {
-                halfHeight = renderPass.size.height * scale.y * 0.5 * 1 / devicePixelRatio
+                if(scale.unit === SizeUnit["%"]) {
+                    halfHeight = renderPass.size.height * scale.y * 0.5 * 1 / devicePixelRatio
+                } else {
+                    halfHeight = scale.y * 0.5 * 1 / devicePixelRatio
+
+                }
             }
             this.#boundingBox.top = offsetYPixels - halfHeight;
             this.#boundingBox.bottom = offsetYPixels + halfHeight;

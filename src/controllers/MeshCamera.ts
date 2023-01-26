@@ -2,7 +2,7 @@ import { TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import type { Engine } from "../engine";
 import { CameraController } from "./CameraController.js";
-import { UIRectangle } from "../ui/UIRectangle.js";
+import { SizeUnit, UIRectangle } from "../ui/UIRectangle.js";
 declare const engine: Engine;
 
 export const enum ARROW_KEYS {
@@ -67,7 +67,6 @@ export class MeshCamera extends CameraController {
     }
     deAttachCameraController() {
         document.exitPointerLock();
-        this.pointerLocked = false;
         engine.clearInputListeners(this);
         this.cursor?.destroy();
         this.camera.gpu?.renderPassCanvas.onResize.delete(this)
@@ -83,7 +82,7 @@ export class MeshCamera extends CameraController {
                     label: 'cursor',
                     borderSize: { width: 0, height: 'auto', texture_width: 0, texture_height: 0 },
                     backgroundTexture: bitmap,
-                    scale: { min_width: 0.01, y: 0.01 },
+                    scale: { min_width: 0.01, y: 0.01, unit: SizeUnit["%"] },
                     translate: { x: 0, y: 0 },
                     originalAspectRatio: 1,
                 })
@@ -105,12 +104,10 @@ export class MeshCamera extends CameraController {
             Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0); 
         }
     }
-    pointerLocked = false;
     #lockPointer = () => {
-        if(this.pointerLocked)
+        if(document.pointerLockElement)
             return;
         (document.body.requestPointerLock() as unknown as Promise<void>).then(()=> {
-            this.pointerLocked = true
             const gpu = this.camera.gpu
             if(gpu) {
                 this.updateMouseCoords();

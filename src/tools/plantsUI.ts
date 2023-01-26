@@ -4,15 +4,17 @@ import type { Plants } from "../plants/Plants.js";
 import type { PTDresult } from "../types/interfaces/index.js";
 import { Engine } from "../engine.js";
 import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
+import { Terrain } from "../world/terrain.js";
+import { UINode } from "../ui/UINode.js";
+import { SizeUnit } from "../ui/UIRectangle.js";
 declare const engine: Engine;
 
 
-export class PlantsUI extends UIRectangleNode {
+export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & { terrain: Terrain, open: boolean }> {
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
     scene = engine.scenes.get('main');
-
-    constructor(props: UIRectangleNodeProps,
+    constructor(props: UIRectangleNodeProps & { terrain: Terrain, open: boolean },
     ) {
         super(props);
         if (!this.scene) {
@@ -30,21 +32,17 @@ export class PlantsUI extends UIRectangleNode {
         if (this.props.open) {
             this.#wasOpen = true
             engine.addInputListener('keydown', this, this.#inputListener);
-            return [{
-                ctr: UIRectangleNode,
-                props: {
+            return [
+                UINode.createCtrProps(UIRectangleNode, {
                     gpu: this.props.gpu,
-                    terrain: this.props.terrain,
                     bitmap: this.props.bitmap,
                     label: 'createGrassButton',
-                    scale: { min_width: 0.15, y: 0.07 },
+                    scale: { min_width: 0.15, y: 0.07, unit: SizeUnit["%"] },
                     translate: { x: -0.8, y: 0.8 },
-                    open: true,
                     text: 'Create grass (1)',
-                    menuTree: this.props.menuTree,
                     onClick: () => this.activateDraw()
-                }
-            }]
+                })
+            ]
         } else if(this.#wasOpen) {
             this.#wasOpen = false;
             this.PT?.destroy();

@@ -2,7 +2,7 @@
 type returnNode<T extends UINode> = { ctr: new (props: any) => T, props: object }
 
 export abstract class UINode<P extends object = object, S extends object = object> {
-    static createCtrProps<P extends object, C extends typeof UINode<P>>(ctr: C, props: P) {
+    static createCtrProps<P extends object, C extends typeof UINode<P>>(ctr: C, props: InstanceType<C>["props"]) {
         return {
             ctr,
             props
@@ -20,14 +20,18 @@ export abstract class UINode<P extends object = object, S extends object = objec
     }
     abstract render(): (returnNode<UINode> | null)[] | null;
 
-    constructor(protected props: Readonly<P>) {
+    constructor(public props: Readonly<P>) {
         // Render after child constructor has been executed, to avoid error
         // "Cannot read private member #instance from an object whose class did not declare it"
         queueMicrotask(() => {
             this.#requestRender();
         })
     }
-    abstract destroy(): void;
+    destroy() {
+        this.#children.forEach(c => {
+            c?.destroy();
+        });
+    }
     #requestRender() {
         const output = this.render();
         if (output) {

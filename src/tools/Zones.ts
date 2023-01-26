@@ -9,8 +9,9 @@ import { TextureView } from "../GPU/TextureView.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 import { UINode } from "../ui/UINode.js";
+import { SizeUnit } from "../ui/UIRectangle.js";
 declare const engine: Engine;
-export class Zones extends UIRectangleNode {
+export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & { terrain: Terrain, menuTree: {level: number}, open: boolean }> {
     #PT?: paintTexture;
     #size = 5120;
     readonly #ratio: number //texture coordinates
@@ -18,7 +19,7 @@ export class Zones extends UIRectangleNode {
     scene: Scene;
     #wasOpen = false;
     constructor(
-        props: UIRectangleNodeProps,
+        props: UIRectangleNodeProps & { terrain: Terrain, menuTree: {level: number}, open: boolean },
     ) {
         super(props);
         const initialScene = props.terrain.scenes[0];
@@ -86,14 +87,11 @@ export class Zones extends UIRectangleNode {
             this.props.terrain.mesh.set_scenes(staticScene.id)
             return [UINode.createCtrProps(UIRectangleNode,
                 {
-                    menuTree: this.props.menuTree,
                     gpu: this.props.gpu,
-                    terrain: this.props.terrain,
                     bitmap: this.props.bitmap,
                     label: 'residentalButton',
-                    scale: { min_width: 0.15, y: 0.07 },
+                    scale: { min_width: 0.15, y: 0.07, unit: SizeUnit["%"] },
                     translate: { x: -0.8, y: 0.8 },
-                    open: true,
                     text: 'Residental (1)',
                     onClick: () => {
                         this.paintZone()
