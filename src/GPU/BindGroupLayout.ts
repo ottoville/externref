@@ -31,6 +31,9 @@ export abstract class BindGroupLayoutEntry<V extends ShaderStage = ShaderStage> 
         public readonly variableName: string,
         public structName: string) {
     }
+    toString() {
+        return this.variableName
+    }
 }
 export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = Struct> extends BindGroupLayoutEntry<V> {
     constructor(

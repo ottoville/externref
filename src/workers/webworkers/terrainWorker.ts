@@ -3,7 +3,8 @@ const methods2: { [index: string]: (e: WMessage) => void } = {
 
     saveTexture: async (e: WMessage<{buffer:ArrayBuffer, size:[number, number]}>) => {
         const response = new Response(e.data.buffer);
-        response.headers.set('content-length', e.data.buffer.byteLength.toString());
+        response.headers.set('Content-Length', e.data.buffer.byteLength.toString());
+        response.headers.set('Content-Type', 'image/webp');
         (await caches.open('save')).put(new Request('/terrainTexture.webp'), response);
 
     },
