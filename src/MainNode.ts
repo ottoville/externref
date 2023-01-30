@@ -8,6 +8,16 @@ export interface DrawableNode {
     label: string;
     destroy(): void;
 }
+export type MainNodeProps = {
+    positionsCount?: number,
+    point_light?: number,
+    directional_light?: number,
+    strip?: boolean,
+    label: string,
+    scenes?: Scene[] | undefined,
+    fixed?: boolean,
+    rigid_body?: boolean,
+};
 export abstract class MainNode implements DrawableNode {
     acceleration2: [number, number, number] = [0, 0, 0];
     //Actual velocity that occured last tick
@@ -112,16 +122,7 @@ export abstract class MainNode implements DrawableNode {
             scenes,
             fixed = false,
             rigid_body = true }:
-            {
-                positionsCount?: number,
-                point_light?: number,
-                directional_light?: number,
-                strip?: boolean,
-                label: string,
-                scenes?: Scene[] | undefined,
-                fixed?: boolean,
-                rigid_body?: boolean,
-            }
+            MainNodeProps
     ) {
         this.label = label;
         const sceneids = scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1;

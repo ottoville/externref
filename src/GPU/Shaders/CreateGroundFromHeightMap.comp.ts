@@ -1,11 +1,13 @@
 import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
-import { Vertices } from './structs/Structs.js';
+import { Struct, Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js'
 import type { Terrain } from '../../world/terrain.js';
 
-type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>, TextLayout<ShaderStage.COMPUTE>]>];
+type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE, Struct<{
+    vert: [string, string];
+}>>, TextLayout<ShaderStage.COMPUTE>]>];
 export class CreateGroundFromHeightMap extends ComputeShader<
     { main: PipelineLayout }, BindLayouts> {
     constructor(gpu: GPU, settings: typeof Terrain.settings) {
@@ -52,20 +54,22 @@ export class CreateGroundFromHeightMap extends ComputeShader<
             f32(GlobalInvocationID.x * ${settings.size[0]}) / ${settings.subdivisions[0]},
             f32(GlobalInvocationID.y * ${settings.size[1]}) / ${settings.subdivisions[0]}
         );
-        var position: vec3<f32> = vec3<f32>(f32(GlobalInvocationID.x *  ${settings.size[0]}) / ${settings.subdivisions[0]} - (${settings.size[0]} / 2.0),
-        0.0,
-        f32((${settings.subdivisions[1]} - GlobalInvocationID.y) * ${settings.size[1]}) / ${settings.subdivisions[1]} - (${settings.size[1]} / 2.0));
+        var position: vec3<f32> = vec3<f32>(
+            f32(GlobalInvocationID.x *  ${settings.size[0]}) / ${settings.subdivisions[0]} - (${settings.size[0]}f / 2.0),
+            0.0,
+            f32((${settings.subdivisions[1]} - GlobalInvocationID.y) * ${settings.size[1]}) / ${settings.subdivisions[1]} - (${settings.size[1]} / 2.0)
+        );
         // TODO: move to uniform
-       let texture_size:vec2<u32> = textureDimensions(${pixels.variableName});
+       let texture_size:vec2<u32> = textureDimensions(${pixels});
     
     
-       let gradient:f32 = dot(textureLoad(${pixels.variableName}, vec2<i32>((vec2<f32>(texture_size)/vec2<f32>(${settings.size[0]}, ${settings.size[1]})) * coords.xy), 0), filt);    
+       let gradient:f32 = dot(textureLoad(${pixels}, vec2<i32>((vec2<f32>(texture_size)/vec2<f32>(${settings.size[0]}, ${settings.size[1]})) * coords.xy), 0), filt);    
     
        position.y = ${settings.minmax[0]} + f32( ${settings.minmax[1]} -  ${settings.minmax[0]}) * gradient;
        //position.y = 10.0;
-       ${positions.variableName}.vert[GlobalInvocationID.y * (${settings.subdivisions[0]} + u32(1)) + GlobalInvocationID.x].position = position;
+       ${positions.prop('vert')}[GlobalInvocationID.y * (${settings.subdivisions[0]} + 1u) + GlobalInvocationID.x].position = position;
       
-       ${positions.variableName}.vert[GlobalInvocationID.y * (${settings.subdivisions[0]} + u32(1)) + GlobalInvocationID.x].uv = (position.xz + vec2<f32>(${settings.maxXZ})) / vec2<f32>(${settings.size[0]}, ${settings.size[1]});
+       ${positions.prop('vert')}[GlobalInvocationID.y * (${settings.subdivisions[0]} + 1u) + GlobalInvocationID.x].uv = (position.xz + vec2<f32>(${settings.maxXZ})) / vec2<f32>(${settings.size[0]}, ${settings.size[1]});
        return;
     }
       `;

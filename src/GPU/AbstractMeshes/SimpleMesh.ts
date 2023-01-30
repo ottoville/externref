@@ -1,29 +1,29 @@
 ﻿import { BoundableNodeSimple } from "../../nodes/BoundableNodeSimple.js";
-import type { Scene } from "../../Scene.js";
 import { DrawableSimple } from "../Drawables/DrawableSimple.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { Buffer, VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { RenderPipeline } from "../RenderPipeline2.js";
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
+import type { MainNodeProps } from "../../MainNode.js";
+import type { DataNodeProps } from "../../nodes/DataNode.js";
 
 declare const engine: Engine;
 
-export abstract class SimpleMesh extends BoundableNodeSimple {
+export class SimpleMesh extends BoundableNodeSimple {
     drawable: DrawableSimple<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
-        vBufferCPU: Float32Array,
-        label: string,
-        can_collide: boolean,
-        vBufferGPU?: VertexBuffer,
-        scenes?: Scene[],
-        fixed = false,
-        point_light = 0) {
-        super(vBufferCPU, 6, false, label, can_collide, scenes, fixed, undefined, point_light);
+        dataNodeProps: Omit<DataNodeProps, 'verticesPositionStride'>,
+        mainNodeProps: Omit<MainNodeProps, "positionsCount">,
+        vBufferGPU?: VertexBuffer) {
+        super({
+            ...dataNodeProps,
+            verticesPositionStride: 6,
+        }, mainNodeProps);
         if (engine.gpu) {
             if (!vBufferGPU) {
-                vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX], 'SimpleMeshVertex_' + label, b => {
-                    new Float32Array(b.getMappedRange()).set(vBufferCPU);
+                vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.byteLength, [GPUBufferUsage.VERTEX], 'SimpleMeshVertex_' + mainNodeProps.label, b => {
+                    new Float32Array(b.getMappedRange()).set(dataNodeProps.vertices);
                 });
             }
             const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline);

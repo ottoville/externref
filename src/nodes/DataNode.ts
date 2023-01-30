@@ -1,7 +1,6 @@
 import { ObjectWorkerThread } from "../WorkerThread.js";
-import { MainNode } from "../MainNode.js";
+import { MainNode, MainNodeProps } from "../MainNode.js";
 import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "../Math.js";
-import type { Scene } from "../Scene.js";
 import type { ColliderJS } from "../Collider.js";
 import type { Engine, rust_pointer } from "../engine.js";
 declare const engine: Engine;
@@ -35,6 +34,14 @@ export interface Ellipsoid {
     readonly closeDistanceVector: [number, number, number]
 }
 
+export type DataNodeProps = {
+    vertices: Float32Array;
+    verticesPositionStride?: number;
+    can_collide?: boolean;
+    static_faces?: boolean;
+    frontFace?: GPUFrontFace;
+    character_can_collide_to?: boolean;
+};
 /*
     TODO: Calculate closeDistance on every collision to take account angle between upVector and collided slope,
     so it is always small enought for gravity to hit on next tick.
@@ -103,47 +110,24 @@ export abstract class DataNode extends MainNode {
     constructor(
         {
             vertices,
-            verticesPositionStride,
+            verticesPositionStride = 3,
             can_collide = false,
-            strip = false,
-            point_light = 0,
             static_faces = false,
-            label,
-            scenes,
             frontFace = 'cw',
-            fixed = false,
-            rigid_body = true,
             character_can_collide_to = true
-        }:
-            {
-                vertices: Float32Array;
-                verticesPositionStride: number;
-                can_collide?: boolean;
-                strip?: boolean;
-                point_light?: number;
-                static_faces?: boolean;
-                label: string;
-                scenes: Scene[] | undefined;
-                frontFace?: GPUFrontFace;
-                fixed: boolean;
-                rigid_body: boolean;
-                character_can_collide_to?: boolean;
-            }
+        }: DataNodeProps,
+        mainNodeProps: Omit<MainNodeProps, 'positionsCount'>
     ) {
-        super({
-            positionsCount: vertices.length / verticesPositionStride,
-            point_light,
-            strip,
-            label,
-            scenes,
-            fixed,
-            rigid_body
-        });
+        super(
+            {
+                positionsCount: vertices.length / verticesPositionStride,
+                ...mainNodeProps
+            });
         this.#frontFace = frontFace;
         this.#character_can_collide_to = character_can_collide_to;
 
         DataNode.Meshes.set(this.id, this);
-        engine.rust.add_geometry(this.ptr, true, verticesPositionStride, static_faces, strip);
+        engine.rust.add_geometry(this.ptr, true, verticesPositionStride, static_faces, mainNodeProps.strip ?? false);
 
         this.set_vertices(vertices);
         // queueMicrotask here so mesh will have indices initialized

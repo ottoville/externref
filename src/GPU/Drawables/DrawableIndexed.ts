@@ -103,6 +103,8 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
         if (this.#indexBuffer) {
             renderEncoder.setIndexBuffer(this.#indexBuffer.indexBuffer, this.#GPUIndexFormat);
             renderEncoder.drawIndexed(this.node.indices_count ?? 0, this.instanceCount, this.#firstIndex, this.#baseVertex, this.#firstInstance);
+        } else {
+            console.warn('wont draw', this.label, 'no indexBuffer')
         }
     }
 }

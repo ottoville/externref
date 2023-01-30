@@ -60,7 +60,7 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
     }
     return [vertices, indices] as const;
 }
-function createCone(faces = 14, stride = 6) {
+function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, indices: Uint32Array] {
     if (faces % 2 !== 0) {
         throw (new Error("Cone must not have odd number of faces"));
     }
@@ -96,11 +96,25 @@ export class Cone extends SimpleIndexedMesh {
     constructor(
         scenes?: Scene[],
         point_light = 0,
-        has_physic = false,
+        can_collide = false,
         label = 'cone' + (uid++),
         color: [number, number, number, number] = [1, 0, 0, 0]
     ) {
-        super(...createCone(14, 6), label, undefined, undefined, point_light, has_physic, scenes, undefined, "triangle-list");
+        const [vertices, indices] = createCone(14, 6)
+        super(
+            {
+                vertices,
+                can_collide,
+            },
+            {
+                label,
+                point_light,
+                scenes,
+            },
+            indices,
+            undefined,
+            undefined,
+            "triangle-list");
         this.color = color;
     }
     override create_collider() {

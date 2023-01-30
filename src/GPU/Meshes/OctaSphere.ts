@@ -23,7 +23,7 @@ pathchesQuats.forEach(patch =>
 const tmpVector = new TerraVector3();
 const tmpQuaternion = new TerraVector4() as Quaternion;
 
-function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height = 0, depth = 0) {
+function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height = 0, depth = 0): readonly [vertices: Float32Array, indices: Uint32Array] {
     const n = 2 ** (num_subdivisions + 1)
 
     const num_faces_per_patch = n * ((n + 1) / 2);
@@ -346,8 +346,19 @@ export class OctaSphere extends SimpleIndexedMesh {
         protected depth = 0,
         scenes?: Scene[],
     ) {
-
-        super(...tessellate_octasphere_patch(2, width, height, depth), label, undefined, undefined, undefined, can_collide, scenes, 'ccw', undefined, fixed)
+        const [vertices, indices] = tessellate_octasphere_patch(2, width, height, depth);
+        super(
+            {
+                vertices,
+                can_collide,
+                frontFace: 'ccw'
+            },
+            {
+                label,
+                scenes,
+                fixed
+            },
+            indices)
     }
 }
 

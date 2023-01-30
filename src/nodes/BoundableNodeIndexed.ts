@@ -1,6 +1,6 @@
-import { type canCollideCharacter, DataNode } from "./DataNode.js";
+import { type canCollideCharacter, DataNode, DataNodeProps } from "./DataNode.js";
 import type { Engine } from "../engine.js";
-import type { Scene } from "../Scene.js";
+import type { MainNodeProps } from "../MainNode.js";
 declare const engine: Engine;
 
 export abstract class BoundableNodeIndexed extends DataNode implements canCollideCharacter {
@@ -26,35 +26,14 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
             this.rebuildTrianglePlanes();
         }*/
     constructor(
-        vertices: Float32Array,
-        verticesPositionStride = 3,
-        indicesView: Uint32Array,
-        can_collide = false,
-        strip = false,
-        point_light = 0,
-        static_faces = false,
-        label: string,
-        scenes?: Scene[],
-        frontFace: GPUFrontFace = 'cw',
-        fixed = false,
-        rigid_body = true,
-        character_can_collide_to = true
+        dataNodeProps: DataNodeProps,
+        mainNodeProps: MainNodeProps,
+        indicesView: Uint32Array
     ) {
-        super({
-            vertices,
-            verticesPositionStride,
-            can_collide,
-            strip,
-            point_light,
-            static_faces,
-            label,
-            scenes,
-            frontFace,
-            fixed,
-            rigid_body,
-            character_can_collide_to
-        });
-        this.set_indices_and_vertices(indicesView, vertices);
+        super(
+            dataNodeProps,
+            mainNodeProps);
+        this.set_indices_and_vertices(indicesView, dataNodeProps.vertices);
     }
     override set_vertices(vertices: Float32Array) {
         super.set_vertices(vertices);

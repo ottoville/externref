@@ -43,7 +43,22 @@ export class TerrainMesh extends BoundableNodeIndexed {
         indicesView: Uint32Array,
         verticesPositionStride = 3
     ) {
-        super(vertices, verticesPositionStride, indicesView, true, undefined, undefined, true, 'terrain', scenes, undefined, true, false);
+        super(
+            {
+                vertices,
+                verticesPositionStride,
+                can_collide: true,
+                static_faces: true
+
+            },
+            {
+                label: 'terrain',
+                scenes,
+                fixed: true,
+                rigid_body: false
+            },
+            indicesView
+        );
         if (engine.gpu) {
             this.sampler = engine.gpu.device.createSampler({
                 magFilter: "linear",

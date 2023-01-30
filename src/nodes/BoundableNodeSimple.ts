@@ -1,29 +1,14 @@
-import type { Scene } from "../Scene.js";
-import { type canCollideCharacter, DataNode } from "./DataNode.js";
+import type { MainNodeProps } from "../MainNode.js";
+import { type canCollideCharacter, DataNode, DataNodeProps } from "./DataNode.js";
 
 export abstract class BoundableNodeSimple extends DataNode implements canCollideCharacter {
     constructor(
-        vertices: Float32Array,
-        verticesPositionStride = 3,
-        strip = false,
-        label: string,
-        can_collide: boolean,
-        scenes?: Scene[],
-        fixed = false,
-        rigid_body = true,
-        point_light = 0,
+        dataNodeProps: DataNodeProps,
+        mainNodeProps: Omit<MainNodeProps, 'positionsCount'>,
     ) {
-        super({
-            vertices,
-            verticesPositionStride,
-            can_collide,
-            strip,
-            point_light,
-            label,
-            scenes,
-            fixed,
-            rigid_body
-        });
+        super(
+            dataNodeProps,
+            mainNodeProps);
     }
     override set_vertices(vertices: Float32Array) {
         super.set_vertices(vertices);

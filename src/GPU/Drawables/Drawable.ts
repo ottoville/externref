@@ -15,7 +15,12 @@ export type DrawableProps = {
     label: string
 }
 export abstract class Drawable {
-    #vertexBuffers: Map<number, { buffer: VertexBuffer, offset: number | undefined, size: number | undefined }> = new Map();
+    #vertexBuffers: Map<number,
+        {
+            buffer: VertexBuffer,
+            offset: number | undefined,
+            size: number | undefined
+        }> = new Map();
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     public renderPipeline: Readonly<RenderPipeline>;
     #renderPasses: Set<RenderPass>;
@@ -46,7 +51,7 @@ export abstract class Drawable {
                 rp.bundles.forEach(b => b.destroy())
             } else {
                 variantP.then(variant => {
-                    if(this.destroyed)
+                    if (this.destroyed)
                         return;
                     this.#renderList.set(rp, variant.rootDrawables.add(this));
                     rp.bundles.forEach(b => b.destroy())
@@ -80,9 +85,9 @@ export abstract class Drawable {
         this.destroyed = true;
     }
     setVertexBuffer(index: number, buffer: ArrayBufferView, destroyOld?: boolean): VertexBuffer
-    setVertexBuffer<T extends VertexBuffer>(index: number, buffer: T, destroyOld?: boolean, offset?: number, size?: number): T
-    setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer, destroyOld?: boolean, offset?: number, size?: number): VertexBuffer
-    setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer, destroyOld = true, offset?: number, size?: number): VertexBuffer {
+    setVertexBuffer<T extends VertexBuffer>(index: number, buffer: T, destroyOld?: boolean, GPUoffset?: number, size?: number): T
+    setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer, destroyOld?: boolean, GPUoffset?: number, size?: number): VertexBuffer
+    setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer, destroyOld = true, GPUoffset?: number, size?: number): VertexBuffer {
         if (destroyOld) {
             const Tbuffer = this.#vertexBuffers.get(index);
             if (Tbuffer) {
@@ -93,11 +98,13 @@ export abstract class Drawable {
         if (buffer instanceof Buffer)
             var Tbuffer = buffer;
         else {
-            var Tbuffer = Buffer.create(this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu, buffer.byteLength, [GPUBufferUsage.VERTEX], 'DrawableVertex_' + this.label, b => {
-                new Uint8Array(b.getMappedRange()).set(new Uint8Array(buffer.buffer));
+            const gpu = this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
+            var Tbuffer = Buffer.create(gpu, buffer.byteLength, [GPUBufferUsage.VERTEX], 'DrawableVertex_' + this.label, b => {
+                const buff = new Uint8Array(b.getMappedRange());
+                buff.set(new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength/Uint8Array.BYTES_PER_ELEMENT));
             })
         }
-        this.#vertexBuffers.set(index, { buffer: Tbuffer, offset, size });
+        this.#vertexBuffers.set(index, { buffer: Tbuffer, offset: GPUoffset, size });
         return Tbuffer;
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder): void
@@ -112,6 +119,7 @@ export abstract class Drawable {
             renderEncoder.setBindGroup(BindGroupsStart++, this.#staticBindGroup.bindGroup)
         }
         this.#vertexBuffers.forEach((buffer, index) => renderEncoder.setVertexBuffer(index, buffer.buffer.vertexBuffer, buffer.offset, buffer.size));
+        console.debug('draw', this.label)
         this.render(renderEncoder);
     }
 }

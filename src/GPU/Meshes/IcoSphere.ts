@@ -110,6 +110,17 @@ export class IcoSphere extends SimpleIndexedMesh {
             verticesAndNormals[i * 6 + 4] = vertices[i * 3 + 1]!;
             verticesAndNormals[i * 6 + 5] = vertices[i * 3 + 2]!;
         }
-        super(verticesAndNormals, indices, label, undefined, undefined, undefined, can_collide, scenes, 'ccw', undefined, fixed)
+        super(
+            {
+                vertices: verticesAndNormals,
+                can_collide,
+                frontFace: 'ccw'
+            },
+            {
+                label,
+                scenes,
+                fixed
+            }
+            , indices)
     }
 }

@@ -13,12 +13,24 @@ export class Sea extends BoundableNodeSimple {
         return engine.rust.create_cuboid_collider(50000, 3, 50000, 0, false);
     }
     constructor(scenes: Scene[]) {
-        super(new Float32Array([
-            -50000.0, 3.0, -50000.0,
-            50000.0, 3.0, -50000.0,
-            -50000.0, 3.0, 50000.0,
-            50000.0, 3.0, 50000.0
-        ]), undefined, true, 'water', false, scenes, true, false); //48
+        super(
+            {
+                vertices: new Float32Array([
+                    -50000.0, 3.0, -50000.0,
+                    50000.0, 3.0, -50000.0,
+                    -50000.0, 3.0, 50000.0,
+                    50000.0, 3.0, 50000.0
+                ]),
+                can_collide: false,
+            },
+            {
+                strip: true,
+                label: 'water',
+                scenes,
+                fixed: true,
+                rigid_body: false
+            }
+        ); //48
         if (engine.gpu) {
             const renderPipeline = engine.gpu.createRenderPipeline(WaterRenderPipeline, {
                 topology: 'triangle-strip',
