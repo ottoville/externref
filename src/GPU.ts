@@ -68,25 +68,13 @@ export class GPU {
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
         BGLayout<[
-            BufLayout<ShaderStage.VERTEX_AND_FRAGMENT,
-                Struct<{
-                    transformation: [string, string];
-                    color: [string, string];
-                    ambient: [string, string];
-                    shadow: [string, string];
-                    spot_light: [string, string];
-                    id: [string, string];
-                    point_light_squared: [string, string];
-                    directional_light: [string, string];
-                    scenes: [string, string];
-                    z: [string, string];
-                }>>]>
+            BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>
+        ]>
     ]>;
-
     readonly lightsBindGroupTexture2: BindablePipelineLayout<readonly [
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
-        BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+        BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,
         BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>]>;
 
     readonly BindGroupPosition: BindGroup;

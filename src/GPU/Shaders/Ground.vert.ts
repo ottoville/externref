@@ -40,7 +40,7 @@ fn main(@location(0) position : vec3<f32>,
         @location(1) uv : vec2<f32>,
         @location(2) normal : vec3<f32> ) -> Output {
   var output : Output;
-  output.Position = ${scene.variableName}.modelViewProjection * vec4<f32>(position.xyz, 1.0);
+  output.Position = ${scene.prop('modelViewProjection')} * vec4<f32>(position.xyz, 1.0);
   //shading = dot(normal, lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
 
@@ -50,8 +50,8 @@ fn main(@location(0) position : vec3<f32>,
 
   //let localPosition:vec4<f32> = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
   //output.position=localPosition.xyz;//position;
-  output.id=${world.variableName}.id;
-  output.scenes=${world.variableName}.scenes;
+  output.id=${world.prop('id')};
+  output.scenes=${world.prop('scenes')};
   return output;
 }
 struct PickOutput {
@@ -63,8 +63,8 @@ fn pick(@location(0) position : vec3<f32>,
         @location(1) uv : vec2<f32>,
         @location(2) normal : vec3<f32> ) -> PickOutput {
   var output : PickOutput;
-  output.Position = ${scene.variableName}.modelViewProjection * vec4<f32>(position.xyz, 1.0);
-  output.id=${world.variableName}.id;
+  output.Position = ${scene.prop('modelViewProjection') } * vec4<f32>(position.xyz, 1.0);
+  output.id=${world.prop('id') };
   return output;
 }
   `;
