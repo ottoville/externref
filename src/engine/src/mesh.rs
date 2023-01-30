@@ -529,7 +529,7 @@ impl Mesh {
         if rigid_body {
             let rigid_body_builder:RigidBodyBuilder;
             if fixed {
-                rigid_body_builder = RigidBodyBuilder::fixed();
+                rigid_body_builder = RigidBodyBuilder::fixed().ccd_enabled(true);
             } else {
                 rigid_body_builder = RigidBodyBuilder::dynamic().sleeping(true).ccd_enabled(true);
             }

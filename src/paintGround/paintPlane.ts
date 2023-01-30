@@ -8,7 +8,7 @@ import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import type { Engine } from "../engine.js";
 import { BoundableNodeIndexed } from "../nodes/BoundableNodeIndexed.js";
-import { PlaneVertShader } from "../GPU/Shaders/Plane.vert.js";
+import { PlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
 import { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 declare const engine: Engine;
@@ -17,11 +17,19 @@ declare const engine: Engine;
 
 class PlaneMesh extends BoundableNodeIndexed {
     //indices_count=0;
-    drawable: DrawableIndexed<RenderPipeline<PlaneVertShader>>;
-    constructor(renderPipeline: RenderPipeline<PlaneVertShader>, vertexBuffer: Float32Array) {
-        super(vertexBuffer, 2,
-            new Uint32Array(),
-            false, false, undefined, undefined, 'plane', undefined, undefined, false, false, false);
+    drawable: DrawableIndexed<RenderPipeline<PlaneAtGroundHeightVertShader>>;
+    constructor(renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>, vertexBuffer: Float32Array) {
+        super(
+            {
+                vertices: vertexBuffer,
+                verticesPositionStride: 2,
+                character_can_collide_to: false
+            },
+            {
+                label: 'plane',
+                rigid_body: false,
+            },
+            new Uint32Array());
         //super({ positionsCount: verticesCount, label: 'plane'});
         this.drawable = new DrawableIndexed(
             {
@@ -34,7 +42,7 @@ class PlaneMesh extends BoundableNodeIndexed {
     }
 }
 
-const renderPipelines: Map<GPU, RenderPipeline<PlaneVertShader>> = new Map();
+const renderPipelines: Map<GPU, RenderPipeline<PlaneAtGroundHeightVertShader>> = new Map();
 export class paintPlane extends paintGround {
     #mesh: PlaneMesh
     constructor(
@@ -48,7 +56,7 @@ export class paintPlane extends paintGround {
         });
         let renderPipeline = renderPipelines.get(scene.gpu);
         if (!renderPipeline) {
-            const planeVertShader = new PlaneVertShader(
+            const planeVertShader = new PlaneAtGroundHeightVertShader(
                 ground.TerrainHeightsbindGroupTree,
                 {
                     arrayStride: 4 * 2,

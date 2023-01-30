@@ -67,8 +67,20 @@ export class GPU {
     readonly positionBindGroupTimeWGSL: BindablePipelineLayout<readonly [
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
-        BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>
-        ]>
+        BGLayout<[
+            BufLayout<ShaderStage.VERTEX_AND_FRAGMENT,
+                Struct<{
+                    transformation: [string, string];
+                    color: [string, string];
+                    ambient: [string, string];
+                    shadow: [string, string];
+                    spot_light: [string, string];
+                    id: [string, string];
+                    point_light_squared: [string, string];
+                    directional_light: [string, string];
+                    scenes: [string, string];
+                    z: [string, string];
+                }>>]>
     ]>;
 
     readonly lightsBindGroupTexture2: BindablePipelineLayout<readonly [
@@ -109,19 +121,23 @@ export class GPU {
         BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, Struct<{
             modelViewProjection: [string, string];
             view: [string, string];
-            viewPosition: [string, string]; }>>,
+            viewPosition: [string, string];
+        }>>,
         BufLayout<ShaderStage.VERTEX, Struct<{
             time: [string, string];
-            delta: [string, string]; }>>,
+            delta: [string, string];
+        }>>,
         BufLayout<ShaderStage.FRAGMENT, Struct<{
             bounds: [string, string];
             lightsCount: [string, string];
-            lights: [string, string]; }>>,
+            lights: [string, string];
+        }>>,
         BufLayout<ShaderStage.FRAGMENT, Struct<{
             length: [string, string];
             pointers: [string, string];
-            mesh: [string, string]; }>>,
-        BufLayout<ShaderStage.FRAGMENT,Struct<{
+            mesh: [string, string];
+        }>>,
+        BufLayout<ShaderStage.FRAGMENT, Struct<{
             inversed_projection: [string, string];
             reversed_projection: [string, string];
             projectionFarPlane: [string, string];
@@ -130,12 +146,14 @@ export class GPU {
             z_near_multiplied_far: [string, string];
             z_near_substracted_far: [string, string];
             slice_scale: [string, string];
-            slice_bias: [string, string]; }>>
+            slice_bias: [string, string];
+        }>>
     ]>;
 
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
-    readonly sizeBindGroupLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE_AND_FRAGMENT>]>
+    readonly sizeBindGroupLayout: BGLayout<[BufLayout<number, Struct<{ screenDimensions: [string, string]; screendimensions_ratio: [string, string]; }>>]>;
+
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     readonly bindGroupTextureWater: SharedPipelineLayout<[
         typeof this.sizeBindGroupLayout,

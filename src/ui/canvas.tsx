@@ -51,6 +51,8 @@ export class Canvas extends TerraCompoment {
             const e = errors.shift();
             if (e) {
                 console.error(e);
+                if(e.cause)
+                    console.error(e.cause);
                 this.#errorDialog.textContent = e.name + ', ' + e.message;
                 this.#errorDialog.showModal();
             }
@@ -124,7 +126,7 @@ export class Canvas extends TerraCompoment {
             //new testPlane(terrascene);
             const archRotateController = new ArcRotateCamera(engine.mainCamera, true);
             engine.mainCamera.attachControllerForCamera(archRotateController);
-            const human = new Human({ scenes: [terrascene], inputEnabled: true });
+            const human = new Human({ scenes: [terrascene], inputEnabled: false });
             // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
             human.translation = [403.4, 1000, 23];
             document.addEventListener('keydown', e => {
