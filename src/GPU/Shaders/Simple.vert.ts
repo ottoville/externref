@@ -33,7 +33,9 @@ struct Output {
   @builtin(position) Position : vec4<f32>,
   @location(0) normal : vec3<f32>,
   @location(1) @interpolate(flat) id : u32,
-  @location(2) color : vec3<f32>
+  @location(2) color : vec3<f32>,
+  @location(3) position : vec3<f32>,
+  @location(4) @interpolate(flat) scenes : u32  
 };
 @vertex
 fn main(
@@ -42,15 +44,17 @@ fn main(
   @location(1) normal : vec3<f32>
 ) -> Output {
   var output:Output;
-  output.normal=normal;
-  var curPos : mat4x4<f32> = ${world.variableName}.transformation;
-  curPos[3] = ${world.variableName}.transformation[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
+  //output.normal=normal;
+  var curPos : mat4x4<f32> = ${world.prop('transformation')};
   curPos[3].w=1.0;
   var worldPos=curPos * vec4<f32>(pos, 1.0);
+  output.normal = normalize((curPos * vec4<f32>(normal, 0.0)).xyz);
 
-  output.Position = ${scene.variableName}.modelViewProjection * worldPos;
-  output.id=${world.variableName}.id;
-  output.color = ${world.variableName}.color;
+  output.Position = ${scene.prop('modelViewProjection') } * worldPos;
+  output.id=${world.prop('id')};
+  output.color = ${world.prop('color')};
+  output.position=vec3<f32>(worldPos.xyz);
+  output.scenes=${world.prop('scenes')};
   //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
   return output;
