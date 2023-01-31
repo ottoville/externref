@@ -16,7 +16,7 @@ export const enum GPUBufferUsage {
     QUERY_RESOLVE = 0x0200
 }
 export interface CopyDstBuffer extends Buffer {
-    updateBufferRaw: (commandEncoder: GPUCommandEncoder, data: ArrayBuffer) => void
+    updateBufferRaw: (commandEncoder: GPUCommandEncoder, data: BufferSource) => void
     copyFrom: (commandEncoder: GPUCommandEncoder, from: GPUBuffer, sourceOffset: GPUSize64, destinationOffset: GPUSize64, copySize: GPUSize64) => void
     copyFromTexture: (commandEncoder: GPUCommandEncoder, source: GPUImageCopyTexture, dataLayout: GPUImageDataLayout, copySize: GPUExtent3DStrict) => void
     write: (bufferOffset: GPUSize64, data: BufferSource | SharedArrayBuffer, dataOffset?: GPUSize64, writeSize?: GPUSize64) => void
@@ -147,7 +147,15 @@ export class Buffer extends Bindable {
             (this as unknown as CopyDstBuffer).updateBufferRaw = (commandEncoder, data) => {
                 const tempBuffer = new copySrcBuffer(gpu, data.byteLength, [], true, label + '_swap');
                 this.gpu.tempGPUBuffers.push(tempBuffer.buffer);
-                new Int8Array(tempBuffer.buffer.getMappedRange()).set(new Int8Array(data));
+                let buffer: ArrayBuffer;
+                let srcOffset = 0;
+                if(data instanceof ArrayBuffer) {
+                    buffer = data;
+                } else {
+                    buffer = data.buffer;
+                    srcOffset = data.byteOffset
+                }
+                new Int8Array(tempBuffer.buffer.getMappedRange()).set(new Int8Array(buffer, srcOffset, data.byteLength/Int8Array.BYTES_PER_ELEMENT));
                 tempBuffer.buffer.unmap();
                 commandEncoder.copyBufferToBuffer(
                     tempBuffer.buffer, 0,

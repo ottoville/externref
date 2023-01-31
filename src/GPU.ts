@@ -729,15 +729,6 @@ export class GPU {
         framecount++;
         //performance.mark('renderloopStart');
 
-
-
-        this.#GPUQueueCommandEncoder = null;
-        engine.rust.renderloop();
-        //@ts-ignore bug in TS
-        const commandBuff = this.#GPUQueueCommandEncoder?.finish() ?? null;
-        if (commandBuff)
-            this.pendingCommandBuffers.add(commandBuff);
-
         if (engine.inputManager?.checkInputs && engine.inputManager?.checkInputs()) {
             if (engine.inputManager.calculateCameraPositionAndTarget)
                 engine.inputManager.calculateCameraPositionAndTarget();
@@ -759,6 +750,15 @@ export class GPU {
             engine.cameras.forEach(camera => {
                 camera.updateView(renderEncoder)
             })
+            // Rust render loop start
+            this.#GPUQueueCommandEncoder = null;
+            engine.rust.renderloop();
+            //@ts-ignore bug in TS
+            const commandBuff = this.#GPUQueueCommandEncoder?.finish() ?? null;
+            if (commandBuff) {
+                this.pendingCommandBuffers.add(commandBuff);
+            }
+            // Rust render loop end
             const lightPass = renderEncoder.beginComputePass({ label: 'lightPassEncoder' });
             lightPass.setPipeline(updateViewPipeline);
             lightPass.setBindGroup(0, this.#updateViewBindGroup.bindGroup);

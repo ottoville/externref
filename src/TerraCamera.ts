@@ -38,7 +38,9 @@ export class TerraCamera {
     readonly #controls: CameraControl;
     #doUpdateView = false;
     viewUpdated = false;
-    readonly beforeViewUpdate: Set<(position: TerraVector3, direction: TerraVector3) => void> = new Set();
+    readonly beforeViewUpdate: Set<
+        (position: TerraVector3, direction: TerraVector3, commandEncoder: GPUCommandEncoder) => void
+    > = new Set();
     #cameraController?: TerraCamera
     #inputController?: CameraController
     projection?: Projection
@@ -164,7 +166,9 @@ export class TerraCamera {
     updateView(commandEncoder: GPUCommandEncoder) {
         if (!this.#doUpdateView)
             return;
-        this.beforeViewUpdate.forEach(cb => cb(this.#position, this.#direction));
+        this.beforeViewUpdate.forEach(cb =>
+            cb(this.#position, this.#direction, commandEncoder)
+        );
         this.#doUpdateView = false;
         this.viewUpdated = true;
         this.#childCameras.forEach(childCameraControl => {

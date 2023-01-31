@@ -1,7 +1,6 @@
 // Caution! Be sure you understand the caveats before publishing an application with
 // offline support. See https://aka.ms/blazor-offline-considerations
 
-self.importScripts('./service-worker-assets.js');
 ((service: ServiceWorkerGlobalScope): void => {
     service.addEventListener('install', event => event.waitUntil(onInstall()));
     service.addEventListener('activate', event => event.waitUntil(onActivate()));
@@ -9,13 +8,14 @@ self.importScripts('./service-worker-assets.js');
 })(self as unknown as ServiceWorkerGlobalScope);
 
 const cacheNamePrefix = 'offline-cache-';
-//@ts-ignore
-const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
+
+const cacheName = `${cacheNamePrefix}v1`;
 const offlineAssetsInclude = [/\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/];
 const offlineAssetsExclude = [/^service-worker\.js$/];
 
 async function onInstall() {
     console.info('Service worker: Install');
+    return;
     // Fetch and cache all matching items from the assets manifest
     //@ts-ignore
     const assetsRequests = self.assetsManifest.assets
