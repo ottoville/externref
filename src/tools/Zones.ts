@@ -9,7 +9,7 @@ import { TextureView } from "../GPU/TextureView.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 import { UINode } from "../ui/UINode.js";
-import { SizeUnit } from "../ui/UIRectangle.js";
+import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
 declare const engine: Engine;
 export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & { terrain: Terrain, menuTree: { level: number }, open: boolean }> {
     #PT?: paintTexture;
@@ -91,8 +91,17 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & { terr
                         gpu: this.props.gpu,
                         bitmap: this.props.bitmap,
                         label: 'residentalButton',
-                        scale: { min_width: 0.15, y: 0.07, unit: SizeUnit["%"] },
-                        translate: { x: -0.8, y: 0.8 },
+                        scale: { min_width: 0.15, y: 0.07, unit: NumericUnit["%"] },
+                        translate: {
+                            x: {
+                                value: [-0.8, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            },
+                            y: {
+                                value: [0.8, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            }
+                        },
                         text: 'Residental (1)',
                         onClick: () => {
                             this.paintZone()

@@ -28,9 +28,10 @@ import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
 //@ts-ignore
 import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
 import { ArcRotateCamera } from "../controllers/ArcRotateCamera.js";
-import { SizeUnit, UIRectangle } from "./UIRectangle.js";
+import { Anchor, NumericUnit, UIRectangle } from "./UIRectangle.js";
 import { createTopMenu } from "./topMenu.js";
 import { createSettingsMenu } from "./SettingsMenu.js";
+import { createTimeControls } from "./TimeControls.js";
 
 declare const engine: Engine;
 
@@ -51,7 +52,7 @@ export class Canvas extends TerraCompoment {
             const e = errors.shift();
             if (e) {
                 console.error(e);
-                if(e.cause)
+                if (e.cause)
                     console.error(e.cause);
                 this.#errorDialog.textContent = e.name + ', ' + e.message;
                 this.#errorDialog.showModal();
@@ -117,6 +118,7 @@ export class Canvas extends TerraCompoment {
         this.setProgress(41);
 
         createSettingsMenu.addKeydownListener(gpu);
+        new createTimeControls({ gpu });
 
         const mainScene = new Scene('main', gpu, [engine.mainCamera, waterCamera], (terrascene) => {
             new Sun2(gpu, [terrascene]);
@@ -214,10 +216,26 @@ export class Canvas extends TerraCompoment {
             canvaspipeline: gpu.UIPipeline,
             renderPass: gpu.renderPassCanvas,
             label: 'UICanvas',
-            borderSize: { width: 0, height: 0, texture_width: 0, texture_height: 0 },
-            backgroundTexture: gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
-            scale: { min_width: 1, y: 1, unit: SizeUnit["%"] },
-            translate: { x: 0, y: 0 },
+            borderSize: {
+                width: [0, NumericUnit["%"]],
+                height: [0, NumericUnit["%"]]
+            },
+            backgroundAsset: {
+                texture: gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
+                border_width: 0,
+                border_height: 0
+            },
+            scale: { min_width: 1, y: 1, unit: NumericUnit["%"] },
+            translate: {
+                x: {
+                    value: [0, NumericUnit["%"]],
+                    anchor: Anchor.CENTER
+                },
+                y: {
+                    value: [0, NumericUnit["%"]],
+                    anchor: Anchor.CENTER
+                }
+            },
         });
 
 
@@ -262,9 +280,6 @@ export class Canvas extends TerraCompoment {
         */
         return [mainScene];
     }
-    gameState = <fieldset class="gameControl hidden" id="gameState"></fieldset>
-
-    timeOfDay: HTMLOutputElement = <output id="TODout" fow="TOD"></output>
     constructor() {
         super();
         this.#errorDialog.addEventListener('close', () => {
@@ -275,28 +290,6 @@ export class Canvas extends TerraCompoment {
         this.initalize().then(args => {
             if (!args)
                 return;
-            setInterval(() => {
-                this.timeOfDay.value = new Date(Number(engine.physics.gameTime)).toUTCString();
-            }, 1000);
-
-            this.gameState.appendChild(<div onChange={(e: Event) => { engine.physics.gameSpeed = parseInt((e.target as HTMLInputElement).value) }}>
-                <label>Time of day: {this.timeOfDay}</label>
-                <br />
-                <input name="time" type="radio" id="pause" value="-1" checked={engine.physics.gameSpeed === -1} />
-                <label for="pause">⏸️</label>
-                <input name="time" type="radio" id="play" value="1" checked={engine.physics.gameSpeed === 1} />
-                <label for="play">▶️</label>
-                <input name="time" type="radio" id="fastforward" value="2" checked={engine.physics.gameSpeed === 2} />
-                <label for="fastforward">⏩</label>
-                <input name="time" type="radio" id="fastforward2" value="3" checked={engine.physics.gameSpeed === 4} />
-                <label for="fastforward2">4⏩</label>
-                <input name="time" type="radio" id="fastforward3" value="4" checked={engine.physics.gameSpeed === 8} />
-                <label for="fastforward3">8⏩</label>
-                <input name="time" type="radio" id="fastforward4" value="5" checked={engine.physics.gameSpeed === 16} />
-                <label for="fastforward4">16⏩</label>
-                <input name="time" type="radio" id="fastforward5" value="6" checked={engine.physics.gameSpeed === 32} />
-                <label for="fastforward5">32⏩</label>
-            </div>)
         }).catch((e: Error) => {
             errors.push(e);
             this.showError();
@@ -313,7 +306,6 @@ export class Canvas extends TerraCompoment {
             {this.#errorDialog}
             {this.#canvasElem}
             <div id="fps">@(rendertime) @(msPerFrame)</div>
-            {this.gameState}
             <div style="position:absolute;top:30%; background-color:white;width:100%;text-align:center ">
                 {this.#progresElem}
                 <br />

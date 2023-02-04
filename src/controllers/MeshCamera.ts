@@ -2,7 +2,7 @@ import { TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import type { Engine } from "../engine";
 import { CameraController } from "./CameraController.js";
-import { SizeUnit, UIRectangle } from "../ui/UIRectangle.js";
+import { Anchor, NumericUnit, UIRectangle } from "../ui/UIRectangle.js";
 declare const engine: Engine;
 
 export const enum ARROW_KEYS {
@@ -80,10 +80,25 @@ export class MeshCamera extends CameraController {
                     canvaspipeline: gpu.UIPipeline,
                     renderPass: gpu.renderPassCanvas,
                     label: 'cursor',
-                    borderSize: { width: 0, height: 'auto', texture_width: 0, texture_height: 0 },
-                    backgroundTexture: bitmap,
-                    scale: { min_width: 0.01, y: 0.01, unit: SizeUnit["%"] },
-                    translate: { x: 0, y: 0 },
+                    borderSize: {
+                        width: [0, NumericUnit["%"]],
+                        height: 'auto',
+                    },
+                    backgroundAsset: {
+                        texture: bitmap,
+                        border_width: 0,
+                        border_height: 0
+                    },
+                    scale: { min_width: 0.01, y: 0.01, unit: NumericUnit["%"] },
+                    translate: {
+                        x: {
+                            value: [0, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        }, y: {
+                            value: [0, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        }
+                    },
                     originalAspectRatio: 1,
                 })
             }).catch(err => {
@@ -98,18 +113,18 @@ export class MeshCamera extends CameraController {
     }
     updateMouseCoords = () => {
         const gpu = this.camera.gpu
-        if(gpu) {
+        if (gpu) {
             Atomics.store(gpu.mousePosition, 0, gpu.renderPassCanvas.size.width * 0.5)
             Atomics.store(gpu.mousePosition, 1, gpu.renderPassCanvas.size.height * 0.5)
             Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
         }
     }
     #lockPointer = () => {
-        if(document.pointerLockElement)
+        if (document.pointerLockElement)
             return;
-        (document.body.requestPointerLock() as unknown as Promise<void>).then(()=> {
+        (document.body.requestPointerLock() as unknown as Promise<void>).then(() => {
             const gpu = this.camera.gpu
-            if(gpu) {
+            if (gpu) {
                 this.updateMouseCoords();
                 gpu.renderPassCanvas.onResize.set(this, this.updateMouseCoords)
             }

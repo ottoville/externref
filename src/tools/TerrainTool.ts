@@ -11,7 +11,7 @@ import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import { UINode } from "../ui/UINode.js";
-import { SizeUnit } from "../ui/UIRectangle.js";
+import { NumericUnit, Anchor } from "../ui/UIRectangle.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
@@ -67,8 +67,19 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
                     gpu: this.props.gpu,
                     bitmap: this.props.bitmap,
                     label: 'Lower',
-                    scale: { min_width: 0.10, y: 0.07, unit: SizeUnit["%"] },
-                    translate: { x: -0.85, y: 0.8 },
+                    scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
+                    translate: {
+                        x:
+                        {
+                            value: [-0.85, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        }
+
+                        , y: {
+                            value: [0.8, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        }
+                    },
                     text: 'Lower (1)',
                     onClick: () => {
                         this.setState({
@@ -79,8 +90,16 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
                     gpu: this.props.gpu,
                     bitmap: this.props.bitmap,
                     label: 'Raise',
-                    scale: { min_width: 0.10, y: 0.07, unit: SizeUnit["%"] },
-                    translate: { x: -0.6, y: 0.8 },
+                    scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
+                    translate: {
+                        x: {
+                            value: [-0.6, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        }, y: {
+                            value: [0.8, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        }
+                    },
                     text: 'Raise (2)',
                     onClick: () => {
                         this.setState({

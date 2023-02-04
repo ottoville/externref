@@ -6,7 +6,7 @@ import { Engine } from "../engine.js";
 import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 import { Terrain } from "../world/terrain.js";
 import { UINode } from "../ui/UINode.js";
-import { SizeUnit } from "../ui/UIRectangle.js";
+import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
 declare const engine: Engine;
 
 
@@ -37,13 +37,22 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & { t
                     gpu: this.props.gpu,
                     bitmap: this.props.bitmap,
                     label: 'createGrassButton',
-                    scale: { min_width: 0.15, y: 0.07, unit: SizeUnit["%"] },
-                    translate: { x: -0.8, y: 0.8 },
+                    scale: { min_width: 0.15, y: 0.07, unit: NumericUnit["%"] },
+                    translate: {
+                        x: {
+                            value: [-0.8, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        },
+                        y: {
+                            value: [0.8, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        }
+                    },
                     text: 'Create grass (1)',
                     onClick: () => this.activateDraw()
                 })
             ]
-        } else if(this.#wasOpen) {
+        } else if (this.#wasOpen) {
             this.#wasOpen = false;
             this.PT?.destroy();
             engine.clearInputListeners(this);

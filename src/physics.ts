@@ -236,7 +236,7 @@ export class Physics {
     }
     set gameSpeed(value: number) {
         if (Number.isNaN(value))
-            throw new Error('gameSpeed must be number')
+            throw new Error('gameSpeed must be number');
         this.#lastStateChangeGameTime = this.gameTime;
         this.#lastStateChangeTime = new Date().getTime();
 

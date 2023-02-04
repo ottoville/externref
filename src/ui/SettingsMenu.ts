@@ -2,11 +2,10 @@ import type { GPU } from "../GPU.js"
 import type { Engine } from "../engine.js";
 import { UIRectangleNode } from "./UIRectangleNode.js";
 import { UINode } from "./UINode.js";
-import { SizeUnit } from "./UIRectangle.js";
+import { Anchor, NumericUnit } from "./UIRectangle.js";
 declare const engine: Engine;
 
 type MenuState = {
-    menuOpenName: string | undefined,
     bitmap: ImageBitmap | undefined,
 };
 
@@ -25,7 +24,6 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }, MenuState> {
         super(props);
         this.gpu = props.gpu;
         this.state = {
-            menuOpenName: undefined,
             bitmap: undefined,
         }
         fetch('/assets/button.webp').then(async asset => {
@@ -44,32 +42,42 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }, MenuState> {
         {
             gpu: props.gpu,
             bitmap: this.state.bitmap,
-            onClick: this.setActiveMenu
         }
         return [
             UINode.createCtrProps(UIRectangleNode, {
                 ...commonProps,
                 label: 'MSAA',
-                scale: { min_width: 200, y: 50, unit: SizeUnit.px },
-                translate: { x: 0, y: 0 },
+                scale: { min_width: 200, y: 50, unit: NumericUnit.px },
+                translate: {
+                    x: {
+                        value: [0, NumericUnit["%"]],
+                        anchor: Anchor.CENTER
+                    }, y: {
+                        value: [0, NumericUnit["%"]],
+                        anchor: Anchor.CENTER
+                    },
+                },
                 text: 'Toggle MSAA',
             }),
             UINode.createCtrProps(UIRectangleNode, {
                 ...commonProps,
                 label: 'Close',
-                scale: { min_width: 200, y: 50, unit: SizeUnit.px },
-                translate: { x: 0, y: -0.2 },
+                scale: { min_width: 200, y: 50, unit: NumericUnit.px },
+                translate: {
+                    x: {
+                        value: [0, NumericUnit["%"]],
+                        anchor: Anchor.CENTER
+                    }, y: {
+                        value: [-0.2, NumericUnit["%"]],
+                        anchor: Anchor.CENTER
+                    }
+                },
                 text: 'Close',
                 onClick: () => {
                     this.destroy();
                 }
             })
         ];
-    }
-    setActiveMenu = (menuName?: string) => {
-        this.setState({
-            menuOpenName: this.state.menuOpenName === menuName ? undefined : menuName
-        })
     }
     override destroy(): void {
         super.destroy();

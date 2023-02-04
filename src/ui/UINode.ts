@@ -45,7 +45,7 @@ export abstract class UINode<P extends object = object, S extends object = objec
                 if (child?.ctr) {
                     if (instance) {
                         if(instance.constructor === child.ctr) {
-                            instance.props = child.props
+                            instance.props = child.props;
                             instance.#requestRender();
                             return instance;
                         }

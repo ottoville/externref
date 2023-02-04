@@ -6,7 +6,7 @@ import { UINode } from "./UINode.js";
 import { Zones } from "../tools/Zones.js";
 import { TerrainToolButton } from "../tools/TerrainTool.js";
 import { PlantsUI } from "../tools/plantsUI.js";
-import { SizeUnit } from "./UIRectangle.js";
+import { Anchor, NumericUnit } from "./UIRectangle.js";
 declare const engine: Engine;
 
 type MenuState = {
@@ -74,8 +74,16 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                     ...commonProps,
                     open: this.state.menuOpenName === 'Plants',
                     label: 'Plants',
-                    scale: { min_width: 0.07, y: 0.04, unit: SizeUnit["%"] },
-                    translate: { x: -0.9, y: 0.9 },
+                    scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
+                    translate: {
+                        x: {
+                            value: [-0.9, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        }, y: {
+                            value: [0.9, NumericUnit["%"]],
+                            anchor: Anchor.CENTER
+                        }
+                    },
                     text: 'Plants (1)',
                 }),
                 UINode.createCtrProps(TerrainToolButton,
@@ -83,8 +91,16 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...commonProps,
                         open: this.state.menuOpenName === 'Terrain',
                         label: 'Terrain',
-                        scale: { min_width: 0.07, y: 0.04, unit: SizeUnit["%"] },
-                        translate: { x: -0.75, y: 0.9 },
+                        scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
+                        translate: {
+                            x: {
+                                value: [-0.75, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            }, y: {
+                                value: [0.9, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            }
+                        },
                         text: 'Terrain (2)',
                         menuTree: this.menuTree,
                     }
@@ -94,8 +110,16 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...commonProps,
                         open: this.state.menuOpenName === 'Zones',
                         label: 'Zones',
-                        scale: { min_width: 0.07, y: 0.04, unit: SizeUnit["%"] },
-                        translate: { x: -0.6, y: 0.9 },
+                        scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
+                        translate: {
+                            x: {
+                                value: [-0.6, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            }, y: {
+                                value: [0.9, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            }
+                        },
                         text: 'Zones (3)',
                         menuTree: this.menuTree,
                     }
