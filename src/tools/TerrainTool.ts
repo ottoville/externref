@@ -68,6 +68,10 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
                     bitmap: this.props.bitmap,
                     label: 'Lower',
                     scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
+                    borderSize: {
+                        width: [8, NumericUnit.px],
+                        height: 'auto',
+                    },
                     translate: {
                         x:
                         {
@@ -91,6 +95,10 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
                     bitmap: this.props.bitmap,
                     label: 'Raise',
                     scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
+                    borderSize: {
+                        width: [8, NumericUnit.px],
+                        height: 'auto',
+                    },
                     translate: {
                         x: {
                             value: [-0.6, NumericUnit["%"]],

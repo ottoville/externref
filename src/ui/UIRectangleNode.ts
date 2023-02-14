@@ -1,17 +1,17 @@
-import { NumericUnit, UIRectangle, UIRectangleProps } from "./UIRectangle.js";
+import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
 import type { GPU } from "../GPU.js"
 import { UINode } from "./UINode.js";
 
 export type UIRectangleNodeProps = {
     gpu: GPU,
-    bitmap: ImageBitmap,
+    bitmap?: ImageBitmap | undefined,
     text: string,
     onClick?: (menuName?: string) => void
     children?: ({
         ctr: new (props: UIRectangleNodeProps) => UIRectangleNode;
         props: UIRectangleNodeProps;
     } | null)[] | null
-} & Pick<UIRectangleProps, 'scale' | 'translate' | 'label' | 'originalAspectRatio'>
+} & Pick<UIRectangleProps, 'scale' | 'translate' | 'label' | 'originalAspectRatio' | 'borderSize'>
 export class UIRectangleNode<S extends object = object, P extends UIRectangleNodeProps = UIRectangleNodeProps> extends UINode<P, S> {
     static instances: Map<UINode, UIRectangleNode> = new Map()
     static getInstance<P extends UIRectangleNodeProps>(host: UINode, props: P): UIRectangleNode {
@@ -37,15 +37,12 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
                 canvaspipeline: props.gpu.UIPipeline,
                 renderPass: props.gpu.renderPassCanvas,
                 label: props.label,
-                borderSize: {
-                    width: [8, NumericUnit.px],
-                    height: 'auto',
-                },
-                backgroundAsset: {
+                borderSize: props.borderSize,
+                backgroundAsset: props.bitmap? {
                     texture: props.bitmap,
                     border_width: 0.2,
                     border_height: 0.2
-                },
+                } : undefined,
                 scale: props.scale,
                 translate: props.translate,
                 originalAspectRatio: props.originalAspectRatio,

@@ -62,7 +62,11 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
             gpu: props.gpu,
             terrain: props.terrain,
             bitmap: this.state.bitmap,
-            onClick: this.setActiveMenu
+            onClick: this.setActiveMenu,
+            borderSize: {
+                width: [8, NumericUnit.px],
+                height: 'auto',
+            } as const
         }
         keyBoardMap.length = 0;
         const menus: {

@@ -42,6 +42,10 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }, MenuState> {
         {
             gpu: props.gpu,
             bitmap: this.state.bitmap,
+            borderSize: {
+                width: [8, NumericUnit.px],
+                height: 'auto',
+            } as const
         }
         return [
             UINode.createCtrProps(UIRectangleNode, {

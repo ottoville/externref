@@ -92,6 +92,10 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & { terr
                         bitmap: this.props.bitmap,
                         label: 'residentalButton',
                         scale: { min_width: 0.15, y: 0.07, unit: NumericUnit["%"] },
+                        borderSize: {
+                            width: [8, NumericUnit.px],
+                            height: 'auto',
+                        },
                         translate: {
                             x: {
                                 value: [-0.8, NumericUnit["%"]],

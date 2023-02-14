@@ -31,7 +31,7 @@ fn main(
   @location(1) uv : vec2<f32>
   ) -> Output {
   var output : Output;   
-  output.Position = vec4<f32>(${uniforms.variableName}.translate + position, 1.0, 1.0);
+  output.Position = vec4<f32>(${uniforms.prop('translate')} + position, 1.0, 1.0);
   output.v_uv=uv;
   return output;
 

@@ -2,26 +2,20 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js'
-import type { Terrain } from '../../world/terrain.js';
-import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 
 type BindLayouts = readonly [
     GPU["sizeBindGroupLayout"],
     GPU["uniformBindGroupLayoutWithTime"],
     BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
-    BGLayout<[
-        BufLayout<ShaderStage.VERTEX>,
-        BufLayout<ShaderStage.VERTEX>,
-    ]>
+
 ]
-export class PlaneVertShader extends VertexShader<
+export class Plane extends VertexShader<
     { main: PipelineLayout },
     [GPUVertexBufferLayout],
     BindLayouts> {
     constructor(
         pipelineLayout: PipelineLayout<BindLayouts>,
-        buffers: GPUVertexBufferLayout,
-        settings: typeof Terrain.settings) {
+        buffers: GPUVertexBufferLayout) {
         const entryPoints = {
             main: pipelineLayout
         }
@@ -34,14 +28,12 @@ export class PlaneVertShader extends VertexShader<
         this.createWGSL((
             [/*uniforms*/,],
             [scene,/*time, clusters_array, meshes, projection*/],
-            [world],
-            [slopes, facet12]) => {
+            [world]) => {
 
             //////////////////////////////////
 
             return /* wgsl */ `
 
-      ${getHeightAtCoordinates(settings, slopes, facet12)}
 
 struct Output {
  @location(0) color : vec3<f32>,
@@ -50,8 +42,7 @@ struct Output {
 @vertex
 fn main(@location(0) position : vec3<f32>) -> Output {
    var output:Output;
-   var worldPos:vec4<f32> = ${world.variableName}.transformation * vec4<f32>(position.x, 0.0, position.y, 1.0);
-   worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz);
+   var worldPos:vec4<f32> = ${world.variableName}.transformation * vec4<f32>(position.xyz, 1.0);
    output.Position = ${scene.variableName}.modelViewProjection * worldPos;
    output.color = vec3<f32>(1.0,1.0,1.0);
    return output;

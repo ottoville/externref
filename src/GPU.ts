@@ -151,12 +151,15 @@ export class GPU {
 
 
     readonly #ro: ResizeObserver;
-    readonly #canvasRootLayout: BindablePipelineLayout<readonly [BGLayout<[BufLayout<ShaderStage.VERTEX>, TextLayout<ShaderStage.FRAGMENT>]>]>;
+    readonly #canvasRootLayout: BindablePipelineLayout<readonly [
+        typeof this.BindGroupLayoutCanvas
+    ]>;
     readonly UIPipeline: RenderPipeline<UIVertShader>
 
     readonly updateViewShader: UpdateView;
-    readonly BindGroupLayoutCanvas: BGLayout<[BufLayout<ShaderStage.VERTEX>, TextLayout<ShaderStage.FRAGMENT>]>;
+    readonly BindGroupLayoutCanvas: BGLayout<[BufLayout<ShaderStage.VERTEX, typeof UIUniforms>, TextLayout<ShaderStage.FRAGMENT>]>
     destroyed = false;
+    fps = 0
     createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
     createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
     createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive?: Omit<GPUPrimitiveState, 'topology'>): R
@@ -403,6 +406,20 @@ export class GPU {
                     textureViewDescriptor: undefined
                 })
         );
+        //@ts-expect-error
+        window.debugMeshes = async () => {
+            const drawables = (await Promise.all(Array.from(this.positionBindGroupTimeWGSL.renderPipeLines).map(async (rp) => {
+                const variant = this.renderPassScreen.renderPipelines.get(rp);
+                if (variant) {
+                    return Array.from((await variant).rootDrawables).map(drawable => {
+                        return [drawable.label, drawable];
+                    });
+                } else {
+                    return null
+                }
+            }))).flat();
+            console.table(drawables)
+        }
 
         this.renderPassWater = new DepthRenderPass(
             {
@@ -721,8 +738,7 @@ export class GPU {
 
         const nowSecond = (Date.now() / 500) | 0;
         if (nowSecond !== curSecond) {
-            //@ts-ignore
-            window.fps = framecount * 2; // Update fps twice a second so framecount is for half second
+            this.fps = framecount * 2; // Update fps twice a second so framecount is for half second
             curSecond = nowSecond;
             framecount = 0;
         }

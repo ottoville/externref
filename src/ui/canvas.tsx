@@ -32,6 +32,7 @@ import { Anchor, NumericUnit, UIRectangle } from "./UIRectangle.js";
 import { createTopMenu } from "./topMenu.js";
 import { createSettingsMenu } from "./SettingsMenu.js";
 import { createTimeControls } from "./TimeControls.js";
+import { CreateFPSMeter } from "./FPS.js";
 
 declare const engine: Engine;
 
@@ -119,7 +120,7 @@ export class Canvas extends TerraCompoment {
 
         createSettingsMenu.addKeydownListener(gpu);
         new createTimeControls({ gpu });
-
+        new CreateFPSMeter({ gpu })
         const mainScene = new Scene('main', gpu, [engine.mainCamera, waterCamera], (terrascene) => {
             new Sun2(gpu, [terrascene]);
             // Initial scene objects here
@@ -305,7 +306,6 @@ export class Canvas extends TerraCompoment {
         return <div style="height:100%">
             {this.#errorDialog}
             {this.#canvasElem}
-            <div id="fps">@(rendertime) @(msPerFrame)</div>
             <div style="position:absolute;top:30%; background-color:white;width:100%;text-align:center ">
                 {this.#progresElem}
                 <br />

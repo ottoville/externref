@@ -20,8 +20,6 @@ function createError(e: unknown) {
 }
 
 declare const engine: Engine;
-//@ts-ignore
-globalThis.fps = 0;
 export type rust_pointer<T> = {
     __brand: T
 } & number
