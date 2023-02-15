@@ -1,6 +1,8 @@
 import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
 import type { GPU } from "../GPU.js"
 import { UINode } from "./UINode.js";
+import { UIRectangleBackground } from "./UIRectangleBackground.js";
+import { UIRectangleText } from "./UIRectangleText.js";
 
 export type UIRectangleNodeProps = {
     gpu: GPU,
@@ -33,31 +35,48 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
     render() {
         const props = this.props;
         if (!this.#instance) {
-            this.#instance = new UIRectangle({
-                canvaspipeline: props.gpu.UIPipeline,
-                renderPass: props.gpu.renderPassCanvas,
-                label: props.label,
-                borderSize: props.borderSize,
-                backgroundAsset: props.bitmap? {
+            if (props.bitmap) {
+                this.#instance = new UIRectangleBackground({
+                    canvaspipeline: props.gpu.UIPipeline,
+                    renderPass: props.gpu.renderPassCanvas,
+                    label: props.label,
+                    borderSize: props.borderSize,
+                    scale: props.scale,
+                    translate: props.translate,
+                    originalAspectRatio: props.originalAspectRatio,
+                    events: {
+                        onClick: () => {
+                            if (this.props.onClick) {
+                                this.props.onClick(props.label)
+                            }
+                        }
+                    },
+                }, {
                     texture: props.bitmap,
                     border_width: 0.2,
                     border_height: 0.2
-                } : undefined,
-                scale: props.scale,
-                translate: props.translate,
-                originalAspectRatio: props.originalAspectRatio,
-                events: {
-                    onClick: () => {
-                        if (this.props.onClick) {
-                            this.props.onClick(props.label)
+                }, props.text);
+            } else {
+                this.#instance = new UIRectangleText({
+                    canvaspipeline: props.gpu.UIPipeline,
+                    renderPass: props.gpu.renderPassCanvas,
+                    label: props.label,
+                    borderSize: props.borderSize,
+                    scale: props.scale,
+                    translate: props.translate,
+                    originalAspectRatio: props.originalAspectRatio,
+                    events: {
+                        onClick: () => {
+                            if (this.props.onClick) {
+                                this.props.onClick(props.label)
+                            }
                         }
-                    }
-                },
-                text: props.text
-            });
-        } else {
-            if (props.text !== this.#instance.props.text) {
-                this.#instance.props.text = props.text;
+                    },
+                }, props.text);
+            }
+        } else if(this.#instance instanceof UIRectangleBackground || this.#instance instanceof UIRectangleText) {
+            if (props.text !== this.#instance.text) {
+                this.#instance.text = props.text;
                 this.#instance.createTexture()
             }
         }

@@ -4,7 +4,7 @@ import type { RenderPass } from "./RenderPasses/RenderPass.js";
 
 export class BindGroup<L extends BGLayout = BGLayout> {
     #dirty = true;
-    #bindGroup: GPUBindGroup;
+    #bindGroup?: GPUBindGroup;
     readonly #renderBundles: Set<RenderBundleEncoder> = new Set();
     getForRenderBundle(renderBundleEncoder: RenderBundleEncoder) {
         this.#renderBundles.add(renderBundleEncoder);
@@ -15,8 +15,8 @@ export class BindGroup<L extends BGLayout = BGLayout> {
         this.#dirty = true;
     }
     //TODO: set private
-    get bindGroup() {
-        if (this.#dirty) {
+    get bindGroup(): GPUBindGroup {
+        if (this.#dirty || !this.#bindGroup) {
             const entries = this.entriesf(this);
             this.#bindGroup = this.layout.gpu.device.createBindGroup({
                 layout: this.layout.layout,
@@ -32,7 +32,6 @@ export class BindGroup<L extends BGLayout = BGLayout> {
         private label: string,
         private entriesf: (bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>,
         readonly renderPasses: Set<RenderPass> = new Set()) {
-        this.#bindGroup = this.bindGroup;
         this.renderPasses.forEach(rp => rp.bundles.forEach(bundle => {
             this.#renderBundles.add(bundle);
         }))

@@ -3,6 +3,7 @@ import type { TerraCamera } from "../TerraCamera.js";
 import type { Engine } from "../engine";
 import { CameraController } from "./CameraController.js";
 import { Anchor, NumericUnit, UIRectangle } from "../ui/UIRectangle.js";
+import { UIRectangleBackground } from "../ui/UIRectangleBackground.js";
 declare const engine: Engine;
 
 export const enum ARROW_KEYS {
@@ -76,18 +77,13 @@ export class MeshCamera extends CameraController {
         const gpu = this.camera.gpu;
         if (gpu) {
             cursorBitmap.then(bitmap => {
-                this.cursor = new UIRectangle({
+                this.cursor = new UIRectangleBackground({
                     canvaspipeline: gpu.UIPipeline,
                     renderPass: gpu.renderPassCanvas,
                     label: 'cursor',
                     borderSize: {
                         width: [0, NumericUnit["%"]],
                         height: 'auto',
-                    },
-                    backgroundAsset: {
-                        texture: bitmap,
-                        border_width: 0,
-                        border_height: 0
                     },
                     scale: { min_width: 0.01, y: 0.01, unit: NumericUnit["%"] },
                     translate: {
@@ -100,6 +96,10 @@ export class MeshCamera extends CameraController {
                         }
                     },
                     originalAspectRatio: 1,
+                }, {
+                    texture: bitmap,
+                    border_width: 0,
+                    border_height: 0
                 })
             }).catch(err => {
                 engine.showError(err);
