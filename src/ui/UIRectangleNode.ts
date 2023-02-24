@@ -2,7 +2,7 @@ import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
 import type { GPU } from "../GPU.js"
 import { UINode } from "./UINode.js";
 import { UIRectangleBackground } from "./UIRectangleBackground.js";
-import { UIRectangleText } from "./UIRectangleText.js";
+import { UIRectangleTextOnly } from "./UIRectangleTextOnly.js";
 
 export type UIRectangleNodeProps = {
     gpu: GPU,
@@ -57,7 +57,7 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
                     border_height: 0.2
                 }, props.text);
             } else {
-                this.#instance = new UIRectangleText({
+                this.#instance = new UIRectangleTextOnly({
                     canvaspipeline: props.gpu.UIPipeline,
                     renderPass: props.gpu.renderPassCanvas,
                     label: props.label,
@@ -74,7 +74,7 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
                     },
                 }, props.text);
             }
-        } else if(this.#instance instanceof UIRectangleBackground || this.#instance instanceof UIRectangleText) {
+        } else if(this.#instance instanceof UIRectangleBackground || this.#instance instanceof UIRectangleTextOnly) {
             if (props.text !== this.#instance.text) {
                 this.#instance.text = props.text;
                 this.#instance.createTexture()

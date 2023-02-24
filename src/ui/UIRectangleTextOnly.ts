@@ -1,38 +1,20 @@
 import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
+import { createBackground, font } from "./UIRectangleBackground.js";
 
+export type TextUV = [
+    topLeft: [number, number],
+    topRight: [number, number],
+    bottomRight: [number, number],
+    bottomLeft: [number, number]];
 function createTextureForTextOnly(
     text: string,
     textUV: [topLeft: [number, number], topRight: [number, number], bottomRight: [number, number], bottomLeft: [number, number]],
     originalAspectRatio?: number) {
-    //const copySource = new OffscreenCanvas(this.props.backgroundAsset.texture.width, this.props.backgroundAsset.texture.height);
-    const copySource = new OffscreenCanvas(1, 1);
-    const ctx = copySource.getContext("2d")
-    if (!ctx) {
-        throw new Error('Cant get 2d context for texture text');
-    }
-    const font = '80pt serif';
-    ctx.textBaseline = "top";
-    ctx.font = font;
-    const measuredSize = ctx.measureText(text);
 
-    const textSize = {
-        width: measuredSize.width,
-        height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent
-    }
-    const originalTextHeight = textSize.height;
-    if (originalAspectRatio) {
-        //Keep text aspect ratio normal
-        const textAspectRatio = textSize.height / textSize.width;
-        if (textAspectRatio > originalAspectRatio) {
-            //need to add borders to left and right
-            textSize.width = textSize.height / originalAspectRatio
-        } else if (textAspectRatio < originalAspectRatio) {
-            //need to add borders to top and bottom
-            textSize.height = textSize.width * originalAspectRatio;
-        }
-    }
-    copySource.width = textSize.width;
-    copySource.height = textSize.height;
+    const { originalTextHeight, textSize, measuredSize, ctx, copySource2 } = createBackground(1, 1, text, originalAspectRatio)
+
+    copySource2.width = textSize.width;
+    copySource2.height = textSize.height;
 
     ctx.font = font;
     ctx.textAlign = "center";
@@ -49,9 +31,9 @@ function createTextureForTextOnly(
     textUV[1] = [textSize.width, 0];
     textUV[2] = [textSize.width, textSize.height];
     textUV[3] = [0, textSize.height];
-    return copySource;
+    return copySource2;
 }
-export class UIRectangleText extends UIRectangle {
+export class UIRectangleTextOnly extends UIRectangle {
     createTexture() {
         const copySource = createTextureForTextOnly(this.text, this.textUV, this.props.originalAspectRatio)
         this.createTextureView(copySource);
@@ -87,16 +69,12 @@ export class UIRectangleText extends UIRectangle {
         bottomRight: [number, number],
         bottomLeft: [number, number]]
     constructor(public override props: UIRectangleProps, public text: string) {
-        const textUV: [
-            topLeft: [number, number],
-            topRight: [number, number],
-            bottomRight: [number, number],
-            bottomLeft: [number, number]] = [
-                [0, 0],
-                [0, 0],
-                [0, 0],
-                [0, 0]
-            ]
+        const textUV: TextUV = [
+            [0, 0],
+            [0, 0],
+            [0, 0],
+            [0, 0]
+        ]
         super(props, createTextureForTextOnly(text, textUV, props.originalAspectRatio))
         this.textUV = textUV;
         const {

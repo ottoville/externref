@@ -1,22 +1,10 @@
 import type { BufLayout, ShaderStage } from "../BindGroupLayout.js";
-import type { Struct } from "./structs/Structs.js";
-
-type Projection = BufLayout<ShaderStage.FRAGMENT, Struct<{
-    inversed_projection: [string, string];
-    reversed_projection: [string, string];
-    projectionFarPlane: [string, string];
-    zNear: [string, string];
-    zFar: [string, string];
-    z_near_multiplied_far: [string, string];
-    z_near_substracted_far: [string, string];
-    slice_scale: [string, string];
-    slice_bias: [string, string];
-}>>;
+import type { ProjectionStruct, Struct } from "./structs/Structs.js";
 
 export const getClusterIndex = (uniforms: BufLayout<number, Struct<{
     screenDimensions: [string, string];
     screendimensions_ratio: [string, string];
-}>>, projection: Projection) => /* wgsl */ `
+}>>, projection: BufLayout<ShaderStage.FRAGMENT, typeof ProjectionStruct>) => /* wgsl */ `
     fn linearDepth(depthSample : f32) -> f32 {
         return projection.z_near_multiplied_far / fma(depthSample, ${projection.prop('z_near_substracted_far')}, ${projection.prop('zNear')});
     }

@@ -33,7 +33,7 @@ export const ClusterBounds = new Struct('ClusterBounds', {
     minAABB: ['', 'vec4<f32>'],
     maxAABB: ['', 'vec4<f32>']
 })
-export const Projection = new Struct('Projection', {
+export const ProjectionStruct = new Struct('Projection', {
     inversed_projection: ['', 'mat4x4<f32>'],
     reversed_projection: ['', 'mat4x4<f32>'],
     projectionFarPlane: ['', 'mat4x4<f32>'],

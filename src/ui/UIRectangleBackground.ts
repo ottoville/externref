@@ -1,8 +1,38 @@
 import { TextureView } from "../GPU/TextureView.js";
 import { Texture2D } from "../GPU/Texture2D.js";
 import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
+import type { TextUV } from "./UIRectangleTextOnly.js";
+export const font = '80pt serif';
 
+export function createBackground(width: number, height: number, text: string, originalAspectRatio?: number) {
+    const copySource2 = new OffscreenCanvas(width, height);
+    const ctx = copySource2.getContext("2d")
+    if (!ctx) {
+        throw new Error('Cant get 2d context for texture text');
+    }
 
+    ctx.textBaseline = "top";
+    ctx.font = font;
+    const measuredSize = ctx.measureText(text);
+
+    const textSize = {
+        width: measuredSize.width,
+        height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent
+    }
+    const originalTextHeight = textSize.height;
+    if (originalAspectRatio) {
+        //Keep text aspect ratio normal
+        const textAspectRatio = textSize.height / textSize.width;
+        if (textAspectRatio > originalAspectRatio) {
+            //need to add borders to left and right
+            textSize.width = textSize.height / originalAspectRatio
+        } else if (textAspectRatio < originalAspectRatio) {
+            //need to add borders to top and bottom
+            textSize.height = textSize.width * originalAspectRatio;
+        }
+    }
+    return { originalTextHeight, textSize, measuredSize, copySource2, ctx }
+}
 function createTexture(
     backgroundAsset: {
         texture: ImageBitmap;
@@ -15,32 +45,8 @@ function createTexture(
     let copySource: ImageBitmap | OffscreenCanvas = backgroundAsset.texture
     // Create texture for text
     if (text) {
-        copySource = new OffscreenCanvas(backgroundAsset.texture.width, backgroundAsset.texture.height);
-        const ctx = copySource.getContext("2d")
-        if (!ctx) {
-            throw new Error('Cant get 2d context for texture text');
-        }
-        const font = '80pt serif';
-        ctx.textBaseline = "top";
-        ctx.font = font;
-        const measuredSize = ctx.measureText(text);
-
-        const textSize = {
-            width: measuredSize.width,
-            height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent
-        }
-        const originalTextHeight = textSize.height;
-        if (originalAspectRatio) {
-            //Keep text aspect ratio normal
-            const textAspectRatio = textSize.height / textSize.width;
-            if (textAspectRatio > originalAspectRatio) {
-                //need to add borders to left and right
-                textSize.width = textSize.height / originalAspectRatio
-            } else if (textAspectRatio < originalAspectRatio) {
-                //need to add borders to top and bottom
-                textSize.height = textSize.width * originalAspectRatio;
-            }
-        }
+        const { originalTextHeight, textSize, measuredSize, copySource2, ctx } = createBackground(backgroundAsset.texture.width, backgroundAsset.texture.height, text, originalAspectRatio)
+        copySource = copySource2;
         const extendedSize = {
             width: Math.max(backgroundAsset.texture.width, textSize.width),
             height: backgroundAsset.texture.height + textSize.height
@@ -243,16 +249,12 @@ export class UIRectangleBackground extends UIRectangle {
         },
         public text?: string
     ) {
-        const textUV: [
-            topLeft: [number, number],
-            topRight: [number, number],
-            bottomRight: [number, number],
-            bottomLeft: [number, number]] = [
-                [0, 0],
-                [0, 0],
-                [0, 0],
-                [0, 0]
-            ]
+        const textUV: TextUV = [
+            [0, 0],
+            [0, 0],
+            [0, 0],
+            [0, 0]
+        ]
         super(props, createTexture(backgroundAsset, textUV, props.originalAspectRatio, text));
         this.textUV = textUV;
         const {

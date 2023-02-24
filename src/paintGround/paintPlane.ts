@@ -1,6 +1,6 @@
 ﻿import { paintGround } from "./paintGround.js";
 import { Terrain } from "../world/terrain.js";
-import { PTResultF } from "../types/interfaces/index.js";
+import type { PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
 import type { GPU } from "../GPU.js";
 
@@ -9,7 +9,7 @@ import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import type { Engine } from "../engine.js";
 import { BoundableNodeIndexed } from "../nodes/BoundableNodeIndexed.js";
 import { PlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
-import { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 declare const engine: Engine;
 

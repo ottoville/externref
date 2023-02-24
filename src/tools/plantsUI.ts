@@ -2,19 +2,19 @@ import { paintPlane } from "../paintGround/paintPlane.js";
 import type { Plants } from "../plants/Plants.js";
 
 import type { PTDresult } from "../types/interfaces/index.js";
-import { Engine } from "../engine.js";
+import type { Engine } from "../engine.js";
 import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
-import { Terrain } from "../world/terrain.js";
 import { UINode } from "../ui/UINode.js";
 import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
+import type { TopMenuButtonProps } from "../ui/topMenu.js";
 declare const engine: Engine;
 
 
-export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & { terrain: Terrain, open: boolean }> {
+export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & TopMenuButtonProps> {
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
     scene = engine.scenes.get('main');
-    constructor(props: UIRectangleNodeProps & { terrain: Terrain, open: boolean },
+    constructor(props: UIRectangleNodeProps & TopMenuButtonProps,
     ) {
         super(props);
         if (!this.scene) {
@@ -33,28 +33,21 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & { t
             this.#wasOpen = true
             engine.addInputListener('keydown', this, this.#inputListener);
             return [
-                UINode.createCtrProps(UIRectangleNode, {
-                    gpu: this.props.gpu,
-                    bitmap: this.props.bitmap,
-                    label: 'createGrassButton',
-                    scale: { min_width: 0.15, y: 0.07, unit: NumericUnit["%"] },
-                    borderSize: {
-                        width: [8, NumericUnit.px],
-                        height: 'auto',
-                    },
-                    translate: {
-                        x: {
-                            value: [-0.8, NumericUnit["%"]],
-                            anchor: Anchor.CENTER
+                UINode.createCtrProps(UIRectangleNode,
+                    {
+                        ...this.props,
+                        label: 'createGrassButton',
+                        scale: { min_width: 180, y: 50, unit: NumericUnit.px },
+                        translate: {
+                            x: {
+                                value: [100, NumericUnit.px],
+                                anchor: Anchor.LEFT
+                            },
+                            y: this.props.subMenuPosition
                         },
-                        y: {
-                            value: [0.8, NumericUnit["%"]],
-                            anchor: Anchor.CENTER
-                        }
-                    },
-                    text: 'Create grass (1)',
-                    onClick: () => this.activateDraw()
-                })
+                        text: 'Create grass (1)',
+                        onClick: () => this.activateDraw()
+                    })
             ]
         } else if (this.#wasOpen) {
             this.#wasOpen = false;

@@ -2,7 +2,7 @@
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";
-import { type GPU } from "../GPU.js"
+import type { GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
 import type { Engine, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
@@ -12,16 +12,17 @@ import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import { UINode } from "../ui/UINode.js";
 import { NumericUnit, Anchor } from "../ui/UIRectangle.js";
+import type { TopMenuButtonProps } from "../ui/topMenu.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
 
 type TerrainToolButtonState = { subMenu: 'lower' | 'raise' | undefined };
 export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
-    UIRectangleNodeProps & { terrain: Terrain, menuTree: { level: number }, open: boolean }> {
+    UIRectangleNodeProps & TopMenuButtonProps> {
     #wasOpen = false;
     constructor(
-        props: UIRectangleNodeProps & { terrain: Terrain, menuTree: { level: number }, open: boolean },
+        props: UIRectangleNodeProps & TopMenuButtonProps,
     ) {
         super(props);
         this.state = {
@@ -64,25 +65,16 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
             engine.addInputListener('keydown', this, this.#inputListener);
             return [
                 UINode.createCtrProps(UIRectangleNode, {
-                    gpu: this.props.gpu,
-                    bitmap: this.props.bitmap,
+                    ...this.props,
                     label: 'Lower',
                     scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
-                    borderSize: {
-                        width: [8, NumericUnit.px],
-                        height: 'auto',
-                    },
                     translate: {
                         x:
                         {
                             value: [-0.85, NumericUnit["%"]],
                             anchor: Anchor.CENTER
-                        }
-
-                        , y: {
-                            value: [0.8, NumericUnit["%"]],
-                            anchor: Anchor.CENTER
-                        }
+                        },
+                        y: this.props.subMenuPosition
                     },
                     text: 'Lower (1)',
                     onClick: () => {
@@ -91,22 +83,15 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
                         })
                     }
                 }), UINode.createCtrProps(UIRectangleNode, {
-                    gpu: this.props.gpu,
-                    bitmap: this.props.bitmap,
+                    ...this.props,
                     label: 'Raise',
                     scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
-                    borderSize: {
-                        width: [8, NumericUnit.px],
-                        height: 'auto',
-                    },
                     translate: {
                         x: {
                             value: [-0.6, NumericUnit["%"]],
                             anchor: Anchor.CENTER
-                        }, y: {
-                            value: [0.8, NumericUnit["%"]],
-                            anchor: Anchor.CENTER
-                        }
+                        },
+                        y: this.props.subMenuPosition
                     },
                     text: 'Raise (2)',
                     onClick: () => {

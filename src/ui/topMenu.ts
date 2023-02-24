@@ -6,7 +6,7 @@ import { UINode } from "./UINode.js";
 import { Zones } from "../tools/Zones.js";
 import { TerrainToolButton } from "../tools/TerrainTool.js";
 import { PlantsUI } from "../tools/plantsUI.js";
-import { Anchor, NumericUnit } from "./UIRectangle.js";
+import { Anchor, NumericUnit, VerticalPosition } from "./UIRectangle.js";
 declare const engine: Engine;
 
 type MenuState = {
@@ -14,6 +14,13 @@ type MenuState = {
     bitmap: ImageBitmap | undefined,
 };
 const keyBoardMap: string[] = []
+
+export type TopMenuButtonProps = {
+    terrain: Terrain,
+    menuTree: { level: number },
+    open: boolean,
+    subMenuPosition: VerticalPosition
+}
 
 export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuState> {
     constructor(props: { gpu: GPU, terrain: Terrain }) {
@@ -66,6 +73,10 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
             borderSize: {
                 width: [8, NumericUnit.px],
                 height: 'auto',
+            } as const,
+            subMenuPosition: {
+                value: [70, NumericUnit.px],
+                anchor: Anchor.TOP
             } as const
         }
         keyBoardMap.length = 0;
@@ -89,6 +100,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         }
                     },
                     text: 'Plants (1)',
+                    menuTree: this.menuTree,
                 }),
                 UINode.createCtrProps(TerrainToolButton,
                     {

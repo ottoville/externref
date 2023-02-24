@@ -16,7 +16,8 @@ export const enum ARROW_KEYS {
     DOWN_RIGHT = ARROW_KEYS.DOWN | ARROW_KEYS.RIGHT,
     DOWN_LEFT = ARROW_KEYS.DOWN | ARROW_KEYS.LEFT,
 }
-const cursorBitmap = fetch('/assets/cursor.webp').then(asset => asset.blob()).then(createImageBitmap);
+
+const cursorBitmap:Promise<ImageBitmap> = typeof globalThis.createImageBitmap !== 'undefined' ? fetch('/assets/cursor.webp').then(asset => asset.blob()).then(createImageBitmap) : Promise.resolve<ImageBitmap>({} as ImageBitmap);
 export class MeshCamera extends CameraController {
     name = 'PositionCamera';
     angle = Math.PI;
@@ -26,14 +27,6 @@ export class MeshCamera extends CameraController {
     cursor: UIRectangle | undefined = undefined;
     constructor(public camera: TerraCamera, initial = false) {
         super();
-        const syncCamera = () => {
-            //this.camera.position=this.#position;
-            this.cameraControl?.updateDirection(direction => {
-                direction[0] = Math.cos(this.angle);
-                direction[1] = 0;
-                direction[2] = Math.sin(this.angle);
-            });
-        }
         if (initial && engine.DB) {
             engine.DB.transaction("save").objectStore("save").get(["camera", "MeshCamera"]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
@@ -45,7 +38,11 @@ export class MeshCamera extends CameraController {
                     });
                     //this.#position.set(restored.data.position);
                     this.angle = restored.data.angle;
-                    syncCamera();
+                    this.cameraControl?.updateDirection(direction => {
+                        direction[0] = Math.cos(this.angle);
+                        direction[1] = 0;
+                        direction[2] = Math.sin(this.angle);
+                    });
                 }
             }
         } else {

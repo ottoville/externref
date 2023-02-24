@@ -10,8 +10,9 @@ import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 import { UINode } from "../ui/UINode.js";
 import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
+import type { TopMenuButtonProps } from "../ui/topMenu.js";
 declare const engine: Engine;
-export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & { terrain: Terrain, menuTree: { level: number }, open: boolean }> {
+export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMenuButtonProps> {
     #PT?: paintTexture;
     #size = 5120;
     readonly #ratio: number //texture coordinates
@@ -19,7 +20,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & { terr
     scene: Scene;
     #wasOpen = false;
     constructor(
-        props: UIRectangleNodeProps & { terrain: Terrain, menuTree: { level: number }, open: boolean },
+        props: UIRectangleNodeProps & TopMenuButtonProps,
     ) {
         super(props);
         const initialScene = props.terrain.scenes[0];
@@ -88,23 +89,15 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & { terr
             return [
                 UINode.createCtrProps(UIRectangleNode,
                     {
-                        gpu: this.props.gpu,
-                        bitmap: this.props.bitmap,
+                        ...this.props,
                         label: 'residentalButton',
                         scale: { min_width: 0.15, y: 0.07, unit: NumericUnit["%"] },
-                        borderSize: {
-                            width: [8, NumericUnit.px],
-                            height: 'auto',
-                        },
                         translate: {
                             x: {
                                 value: [-0.8, NumericUnit["%"]],
                                 anchor: Anchor.CENTER
                             },
-                            y: {
-                                value: [0.8, NumericUnit["%"]],
-                                anchor: Anchor.CENTER
-                            }
+                            y: this.props.subMenuPosition
                         },
                         text: 'Residental (1)',
                         onClick: () => {

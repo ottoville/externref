@@ -2,7 +2,7 @@ import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
 import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
-import { Clusters, Projection } from './structs/Structs.js';
+import { Clusters, ProjectionStruct } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js'
 type BindLayouts = readonly [GPU["sizeBindGroupLayout"],
     BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>];
@@ -30,7 +30,7 @@ export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, BindLa
                             hasDynamicOffset: false,
                             minBindingSize: PROJECTION_BUFFER_SIZE
                         }
-                    }, 'screentoview', Projection)
+                    }, 'screentoview', ProjectionStruct)
             )
         ] as const;
 

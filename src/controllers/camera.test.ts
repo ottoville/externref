@@ -1,6 +1,6 @@
 import { describe, beforeAll, it, expect } from '@jest/globals'
 import { ArcRotateCamera } from "./ArcRotateCamera.js";
-import { PositionCamera } from "./positionCamera.js";
+import { MeshCamera } from "./meshCamera.js";
 import { Engine } from "../engine.js";
 import fs from 'fs';
 
@@ -10,7 +10,7 @@ describe(
         let engine: Engine | void;
         let originalPosition: Float32Array;
         let originalDirection: Float32Array;
-        let cameraControllers: [typeof ArcRotateCamera, typeof PositionCamera];
+        let cameraControllers: [typeof ArcRotateCamera, typeof MeshCamera];
 
         beforeAll(async () => {
             engine = await Engine.initEngine(undefined, (e) => {
@@ -27,7 +27,7 @@ describe(
             control.updatePosition(position => position.set([100, 100, 100]));
             originalPosition = new Float32Array(engine!.mainCamera.position as [number, number, number])
             originalDirection = new Float32Array(engine!.mainCamera.direction as [number, number, number])
-            cameraControllers = [ArcRotateCamera, PositionCamera];
+            cameraControllers = [ArcRotateCamera, MeshCamera];
         }, 10000);
 
         it('should load without error', () => {
