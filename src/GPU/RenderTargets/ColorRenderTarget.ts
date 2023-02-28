@@ -10,28 +10,6 @@ export type ColorRenderTargetParams = {
 export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     extends RenderPassTarget<F, U>
 {
-    static createForRenderpass<U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue, F extends GPUTextureFormat = GPUTextureFormat>(
-        textureOptions:Texture2DParams<F, U>,
-        clearValue: GPUColor,
-        textureViewDescriptor?: GPUTextureViewDescriptor,
-        blend?:GPUBlendState,
-        writeMask: GPUColorWriteFlags = 0xF,
-        context?: GPUCanvasContext
-
-    ) {
-        return () => {
-            const options: ColorRenderTargetParams = {
-                clearValue,
-                blend
-            }
-            return new ColorRenderTarget<F, U>(textureOptions,
-                {
-                    writeMask,
-                    context,
-                    textureViewDescriptor,
-                }, options)
-        }
-    }
     #clearValue: GPUColor;
     public blend: GPUBlendState | undefined
     constructor(

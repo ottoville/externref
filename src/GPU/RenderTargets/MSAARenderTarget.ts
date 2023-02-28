@@ -5,29 +5,6 @@ import type { RenderTargetTextureUsageValue } from "../Texture.js";
 
 export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     extends ColorRenderTarget<F, U> {
-    static override createForRenderpass<U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue, F extends GPUTextureFormat = GPUTextureFormat>(
-        textureOptions:Texture2DParams<F, U>,
-        clearValue: GPUColor,
-        textureViewDescriptor?: GPUTextureViewDescriptor,
-        blend?:GPUBlendState,
-        writeMask: GPUColorWriteFlags = 0xF,
-        context?: GPUCanvasContext
-    ) {
-        return () => {
-            const rt = new MSAARenderTarget(
-                textureOptions
-                , {
-                    context,
-                    writeMask,
-                    textureViewDescriptor
-                }, {
-                    clearValue,
-                    blend
-                }
-            );
-            return rt;
-        }
-    }
     readonly resolveTexture?: RenderPassTarget<F, U>
     readonly #resolveView: () => GPUTextureView;
     constructor(

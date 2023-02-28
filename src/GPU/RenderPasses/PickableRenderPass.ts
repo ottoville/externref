@@ -69,16 +69,18 @@ export class PickableRenderPass<T extends {
             ]);
 
         } else {
-            const offset = this.#rowBytes % 256;
-            if (offset !== 0)
-                this.#rowBytes = this.#rowBytes - offset + 256
-            this.#pickBuffer = this.gpu.device.createBuffer({
-                size: this.#rowBytes * this.size.height,
-                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-                label: 'pickBuffer'
-            });
+            this.#pickBuffer = this.#createPickBuffer()
         }
-
+    }
+    #createPickBuffer() {
+        const offset = this.#rowBytes % 256;
+        if (offset !== 0)
+            this.#rowBytes = this.#rowBytes - offset + 256
+        return this.gpu.device.createBuffer({
+            size: this.#rowBytes * this.size.height,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+            label: 'pickBuffer'
+        });
     }
     override resize(width: number, height: number) {
         super.resize(width, height);
@@ -91,15 +93,7 @@ export class PickableRenderPass<T extends {
                 }, 1000);
             }
             this.#rowBytes = this.size.width * 4;
-            const offset = this.#rowBytes % 256;
-            if (offset !== 0)
-                this.#rowBytes = this.#rowBytes - offset + 256
-
-            this.#pickBuffer = this.gpu.device.createBuffer({
-                size: this.#rowBytes * this.size.height,
-                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-                label: 'pickBuffer'
-            });
+            this.#pickBuffer = this.#createPickBuffer();
         }
     }
 
