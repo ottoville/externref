@@ -22,15 +22,15 @@ export class Capsule extends OctaSphere {
     }
     override create_collider() {
         if (this.height > 0 && this.width === 0 && this.depth === 0) {
-            const radius = (1 / (1 + this.height * 0.5)) * this.scale_x;
+            const radius = this.scale_x/(this.height+1);
             return engine.rust.create_capsule_collider(this.scale_y - radius, radius, 0, false);
         }
         else if (this.height === 0 && this.width > 0 && this.depth === 0) {
-            const radius = (1 / (1 + this.width * 0.5)) * this.scale_x;
+            const radius = this.scale_x/(this.width+1);
             return engine.rust.create_capsule_collider(this.scale_y - radius, radius, 1, false);
         }
         else {
-            const radius = (1 / (1 + this.depth * 0.5)) * this.scale_x;
+            const radius = this.scale_x/(this.depth+1);
             return engine.rust.create_capsule_collider(this.scale_y - radius, radius, 2, false);
         }
     }

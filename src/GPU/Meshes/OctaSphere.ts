@@ -2,6 +2,16 @@
 import { TerraVector3, TerraVector4, Quaternion } from "../../Math.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 
+type Patch = {
+    verticesForPatch: TerraVector3[];
+    patchPointsA: number[];
+    patchPointsB: number[];
+    patchPointsC: number[];
+    quat: {
+        euler: number[];
+        quaternion: Quaternion | null;
+    };
+};
 
 const HALF_PI = Math.PI * 0.5;
 // Clone patch
@@ -23,7 +33,7 @@ pathchesQuats.forEach(patch =>
 const tmpVector = new TerraVector3();
 const tmpQuaternion = new TerraVector4() as Quaternion;
 
-function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height = 0, depth = 0): readonly [vertices: Float32Array, indices: Uint32Array] {
+function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, halfHeight = 0, halfDepth = 0): readonly [vertices: Float32Array, indices: Uint32Array] {
     const n = 2 ** (num_subdivisions + 1)
 
     const num_faces_per_patch = n * ((n + 1) / 2);
@@ -41,17 +51,17 @@ function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height
 
     // First patch tessellation
     let firstIndex = 0;
-    if (width > 0)
+    if (halfWidth > 0)
         indicesCount += (n - 1) * 6 * 4;
-    if (height > 0)
+    if (halfHeight > 0)
         indicesCount += (n - 1) * 6 * 4
-    if (depth > 0)
+    if (halfDepth > 0)
         indicesCount += (n - 1) * 6 * 4
 
 
-    if (width > 0 && height > 0 && depth > 0) {
+    if (halfWidth > 0 && halfHeight > 0 && halfDepth > 0) {
         indicesCount += 36; //6*6
-    } else if ((width && height) || (width && depth) || (height && depth)) {
+    } else if ((halfWidth && halfHeight) || (halfWidth && halfDepth) || (halfHeight && halfDepth)) {
         indicesCount += 12; //2*6
     }
 
@@ -195,7 +205,7 @@ function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height
             indices[indices_count++] = indices[j * 3 + 1]! + (i + 1) * num_faces_per_patch;
             indices[indices_count++] = indices[j * 3 + 2]! + (i + 1) * num_faces_per_patch;
         }
-        return { verticesForPatch, patchPointsA, patchPointsB, patchPointsC, quat };
+        return { verticesForPatch, patchPointsA, patchPointsB, patchPointsC, quat } as Patch;
     });
     patches.unshift(firstPatch)
 
@@ -203,50 +213,47 @@ function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height
     for (let i = 0; i < verticesAndNormals.length; i = i + verticesStride) {
         verticesAndNormals.copyWithin(i + 3, i, i + 3);
     }
-
-    if (width > 0) {
+    const moveTuple = (
+        tuple: readonly [Patch, Patch],
+        axel: 0 | 1 | 2,
+        half: number
+    ) => {
+        tuple[0].verticesForPatch.forEach(vertex => {
+            vertex[axel] -= half;
+        });
+        tuple[1].verticesForPatch.forEach(vertex => {
+            vertex[axel] += half;
+        })
+    }
+    let idx: 0 | 1
+    const ConstructDepthAndWidth = (
+        tuples: readonly [readonly [Patch, Patch], readonly [Patch, Patch], readonly [Patch, Patch], readonly [Patch, Patch]]) => {
+        tuples.forEach((tuple, i) => {
+            moveTuple(tuple, 0, halfWidth);
+            idx = i % 2 as 0 | 1;
+            const leftPatch = tuple[idx ? 0 : 1];
+            indices_count = drawConnection(i < 2 ? leftPatch.patchPointsB : leftPatch.patchPointsC, indices, indices_count, tuple[idx].patchPointsA)
+        });
+    }
+    if (halfWidth > 0) {
         const widthTuples = [
             [patches[2]!, patches[1]!],
             [patches[3]!, patches[0]!],
             [patches[6]!, patches[5]!],
             [patches[7]!, patches[4]!]
         ] as const;
-        const halfWidth = width * 0.5;
-        widthTuples.forEach((tuple, i) => {
-            tuple[0].verticesForPatch.forEach(vertex => {
-                vertex[0] -= halfWidth;
-            });
-            tuple[1].verticesForPatch.forEach(vertex => {
-                vertex[0] += halfWidth;
-            })
-            const idx1 = i % 2 as 0 | 1;
-            const leftPatch = tuple[idx1 === 0 ? 1 : 0];
-            indices_count = drawConnection(i < 2 ? leftPatch.patchPointsB : leftPatch.patchPointsC, indices, indices_count, tuple[idx1].patchPointsA)
-        })
+        ConstructDepthAndWidth(widthTuples);
     }
-    if (depth > 0) {
-        const halfDepth = depth * 0.5;
+    if (halfDepth > 0) {
         const depthTuples = [
             [patches[1]!, patches[0]!],
             [patches[2]!, patches[3]!],
             [patches[5]!, patches[4]!],
             [patches[6]!, patches[7]!]
         ] as const;
-
-        depthTuples.forEach((tuple, i) => {
-            tuple[0].verticesForPatch.forEach(vertex => {
-                vertex[2] -= halfDepth;
-            });
-            tuple[1].verticesForPatch.forEach(vertex => {
-                vertex[2] += halfDepth;
-            })
-            const idx1 = i % 2 as 0 | 1;
-            const leftPatch = tuple[idx1 === 0 ? 1 : 0];
-            indices_count = drawConnection(i < 2 ? leftPatch.patchPointsB : leftPatch.patchPointsC, indices, indices_count, tuple[idx1].patchPointsA)
-        })
+        ConstructDepthAndWidth(depthTuples);
     }
-    if (height > 0) {
-        const halfHeight = height * 0.5;
+    if (halfHeight > 0) {
         const heightTuples = [
             [patches[4]!, patches[0]!],
             [patches[5]!, patches[1]!],
@@ -255,23 +262,16 @@ function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height
         ] as const;
 
         heightTuples.forEach((tuple, i) => {
-            tuple[0].verticesForPatch.forEach(vertex => {
-                vertex[1] -= halfHeight;
-            });
-            tuple[1].verticesForPatch.forEach(vertex => {
-                vertex[1] += halfHeight;
-            })
-            const idx = i % 2 as 0 | 1;
-            const leftPoints = idx === 0 ? tuple[1].patchPointsC : tuple[0].patchPointsB;
-            const rightPoints = idx === 0 ? tuple[0].patchPointsB : tuple[1].patchPointsC;
-
+            moveTuple(tuple, 1, halfHeight);
+            idx = i % 2 as 0 | 1;
+            const [leftPoints, rightPoints] = idx ? [tuple[0].patchPointsB, tuple[1].patchPointsC] : [tuple[1].patchPointsC, tuple[0].patchPointsB]
             indices_count = drawConnection(leftPoints, indices, indices_count, rightPoints, true);
         })
     }
 
     // Normalize coordinates
-    if (width > 0 || height > 0 || depth > 0) {
-        const max = 1 + Math.max(width, height, depth) * 0.5;
+    if (halfWidth > 0 || halfHeight > 0 || halfDepth > 0) {
+        const max = 1 + Math.max(halfWidth, halfHeight, halfDepth);
         if (max !== 1) {
             verts.forEach(vert => {
                 vert[0] /= max;
@@ -281,7 +281,7 @@ function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height
         }
     }
 
-    if (width > 0 && depth > 0) {
+    if (halfWidth > 0 && halfDepth > 0) {
         indices[indices_count++] = cornerPointsWidthDepth[0]!;
         indices[indices_count++] = cornerPointsWidthDepth[1]!;
         indices[indices_count++] = cornerPointsWidthDepth[2]!;
@@ -298,7 +298,7 @@ function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height
         indices[indices_count++] = cornerPointsWidthDepth[6]!;
         indices[indices_count++] = cornerPointsWidthDepth[4]!;
     }
-    if (width > 0 && height > 0) {
+    if (halfWidth > 0 && halfHeight > 0) {
         indices[indices_count++] = cornerPointsWidthHeight[0]!;
         indices[indices_count++] = cornerPointsWidthHeight[1]!;
         indices[indices_count++] = cornerPointsWidthHeight[2]!;
@@ -315,7 +315,7 @@ function tessellate_octasphere_patch(num_subdivisions: number, width = 0, height
         indices[indices_count++] = cornerPointsWidthHeight[7]!;
         indices[indices_count++] = cornerPointsWidthHeight[6]!;
     }
-    if (depth > 0 && height > 0) {
+    if (halfDepth > 0 && halfHeight > 0) {
         indices[indices_count++] = cornerPointsDepthHeight[2]!;
         indices[indices_count++] = cornerPointsDepthHeight[1]!;
         indices[indices_count++] = cornerPointsDepthHeight[0]!;
