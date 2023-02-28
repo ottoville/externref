@@ -7,8 +7,13 @@ import type { GPU } from '../../../GPU.js';
 import { getHeightAtCoordinates } from '../getHeightAtCoordinates.js';
 
 type BindLayouts = readonly [
-    BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
-    BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
+    BGLayout<[
+        BufLayout<ShaderStage.COMPUTE, typeof IntArray>,
+        BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>,
+        BufLayout<ShaderStage.COMPUTE, typeof PositionAndRotateArray>,
+        BufLayout<ShaderStage.COMPUTE, typeof FloatArray>
+    ]>,
+    BGLayout<[BufLayout<ShaderStage.COMPUTE, typeof Vec2Array>]>,
 ];
 export class GrassHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
     constructor(settings: typeof Terrain.settings, gpu: GPU) {
@@ -170,15 +175,15 @@ export class GrassHeightAtCoordinates extends ComputeShader<{ main: PipelineLayo
       fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
       
       
-          let flatpos:vec2<f32> = ${positions.variableName}.vectors[GlobalInvocationID.x]; 
+          let flatpos:vec2<f32> = ${positions.prop('vectors')}[GlobalInvocationID.x]; 
           let y:f32 = getHeightAtCoordinates(flatpos);
-          ${positionAndRotate.variableName}.arr[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
-          ${positionAndRotate.variableName}.arr[GlobalInvocationID.x].rotation = 3.145 * rand(flatpos);
+          ${positionAndRotate.prop('arr')}[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
+          ${positionAndRotate.prop('arr')}[GlobalInvocationID.x].rotation = 3.145 * rand(flatpos);
           var index:u32 = GlobalInvocationID.x * u32(4);
-          ${shapes.variableName}.numbers[index] = 0.4 + 0.6 * rand(vec2<f32>(flatpos.yx)); // x:scale
-          ${shapes.variableName}.numbers[index + u32(1)] = PI *0.2 * rand(vec2<f32>(flatpos.x, flatpos.y + f32(GlobalInvocationID.x))); // baseAngle
-          ${shapes.variableName}.numbers[index + u32(2)] = PI *0.2 * rand(vec2<f32>(flatpos.xy)); // z:curve
-          ${shapes.variableName}.numbers[index + u32(3)] = snoise(vec2<f32>(flatpos.xy)); //  w:color
+          ${shapes.prop('numbers')}[index] = 0.4 + 0.6 * rand(vec2<f32>(flatpos.yx)); // x:scale
+          ${shapes.prop('numbers')}[index + u32(1)] = PI *0.2 * rand(vec2<f32>(flatpos.x, flatpos.y + f32(GlobalInvocationID.x))); // baseAngle
+          ${shapes.prop('numbers')}[index + u32(2)] = PI *0.2 * rand(vec2<f32>(flatpos.xy)); // z:curve
+          ${shapes.prop('numbers')}[index + u32(3)] = snoise(vec2<f32>(flatpos.xy)); //  w:color
           return;
       }
         `;

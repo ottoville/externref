@@ -2,12 +2,13 @@
 // See Simple.frag.ts for pickable counterpart
 // See SingleColor.frag.ts for pickable shared single color for all vertices
 
+import { BGLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 
-export class ColorFragShader extends FragmentShader<
-    { main: PipelineLayout }> {
-    constructor(pipelineLayout: PipelineLayout) {
+export class ColorFragShader<B extends readonly BGLayout[]> extends FragmentShader<
+    { main: PipelineLayout }, B> {
+    constructor(pipelineLayout: PipelineLayout<B>) {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {

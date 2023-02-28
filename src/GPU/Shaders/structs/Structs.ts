@@ -1,3 +1,5 @@
+import { BufLayout, ShaderStage } from "../../BindGroupLayout.js";
+
 export class Struct<T extends { [index: string]: [size: string, type: string] } = { [index: string]: [size: string, type: string] }> {
     constructor(public name: string, public properties: T, public depedencies?: Struct[]) {
 
@@ -104,6 +106,15 @@ export const Clusters = new Struct('Clusters',
     },
     [ClusterBounds]
 )
+export const UpdateClustersBufferLayout = new BufLayout(
+    {
+        visibility: ShaderStage.COMPUTE,
+        buffer: {
+            type: "storage",
+            hasDynamicOffset: false,
+            minBindingSize: 7962624
+        }
+    }, 'clusters', Clusters);
 export const ViewUniforms = new Struct('ViewUniforms', {
     modelViewProjectionMatrix: ['', 'mat4x4<f32>'],
     view: ['', 'mat4x4<f32>'],

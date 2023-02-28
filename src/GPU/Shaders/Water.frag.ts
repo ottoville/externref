@@ -1,13 +1,7 @@
-import { BGLayout, BufLayout, SampLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from "GPU.js"
-type BindLayouts = [
-    GPU["sizeBindGroupLayout"],
-    GPU["uniformBindGroupLayoutWithTime"],
-    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
-    BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>];
-
+type BindLayouts = GPU["bindGroupTextureWater"]["bindGroupLayouts"]
 export class WaterFragShader extends FragmentShader<
     { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
     constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
@@ -16,7 +10,7 @@ export class WaterFragShader extends FragmentShader<
             entryPoints: {
                 main: pipelineLayout,
                 pick: pipelineLayout
-            }, label: 'Simple.frag'
+            }, label: 'Water.frag'
         });
         this.createWGSL((
             [/*uniforms*/,],
@@ -41,7 +35,7 @@ export class WaterFragShader extends FragmentShader<
         var output:Output;
         let uv : vec2<f32> = vec2<f32>(v_uv.x/v_uv.w , (v_uv.y/v_uv.w))*0.5+vec2<f32>(0.5,0.5);
       
-        output.Diffuse=textureSample(${diffuseTexture.variableName}, ${mySampler.variableName}, uv);
+        output.Diffuse=textureSample(${diffuseTexture}, ${mySampler}, uv);
       
         return output;
       }

@@ -2,11 +2,18 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
-import { Clusters, Lights, MeshArray, ViewUniforms } from './structs/Structs.js';
+import { Clusters, Lights, MeshArray, UpdateClustersBufferLayout, ViewUniforms } from './structs/Structs.js';
 
 type BindLayouts = readonly [
-    BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
-    BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>];
+    BGLayout<[
+        BufLayout<ShaderStage.COMPUTE, typeof MeshArray>,
+        BufLayout<ShaderStage.COMPUTE, typeof Lights>,
+        BufLayout<ShaderStage.COMPUTE, typeof Lights>
+    ]>,
+    BGLayout<[
+        BufLayout<ShaderStage.COMPUTE, typeof Clusters>,
+        BufLayout<ShaderStage.COMPUTE, typeof ViewUniforms>
+    ]>];
 export class UpdateView extends ComputeShader<
     { main: PipelineLayout }, BindLayouts> {
     constructor(
@@ -42,15 +49,7 @@ export class UpdateView extends ComputeShader<
                     }, 'directional_lights', Lights)
             ),
             new BGLayout(gpu, 'UpdateClustersLayout',
-                new BufLayout(
-                    {
-                        visibility: ShaderStage.COMPUTE,
-                        buffer: {
-                            type: "storage",
-                            hasDynamicOffset: false,
-                            minBindingSize: 7962624
-                        }
-                    }, 'clusters', Clusters),
+                UpdateClustersBufferLayout,
                 new BufLayout(
                     {
                         visibility: ShaderStage.COMPUTE,
@@ -108,26 +107,26 @@ export class UpdateView extends ComputeShader<
         
           
           var lightCount=0u;
-          for(var pointerIndex:u32=0u; pointerIndex < ${directional_lights.variableName}.length; pointerIndex = pointerIndex + 1u) {
-            let meshIndex = ${directional_lights.variableName}.pointers[pointerIndex];
-            let mesh=${meshes.variableName}.mesh[meshIndex];
-            ${clusters.variableName}.lights[tileIndex*63u + lightCount] = meshIndex;
+          for(var pointerIndex:u32=0u; pointerIndex < ${directional_lights.prop('length')}; pointerIndex = pointerIndex + 1u) {
+            let meshIndex = ${directional_lights.prop('pointers')}[pointerIndex];
+            let mesh=${meshes.prop('mesh')}[meshIndex];
+            ${clusters.prop('lights')}[tileIndex*63u + lightCount] = meshIndex;
             lightCount=lightCount+1u;
             if(lightCount==63u) {
               break;
             }
           }
-          let cluster=${clusters.variableName}.bounds[tileIndex];
-          for(var pointerIndex:u32=0u; pointerIndex < ${point_lights.variableName}.length; pointerIndex = pointerIndex + 1u) {
-            let meshIndex = ${point_lights.variableName}.pointers[pointerIndex];
-            let mesh=${meshes.variableName}.mesh[meshIndex];
+          let cluster=${clusters.prop('bounds')}[tileIndex];
+          for(var pointerIndex:u32=0u; pointerIndex < ${point_lights.prop('length')}; pointerIndex = pointerIndex + 1u) {
+            let meshIndex = ${point_lights.prop('pointers')}[pointerIndex];
+            let mesh=${meshes.prop('mesh')}[meshIndex];
             // TODO: Preselect lights with CPU
-            let lightViewPos = ${viewUniforms.variableName}.view * vec4<f32>(mesh.transformation[3].xyz, 1.0);
+            let lightViewPos = ${viewUniforms.prop('view')} * vec4<f32>(mesh.transformation[3].xyz, 1.0);
             let sqDist = sqDistPointAABB(lightViewPos.xyz, cluster.minAABB.xyz, cluster.maxAABB.xyz);
         
             if (sqDist <= mesh.point_light_squared) {
               // Light affects this cluster. Add it to the list.
-              ${clusters.variableName}.lights[tileIndex*63u + lightCount] = meshIndex;
+              ${clusters.prop('lights')}[tileIndex*63u + lightCount] = meshIndex;
               lightCount=lightCount+1u;
               //TODO: lightCount might already be max because of directional lights
               if(lightCount==63u) {
@@ -136,7 +135,7 @@ export class UpdateView extends ComputeShader<
             }
         
           }
-          ${clusters.variableName}.lightsCount[tileIndex] = lightCount;
+          ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
         }
         
       `;

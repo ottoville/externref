@@ -1,13 +1,8 @@
-import { BGLayout, BufLayout, SampLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import type { GPU } from "GPU.js"
 
-type BindLayouts = [
-    GPU["sizeBindGroupLayout"],
-    GPU["uniformBindGroupLayoutWithTime"],
-    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
-    BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>];
+type BindLayouts = GPU["bindGroupTextureWater"]["bindGroupLayouts"]
 
 export class WaterVertShader extends VertexShader<
     { main: PipelineLayout },

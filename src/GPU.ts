@@ -18,7 +18,7 @@ import { UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
 import { ClustersComp } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderPipeline } from "./GPU/RenderPipeline2.js";
-import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct, Struct } from "./GPU/Shaders/structs/Structs.js";
+import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct } from "./GPU/Shaders/structs/Structs.js";
 import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 import { UIFragShader } from "./GPU/Shaders/UI.frag.js";
 declare const engine: Engine;
@@ -114,7 +114,8 @@ export class GPU {
 
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
-    readonly sizeBindGroupLayout: BGLayout<[BufLayout<number, Struct<{ screenDimensions: [string, string]; screendimensions_ratio: [string, string]; }>>]>;
+    readonly sizeBindGroupLayout: BGLayout<[
+        BufLayout<number, typeof Uniforms>]>;
 
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     readonly bindGroupTextureWater: SharedPipelineLayout<[

@@ -1,25 +1,16 @@
-import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-import type { GPU } from '../../GPU.js'
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
-type BindLayouts = readonly [
-    GPU["sizeBindGroupLayout"],
-    GPU["uniformBindGroupLayoutWithTime"],
-    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
-    BGLayout<[
-        BufLayout<ShaderStage.VERTEX>,
-        BufLayout<ShaderStage.VERTEX>,
-    ]>
-]
+import type { BindLayoutsGroundHeight } from './PlaneAtGroundHeight.vert.js';
+
 export class HelperVertShader extends VertexShader<
     { main: PipelineLayout },
     [],
-    BindLayouts> {
+    BindLayoutsGroundHeight> {
     constructor(
         settings: typeof Terrain.settings,
-        pipelineLayout: PipelineLayout<BindLayouts>) {
+        pipelineLayout: PipelineLayout<BindLayoutsGroundHeight>) {
 
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
@@ -59,7 +50,7 @@ export class HelperVertShader extends VertexShader<
  
      var output:Output;
  
-     var angle:f32 = (f32(${time.variableName}.time) * 0.001) + f32(instanceIdx) * angleStep;
+     var angle:f32 = (f32(${time.prop('time')}) * 0.001) + f32(instanceIdx) * angleStep;
      var c:f32 = cos(angle);
      var s:f32 = sin(angle);
      var position:vec3<f32> =vec3<f32>(vertices[VertexIndex].x,1.5,vertices[VertexIndex].y);
@@ -67,9 +58,9 @@ export class HelperVertShader extends VertexShader<
      var offset:vec2<f32> = rotated + vec2<f32>(10.0 * c, 10.0 * s);
  
  
-     var worldPos:vec4<f32> = ${world.variableName}.transformation * vec4<f32>(offset.x, position.y, offset.y, 1.0);
+     var worldPos:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(offset.x, position.y, offset.y, 1.0);
      worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 3.0;
-     output.Position = ${scene.variableName}.modelViewProjection * worldPos;
+     output.Position = ${scene.prop('modelViewProjection')} * worldPos;
      output.color = vec3<f32>(1.0,1.0,1.0);
      return output;
  }

@@ -2,11 +2,12 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js'
+import { MeshUniforms } from './structs/Structs.js';
 
 type BindLayouts = readonly [
     GPU["sizeBindGroupLayout"],
     GPU["uniformBindGroupLayoutWithTime"],
-    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
+    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,
 
 ]
 export class Plane extends VertexShader<
@@ -14,17 +15,14 @@ export class Plane extends VertexShader<
     [GPUVertexBufferLayout],
     BindLayouts> {
     constructor(
-        pipelineLayout: PipelineLayout<BindLayouts>,
-        buffers: GPUVertexBufferLayout) {
-        const entryPoints = {
-            main: pipelineLayout
-        }
+        pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            entryPoints,
+            entryPoints: {
+                main: pipelineLayout
+            },
             label: 'plane.vert'
         }, [buffers]);
-
         this.createWGSL((
             [/*uniforms*/,],
             [scene,/*time, clusters_array, meshes, projection*/],
@@ -42,8 +40,8 @@ struct Output {
 @vertex
 fn main(@location(0) position : vec3<f32>) -> Output {
    var output:Output;
-   var worldPos:vec4<f32> = ${world.variableName}.transformation * vec4<f32>(position.xyz, 1.0);
-   output.Position = ${scene.variableName}.modelViewProjection * worldPos;
+   var worldPos:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(position.xyz, 1.0);
+   output.Position = ${scene.prop('modelViewProjection')} * worldPos;
    output.color = vec3<f32>(1.0,1.0,1.0);
    return output;
 }

@@ -2,10 +2,14 @@ import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
 import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
-import { Clusters, ProjectionStruct } from './structs/Structs.js';
+import { Clusters, ProjectionStruct, UpdateClustersBufferLayout } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js'
-type BindLayouts = readonly [GPU["sizeBindGroupLayout"],
-    BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>];
+type BindLayouts = readonly [
+    GPU["sizeBindGroupLayout"],
+    BGLayout<[
+        BufLayout<ShaderStage.COMPUTE, typeof Clusters>,
+        BufLayout<ShaderStage.COMPUTE, typeof ProjectionStruct>]
+    >];
 export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
     constructor(
         sizeGroup: GPU["sizeBindGroupLayout"],
@@ -13,15 +17,7 @@ export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, BindLa
         const bindLayouts = [
             sizeGroup,
             new BGLayout(sizeGroup.gpu, 'CreateClustersLayout2',
-                new BufLayout(
-                    {
-                        visibility: ShaderStage.COMPUTE,
-                        buffer: {
-                            type: "storage",
-                            hasDynamicOffset: false,
-                            minBindingSize: 7962624
-                        }
-                    }, 'clusters', Clusters),
+                UpdateClustersBufferLayout,
                 new BufLayout(
                     {
                         visibility: ShaderStage.COMPUTE,
@@ -52,14 +48,14 @@ export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, BindLa
     
 fn clipToView(clip : vec4<f32>) -> vec4<f32> {
 //View space transform
- let view = ${screentoview.variableName}.inversed_projection * clip;
+ let view = ${screentoview.prop('inversed_projection')} * clip;
   //Perspective projection
  return view / view.w;
 }
 
 fn screen2View(screen : vec4<f32>) -> vec4<f32> {
   //Convert to NDC
- let texCoord = screen.xy /  ${uniforms.variableName}.screenDimensions;
+ let texCoord = screen.xy /  ${uniforms.prop('screenDimensions')};
      //Convert to clipSpace
 
  let clip = vec4<f32>(vec2<f32>(texCoord.x, 1.0 - texCoord.y) * 2.0 - 1.0, screen.z, screen.w);
@@ -90,8 +86,8 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
  let tileIndex = global_id.x +
                  global_id.y * tileCount.x +
                  global_id.z * tileCount.x * tileCount.y;
- let tileSize = vec2<f32>(${uniforms.variableName}.screenDimensions.x / f32(tileCount.x),
-                          ${uniforms.variableName}.screenDimensions.y / f32(tileCount.y));
+ let tileSize = vec2<f32>(${uniforms.prop('screenDimensions')}.x / f32(tileCount.x),
+                          ${uniforms.prop('screenDimensions')}.y / f32(tileCount.y));
  //Calculating the min and max point in screen space
 
  let maxPoint_sS = vec4<f32>(vec2<f32>(f32(global_id.x+1u), f32(global_id.y+1u)) * tileSize, 1.0, 1.0);
@@ -100,16 +96,16 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
  let maxPoint_vS = screen2View(maxPoint_sS).xyz;
  let minPoint_vS = screen2View(minPoint_sS).xyz;
  //Near and far values of the cluster in view space
- let tileNear = -${screentoview.variableName}.zNear * pow(${screentoview.variableName}.zFar/ ${screentoview.variableName}.zNear, f32(global_id.z)/f32(tileCount.z));
- let tileFar = -${screentoview.variableName}.zNear * pow(${screentoview.variableName}.zFar/ ${screentoview.variableName}.zNear, f32(global_id.z+1u)/f32(tileCount.z));
+ let tileNear = -${screentoview.prop('zNear')} * pow(${screentoview.prop('zFar')}/ ${screentoview.prop('zNear')}, f32(global_id.z)/f32(tileCount.z));
+ let tileFar = -${screentoview.prop('zNear')} * pow(${screentoview.prop('zFar')}/ ${screentoview.prop('zNear')}, f32(global_id.z+1u)/f32(tileCount.z));
  //Finding the 4 intersection points made from the maxPoint to the cluster near/far plane
  let minPointNear = lineIntersectionToZPlane(eyePos, minPoint_vS, tileNear);
  let minPointFar = lineIntersectionToZPlane(eyePos, minPoint_vS, tileFar);
  let maxPointNear = lineIntersectionToZPlane(eyePos, maxPoint_vS, tileNear);
  let maxPointFar = lineIntersectionToZPlane(eyePos, maxPoint_vS, tileFar);
  //Getting the 
- ${clusters.variableName}.bounds[tileIndex].minAABB = vec4<f32>(min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar)),0);
- ${clusters.variableName}.bounds[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar)),0);
+ ${clusters.prop('bounds')}[tileIndex].minAABB = vec4<f32>(min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar)),0);
+ ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar)),0);
 }
 
  `;
