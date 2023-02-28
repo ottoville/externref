@@ -7,12 +7,12 @@ import type { Engine } from "../engine.js";
 import { TextureUsageEnums } from "../GPU/Texture.js";
 import { TextureView } from "../GPU/TextureView.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
-import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
+import type { TopMenuButtonProps } from "../ui/topMenu.js";
+import { Button, ButtonProps } from "../ui/Button.js";
 import { UINode } from "../ui/UINode.js";
 import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
-import type { TopMenuButtonProps } from "../ui/topMenu.js";
 declare const engine: Engine;
-export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMenuButtonProps> {
+export class Zones extends Button<object, ButtonProps & TopMenuButtonProps> {
     #PT?: paintTexture;
     #size = 5120;
     readonly #ratio: number //texture coordinates
@@ -20,7 +20,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
     scene: Scene;
     #wasOpen = false;
     constructor(
-        props: UIRectangleNodeProps & TopMenuButtonProps,
+        props: ButtonProps & TopMenuButtonProps,
     ) {
         super(props);
         const initialScene = props.terrain.scenes[0];
@@ -85,9 +85,9 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                 throw (new Error('staticScene not found'));
             }
             this.props.terrain.mesh.setTextureView(new TextureView(this.#zoneTexture));
-            this.props.terrain.mesh.set_scenes(staticScene.id)
+            this.props.terrain.mesh.set_scenes(staticScene.id);
             return [
-                UINode.createCtrProps(UIRectangleNode,
+                UINode.createCtrProps(Button,
                     {
                         ...this.props,
                         label: 'residentalButton',

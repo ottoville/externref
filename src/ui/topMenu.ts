@@ -1,17 +1,15 @@
 import type { GPU } from "../GPU.js"
 import type { Terrain } from "../world/terrain.js";
 import type { Engine } from "../engine.js";
-import { UIRectangleNodeProps } from "./UIRectangleNode.js";
 import { UINode } from "./UINode.js";
-import { Zones } from "../tools/Zones.js";
 import { TerrainToolButton } from "../tools/TerrainTool.js";
 import { PlantsUI } from "../tools/plantsUI.js";
 import { Anchor, NumericUnit, VerticalPosition } from "./UIRectangle.js";
+import { Zones } from "../tools/Zones.js";
 declare const engine: Engine;
 
 type MenuState = {
     menuOpenName: string | undefined,
-    bitmap: ImageBitmap | undefined,
 };
 const keyBoardMap: string[] = []
 
@@ -27,15 +25,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
         super(props);
         this.state = {
             menuOpenName: undefined,
-            bitmap: undefined,
         }
-        fetch('/assets/button.webp').then(async asset => {
-            const bitmap = await createImageBitmap(await asset.blob());
-            this.setState({ bitmap });
-        }).catch(err => {
-            engine.showError(err);
-        })
-
         engine.addInputListener('keydown', this, this.#inputListener);
     }
     menuTree = { level: 0 }
@@ -62,28 +52,18 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
     }
     render() {
         const props = this.props;
-        if (!this.state.bitmap)
-            return null;
         const commonProps =
         {
             gpu: props.gpu,
             terrain: props.terrain,
-            bitmap: this.state.bitmap,
             onClick: this.setActiveMenu,
-            borderSize: {
-                width: [8, NumericUnit.px],
-                height: 'auto',
-            } as const,
             subMenuPosition: {
                 value: [70, NumericUnit.px],
                 anchor: Anchor.TOP
-            } as const
+            } as const,
         }
         keyBoardMap.length = 0;
-        const menus: {
-            ctr: typeof PlantsUI | typeof TerrainToolButton | typeof Zones,
-            props: UIRectangleNodeProps
-        }[] =
+        const menus =
             [
                 UINode.createCtrProps(PlantsUI, {
                     ...commonProps,
@@ -124,6 +104,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                 UINode.createCtrProps(Zones,
                     {
                         ...commonProps,
+                        menuTree: this.menuTree,
                         open: this.state.menuOpenName === 'Zones',
                         label: 'Zones',
                         scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
@@ -137,7 +118,6 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                             }
                         },
                         text: 'Zones (3)',
-                        menuTree: this.menuTree,
                     }
                 ),
             ];
@@ -153,7 +133,6 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
     }
     override destroy(): void {
         super.destroy();
-        this.state.bitmap?.close();
         engine.removeInputListener('keydown', this, this.#inputListener)
     }
 }

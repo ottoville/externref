@@ -1,15 +1,9 @@
 import type { GPU } from "../GPU.js"
-import type { Engine } from "../engine.js";
-import { UIRectangleNode } from "./UIRectangleNode.js";
 import { UINode } from "./UINode.js";
 import { Anchor, NumericUnit } from "./UIRectangle.js";
-declare const engine: Engine;
+import { Button } from "./Button.js";
 
-type MenuState = {
-    bitmap: ImageBitmap | undefined,
-};
-
-export class createSettingsMenu extends UINode<{ gpu: GPU }, MenuState> {
+export class createSettingsMenu extends UINode<{ gpu: GPU }> {
     static addKeydownListener(gpu: GPU) {
         document.addEventListener('keydown', function openSettings(e: KeyboardEvent) {
             if (e.code === 'Escape') {
@@ -23,33 +17,11 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }, MenuState> {
     constructor(props: { gpu: GPU }) {
         super(props);
         this.gpu = props.gpu;
-        this.state = {
-            bitmap: undefined,
-        }
-        fetch('/assets/button.webp').then(async asset => {
-            const bitmap = await createImageBitmap(await asset.blob());
-            this.setState({ bitmap });
-        }).catch(err => {
-            engine.showError(err);
-        })
     }
-    menuTree = { level: 0 }
     render() {
-        const props = this.props;
-        if (!this.state.bitmap)
-            return null;
-        const commonProps =
-        {
-            gpu: props.gpu,
-            bitmap: this.state.bitmap,
-            borderSize: {
-                width: [8, NumericUnit.px],
-                height: 'auto',
-            } as const
-        }
         return [
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.props.gpu,
                 label: 'MSAA',
                 scale: { min_width: 200, y: 50, unit: NumericUnit.px },
                 translate: {
@@ -63,8 +35,8 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }, MenuState> {
                 },
                 text: 'Toggle MSAA',
             }),
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.props.gpu,
                 label: 'Close',
                 scale: { min_width: 200, y: 50, unit: NumericUnit.px },
                 translate: {
@@ -85,7 +57,6 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }, MenuState> {
     }
     override destroy(): void {
         super.destroy();
-        this.state.bitmap?.close();
         createSettingsMenu.addKeydownListener(this.gpu)
     }
 }

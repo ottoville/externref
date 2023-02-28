@@ -105,7 +105,7 @@ export abstract class UIRectangle {
                 copySource.height > this.texture.size.height) {
                 this.texture.destroy()
                 this.texture = undefined;
-                this.drawable.setVertexBuffer(0, this.updateBoundingBoxAndVerticesSuper());
+                this.drawable.setVertexBuffer(0, this.#updateBoundingBoxAndVerticesSuper());
             }
         }
         if (!this.texture) {
@@ -158,7 +158,7 @@ export abstract class UIRectangle {
         b[1] = YPosition
 
     }
-    updateBoundingBoxAndVerticesSuper() {
+    #updateBoundingBoxAndVerticesSuper() {
         const { scale, renderPass, originalAspectRatio, translate } = this.props
         if (this.props.translate.x.value[1] === NumericUnit.px || this.props.translate.y.value[1] === NumericUnit.px) {
             const buff = new ArrayBuffer(8);
@@ -314,7 +314,7 @@ export abstract class UIRectangle {
             this.textureView = texture;
         }
         queueMicrotask(() => {
-            const vertices = this.updateBoundingBoxAndVerticesSuper();
+            const vertices = this.#updateBoundingBoxAndVerticesSuper();
             const drawable = new DrawableSimple({
                 renderPipeline: canvaspipeline,
                 renderPasses: new Set([renderPass]),
@@ -327,7 +327,7 @@ export abstract class UIRectangle {
             });
             this.drawable = drawable
             renderPass.onResize.set(this, () => {
-                const newVertices = this.updateBoundingBoxAndVerticesSuper();
+                const newVertices = this.#updateBoundingBoxAndVerticesSuper();
                 drawable.setVertexBuffer(0, newVertices);
             });
 

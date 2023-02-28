@@ -6,23 +6,23 @@ import type { GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
 import type { Engine, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
-import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
-import { UINode } from "../ui/UINode.js";
-import { NumericUnit, Anchor } from "../ui/UIRectangle.js";
 import type { TopMenuButtonProps } from "../ui/topMenu.js";
+import { Button, type ButtonProps } from "../ui/Button.js";
+import { UINode } from "../ui/UINode.js";
+import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
 
 type TerrainToolButtonState = { subMenu: 'lower' | 'raise' | undefined };
-export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
-    UIRectangleNodeProps & TopMenuButtonProps> {
+export class TerrainToolButton extends Button<TerrainToolButtonState,
+    ButtonProps & TopMenuButtonProps> {
     #wasOpen = false;
     constructor(
-        props: UIRectangleNodeProps & TopMenuButtonProps,
+        props: ButtonProps & TopMenuButtonProps,
     ) {
         super(props);
         this.state = {
@@ -64,7 +64,7 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
             }
             engine.addInputListener('keydown', this, this.#inputListener);
             return [
-                UINode.createCtrProps(UIRectangleNode, {
+                UINode.createCtrProps(Button, {
                     ...this.props,
                     label: 'Lower',
                     scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
@@ -82,7 +82,7 @@ export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
                             subMenu: 'lower'
                         })
                     }
-                }), UINode.createCtrProps(UIRectangleNode, {
+                }), UINode.createCtrProps(Button, {
                     ...this.props,
                     label: 'Raise',
                     scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },

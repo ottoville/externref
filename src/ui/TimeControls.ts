@@ -1,12 +1,11 @@
 import type { GPU } from "../GPU.js"
 import type { Engine } from "../engine.js";
-import { UIRectangleNode } from "./UIRectangleNode.js";
 import { UINode } from "./UINode.js";
 import { Anchor, NumericUnit } from "./UIRectangle.js";
+import { Button } from "./Button.js";
 declare const engine: Engine;
 
 type MenuState = {
-    bitmap: ImageBitmap | undefined,
     timeOfDay: string
 };
 
@@ -16,42 +15,22 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
         super(props);
         this.gpu = props.gpu;
         this.state = {
-            bitmap: undefined,
             timeOfDay: new Date(Number(engine.physics.gameTime)).toUTCString()
         }
-        fetch('/assets/button.webp').then(async asset => {
-            const bitmap = await createImageBitmap(await asset.blob());
-            this.setState({ bitmap });
-        }).catch(err => {
-            engine.showError(err);
-        });
         setInterval(() => {
             this.setState({
                 timeOfDay: new Date(Number(engine.physics.gameTime)).toUTCString()
             });
         }, 1000);
     }
-    menuTree = { level: 0 }
     render() {
-        const props = this.props;
-        if (!this.state.bitmap)
-            return null;
-        const commonProps =
-        {
-            gpu: props.gpu,
-            bitmap: this.state.bitmap,
-            borderSize: {
-                width: [8, NumericUnit.px],
-                height: 'auto',
-            } as const
-        }
         const yPos = {
             value: [40, NumericUnit.px],
             anchor: Anchor.BOTTOM
         } as const;
         return [
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.gpu,
                 label: 'TimeOfDay',
                 scale: { min_width: 300, y: 30, unit: NumericUnit.px },
                 translate: {
@@ -66,8 +45,8 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
                 },
                 text: 'Time of day ' + this.state.timeOfDay,
             }),
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.gpu,
                 label: 'pause',
                 scale: { min_width: 30, y: 30, unit: NumericUnit.px },
                 translate: {
@@ -82,8 +61,8 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
                     engine.physics.gameSpeed = -1
                 }
             }),
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.gpu,
                 label: 'play',
                 scale: { min_width: 30, y: 30, unit: NumericUnit.px },
                 translate: {
@@ -98,8 +77,8 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
                     engine.physics.gameSpeed = 1
                 }
             }),
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.gpu,
                 label: 'fastforward',
                 scale: { min_width: 30, y: 30, unit: NumericUnit.px },
                 translate: {
@@ -114,8 +93,8 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
                     engine.physics.gameSpeed = 2
                 }
             }),
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.gpu,
                 label: 'fastforward1',
                 scale: { min_width: 30, y: 30, unit: NumericUnit.px },
                 translate: {
@@ -130,8 +109,8 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
                     engine.physics.gameSpeed = 4
                 }
             }),
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.gpu,
                 label: 'fastforward2',
                 scale: { min_width: 30, y: 30, unit: NumericUnit.px },
                 translate: {
@@ -146,8 +125,8 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
                     engine.physics.gameSpeed = 8
                 }
             }),
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.gpu,
                 label: 'fastforward3',
                 scale: { min_width: 30, y: 30, unit: NumericUnit.px },
                 translate: {
@@ -162,8 +141,8 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
                     engine.physics.gameSpeed = 16
                 }
             }),
-            UINode.createCtrProps(UIRectangleNode, {
-                ...commonProps,
+            UINode.createCtrProps(Button, {
+                gpu: this.gpu,
                 label: 'fastforward4',
                 scale: { min_width: 30, y: 30, unit: NumericUnit.px },
                 translate: {
@@ -182,6 +161,5 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
     }
     override destroy(): void {
         super.destroy();
-        this.state.bitmap?.close();
     }
 }

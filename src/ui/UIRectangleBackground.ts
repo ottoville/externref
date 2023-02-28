@@ -1,7 +1,8 @@
 import { TextureView } from "../GPU/TextureView.js";
 import { Texture2D } from "../GPU/Texture2D.js";
-import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
+import type { UIRectangleProps } from "./UIRectangle.js";
 import type { TextUV } from "./UIRectangleTextOnly.js";
+import { UIRectangleText } from "./UIRectangleText.js";
 export const font = '80pt serif';
 
 export function createBackground(width: number, height: number, text: string, originalAspectRatio?: number) {
@@ -94,35 +95,20 @@ function createTexture(
 /*
     Draws rectangle.
 */
-export class UIRectangleBackground extends UIRectangle {
-    textUV: [topLeft: [number, number], topRight: [number, number], bottomRight: [number, number], bottomLeft: [number, number]];
+export class UIRectangleBackground extends UIRectangleText {
     createTexture(): TextureView<Texture2D> {
         const copySource = createTexture(this.backgroundAsset, this.textUV, this.props.originalAspectRatio, this.text);
         return this.createTextureView(copySource);
     }
-    /*
-                //bottom left
-            -content_sizeX, -content_sizeY, ...textUV[3],
-            //bottom right
-            content_sizeX, -content_sizeY, ...textUV[2],
-            //top left
-            -content_sizeX, content_sizeY, ...textUV[0],
-
-            //top left
-            -content_sizeX, content_sizeY, ...textUV[0],
-            //bottom right
-            content_sizeX, -content_sizeY, ...textUV[2],
-            //top right
-            content_sizeX, content_sizeY, ...textUV[1]
-
-            */
-    override updateBoundingBoxAndVertices({ vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY }: {
+    override updateBoundingBoxAndVertices(
+        args: {
         vertices: Float32Array;
         content_sizeX: number;
         content_sizeY: number;
         outer_sizeX: number;
         outer_sizeY: number;
     }) {
+        const { vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY } = args
         const { borderSize } = this.props
         const texture = this.backgroundAsset.texture;
         const container_uvs = {
@@ -132,21 +118,7 @@ export class UIRectangleBackground extends UIRectangle {
             left: (1 - this.backgroundAsset.border_width) * texture.width
         }
         if (this.text) {
-            vertices.set([
-                //bottom left
-                -content_sizeX, -content_sizeY, ...this.textUV[3],
-                //bottom right
-                content_sizeX, -content_sizeY, ...this.textUV[2],
-                //top left
-                -content_sizeX, content_sizeY, ...this.textUV[0],
-
-                //top left
-                -content_sizeX, content_sizeY, ...this.textUV[0],
-                //bottom right
-                content_sizeX, -content_sizeY, ...this.textUV[2],
-                //top right
-                content_sizeX, content_sizeY, ...this.textUV[1]
-            ]);
+            super.updateBoundingBoxAndVertices(args)
         } else {
             vertices.set(
                 [
@@ -257,11 +229,5 @@ export class UIRectangleBackground extends UIRectangle {
         ]
         super(props, createTexture(backgroundAsset, textUV, props.originalAspectRatio, text));
         this.textUV = textUV;
-        const {
-            label,
-            borderSize,
-        } = props;
-        this.positions_count = (borderSize.width[0] > 0 || borderSize.height[0] > 0) ? 54 : 6;
-        this.label = label + '_UIRectangle';
     }
 }
