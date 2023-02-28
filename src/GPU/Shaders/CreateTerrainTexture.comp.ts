@@ -1,7 +1,7 @@
 import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
-import type { Terrain } from '../../world/terrain.js';
+import type { Terrain } from '../../world/Terrain.js';
 import { Struct } from './structs/Structs.js';
 
 type SlopesLayout = BGLayout<[BufLayout<ShaderStage.COMPUTE, Struct<{

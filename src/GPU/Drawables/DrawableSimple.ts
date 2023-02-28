@@ -1,10 +1,8 @@
 import type { Engine } from "../../engine.js";
-import { DrawableDirect } from "./DrawableDirect.js";
+import { DrawableDirect, type MappedVertexBuffers } from "./DrawableDirect.js";
 import { type DrawableNode, MainNode } from "../../MainNode.js";
 import type { BindGroup } from "../BindGroup.js";
-import type { VertexBuffer } from "../Buffer/Buffer.js";
 import { RenderPipeline } from "../RenderPipeline2.js";
-import { VertexShader } from "../Shaders/VertexShader.js";
 import { DrawableProps } from "./Drawable.js";
 declare const engine: Engine;
 
@@ -15,17 +13,7 @@ export class DrawableSimple<R extends RenderPipeline> extends DrawableDirect {
     constructor(
         drawableProps: Omit<DrawableProps, 'label'> & {
             renderPipeline: R;
-            vertexBuffers:
-            //extract VertexShader
-            R extends RenderPipeline<infer VERTEX_SHADER> ? (
-                //extract VertexBuffers
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                VERTEX_SHADER extends VertexShader<infer _E, infer VERTEX_BUFFERS> ? (
-                    {
-                        [Property in keyof VERTEX_BUFFERS]: ArrayBufferView | VertexBuffer;
-                    }
-                ) : never
-            ) : never
+            vertexBuffers: MappedVertexBuffers<R>
         },
         {
             node,

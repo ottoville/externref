@@ -1,5 +1,5 @@
 ﻿import { paintGround } from "./paintGround.js";
-import type { Terrain } from "../world/terrain.js";
+import type { Terrain } from "../world/Terrain.js";
 //import { Vector3 } from "../lib/babylon/Maths/math.vector.js";
 //import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
 

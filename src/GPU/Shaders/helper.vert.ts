@@ -2,7 +2,7 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js'
-import type { Terrain } from '../../world/terrain.js';
+import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 type BindLayouts = readonly [
     GPU["sizeBindGroupLayout"],

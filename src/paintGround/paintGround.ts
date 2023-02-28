@@ -3,7 +3,7 @@
 const fullRad = Math.PI * 2
 import { TerraVector2, Angle } from "../Math.js";
 
-import type { Terrain } from "../world/terrain.js";
+import type { Terrain } from "../world/Terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
 import { Engine } from "../engine.js";

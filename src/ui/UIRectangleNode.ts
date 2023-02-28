@@ -67,7 +67,11 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
                 if (props.bitmap instanceof ImageBitmap) {
                     this.#instance = this.createBackgroundInstance(commonProps, props.bitmap);
                 } else {
-                    this.#instance = props.bitmap.then(bitmap => this.createBackgroundInstance(commonProps, bitmap));
+                    this.#instance = props.bitmap.then(bitmap => {
+                        //Replace promise with resolved value;
+                        this.#instance = this.createBackgroundInstance(commonProps, bitmap);
+                        return this.#instance;
+                    });
                 }
             } else {
                 this.#instance = new UIRectangleTextOnly(commonProps, props.text);

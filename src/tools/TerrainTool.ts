@@ -1,4 +1,4 @@
-﻿import type { Terrain } from "../world/terrain.js";
+﻿import type { Terrain } from "../world/Terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";

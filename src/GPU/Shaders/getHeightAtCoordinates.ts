@@ -1,5 +1,5 @@
 import { BufLayout } from '../BindGroupLayout.js';
-import type { Terrain } from '../../world/terrain.js';
+import type { Terrain } from '../../world/Terrain.js';
 
 export const getHeightAtCoordinates = (
     settings: typeof Terrain.settings,

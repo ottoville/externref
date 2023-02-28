@@ -1,6 +1,7 @@
 ﻿import type { Scene } from "../../Scene.js";
 import type { Engine } from "../../engine.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
+import { TerraVector3 } from "../../Math.js";
 declare const engine: Engine;
 let v = 12;
 const midCache = new Map<number, number>(); // midpoint vertices cache to avoid duplicating shared vertices
@@ -66,11 +67,7 @@ const icosphere = (order = 0) => {
     }
     // normalize vertices
     for (let i = 0; i < vertices.length; i += 3) {
-        //0.5 to create vertices from -0.5 to 0.5
-        const m = 1 / Math.hypot(vertices[i + 0]!, vertices[i + 1]!, vertices[i + 2]!);
-        vertices[i + 0] *= m;
-        vertices[i + 1] *= m;
-        vertices[i + 2] *= m;
+        new TerraVector3(vertices.buffer, i * Float32Array.BYTES_PER_ELEMENT).normalize();
     }
     return [vertices, triangles] as [vertices: Float32Array, indices: Uint32Array];
 }

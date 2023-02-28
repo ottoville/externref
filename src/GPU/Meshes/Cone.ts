@@ -1,6 +1,7 @@
-﻿import type { Scene } from "../../Scene.js";
-import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
+﻿import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 import type { Engine } from "../../engine.js";
+import type { MainNodeProps } from "../../MainNode.js";
+import { TerraVector3 } from "../../Math.js";
 declare const engine: Engine;
 
 const douplePI = Math.PI * 2;
@@ -52,11 +53,7 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
     }
     // normalize vertices
     for (let i = 0; i < vertices.length; i += stride) {
-        //0.5 to create vertices from -0.5 to 0.5
-        const m = 0.5 / Math.hypot(vertices[i + 0]!, vertices[i + 1]!, vertices[i + 2]!);
-        vertices[i + 0] *= m;
-        vertices[i + 1] *= m;
-        vertices[i + 2] *= m;
+        new TerraVector3(vertices.buffer, i * Float32Array.BYTES_PER_ELEMENT).normalize();
     }
     return [vertices, indices] as const;
 }
@@ -68,9 +65,9 @@ function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, i
     const coneVertices = Array.from(circleVertices);
     //Lover the vertices to keep 0,0 coordinate in middle.
     for (let i = 0; i < coneVertices.length; i = i + stride) {
-        coneVertices[i + 1] = -0.5;
+        coneVertices[i + 1] = -1;
     }
-    const zeroIndice = coneVertices.push(0, 0.5, 0,  /* normals: */0, 0, 0) / stride - 1;
+    const zeroIndice = coneVertices.push(0, 1, 0,  /* normals: */0, 0, 0) / stride - 1;
 
     let indicesOrder = [0];
     const indicesOrder2: number[] = [];
@@ -91,26 +88,19 @@ function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, i
     }
     return [Float32Array.from(coneVertices), Uint32Array.from(coneIndices)] as const;
 }
-let uid = 0;
 export class Cone extends SimpleIndexedMesh {
     constructor(
-        scenes?: Scene[],
-        point_light = 0,
+        mainNodeProps: Omit<MainNodeProps, 'strip'>,
         can_collide = false,
-        label = 'cone' + (uid++),
         color: [number, number, number, number] = [1, 0, 0, 0]
     ) {
-        const [vertices, indices] = createCone(14, 6)
+        const [vertices, indices] = createCone(14, 6);
         super(
             {
                 vertices,
                 can_collide,
             },
-            {
-                label,
-                point_light,
-                scenes,
-            },
+            mainNodeProps,
             indices,
             undefined,
             undefined,
@@ -118,15 +108,14 @@ export class Cone extends SimpleIndexedMesh {
         this.color = color;
     }
     override create_collider() {
-        return engine.rust.create_cone_collider(this.scale_y / 2, this.radius);
+        return engine.rust.create_cone_collider(this.scale_y, this.radius);
     }
     get radius() {
-        return this.scale_x * 0.5;
+        return this.scale_x;
     }
     set radius(radius: number) {
-        const scale = radius * 2;
-        this.update_scale(scale, this.scale_y, scale);
-        const collider_ptr = engine.rust.create_cone_collider(this.scale_y / 2, radius);
+        this.update_scale(radius, this.scale_y, radius);
+        const collider_ptr = engine.rust.create_cone_collider(this.scale_y, radius);
         engine.rust.add_collider(this.ptr, collider_ptr);
     }
 }

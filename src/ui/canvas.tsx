@@ -6,7 +6,7 @@ import { Plants } from "../plants/Plants.js";
 import { PlantsUI } from "../tools/plantsUI.js";
 /*import { CameraTAB } from "../tools/camera.js";
 import { BuildingsUI } from "../tools/buildings.js";*/
-import { Terrain } from "../world/terrain.js";
+import { Terrain } from "../world/Terrain.js";
 import { Sea } from "../world/water.js";
 //import { LazyEval } from "../LazyEval.js";
 import { Sun2 } from "../world/sun2.js";
@@ -22,7 +22,6 @@ import { Box } from "../GPU/Meshes/Box.js";
 import { Triangle } from "../GPU/Meshes/Triangle.js";
 //@ts-ignore
 import { IcoSphere } from "../GPU/Meshes/IcoSphere.js";
-//@ts-ignore
 import { Cone } from "../GPU/Meshes/Cone.js";
 import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
 //@ts-ignore
@@ -172,10 +171,12 @@ export class Canvas extends TerraCompoment {
              slope.update_rotation(Math.sin(1.4), 0, 0, Math.cos(1.4));
              slope.translation = [23, 500, 23];
          */
-            const sphere = new Capsule('blueball0', true, false, CAPSULE_ORIENTATION.y, 3);
-            sphere.translation = [0, 900, -70];
-            sphere.radius = 50;
-            sphere.color = [1, 1, 0, 0];
+            const cone = new Cone({ label: 'cone' }, true);
+            cone.update_euler_angles(90,0,0);
+            cone.translation = [0, 900, -70];
+            cone.update_scale(50,50,50)
+            cone.radius = 50;
+            cone.color = [1, 0, 0, 0];
 
 
             const sphere2 = new Capsule('blueball1', true, false, CAPSULE_ORIENTATION.z, 3);

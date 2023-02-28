@@ -2,7 +2,7 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { FloatArray } from './structs/Structs.js';
-import type { Terrain } from '../../world/terrain.js';
+import type { Terrain } from '../../world/Terrain.js';
 
 type BindLayouts = readonly [
     BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,

@@ -1,5 +1,5 @@
 import type { GPU } from "../GPU.js"
-import type { Terrain } from "../world/terrain.js";
+import type { Terrain } from "../world/Terrain.js";
 import type { Engine } from "../engine.js";
 import { UINode } from "./UINode.js";
 import { TerrainToolButton } from "../tools/TerrainTool.js";

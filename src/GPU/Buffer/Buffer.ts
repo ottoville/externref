@@ -215,7 +215,7 @@ class copySrcBuffer extends Buffer {
             this.buffer = newBuffer;
         } catch (e) {
             engine.showError(e);
-            throw (new Error('Cannot create buffer', { cause: (e instanceof Error ? e : new Error(new String(e).toString())) }));
+            throw (new Error('Cannot create resized buffer', { cause: (e instanceof Error ? e : new Error(new String(e).toString())) }));
         }
     }
 }

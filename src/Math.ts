@@ -157,9 +157,9 @@ export class TerraVector3 extends Float32Array {
     static override of(x: number, y: number, z: number) {
         return super.of(x, y, z) as TerraVector3;
     }
-    constructor(Arr?: ArrayBufferLike, offset?: number)
+    constructor(Arr?: ArrayBufferLike, byteOffset?: number)
     constructor(Arr?: number[])
-    constructor(Arr?: number[] | ArrayBufferLike, offset = 0) {
+    constructor(Arr?: number[] | ArrayBufferLike, byteOffset = 0) {
         if (!Arr)
             super(3);
         else if (Array.isArray(Arr)) {
@@ -167,7 +167,7 @@ export class TerraVector3 extends Float32Array {
             super(Arr);
         }
         else {
-            super(Arr, offset, 3);
+            super(Arr, byteOffset, 3);
         }
     }
     toQuaternionToRef(angle: number, result: Quaternion) {

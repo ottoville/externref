@@ -1,5 +1,5 @@
 ﻿import { paintGround } from "./paintGround.js";
-import type { Terrain } from "../world/terrain.js";
+import type { Terrain } from "../world/Terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
 import { TerraVector2 } from "../Math.js";

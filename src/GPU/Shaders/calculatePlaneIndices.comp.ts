@@ -3,7 +3,7 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Indices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js'
-import type { Terrain } from '../../world/terrain.js';
+import type { Terrain } from '../../world/Terrain.js';
 
 type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>]>];
 export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {

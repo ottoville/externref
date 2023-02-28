@@ -1,5 +1,5 @@
 import { paintTexture } from "../paintGround/paintTexture.js";
-import { Terrain } from "../world/terrain.js";
+import { Terrain } from "../world/Terrain.js";
 import { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";

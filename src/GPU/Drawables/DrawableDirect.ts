@@ -1,5 +1,18 @@
+import type { VertexBuffer } from "../Buffer/Buffer.js";
+import type { RenderPipeline } from "../RenderPipeline2.js";
+import type { VertexShader } from "../Shaders/VertexShader.js";
 import { type DrawableNode } from "../../MainNode.js";
 import { Drawable, DrawableProps } from "./Drawable.js";
+
+export type MappedVertexBuffers<R extends RenderPipeline> = R extends RenderPipeline<infer VERTEX_SHADER> ? (
+    //extract VertexBuffers
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    VERTEX_SHADER extends VertexShader<infer _E, infer VERTEX_BUFFERS> ? (
+        {
+            [Property in keyof VERTEX_BUFFERS]: ArrayBufferView | VertexBuffer;
+        }
+    ) : never
+) : never
 
 export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;

@@ -2,7 +2,7 @@ import { BGLayout, BufLayout, ShaderStage } from '../../BindGroupLayout.js'
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
 import { FloatArray, IntArray, PlaneArray, PositionAndRotateArray, Vec2Array } from '../structs/Structs.js';
-import type { Terrain } from '../../../world/terrain.js';
+import type { Terrain } from '../../../world/Terrain.js';
 import type { GPU } from '../../../GPU.js';
 import { getHeightAtCoordinates } from '../getHeightAtCoordinates.js';
 

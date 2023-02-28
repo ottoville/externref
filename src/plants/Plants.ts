@@ -1,5 +1,5 @@
 import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
-import { Terrain } from "../world/terrain.js";
+import { Terrain } from "../world/Terrain.js";
 //import simplex from '../simplex.js'
 
 import { PTDresult } from "../types/interfaces/index.js";
