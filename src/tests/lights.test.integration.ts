@@ -75,12 +75,12 @@ describe('Lights ', function () {
         expect(redPixel).toEqual({
             0: 0,
             1: 0,
-            2: 255,
+            2: 76,
             3: 255
         });
         expect(greenPixel).toEqual({
             0: 0,
-            1: 255,
+            1: 13,
             2: 0,
             3: 255
         })

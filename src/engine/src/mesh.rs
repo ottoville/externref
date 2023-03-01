@@ -18,7 +18,6 @@ pub use crate::terrain::elevator::Elevator;
 pub use crate::drawable::Drawable;
 pub use crate::drawable::DrawCommand;
 pub use crate::drawable::DrawType;
-use crate::math2::Vec3F32;
 
 
 pub struct Mesh {
@@ -26,7 +25,7 @@ pub struct Mesh {
     pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
     pub gpu_mesh_alignment: usize, //Alignment in engine.gpu_meshes vector
     pub rotation: Quaternion,
-    scaling: Vec3<f32>,
+    pub scaling: Vec3<f32>,
     pub geometry:Option<Geometry>,
     pub positions_count:usize,
     pub strip:bool,
@@ -51,9 +50,10 @@ pub unsafe extern "C" fn new_mesh(
         match cstr.to_str() {
             Ok(str) => {
                 let e = ENGINE.physic_engine_mut();
-                let mesh = Mesh::new(id, positions_count,point_light,directional_light,scenes,strip,fixed,rigid_body, str.to_string(), e);
-                (*mesh).update_dynamic_buffer();
-                return mesh;    
+                let e2 = ENGINE.physic_engine_mut();
+                let len = e.meshes.len();
+                Mesh::new(id, positions_count,point_light,directional_light,scenes,strip,fixed,rigid_body, str.to_string(), e);
+                return &e2.meshes[len];    
             }
             Err(error) => {
                 panic!("{}", &error.to_string());
@@ -211,26 +211,6 @@ pub unsafe extern "C" fn create_convex_hull_collider(mesh_ptr:*mut Mesh) -> *mut
     (*mesh_ptr).create_convex_hull_collider()
 }
 
-#[cfg(debug_assertions)]
-#[no_mangle]
-pub unsafe extern "C" fn bounding_min_pointer(mesh_ptr:*mut Mesh) -> *const Vec3F32 {
-    let engine2 = ENGINE.physic_engine();
-    let gpu_mesh = &engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
-
-    (*mesh_ptr).get_geometry_mut().update_bounding_box(&gpu_mesh.transformation);
-    (&(*mesh_ptr).get_geometry_mut().bounding_box.min) as *const Vec3F32
-
-
-}
-#[cfg(debug_assertions)]
-#[no_mangle]
-pub unsafe extern "C" fn bounding_max_pointer(mesh_ptr:*mut Mesh) -> *const Vec3F32 {
-    let engine2 = ENGINE.physic_engine();
-    let gpu_mesh = &engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
-
-    (*mesh_ptr).get_geometry_mut().update_bounding_box(&gpu_mesh.transformation);
-    (&(*mesh_ptr).get_geometry_mut().bounding_box.max) as *const Vec3F32
-}
 #[no_mangle]
 pub unsafe extern "C" fn scale_x(mesh_ptr:*mut Mesh) -> f32 {
     (*mesh_ptr).scaling.x
@@ -325,36 +305,10 @@ impl Mesh {
 }
 
 impl Mesh {
-    pub fn create_flat_collider(&self) -> *mut Collider {
-        let geometry = self.get_geometry();
-        let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
-        let vertices_amount = geometry.vertices.len() / geometry.vertices_stride;
-        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(vertices_amount);
-        iterator.for_each(|i| {
-            // TODO: ensure simd
-            vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
-            vertices.push(Point::new(i[0] * self.scaling.x - 0.01, i[1] * self.scaling.y, i[2] * self.scaling.z));
-        });
-        let hull = ColliderBuilder::convex_hull(&vertices);
-        match hull {
-            Some(h) => {
-                let collider = Box::new(h.mass_properties(MassProperties::new(
-                    point![0.0, 1.0, 0.0],
-                    0.5,
-                    vector![0.3, 0.2, 0.1],
-                )).build());
-                Box::leak(collider)
-            }
-            None => {
-                panic!("Cannot create convex hull");
-            }
-        }
-    }
     pub fn create_convex_hull_collider(&self) -> *mut Collider {
         let geometry = self.get_geometry();
         let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
-        let vertices_amount = geometry.vertices.len() / geometry.vertices_stride;
-        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(vertices_amount*2);
+        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(self.positions_count*2);
         iterator.for_each(|i| {
             // TODO: ensure simd
             vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
@@ -381,8 +335,7 @@ impl Mesh {
 
         let geometry = self.get_geometry();
         let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
-        let vertices_amount = geometry.vertices.len() / geometry.vertices_stride;
-        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(vertices_amount);
+        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(self.positions_count);
         iterator.for_each(|i| {
             // TODO: ensure simd
             vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
@@ -392,9 +345,9 @@ impl Mesh {
             if self.strip {
                 panic!("Unindexed Trimesh collider with triangle strip is not yet supported");
             }
-            indices = Vec::with_capacity(vertices_amount);
+            indices = Vec::with_capacity(self.positions_count);
             let mut pos = 0;
-            while pos < vertices_amount {
+            while pos < self.positions_count {
                 indices.push([pos as u32, pos as u32 + 1, pos as u32 + 2]);
                 pos = pos + 3;
             }
@@ -460,8 +413,8 @@ impl Mesh {
         fixed:bool,
         rigid_body: bool,
         label: String,
-        engine2: &'static mut Engine2) -> *const Mesh {
-        let mut m = Mesh {
+        engine2: &'static mut Engine2) {
+        let m = Mesh {
             id,
             gpu_mesh_alignment: engine2.gpu_meshes.len(),
             gpu_alignment: ENGINE.allocate_gpu(),
@@ -524,8 +477,8 @@ impl Mesh {
         ENGINE.allocated_gpu_memory();
 
         let new_id=engine2.meshes.len();
-        
-        let ptr: *const Mesh;
+        m.update_dynamic_buffer();
+        engine2.meshes.push(m);
         if rigid_body {
             let rigid_body_builder:RigidBodyBuilder;
             if fixed {
@@ -535,15 +488,10 @@ impl Mesh {
             }
             let rigid_body=rigid_body_builder.build();
             let rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
-            m.rigid_body_handle = Some(rigid_body_handle);
-            engine2.meshes.push(m);
-            ptr = &engine2.meshes[new_id] as *const Mesh;
+            engine2.meshes[new_id].rigid_body_handle = Some(rigid_body_handle);
             engine2.rigid_bodies.insert(rigid_body_handle, &mut engine2.meshes[new_id]);
-        } else {
-            engine2.meshes.push(m);
-            ptr = &engine2.meshes[new_id] as *const Mesh;
         }
-        return ptr;
+        //return ptr;
     }
     pub fn get_geometry(&self) -> &Geometry {
         if let Some(g) = &self.geometry {
@@ -601,7 +549,7 @@ impl Mesh {
         ENGINE.gpu_queue2.push((&gpu_mesh, self.gpu_alignment));
     }
 
-    fn on_update(&mut self) {
+    pub fn on_update(&mut self) {
         unsafe {
             self.update_matrix();
             self.update_dynamic_buffer();

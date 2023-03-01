@@ -8,6 +8,7 @@ mod geometry;
 mod math2;
 mod mesh;
 mod terrain;
+mod meshes;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;

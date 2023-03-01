@@ -11,9 +11,8 @@ import { BoundableNodeIndexed } from "../nodes/BoundableNodeIndexed.js";
 import { PlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
+import { createTiledGround } from "../helpers.js";
 declare const engine: Engine;
-
-
 
 class PlaneMesh extends BoundableNodeIndexed {
     //indices_count=0;
@@ -86,36 +85,6 @@ export class paintPlane extends paintGround {
         this.#mesh.drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     }
     #startingPoint = new TerraVector2(2);
-    private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
-        const positions: number[] = [0, 0, 0, 1];
-        const indices: number[] = [0, 1];
-        let row = 0;
-        let backwards = false;
-        while (true) {
-            if (row != 0) {
-                if (!backwards)
-                    indices.push((positions.push(0, row + 1) - 2) >> 1)
-                else
-                    indices.push((positions.push(width, row + 1) - 2) >> 1)
-            }
-            for (let i = 1; i <= width; i++) {
-                if (!backwards) {
-                    if (row == 0)
-                        indices.push((positions.push(i, row) - 2) >> 1)
-                    else
-                        indices.push(indices[indices.length - i * 4]!);
-                    indices.push((positions.push(i, row + 1) - 2) >> 1);
-                } else {
-                    indices.push(indices[indices.length - i * 4]!);
-                    indices.push((positions.push(width - i, row + 1) - 2) >> 1)
-
-                }
-            }
-            row++;
-            backwards = !backwards
-            yield { positions: positions, indices: indices };
-        }
-    }
     /*public activate(callback: PTResultF) {
         super.activate(callback);
     }*/
@@ -132,7 +101,7 @@ export class paintPlane extends paintGround {
     }
     #columns = 0;
     #rows = 0;
-    #rowGenerator: Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> | null = null;
+    #rowGenerator: Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }> | null = null;
 
     onMainPointerUp(height: number): void {
         this.#rowGenerator = null;
@@ -156,7 +125,7 @@ export class paintPlane extends paintGround {
     onAreaDraw(width: number) {
         let newValues: { positions: number[], indices: number[] } | null = null;
         if (!this.#rowGenerator) {
-            this.#rowGenerator = this.createTiledGround(this.#columns);
+            this.#rowGenerator = createTiledGround(this.#columns);
         }
 
         const newRows = Math.max(1, Math.floor(width / 10));

@@ -14,6 +14,49 @@ pub struct BoundingBox {
     pub need_init:bool,
 }
 
+#[cfg(test)]
+#[test]
+fn test_bounding_box() {
+    use crate::{meshes::meshes::{box_positions, box_indices}, engine::{init_engine}, mesh::ENGINE, Geometry};
+    #[no_mangle]
+    pub extern "C" fn jslog(number:*const u8) { }
+    unsafe {
+        init_engine();
+        let engine = ENGINE.physic_engine_mut();
+        let engine2 = ENGINE.physic_engine_mut();
+        let len = engine2.meshes.len();
+        Mesh::new(1, 24, 0.0, 0.0, 0.0, false, false, false, String::from("box"), engine);
+        let m = &mut engine2.meshes[len];
+        let mut geometry = Geometry::new(true, 6, false, false);
+        geometry.set_vertices(box_positions.to_vec());
+        geometry.indices = box_indices.to_vec();
+        m.geometry = Some(geometry);
+
+        m.scaling.x = 500.0;
+        m.scaling.y = 500.0;
+        m.scaling.z = 500.0;
+        m.set_translation(123.0, 1000.0, 123.0);
+        m.rotation.i = (1.1f32).sin();
+        m.rotation.j = 0.0;
+        m.rotation.k = 0.0;
+        m.rotation.w = (1.1f32).cos();
+        m.on_update();
+        let gpu_mesh = &engine2.gpu_meshes[m.gpu_mesh_alignment];
+        let geo = m.get_geometry_mut();
+        geo.update_bounding_box(&gpu_mesh.transformation);
+
+        assert_eq!(geo.bounding_box.min.x, -377.0);
+        assert_eq!(geo.bounding_box.min.y, 301.50122);
+        assert_eq!(geo.bounding_box.min.z, -575.4988);
+
+
+        assert_eq!(geo.bounding_box.max.x, 623.0);
+        assert_eq!(geo.bounding_box.max.y, 1698.498779296875);
+        assert_eq!(geo.bounding_box.max.z, 821.4988);
+        
+    }
+}
+
 impl BoundingBox {
     pub fn new(has_bounding:bool) -> Self {
         BoundingBox {

@@ -1,7 +1,7 @@
 import type { GPU } from "../GPU.js";
 import { BindGroup } from "./BindGroup.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
-import { Struct } from "./Shaders/structs/Structs.js";
+import type { Struct } from "./Shaders/structs/Structs.js";
 
 
 export interface GPUBindGroupTextureEntry {

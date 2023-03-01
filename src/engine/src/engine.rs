@@ -58,17 +58,17 @@ pub unsafe extern "C" fn GPUMeshes() -> &'static GPUMesh {
     &ENGINE.physic_engine().gpu_meshes[0]
 }
 pub struct Engine2 {
-    physic_pipeline: PhysicsPipeline,
+    pub physic_pipeline: PhysicsPipeline,
     pub rigid_body_set: RigidBodySet,
     pub collider_set: ColliderSet,
     pub island_manager: IslandManager,
-    narrow_phase: NarrowPhase,
-    ccd_solver: CCDSolver,
+    pub narrow_phase: NarrowPhase,
+    pub ccd_solver: CCDSolver,
     pub meshes: Vec<Mesh>,
     pub rigid_bodies: HashMap<RigidBodyHandle, &'static mut Mesh>,
-    broad_phase: BroadPhase,
+    pub broad_phase: BroadPhase,
     pub gpu_meshes: Vec<GPUMesh>,
-    joint_set:ImpulseJointSet
+    pub joint_set:ImpulseJointSet
 }
 pub fn create_js_string(mut str: String) -> *const u8 {
     str.truncate(512);
@@ -94,6 +94,10 @@ pub extern "C" fn init_engine2() -> usize {
     panic::set_hook(Box::new(|panic_info| unsafe {
         jspanic(create_js_string(panic_info.to_string()));
     }));
+    init_engine();
+    std::mem::size_of::<GPUMesh>()
+}
+pub fn init_engine() {
     let rigid_body_set = RigidBodySet::new();
     let collider_set = ColliderSet::new();
 
@@ -113,9 +117,7 @@ pub extern "C" fn init_engine2() -> usize {
     unsafe {
         ENGINE.engine2 = Some(e);
     }
-    std::mem::size_of::<GPUMesh>()
 }
-
 unsafe fn collider_to_mesh(e:&Engine2, collider_handle: ColliderHandle) -> Option<&&mut Mesh> {
     return match e.collider_set.get(collider_handle) {
         Some(collider) => match collider.parent() {

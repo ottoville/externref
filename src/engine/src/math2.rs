@@ -1,3 +1,6 @@
+#[cfg(target_arch = "wasm32")]
+use std::arch::wasm32::*;
+
 #[derive(Copy, Clone)]
 pub struct Vec3<T> {
     pub x: T,
@@ -158,21 +161,19 @@ impl Vec4<f32> {
     }
     #[cfg(target_arch = "wasm32")]
     pub fn min(&self, other: &Vec4<f32>) -> Vec4<f32> {
-        use std::arch::wasm32::*;
         unsafe {
             let v0 = v128_load(self as *const Vec4<f32> as *const v128);
             let v1 = v128_load(other as *const Vec4<f32> as *const v128);
-            let res=f32x4_pmin(v0, v1);
+            let res= f32x4_pmin(v0, v1);
             return std::mem::transmute::<v128, Vec4<f32>>(res);
         }
     }
     #[cfg(target_arch = "wasm32")]
     pub fn max(&self, other: &Vec4<f32>) -> Vec4<f32> {
-        use std::arch::wasm32::*;
         unsafe {
             let v0 = v128_load(self as *const Vec4<f32> as *const v128);
             let v1 = v128_load(other as *const Vec4<f32> as *const v128);
-            let res=f32x4_pmax(v0, v1);
+            let res= f32x4_pmax(v0, v1);
             return std::mem::transmute::<v128, Vec4<f32>>(res);
         }
     }

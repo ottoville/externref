@@ -9,6 +9,9 @@ export interface DrawableNode {
     destroy(): void;
 }
 export type MainNodeProps = {
+    /**
+     * Vertices count on vertex buffer. Hox: This is NOT amount of indices
+     */
     positionsCount?: number,
     point_light?: number,
     directional_light?: number,
