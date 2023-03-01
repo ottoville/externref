@@ -43,3 +43,13 @@ pub const box_indices : [usize; 36] =
         16, 17, 18, 16, 18, 19,   // right
         20, 21, 22, 20, 22, 23,   // left
     ];
+#[no_mangle]
+pub extern "C" fn get_box_vertices() -> *mut f32 {
+    let mut buf = std::mem::ManuallyDrop::new(box_positions.to_vec());
+    buf.as_mut_ptr()
+}
+#[no_mangle]
+pub extern "C" fn get_box_indices() -> *mut usize {
+    let mut buf = std::mem::ManuallyDrop::new(box_indices.to_vec());
+    buf.as_mut_ptr()
+}

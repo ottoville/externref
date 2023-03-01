@@ -1,5 +1,5 @@
 import { type canCollideCharacter, DataNode, DataNodeProps } from "./DataNode.js";
-import type { Engine } from "../engine.js";
+import type { Engine, rust_pointer } from "../engine.js";
 import type { MainNodeProps } from "../MainNode.js";
 declare const engine: Engine;
 
@@ -14,6 +14,18 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
         new Float32Array(engine.rust.memory.buffer, ptr_vertices, vertices.length).set(vertices);
 
         engine.rust.set_indices_and_vertices(this.ptr, ptr, indices.length, ptr_vertices, vertices.length);
+        this.rebuildTrianglePlanes();
+    }
+    set_indices(indices: Uint32Array) {
+        let ptr: rust_pointer<'usize'>
+        this.indices_count = indices.length;
+        if(indices.buffer !== engine.rust.memory.buffer) {
+            ptr = engine.rust.alloc_vector_usize(indices.length);
+        } else {
+            ptr = indices.byteOffset as rust_pointer<'usize'>;
+            new Uint32Array(engine.rust.memory.buffer, ptr, indices.length).set(indices);
+        }
+        engine.rust.set_indices(this.ptr, ptr, indices.length,);
         this.rebuildTrianglePlanes();
     }
     get indices() {
@@ -33,7 +45,7 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
         super(
             dataNodeProps,
             mainNodeProps);
-        this.set_indices_and_vertices(indicesView, dataNodeProps.vertices);
+        this.set_indices(indicesView);
     }
     override set_vertices(vertices: Float32Array) {
         super.set_vertices(vertices);

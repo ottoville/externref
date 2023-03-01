@@ -71,7 +71,8 @@ export type rustWasm = {
         fixed: boolean,
         rigid_body: boolean,
         label: rust_pointer<"u8">): rust_pointer<"mesh">,
-    add_geometry(mesh: rust_pointer<"mesh">,
+    create_geometry(
+        mesh: rust_pointer<"mesh">,
         has_bounding: boolean,
         vertices_stride: number,
         static_faces: boolean,
@@ -80,9 +81,10 @@ export type rustWasm = {
         collider: rust_pointer<"collider">): void
     memory: WebAssembly.Memory,
     set_vertices(mesh: rust_pointer<"mesh">, ptr: rust_pointer<"f32">, length: number): void,
+    set_indices(mesh: rust_pointer<"mesh">, ptr: rust_pointer<"usize">, length: number): void,
     set_indices_and_vertices(mesh: rust_pointer<"mesh">, indices: rust_pointer<"usize">, indices_length: number, vertices: rust_pointer<"f32">, vertices_length: number): void,
     vertices_pointer(mesh: rust_pointer<"mesh">): number,
-    indices_pointer(mesh: rust_pointer<"mesh">): number,
+    indices_pointer(mesh: rust_pointer<"mesh">): rust_pointer<'indices'>,
     last_collider_world_vertices_pointer(mesh: rust_pointer<"mesh">): number,
     vertices_count(mesh: rust_pointer<"mesh">): number,
     faces_count(mesh: rust_pointer<"mesh">): number,
@@ -134,6 +136,9 @@ export type rustWasm = {
     create_convex_hull_collider(mesh: rust_pointer<"mesh">): rust_pointer<"collider">
     create_cuboid_collider(hx: number, hy: number, hz: number, border_radius: number, collision_events: boolean): rust_pointer<"collider">
     create_cone_collider(half_height: number, radius: number): rust_pointer<"collider">
+
+    get_box_vertices(): rust_pointer<"f32">
+    get_box_indices(): rust_pointer<"u32">
 }
 
 function Dot(left: readonly [number, number, number] | Float32Array | TerraVector3, right: readonly [number, number, number] | Float32Array | TerraVector3): number {

@@ -21,7 +21,7 @@ pub struct Geometry {
     pub static_faces: bool, // Used for terrain
 }
 impl Geometry {
-    pub unsafe fn new(has_bounding:bool,vertices_stride:usize, static_faces:bool, strip:bool) -> Self {
+    pub fn new(has_bounding:bool,vertices_stride:usize, static_faces:bool, strip:bool) -> Self {
         let mut g = Geometry {
             bounding_box:BoundingBox::new(has_bounding),
             vertices: Vec::new(),
@@ -78,6 +78,11 @@ impl Geometry {
     }
     pub fn set_vertices(&mut self, vertices:Vec<f32>) {
         self.vertices=vertices;
+        self.bounding_box.need_init = true;
+        self.allocate_faces();
+    }
+    pub fn set_indices(&mut self, indices:Vec<usize>) {
+        self.indices=indices;
         self.bounding_box.need_init = true;
         self.allocate_faces();
     }

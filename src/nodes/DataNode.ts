@@ -93,8 +93,13 @@ export abstract class DataNode extends MainNode {
         return engine.rust.vertices_stride(this.ptr);
     }
     set_vertices(vertices: Float32Array) {
-        const ptr = engine.rust.alloc_vector_f32(vertices.length);
-        new Float32Array(engine.rust.memory.buffer, ptr, vertices.length).set(vertices);
+        let ptr: rust_pointer<"f32">;
+        if(vertices.buffer !== engine.memory.buffer) {
+            ptr = engine.rust.alloc_vector_f32(vertices.length);
+            new Float32Array(engine.rust.memory.buffer, ptr, vertices.length).set(vertices);
+        } else {
+            ptr = vertices.byteOffset as rust_pointer<"f32">;
+        }
         engine.rust.set_vertices(this.ptr, ptr, vertices.length);
     }
     get last_collider_world_vertices_pointer() {
@@ -127,8 +132,7 @@ export abstract class DataNode extends MainNode {
         this.#character_can_collide_to = character_can_collide_to;
 
         DataNode.Meshes.set(this.id, this);
-        engine.rust.add_geometry(this.ptr, true, verticesPositionStride, static_faces, mainNodeProps.strip ?? false);
-
+        engine.rust.create_geometry(this.ptr, true, verticesPositionStride, static_faces, mainNodeProps.strip ?? false);
         this.set_vertices(vertices);
         // queueMicrotask here so mesh will have indices initialized
         if (can_collide) {

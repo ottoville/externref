@@ -61,13 +61,13 @@ pub unsafe extern "C" fn new_mesh(
         }
 }
 #[no_mangle]
-pub unsafe extern "C" fn add_geometry(
+pub unsafe extern "C" fn create_geometry(
     mesh:*mut Mesh,
     has_bounding:bool,
     vertices_stride:usize,
     static_faces:bool,
     strip:bool) {        
-        (*mesh).add_geometry(has_bounding, vertices_stride, static_faces, strip);
+        (*mesh).create_geometry(has_bounding, vertices_stride, static_faces, strip);
 }
 #[no_mangle]
 pub unsafe extern "C" fn add_collider(
@@ -82,13 +82,18 @@ pub unsafe extern "C" fn set_vertices(mesh:*mut Mesh, ptr:*mut f32, length:usize
     (*mesh).get_geometry_mut().set_vertices(vertices);
 }
 #[no_mangle]
+pub unsafe extern "C" fn set_indices(mesh:*mut Mesh, ptr:*mut usize, length:usize) {
+    let indices=Vec::from_raw_parts(ptr, length, length);
+    let geometry = (*mesh).get_geometry_mut();
+    geometry.set_indices(indices);
+}
+#[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices(mesh:*mut Mesh, indices_ptr:*mut usize, indices_length:usize, vertices_ptr:*mut f32, vertices_length:usize) {
     let indices=Vec::from_raw_parts(indices_ptr, indices_length, indices_length);
     let vertices=Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_length);
     let geometry = (*mesh).get_geometry_mut();
     geometry.indices=indices;
     geometry.set_vertices(vertices);
-
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_pointer(mesh: *mut Mesh) -> *const f32 {
@@ -370,7 +375,7 @@ impl Mesh {
         let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).density(2.0).restitution(0.5).build());
         Box::leak(collider)
     }
-    pub unsafe fn add_geometry<'a>(
+    pub unsafe fn create_geometry<'a>(
         &'static mut self,
         has_bounding:bool,
         vertices_stride:usize,

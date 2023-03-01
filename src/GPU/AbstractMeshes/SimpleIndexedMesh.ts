@@ -57,11 +57,11 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
                 }
             )
             if (!iBuffer) {
-                iBuffer = Buffer.create(engine.gpu, indicesView.byteLength, [GPUBufferUsage.INDEX], 'index_' + mainNodeProps.label, b => {
-                    new Uint32Array(b.getMappedRange()).set(indicesView);
+                iBuffer = Buffer.create(engine.gpu, this.indices.byteLength, [GPUBufferUsage.INDEX], 'index_' + mainNodeProps.label, b => {
+                    new Uint32Array(b.getMappedRange()).set(this.indices);
                 })
             }
-            this.drawable!.setIndexBuffer(iBuffer, undefined, undefined, indicesView.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');
+            this.drawable!.setIndexBuffer(iBuffer, undefined, undefined, this.indices.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');
         }
     }
     updateVertices(
