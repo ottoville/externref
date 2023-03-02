@@ -16,13 +16,13 @@ jobs:
   steps:
   - checkout: self
     submodules: true
-  #- task: Npm@1
-  #  displayName: npm audit
-  #  inputs:
-  #    command: custom
-  #    workingDir: src
-  #    verbose: false
-  #    customCommand: audit --audit-level=high
+  - task: Npm@1
+    displayName: npm audit
+    inputs:
+      command: custom
+      workingDir: src
+      verbose: false
+      customCommand: audit --omit dev
   - task: Npm@1
     displayName: npm install
     inputs:
