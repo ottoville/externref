@@ -21,9 +21,9 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
         this.indices_count = indices.length;
         if(indices.buffer !== engine.rust.memory.buffer) {
             ptr = engine.rust.alloc_vector_usize(indices.length);
+            new Uint32Array(engine.rust.memory.buffer, ptr, indices.length).set(indices);
         } else {
             ptr = indices.byteOffset as rust_pointer<'usize'>;
-            new Uint32Array(engine.rust.memory.buffer, ptr, indices.length).set(indices);
         }
         engine.rust.set_indices(this.ptr, ptr, indices.length,);
         this.rebuildTrianglePlanes();
