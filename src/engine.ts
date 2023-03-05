@@ -39,9 +39,21 @@ export type ListenerObj<K extends (Events & keyof HTMLElementEventMap) = (Events
     object: object
 }
 type ListenerOptions = {
+    /**
+     Is this a event for UI elements.
+     */
     ui?: boolean,
+    /**
+     Does this event trigger before other events.
+     */
     priority?: boolean,
+    /**
+     Is this a event deleted after frist trigger.
+     */
     once?: boolean,
+    /**
+     Make this event non preventable by other events. Events can be prevented by returning "true" in callback
+     */
     force?: boolean
 };
 export type rustWasm = {
