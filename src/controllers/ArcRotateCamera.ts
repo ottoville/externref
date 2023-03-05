@@ -174,14 +174,6 @@ export class ArcRotateCamera extends CameraController {
             engine.addInputListener(onceUp)
         }
     }
-    startTooling(): void {
-        engine.removeInputListener(this.#cameraPointerDown);
-        if (this.pointerDown)
-            engine.removeInputListener(this.#cameraMove);
-    }
-    stopTooling(): void {
-        engine.addInputListener(this.#cameraPointerDown);
-    }
     deAttachCameraController() {
         engine.clearInputListeners(this);
         this.serialize();

@@ -57,12 +57,6 @@ export class MeshCamera extends CameraController {
         //TODO
         return true;
     }
-    startTooling(): void {
-        return undefined
-    }
-    stopTooling(): void {
-        return undefined
-    }
     deAttachCameraController() {
         document.exitPointerLock();
         engine.clearInputListeners(this);

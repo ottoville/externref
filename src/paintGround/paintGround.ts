@@ -29,7 +29,6 @@ export abstract class paintGround {
         protected ground: Terrain,
         public resolve: PTResultF
     ) {
-        engine.inputManager?.startTooling();
         engine.addInputListener(this.#mainPointerDown);
     }
     //public resolve: PTResultF = () => null;
@@ -143,7 +142,6 @@ export abstract class paintGround {
         options: { once: true },
         cb: () => {
             engine.removeInputListener(this.#drawArea)
-            engine.inputManager?.stopTooling();
             //fix race condition
             if (this.#end_position[0] == 0)
                 return;

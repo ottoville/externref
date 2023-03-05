@@ -50,8 +50,6 @@ export abstract class CameraController implements Ellipsoid {
 
     abstract attachCameraController(): void;
     abstract deAttachCameraController(): void;
-    abstract startTooling(): void
-    abstract stopTooling(): void
     abstract checkInputs(): boolean
     abstract calculateCameraPositionAndTarget(): void
 

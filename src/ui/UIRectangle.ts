@@ -25,6 +25,8 @@ export const enum Anchor {
 export type ValueUnit = readonly [
     value: number,
     unit: NumericUnit
+] | readonly [
+    value: 0,
 ]
 
 export type VerticalPosition = {
