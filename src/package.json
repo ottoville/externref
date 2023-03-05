@@ -21,7 +21,8 @@
     "test-integration": "npm run buildRust && start npm run swa && node --experimental-vm-modules node_modules/jest/bin/jest.js  --forceExit --detectOpenHandles --runInBand --silent=false --config=jest.integration.config.js",
     "test-rust": "cargo test           --lib --manifest-path ./Cargo.toml",
     "test-wasm": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
-    "test-duplicates": " jscpd --exitCode 1 --ignore \"./node_modules/**,./rapier,./target,./jest*,./tests/**\" ./"
+    "test-duplicates": " jscpd --exitCode 1 --ignore \"./node_modules/**,./rapier,./target,./jest*,./tests/**\" ./",
+    "clean": "pwsh -Command \"rm *.tsbuildinfo; rm -r ./node_modules;\"; cargo clean --target-dir ../rust"
   },
   "author": "Otto-Ville Lamminpää",
   "license": "All rights reserved",

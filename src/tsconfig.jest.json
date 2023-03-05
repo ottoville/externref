@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports":true,
     "target": "ESNext",
     "module": "ESNext",
     "jsx": "react",
-    "jsxFactory": "TerraUI.createElement",
     "sourceMap": false,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    //"strict": true,
+    "strict": true,
     "tsBuildInfoFile": "tsconfig.testbuild.tsbuildinfo",
     "incremental": true,
     "lib": [

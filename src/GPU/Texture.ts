@@ -92,6 +92,11 @@ export class Texture<
         if (debug) {
             usages |= GPUTextureUsage['COPY_SRC'];
         }
+        if(this.size.width === 0) {
+            throw new Error('Texture must have width')
+        } else if('height' in this.size && this.size.height === 0) {
+            throw new Error('Texture must have height')
+        }
         this.texture = this.gpu.device.createTexture({
             size: this.size,
             sampleCount: sampleCount,

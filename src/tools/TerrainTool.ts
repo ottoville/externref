@@ -4,7 +4,7 @@ import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";
 import type { GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
-import type { Engine, rust_pointer } from "../engine.js";
+import type { Engine, ListenerObj, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
@@ -29,21 +29,25 @@ export class TerrainToolButton extends Button<TerrainToolButtonState,
             subMenu: undefined
         }
     }
-    #inputListener = (e: KeyboardEvent) => {
-        if (e.code === "Digit1") {
-            this.setState({
-                subMenu: 'lower'
-            })
-        } else if (e.code === "Digit2") {
-            this.setState({
-                subMenu: 'raise'
-            })
-        }
-        else if (e.code === 'Backspace') {
-            this.props.menuTree.level = 1;
-            this.setState({
-                subMenu: undefined
-            })
+    #inputListener: ListenerObj<'keydown'> = {
+        object: this,
+        type: 'keydown',
+        cb: (e: KeyboardEvent) => {
+            if (e.code === "Digit1") {
+                this.setState({
+                    subMenu: 'lower'
+                })
+            } else if (e.code === "Digit2") {
+                this.setState({
+                    subMenu: 'raise'
+                })
+            }
+            else if (e.code === 'Backspace') {
+                this.props.menuTree.level = 1;
+                this.setState({
+                    subMenu: undefined
+                })
+            }
         }
     }
     #tool?: TerrainTool
@@ -62,7 +66,7 @@ export class TerrainToolButton extends Button<TerrainToolButtonState,
                 this.#wasOpen = true;
                 this.#tool = new TerrainTool(this.props.terrain);
             }
-            engine.addInputListener('keydown', this, this.#inputListener);
+            engine.addInputListener(this.#inputListener);
             return [
                 UINode.createCtrProps(Button, {
                     ...this.props,
@@ -105,7 +109,7 @@ export class TerrainToolButton extends Button<TerrainToolButtonState,
             this.#wasOpen = false;
             this.#tool?.destroy();
             console.log('remove inputlistener')
-            engine.removeInputListener('keydown', this, this.#inputListener)
+            engine.removeInputListener(this.#inputListener)
         }
         return null
     }
@@ -180,7 +184,7 @@ export class TerrainTool extends MainNode {
 
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
-        engine.addInputListener('pointermove', this, this.#mouseListener)
+        engine.addInputListener(this.#mouseListener)
 
     }
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number, number]) {
@@ -189,24 +193,33 @@ export class TerrainTool extends MainNode {
     private direction: 1 | 0 | -1 = 0;
     private mouseinterval = 0;
 
-    #pointerdownf = (evt: PointerEvent): void => {
-        if (evt.button !== 0) {
-            return;
-        }
-        engine.addInputListenerOnce('pointerup', this, this.#pointerupf)
-        engine.inputManager?.deAttachCameraController();
-
-        this.mouseinterval = setInterval(() => {
-            engine.rust.elevate(this.elevator, this.terrain.mesh.ptr, 200, 5 * this.direction);
-            const elevator_length = engine.rust.get_length(this.elevator);
-            if (elevator_length > 0) {
-                this.terrain.updateSwap2(engine.rust.get_offset(this.elevator) * Float32Array.BYTES_PER_ELEMENT, elevator_length * Float32Array.BYTES_PER_ELEMENT)
+    #pointerdownf: ListenerObj<'pointerdown'> = {
+        object: this,
+        type: 'pointerdown',
+        cb: (evt: PointerEvent): void => {
+            if (evt.button !== 0) {
+                return;
             }
-        }, 17);
+            engine.addInputListener(this.#pointerupf)
+            engine.inputManager?.deAttachCameraController();
+
+            this.mouseinterval = setInterval(() => {
+                engine.rust.elevate(this.elevator, this.terrain.mesh.ptr, 200, 5 * this.direction);
+                const elevator_length = engine.rust.get_length(this.elevator);
+                if (elevator_length > 0) {
+                    this.terrain.updateSwap2(engine.rust.get_offset(this.elevator) * Float32Array.BYTES_PER_ELEMENT, elevator_length * Float32Array.BYTES_PER_ELEMENT)
+                }
+            }, 17);
+        }
     }
-    #pointerupf = (): void => {
-        engine.inputManager?.attachCameraController();
-        clearInterval(this.mouseinterval);
+    #pointerupf: ListenerObj<'pointerup'> = {
+        object: this,
+        type: 'pointerup',
+        options: { once: true },
+        cb: (): void => {
+            engine.inputManager?.attachCameraController();
+            clearInterval(this.mouseinterval);
+        }
     }
     override destroy = (): void => {
         this.drawable.destroy();
@@ -214,27 +227,31 @@ export class TerrainTool extends MainNode {
         //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
         super.destroy();
     };
-    #mouseListener = () => {
-        /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
-            this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
-        });*/
-        engine.gpu!.renderPassScreen.pickPosition(true).then(pickInfo => {
-            if (pickInfo) {
-                this.#pick.meshId = pickInfo.meshId;
-                this.#pick.position[0] = pickInfo.position[0];
-                this.#pick.position[1] = pickInfo.position[1];
-                this.#pick.position[2] = pickInfo.position[2];
-                this.translation = [pickInfo.position[0], 0, pickInfo.position[2]];
-            }
-        }).catch(err => engine.showError(err));
+    #mouseListener: ListenerObj<'pointermove'> = {
+        object: this,
+        type: 'pointermove',
+        cb: () => {
+            /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
+                this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
+            });*/
+            engine.gpu!.renderPassScreen.pickPosition(true).then(pickInfo => {
+                if (pickInfo) {
+                    this.#pick.meshId = pickInfo.meshId;
+                    this.#pick.position[0] = pickInfo.position[0];
+                    this.#pick.position[1] = pickInfo.position[1];
+                    this.#pick.position[2] = pickInfo.position[2];
+                    this.translation = [pickInfo.position[0], 0, pickInfo.position[2]];
+                }
+            }).catch(err => engine.showError(err));
+        }
     }
     raise = (): void => {
         this.direction = 1;
-        engine.addInputListener('pointerdown', this, this.#pointerdownf)
+        engine.addInputListener(this.#pointerdownf)
 
     }
     lower = (): void => {
         this.direction = -1;
-        engine.addInputListener('pointerdown', this, this.#pointerdownf)
+        engine.addInputListener(this.#pointerdownf)
     }
 }

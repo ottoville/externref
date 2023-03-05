@@ -42,11 +42,11 @@ class Light extends MainNode {
     }
 }
 const errors: Error[] = []
-export class Canvas extends TerraCompoment {
-    #progressBar: HTMLProgressElement = <progress min="0" max="100" value="0"></progress>;
-    #progresElem: HTMLSpanElement = <span>0</span>;
-    #errorDialog: HTMLDialogElement = <dialog></dialog>
-    #canvasElem: HTMLCanvasElement = <canvas class="gameControl hidden"></canvas>
+export class Canvas {
+    #progressBar: HTMLProgressElement = document.createElement('progress');
+    #progresElem = document.createElement('span');
+    #errorDialog = document.createElement('dialog')
+    #canvasElem = document.createElement('canvas')
     currentGameTime = 0;
     showError() {
         if (!this.#errorDialog.open) {
@@ -61,7 +61,8 @@ export class Canvas extends TerraCompoment {
         }
     }
     constructor() {
-        super();
+        this.#progressBar.max=100;
+
         this.#errorDialog.addEventListener('close', () => {
             this.showError();
         });
@@ -172,14 +173,14 @@ export class Canvas extends TerraCompoment {
              slope.translation = [23, 500, 23];
          */
             const cone = new Cone({ label: 'cone' }, true);
-            cone.update_euler_angles(90,0,0);
+            cone.update_euler_angles(90, 0, 0);
             cone.translation = [0, 900, -70];
-            cone.update_scale(50,50,50)
+            cone.update_scale(50, 50, 50)
             cone.radius = 50;
             cone.color = [1, 0, 0, 0];
 
 
-            const sphere2 = new Capsule('blueball1', true, false, CAPSULE_ORIENTATION.z, 3);
+            const sphere2 = new Capsule('blueball1', true, false, CAPSULE_ORIENTATION.y, 3);
             sphere2.translation = [60, 900, -70];
             sphere2.radius = 50;
             sphere2.color = [0, 0, 1, 0];
@@ -194,12 +195,12 @@ export class Canvas extends TerraCompoment {
             sphere4.update_scale(30);
             sphere4.color = [1, 0, 1, 0];
 
-            /*
-                    const b = new Box(
-                        {can_collide: false, label: 'PickGreenbox'});
-                    b.translation = [0,400,0]
-                    b.update_scale(500, 500, 500);
-            */
+
+            /*const b = new Box(
+                { can_collide: false, label: 'PickGreenbox' });
+            b.translation = [0, 400, 0]
+            b.update_scale(500, 500, 500);*/
+
             /* const b = new Box(undefined, undefined, true, 'gravitybixbox',undefined,true);
              b.update_scale(100, 5, 100);
              b.translation = [123, 300, 123];
@@ -223,17 +224,17 @@ export class Canvas extends TerraCompoment {
                 renderPass: gpu.renderPassCanvas,
                 label: 'UICanvas',
                 borderSize: {
-                    width: [0, NumericUnit["%"]],
-                    height: [0, NumericUnit["%"]]
+                    width: [0],
+                    height: [0]
                 },
                 scale: { min_width: 1, y: 1, unit: NumericUnit["%"] },
                 translate: {
                     x: {
-                        value: [0, NumericUnit["%"]],
+                        value: [0],
                         anchor: Anchor.CENTER
                     },
                     y: {
-                        value: [0, NumericUnit["%"]],
+                        value: [0],
                         anchor: Anchor.CENTER
                     }
                 },
@@ -270,11 +271,6 @@ export class Canvas extends TerraCompoment {
                     // sceneInitedrej(e);
                 }
             }
-            /*
-            for (let i = 0; i < gameControlsUI.length; i++) {
-                gameControlsUI[i].classList.remove('hidden');
-            }
-            */
         }).catch(e => {
             errors.push(e)
             this.showError();
@@ -287,14 +283,20 @@ export class Canvas extends TerraCompoment {
             this.#progressBar.parentNode?.parentNode?.removeChild(this.#progressBar.parentNode);
     }
     render() {
-        return <div style="height:100%">
-            {this.#errorDialog}
-            {this.#canvasElem}
-            <div style="position:absolute;top:30%; background-color:white;width:100%;text-align:center ">
-                {this.#progresElem}
-                <br />
-                {this.#progressBar}
-            </div>
-        </div >
+        const mainContainer = document.createElement('div')
+        mainContainer.style.height = "100%"
+        mainContainer.appendChild(this.#errorDialog)
+        mainContainer.appendChild(this.#canvasElem)
+        const container = mainContainer.appendChild(document.createElement('div'))
+        container.style.position='absolute';
+        container.style.top='30%';
+        container.style.backgroundColor='white';
+        container.style.width='100%';
+        container.style.textAlign='center';
+
+        container.appendChild(this.#progresElem);
+        container.appendChild(document.createElement('br'));
+        container.appendChild(this.#progressBar);
+        return mainContainer;
     }
 }

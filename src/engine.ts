@@ -32,8 +32,18 @@ globalThis.addEventListener && globalThis.addEventListener('unhandledrejection',
 })
 */
 
-type Listener = (e: UIEvent) => (void | boolean)
-
+export type ListenerObj<K extends (Events & keyof HTMLElementEventMap) = (Events & keyof HTMLElementEventMap)> = {
+    type: K,
+    cb: (e: HTMLElementEventMap[K]) => (void | boolean);
+    options?: ListenerOptions;
+    object: object
+}
+type ListenerOptions = {
+    ui?: boolean,
+    priority?: boolean,
+    once?: boolean,
+    force?: boolean
+};
 export type rustWasm = {
     GPUMeshes(): rust_pointer<"GPUMeshes">,
 
@@ -430,88 +440,47 @@ export class Engine {
 
     }
     #inputMaps = {
-        pointerdown: new Map<object, Set<Listener>>(),
-        pointerup: new Map<object, Set<Listener>>(),
-        pointermove: new Map<object, Set<Listener>>(),
-        pointerleave: new Map<object, Set<Listener>>(),
-        wheel: new Map<object, Set<Listener>>(),
-        keydown: new Map<object, Set<Listener>>(),
-        keyup: new Map<object, Set<Listener>>(),
+        pointerdown: new Set<ListenerObj>(),
+        pointerup: new Set<ListenerObj>,
+        pointermove: new Set<ListenerObj>,
+        pointerleave: new Set<ListenerObj>,
+        wheel: new Set<ListenerObj>,
+        keydown: new Set<ListenerObj>,
+        keyup: new Set<ListenerObj>,
+    };
 
-        pointerdownOnce: new Map<object, Set<Listener>>(),
-        pointerupOnce: new Map<object, Set<Listener>>(),
-        pointermoveOnce: new Map<object, Set<Listener>>(),
-        pointerleaveOnce: new Map<object, Set<Listener>>(),
-        wheelOnce: new Map<object, Set<Listener>>(),
-        keydownOnce: new Map<object, Set<Listener>>(),
-        keyupOnce: new Map<object, Set<Listener>>(),
-
-        UIpointerdown: new Map<object, Set<Listener>>(),
-        UIpointerup: new Map<object, Set<Listener>>(),
-        UIpointermove: new Map<object, Set<Listener>>(),
-        UIpointerleave: new Map<object, Set<Listener>>(),
-        UIwheel: new Map<object, Set<Listener>>(),
-        UIkeydown: new Map<object, Set<Listener>>(),
-        UIkeyup: new Map<object, Set<Listener>>(),
-
-        UIpointerdownOnce: new Map<object, Set<Listener>>(),
-        UIpointerupOnce: new Map<object, Set<Listener>>(),
-        UIpointermoveOnce: new Map<object, Set<Listener>>(),
-        UIpointerleaveOnce: new Map<object, Set<Listener>>(),
-        UIwheelOnce: new Map<object, Set<Listener>>(),
-        UIkeydownOnce: new Map<object, Set<Listener>>(),
-        UIkeyupOnce: new Map<object, Set<Listener>>(),
-
-    } as const;
     /*
         Add listener to canvas element.
          * type: type of listener
          * object: The object which adds the listener, this is used to remove listener when object is destroyed
     */
-    addInputListener<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => (void | boolean), ui = false) {
-        let map: Map<object, Set<Listener>>
-        if (ui) {
-            map = this.#inputMaps[`UI${type}`];
-        } else {
-            map = this.#inputMaps[type];
-        }
-        let cbs = map.get(object);
-        if (!cbs) {
-            cbs = new Set();
-            map.set(object, cbs);
-        }
+    addInputListener<K extends (Events & keyof HTMLElementEventMap) = (Events & keyof HTMLElementEventMap)>(obj: ListenerObj<K>) {
         // To ensure that events added while processing events does not trigger in same loop
         queueMicrotask(() => {
-            //@ts-expect-error
-            cbs.add(cb);
+            if (obj.options?.priority && this.#inputMaps[obj.type]!.size > 0) {
+                //@ts-expect-error
+                this.#inputMaps[obj.type] = new Set([obj, ...this.#inputMaps[obj.type]!])
+            } else {
+                //@ts-expect-error
+                this.#inputMaps[obj.type].add(obj);
+            }
         })
 
     }
-    addInputListenerOnce<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => (void | boolean), ui = false) {
-        let map: Map<object, Set<Listener>>
-        if (ui) {
-            map = this.#inputMaps[`UI${type}Once`];
-        } else {
-            map = this.#inputMaps[`${type}Once`];
-        }
-        let cbs = map.get(object);
-        if (!cbs) {
-            cbs = new Set();
-            map.set(object, cbs);
-        }
+    removeInputListener<K extends (Events & keyof HTMLElementEventMap) = (Events & keyof HTMLElementEventMap)>(listenerObj: ListenerObj<K>) {
         //@ts-expect-error
-        cbs.add(cb);
-    }
-    removeInputListener<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => void) {
-        //@ts-expect-error
-        const removed = this.#inputMaps[type].get(object)?.delete(cb) || this.#inputMaps[`${type}Once`].get(object)?.delete(cb)
+        const removed = this.#inputMaps[listenerObj.type].delete(listenerObj);
         if (!removed) {
-            console.warn('Removed', type, 'listener on', object, 'that did not exists');
+            console.warn('Removed', listenerObj.type, 'listener on', listenerObj.object, 'that did not exists');
         }
     }
     clearInputListeners(object: object) {
-        Object.values(this.#inputMaps).forEach(map => {
-            map.delete(object);
+        Object.values(this.#inputMaps).forEach(set => {
+            Array.from(set).forEach(eventObj => {
+                if (eventObj.object === object) {
+                    set.delete(eventObj);
+                }
+            })
         });
     }
     constructor(
@@ -528,33 +497,30 @@ export class Engine {
 
         if (canvas) {
             (['pointerup', 'pointerdown', 'pointermove', 'wheel', 'pointerleave', 'keydown', 'keyup'] as const).forEach(eventType => {
-                const UI = 'UI' + eventType as `UI${typeof eventType}`;
-                const UIOnce = UI + 'Once' as `${typeof UI}Once`;
-                const UIEvents = [UI, UIOnce] as const;
                 canvas.ownerDocument.addEventListener(eventType, (e) => {
-                    // TODO: quite a heavy processing, move to rust
-                    for (let i = 0 as 0 | 1; i < 2; i++) {
-                        const inputEntries = this.#inputMaps[UIEvents[i]].entries();
-                        let inputEntryResult = inputEntries.next();
-                        while (!inputEntryResult.done) {
-                            const [, cbs] = inputEntryResult.value;
-                            const cbsEntries = cbs.entries();
-                            let result = cbsEntries.next();
-                            while (!result.done) {
-                                const [cb] = result.value;
-                                if (cb(e)) {
-                                    return;
-                                }
-                                result = cbsEntries.next();
+                    const UIEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {
+                        return eventObj.options?.ui
+                    });
+                    let cancelled = false;
+                    for (let i = 0; i < UIEvents.length; i++) {
+                        if (!cancelled || UIEvents[i]!.options?.force) {
+                            if (UIEvents[i]!.options?.once) {
+                                this.#inputMaps[eventType].delete(UIEvents[i]!);
                             }
-                            inputEntryResult = inputEntries.next();
+                            cancelled = (UIEvents[i]!.cb(e) ?? false) || cancelled;
                         }
                     }
-
-                    this.#inputMaps[eventType].forEach(cbs => cbs.forEach(cb => cb(e)))
-                    const once = eventType + 'Once' as `${typeof eventType}Once`;
-                    this.#inputMaps[once].forEach(cbs => cbs.forEach(cb => cb(e)))
-                    this.#inputMaps[once].clear();
+                    const OtherEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {
+                        return !eventObj.options?.ui
+                    });
+                    for (let i = 0; i < OtherEvents.length; i++) {
+                        if (!cancelled || OtherEvents[i]!.options?.force) {
+                            if (OtherEvents[i]!.options?.once) {
+                                this.#inputMaps[eventType].delete(OtherEvents[i]!);
+                            }
+                            cancelled = (OtherEvents[i]!.cb(e) ?? false) || cancelled
+                        }
+                    }
                 }, { passive: false });
             });
 

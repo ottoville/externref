@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
     "declaration": false,
     "experimentalDecorators": true,
     "outDir": "../wwwroot/js",
@@ -17,7 +18,6 @@
     "noImplicitOverride": true,
     "exactOptionalPropertyTypes": true,
     "jsx": "react",
-    "jsxFactory": "TerraUI.createElement",
     //"strict": true,
     "target": "ESNext",
     "module": "ESNext",
@@ -40,7 +40,7 @@
     },
     "allowSyntheticDefaultImports": true,
   },
-  "include": ["**/*.ts", "**/*.tsx", "./rustwasm/*.js", "code.tsx" ],
+  "include": ["**/*.ts", "**/*.tsx", "./rustwasm/*.js", "code.ts" ],
   "exclude": [
     "node_modules",
     "jestWorker.ts",

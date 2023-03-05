@@ -2,8 +2,7 @@ import { describe, beforeAll, it, expect } from '@jest/globals'
 import type { Page, Browser } from 'puppeteer-core';
 import { jest } from '@jest/globals'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-//declare const puppeteer:typeof import('puppeteer') = require('puppeteer');
+//@ts-ignore
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 jest.setTimeout(10000)
 describe(

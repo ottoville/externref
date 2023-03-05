@@ -3,7 +3,7 @@ import { Terrain } from "../world/Terrain.js";
 import { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";
-import type { Engine } from "../engine.js";
+import type { Engine, ListenerObj } from "../engine.js";
 import { TextureUsageEnums } from "../GPU/Texture.js";
 import { TextureView } from "../GPU/TextureView.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
@@ -31,9 +31,13 @@ export class Zones extends Button<object, ButtonProps & TopMenuButtonProps> {
 
         this.#ratio = Terrain.size[0] / this.#size //texture coordinates
     }
-    #inputListener = (e: KeyboardEvent) => {
-        if (e.code === "Digit1") {
-            this.paintZone();
+    #inputListener: ListenerObj<'keydown'> = {
+        object: this,
+        type: 'keydown',
+        cb: (e: KeyboardEvent) => {
+            if (e.code === "Digit1") {
+                this.paintZone();
+            }
         }
     }
     paintZone() {
@@ -54,7 +58,7 @@ export class Zones extends Button<object, ButtonProps & TopMenuButtonProps> {
                 usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC"],
                 label: 'ZoneTexture'
             });
-            engine.addInputListener('keydown', this, this.#inputListener);
+            engine.addInputListener(this.#inputListener);
             if (engine.DB) {
                 const texture = new OffscreenCanvas(5120, 5120)
                 const ctx = texture.getContext('2d');

@@ -4,6 +4,7 @@ import { Page, Browser } from 'puppeteer-core';
 import { Box as Box2 } from "../GPU/Meshes/Box.js";
 
 import type { Engine } from "../engine.js";
+//@ts-ignore
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 
 describe('Lights ', function () {

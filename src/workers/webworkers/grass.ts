@@ -27,7 +27,7 @@ function clamp(value: number, min: number, max: number) {
 const grids2: Map<string, number[]> = new Map()
 const methods = {
     init: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
-        this.postMessage({ id: data.id });
+        globalThis.postMessage({ id: data.id });
         caches.match(new Request('/grass')).then(response => {
             if (response) {
                 return response.arrayBuffer();
@@ -35,7 +35,7 @@ const methods = {
                 return fetch('/assets/grass').then(response2 => response2.arrayBuffer())
             }
         }).then(arrayBuffer => {
-            this.postMessage({ type: 'updated', buffer: arrayBuffer });
+            globalThis.postMessage({ type: 'updated', buffer: arrayBuffer });
         }).catch(e => {
             console.error('Error in web worker', e)
         })
@@ -132,7 +132,7 @@ const methods = {
                grasspositions[i * 2 + 1] = plantaes[i].pos[1]
            }*/
         console.log('update grass, count', grasspositions.length / 2);
-        this.postMessage({ type: 'updated', count: grasspositions.length / 2, buffer: grasspositions.buffer });
+        globalThis.postMessage({ type: 'updated', count: grasspositions.length / 2, buffer: grasspositions.buffer });
 
         const response = new Response(grasspositions);
         response.headers.set('content-length', grasspositions.buffer.byteLength.toString());
@@ -146,7 +146,7 @@ const methods = {
         const trans = (await DB).transaction(['plantae']);
         trans.objectStore('plantae').getAll().onsuccess = (evt) => {
             bladecount = Math.min((<IDBRequest>evt.target).result.length, grasspositions.length);
-            trans.oncomplete = () => this.postMessage({ type: 'updated', count: bladecount })
+            trans.oncomplete = () => globalThis.postMessage({ type: 'updated', count: bladecount })
             for (let i = 0; i < bladecount; i++) {
                 const r = (<IDBRequest>evt.target).result[i];
                 grasspositions.set(r.pos, i * 2);
@@ -155,6 +155,7 @@ const methods = {
     }
 }
 onmessage = (e: WorkerMessage) => {
+    //@ts-expect-error
     methods[e.data.action](e.data);
 }
 

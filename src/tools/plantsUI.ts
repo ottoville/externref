@@ -2,7 +2,7 @@ import { paintPlane } from "../paintGround/paintPlane.js";
 import type { Plants } from "../plants/Plants.js";
 
 import type { PTDresult } from "../types/interfaces/index.js";
-import type { Engine } from "../engine.js";
+import type { Engine, ListenerObj } from "../engine.js";
 import { UINode } from "../ui/UINode.js";
 import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
 import type { TopMenuButtonProps } from "../ui/topMenu.js";
@@ -21,9 +21,13 @@ export class PlantsUI extends Button<object, ButtonProps & TopMenuButtonProps> {
             throw (new Error('no scene'));
         }
     }
-    #inputListener = (e: KeyboardEvent) => {
-        if (e.code === "Digit1") {
-            this.activateDraw()
+    #inputListener: ListenerObj<'keydown'> = {
+        object: this,
+        type: 'keydown',
+        cb: (e: KeyboardEvent) => {
+            if (e.code === "Digit1") {
+                this.activateDraw()
+            }
         }
     }
     #wasOpen = false;
@@ -31,7 +35,7 @@ export class PlantsUI extends Button<object, ButtonProps & TopMenuButtonProps> {
         super.render();
         if (this.props.open) {
             this.#wasOpen = true
-            engine.addInputListener('keydown', this, this.#inputListener);
+            engine.addInputListener(this.#inputListener);
             return [
                 UINode.createCtrProps(Button,
                     {

@@ -3,7 +3,7 @@ import type { Page, Browser } from 'puppeteer-core';
 
 import { describe, beforeAll, it, expect } from '@jest/globals'
 
-
+//@ts-ignore
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 
 describe('Physic time ', function () {

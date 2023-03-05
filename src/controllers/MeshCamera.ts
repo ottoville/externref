@@ -1,6 +1,6 @@
 import { TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
-import type { Engine } from "../engine";
+import type { Engine, ListenerObj } from "../engine";
 import { CameraController } from "./CameraController.js";
 import { Anchor, NumericUnit, UIRectangle } from "../ui/UIRectangle.js";
 import { UIRectangleBackground } from "../ui/UIRectangleBackground.js";
@@ -17,7 +17,7 @@ export const enum ARROW_KEYS {
     DOWN_LEFT = ARROW_KEYS.DOWN | ARROW_KEYS.LEFT,
 }
 
-const cursorBitmap:Promise<ImageBitmap> = typeof globalThis.createImageBitmap !== 'undefined' ? fetch('/assets/cursor.webp').then(asset => asset.blob()).then(createImageBitmap) : Promise.resolve<ImageBitmap>({} as ImageBitmap);
+const cursorBitmap: Promise<ImageBitmap> = typeof globalThis.createImageBitmap !== 'undefined' ? fetch('/assets/cursor.webp').then(asset => asset.blob()).then(createImageBitmap) : Promise.resolve<ImageBitmap>({} as ImageBitmap);
 export class MeshCamera extends CameraController {
     name = 'PositionCamera';
     angle = Math.PI;
@@ -79,16 +79,16 @@ export class MeshCamera extends CameraController {
                     renderPass: gpu.renderPassCanvas,
                     label: 'cursor',
                     borderSize: {
-                        width: [0, NumericUnit["%"]],
+                        width: [0],
                         height: 'auto',
                     },
                     scale: { min_width: 0.01, y: 0.01, unit: NumericUnit["%"] },
                     translate: {
                         x: {
-                            value: [0, NumericUnit["%"]],
+                            value: [0],
                             anchor: Anchor.CENTER
                         }, y: {
-                            value: [0, NumericUnit["%"]],
+                            value: [0],
                             anchor: Anchor.CENTER
                         }
                     },
@@ -103,10 +103,10 @@ export class MeshCamera extends CameraController {
             });
         }
         this.#lockPointer();
-        engine.addInputListener('pointerdown', this, this.#lockPointer);
-        engine.addInputListener('keydown', this, this.#keydownfunction);
-        engine.addInputListener('keyup', this, this.#keyupfunction);
-        engine.addInputListener('pointermove', this, this.#pointerMoveFunction);
+        engine.addInputListener(this.#lockPointerListener);
+        engine.addInputListener(this.#keydownfunction);
+        engine.addInputListener(this.#keyupfunction);
+        engine.addInputListener(this.#pointerMoveFunction);
     }
     updateMouseCoords = () => {
         const gpu = this.camera.gpu
@@ -128,6 +128,13 @@ export class MeshCamera extends CameraController {
         }).catch(err => {
             engine.showError(err);
         });
+    }
+    #lockPointerListener: ListenerObj<'pointerdown'> = {
+        object: this,
+        type: 'pointerdown',
+        cb: () => {
+            this.#lockPointer()
+        }
     }
     //#serializeRequested=false;
 
@@ -152,36 +159,51 @@ export class MeshCamera extends CameraController {
               console.error(e);
           };*/
     }
-    #keydownfunction = (e: KeyboardEvent) => {
-        if (e.key === 'ArrowUp') {
-            this.arrowKeysDown |= ARROW_KEYS.UP;
-        }
-        else if (e.key === 'ArrowDown') {
-            this.arrowKeysDown |= ARROW_KEYS.DOWN;
-        }
-        if (e.key === 'ArrowLeft') {
-            this.arrowKeysDown |= ARROW_KEYS.LEFT;
-        }
-        else if (e.key === 'ArrowRight') {
-            this.arrowKeysDown |= ARROW_KEYS.RIGHT;
+    #keydownfunction: ListenerObj<'keydown'> = {
+        object: this,
+        type: 'keydown',
+        cb: (e: KeyboardEvent) => {
+            if (e.key === 'ArrowUp') {
+                this.arrowKeysDown |= ARROW_KEYS.UP;
+            }
+            else if (e.key === 'ArrowDown') {
+                this.arrowKeysDown |= ARROW_KEYS.DOWN;
+            }
+            if (e.key === 'ArrowLeft') {
+                this.arrowKeysDown |= ARROW_KEYS.LEFT;
+            }
+            else if (e.key === 'ArrowRight') {
+                this.arrowKeysDown |= ARROW_KEYS.RIGHT;
+            }
         }
     }
-    #pointerMoveFunction = (e: PointerEvent) => {
-        this.pointerMovement = { x: e.movementX, y: e.movementY }
+    #pointerMoveFunction: ListenerObj<'pointermove'> = {
+        object: this,
+        type: 'pointermove',
+        options: {
+            force: true
+        },
+        cb: (e: PointerEvent) => {
+            this.pointerMovement = { x: e.movementX, y: e.movementY }
+        }
     }
-    #keyupfunction = (e: KeyboardEvent) => {
-        if (e.key === 'ArrowUp') {
-            this.arrowKeysDown &= ~ARROW_KEYS.UP;
-            //  this.#mesh.grip=0;
-        }
-        else if (e.key === 'ArrowDown') {
-            this.arrowKeysDown &= ~ARROW_KEYS.DOWN;
-        }
-        if (e.key === 'ArrowLeft') {
-            this.arrowKeysDown &= ~ARROW_KEYS.LEFT;
-        }
-        else if (e.key === 'ArrowRight') {
-            this.arrowKeysDown &= ~ARROW_KEYS.RIGHT;
+    #keyupfunction: ListenerObj<'keyup'> = {
+        object: this,
+        type: 'keyup',
+        cb: (e: KeyboardEvent) => {
+            if (e.key === 'ArrowUp') {
+                this.arrowKeysDown &= ~ARROW_KEYS.UP;
+                //  this.#mesh.grip=0;
+            }
+            else if (e.key === 'ArrowDown') {
+                this.arrowKeysDown &= ~ARROW_KEYS.DOWN;
+            }
+            if (e.key === 'ArrowLeft') {
+                this.arrowKeysDown &= ~ARROW_KEYS.LEFT;
+            }
+            else if (e.key === 'ArrowRight') {
+                this.arrowKeysDown &= ~ARROW_KEYS.RIGHT;
+            }
         }
     }
     lastTranslation = new TerraVector3();

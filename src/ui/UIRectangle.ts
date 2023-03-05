@@ -1,7 +1,7 @@
 import type { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
 import { Buffer, type CopyDstBuffer, GPUBufferUsage, BindUniformBuffer } from "../GPU/Buffer/Buffer.js";
 import { TextureView } from "../GPU/TextureView.js";
-import type { Engine } from "../engine.js";
+import type { Engine, ListenerObj } from "../engine.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { TextureUsageEnums } from "../GPU/Texture.js";
 import { Texture2D } from "../GPU/Texture2D.js";
@@ -292,20 +292,30 @@ export abstract class UIRectangle {
                 )
             }
             let pointerDown = false;
-            engine.addInputListener('pointerup', this, (e) => {
-                if (pointerDown && checkClickArea(e)) {
-                    onClick(e);
-                    return true;
+            engine.addInputListener({
+                object: this,
+                type: 'pointerup',
+                options: { ui: true },
+                cb: (e) => {
+                    if (pointerDown && checkClickArea(e)) {
+                        onClick(e);
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
-            }, true)
-            engine.addInputListener('pointerdown', this, (e) => {
-                if (checkClickArea(e)) {
-                    pointerDown = true;
-                    return true;
+            } as ListenerObj<'pointerup'>)
+            engine.addInputListener({
+                object: this,
+                type: 'pointerdown',
+                options: { ui: true },
+                cb: (e) => {
+                    if (checkClickArea(e)) {
+                        pointerDown = true;
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
-            }, true)
+            } as ListenerObj<'pointerdown'>)
         }
 
         if (!(texture instanceof TextureView)) {

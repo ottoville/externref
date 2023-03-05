@@ -1,4 +1,4 @@
-﻿import type { Engine } from "../engine.js";
+﻿import type { Engine, ListenerObj } from "../engine.js";
 import { TerraMatrix, TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import { CameraController } from "./CameraController.js";
@@ -20,7 +20,7 @@ interface serialized {
     position: { 0: number, 1: number, 2: number } & Float32Array
 }
 export class ArcRotateCamera extends CameraController {
-    name='ArcRotateCamera'
+    name = 'ArcRotateCamera'
     #serializeRequested = false;
     serialize(): void {
         if (this.#serializeRequested || !engine.DB)
@@ -106,70 +106,105 @@ export class ArcRotateCamera extends CameraController {
             this.#rebuildAnglesAndRadius();
         }
     }
-    #cameraMove = (e: PointerEvent) => {
-        e.preventDefault();
-        if (pointerDownButton == 2) {
-            this.#inertialPanning[0] += -e.movementX / panningSensibility;
-            this.#inertialPanning[2] += e.movementY / panningSensibility;
-        } else {
-            this.#inertialAlphaOffset += e.movementX / angularSensibilityX;
-            this.#inertialBetaOffset -= e.movementY / angularSensibilityY;
+    #cameraMove: ListenerObj<'pointermove'> = {
+        type: 'pointermove',
+        object: this,
+        cb: (e) => {
+            e.preventDefault();
+            if (pointerDownButton == 2) {
+                this.#inertialPanning[0] += -e.movementX / panningSensibility;
+                this.#inertialPanning[2] += e.movementY / panningSensibility;
+            } else {
+                this.#inertialAlphaOffset += e.movementX / angularSensibilityX;
+                this.#inertialBetaOffset -= e.movementY / angularSensibilityY;
+            }
         }
     }
-    #cameraWheel = (e: WheelEvent) => {
-        e.preventDefault();
-        let delta = -e.deltaY / (3 * 40);
-        if (e.ctrlKey)
-            delta *= 10;
-        if (delta) {
-            this.inertialRadiusOffset += delta;
+    #cameraWheel: ListenerObj<'wheel'> = {
+        object: this,
+        type: 'wheel',
+        cb: (e) => {
+            e.preventDefault();
+            let delta = -e.deltaY / (3 * 40);
+            if (e.ctrlKey)
+                delta *= 10;
+            if (delta) {
+                this.inertialRadiusOffset += delta;
+            }
         }
     }
-    #cameraPointerDown = (e: PointerEvent) => {
-        pointerDownButton = e.button;
-        if (pointerDownButton !== 2) {
-            engine.gpu?.renderPassScreen.pickPosition().then(position => {
-                if(position) {
-                    this.#targetMovingfrom = new TerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
-                    this.#targetMovingTo = position.position;
-                    this.#targetLerpPosition = 0;
+    pointerDown = false;
+    #cameraPointerDown: ListenerObj<'pointerdown'> = {
+        object: this,
+        type: 'pointerdown',
+        cb: (e: PointerEvent) => {
+            this.pointerDown = true;
+            pointerDownButton = e.button;
+            if (pointerDownButton !== 2) {
+                engine.gpu?.renderPassScreen.pickPosition().then(position => {
+                    if (position) {
+                        this.#targetMovingfrom = new TerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
+                        this.#targetMovingTo = position.position;
+                        this.#targetLerpPosition = 0;
+                    }
+                }).catch(err => engine.showError(err))
+            }
+            engine.addInputListener(this.#cameraMove);
+            const onceUp: ListenerObj<'pointerup'> = {
+                object: this,
+                type: 'pointerup',
+                options: { once: true },
+                cb: () => {
+                    engine.removeInputListener(this.#cameraMove)
+                    engine.removeInputListener(onceLeave);
+                    this.pointerDown = false;
                 }
-            }).catch(err => engine.showError(err))
+            }
+            const onceLeave: ListenerObj<'pointerleave'> = {
+                object: this,
+                type: 'pointerleave',
+                options: { once: true },
+                cb: () => {
+                    engine.removeInputListener(this.#cameraMove);
+                    engine.removeInputListener(onceUp);
+                    this.pointerDown = false;
+                }
+            }
+            engine.addInputListener(onceLeave);
+            engine.addInputListener(onceUp)
         }
-        engine.addInputListener('pointermove', this, this.#cameraMove);
-        const onceUp = () => {
-            engine.removeInputListener('pointermove', this, this.#cameraMove)
-            engine.removeInputListener('pointerleave', this, onceLeace)
-        }
-        const onceLeace = () => {
-            engine.removeInputListener('pointermove', this, this.#cameraMove);
-            engine.removeInputListener('pointerup', this, onceUp);
-        }
-        engine.addInputListenerOnce('pointerleave', this, onceLeace);
-        engine.addInputListenerOnce('pointerup',this, onceUp)
     }
     startTooling(): void {
-        engine.removeInputListener('pointerdown', this, this.#cameraPointerDown);
-        engine.removeInputListener('pointermove', this, this.#cameraMove);
+        engine.removeInputListener(this.#cameraPointerDown);
+        if (this.pointerDown)
+            engine.removeInputListener(this.#cameraMove);
     }
     stopTooling(): void {
-        engine.addInputListener('pointerdown', this, this.#cameraPointerDown);
+        engine.addInputListener(this.#cameraPointerDown);
     }
     deAttachCameraController() {
         engine.clearInputListeners(this);
         this.serialize();
     }
     attachCameraController() {
-        engine.addInputListener('wheel', this, this.#cameraWheel);
-        engine.addInputListener('pointerdown', this, this.#cameraPointerDown);
-        engine.addInputListener('pointermove', this, (e) => {
-            if(this.camera.gpu) {
-                const gpu = this.camera.gpu
-                Atomics.store(gpu.mousePosition, 0, e.clientX * gpu.scale.x)
-                Atomics.store(gpu.mousePosition, 1, e.clientY * gpu.scale.y)
-                Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
+        engine.addInputListener(this.#cameraWheel);
+        engine.addInputListener(this.#cameraPointerDown);
+        engine.addInputListener({
+            object: this,
+            type: 'pointermove',
+            options: {
+                force: true
+            },
+            cb: (e) => {
+                if (this.camera.gpu) {
+                    const gpu = this.camera.gpu
+                    Atomics.store(gpu.mousePosition, 0, e.clientX * gpu.scale.x)
+                    Atomics.store(gpu.mousePosition, 1, e.clientY * gpu.scale.y)
+                    Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
+                }
             }
-        });
+        } as ListenerObj<'pointermove'>
+        );
     }
     #calculatePosition() {
         let sinb = Math.sin(this.#beta);
@@ -183,7 +218,7 @@ export class ArcRotateCamera extends CameraController {
         return this.#computationVector
     }
     calculateCameraPositionAndTarget() {
-        if(!this.cameraControl) {
+        if (!this.cameraControl) {
             throw new Error('no cameracontrol')
         }
         this.#collisionTriggered = true;

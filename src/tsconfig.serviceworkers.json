@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
     "composite": true,
     "outDir": "../wwwroot",
     "module": "esnext",

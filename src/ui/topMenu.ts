@@ -1,6 +1,6 @@
 import type { GPU } from "../GPU.js"
 import type { Terrain } from "../world/Terrain.js";
-import type { Engine } from "../engine.js";
+import type { Engine, ListenerObj } from "../engine.js";
 import { UINode } from "./UINode.js";
 import { TerrainToolButton } from "../tools/TerrainTool.js";
 import { PlantsUI } from "../tools/plantsUI.js";
@@ -26,28 +26,32 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
         this.state = {
             menuOpenName: undefined,
         }
-        engine.addInputListener('keydown', this, this.#inputListener);
+        engine.addInputListener(this.#inputListener);
     }
     menuTree = { level: 0 }
-    #inputListener = (e: KeyboardEvent) => {
-        if (this.state.menuOpenName === undefined) {
-            this.menuTree.level = 1;
-            if (e.code === "Digit1" || e.code === "Digit2" || e.code === "Digit3") {
-                const num = e.code.at(-1);
-                if (num) {
-                    const menu = keyBoardMap[parseInt(num) - 1];
-                    if (menu) {
-                        this.setState({
-                            menuOpenName: menu
-                        })
+    #inputListener: ListenerObj<'keydown'> = {
+        object: this,
+        type: 'keydown',
+        cb: (e: KeyboardEvent) => {
+            if (this.state.menuOpenName === undefined) {
+                this.menuTree.level = 1;
+                if (e.code === "Digit1" || e.code === "Digit2" || e.code === "Digit3") {
+                    const num = e.code.at(-1);
+                    if (num) {
+                        const menu = keyBoardMap[parseInt(num) - 1];
+                        if (menu) {
+                            this.setState({
+                                menuOpenName: menu
+                            })
+                        }
                     }
-                }
 
+                }
+            } else if (e.code === 'Backspace' && this.menuTree.level === 1) {
+                this.setState({
+                    menuOpenName: undefined
+                })
             }
-        } else if (e.code === 'Backspace' && this.menuTree.level === 1) {
-            this.setState({
-                menuOpenName: undefined
-            })
         }
     }
     render() {
@@ -133,6 +137,6 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
     }
     override destroy(): void {
         super.destroy();
-        engine.removeInputListener('keydown', this, this.#inputListener)
+        engine.removeInputListener(this.#inputListener)
     }
 }
