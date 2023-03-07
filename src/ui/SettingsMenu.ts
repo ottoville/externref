@@ -22,35 +22,59 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }> {
         return [
             UINode.createCtrProps(Button, {
                 gpu: this.props.gpu,
-                label: 'MSAA',
-                scale: { min_width: 200, y: 50, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [0, NumericUnit["%"]],
-                        anchor: Anchor.CENTER
-                    }, y: {
-                        value: [0, NumericUnit["%"]],
-                        anchor: Anchor.CENTER
+                UIRectangleProps: {
+                    label: 'MSAA',
+                    scale: { min_width: 200, y: 50, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [0],
+                            anchor: Anchor.CENTER
+                        }, y: {
+                            value: [0],
+                            anchor: Anchor.CENTER
+                        },
                     },
                 },
                 text: 'Toggle MSAA',
             }),
             UINode.createCtrProps(Button, {
                 gpu: this.props.gpu,
-                label: 'Close',
-                scale: { min_width: 200, y: 50, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [0, NumericUnit["%"]],
-                        anchor: Anchor.CENTER
-                    }, y: {
-                        value: [-0.2, NumericUnit["%"]],
-                        anchor: Anchor.CENTER
-                    }
+                UIRectangleProps: {
+                    label: 'Close',
+                    scale: { min_width: 200, y: 50, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [0],
+                            anchor: Anchor.CENTER
+                        }, y: {
+                            value: [-60, NumericUnit.px],
+                            anchor: Anchor.CENTER
+                        }
+                    },
                 },
                 text: 'Close',
                 onClick: () => {
                     this.destroy();
+                }
+            }),
+            UINode.createCtrProps(Button, {
+                gpu: this.props.gpu,
+                UIRectangleProps: {
+                    label: 'DevTools',
+                    scale: { min_width: 200, y: 50, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [0],
+                            anchor: Anchor.CENTER
+                        }, y: {
+                            value: [-120, NumericUnit.px],
+                            anchor: Anchor.CENTER
+                        }
+                    },
+                },
+                text: 'DevTools',
+                onClick: () => {
+                    document.querySelector('aside')!.style.display='block';
                 }
             })
         ];

@@ -40,14 +40,16 @@ export class PlantsUI extends Button<object, ButtonProps & TopMenuButtonProps> {
                 UINode.createCtrProps(Button,
                     {
                         ...this.props,
-                        label: 'createGrassButton',
-                        scale: { min_width: 180, y: 50, unit: NumericUnit.px },
-                        translate: {
-                            x: {
-                                value: [100, NumericUnit.px],
-                                anchor: Anchor.LEFT
+                        UIRectangleProps: {
+                            label: 'createGrassButton',
+                            scale: { min_width: 180, y: 50, unit: NumericUnit.px },
+                            translate: {
+                                x: {
+                                    value: [100, NumericUnit.px],
+                                    anchor: Anchor.LEFT
+                                },
+                                y: this.props.subMenuPosition
                             },
-                            y: this.props.subMenuPosition
                         },
                         text: 'Create grass (1)',
                         onClick: () => this.activateDraw()

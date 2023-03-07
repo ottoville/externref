@@ -60,7 +60,7 @@ export class Canvas {
             }
         }
     }
-    constructor() {
+    constructor(container: HTMLElement) {
         this.#progressBar.max=100;
 
         this.#errorDialog.addEventListener('close', () => {
@@ -274,29 +274,28 @@ export class Canvas {
         }).catch(e => {
             errors.push(e)
             this.showError();
-        })
+        });
+        const mainContainer = container.appendChild(document.createElement('div'));
+        mainContainer.id='mainContainer';
+        mainContainer.appendChild(this.#errorDialog)
+        mainContainer.appendChild(this.#canvasElem);
+        const devTools = container.appendChild(document.createElement('aside'));
+        devTools.style.display = 'none';
+        const closeButton = devTools.appendChild(document.createElement('button'));
+        closeButton.textContent = 'close';
+        closeButton.onclick = () => {
+            devTools.style.display = 'none';
+        }
+        const progressBarContainer = mainContainer.appendChild(document.createElement('div'));
+        progressBarContainer.id='progressBarContainer';
+        progressBarContainer.appendChild(this.#progresElem);
+        progressBarContainer.appendChild(document.createElement('br'));
+        progressBarContainer.appendChild(this.#progressBar);
     }
     setProgress(value: number) {
         this.#progressBar.value = value;
         this.#progresElem.textContent = value.toFixed(0);
         if (value === 100)
             this.#progressBar.parentNode?.parentNode?.removeChild(this.#progressBar.parentNode);
-    }
-    render() {
-        const mainContainer = document.createElement('div')
-        mainContainer.style.height = "100%"
-        mainContainer.appendChild(this.#errorDialog)
-        mainContainer.appendChild(this.#canvasElem)
-        const container = mainContainer.appendChild(document.createElement('div'))
-        container.style.position='absolute';
-        container.style.top='30%';
-        container.style.backgroundColor='white';
-        container.style.width='100%';
-        container.style.textAlign='center';
-
-        container.appendChild(this.#progresElem);
-        container.appendChild(document.createElement('br'));
-        container.appendChild(this.#progressBar);
-        return mainContainer;
     }
 }

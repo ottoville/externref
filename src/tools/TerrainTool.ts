@@ -70,15 +70,17 @@ export class TerrainToolButton extends Button<TerrainToolButtonState,
             return [
                 UINode.createCtrProps(Button, {
                     ...this.props,
-                    label: 'Lower',
-                    scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
-                    translate: {
-                        x:
-                        {
-                            value: [-0.85, NumericUnit["%"]],
-                            anchor: Anchor.CENTER
+                    UIRectangleProps: {
+                        label: 'Lower',
+                        scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
+                        translate: {
+                            x:
+                            {
+                                value: [-0.85, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            },
+                            y: this.props.subMenuPosition
                         },
-                        y: this.props.subMenuPosition
                     },
                     text: 'Lower (1)',
                     onClick: () => {
@@ -88,14 +90,16 @@ export class TerrainToolButton extends Button<TerrainToolButtonState,
                     }
                 }), UINode.createCtrProps(Button, {
                     ...this.props,
-                    label: 'Raise',
-                    scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
-                    translate: {
-                        x: {
-                            value: [-0.6, NumericUnit["%"]],
-                            anchor: Anchor.CENTER
+                    UIRectangleProps: {
+                        label: 'Raise',
+                        scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
+                        translate: {
+                            x: {
+                                value: [-0.6, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            },
+                            y: this.props.subMenuPosition
                         },
-                        y: this.props.subMenuPosition
                     },
                     text: 'Raise (2)',
                     onClick: () => {

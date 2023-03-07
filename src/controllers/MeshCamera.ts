@@ -113,7 +113,7 @@ export class MeshCamera extends CameraController {
     #lockPointer = () => {
         if (document.pointerLockElement)
             return;
-        (document.body.requestPointerLock() as unknown as Promise<void>).then(() => {
+        (engine.canvas!.requestPointerLock() as unknown as Promise<void>).then(() => {
             const gpu = this.camera.gpu
             if (gpu) {
                 this.updateMouseCoords();

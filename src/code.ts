@@ -9,7 +9,7 @@ window.render = async (play = false) => {
     app.innerHTML = ''
     const creditentials = await fetch('/.auth/me').then(response => response.json());
     if (play) {
-        return app.appendChild(new Canvas().render())
+        return new Canvas(app);
     }
     app.innerHTML =`<div>
         <h3>Log in to play the game</h3>
@@ -26,11 +26,3 @@ window.render = async (play = false) => {
 }
 //@ts-expect-error
 window.render();
-
-console.log(app)
-
-const loadelem = document.body.appendChild(document.createElement("div"));
-loadelem.style.position = 'absolute';
-loadelem.style.right = '30%';
-loadelem.style.top = '30%';
-loadelem.style.display = 'none';

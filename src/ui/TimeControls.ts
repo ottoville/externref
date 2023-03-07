@@ -31,30 +31,34 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
         return [
             UINode.createCtrProps(Button, {
                 gpu: this.gpu,
-                label: 'TimeOfDay',
-                scale: { min_width: 300, y: 30, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [150, NumericUnit.px],
-                        anchor: Anchor.RIGHT
+                UIRectangleProps: {
+                    label: 'TimeOfDay',
+                    scale: { min_width: 300, y: 30, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [150, NumericUnit.px],
+                            anchor: Anchor.RIGHT
+                        },
+                        y: {
+                            value: [80, NumericUnit.px],
+                            anchor: Anchor.BOTTOM
+                        }
                     },
-                    y: {
-                        value: [80, NumericUnit.px],
-                        anchor: Anchor.BOTTOM
-                    }
                 },
                 text: 'Time of day ' + this.state.timeOfDay,
             }),
             UINode.createCtrProps(Button, {
                 gpu: this.gpu,
-                label: 'pause',
-                scale: { min_width: 30, y: 30, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [275, NumericUnit.px],
-                        anchor: Anchor.RIGHT
+                UIRectangleProps: {
+                    label: 'pause',
+                    scale: { min_width: 30, y: 30, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [275, NumericUnit.px],
+                            anchor: Anchor.RIGHT
+                        },
+                        y: yPos
                     },
-                    y: yPos
                 },
                 text: '⏸️',
                 onClick: () => {
@@ -63,14 +67,16 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
             }),
             UINode.createCtrProps(Button, {
                 gpu: this.gpu,
-                label: 'play',
-                scale: { min_width: 30, y: 30, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [235, NumericUnit.px],
-                        anchor: Anchor.RIGHT
+                UIRectangleProps: {
+                    label: 'play',
+                    scale: { min_width: 30, y: 30, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [235, NumericUnit.px],
+                            anchor: Anchor.RIGHT
+                        },
+                        y: yPos
                     },
-                    y: yPos
                 },
                 text: '▶️',
                 onClick: () => {
@@ -79,14 +85,16 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
             }),
             UINode.createCtrProps(Button, {
                 gpu: this.gpu,
-                label: 'fastforward',
-                scale: { min_width: 30, y: 30, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [190, NumericUnit.px],
-                        anchor: Anchor.RIGHT
+                UIRectangleProps: {
+                    label: 'fastforward',
+                    scale: { min_width: 30, y: 30, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [190, NumericUnit.px],
+                            anchor: Anchor.RIGHT
+                        },
+                        y: yPos
                     },
-                    y: yPos
                 },
                 text: '⏩',
                 onClick: () => {
@@ -95,14 +103,16 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
             }),
             UINode.createCtrProps(Button, {
                 gpu: this.gpu,
-                label: 'fastforward1',
-                scale: { min_width: 30, y: 30, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [145, NumericUnit.px],
-                        anchor: Anchor.RIGHT
+                UIRectangleProps: {
+                    label: 'fastforward1',
+                    scale: { min_width: 30, y: 30, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [145, NumericUnit.px],
+                            anchor: Anchor.RIGHT
+                        },
+                        y: yPos
                     },
-                    y: yPos
                 },
                 text: '4⏩',
                 onClick: () => {
@@ -111,14 +121,16 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
             }),
             UINode.createCtrProps(Button, {
                 gpu: this.gpu,
-                label: 'fastforward2',
-                scale: { min_width: 30, y: 30, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [105, NumericUnit.px],
-                        anchor: Anchor.RIGHT
+                UIRectangleProps: {
+                    label: 'fastforward2',
+                    scale: { min_width: 30, y: 30, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [105, NumericUnit.px],
+                            anchor: Anchor.RIGHT
+                        },
+                        y: yPos
                     },
-                    y: yPos
                 },
                 text: '8⏩',
                 onClick: () => {
@@ -127,14 +139,16 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
             }),
             UINode.createCtrProps(Button, {
                 gpu: this.gpu,
-                label: 'fastforward3',
-                scale: { min_width: 30, y: 30, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [65, NumericUnit.px],
-                        anchor: Anchor.RIGHT
+                UIRectangleProps: {
+                    label: 'fastforward3',
+                    scale: { min_width: 30, y: 30, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [65, NumericUnit.px],
+                            anchor: Anchor.RIGHT
+                        },
+                        y: yPos
                     },
-                    y: yPos
                 },
                 text: '16⏩',
                 onClick: () => {
@@ -143,14 +157,16 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
             }),
             UINode.createCtrProps(Button, {
                 gpu: this.gpu,
-                label: 'fastforward4',
-                scale: { min_width: 30, y: 30, unit: NumericUnit.px },
-                translate: {
-                    x: {
-                        value: [25, NumericUnit.px],
-                        anchor: Anchor.RIGHT
+                UIRectangleProps: {
+                    label: 'fastforward4',
+                    scale: { min_width: 30, y: 30, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [25, NumericUnit.px],
+                            anchor: Anchor.RIGHT
+                        },
+                        y: yPos
                     },
-                    y: yPos
                 },
                 text: '32⏩',
                 onClick: () => {

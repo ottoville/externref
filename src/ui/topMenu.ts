@@ -71,36 +71,40 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
             [
                 UINode.createCtrProps(PlantsUI, {
                     ...commonProps,
-                    open: this.state.menuOpenName === 'Plants',
-                    label: 'Plants',
-                    scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
-                    translate: {
-                        x: {
-                            value: [-0.9, NumericUnit["%"]],
-                            anchor: Anchor.CENTER
-                        }, y: {
-                            value: [0.9, NumericUnit["%"]],
-                            anchor: Anchor.CENTER
+                    UIRectangleProps: {
+                        label: 'Plants',
+                        scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
+                        translate: {
+                            x: {
+                                value: [-0.9, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            }, y: {
+                                value: [0.9, NumericUnit["%"]],
+                                anchor: Anchor.CENTER
+                            }
                         }
                     },
+                    open: this.state.menuOpenName === 'Plants',
                     text: 'Plants (1)',
                     menuTree: this.menuTree,
                 }),
                 UINode.createCtrProps(TerrainToolButton,
                     {
                         ...commonProps,
-                        open: this.state.menuOpenName === 'Terrain',
-                        label: 'Terrain',
-                        scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
-                        translate: {
-                            x: {
-                                value: [-0.75, NumericUnit["%"]],
-                                anchor: Anchor.CENTER
-                            }, y: {
-                                value: [0.9, NumericUnit["%"]],
-                                anchor: Anchor.CENTER
+                        UIRectangleProps: {
+                            label: 'Terrain',
+                            scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
+                            translate: {
+                                x: {
+                                    value: [-0.75, NumericUnit["%"]],
+                                    anchor: Anchor.CENTER
+                                }, y: {
+                                    value: [0.9, NumericUnit["%"]],
+                                    anchor: Anchor.CENTER
+                                }
                             }
                         },
+                        open: this.state.menuOpenName === 'Terrain',
                         text: 'Terrain (2)',
                         menuTree: this.menuTree,
                     }
@@ -108,25 +112,27 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                 UINode.createCtrProps(Zones,
                     {
                         ...commonProps,
-                        menuTree: this.menuTree,
-                        open: this.state.menuOpenName === 'Zones',
-                        label: 'Zones',
-                        scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
-                        translate: {
-                            x: {
-                                value: [-0.6, NumericUnit["%"]],
-                                anchor: Anchor.CENTER
-                            }, y: {
-                                value: [0.9, NumericUnit["%"]],
-                                anchor: Anchor.CENTER
+                        UIRectangleProps: {
+                            label: 'Zones',
+                            scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
+                            translate: {
+                                x: {
+                                    value: [-0.6, NumericUnit["%"]],
+                                    anchor: Anchor.CENTER
+                                }, y: {
+                                    value: [0.9, NumericUnit["%"]],
+                                    anchor: Anchor.CENTER
+                                }
                             }
                         },
+                        menuTree: this.menuTree,
+                        open: this.state.menuOpenName === 'Zones',
                         text: 'Zones (3)',
                     }
                 ),
             ];
         menus.forEach(menu => {
-            keyBoardMap.push(menu.props.label)
+            keyBoardMap.push(menu.props.UIRectangleProps.label)
         })
         return menus;
     }

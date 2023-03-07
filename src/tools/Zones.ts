@@ -94,14 +94,16 @@ export class Zones extends Button<object, ButtonProps & TopMenuButtonProps> {
                 UINode.createCtrProps(Button,
                     {
                         ...this.props,
-                        label: 'residentalButton',
-                        scale: { min_width: 0.15, y: 0.07, unit: NumericUnit["%"] },
-                        translate: {
-                            x: {
-                                value: [-0.8, NumericUnit["%"]],
-                                anchor: Anchor.CENTER
+                        UIRectangleProps: {
+                            label: 'residentalButton',
+                            scale: { min_width: 0.15, y: 0.07, unit: NumericUnit["%"] },
+                            translate: {
+                                x: {
+                                    value: [-0.8, NumericUnit["%"]],
+                                    anchor: Anchor.CENTER
+                                },
+                                y: this.props.subMenuPosition
                             },
-                            y: this.props.subMenuPosition
                         },
                         text: 'Residental (1)',
                         onClick: () => {

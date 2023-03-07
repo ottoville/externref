@@ -173,8 +173,6 @@ export abstract class UIRectangle {
         } else {
             widthPixels = scale.min_width
         }
-        const halfWidth = widthPixels * 0.5 * 1 / devicePixelRatio
-        let halfHeight: number;
         if (originalAspectRatio) {
             const heightPixels = widthPixels * originalAspectRatio;
             if (scale.unit === NumericUnit["%"]) {
@@ -182,36 +180,44 @@ export abstract class UIRectangle {
             } else {
                 scale.y = heightPixels;
             }
-            halfHeight = halfWidth * originalAspectRatio;
-        } else {
-            if (scale.unit === NumericUnit["%"]) {
-                halfHeight = renderPass.size.height * scale.y * 0.5 * 1 / devicePixelRatio
-            } else {
-                halfHeight = scale.y * 0.5 * 1 / devicePixelRatio
-
+        }
+        if (this.props.events) {
+            const halfWidth = widthPixels * 0.5
+            let halfHeight: number;
+            if (originalAspectRatio)
+                halfHeight = halfWidth * originalAspectRatio;
+            else {
+                if (scale.unit === NumericUnit["%"])
+                    halfHeight = renderPass.size.height * scale.y * 0.5
+                else
+                    halfHeight = scale.y * 0.5
             }
-        }
-        if (translate.x.value[1] === NumericUnit["%"]) {
-            var offsetXPixels = (0.5 * renderPass.size.width * (translate.x.value[0] + 1)) / devicePixelRatio
-        } else {
-            var offsetXPixels = translate.x.value[0] / devicePixelRatio;
-        }
+            let movementXPixels = translate.x.value[0];
+            if (translate.x.value[1] === NumericUnit["%"]) {
+                movementXPixels = translate.x.value[0] * renderPass.size.width * 0.5
+            }
+            if (translate.x.anchor === Anchor.RIGHT) {
+                movementXPixels = renderPass.size.width - movementXPixels;
+            }
+            else if (translate.x.anchor === Anchor.CENTER) {
+                movementXPixels = movementXPixels + renderPass.size.width * 0.5
+            }
+            let movementYPixels = translate.y.value[0];
+            if (translate.y.value[1] === NumericUnit["%"]) {
+                movementYPixels = translate.y.value[0] * renderPass.size.height * 0.5
+            }
+            if (translate.y.anchor === Anchor.BOTTOM) {
+                movementYPixels = renderPass.size.height - movementYPixels;
+            }
+            else if (translate.y.anchor === Anchor.CENTER) {
+                movementYPixels = renderPass.size.height * 0.5 - movementYPixels
+            }
 
-        if (translate.x.anchor === Anchor.RIGHT) {
-            var offsetXPixels = renderPass.size.width / devicePixelRatio - offsetXPixels;
+            this.boundingBox.top = (movementYPixels - halfHeight) / devicePixelRatio;
+            this.boundingBox.bottom = (movementYPixels + halfHeight) / devicePixelRatio;
+            this.boundingBox.left = (movementXPixels - halfWidth) / devicePixelRatio;
+            this.boundingBox.right = (movementXPixels + halfWidth) / devicePixelRatio;
         }
-        if (translate.y.value[1] === NumericUnit["%"]) {
-            var offsetYPixels = (0.5 * renderPass.size.height * (1 - translate.y.value[0])) / devicePixelRatio
-        } else {
-            var offsetYPixels = translate.y.value[0] / devicePixelRatio;
-        }
-        if (translate.y.anchor === Anchor.BOTTOM) {
-            var offsetYPixels = renderPass.size.height / devicePixelRatio - offsetYPixels;
-        }
-        this.boundingBox.top = offsetYPixels - halfHeight;
-        this.boundingBox.bottom = offsetYPixels + halfHeight;
-        this.boundingBox.left = offsetXPixels - halfWidth;
-        this.boundingBox.right = offsetXPixels + halfWidth;
 
         const { borderSize, label } = this.props
         let widthBorderPixels: number

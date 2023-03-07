@@ -509,7 +509,12 @@ export class Engine {
 
         if (canvas) {
             (['pointerup', 'pointerdown', 'pointermove', 'wheel', 'pointerleave', 'keydown', 'keyup'] as const).forEach(eventType => {
+                // keyup and keydown wont trigger if listener is canvas
                 canvas.ownerDocument.addEventListener(eventType, (e) => {
+                    // Do not trigger on devtools
+                    if(!(eventType ==='keydown' || eventType === 'keyup') && e.target !== canvas) {
+                        return;
+                    }
                     const UIEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {
                         return eventObj.options?.ui
                     });

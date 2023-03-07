@@ -23,7 +23,7 @@
             "preLaunchTask": "start-swa"
         },
         {
-            "type": "pwa-msedge",
+            "type": "msedge",
             "name": "Launch Microsoft Edge",
             "request": "launch",
             "runtimeExecutable": "canary",

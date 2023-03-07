@@ -26,21 +26,23 @@ export class CreateFPSMeter extends UINode<{ gpu: GPU }, MenuState> {
         return [
             UINode.createCtrProps(UIRectangleNode, {
                 gpu: props.gpu,
-                label: 'FPS',
-                scale: { min_width: 10, y: 30, unit: NumericUnit.px },
-                borderSize: {
-                    width: [0, NumericUnit.px],
-                    height: 'auto',
-                },
-                translate: {
-                    x: {
-                        value: [15, NumericUnit.px],
-                        anchor: Anchor.LEFT
+                UIRectangleProps: {
+                    label: 'FPS',
+                    scale: { min_width: 10, y: 30, unit: NumericUnit.px },
+                    translate: {
+                        x: {
+                            value: [15, NumericUnit.px],
+                            anchor: Anchor.LEFT
+                        },
+                        y: {
+                            value: [25, NumericUnit.px],
+                            anchor: Anchor.BOTTOM
+                        }
                     },
-                    y: {
-                        value: [25, NumericUnit.px],
-                        anchor: Anchor.BOTTOM
-                    }
+                    borderSize: {
+                        width: [0, NumericUnit.px],
+                        height: 'auto',
+                    },
                 },
                 text: this.state.fps.toString(),
             })

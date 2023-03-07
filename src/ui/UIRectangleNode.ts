@@ -7,12 +7,13 @@ import type { Engine } from "../engine.js";
 declare const engine: Engine;
 
 export type UIRectangleNodeProps = {
+    UIRectangleProps: Omit<UIRectangleProps, "canvaspipeline" | "renderPass">,
     gpu: GPU,
     bitmap?: ImageBitmap | Promise<ImageBitmap> | undefined,
     text: string,
     onClick?: ((menuName?: string) => void) | undefined
     children?: (ReturnType<typeof UINode["createCtrProps"]> | null)[] | null | undefined
-} & Pick<UIRectangleProps, 'scale' | 'translate' | 'label' | 'originalAspectRatio' | 'borderSize'>
+}
 export class UIRectangleNode<S extends object = object, P extends UIRectangleNodeProps = UIRectangleNodeProps> extends UINode<P, S> {
     static instances: Map<UINode, UIRectangleNode> = new Map()
     static getInstance<P extends UIRectangleNodeProps>(host: UINode, props: P): UIRectangleNode {
@@ -45,45 +46,41 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
         }, this.props.text);
     }
     render() {
-        const props = this.props;
+        const { gpu, onClick, bitmap, text, children } = this.props
         const commonProps: UIRectangleProps = {
-            canvaspipeline: props.gpu.UIPipeline,
-            renderPass: props.gpu.renderPassCanvas,
-            label: props.label,
-            borderSize: props.borderSize,
-            scale: props.scale,
-            translate: props.translate,
-            originalAspectRatio: props.originalAspectRatio,
-            events: {
+            canvaspipeline: gpu.UIPipeline,
+            renderPass: gpu.renderPassCanvas,
+            ...this.props.UIRectangleProps,
+        }
+        if (onClick) {
+            commonProps.events = {
                 onClick: () => {
-                    if (this.props.onClick) {
-                        this.props.onClick(props.label)
-                    }
+                    onClick(this.props.UIRectangleProps.label)
                 }
             }
         }
         if (!this.#instance) {
-            if (props.bitmap) {
-                if (props.bitmap instanceof ImageBitmap) {
-                    this.#instance = this.createBackgroundInstance(commonProps, props.bitmap);
+            if (bitmap) {
+                if (bitmap instanceof ImageBitmap) {
+                    this.#instance = this.createBackgroundInstance(commonProps, bitmap);
                 } else {
-                    this.#instance = props.bitmap.then(bitmap => {
+                    this.#instance = bitmap.then(bitmap2 => {
                         //Replace promise with resolved value;
-                        this.#instance = this.createBackgroundInstance(commonProps, bitmap);
+                        this.#instance = this.createBackgroundInstance(commonProps, bitmap2);
                         return this.#instance;
                     });
                 }
             } else {
-                this.#instance = new UIRectangleTextOnly(commonProps, props.text);
+                this.#instance = new UIRectangleTextOnly(commonProps, text);
             }
         } else if (this.#instance instanceof UIRectangleBackground || this.#instance instanceof UIRectangleTextOnly) {
-            if (props.text !== this.#instance.text) {
-                this.#instance.text = props.text;
+            if (text !== this.#instance.text) {
+                this.#instance.text = text;
                 this.#instance.createTexture()
             }
         }
-        if (props.children) {
-            return props.children;
+        if (children) {
+            return children;
         }
         return null
     }
