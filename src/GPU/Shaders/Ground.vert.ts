@@ -1,7 +1,7 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js'
-type BindLayouts = GPU["lightsBindGroupTexture2"]["bindGroupLayouts"]
+type BindLayouts = GPU["lightsTextureBindGroup"]["bindGroupLayouts"]
 
 export class GroundVertShader extends VertexShader<
     { main: PipelineLayout },

@@ -4,7 +4,7 @@ import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { Buffer, IndexBuffer, VertexBuffer, GPUBufferUsage, CopyDstBuffer } from "../../GPU/Buffer/Buffer.js";
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
-import type { RenderPipeline } from "../RenderPipeline2.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 import type { DataNodeProps } from "../../nodes/DataNode.js";
 import type { MainNodeProps } from "../../MainNode.js";
 declare const engine: Engine;

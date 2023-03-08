@@ -4,7 +4,7 @@ import { Buffer, type VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 
 import type { Engine } from "../../engine.js";
 import { BindGroup } from "../BindGroup.js";
-import { RenderPipeline } from "../RenderPipeline2.js";
+import { RenderPipeline } from "../RenderPipeline.js";
 declare const engine: Engine;
 
 export type DrawableProps = {
@@ -46,16 +46,16 @@ export abstract class Drawable {
         this.#renderPasses.forEach(rp => {
             const variantP = rp.getVariant(this.renderPipeline);
             // variabtP can be either a promise or results of a promise
-            if ('rootDrawables' in variantP) {
-                this.#renderList.set(rp, variantP.rootDrawables.add(this));
-                rp.bundles.forEach(b => b.destroy())
-            } else {
+            if(variantP instanceof Promise) {
                 variantP.then(variant => {
                     if (this.destroyed)
                         return;
                     this.#renderList.set(rp, variant.rootDrawables.add(this));
                     rp.bundles.forEach(b => b.destroy())
                 }).catch(err => engine.showError(err))
+            } else {
+                this.#renderList.set(rp, variantP.rootDrawables.add(this));
+                rp.bundles.forEach(b => b.destroy())
             }
         });
     }

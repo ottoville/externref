@@ -7,10 +7,10 @@ import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";
 import { RenderPipelineLayout } from "../PipelineLayout.js";
-import type { RenderPipeline } from "../RenderPipeline2.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 
 
-interface RenderPipelineVariant2 {
+interface RenderPipelineVariant {
     renderpipeline: GPURenderPipeline;
     rootDrawables: Set<Drawable>
 }
@@ -36,7 +36,7 @@ export class RenderPass<U extends {
     readonly perspectiveCameras: Set<TerraCamera> = new Set();
 
     readonly bundles: RenderBundleEncoder[] = [];
-    readonly renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2 | Promise<RenderPipelineVariant2>> = new Map();
+    readonly renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant | Promise<RenderPipelineVariant>> = new Map();
     readonly sizeBindGroup: () => BindGroup;
     #sizeBuffer: BindUniformBuffer;
     readonly colorRenderTargets = {} as U

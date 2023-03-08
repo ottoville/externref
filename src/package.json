@@ -11,8 +11,9 @@
     "buildWasm": "wat2wasm.exe collider\\collider.wat --debug-names -o ..\\wwwroot\\collider\\colliderO.wasm",
     "buildWasmSimd": "pwsh -Command ./wat2wasm collider/colliderSIMD2.wat --debug-names -o ../wwwroot/collider/colliderSimdO.wasm",
     "buildWasmSimd-prod": "wat2wasm.exe collider\\colliderSIMD2.wat -o ..\\wwwroot\\collider\\colliderSimd.wasm && wasm-opt.exe ..\\wwwroot\\collider\\colliderSimd.wasm -o ..\\wwwroot\\collider\\colliderSimdO.wasm -O3 --enable-simd --always-inline-max-function-size 200",
-    "build": "npm run buildRust && tsc -b  && npm run buildWasmSimd",
-    "build-prod": "npm run buildRust-prod && tsc -b  && npm run buildWasmSimd",
+    "build": "npm run buildRust && tsc -b  && npm run buildWasmSimd && npm run build-webpack",
+    "build-prod": "npm run buildRust-prod && tsc -b  && npm run buildWasmSimd && npm run build-webpack",
+    "build-webpack": "webpack --config .\\webpack.config.canvas.js && webpack --config .\\webpack.config.devtools.js",
     "eslint": "eslint --ext .ts,.tsx --quiet ./",
     "eslint-fix": "eslint --fix --ext .ts,.tsx --quiet ./",
     "swa": "swa start ../wwwroot/ --ssl --ssl-cert=\"../server.crt\" --ssl-key=\"../server.key\"",
@@ -27,6 +28,7 @@
   "author": "Otto-Ville Lamminpää",
   "license": "All rights reserved",
   "dependencies": {
+    "@microsoft/applicationinsights-web": "2.8.10",
     "@types/offscreencanvas": "2019.7.0",
     "@webgpu/types": "0.1.28",
     "typescript": "4.9.5",
@@ -44,6 +46,10 @@
     "jest": "29.4.3",
     "jscpd": "3.5.3",
     "puppeteer-core": "19.7.2",
-    "ts-jest": "29.0.5"
+    "source-map-loader": "4.0.1",
+    "ts-jest": "29.0.5",
+    "ts-loader": "9.4.2",
+    "webpack": "5.75.0",
+    "webpack-cli": "5.0.1"
   }
 }

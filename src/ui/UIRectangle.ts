@@ -6,7 +6,7 @@ import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { TextureUsageEnums } from "../GPU/Texture.js";
 import { Texture2D } from "../GPU/Texture2D.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
 declare const engine: Engine;
 

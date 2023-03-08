@@ -2,7 +2,7 @@ import { BindablePipelineLayout, PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js'
 
-type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"]
+type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
 
 export class SimpleVertShader extends VertexShader<
     {

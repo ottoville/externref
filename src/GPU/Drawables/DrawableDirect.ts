@@ -1,5 +1,5 @@
 import type { VertexBuffer } from "../Buffer/Buffer.js";
-import type { RenderPipeline } from "../RenderPipeline2.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 import type { VertexShader } from "../Shaders/VertexShader.js";
 import { type DrawableNode } from "../../MainNode.js";
 import { Drawable, DrawableProps } from "./Drawable.js";

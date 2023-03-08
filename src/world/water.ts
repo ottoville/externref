@@ -3,7 +3,7 @@ import type { Scene } from "../Scene.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { WaterRenderPipeline } from "../GPU/RenderPipeLines/Water.js";
 import type { Engine } from "../engine.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { WaterVertShader } from "../GPU/Shaders/Water.vert.js";
 declare const engine: Engine;
 

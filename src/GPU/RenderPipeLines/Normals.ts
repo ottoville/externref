@@ -4,7 +4,7 @@ import { ColorFragShader } from "../Shaders/Color.frag.js";
 
 export const NormalsPipeline = [
     'NormalsPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-        const debugNormalsVertShader = new DebugNormalsVertShader(gpu.positionBindGroupTimeWGSL, {
+        const debugNormalsVertShader = new DebugNormalsVertShader(gpu.positionAndTimeBindGroup, {
             arrayStride: 48,
             stepMode: "vertex",
             attributes: [
@@ -22,11 +22,11 @@ export const NormalsPipeline = [
                 }
             ]
         });
-        return gpu.positionBindGroupTimeWGSL.addRenderPipeline(
+        return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
                 label,
                 vertexShader: debugNormalsVertShader,
-                fragmentShader: new ColorFragShader(gpu.positionBindGroupTimeWGSL),
+                fragmentShader: new ColorFragShader(gpu.positionAndTimeBindGroup),
                 renderPipeline: {
                     primitive
                 }

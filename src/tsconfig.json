@@ -36,7 +36,9 @@
     "tsBuildInfoFile": "tsconfig.main.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "/js/engine/*": ["../wwwroot/js/engine/*"]
+      "/js/engine/*": ["../wwwroot/js/engine/*"],
+      "/js/DevTools.bundle.js": ["./ui/DevTools.ts"],
+      "/js/bundled.js": ["./bundled.ts"]
     },
     "allowSyntheticDefaultImports": true,
   },

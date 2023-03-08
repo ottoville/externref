@@ -297,7 +297,7 @@ TODO
                     }
                 }, 'facet12', PlaneArray)
         )
-        this.TerrainHeightsbindGroupTree = gpu.positionBindGroupTimeWGSL.addChildBindGroupLayout('terrainPipelineLayout',
+        this.TerrainHeightsbindGroupTree = gpu.positionAndTimeBindGroup.addChildBindGroupLayout('terrainPipelineLayout',
             this.heightsLayout.createBindGroup('TerrainHeightsbindGroupTree', bindGroup => [
                 {
                     binding: 0,

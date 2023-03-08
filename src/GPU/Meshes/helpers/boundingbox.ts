@@ -4,7 +4,7 @@ import { BoundingBoxPipeline } from "../../RenderPipeLines/Boundingbox.js";
 import type { Engine } from "../../../engine.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
-import type { RenderPipeline } from "../../RenderPipeline2.js";
+import type { RenderPipeline } from "../../RenderPipeline.js";
 import type { DebugBoundingBoxVertShader } from "../../Shaders/debug_boundingbox.vert.js";
 declare const engine: Engine;
 

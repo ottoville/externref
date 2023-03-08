@@ -6,7 +6,7 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js'
 import { getClusterIndex } from './getClusterIndex.js';
 
-type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"]
+type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
 
 export class SimpleFragShader extends FragmentShader<
     { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {

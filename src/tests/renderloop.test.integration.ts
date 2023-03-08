@@ -9,9 +9,6 @@ const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 describe('Physic time ', function () {
     let page: Page;
     beforeAll(async () => {
-        await new Promise((res) => {
-            setTimeout(res, 2000)
-        });
         page = await browser.newPage();
         await page.goto('https://localhost:4280');
     }, 10000);

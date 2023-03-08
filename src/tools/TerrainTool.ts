@@ -7,7 +7,7 @@ import { TerraVector3 } from "../Math.js";
 import type { Engine, ListenerObj, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import type { TopMenuButtonProps } from "../ui/topMenu.js";
 import { Button, type ButtonProps } from "../ui/Button.js";

@@ -17,7 +17,7 @@ import { BGLayout, BufLayout, SampLayout, TextLayout, ShaderStage } from "./GPU/
 import { UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
 import { ClustersComp } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
-import { RenderPipeline } from "./GPU/RenderPipeline2.js";
+import { RenderPipeline } from "./GPU/RenderPipeline.js";
 import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct } from "./GPU/Shaders/structs/Structs.js";
 import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 import { UIFragShader } from "./GPU/Shaders/UI.frag.js";
@@ -64,14 +64,14 @@ export class GPU {
     readonly GPUMeshes: CopySrcBuffer & CopyDstBuffer & BindStorageBuffer & BindUniformBuffer
     readonly #GPUPointLights: CopyDstBuffer & BindStorageBuffer & BindUniformBuffer;
     readonly #GPUDirectionalLights: CopyDstBuffer & BindStorageBuffer
-    readonly positionBindGroupTimeWGSL: BindablePipelineLayout<readonly [
+    readonly positionAndTimeBindGroup: BindablePipelineLayout<readonly [
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
         BGLayout<[
             BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>
         ]>
     ]>;
-    readonly lightsBindGroupTexture2: BindablePipelineLayout<readonly [
+    readonly lightsTextureBindGroup: BindablePipelineLayout<readonly [
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
         BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,
@@ -271,8 +271,8 @@ export class GPU {
                 resource: this.GPUMeshes.getUniformBinding(bindGroup, 0, GPU.gpu_memory_index_size)
             }
         ]);
-        this.positionBindGroupTimeWGSL = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot', BindGroupLayoutPosition)
-        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.createAppendedLayout('lightsBindGroupTexture2Layout',
+        this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot', BindGroupLayoutPosition)
+        this.lightsTextureBindGroup = this.positionAndTimeBindGroup.createAppendedLayout('lightsBindGroupTexture2Layout',
             new BGLayout(this,
                 'lightsBindGroupTexture2',
                 new SampLayout(
@@ -287,7 +287,7 @@ export class GPU {
                         texture: {}
                     }, 'myTexture', 'texture_2d<f32>')
             ));
-        this.bindGroupTextureWater = this.positionBindGroupTimeWGSL.createSharedLayout('lightsBindGroupTexture2PipelineLayout',
+        this.bindGroupTextureWater = this.positionAndTimeBindGroup.createSharedLayout('lightsBindGroupTexture2PipelineLayout',
             new BGLayout(this,
                 'lightsBindGroupTexture2water',
                 new SampLayout(
@@ -381,21 +381,6 @@ export class GPU {
                     textureViewDescriptor: undefined
                 })
         );
-        //@ts-expect-error
-        window.debugMeshes = async () => {
-            const drawables = (await Promise.all(Array.from(this.positionBindGroupTimeWGSL.renderPipeLines).map(async (rp) => {
-                const variant = this.renderPassScreen.renderPipelines.get(rp);
-                if (variant) {
-                    return Array.from((await variant).rootDrawables).map(drawable => {
-                        return [drawable.label, drawable];
-                    });
-                } else {
-                    return null
-                }
-            }))).flat();
-            console.table(drawables)
-        }
-
         this.renderPassWater = new DepthRenderPass(
             {
                 gpu: this,

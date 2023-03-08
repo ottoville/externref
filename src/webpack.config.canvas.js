@@ -1,0 +1,33 @@
+const path = require('path');
+
+module.exports = {
+    mode: 'development',
+    entry: './bundled.ts',
+    experiments: {
+        outputModule: true,
+    },
+    output: {
+        library: {
+            type: 'module',
+        },
+        path: path.resolve(__dirname, '../wwwroot/js/'),
+        filename: 'bundled.js',
+    },
+    module: {
+        rules: [{ test: /\.ts$/, use: 'ts-loader' },
+            {
+                test: /\.js$/,
+                enforce: 'pre',
+                use: ['source-map-loader'],
+            }],
+    },
+    resolve: {
+        extensionAlias: {
+            '.js': ['.ts', '.js'],
+            '.mjs': ['.mts', '.mjs'],
+        },
+        alias: {
+            "/DevTools.bundle.js": path.resolve(__dirname, "./ui/DevTools.ts")
+        }
+    },
+};

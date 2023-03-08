@@ -3,7 +3,7 @@ import { DrawableSimple } from "../Drawables/DrawableSimple.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { Buffer, VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
-import type { RenderPipeline } from "../RenderPipeline2.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
 import type { MainNodeProps } from "../../MainNode.js";
 import type { DataNodeProps } from "../../nodes/DataNode.js";

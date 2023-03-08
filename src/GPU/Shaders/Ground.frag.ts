@@ -3,7 +3,7 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js'
 import { getClusterIndex } from './getClusterIndex.js';
 
-type BindLayouts = GPU["lightsBindGroupTexture2"]["bindGroupLayouts"]
+type BindLayouts = GPU["lightsTextureBindGroup"]["bindGroupLayouts"]
 
 
 export class GroundFragShader extends FragmentShader<

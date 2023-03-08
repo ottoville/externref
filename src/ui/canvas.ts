@@ -33,6 +33,8 @@ import { createSettingsMenu } from "./SettingsMenu.js";
 import { createTimeControls } from "./TimeControls.js";
 import { CreateFPSMeter } from "./FPS.js";
 import { UIRectangleTextureView } from "./UIRectangleTextureView.js";
+// eslint-disable-next-line import/extensions
+import { DevTools } from "/js/DevTools.bundle.js";
 
 declare const engine: Engine;
 
@@ -68,6 +70,21 @@ export class Canvas {
         });
         this.setProgress(2);
         this.setProgress(6);
+
+        const mainContainer = container.appendChild(document.createElement('div'));
+        mainContainer.id='mainContainer';
+        mainContainer.appendChild(this.#errorDialog)
+        mainContainer.appendChild(this.#canvasElem);
+        const devTools = container.appendChild(document.createElement('aside'));
+        devTools.style.display = 'none';
+        const progressBarContainer = mainContainer.appendChild(document.createElement('div'));
+        progressBarContainer.id='progressBarContainer';
+        progressBarContainer.appendChild(this.#progresElem);
+        progressBarContainer.appendChild(document.createElement('br'));
+        progressBarContainer.appendChild(this.#progressBar);
+
+
+
         const progressForWasmLoading = 34;
         Engine.initEngine(this.#canvasElem, (e) => {
             errors.push(e);
@@ -114,6 +131,7 @@ export class Canvas {
             this.setProgress(40);
 
             const gpu = await terraEngine.GPUReady;
+            DevTools(devTools, gpu);
             const waterCamera = new TerraCamera(engine.mainCamera);
             waterCamera.initForGPU(gpu.renderPassWater, gpu, engine.mainCamera.projection!)
             waterCamera.beforeViewUpdate.add((position, direction) => {
@@ -275,22 +293,6 @@ export class Canvas {
             errors.push(e)
             this.showError();
         });
-        const mainContainer = container.appendChild(document.createElement('div'));
-        mainContainer.id='mainContainer';
-        mainContainer.appendChild(this.#errorDialog)
-        mainContainer.appendChild(this.#canvasElem);
-        const devTools = container.appendChild(document.createElement('aside'));
-        devTools.style.display = 'none';
-        const closeButton = devTools.appendChild(document.createElement('button'));
-        closeButton.textContent = 'close';
-        closeButton.onclick = () => {
-            devTools.style.display = 'none';
-        }
-        const progressBarContainer = mainContainer.appendChild(document.createElement('div'));
-        progressBarContainer.id='progressBarContainer';
-        progressBarContainer.appendChild(this.#progresElem);
-        progressBarContainer.appendChild(document.createElement('br'));
-        progressBarContainer.appendChild(this.#progressBar);
     }
     setProgress(value: number) {
         this.#progressBar.value = value;

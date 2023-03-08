@@ -1,7 +1,7 @@
 import type { IndirectBuffer, VertexBuffer } from "../Buffer/Buffer.js";
 import { Drawable, DrawableProps } from "./Drawable.js";
 import type { VertexShader } from "../Shaders/VertexShader.js";
-import type { RenderPipeline } from "../RenderPipeline2.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 
 export class DrawableIndirect<R extends RenderPipeline = RenderPipeline> extends Drawable {
     constructor(drawableProps: DrawableProps & {

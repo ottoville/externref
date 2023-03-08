@@ -9,7 +9,7 @@ import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import type { Engine } from "../engine.js";
 import { BoundableNodeIndexed } from "../nodes/BoundableNodeIndexed.js";
 import { PlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import { createTiledGround } from "../helpers.js";
 declare const engine: Engine;

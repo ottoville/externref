@@ -2,7 +2,7 @@ import { Buffer, type IndexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect, type MappedVertexBuffers } from "./DrawableDirect.js";
 import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
-import type { RenderPipeline } from "../RenderPipeline2.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 import { DrawableProps } from "./Drawable.js";
 declare const engine: Engine;
 

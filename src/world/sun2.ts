@@ -5,7 +5,7 @@ import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import type { Engine } from "../engine.js";
 import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
 import type { GPU } from "../GPU.js"
-import type { RenderPipeline } from "../GPU/RenderPipeline2.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { SunVertShader } from "../GPU/Shaders/Sun.vert.js";
 declare const engine: Engine;
 

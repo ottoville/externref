@@ -2,7 +2,7 @@ import type { Engine } from "../../engine.js";
 import { DrawableDirect, type MappedVertexBuffers } from "./DrawableDirect.js";
 import { type DrawableNode, MainNode } from "../../MainNode.js";
 import type { BindGroup } from "../BindGroup.js";
-import { RenderPipeline } from "../RenderPipeline2.js";
+import { RenderPipeline } from "../RenderPipeline.js";
 import { DrawableProps } from "./Drawable.js";
 declare const engine: Engine;
 

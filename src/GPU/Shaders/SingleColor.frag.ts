@@ -4,7 +4,7 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from '../../GPU.js'
-type BindLayouts = GPU["positionBindGroupTimeWGSL"]["bindGroupLayouts"]
+type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
 
 export class SingleColorFragShader extends FragmentShader<
     { main: PipelineLayout }, BindLayouts> {
