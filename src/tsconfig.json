@@ -17,7 +17,7 @@
     "noImplicitReturns": true,
     "noImplicitOverride": true,
     "exactOptionalPropertyTypes": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     //"strict": true,
     "target": "ESNext",
     "module": "ESNext",
@@ -37,7 +37,7 @@
     "baseUrl": ".",
     "paths": {
       "/js/engine/*": ["../wwwroot/js/engine/*"],
-      "/js/DevTools.bundle.js": ["./ui/DevTools.ts"],
+      "/js/devTools.bundle.js": ["ui/DevTools.tsx"],
       "/js/bundled.js": ["./bundled.ts"]
     },
     "allowSyntheticDefaultImports": true,

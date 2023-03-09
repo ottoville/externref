@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
     mode: 'development',
-    entry: './ui/DevTools.ts',
+    entry: './ui/DevTools.tsx',
     experiments: {
         outputModule: true,
     },
@@ -14,7 +14,16 @@ module.exports = {
         filename: 'devTools.bundle.js',
     },
     module: {
-        rules: [{ test: /\.ts$/, use: 'ts-loader' },],
+        rules: [{ test: /\.ts|tsx$/, use: 'ts-loader' },],
+    },
+    resolve: {
+        extensionAlias: {
+            '.js': ['.ts', '.js'],
+            '.mjs': ['.mts', '.mjs'],
+        },
+        alias: {
+            "/DevTools.bundle.js": path.resolve(__dirname, "./ui/DevTools.tsx")
+        }
     },
 
 };

@@ -17,7 +17,7 @@ describe('Physic time ', function () {
         await elem?.click();
         await page.waitForSelector('progress');
         await page.waitForFunction(() => !document.querySelector('progress'));
-    })
+    }, 10000)
     it('Delta has changed', async function () {
         const [value0, value1] = await page.evaluate(async function () {
             //@ts-expect-error

@@ -1,11 +1,7 @@
-import type { GPU } from "../GPU";
+import type { GPU } from "../GPU.js";
+import * as ReactDom from "react-dom";
 
 export const DevTools = (container: HTMLElement, gpu: GPU) => {
-    const closeButton = container.appendChild(document.createElement('button'));
-    closeButton.textContent = 'close';
-    closeButton.onclick = () => {
-        container.style.display = 'none';
-    }
     gpu.positionAndTimeBindGroup.renderPipelineListeners.add(async () => {
         const drawables = (await Promise.all(Array.from(gpu.positionAndTimeBindGroup.renderPipeLines).map(async (rp) => {
             const variant = gpu.renderPassScreen.renderPipelines.get(rp);
@@ -18,5 +14,8 @@ export const DevTools = (container: HTMLElement, gpu: GPU) => {
             }
         }))).flat();
         console.log('drawables', drawables);
-    })
+    });
+    ReactDom.render(<button onClick={() => {
+        container.style.display = 'none';
+    }}>Close</button>,container)
 }

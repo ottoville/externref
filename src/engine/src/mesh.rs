@@ -160,6 +160,10 @@ pub unsafe extern "C" fn apply_impulse(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f3
     (*mesh_ptr).apply_impulse(x, y, z)
 }
 #[no_mangle]
+pub unsafe extern "C" fn label_field_pointer(mesh_ptr:*mut Mesh) -> *const String {
+    std::ptr::addr_of!((*mesh_ptr).label)
+}
+#[no_mangle]
 pub unsafe extern "C" fn indices_pointer(mesh_ptr:*mut Mesh) -> *const usize {
     (*mesh_ptr).get_geometry_mut().indices.as_ptr()
 }
@@ -496,7 +500,6 @@ impl Mesh {
             engine2.meshes[new_id].rigid_body_handle = Some(rigid_body_handle);
             engine2.rigid_bodies.insert(rigid_body_handle, &mut engine2.meshes[new_id]);
         }
-        //return ptr;
     }
     pub fn get_geometry(&self) -> &Geometry {
         if let Some(g) = &self.geometry {

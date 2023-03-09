@@ -34,7 +34,7 @@ import { createTimeControls } from "./TimeControls.js";
 import { CreateFPSMeter } from "./FPS.js";
 import { UIRectangleTextureView } from "./UIRectangleTextureView.js";
 // eslint-disable-next-line import/extensions
-import { DevTools } from "/js/DevTools.bundle.js";
+import { DevTools } from "/js/devTools.bundle.js";
 
 declare const engine: Engine;
 

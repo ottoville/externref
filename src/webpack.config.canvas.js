@@ -27,7 +27,7 @@ module.exports = {
             '.mjs': ['.mts', '.mjs'],
         },
         alias: {
-            "/DevTools.bundle.js": path.resolve(__dirname, "./ui/DevTools.ts")
+            "/DevTools.bundle.js": path.resolve(__dirname, "./ui/DevTools.tsx")
         }
     },
 };

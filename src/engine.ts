@@ -126,7 +126,8 @@ export type rustWasm = {
     strip(mesh: rust_pointer<"mesh">): number,
     collider_planes_parallel_pointer(mesh: rust_pointer<"mesh">): rust_pointer<"collider_planes_parallel_pointer">,
     gpu_pointer(mesh: rust_pointer<"mesh">): number,
-    translation_pointer(mesh: rust_pointer<"mesh">): number,
+    label_field_pointer(mesh: rust_pointer<"mesh">): rust_pointer<"label_field">,
+    translation_pointer(mesh: rust_pointer<"mesh">): rust_pointer<"translation">,
     velocity_pointer(mesh: rust_pointer<"mesh">): number,
     intersect_box_aa_sphere(mesh: rust_pointer<"mesh">, collider_ptr: number, radius: number): boolean
     scale_x(mesh: rust_pointer<"mesh">): number,

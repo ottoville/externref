@@ -8,6 +8,8 @@ export interface DrawableNode {
     label: string;
     destroy(): void;
 }
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 export type MainNodeProps = {
     /**
      * Vertices count on vertex buffer. Hox: This is NOT amount of indices
@@ -26,7 +28,11 @@ export abstract class MainNode implements DrawableNode {
     //Actual velocity that occured last tick
     last_velocity: [number, number, number] = [0, 0, 0];
     last_acceleration: [number, number, number] = [0, 0, 0];
-    label: string;
+    get label() : string {
+        const label_field_pointer = engine.rust.label_field_pointer(this.ptr);
+        const [label_ptr, label_len_bytes] = new Uint32Array(engine.rust.memory.buffer, label_field_pointer, 2);
+        return textDecoder.decode(new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len_bytes!*Uint8Array.BYTES_PER_ELEMENT));
+    }
     get speed() {
         return Math.sqrt(this.velocity[0] * this.velocity[0] + this.velocity[1] * this.velocity[1] + this.velocity[2] * this.velocity[2])
     }
@@ -127,13 +133,12 @@ export abstract class MainNode implements DrawableNode {
             rigid_body = true }:
             MainNodeProps
     ) {
-        this.label = label;
         const sceneids = scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1;
-        const label_ptr = engine.rust.alloc_string(label.length);
-        const view = new Uint8Array(engine.rust.memory.buffer, label_ptr, label.length);
-        view.set(new TextEncoder().encode(label));
+        const string_ptr = engine.rust.alloc_string(label.length);
+        textEncoder.encodeInto(label,
+            new Uint8Array(engine.rust.memory.buffer, string_ptr, label.length));
+        this.ptr = engine.rust.new_mesh(MainNode.uniqueID++, positionsCount, point_light, directional_light, sceneids, strip, fixed, rigid_body, string_ptr);
 
-        this.ptr = engine.rust.new_mesh(MainNode.uniqueID++, positionsCount, point_light, directional_light, sceneids, strip, fixed, rigid_body, label_ptr);
         MainNode.Meshes.set(this.id, this);
     }
     destroy() {
