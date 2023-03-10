@@ -14,14 +14,7 @@ export default {
         filename: 'bundled.js',
     },
     module: {
-        rules: [
-            { test: /\.ts$/, use: 'ts-loader' },
-            {
-                test: /\.js$/,
-                enforce: 'pre',
-                use: ['source-map-loader'],
-            }
-        ],
+        rules: [{ test: /\.ts$/, use: 'ts-loader' },],
     },
     resolve: {
         extensionAlias: {
