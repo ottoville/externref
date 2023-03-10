@@ -1,6 +1,6 @@
-const path = require('path');
+import * as path from 'path';
 
-module.exports = {
+export default {
     mode: 'development',
     entry: './ui/DevTools/DevToolsApp.tsx',
     experiments: {
@@ -10,7 +10,7 @@ module.exports = {
         library: {
             type: 'module',
         },
-        path: path.resolve(__dirname, '../wwwroot/js/ui/DevTools/'),
+        path: path.resolve('../wwwroot/js/ui/DevTools/'),
         filename: 'DevToolsApp.js',
     },
     module: {

@@ -1,6 +1,6 @@
-const path = require('path');
+import * as path from 'path';
 
-module.exports = {
+export default {
     mode: 'development',
     entry: './bundled.ts',
     experiments: {
@@ -10,16 +10,18 @@ module.exports = {
         library: {
             type: 'module',
         },
-        path: path.resolve(__dirname, '../wwwroot/js/'),
+        path: path.resolve('../wwwroot/js/'),
         filename: 'bundled.js',
     },
     module: {
-        rules: [{ test: /\.ts$/, use: 'ts-loader' },
+        rules: [
+            { test: /\.ts$/, use: 'ts-loader' },
             {
                 test: /\.js$/,
                 enforce: 'pre',
                 use: ['source-map-loader'],
-            }],
+            }
+        ],
     },
     resolve: {
         extensionAlias: {
