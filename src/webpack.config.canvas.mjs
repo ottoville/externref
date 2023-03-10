@@ -14,7 +14,11 @@ export default {
         filename: 'bundled.js',
     },
     module: {
-        rules: [{ test: /\.ts$/, use: 'ts-loader' },],
+        rules: [
+            {
+                test: /\.ts$/, use: 'ts-loader'
+            },
+        ],
     },
     resolve: {
         extensionAlias: {

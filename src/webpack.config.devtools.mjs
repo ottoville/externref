@@ -14,12 +14,16 @@ export default {
         filename: 'DevToolsApp.js',
     },
     module: {
-        rules: [{ test: /\.ts|tsx$/, use: 'ts-loader' },],
+        rules: [{ test: /\.ts|tsx$/, use: 'ts-loader' }],
     },
     resolve: {
         extensionAlias: {
             '.js': ['.ts', '.js'],
             '.mjs': ['.mts', '.mjs'],
         }
+    },
+    externals: {
+        '../../MainNode.js': '../../MainNode.js',
+        '../../GPU/Drawables/DrawableDirect.js': '../../GPU/Drawables/DrawableDirect.js'
     },
 };

@@ -170,6 +170,9 @@ export class TerraVector3 extends Float32Array {
             super(Arr, byteOffset, 3);
         }
     }
+    override toString() {
+        return `x: ${this[0]}, y: ${this[1]}, z: ${this[2]}`
+    }
     toQuaternionToRef(angle: number, result: Quaternion) {
         // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
         // assumes axis is normalized

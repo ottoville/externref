@@ -75,9 +75,11 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }> {
                     },
                 },
                 text: 'DevTools',
-                onClick: async () => {
-                    const { DevTools } = await import('./DevTools/DevTools.js');
-                    DevTools(engine.devTools!, this.gpu)
+                onClick: () => {
+                    import('./DevTools/DevTools.js')
+                        .then(({ DevTools }) => DevTools(engine.devTools!, this.gpu))
+                        .catch(err => engine.showError(err));
+                    this.destroy();
                 }
             })
         ];
