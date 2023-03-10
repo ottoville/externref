@@ -40,7 +40,7 @@ jobs:
       command: custom
       workingDir: src
       verbose: false
-      customCommand: run build
+      customCommand: run build-prod
   - task: AzureStaticWebApp@0
     displayName: 'Static Web App: '
     inputs:
