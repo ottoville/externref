@@ -10,9 +10,19 @@ import { RenderPipelineLayout } from "../PipelineLayout.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 
 
-interface RenderPipelineVariant {
-    renderpipeline: GPURenderPipeline;
-    rootDrawables: Set<Drawable>
+export class RenderPipelineVariant {
+    constructor(
+        public renderpipeline: GPURenderPipeline,
+        public rootDrawables: Set<Drawable>
+    ) {
+
+    }
+    onRootDrawableChanges:Set<() => void> = new Set();
+    addRootDrawable(drawable: Drawable) {
+        this.rootDrawables.add(drawable)
+        this.onRootDrawableChanges.forEach(cb => cb())
+        return this.rootDrawables;
+    }
 }
 
 export type RenderPassProps<U> = {
@@ -120,6 +130,7 @@ export class RenderPass<U extends {
 
         return this.#sizeBuffer;
     }
+    onRenderPipelinesChange: Set<() => void> = new Set()
     getVariant(renderPipeline: Readonly<RenderPipeline>) {
         let variant = this.renderPipelines.get(renderPipeline);
         if (!variant) {
@@ -129,7 +140,7 @@ export class RenderPass<U extends {
                 ...this.onDecoratePipeline(renderPipeline),
                 label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label
             };
-            console.debug('Create renderpipeline ',params)
+            console.debug('Create renderpipeline ', params)
             const variantP = this.gpu.device.createRenderPipelineAsync(
                 params
             ).catch((err: unknown) => {
@@ -143,12 +154,13 @@ export class RenderPass<U extends {
                 }
                 throw (new Error('createRenderPipelineAsync failed', { cause: err }));
             }).then((variantPipeline) => {
-                variant = {
-                    renderpipeline: variantPipeline,
-                    rootDrawables: new Set<Drawable>()
-                }
+                variant = new RenderPipelineVariant(
+                    variantPipeline,
+                    new Set<Drawable>()
+                )
                 // Replace promise with real object
                 this.renderPipelines.set(renderPipeline, variant);
+                this.onRenderPipelinesChange.forEach(cb => cb());
                 return variant;
             })
             // Save promise

@@ -24,6 +24,7 @@ export class RenderPipeline<V extends VertexShader = VertexShader> {
     }
     destroy(): void {
         this.props.bindgroupdrawable.renderPipeLines.delete(this);
+        this.props.bindgroupdrawable.renderPipelineListeners.forEach(cb => cb());
     }
     draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder,
         renderPass: RenderPass,

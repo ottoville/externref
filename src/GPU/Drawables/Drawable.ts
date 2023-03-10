@@ -50,11 +50,11 @@ export abstract class Drawable {
                 variantP.then(variant => {
                     if (this.destroyed)
                         return;
-                    this.#renderList.set(rp, variant.rootDrawables.add(this));
+                    this.#renderList.set(rp, variant.addRootDrawable(this));
                     rp.bundles.forEach(b => b.destroy())
                 }).catch(err => engine.showError(err))
             } else {
-                this.#renderList.set(rp, variantP.rootDrawables.add(this));
+                this.#renderList.set(rp, variantP.addRootDrawable(this));
                 rp.bundles.forEach(b => b.destroy())
             }
         });

@@ -245,8 +245,13 @@ export class Engine {
     mainCamera: TerraCamera;
     memory: WebAssembly.Memory;
     GPUReady: Promise<GPU>;
+    canvas?: HTMLCanvasElement;
+    devTools?: HTMLElement;
     static async initEngine(
-        canvas: HTMLCanvasElement | undefined,
+        nodes: {
+            canvas: HTMLCanvasElement,
+            devTools: HTMLElement,
+        } | undefined,
         showError: (e: Error) => void,
         wasmBinaries: { rust: Response | PromiseLike<Response> | BufferSource, collider: Response | PromiseLike<Response> | BufferSource }): Promise<Engine | void> {
         let DB: Promise<EarthDatabase> | undefined = undefined;
@@ -353,7 +358,7 @@ export class Engine {
             }
             var rustWasm = rust.instance.exports as rustWasm;
             GPUDataSize = rustWasm.init_engine2();
-            if (canvas && !window.navigator.gpu) {
+            if (nodes?.canvas && !window.navigator.gpu) {
                 throw (new Error('no webgpu support'));
             }
 
@@ -384,7 +389,7 @@ export class Engine {
             return showError(createError(e));
         }
         const wasm = colliderWasm.instance.exports as unknown as ColliderWasm;
-        return new Engine(DB ? await DB : undefined, canvas, wasm, rustWasm, showError, GPUDataSize);
+        return new Engine(DB ? await DB : undefined, nodes, wasm, rustWasm, showError, GPUDataSize);
     }
     readonly cameras: Set<TerraCamera> = new Set();
 
@@ -498,22 +503,30 @@ export class Engine {
     }
     constructor(
         public DB: EarthDatabase | undefined,
-        public canvas: HTMLCanvasElement | undefined,
+        nodes: {
+            canvas: HTMLCanvasElement,
+            devTools: HTMLElement,
+        } | undefined,
         public wasm: ColliderWasm,
         public rust: rustWasm,
         public showErrorError: (e: Error) => void,
         GPUDataSize: number,
     ) {
+        if(nodes) {
+            this.canvas=nodes.canvas;
+            this.devTools=nodes.devTools;
+        }
+
         //@ts-ignore
         globalThis.engine = this;
         this.mainCamera = new TerraCamera();
 
-        if (canvas) {
+        if (nodes?.canvas) {
             (['pointerup', 'pointerdown', 'pointermove', 'wheel', 'pointerleave', 'keydown', 'keyup'] as const).forEach(eventType => {
                 // keyup and keydown wont trigger if listener is canvas
-                canvas.ownerDocument.addEventListener(eventType, (e) => {
+                nodes.canvas.ownerDocument.addEventListener(eventType, (e) => {
                     // Do not trigger on devtools
-                    if(!(eventType ==='keydown' || eventType === 'keyup') && e.target !== canvas) {
+                    if(!(eventType ==='keydown' || eventType === 'keyup') && e.target !== nodes.canvas) {
                         return;
                     }
                     const UIEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {

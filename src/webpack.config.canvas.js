@@ -25,9 +25,6 @@ module.exports = {
         extensionAlias: {
             '.js': ['.ts', '.js'],
             '.mjs': ['.mts', '.mjs'],
-        },
-        alias: {
-            "/DevTools.bundle.js": path.resolve(__dirname, "./ui/DevTools.tsx")
         }
     },
 };

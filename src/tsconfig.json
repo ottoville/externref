@@ -37,8 +37,6 @@
     "baseUrl": ".",
     "paths": {
       "/js/engine/*": ["../wwwroot/js/engine/*"],
-      "/js/devTools.bundle.js": ["ui/DevTools.tsx"],
-      "/js/bundled.js": ["./bundled.ts"]
     },
     "allowSyntheticDefaultImports": true,
   },

@@ -2,6 +2,8 @@ import type { GPU } from "../GPU.js"
 import { UINode } from "./UINode.js";
 import { Anchor, NumericUnit } from "./UIRectangle.js";
 import { Button } from "./Button.js";
+import type { Engine } from "../engine.js";
+declare const engine: Engine;
 
 export class createSettingsMenu extends UINode<{ gpu: GPU }> {
     static addKeydownListener(gpu: GPU) {
@@ -73,8 +75,9 @@ export class createSettingsMenu extends UINode<{ gpu: GPU }> {
                     },
                 },
                 text: 'DevTools',
-                onClick: () => {
-                    document.querySelector('aside')!.style.display='block';
+                onClick: async () => {
+                    const { DevTools } = await import('./DevTools/DevTools.js');
+                    DevTools(engine.devTools!, this.gpu)
                 }
             })
         ];

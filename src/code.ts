@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/extensions
-import { ApplicationInsights } from "/js/bundled.js";
+import { ApplicationInsights } from "./bundled.js";
 
 /* eslint-disable indent */
 const app = document.getElementById('app')
