@@ -1,4 +1,4 @@
-﻿import { ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
+﻿import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Scene } from "./Scene.js";
 import type { Engine, rust_pointer } from "./engine.js";
 import type { ColliderJS } from "./Collider.js";
@@ -93,7 +93,7 @@ export abstract class MainNode implements DrawableNode {
     get strip(): boolean {
         return engine.rust.strip(this.ptr) === 1 ? true : false;
     }
-
+    onMeshChange: Set<() => void> = new Set();
     onPhysicTick?: (time: number) => void;
     hasGravity = false;
     isStatic = false;
@@ -116,7 +116,7 @@ export abstract class MainNode implements DrawableNode {
         return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.velocity_pointer(this.ptr))
     }
     set velocity(value: [number, number, number] | TerraVector3) {
-        new TerraVector3(engine.memory.buffer, engine.rust.velocity_pointer(this.ptr)).set(value);
+        new MutableTerraVector3(engine.memory.buffer, engine.rust.velocity_pointer(this.ptr)).set(value);
         this.update_dynamic_buffer();
     }
     intersect_box_aa_sphere(collider: ColliderJS, radius: number) {

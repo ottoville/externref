@@ -1,4 +1,4 @@
-import { TerraVector3 } from "../../Math.js";
+import { MutableTerraVector3, ReadOnlyTerraVector3, TerraVector3 } from "../../Math.js";
 import { MainNode } from "../../MainNode.js";
 import { MSAARenderTarget } from "../RenderTargets/MSAARenderTarget.js";
 import type { BindGroup } from "../BindGroup.js";
@@ -100,7 +100,7 @@ export class PickableRenderPass<T extends {
     pickPromise: Promise<{ position: TerraVector3 } | null> | null = null;
     pickPromiseMesh: Promise<{ position: TerraVector3, meshId: number } | null> | null = null;
     #zAndIDPromise: Promise<[z: number, id: number]> | null = null;
-    async pickPosition(): Promise<{ position: TerraVector3 } | null>
+    async pickPosition(): Promise<{ position: ReadOnlyTerraVector3 } | null>
     async pickPosition(mesh: true): Promise<{ position: TerraVector3, meshId: number } | null>
     async pickPosition(mesh = false): Promise<{ position: TerraVector3; } | { position: TerraVector3; meshId: number; } | null> {
         if (mesh && this.pickPromiseMesh) {
@@ -201,10 +201,10 @@ export class PickableRenderPass<T extends {
                 this.pickPromiseMesh = null;
                 return null;
             }
-            const result = new TerraVector3();
+            const result = new MutableTerraVector3();
             const x = this.gpu.mousePosition[0] / this.size.width * 2 - 1;
             const y = -(this.gpu.mousePosition[1] / this.size.height * 2 - 1);
-            new TerraVector3([x, y, zAndID[0]]).multiply2Ref(camera.projectionViewInverted, result);
+            new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(camera.projectionViewInverted, result);
             if (mesh) {
                 this.pickPromiseMesh = null;
                 return { position: result, meshId: zAndID[1] };

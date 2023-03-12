@@ -3,7 +3,7 @@
 
 import type { Ellipsoid } from "./nodes/DataNode.js";
 import type { Engine, rustWasm, rust_pointer } from "./engine.js";
-import { TerraVector3, TerraVector4, Triangle } from "./Math.js";
+import { MutableTerraVector3, TerraVector3, TerraVector4, Triangle } from "./Math.js";
 declare const engine: Engine;
 
 // TODO: change to readonlyTerraVector
@@ -109,7 +109,7 @@ export class ColliderJS {
     }
     constructor(rustExports: rustWasm) {
         this.collider_ptr = rustExports.collider();
-        this.finalPosition = new TerraVector3();
+        this.finalPosition = new MutableTerraVector3();
     }
 
 
@@ -120,7 +120,7 @@ export class ColliderJS {
     epsilon = 0;
     /** @hidden */
     /** @hidden */
-    #velocityWorld = new TerraVector3()
+    #velocityWorld = new MutableTerraVector3()
     #normalizedVelocity: [x: number, y: number, z: number] = [0, 0, 0];
     /** @hidden */
     // public _initialVelocity: [x: number, y: number, z: number] = [0, 0, 0];

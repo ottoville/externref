@@ -150,10 +150,10 @@ export class TerraVector2 extends Float32Array {
     declare 1: number
 }
 
-export class TerraVector3 extends Float32Array {
-    declare 0: number
-    declare 1: number
-    declare 2: number
+export abstract class TerraVector3 extends Float32Array {
+    abstract 0: number
+    abstract 1: number
+    abstract 2: number
     static override of(x: number, y: number, z: number) {
         return super.of(x, y, z) as TerraVector3;
     }
@@ -185,13 +185,10 @@ export class TerraVector3 extends Float32Array {
         result[3] = Math.cos(halfAngle)
         return result;
     }
-    LerpToRef(end: TerraVector3, amount: number, result: TerraVector3): void {
+    LerpToRef(end: TerraVector3, amount: number, result: MutableTerraVector3): void {
         result[0] = this[0] + ((end[0] - this[0]) * amount);
         result[1] = this[1] + ((end[1] - this[1]) * amount);
         result[2] = this[2] + ((end[2] - this[2]) * amount);
-    }
-    clone() {
-        return new TerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset + 12));
     }
     multiply2Ref(m: TerraMatrix, ref: TerraVector3 | TerraVector4): void {
         var rx = this[0] * m[0] + this[1] * m[4] + this[2] * m[8] + m[12];
@@ -247,17 +244,33 @@ export class TerraVector3 extends Float32Array {
     }
 }
 export class ReadOnlyTerraVector3 extends TerraVector3 {
+    //Nominal typing
+    readonly mutable:number = 2;
     declare readonly 0: number
     declare readonly 1: number
     declare readonly 2: number
     static override of(x: number, y: number, z: number) {
         return super.of(x, y, z) as ReadOnlyTerraVector3;
     }
-    override set(): never {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    override set(_array: ArrayLike<number>, _offset?: number): never | void {
         throw (new Error('Cannot use "set" in ReadOnly vector, use setter instead'));
+    }
+    clone() {
+        return new ReadOnlyTerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset + 12));
     }
 }
 
+export class MutableTerraVector3 extends TerraVector3 {
+    //Nominal typing
+    readonly mutable = 1;
+    declare 0: number
+    declare 1: number
+    declare 2: number
+    clone() {
+        return new MutableTerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset + 12));
+    }
+}
 export class TerraVector4 extends Float32Array {
     declare 0: number
     declare 1: number

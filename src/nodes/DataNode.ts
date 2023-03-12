@@ -1,6 +1,6 @@
 import { ObjectWorkerThread } from "../WorkerThread.js";
 import { MainNode, MainNodeProps } from "../MainNode.js";
-import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "../Math.js";
+import { MutableTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from "../Math.js";
 import type { ColliderJS } from "../Collider.js";
 import type { Engine, rust_pointer } from "../engine.js";
 declare const engine: Engine;
@@ -17,7 +17,7 @@ export interface PickingInfo {
 }
 class pickInfo {
     buffer = new SharedArrayBuffer(6 * 4);
-    point = new TerraVector3(this.buffer);
+    point = new MutableTerraVector3(this.buffer);
     #distance = new DataView(this.buffer, 3 * 4, 4)
     getDistance() {
         return this.#distance.getFloat32(0, true);
@@ -224,7 +224,7 @@ export abstract class DataNode extends MainNode {
             if (i > this.positions_count) {
                 throw new Error('Tried to access vertice out of boundary')
             }
-            new TerraVector3(engine.memory.buffer, posAndCol[0]).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer, posAndCol[1]));
+            new MutableTerraVector3(engine.memory.buffer, posAndCol[0]).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer, posAndCol[1]));
         });
         const collider_planes_parallel_pointer = engine.rust.collider_planes_parallel_pointer(this.ptr);
         this.#triangleFaces.forEach(face => {

@@ -3,7 +3,7 @@ import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";
 import type { GPU } from "../GPU.js"
-import { TerraVector3 } from "../Math.js";
+import { MutableTerraVector3, TerraVector3 } from "../Math.js";
 import type { Engine, ListenerObj, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
@@ -166,7 +166,7 @@ export class TerrainTool extends MainNode {
             firstVertex: 0,
             instanceCount: 8,
         })
-        this.#pick = { position: new TerraVector3(engine.memory.buffer, engine.rust.mouse_position_pointer(this.elevator)), meshId: 0 };
+        this.#pick = { position: new MutableTerraVector3(engine.memory.buffer, engine.rust.mouse_position_pointer(this.elevator)), meshId: 0 };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*

@@ -21,6 +21,7 @@ import { RenderPipeline } from "./GPU/RenderPipeline.js";
 import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct } from "./GPU/Shaders/structs/Structs.js";
 import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 import { UIFragShader } from "./GPU/Shaders/UI.frag.js";
+import { MainNode } from "./MainNode.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -630,9 +631,15 @@ export class GPU {
 
         Buffer.create(this, this.GPUDataSizeBytes * this.#queue_map.size, [GPUBufferUsage.COPY_SRC], 'handle_gpu_queue', (tempBuffer, gpu2) => {
             this.#queue_map.forEach((offset, gpumeshPointer) => {
+                const dataLength = this.GPUDataSizeBytes / 4;
+                const data = new Float32Array(engine.memory.buffer, gpumeshPointer, dataLength);
+                const dataInt = new Uint32Array(engine.memory.buffer, gpumeshPointer, dataLength);
+                const mesh = MainNode.Meshes.get(dataInt[28]!);
+                if(!mesh) {
+                    throw new Error("Tried to update non exist mesh with id " + dataInt[28]);
+                }
+                mesh.onMeshChange.forEach((cb) => cb())
 
-
-                const data = new Float32Array(engine.memory.buffer, gpumeshPointer, this.GPUDataSizeBytes / 4);
                 //Point light
                 if (data[29]! > 0) {
                     engine.updateLights = true;

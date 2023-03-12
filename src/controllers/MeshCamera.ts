@@ -1,4 +1,4 @@
-import { TerraVector3 } from "../Math.js";
+import { MutableTerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import type { Engine, ListenerObj } from "../engine";
 import { CameraController } from "./CameraController.js";
@@ -200,5 +200,5 @@ export class MeshCamera extends CameraController {
             }
         }
     }
-    lastTranslation = new TerraVector3();
+    lastTranslation = new MutableTerraVector3();
 }

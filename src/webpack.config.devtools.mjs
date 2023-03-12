@@ -18,12 +18,13 @@ export default {
     },
     resolve: {
         extensionAlias: {
-            '.js': ['.ts', '.js'],
+            '.js': ['.ts', '.js', '.tsx'],
             '.mjs': ['.mts', '.mjs'],
         }
     },
     externals: {
         '../../MainNode.js': '../../MainNode.js',
-        '../../GPU/Drawables/DrawableDirect.js': '../../GPU/Drawables/DrawableDirect.js'
+        '../../GPU/Drawables/DrawableDirect.js': '../../GPU/Drawables/DrawableDirect.js',
+        '../../controllers/ArcRotateCamera.js': '../../controllers/ArcRotateCamera.js',
     },
 };

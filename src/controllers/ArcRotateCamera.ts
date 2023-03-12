@@ -1,5 +1,5 @@
 ﻿import type { Engine, ListenerObj } from "../engine.js";
-import { TerraMatrix, TerraVector3 } from "../Math.js";
+import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import { CameraController } from "./CameraController.js";
 let pointerDownButton = 0;
@@ -46,7 +46,7 @@ export class ArcRotateCamera extends CameraController {
         };
     }
 
-    #computationVector = new TerraVector3();
+    #computationVector = new MutableTerraVector3();
 
     #cameraTransformMatrix = new TerraMatrix();
 
@@ -56,14 +56,14 @@ export class ArcRotateCamera extends CameraController {
     #inertia = 0.9;
     #speed = 2.0;
 
-    #transformedDirection = new TerraVector3();
+    #transformedDirection = new MutableTerraVector3();
     /**
     * Defines the value of the inertia used during panning.
     * 0 would mean stop inertia and one would mean no decelleration at all.
     */
     #panningInertia = 0.9;
 
-    #inertialPanning = new TerraVector3();
+    #inertialPanning = new MutableTerraVector3();
     /*
     * Current inertia value on the longitudinal axis.
     * The bigger this number the longer it will take for the camera to stop.
@@ -75,7 +75,7 @@ export class ArcRotateCamera extends CameraController {
     */
     #inertialBetaOffset = 0;
     #collisionTriggered = false;
-    #target = new TerraVector3([100, 0, 1000]);
+    #target = new MutableTerraVector3([100, 0, 1000]);
     #alpha = 0;
     #beta = 0;
     #radius = 10;
@@ -133,6 +133,32 @@ export class ArcRotateCamera extends CameraController {
             }
         }
     }
+    MoveToPlace = () => {
+        if (this.#targetMovingfrom && this.#targetMovingTo) {
+            this.#targetMovingfrom.LerpToRef(this.#targetMovingTo, this.#targetLerpPosition, this.#target);
+            this.#targetLerpPosition += 0.01;
+            if (this.#targetLerpPosition > 1) {
+                this.#targetMovingfrom = null;
+                this.#targetMovingTo = null;
+                this.#targetLerpPosition = 0;
+                return true;
+            }
+        }
+        return false;
+    }
+    moveto(destination: ReadOnlyTerraVector3) {
+        this.#targetMovingfrom = new ReadOnlyTerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
+        this.#targetMovingTo = destination;
+        this.#targetLerpPosition = 0;
+        const moveWithTimeout = () => {
+            if(!this.MoveToPlace()) {
+                setTimeout(moveWithTimeout, 16)
+            }
+            this.calculateCameraPositionAndTarget();
+        };
+
+        setTimeout(moveWithTimeout, 16)
+    }
     pointerDown = false;
     #cameraPointerDown: ListenerObj<'pointerdown'> = {
         object: this,
@@ -143,7 +169,7 @@ export class ArcRotateCamera extends CameraController {
             if (pointerDownButton !== 2) {
                 engine.gpu?.renderPassScreen.pickPosition().then(position => {
                     if (position) {
-                        this.#targetMovingfrom = new TerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
+                        this.#targetMovingfrom = new MutableTerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
                         this.#targetMovingTo = position.position;
                         this.#targetLerpPosition = 0;
                     }
@@ -273,30 +299,17 @@ export class ArcRotateCamera extends CameraController {
         });
 
     }
-    #targetMovingfrom: TerraVector3 | null = null;
-    #targetMovingTo: TerraVector3 | null = null;
+    #targetMovingfrom: ReadOnlyTerraVector3 | null = null;
+    #targetMovingTo: ReadOnlyTerraVector3 | null = null;
     #targetLerpPosition = 0;
     checkInputs = () => {
         if (this.#collisionTriggered) {
             return false;
         }
         let updateView = false;
-        //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
-
-        //inputs.checkInputs();
         // Inertia
         if (this.#inertialAlphaOffset !== 0 || this.#inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
-            if (this.#targetMovingfrom != null && this.#targetMovingTo != null) {
-                const newTarget = new TerraVector3();
-                this.#targetMovingfrom.LerpToRef(this.#targetMovingTo, this.#targetLerpPosition, newTarget);
-                this.#target = newTarget;
-                this.#targetLerpPosition += 0.01;
-                if (this.#targetLerpPosition > 1) {
-                    this.#targetMovingfrom = null;
-                    this.#targetMovingTo = null;
-                    this.#targetLerpPosition = 0;
-                }
-            }
+            this.MoveToPlace()
 
             let inertialAlphaOffset = this.#inertialAlphaOffset;
             if (this.#beta <= 0) {

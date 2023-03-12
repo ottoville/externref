@@ -1,5 +1,5 @@
 ﻿import type { Scene } from "../../Scene.js";
-import { TerraVector3, TerraVector4, Quaternion } from "../../Math.js";
+import { TerraVector3, TerraVector4, Quaternion, MutableTerraVector3 } from "../../Math.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 
 type Patch = {
@@ -30,7 +30,7 @@ const pathchesQuats = ([
 pathchesQuats.forEach(patch =>
     patch.quaternion = Quaternion.FromRotationYawPitchRoll(patch.euler[1]! * HALF_PI, patch.euler[0]! * HALF_PI, patch.euler[2]! * HALF_PI)
 );
-const tmpVector = new TerraVector3();
+const tmpVector = new MutableTerraVector3();
 const tmpQuaternion = new TerraVector4() as Quaternion;
 
 function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, halfHeight = 0, halfDepth = 0): readonly [vertices: Float32Array, indices: Uint32Array] {
@@ -46,7 +46,7 @@ function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, ha
     const verticesStride = 6;
     const verts: TerraVector3[] = new Array(totalFacesCount)
     for (let i = 0; i < totalFacesCount; i++) {
-        verts[i] = new TerraVector3(verticesAndNormals.buffer, i * verticesStride * Float32Array.BYTES_PER_ELEMENT);
+        verts[i] = new MutableTerraVector3(verticesAndNormals.buffer, i * verticesStride * Float32Array.BYTES_PER_ELEMENT);
     }
 
     // First patch tessellation

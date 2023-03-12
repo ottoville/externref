@@ -1,6 +1,6 @@
 ﻿import type { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
 
-import { TerraMatrix, TerraVector3 } from "./Math.js";
+import { MutableTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Projection } from "./GPU/Projection.js";
 import type { Engine } from "./engine.js";
 import type { GPU } from "./GPU.js";
@@ -18,7 +18,7 @@ export class TerraCamera {
 
 
     readonly #uniformBufferSize = /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ + 4 * 4;
-    readonly #direction = new TerraVector3([1, 0, 0])
+    readonly #direction = new MutableTerraVector3([1, 0, 0])
 
     readonly #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
 
@@ -30,7 +30,7 @@ export class TerraCamera {
     readonly #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
 
 
-    readonly #position = new TerraVector3(this.#viewProjectionPositionBuffer, 128);
+    readonly #position = new MutableTerraVector3(this.#viewProjectionPositionBuffer, 128);
 
     #uniformBuffer?: BindUniformBuffer & CopyDstBuffer
     updateViewBindGroup?: BindGroup;

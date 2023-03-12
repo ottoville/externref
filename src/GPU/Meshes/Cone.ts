@@ -1,7 +1,7 @@
 ﻿import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 import type { Engine } from "../../engine.js";
 import type { MainNodeProps } from "../../MainNode.js";
-import { TerraVector3 } from "../../Math.js";
+import { MutableTerraVector3 } from "../../Math.js";
 declare const engine: Engine;
 
 const douplePI = Math.PI * 2;
@@ -53,7 +53,7 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
     }
     // normalize vertices
     for (let i = 0; i < vertices.length; i += stride) {
-        new TerraVector3(vertices.buffer, i * Float32Array.BYTES_PER_ELEMENT).normalize();
+        new MutableTerraVector3(vertices.buffer, i * Float32Array.BYTES_PER_ELEMENT).normalize();
     }
     return [vertices, indices] as const;
 }

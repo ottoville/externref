@@ -61,6 +61,10 @@ export class Canvas {
         }
     }
     constructor(container: HTMLElement) {
+        this.#canvasElem.addEventListener('contextmenu', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+        })
         this.#progressBar.max = 100;
 
         this.#errorDialog.addEventListener('close', () => {
