@@ -28,7 +28,9 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
             strip,
             ...mainNodeProps,
         }, indicesView);
-        const primitiveState: GPUPrimitiveState = { frontFace: dataNodeProps.frontFace ?? 'cw', topology };
+        const primitiveState: GPUPrimitiveState = {
+            frontFace: dataNodeProps.frontFace ?? 'cw',
+            topology };
         if (strip)
             primitiveState.stripIndexFormat = 'uint32';
         if (engine.gpu) {

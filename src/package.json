@@ -13,7 +13,7 @@
     "buildWasmSimd-prod": "pwsh -Command \"./wat2wasm collider/colliderSIMD2.wat -o ../wwwroot/collider/colliderSimd.wasm && wasm-opt ../wwwroot/collider/colliderSimd.wasm -o ../wwwroot/collider/colliderSimdO.wasm -O3 --enable-simd --always-inline-max-function-size 200\"",
     "build": "npm run buildRust && tsc -b  && npm run buildWasmSimd && npm run build-webpack-debug",
     "build-prod": "npm run buildRust-prod && tsc -b  && npm run buildWasmSimd-prod && npm run build-webpack-prod",
-    "build-webpack-debug": "webpack --config webpack.config.canvas.debug.mjs && webpack --config webpack.config.devtools.mjs",
+    "build-webpack-debug": "webpack --config webpack.config.canvas.debug.mjs && webpack --config webpack.config.devtools.debug.mjs",
     "build-webpack-prod": "webpack --config webpack.config.canvas.mjs && webpack --config webpack.config.devtools.mjs",
     "eslint": "eslint --ext .ts,.tsx --quiet ./",
     "eslint-fix": "eslint --fix --ext .ts,.tsx --quiet ./",

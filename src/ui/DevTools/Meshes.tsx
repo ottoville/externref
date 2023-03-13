@@ -38,7 +38,7 @@ export function Meshes(props: { gpu: GPU }) {
             })}
         </ul>
         {selectedDrawable ?
-            <NodeInfo drawable = { selectedDrawable }></NodeInfo>
+            <NodeInfo key={selectedDrawable.label} drawable = { selectedDrawable }></NodeInfo>
             : null}
     </fieldset>
 }
