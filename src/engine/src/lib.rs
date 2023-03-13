@@ -93,7 +93,7 @@ pub extern "C" fn create_cone_collider(half_height: f32, radius: f32) -> *mut Co
     );
     Box::leak(collider)
 }
-
+#[repr(C)]
 pub struct GPUMesh {
     transformation: Vec4<Vec4<f32>>, //16
     color: [f32; 4],                 //20
