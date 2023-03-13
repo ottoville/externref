@@ -139,6 +139,13 @@ export abstract class MainNode implements DrawableNode {
             new Uint8Array(engine.rust.memory.buffer, string_ptr, label.length));
         this.ptr = engine.rust.new_mesh(MainNode.uniqueID++, positionsCount, point_light, directional_light, sceneids, strip, fixed, rigid_body, string_ptr);
 
+        const label_field_pointer = engine.rust.label_field_pointer(this.ptr);
+        const [label_ptr, label_len_bytes] = new Uint32Array(engine.rust.memory.buffer, label_field_pointer, 2);
+        console.log('label1', textDecoder.decode(new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len_bytes!*Uint8Array.BYTES_PER_ELEMENT)));
+
+        const [label_ptr2, label_len_bytes2] = [this.ptr + 412, label.length*Uint8Array.BYTES_PER_ELEMENT]
+        console.log('label2', textDecoder.decode(new Uint8Array(engine.rust.memory.buffer, label_ptr2, label_len_bytes2!*Uint8Array.BYTES_PER_ELEMENT)));
+
         MainNode.Meshes.set(this.id, this);
     }
     destroy() {
