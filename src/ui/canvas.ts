@@ -9,7 +9,7 @@ import { BuildingsUI } from "../tools/buildings.js";*/
 import { Terrain } from "../world/Terrain.js";
 import { Sea } from "../world/water.js";
 //import { LazyEval } from "../LazyEval.js";
-import { Sun2 } from "../world/sun2.js";
+import { Sun } from "../world/sun.js";
 
 import { MainNode } from "../MainNode.js";
 import { Scene } from "../Scene.js";
@@ -133,7 +133,7 @@ export class Canvas {
             this.setProgress(40);
 
             const gpu = await terraEngine.GPUReady;
-            const waterCamera = new TerraCamera(engine.mainCamera);
+            const waterCamera = new TerraCamera('waterCamera', engine.mainCamera);
             waterCamera.initForGPU(gpu.renderPassWater, gpu, engine.mainCamera.projection!)
             waterCamera.beforeViewUpdate.add((position, direction) => {
                 position[1] -= (position[1] - 3) * 2;
@@ -147,7 +147,7 @@ export class Canvas {
             new createTimeControls({ gpu });
             new CreateFPSMeter({ gpu })
             new Scene('main', gpu, [engine.mainCamera, waterCamera], (terrascene) => {
-                new Sun2(gpu, [terrascene]);
+                new Sun(gpu, [terrascene]);
                 // Initial scene objects here
 
                 new Sea([terrascene]);

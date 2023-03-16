@@ -519,7 +519,7 @@ export class Engine {
 
         //@ts-ignore
         globalThis.engine = this;
-        this.mainCamera = new TerraCamera();
+        this.mainCamera = new TerraCamera('mainCamera');
 
         if (nodes?.canvas) {
             (['pointerup', 'pointerdown', 'pointermove', 'wheel', 'pointerleave', 'keydown', 'keyup'] as const).forEach(eventType => {

@@ -15,11 +15,11 @@ export class createTimeControls extends UINode<{ gpu: GPU }, MenuState> {
         super(props);
         this.gpu = props.gpu;
         this.state = {
-            timeOfDay: new Date(Number(engine.physics.gameTime)).toUTCString()
+            timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString()
         }
         setInterval(() => {
             this.setState({
-                timeOfDay: new Date(Number(engine.physics.gameTime)).toUTCString()
+                timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString()
             });
         }, 1000);
     }

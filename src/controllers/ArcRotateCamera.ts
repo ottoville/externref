@@ -148,7 +148,8 @@ export class ArcRotateCamera extends CameraController {
     }
     moveto(destination: ReadOnlyTerraVector3) {
         this.#targetMovingfrom = new ReadOnlyTerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
-        this.#targetMovingTo = destination;
+        // Clone destination to survive Wasm memory grow.
+        this.#targetMovingTo = destination.clone();
         this.#targetLerpPosition = 0;
         const moveWithTimeout = () => {
             if(!this.MoveToPlace()) {

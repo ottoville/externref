@@ -1,6 +1,6 @@
 ﻿import type { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
 
-import { MutableTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
+import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Projection } from "./GPU/Projection.js";
 import type { Engine } from "./engine.js";
 import type { GPU } from "./GPU.js";
@@ -11,6 +11,11 @@ import { BGLayout } from "./GPU/BindGroupLayout.js";
 declare const engine: Engine;
 
 export type CameraControl = { updatePosition(cb: (position: TerraVector3) => void): void; updateDirection(cb: (direction: TerraVector3) => void): void; }
+const enum VIEW_UPDATED {
+    NONE = 0,
+    POSITION = 1,
+    DIRECTION = 2
+}
 export class TerraCamera {
     readonly #childCameras: Set<CameraControl> = new Set();
 
@@ -30,16 +35,17 @@ export class TerraCamera {
     readonly #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
 
 
-    readonly #position = new MutableTerraVector3(this.#viewProjectionPositionBuffer, 128);
+    readonly position = new ReadOnlyTerraVector3(this.#viewProjectionPositionBuffer, 128);
+    readonly #positionMutable = new MutableTerraVector3(this.#viewProjectionPositionBuffer, 128);
 
     #uniformBuffer?: BindUniformBuffer & CopyDstBuffer
     updateViewBindGroup?: BindGroup;
     uniformBindGroup?: BindGroup;
     readonly #controls: CameraControl;
-    #doUpdateView = false;
+    #doUpdateView = VIEW_UPDATED.NONE;
     viewUpdated = false;
     readonly beforeViewUpdate: Set<
-        (position: TerraVector3, direction: TerraVector3, commandEncoder: GPUCommandEncoder) => void
+        (position: MutableTerraVector3, direction: MutableTerraVector3, commandEncoder: GPUCommandEncoder) => void
     > = new Set();
     #cameraController?: TerraCamera
     #inputController?: CameraController
@@ -93,21 +99,22 @@ export class TerraCamera {
         gpu.projections.add(this.projection);
         gpu.cameras.push(this);
     }
-    constructor(parent?: TerraCamera) {
+    onUpdatePosition: Set<() => void> = new Set();
+    constructor(public label: string, parent?: TerraCamera) {
         this.viewArr[15] = 1;
 
         engine.cameras.add(this);
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const me = this;
         this.#controls = {
-            updatePosition(cb: (position: TerraVector3) => void) {
-                cb(me.#position);
-                me.#doUpdateView = true;
+            updatePosition(cb: (position: MutableTerraVector3) => void) {
+                cb(me.#positionMutable);
+                me.#doUpdateView |= VIEW_UPDATED.POSITION;
             },
             updateDirection(cb: (direction: TerraVector3) => void) {
                 cb(me.#direction);
                 if (me.viewArr[2] !== me.#direction[0] || me.viewArr[6] !== me.#direction[1] || me.viewArr[10] !== me.#direction[2]) {
-                    me.#doUpdateView = true;
+                    me.#doUpdateView |= VIEW_UPDATED.DIRECTION;
                 }
             }
         }
@@ -140,9 +147,6 @@ export class TerraCamera {
         controller.cameraControl = this.#controls;
         return this.#controls
     }
-    get position(): Readonly<{ [0]: number, [1]: number, [2]: number }> {
-        return this.#position
-    }
     updateClusters(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: BGLayout) {
         //TODO move out from loop
         const bindGroup = computePipelineClustersLayout.createBindGroup('updateProjection', bindGroup2 => [
@@ -166,22 +170,32 @@ export class TerraCamera {
     updateView(commandEncoder: GPUCommandEncoder) {
         if (!this.#doUpdateView)
             return;
-        this.beforeViewUpdate.forEach(cb =>
-            cb(this.#position, this.#direction, commandEncoder)
-        );
-        this.#doUpdateView = false;
+        if (this.beforeViewUpdate.size > 0) {
+            this.#doUpdateView |= (VIEW_UPDATED.POSITION & VIEW_UPDATED.DIRECTION)
+            this.beforeViewUpdate.forEach(cb =>
+                cb(this.#positionMutable, this.#direction, commandEncoder)
+            );
+        }
+        if ((this.#doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
+            this.onUpdatePosition.forEach(cb => cb())
+        }
         this.viewUpdated = true;
         this.#childCameras.forEach(childCameraControl => {
-            childCameraControl.updatePosition(position => {
-                position[0] = this.#position[0]
-                position[1] = this.#position[1]
-                position[2] = this.#position[2]
-            })
-            //TODO: share same buffer;
-            childCameraControl.updateDirection(direction => {
-                direction.set(this.#direction)
-            })
+            if ((this.#doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
+                childCameraControl.updatePosition(position => {
+                    position[0] = this.position[0]
+                    position[1] = this.position[1]
+                    position[2] = this.position[2]
+                })
+            }
+            if ((this.#doUpdateView & VIEW_UPDATED.DIRECTION) === VIEW_UPDATED.DIRECTION) {
+                //TODO: share same buffer;
+                childCameraControl.updateDirection(direction => {
+                    direction.set(this.#direction)
+                })
+            }
         });
+        this.#doUpdateView = VIEW_UPDATED.NONE;
 
         //Camera direction
         this.viewArr[2] = this.#direction[0];
@@ -210,11 +224,11 @@ export class TerraCamera {
         // Eye angles, dot products
 
         //x
-        this.viewArr[12] = -(this.viewArr[0] * this.#position[0] + this.viewArr[8] * this.#position[2])
+        this.viewArr[12] = -(this.viewArr[0] * this.position[0] + this.viewArr[8] * this.position[2])
         //y
-        this.viewArr[13] = -(this.viewArr[1] * this.#position[0] + this.viewArr[5] * this.#position[1] + this.viewArr[9] * this.#position[2])
+        this.viewArr[13] = -(this.viewArr[1] * this.position[0] + this.viewArr[5] * this.position[1] + this.viewArr[9] * this.position[2])
         //z
-        this.viewArr[14] = -(this.viewArr[2] * this.#position[0] + this.viewArr[6] * this.#position[1] + this.viewArr[10] * this.#position[2]);
+        this.viewArr[14] = -(this.viewArr[2] * this.position[0] + this.viewArr[6] * this.position[1] + this.viewArr[10] * this.position[2]);
         if (this.projection) {
             this.viewArr.multiplyToRef(this.projection.projectionReversedZ, this.projectionViewArr)
         }

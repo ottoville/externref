@@ -3,34 +3,33 @@ import type { MainNode } from "./MainNode.js";
 import type { Engine } from "./engine.js";
 
 const MIN_TICK_DELTA = 110;
-
 const GRAVITY = 9.80665;
 
-//let Epsilon = 0.001;
 
-/*
- * One real life second = One game minute
- * Gametime is saved in minutes.
- * */
+const gameSecondsPerMs = 60/1000;
 
 const tmp_vector: [number, number, number] = [0, 0, 0];
 export class Physics {
-    #lastTickTimeMsInGameTime: number = new Date().getTime();
-    #lastTickTimeMs: number = new Date().getTime();
-    #lastStateChangeTime = new Date().getTime();
+    #lastTickTimeMsInGameTime: number = Date.now();
+    #lastTickTimeMs: number = Date.now();
+    #lastStateChangeTime = Date.now();
     #gameSpeed = 1;
     #interval: null | ReturnType<typeof setTimeout> = null;
-    #lastStateChangeGameTime = BigInt(21600000); //21600 * 1000; //6 hours
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
     movables: MainNode[] = []; //Stuff that moves without physic, eg. sun.
     tickables: DataNode[] = []; //Stuff that moves and have collision check
+    /**
+     * Seconds since first day in the game
+     * One real life second = One game minute
+     * Gametime is saved in seconds.
+     */
     tickTime = 21600;  //6 hours
     readonly tickIntervalMs = 16.6;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
     get physicTime() {
         if (this.#gameSpeed >= 0) {
-            const timestamp = new Date().getTime();
+            const timestamp = Date.now();
             if (this.#lastStateChangeTime > this.#lastTickTimeMsInGameTime) {
                 var delta = (timestamp - this.#lastStateChangeTime * this.#gameSpeed) + this.#tickDeltaWhenStateChange
             } else {
@@ -74,9 +73,7 @@ export class Physics {
         }
         this.#lastTickTimeMs = timestamp;
 
-
-        this.tickTime += (delta / this.#realMSingameSecond);
-        //  console.log('hours passed', this.tickTime/60/60)
+        this.tickTime += (delta * gameSecondsPerMs);
         const dt = delta / 1000;
         const delta_multiplier = 1000 / delta;
         const dt_half_sqrt = dt * dt * 0.5;
@@ -228,24 +225,17 @@ export class Physics {
         else
             this.#interval = setTimeout(this.#tick, timeToFirstTick);
     }
-    get gameTime() {
-        if (this.gameSpeed < 0)
-            return this.#lastStateChangeGameTime;
-        var interval = new Date().getTime() - this.#lastStateChangeTime;
-        return this.#lastStateChangeGameTime + BigInt(interval * 60 * this.gameSpeed);
-    }
     set gameSpeed(value: number) {
         if (Number.isNaN(value))
             throw new Error('gameSpeed must be number');
-        this.#lastStateChangeGameTime = this.gameTime;
-        this.#lastStateChangeTime = new Date().getTime();
+        this.#lastStateChangeTime = Date.now();
 
         if (this.#interval) {
             clearTimeout(this.#interval);
         }
         this.#timeUntillTick = this.tickIntervalMs - this.#tickDeltaWhenStateChange;
         if (this.#gameSpeed >= 0) {
-            this.#tickDeltaWhenStateChange = (new Date().getTime() - this.#lastTickTimeMs) * this.#gameSpeed
+            this.#tickDeltaWhenStateChange = (Date.now() - this.#lastTickTimeMs) * this.#gameSpeed
         }
         this.#gameSpeed = value;
         if (value >= 0)
