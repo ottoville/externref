@@ -1,6 +1,6 @@
 ﻿import type { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
 
-import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
+import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix } from "./Math.js";
 import type { Projection } from "./GPU/Projection.js";
 import type { Engine } from "./engine.js";
 import type { GPU } from "./GPU.js";
@@ -10,7 +10,7 @@ import type { CameraController } from "./controllers/CameraController.js";
 import { BGLayout } from "./GPU/BindGroupLayout.js";
 declare const engine: Engine;
 
-export type CameraControl = { updatePosition(cb: (position: TerraVector3) => void): void; updateDirection(cb: (direction: TerraVector3) => void): void; }
+export type CameraControl = { updatePosition(cb: (position: MutableTerraVector3) => void): void; updateDirection(cb: (direction: MutableTerraVector3) => void): void; }
 const enum VIEW_UPDATED {
     NONE = 0,
     POSITION = 1,
@@ -111,7 +111,7 @@ export class TerraCamera {
                 cb(me.#positionMutable);
                 me.#doUpdateView |= VIEW_UPDATED.POSITION;
             },
-            updateDirection(cb: (direction: TerraVector3) => void) {
+            updateDirection(cb: (direction: MutableTerraVector3) => void) {
                 cb(me.#direction);
                 if (me.viewArr[2] !== me.#direction[0] || me.viewArr[6] !== me.#direction[1] || me.viewArr[10] !== me.#direction[2]) {
                     me.#doUpdateView |= VIEW_UPDATED.DIRECTION;

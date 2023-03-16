@@ -17,7 +17,7 @@ function CrossToRef(left: readonly [number, number, number], right: readonly [nu
 }
 export class ColliderJS {
     #velocitySquaredLength!: number;
-    finalPosition: TerraVector3;
+    finalPosition: MutableTerraVector3;
     collider_ptr: rust_pointer<"legacy_collider">;
     didCollide = false;
     getLowestRoot(a: number, b: number, c: number, maxR: number) {

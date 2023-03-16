@@ -325,9 +325,12 @@ export class Quaternion extends TerraVector4 {
         );
     }
 }
+/**
+ Math.PI * 2
+ */
 const fullRad = Math.PI * 2
 export class Angle {
-    constructor(private _rad: number, private _deg?: number) {
+    constructor(private _rad: number = 0, private _deg?: number) {
         if (Number.isNaN(_rad)) {
             throw new Error('Radian is NaN')
         }
@@ -360,14 +363,14 @@ export class Angle {
     sum(ang: Angle): Angle {
         return new Angle(this.rad % ang.rad % fullRad)
     }
-    add(deg: number): number {
-        return this.deg + deg % 360
+    add(rad: number) {
+        this._rad = (this._rad + rad) % fullRad;
     }
     sub(rad: number): number {
         if (rad < fullRad && rad > this.rad)
             return fullRad + (this.rad - rad);
         else
-            return this.rad - rad % 360
+            return this.rad - rad % fullRad
     }
     distance(rad: number): Angle {
         const phi = (rad - this.rad) % fullRad;       // This is either the distance or 360 - distance

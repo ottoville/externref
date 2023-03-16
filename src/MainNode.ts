@@ -105,7 +105,7 @@ export abstract class MainNode implements DrawableNode {
     get translation(): ReadOnlyTerraVector3 {
         return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.translation_pointer(this.ptr));
     }
-    set translation(value: [number, number, number] | TerraVector3) {
+    set translation(value: [number, number, number] | ReadOnlyTerraVector3) {
         engine.rust.update_translation(this.ptr, value[0], value[1], value[2]);
     }
     // TODO force per ms?

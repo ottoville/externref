@@ -1,21 +1,10 @@
 import { MutableTerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import type { Engine, ListenerObj } from "../engine";
-import { CameraController } from "./CameraController.js";
+import { ARROW_KEYS, CameraController } from "./CameraController.js";
 import { Anchor, NumericUnit, UIRectangle } from "../ui/UIRectangle.js";
 import { UIRectangleBackground } from "../ui/UIRectangleBackground.js";
 declare const engine: Engine;
-
-export const enum ARROW_KEYS {
-    UP = 1,
-    RIGHT = 2,
-    DOWN = 4,
-    LEFT = 8,
-    UP_RIGHT = ARROW_KEYS.UP | ARROW_KEYS.RIGHT,
-    UP_LEFT = ARROW_KEYS.UP | ARROW_KEYS.LEFT,
-    DOWN_RIGHT = ARROW_KEYS.DOWN | ARROW_KEYS.RIGHT,
-    DOWN_LEFT = ARROW_KEYS.DOWN | ARROW_KEYS.LEFT,
-}
 
 const cursorBitmap: Promise<ImageBitmap> = typeof globalThis.createImageBitmap !== 'undefined' ? fetch('/assets/cursor.webp').then(asset => asset.blob()).then(createImageBitmap) : Promise.resolve<ImageBitmap>({} as ImageBitmap);
 export class MeshCamera extends CameraController {
@@ -25,30 +14,9 @@ export class MeshCamera extends CameraController {
     arrowKeysDown = 0;
     pointerMovement = { x: 0, y: 0 };
     cursor: UIRectangle | undefined = undefined;
-    constructor(public camera: TerraCamera, initial = false) {
+    constructor(public camera: TerraCamera) {
         super();
-        if (initial && engine.DB) {
-            engine.DB.transaction("save").objectStore("save").get(["camera", "MeshCamera"]).onsuccess = evt => {
-                if ((evt.target as IDBRequest).result) {
-                    const restored = ((evt.target as IDBRequest).result as {
-                        data: {
-                            position: [number, number, number],
-                            angle: number
-                        }
-                    });
-                    //this.#position.set(restored.data.position);
-                    this.angle = restored.data.angle;
-                    this.cameraControl?.updateDirection(direction => {
-                        direction[0] = Math.cos(this.angle);
-                        direction[1] = 0;
-                        direction[2] = Math.sin(this.angle);
-                    });
-                }
-            }
-        } else {
-            //this.#position.set(this.camera.position as TerraVector3);
-            this.angle = Math.acos(this.camera.direction[0]);
-        }
+        this.angle = Math.acos(this.camera.direction[0]);
     }
     calculateCameraPositionAndTarget() {
         // TODO
@@ -130,28 +98,9 @@ export class MeshCamera extends CameraController {
             this.#lockPointer()
         }
     }
-    //#serializeRequested=false;
 
     serialize = () => {
         return;
-        /*  if(this.#serializeRequested)
-              return;
-          this.#serializeRequested=true;
-          const request=engine.DB.transaction("save", "readwrite").objectStore("save").put({
-              type: 'camera',
-              name: 'PositionCamera',
-              data: {
-                  position:this.#position,
-                  angle:this.#angle
-               }
-          });
-          request.onsuccess=() => {
-              this.#serializeRequested    =false;
-          };
-          request.onerror =(e) => {
-              this.#serializeRequested    =false;
-              console.error(e);
-          };*/
     }
     #keydownfunction: ListenerObj<'keydown'> = {
         object: this,

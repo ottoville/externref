@@ -26,5 +26,6 @@ export default {
         '../../MainNode.js': '../../MainNode.js',
         '../../GPU/Drawables/DrawableDirect.js': '../../GPU/Drawables/DrawableDirect.js',
         '../../controllers/ArcRotateCamera.js': '../../controllers/ArcRotateCamera.js',
+        '../../controllers/PositionCamera.js': '../../controllers/PositionCamera.js'
     },
 };

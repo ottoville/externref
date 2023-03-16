@@ -1,7 +1,18 @@
 import type { CameraControl } from "../TerraCamera.js";
 import { closeDistance, Ellipsoid } from "../nodes/DataNode.js";
 import { TerraMatrix } from "../Math.js";
-
+export const enum ARROW_KEYS {
+    UP = 1,
+    RIGHT = 2,
+    DOWN = 4,
+    LEFT = 8,
+    UP_RIGHT = ARROW_KEYS.UP | ARROW_KEYS.RIGHT,
+    UP_LEFT = ARROW_KEYS.UP | ARROW_KEYS.LEFT,
+    DOWN_RIGHT = ARROW_KEYS.DOWN | ARROW_KEYS.RIGHT,
+    DOWN_LEFT = ARROW_KEYS.DOWN | ARROW_KEYS.LEFT,
+    LEFT_OR_RIGHT = ARROW_KEYS.RIGHT | ARROW_KEYS.LEFT,
+    UP_OR_DOWN = ARROW_KEYS.UP | ARROW_KEYS.DOWN
+}
 export abstract class CameraController implements Ellipsoid {
     radius: { 0: number; 1: number; 2: number; }
     private readonly collisionRadius: [number, number, number] = [2, 2, 2];
