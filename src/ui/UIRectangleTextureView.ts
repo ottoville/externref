@@ -1,10 +1,7 @@
-import { TextureView } from "../GPU/TextureView.js";
-import { Texture2D } from "../GPU/Texture2D.js";
-import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
+import type { TextureView } from "../GPU/TextureView.js";
+import type { Texture2D } from "../GPU/Texture2D.js";
+import { UIRectangle } from "./UIRectangle.js";
 
-/*
-    Draws rectangle.
-*/
 export class UIRectangleTextureView extends UIRectangle {
     createTexture(): TextureView<Texture2D> {
         return this.textureView;
@@ -113,17 +110,5 @@ export class UIRectangleTextureView extends UIRectangle {
                 ], 24)
         }
         return vertices;
-    }
-    constructor(props: UIRectangleProps,
-        textureView: TextureView<Texture2D>
-    ) {
-        super(props, textureView);
-        const {
-            label,
-            borderSize,
-        } = props;
-        this.positions_count = (borderSize.width[0] > 0 || borderSize.height[0] > 0) ? 54 : 6;
-        this.label = label + '_UIRectangle';
-
     }
 }

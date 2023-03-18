@@ -54,7 +54,7 @@ TODO
     readonly mesh: TerrainMesh;
 
     //readonly TerrainHeightsbindGroupTree: BindablePipelineLayout;
-    TerrainHeightsbindGroupTree: BindablePipelineLayout<readonly [
+    TerrainHeightsbindGroupTree: BindablePipelineLayout<[
         typeof this.gpu.sizeBindGroupLayout,
         typeof this.gpu.uniformBindGroupLayoutWithTime,
         BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,

@@ -37,6 +37,8 @@ window.resetDebugNumber = () => {
     debugNumber = 0;
 }
 */
+type CreateRenderPipelineCB<R extends RenderPipeline> = readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R];
+
 export class GPU {
     #maxInstances = 10;
 
@@ -53,7 +55,7 @@ export class GPU {
     readonly pendingCommandBuffers: Set<GPUCommandBuffer> = new Set();
     readonly tempGPUBuffers: GPUBuffer[] = [];
 
-    readonly rootCameralayout: BindablePipelineLayout<readonly [
+    readonly rootCameralayout: BindablePipelineLayout<[
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime
     ]>;
@@ -65,14 +67,14 @@ export class GPU {
     readonly GPUMeshes: CopySrcBuffer & CopyDstBuffer & BindStorageBuffer & BindUniformBuffer
     readonly #GPUPointLights: CopyDstBuffer & BindStorageBuffer & BindUniformBuffer;
     readonly #GPUDirectionalLights: CopyDstBuffer & BindStorageBuffer
-    readonly positionAndTimeBindGroup: BindablePipelineLayout<readonly [
+    readonly positionAndTimeBindGroup: BindablePipelineLayout<[
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
         BGLayout<[
             BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>
         ]>
     ]>;
-    readonly lightsTextureBindGroup: BindablePipelineLayout<readonly [
+    readonly lightsTextureBindGroup: BindablePipelineLayout<[
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
         BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,
@@ -127,7 +129,7 @@ export class GPU {
 
 
     readonly #ro: ResizeObserver;
-    readonly #canvasRootLayout: BindablePipelineLayout<readonly [
+    readonly #canvasRootLayout: BindablePipelineLayout<[
         typeof this.BindGroupLayoutCanvas
     ]>;
     readonly UIPipeline: RenderPipeline<UIVertShader>
@@ -136,26 +138,24 @@ export class GPU {
     readonly BindGroupLayoutCanvas: BGLayout<[BufLayout<ShaderStage.VERTEX, typeof UIUniforms>, TextLayout<ShaderStage.FRAGMENT>]>
     destroyed = false;
     fps = 0
-    createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
-    createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
-    createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive?: Omit<GPUPrimitiveState, 'topology'>): R
-    createRenderPipeline<R extends (RenderPipeline)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState = {}): R {
+    createRenderPipeline<R extends RenderPipeline>(desc: CreateRenderPipelineCB<R>, primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
+    createRenderPipeline<R extends RenderPipeline>(desc: CreateRenderPipelineCB<R>, primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
+    createRenderPipeline<R extends RenderPipeline>(desc: CreateRenderPipelineCB<R>, primitive?: Omit<GPUPrimitiveState, 'topology'>): R
+    createRenderPipeline<R extends RenderPipeline>(desc: CreateRenderPipelineCB<R>, primitive: GPUPrimitiveState = {}): R {
         const primitiveWithDefaults: GPUPrimitiveState = {
             topology: 'triangle-list',
             frontFace: 'cw',
             cullMode: 'back',
             ...primitive
         }
-        const hash = desc[0] + Object.values(primitiveWithDefaults).sort().join();
-        let renderPipeline = GPU.#renderPipelines.get(hash);
+        const [label, createRenderPipeline] = desc;
+        const hash = label + Object.values(primitiveWithDefaults).sort().join();
+        let renderPipeline = GPU.#renderPipelines.get(hash) as R | undefined;
         if (!renderPipeline) {
-            renderPipeline = desc[1](this, hash, primitiveWithDefaults);
-            if (renderPipeline)
-                GPU.#renderPipelines.set(hash, renderPipeline);
+            renderPipeline = createRenderPipeline(this, hash, primitiveWithDefaults);
+            GPU.#renderPipelines.set(hash, renderPipeline);
         }
-        //@ts-expect-error Bug in TS?
         return renderPipeline;
-
     }
     #GPUQueueCommandEncoder: GPUCommandEncoder | null = null;
     #renderFrame = 0;
@@ -252,7 +252,7 @@ export class GPU {
         )
         this.rootCameralayout = new BindablePipelineLayout({
             label: 'rootCamera',
-            bindGroupLayouts: [this.sizeBindGroupLayout, this.uniformBindGroupLayoutWithTime] as const,
+            bindGroupLayouts: [this.sizeBindGroupLayout, this.uniformBindGroupLayoutWithTime] as  [typeof this.sizeBindGroupLayout, typeof this.uniformBindGroupLayoutWithTime],
         });
         const BindGroupLayoutPosition = new BGLayout(this,
             'BindGroupLayoutPosition',
@@ -458,7 +458,7 @@ export class GPU {
         )
         this.#canvasRootLayout = new BindablePipelineLayout({
             label: 'canvasRootLayout',
-            bindGroupLayouts: [this.BindGroupLayoutCanvas] as const
+            bindGroupLayouts: [this.BindGroupLayoutCanvas] as [typeof this.BindGroupLayoutCanvas]
         });
         const uiVertShader = new UIVertShader(this.#canvasRootLayout, {
             arrayStride: 4 * 4,
@@ -635,7 +635,7 @@ export class GPU {
                 const data = new Float32Array(engine.memory.buffer, gpumeshPointer, dataLength);
                 const dataInt = new Uint32Array(engine.memory.buffer, gpumeshPointer, dataLength);
                 const mesh = MainNode.Meshes.get(dataInt[28]!);
-                if(!mesh) {
+                if (!mesh) {
                     throw new Error("Tried to update non exist mesh with id " + dataInt[28]);
                 }
                 mesh.onMeshChange.forEach((cb) => cb())

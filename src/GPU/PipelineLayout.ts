@@ -22,6 +22,7 @@ export class PipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]>
         if (!bindGroupLayouts[0]) {
             throw new Error('pipelineLayout needs bindgrouplayouts');
         }
+        Object.freeze(bindGroupLayouts);
         this.gpu = bindGroupLayouts[0].gpu;
         this.bindGroupLayouts = bindGroupLayouts;
         this.layout = bindGroupLayouts[0].gpu.device.createPipelineLayout(
@@ -32,7 +33,7 @@ export class PipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]>
         );
     }
 }
-export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]> extends PipelineLayout<B> {
+export class RenderPipelineLayout<B extends BGLayout[] = BGLayout[]> extends PipelineLayout<B> {
     renderPipeLines: Set<RenderPipeline> = new Set();
     subBindGroups: RenderPipelineLayout[] = [];
     bindGroupLayout: BGLayout;
@@ -40,7 +41,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
     constructor(
         props: PipeLineLayoutProps<B>,
         public sharedBindgroup?: BindGroup | undefined) {
-        super(props);
+        super(Object.freeze(props));
         this.bindGroupLayout = props.bindGroupLayouts.at(-1)!;
     }
     renderPipelineListeners: Set<() => void> = new Set();
@@ -68,7 +69,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
     createAppendedLayout<T extends BGLayout<BindGroupLayoutEntry[]>>(label: string, layout: T) {
         const p = new BindablePipelineLayout({
             label,
-            bindGroupLayouts: [...this.bindGroupLayouts, layout] as const,
+            bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
         })
         this.subBindGroups.push(p);
         return p;
@@ -76,7 +77,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
     /*
         Bind group is shared with sub-bindgroups
     */
-    addChildBindGroupLayout<T extends BindGroup>(label: string, sharedBindgroup: T): BindablePipelineLayout<readonly [...B, T extends BindGroup<infer X> ? X : never]> {
+    addChildBindGroupLayout<T extends BindGroup>(label: string, sharedBindgroup: T): BindablePipelineLayout<[...B, T extends BindGroup<infer X> ? X : never]> {
         for (const bg of this.subBindGroups) {
             if (bg.sharedBindgroup === sharedBindgroup && bg instanceof BindablePipelineLayout) {
                 return bg;
@@ -84,7 +85,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
         }
         const p = new BindablePipelineLayout({
             label,
-            bindGroupLayouts: [...this.bindGroupLayouts, sharedBindgroup.layout] as const,
+            bindGroupLayouts: [...this.bindGroupLayouts, sharedBindgroup.layout] as [...B, typeof sharedBindgroup.layout],
         }, sharedBindgroup)
         this.subBindGroups.push(p);
         //@ts-expect-error bug in TS?
@@ -108,7 +109,7 @@ export class SharedPipelineLayout<B extends BGLayout[]> extends RenderPipelineLa
         return RP;
     }
 }
-export class BindablePipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]> extends RenderPipelineLayout<B> {
+export class BindablePipelineLayout<B extends BGLayout[] = BGLayout[]> extends RenderPipelineLayout<B> {
     constructor(
         props: {
             label: string;

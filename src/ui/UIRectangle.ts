@@ -257,7 +257,7 @@ export abstract class UIRectangle {
         if (content_sizeX <= 0 || content_sizeY <= 0) {
             console.warn('UI', label, 'element content size is 0 or below')
         }
-        const positionsCount = (borderSize.width[0] > 0 || borderSize.height[0] > 0) ? 54 : 6
+        const positionsCount = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6
         const vertices = new Float32Array(positionsCount * 4);
         return this.updateBoundingBoxAndVertices({ vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY })
 
@@ -282,7 +282,7 @@ export abstract class UIRectangle {
             borderSize,
             events,
         } = props;
-        this.positions_count = (borderSize.width[0] > 0 || borderSize.height[0] > 0) ? 54 : 6;
+        this.positions_count = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6;
         this.label = label + '_UIRectangle';
 
         this.uniformBuffer = Buffer.create(renderPass.gpu, 8 /* size of vec2<f32> */, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'UI_transform', (buff) => {
