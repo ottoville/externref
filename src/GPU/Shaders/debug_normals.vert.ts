@@ -15,7 +15,8 @@ export class DebugNormalsVertShader extends VertexShader<
             entryPoints: {
                 main: pipelineLayout
             },
-            label: 'debug_normals.vert'
+            label: 'debug_normals.vert',
+            gpu: pipelineLayout.gpu
         }, [buffers]);
         this.createWGSL((
             [/*uniforms*/,],

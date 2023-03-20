@@ -106,7 +106,7 @@ export type rustWasm = {
     set_indices(mesh: rust_pointer<"mesh">, ptr: rust_pointer<"usize">, length: number): void,
     set_indices_and_vertices(mesh: rust_pointer<"mesh">, indices: rust_pointer<"usize">, indices_length: number, vertices: rust_pointer<"f32">, vertices_length: number): void,
     vertices_pointer(mesh: rust_pointer<"mesh">): number,
-    indices_pointer(mesh: rust_pointer<"mesh">): rust_pointer<'indices'>,
+    indices_field_pointer(mesh: rust_pointer<"mesh">): rust_pointer<'indices_indices'>,
     last_collider_world_vertices_pointer(mesh: rust_pointer<"mesh">): number,
     vertices_count(mesh: rust_pointer<"mesh">): number,
     faces_count(mesh: rust_pointer<"mesh">): number,

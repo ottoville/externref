@@ -9,7 +9,10 @@ import { VariantList } from "./VariantList.js";
 import { NodeInfo } from "./NodeInfo.js";
 
 const getPositionBindGroupForScreen = (gpu: GPU) => Array.from(gpu.renderPassScreen.renderPipelines)
-    .filter((map): map is [RenderPipeline, RenderPipelineVariant] => (map[0].props.bindgroupdrawable === gpu.positionAndTimeBindGroup && !(map[1] instanceof Promise)))
+    .filter((map): map is [RenderPipeline, RenderPipelineVariant] => {
+        const [renderPipeline, renderPipelineVariant] = map;
+        return ((renderPipeline.props.bindgroupdrawable === gpu.positionAndTimeBindGroup || gpu.positionAndTimeBindGroup.subBindGroups.includes(renderPipeline.props.bindgroupdrawable)) && !(renderPipelineVariant instanceof Promise));
+    })
 
 
 export function Meshes(props: { gpu: GPU }) {

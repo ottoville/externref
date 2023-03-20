@@ -1,22 +1,22 @@
-import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
+import type { GPU } from "../../GPU.js"
 
-type BindLayouts = readonly [
-    BGLayout<[
-        BufLayout<ShaderStage.VERTEX>,
-        TextLayout<ShaderStage.FRAGMENT>]>
+type BindLayouts = [
+    GPU["BindGroupLayoutCanvas"]
 ]
 
-export class UIFragShader extends FragmentShader<
-    { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
+export class UIFragShader extends FragmentShader<BindLayouts,
+    { main: PipelineLayout, pick: PipelineLayout }> {
     constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: pipelineLayout,
                 pick: pipelineLayout
-            }, label: 'UI.frag'
+            },
+            label: 'UI.frag',
+            gpu: pipelineLayout.gpu
         });
         this.createWGSL((
             [texture]) => {
@@ -33,7 +33,7 @@ export class UIFragShader extends FragmentShader<
         @location(0) v_uv : vec2<f32>,
       ) -> Output {
         let fragCoordI=vec2<i32>(floor(v_uv));
-        let color:vec4<f32> = textureLoad(${texture.variableName}, fragCoordI, 0);
+        let color:vec4<f32> = textureLoad(${texture}, fragCoordI, 0);
       
         var output:Output;
       

@@ -14,7 +14,8 @@ export class GroundVertShader extends VertexShader<
             entryPoints: {
                 main: pipelineLayout
             },
-            label: 'Ground.vert'
+            label: 'Ground.vert',
+            gpu: pipelineLayout.gpu
         }, [buffers]);
         this.createWGSL((
             [/*uniforms*/,],

@@ -2,24 +2,24 @@
 import type { BindGroup } from "./BindGroup.js";
 import type { RenderPipelineLayout } from "./PipelineLayout.js";
 import type { VertexShader } from "./Shaders/VertexShader.js";
-import type { Shader } from "./Shaders/Shader.js";
+import type { FragmentShader } from "./Shaders/FragmentShader.js";
 
-export type RenderPipelineProps<V extends VertexShader> = {
+export type RenderPipelineProps<V extends VertexShader, F extends FragmentShader> = {
     label: string,
     vertexShader: V,
-    fragmentShader: Shader,
+    fragmentShader: F,
     renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex' | 'layout'>,
     depthBuffer?: {
         depthWriteEnabled: boolean, depthCompare: GPUCompareFunction
     },
     bindgroupdrawable: RenderPipelineLayout
 }
-export class RenderPipeline<V extends VertexShader = VertexShader> {
+export class RenderPipeline<V extends VertexShader = VertexShader, F extends FragmentShader = FragmentShader> {
 
     dynamicBindGroupOffset: number[] = [];
     public createSharedBindGroups?: () => Set<BindGroup>;
     constructor(
-        public props: Readonly<RenderPipelineProps<V>>,
+        public props: Readonly<RenderPipelineProps<V, F>>,
     ) {
     }
     destroy(): void {
@@ -32,7 +32,7 @@ export class RenderPipeline<V extends VertexShader = VertexShader> {
         dynamicIndices: number[] = []): number {
         const variant = renderPass.renderPipelines.get(this);
         if (!variant) {
-            console.warn('No renderPipelines has been set for renderpass', this.props.label, ', wont draw anything')
+            //console.warn('Renderpipeline,', this.props.label,' has no variants for renderpass', renderPass.label, ', wont draw anything')
             return 0;
         }
         if(!('rootDrawables' in variant)) {
@@ -46,7 +46,6 @@ export class RenderPipeline<V extends VertexShader = VertexShader> {
         }
 
         renderPassEncoder.setPipeline(variant.renderpipeline);
-        //variant.renderpipeline.label && console.log('set Pipeline ', variant.renderpipeline.label)
         if (this.createSharedBindGroups) {
             this.createSharedBindGroups().forEach(bindgroup => {
                 renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup.bindGroup)

@@ -4,7 +4,7 @@ import { VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js'
 import { MeshUniforms } from './structs/Structs.js';
 
-type BindLayouts = readonly [
+type BindLayouts = [
     GPU["sizeBindGroupLayout"],
     GPU["uniformBindGroupLayoutWithTime"],
     BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,
@@ -21,7 +21,8 @@ export class Plane extends VertexShader<
             entryPoints: {
                 main: pipelineLayout
             },
-            label: 'plane.vert'
+            label: 'plane.vert',
+            gpu: pipelineLayout.gpu
         }, [buffers]);
         this.createWGSL((
             [/*uniforms*/,],

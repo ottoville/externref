@@ -2,22 +2,23 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
-import type { BindLayoutsGroundHeight } from './PlaneAtGroundHeight.vert.js';
+type BindGroupLayouts = Terrain["TerrainHeightsbindGroupTree"]["bindGroupLayouts"];
 
 export class HelperVertShader extends VertexShader<
     { main: PipelineLayout },
     [],
-    BindLayoutsGroundHeight> {
+    BindGroupLayouts> {
     constructor(
         settings: typeof Terrain.settings,
-        pipelineLayout: PipelineLayout<BindLayoutsGroundHeight>) {
+        pipelineLayout: PipelineLayout<BindGroupLayouts>) {
 
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: pipelineLayout
             },
-            label: 'helper.vert'
+            label: 'helper.vert',
+            gpu: pipelineLayout.gpu
         }, []);
         this.createWGSL((
             [/*uniforms*/,],

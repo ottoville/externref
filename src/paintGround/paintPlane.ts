@@ -2,7 +2,6 @@
 import { Terrain } from "../world/Terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
-import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
@@ -15,7 +14,6 @@ import { createTiledGround } from "../helpers.js";
 declare const engine: Engine;
 
 class PlaneMesh extends BoundableNodeIndexed {
-    //indices_count=0;
     drawable: DrawableIndexed<RenderPipeline<PlaneAtGroundHeightVertShader>>;
     constructor(renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>, vertexBuffer: Float32Array) {
         super(
@@ -41,7 +39,6 @@ class PlaneMesh extends BoundableNodeIndexed {
     }
 }
 
-const renderPipelines: Map<GPU, RenderPipeline<PlaneAtGroundHeightVertShader>> = new Map();
 export class paintPlane extends paintGround {
     #mesh: PlaneMesh
     constructor(
@@ -53,34 +50,36 @@ export class paintPlane extends paintGround {
             this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
             callback(p);
         });
-        let renderPipeline = renderPipelines.get(scene.gpu);
-        if (!renderPipeline) {
-            const planeVertShader = new PlaneAtGroundHeightVertShader(
-                ground.TerrainHeightsbindGroupTree,
-                {
-                    arrayStride: 4 * 2,
-                    stepMode: "vertex" as GPUVertexStepMode,
-                    attributes: [
-                        {
-                            // position
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float32x2"
+
+        const renderPipeline = ground.gpu.createRenderPipeline([
+            'paintPlaneRenderpipeline', (_gpu, label, primitive) => {
+                const planeVertShader = new PlaneAtGroundHeightVertShader(
+                    ground.TerrainHeightsbindGroupTree,
+                    {
+                        arrayStride: 4 * 2,
+                        stepMode: "vertex" as GPUVertexStepMode,
+                        attributes: [
+                            {
+                                // position
+                                shaderLocation: 0,
+                                offset: 0,
+                                format: "float32x2"
+                            }
+                        ]
+                    }, Terrain.settings
+                )
+                return ground.TerrainHeightsbindGroupTree.addRenderPipeline(
+                    {
+                        label,
+                        vertexShader: planeVertShader,
+                        fragmentShader: new ColorFragShader(ground.TerrainHeightsbindGroupTree),
+                        renderPipeline: {
+                            primitive,
                         }
-                    ]
-                }, Terrain.settings
-            )
-            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline(
-                {
-                    label: 'paintPlaneRenderpipeline',
-                    vertexShader: planeVertShader,
-                    fragmentShader: new ColorFragShader(ground.TerrainHeightsbindGroupTree),
-                    renderPipeline: {
-                        primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint32' },
-                    }
-                });
-            renderPipelines.set(scene.gpu, renderPipeline);
-        }
+                    });
+            }
+        ], { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint32' })
+
         this.#mesh = new PlaneMesh(renderPipeline, new Float32Array([0, 0, 0]));
         this.#mesh.drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     }
@@ -139,7 +138,6 @@ export class paintPlane extends paintGround {
         if (newValues) {
             this.#mesh.drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
             this.#mesh.drawable.setIndexBuffer(new Uint32Array(newValues.indices));
-            this.#mesh.indices_count = newValues.indices.length;
         }
     }
 }

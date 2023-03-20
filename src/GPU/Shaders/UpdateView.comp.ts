@@ -71,7 +71,8 @@ export class UpdateView extends ComputeShader<
             label: "UpdateView.comp",
             entryPoints: {
                 main: pipelineLayout
-            }
+            },
+            gpu
         });
         this.createWGSL(([meshes, point_lights, directional_lights], [clusters, viewUniforms]) => {
             /////////////////

@@ -9,7 +9,7 @@ export abstract class ComputeShader<
         super(params, GPUShaderStage.COMPUTE);
     }
     createComputePipeline(entryPoint: keyof E) {
-        return this.props.bindGroupLayouts[0]!.gpu.device.createComputePipelineAsync({
+        return this.props.gpu.device.createComputePipelineAsync({
             compute: {
                 module: this.module,
                 entryPoint: entryPoint as string

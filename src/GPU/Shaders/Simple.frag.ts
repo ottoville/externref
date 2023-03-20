@@ -8,15 +8,17 @@ import { getClusterIndex } from './getClusterIndex.js';
 
 type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
 
-export class SimpleFragShader extends FragmentShader<
-    { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
+export class SimpleFragShader extends FragmentShader<BindLayouts,
+    { main: PipelineLayout, pick: PipelineLayout }> {
     constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: pipelineLayout,
                 pick: pipelineLayout
-            }, label: 'Simple.frag'
+            },
+            label: 'Simple.frag',
+            gpu: pipelineLayout.gpu
         });
         this.createWGSL((
             [uniforms,],

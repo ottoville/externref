@@ -53,7 +53,7 @@ export class Sun extends MainNode {
         });
         this.drawable = new DrawableSimple({
             renderPipeline,
-            renderPasses: undefined,
+            renderPasses: new Set([gpu.renderPassScreen, gpu.renderPassWater]),
             vertexBuffers: [] as []
         }, {
             node: this,

@@ -5,23 +5,15 @@ export function* createTiledGround(width: number): Generator<{ positions: number
     let backwards = false;
     while (true) {
         if (row != 0) {
-            if (!backwards)
-                indices.push((positions.push(0, row + 1) - 2) >> 1)
-            else
-                indices.push((positions.push(width, row + 1) - 2) >> 1)
+            indices.push((positions.push(backwards?width:0, row + 1) - 2) * 0.5);
         }
         for (let i = 1; i <= width; i++) {
-            if (!backwards) {
-                if (row == 0)
-                    indices.push((positions.push(i, row) - 2) >> 1)
-                else
-                    indices.push(indices[indices.length - i * 4]!);
-                indices.push((positions.push(i, row + 1) - 2) >> 1);
+            if (!backwards && row === 0) {
+                indices.push((positions.push(i, row) - 2) * 0.5)
             } else {
                 indices.push(indices[indices.length - i * 4]!);
-                indices.push((positions.push(width - i, row + 1) - 2) >> 1)
-
             }
+            indices.push((positions.push(backwards?width - i:i, row + 1) - 2) * 0.5);
         }
         row++;
         backwards = !backwards

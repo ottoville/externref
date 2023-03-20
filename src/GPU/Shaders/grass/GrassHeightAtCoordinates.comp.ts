@@ -79,7 +79,8 @@ export class GrassHeightAtCoordinates extends ComputeShader<{ main: PipelineLayo
             label: "GetHeightAtCoordinates.comp",
             entryPoints: {
                 main: pipelineLayout
-            }
+            },
+            gpu
         });
 
         this.createWGSL(([slopes, facet12, positionAndRotate, shapes], [positions]) => {

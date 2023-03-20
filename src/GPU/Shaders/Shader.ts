@@ -1,12 +1,14 @@
 import { BGLayout, BufLayout, ShaderStage } from "../BindGroupLayout.js";
 import { PipelineLayout } from "../PipelineLayout.js";
 import { Struct } from "./structs/Structs.js";
+import type { GPU } from "../../GPU.js"
 
 export type ShaderParams<E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
     B extends readonly BGLayout[] = readonly BGLayout[]> = {
         bindGroupLayouts: B,
         entryPoints: E,
         label: string,
+        gpu: GPU
     }
 export abstract class Shader<
     E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
@@ -64,10 +66,10 @@ export abstract class Shader<
             return e.filter(ee => {
                 return (ee.entry.visibility & this.shaderFlag) !== 0
             })
-        })
+        });
         //@ts-expect-error https://stackoverflow.com/a/57913509
         this.wgsl += cb(...filtered);
-        this.module = this.props.bindGroupLayouts[0]!.gpu.device.createShaderModule(
+        this.module = this.props.gpu.device.createShaderModule(
             {
                 code: this.wgsl,
                 label: this.props.label,

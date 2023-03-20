@@ -34,7 +34,7 @@ export class Human extends Box {
         this.update_scale(1, 1, 1);
         // engine.inputManager?.destroy();
 
-        this.inputManager = new MeshCamera(engine.mainCamera, false);
+        this.inputManager = new MeshCamera(engine.mainCamera);
         if (properties.inputEnabled) {
             engine.mainCamera.attachControllerForCamera(this.inputManager)
         }

@@ -14,7 +14,8 @@ export class WaterVertShader extends VertexShader<
             entryPoints: {
                 main: pipelineLayout
             },
-            label: 'water.vert'
+            label: 'water.vert',
+            gpu: pipelineLayout.gpu
         }, [buffers]);
         this.createWGSL((
             [/*uniforms*/,],

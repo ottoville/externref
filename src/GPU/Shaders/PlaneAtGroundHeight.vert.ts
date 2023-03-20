@@ -1,23 +1,15 @@
-import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-import { GPU } from '../../GPU.js'
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
-import { MeshUniforms } from './structs/Structs.js';
 
-export type BindLayoutsGroundHeight = readonly [
-    GPU["sizeBindGroupLayout"],
-    GPU["uniformBindGroupLayoutWithTime"],
-    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,
-    Terrain["heightsLayout"]
-]
+type BindGroupLayouts = Terrain["TerrainHeightsbindGroupTree"]["bindGroupLayouts"];
 export class PlaneAtGroundHeightVertShader extends VertexShader<
     { main: PipelineLayout },
     [GPUVertexBufferLayout],
-    BindLayoutsGroundHeight> {
+    BindGroupLayouts> {
     constructor(
-        pipelineLayout: PipelineLayout<BindLayoutsGroundHeight>,
+        pipelineLayout: PipelineLayout<BindGroupLayouts>,
         buffers: GPUVertexBufferLayout,
         settings: typeof Terrain.settings) {
         const entryPoints = {
@@ -26,7 +18,8 @@ export class PlaneAtGroundHeightVertShader extends VertexShader<
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints,
-            label: 'plane.vert'
+            label: 'plane.vert',
+            gpu: pipelineLayout.gpu
         }, [buffers]);
 
         this.createWGSL((

@@ -3,6 +3,7 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { Struct } from './structs/Structs.js';
+import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 
 type SlopesLayout = BGLayout<[BufLayout<ShaderStage.COMPUTE, Struct<{
     numbers: [string, string];
@@ -40,9 +41,9 @@ export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout }
             label: "CreateTerrainTexture.comp",
             entryPoints: {
                 main: pipelineLayout
-            }
+            },
+            gpu: pipelineLayout.gpu
         });
-        const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
 
         this.createWGSL(([slopes, facet12], [ground_texture]) => {
 
@@ -145,28 +146,15 @@ fn snoise2(v:vec3<f32>) -> f32 {
  return 42.0 * dot( m*m, vec4<f32>( dot(p0,x0), dot(p1,x1),
                              dot(p2,x2), dot(p3,x3) ) );
 }
+${getHeightAtCoordinates(settings, slopes, facet12)}
 
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 
- let cx:i32 = i32(f32(GlobalInvocationID.x) * (f32(${settings.size[0]})/f32(${settings.textureSize.width})) - f32(${settings.size[0]}/u32(2)));
- let cz:i32 = i32(f32(GlobalInvocationID.y) * (f32(${settings.size[1]})/f32(${settings.textureSize.height})) - f32(${settings.size[1]}/u32(2)));
+ let cx:f32 = f32(GlobalInvocationID.x) * (f32(${settings.size[0]})/f32(${settings.textureSize.width})) - f32(${settings.size[0]}/u32(2));
+ let cz:f32 = f32(GlobalInvocationID.y) * (f32(${settings.size[1]})/f32(${settings.textureSize.height})) - f32(${settings.size[1]}/u32(2));
 
- let col:u32 = u32(floor(f32((cx + ${settings.maxXZ[0]}) * ${settings.subdivisions[0]}) / ${settings.size[0]}));
- let row:u32 = u32(floor(- f32((cz + ${settings.maxXZ[1]}) * ${settings.subdivisions[1]}) / ${settings.size[1]} + ${settings.subdivisions[0]}));
- let slope:i32 = ${slopes.prop('numbers')}[row * ${settings.subdivisions[0]} + col];
- var norm:vec3<f32>;
- var d:f32;
- if(cz < -1 * cx + slope) {
-     norm = ${facet12.prop('plane')}[row * ${settings.subdivisions[0]} + col].norm;
-     d = ${facet12.prop('plane')}[row * ${settings.subdivisions[0]} + col].d;
- } else {
-     let index:u32 = ${facetSize} + (row * ${settings.subdivisions[0]} + col);
-     norm =${facet12.prop('plane')}[index].norm;
-     d = ${facet12.prop('plane')}[index].d;
- }
-
- let y:f32 = -(norm.x * f32(cx) + norm.z * f32(cz) + d) / norm.y;
+ let y:f32 = getHeightAtCoordinates(vec2<f32>(cx, cz));
  if( y > 4.0 ) {
    let r = (snoise2(vec3<f32>(vec2<f32>(GlobalInvocationID.xy),y))+1.0)*0.5;
    let b = (snoise2(vec3<f32>(vec2<f32>(GlobalInvocationID.yx),y))+1.0)*0.5;

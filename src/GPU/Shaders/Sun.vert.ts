@@ -15,7 +15,8 @@ export class SunVertShader extends VertexShader<
             entryPoints: {
                 main: pipelineLayout
             },
-            label: 'Sun.vert'
+            label: 'Sun.vert',
+            gpu: pipelineLayout.gpu
         }, []);
         this.createWGSL((
             [/*uniforms*/,],

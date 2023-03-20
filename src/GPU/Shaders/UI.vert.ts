@@ -1,7 +1,7 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js'
-type BindLayouts = readonly [GPU["BindGroupLayoutCanvas"]]
+type BindLayouts = [GPU["BindGroupLayoutCanvas"]]
 
 export class UIVertShader extends VertexShader<
     { main: PipelineLayout },
@@ -14,7 +14,8 @@ export class UIVertShader extends VertexShader<
             entryPoints: {
                 main: pipelineLayout
             },
-            label: 'UI.vert'
+            label: 'UI.vert',
+            gpu: pipelineLayout.gpu
         }, [buffers]);
         this.createWGSL(([uniforms,/*texture*/]) => {
             //////////////////////////////////

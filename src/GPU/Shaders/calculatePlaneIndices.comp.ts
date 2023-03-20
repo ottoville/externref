@@ -30,7 +30,8 @@ export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout 
             label: "calculatePlaneIndices.comp",
             entryPoints: {
                 main: pipelineLayout
-            }
+            },
+            gpu: pipelineLayout.gpu
         })
         this.createWGSL(([indices]) => {
             return /* wgsl */ `

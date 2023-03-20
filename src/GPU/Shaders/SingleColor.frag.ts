@@ -7,13 +7,15 @@ import type { GPU } from '../../GPU.js'
 type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
 
 export class SingleColorFragShader extends FragmentShader<
-    { main: PipelineLayout }, BindLayouts> {
+BindLayouts, { main: PipelineLayout }> {
     constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: pipelineLayout,
-            }, label: 'SingleColor.frag'
+            },
+            label: 'SingleColor.frag',
+            gpu: pipelineLayout.gpu
         });
         this.createWGSL((
             [/*uniforms*/,],

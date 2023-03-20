@@ -18,7 +18,8 @@ export class SimpleVertShader extends VertexShader<
                 main: pipelineLayout,
                 pick: pipelineLayout
             },
-            label: 'Simple.vert'
+            label: 'Simple.vert',
+            gpu: pipelineLayout.gpu
         }, [buffers]);
         this.createWGSL((
             [/*uniforms*/,],
@@ -70,13 +71,13 @@ fn pick(
   @location(1) normal : vec3<f32>
 ) ->PickOutput {
   var output: PickOutput;
-  var curPos : mat4x4<f32> = ${world.variableName}.transformation;
-  curPos[3] = ${world.variableName}.transformation[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
+  var curPos : mat4x4<f32> = ${world.prop('transformation')};
+  curPos[3] = ${world.prop('transformation')}[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
   curPos[3].w=1.0;
   var worldPos=curPos * vec4<f32>(pos, 1.0);
 
-  output.Position = ${scene.variableName}.modelViewProjection * worldPos;
-  output.id=${world.variableName}.id;
+  output.Position = ${scene.prop('modelViewProjection')} * worldPos;
+  output.id=${world.prop('id')};
   //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
   return output;

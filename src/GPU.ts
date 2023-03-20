@@ -135,7 +135,9 @@ export class GPU {
     readonly UIPipeline: RenderPipeline<UIVertShader>
 
     readonly updateViewShader: UpdateView;
-    readonly BindGroupLayoutCanvas: BGLayout<[BufLayout<ShaderStage.VERTEX, typeof UIUniforms>, TextLayout<ShaderStage.FRAGMENT>]>
+    readonly BindGroupLayoutCanvas: BGLayout<[
+        BufLayout<ShaderStage.VERTEX, typeof UIUniforms>,
+        TextLayout<ShaderStage.FRAGMENT>]>
     destroyed = false;
     fps = 0
     createRenderPipeline<R extends RenderPipeline>(desc: CreateRenderPipelineCB<R>, primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R

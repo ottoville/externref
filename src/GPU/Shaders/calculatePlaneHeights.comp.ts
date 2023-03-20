@@ -53,7 +53,8 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
             label: "calculatePlaneHeights.comp",
             entryPoints: {
                 main: pipelineLayout
-            }
+            },
+            gpu: pipelineLayout.gpu
         })
         const subdivisions_plus_one = settings.subdivisions[0] + 1;
         const facetSize = settings.subdivisions[0] * settings.subdivisions[1]

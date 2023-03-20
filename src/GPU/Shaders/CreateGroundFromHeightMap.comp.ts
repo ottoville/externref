@@ -41,7 +41,8 @@ export class CreateGroundFromHeightMap extends ComputeShader<
             label: "CreateGroundFromHeightMap.comp",
             entryPoints: {
                 main: pipelineLayout
-            }
+            },
+            gpu
         });
         this.createWGSL(([positions, pixels]) => {
             //////////////////////////

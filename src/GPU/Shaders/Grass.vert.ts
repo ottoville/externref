@@ -17,7 +17,8 @@ export class GrassVertShader extends VertexShader<
             entryPoints: {
                 main: pipelineLayout
             },
-            label: 'grass.vert'
+            label: 'grass.vert',
+            gpu: pipelineLayout.gpu
         }, buffers);
         this.createWGSL((
             [/*uniform*/,],

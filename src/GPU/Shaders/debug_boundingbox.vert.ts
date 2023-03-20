@@ -14,7 +14,8 @@ export class DebugBoundingBoxVertShader extends VertexShader<
             entryPoints: {
                 main: pipelineLayout
             },
-            label: 'debug_boundingBox.vert'
+            label: 'debug_boundingBox.vert',
+            gpu: pipelineLayout.gpu
         }, [buffers]);
         this.createWGSL((
             [/*uniforms*/,],

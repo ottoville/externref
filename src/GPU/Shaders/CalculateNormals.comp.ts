@@ -39,7 +39,8 @@ export class CalculateNormals extends ComputeShader<
             label: 'CalculateNormals.comp',
             entryPoints: {
                 main: pipelineLayout
-            }
+            },
+            gpu: pipelineLayout.gpu
         });
         const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
         this.createWGSL(([normals], [/*slopes*/, facet12]) => {

@@ -65,7 +65,8 @@ export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, BindLayou
             label: "ReadDepth.comp",
             entryPoints: {
                 main: pipelineLayout
-            }
+            },
+            gpu
         });
         this.createWGSL(([/*depth_and_mesh*/,], [depth_texture, mesh_texture, mouse]) => {
             ///////////////////////////

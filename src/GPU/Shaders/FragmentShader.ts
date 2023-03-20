@@ -3,8 +3,8 @@ import { PipelineLayout } from "../PipelineLayout.js";
 import { Shader, ShaderParams } from "./Shader.js";
 
 export abstract class FragmentShader<
-    E extends { [index: string]: PipelineLayout },
-    B extends readonly BGLayout[]
+    B extends readonly BGLayout[] = readonly BGLayout[],
+    E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout }
 > extends Shader<E, B> {
     constructor(
         params: ShaderParams<E, B>

@@ -24,6 +24,8 @@ export default {
     },
     externals: {
         '../../MainNode.js': '../../MainNode.js',
+        '../../nodes/DataNode.js': '../../nodes/DataNode.js',
+        '../../nodes/BoundableNodeIndexed.js': '../../nodes/BoundableNodeIndexed.js',
         '../../GPU/Drawables/DrawableDirect.js': '../../GPU/Drawables/DrawableDirect.js',
         '../../controllers/ArcRotateCamera.js': '../../controllers/ArcRotateCamera.js',
         '../../controllers/PositionCamera.js': '../../controllers/PositionCamera.js'

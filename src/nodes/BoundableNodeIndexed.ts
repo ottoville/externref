@@ -4,9 +4,7 @@ import type { MainNodeProps } from "../MainNode.js";
 declare const engine: Engine;
 
 export abstract class BoundableNodeIndexed extends DataNode implements canCollideCharacter {
-    indices_count?= 0;
     set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array) {
-        this.indices_count = indices.length;
         const ptr = engine.rust.alloc_vector_usize(indices.length);
         new Uint32Array(engine.rust.memory.buffer, ptr, indices.length).set(indices);
 
@@ -18,7 +16,6 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
     }
     set_indices(indices: Uint32Array) {
         let ptr: rust_pointer<'usize'>
-        this.indices_count = indices.length;
         if(indices.buffer !== engine.rust.memory.buffer) {
             ptr = engine.rust.alloc_vector_usize(indices.length);
             new Uint32Array(engine.rust.memory.buffer, ptr, indices.length).set(indices);
@@ -29,14 +26,12 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
         this.rebuildTrianglePlanes();
     }
     get indices() {
-        const ptr = engine.rust.indices_pointer(this.ptr);
-        return new Uint32Array(engine.rust.memory.buffer, ptr, this.indices_count ?? 0);
+        const [indices_len, indices_ptr] = new Uint32Array(engine.rust.memory.buffer, engine.rust.indices_field_pointer(this.ptr), 2);
+        return new Uint32Array(engine.rust.memory.buffer, indices_ptr, indices_len);
     }
-
-    /*    set setFaces(faces:Float32Array) {
-            this.faces=faces;
-            this.rebuildTrianglePlanes();
-        }*/
+    get indices_count() {
+        return new Uint32Array(engine.rust.memory.buffer, engine.rust.indices_field_pointer(this.ptr), 1)[0]!;
+    }
     constructor(
         dataNodeProps: DataNodeProps,
         mainNodeProps: MainNodeProps,

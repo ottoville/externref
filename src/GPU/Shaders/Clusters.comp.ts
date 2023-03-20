@@ -40,7 +40,8 @@ export class ClustersComp extends ComputeShader<{ main: PipelineLayout }, BindLa
             label: "Clusters.comp",
             entryPoints: {
                 main: pipelineLayout
-            }
+            },
+            gpu: pipelineLayout.gpu
         });
         this.createWGSL(([uniforms], [clusters, screentoview]) => {
             /////////////////

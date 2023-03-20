@@ -164,8 +164,8 @@ pub unsafe extern "C" fn label_field_pointer(mesh_ptr:*mut Mesh) -> *const Strin
     std::ptr::addr_of!((*mesh_ptr).label)
 }
 #[no_mangle]
-pub unsafe extern "C" fn indices_pointer(mesh_ptr:*mut Mesh) -> *const usize {
-    (*mesh_ptr).get_geometry_mut().indices.as_ptr()
+pub unsafe extern "C" fn indices_field_pointer(mesh_ptr:*mut Mesh) -> *const Vec<usize> {
+    std::ptr::addr_of!((*mesh_ptr).get_geometry().indices)
 }
 #[no_mangle]
 pub unsafe extern "C" fn gpu_alignment(mesh_ptr:*const Mesh) -> u32 {

@@ -2,15 +2,17 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from "GPU.js"
 type BindLayouts = GPU["bindGroupTextureWater"]["bindGroupLayouts"]
-export class WaterFragShader extends FragmentShader<
-    { main: PipelineLayout, pick: PipelineLayout }, BindLayouts> {
+export class WaterFragShader extends FragmentShader<BindLayouts,
+    { main: PipelineLayout, pick: PipelineLayout }> {
     constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: pipelineLayout,
                 pick: pipelineLayout
-            }, label: 'Water.frag'
+            },
+            label: 'Water.frag',
+            gpu: pipelineLayout.gpu
         });
         this.createWGSL((
             [/*uniforms*/,],

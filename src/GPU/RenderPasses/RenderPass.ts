@@ -17,7 +17,7 @@ export class RenderPipelineVariant {
     ) {
 
     }
-    onRootDrawableChanges:Set<() => void> = new Set();
+    onRootDrawableChanges: Set<() => void> = new Set();
     addRootDrawable(drawable: Drawable) {
         this.rootDrawables.add(drawable)
         this.onRootDrawableChanges.forEach(cb => cb())
@@ -148,8 +148,12 @@ export class RenderPass<U extends {
                     if (err.message.includes(renderPipeline.props.vertexShader.module.label)) {
                         console.error('createRenderPipelineAsync failed, vertex wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err })
                     }
-                    if (err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
+                    else if (err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
                         console.error('createRenderPipelineAsync failed, fragment wgsl:', renderPipeline.props.fragmentShader.wgsl, { cause: err })
+                    } else {
+                        console.error('createRenderPipelineAsync failed, vertex wgsl:',
+                            renderPipeline.props.vertexShader.wgsl, { cause: err });
+                        console.error('fragment wgsl:', renderPipeline.props.fragmentShader.wgsl)
                     }
                 }
                 throw (new Error('createRenderPipelineAsync failed', { cause: err }));
