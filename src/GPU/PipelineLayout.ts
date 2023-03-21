@@ -7,7 +7,7 @@ import type { FragmentShader } from "./Shaders/FragmentShader.js";
 type extractGeneric<Type> = Type extends BGLayout<infer X> ? MapToGPUBindGroupEntry<X> : never
 type Last<T extends BGLayout[]> = T extends [...BGLayout[], infer R] ? R : never
 // eslint-disable-next-line @typescript-eslint/no-shadow
-type Head<T extends BGLayout[]> = T extends [ ...infer Head, BGLayout ] ? Head : BGLayout[];
+type Head<T extends BGLayout[]> = T extends [ ...infer Head, BGLayout ] ? Head : never[];
 
 export type PipeLineLayoutProps<B extends readonly BGLayout[]> = {
     label: string;
@@ -121,13 +121,20 @@ export class BindablePipelineLayout<B extends BGLayout[] = BGLayout[]> extends R
         sharedBindgroup?: BindGroup | undefined) {
         super(props, sharedBindgroup);
     }
+    /**
+     * Add render pipeline to pipelineLayout.
+     * Vertex and fragmen shader must have same bindgrouplayouts than pipelineLayout,
+     * but not every one of then must be defined for shader. Eg. it is allowed to attach shader
+     * with less or no bindgrouplayout, but it is not allowed to attach shader with different or more
+     * bindgrouplayouts than the pipelineLayout has.
+    */
     addRenderPipeline<V extends
         VertexShader<
             { [index: string]: PipelineLayout },
             VertexBuffers,
-            B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>
+            B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []
         >, F extends
-            FragmentShader<B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>>>(
+            FragmentShader<B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []>>(
         props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>,
 
     ): RenderPipeline<V> {
