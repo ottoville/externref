@@ -14,7 +14,7 @@ const positions = new Float32Array([
 let uid = 0;
 export class Triangle extends SimpleMesh {
     override create_collider() {
-        return engine.rust.create_convex_hull_collider(this.ptr);
+        return engine.rust.create_convex_hull_collider(this.id);
     }
     constructor(
         label = 'triangle' + (uid++),

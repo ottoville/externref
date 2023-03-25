@@ -20,7 +20,7 @@ export class BoundingBoxMesh extends MainNode {
             console.warn("Cannot debug_bounding_box on UI elements")
             return;
         }
-        const vectors_simd = new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(targetNode.node.ptr), 3 * 4 * 2);
+        const vectors_simd = new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(targetNode.node.id), 3 * 4 * 2);
         const vectors = new Float32Array([
             vectors_simd[0]!, vectors_simd[4]!, vectors_simd[8]!, 0,
             vectors_simd[1]!, vectors_simd[5]!, vectors_simd[9]!, 0,

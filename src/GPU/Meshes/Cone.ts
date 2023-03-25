@@ -116,6 +116,6 @@ export class Cone extends SimpleIndexedMesh {
     set radius(radius: number) {
         this.update_scale(radius, this.scale_y, radius);
         const collider_ptr = engine.rust.create_cone_collider(this.scale_y, radius);
-        engine.rust.add_collider(this.ptr, collider_ptr);
+        engine.rust.add_collider(this.id, collider_ptr);
     }
 }

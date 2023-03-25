@@ -37,6 +37,6 @@ export class Capsule extends OctaSphere {
     set radius(radius: number) {
         this.update_scale(radius);
         const collider_ptr = this.create_collider();
-        engine.rust.add_collider(this.ptr, collider_ptr);
+        engine.rust.add_collider(this.id, collider_ptr);
     }
 }

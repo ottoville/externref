@@ -21,7 +21,7 @@ pub use crate::drawable::DrawType;
 
 
 pub struct Mesh {
-    pub id:u32,
+    pub id:usize,
     pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
     pub gpu_mesh_alignment: usize, //Alignment in engine.gpu_meshes vector
     pub rotation: Quaternion,
@@ -37,7 +37,6 @@ pub struct Mesh {
 }
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh(
-    id:u32,
     positions_count:usize,
     point_light:f32,
     directional_light:f32,
@@ -45,15 +44,11 @@ pub unsafe extern "C" fn new_mesh(
     strip:bool,
     fixed: bool,
     rigid_body: bool,
-    label: *mut std::os::raw::c_char) -> *const Mesh {
+    label: *mut std::os::raw::c_char) -> usize {
         let cstr = std::ffi::CString::from_raw(label);
         match cstr.to_str() {
             Ok(str) => {
-                let e = ENGINE.physic_engine_mut();
-                let e2 = ENGINE.physic_engine_mut();
-                let len = e.meshes.len();
-                Mesh::new(id, positions_count,point_light,directional_light,scenes,strip,fixed,rigid_body, str.to_string(), e);
-                return &e2.meshes[len];    
+                return Mesh::new(positions_count,point_light,directional_light,scenes,strip,fixed,rigid_body, str.to_string());
             }
             Err(error) => {
                 panic!("{}", &error.to_string());
@@ -62,68 +57,70 @@ pub unsafe extern "C" fn new_mesh(
 }
 #[no_mangle]
 pub unsafe extern "C" fn create_geometry(
-    mesh:*mut Mesh,
+    mesh_id: usize,
     has_bounding:bool,
     vertices_stride:usize,
     static_faces:bool,
-    strip:bool) {        
-        (*mesh).create_geometry(has_bounding, vertices_stride, static_faces, strip);
+    strip:bool) {
+        get_mesh_by_id_mut(mesh_id).create_geometry(has_bounding, vertices_stride, static_faces, strip);
 }
 #[no_mangle]
 pub unsafe extern "C" fn add_collider(
-    mesh:*mut Mesh,
+    mesh_id: usize,
     collider:*const Collider) {
         let coll=std::ptr::read(collider);
-        (*mesh).add_collider(coll, ENGINE.physic_engine_mut());
+        get_mesh_by_id_mut(mesh_id).add_collider(coll, ENGINE.physic_engine_mut());
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_vertices(mesh:*mut Mesh, ptr:*mut f32, length:usize) {
+pub unsafe extern "C" fn set_vertices(mesh_id: usize, ptr:*mut f32, length:usize) {
     let vertices=Vec::from_raw_parts(ptr, length, length);
-    (*mesh).get_geometry_mut().set_vertices(vertices);
+    get_mesh_by_id_mut(mesh_id).get_geometry_mut().set_vertices(vertices);
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_indices(mesh:*mut Mesh, ptr:*mut usize, length:usize) {
+pub unsafe extern "C" fn set_indices(mesh_id: usize, ptr:*mut usize, length:usize) {
     let indices=Vec::from_raw_parts(ptr, length, length);
-    let geometry = (*mesh).get_geometry_mut();
+    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
     geometry.set_indices(indices);
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_indices_and_vertices(mesh:*mut Mesh, indices_ptr:*mut usize, indices_length:usize, vertices_ptr:*mut f32, vertices_length:usize) {
+pub unsafe extern "C" fn set_indices_and_vertices(mesh_id: usize, indices_ptr:*mut usize, indices_length:usize, vertices_ptr:*mut f32, vertices_length:usize) {
     let indices=Vec::from_raw_parts(indices_ptr, indices_length, indices_length);
     let vertices=Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_length);
-    let geometry = (*mesh).get_geometry_mut();
+    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
     geometry.indices=indices;
     geometry.set_vertices(vertices);
 }
 #[no_mangle]
-pub unsafe extern "C" fn vertices_pointer(mesh: *mut Mesh) -> *const f32 {
-    (*mesh).get_geometry_mut().vertices.as_ptr()
+pub unsafe extern "C" fn vertices_pointer(mesh_id: usize) -> *const f32 {
+    get_mesh_by_id(mesh_id).get_geometry().vertices.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn last_collider_world_vertices_pointer(mesh: *mut Mesh) -> *const f32 {
-    (*mesh).get_geometry_mut().last_collider_world_vertices.as_ptr()
+pub unsafe extern "C" fn last_collider_world_vertices_pointer(mesh_id: usize) -> *const f32 {
+    get_mesh_by_id(mesh_id).get_geometry().last_collider_world_vertices.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn vertices_count(mesh_ptr:*mut Mesh) -> usize {
-    (*mesh_ptr).get_geometry_mut().vertices.len() / (*mesh_ptr).get_geometry_mut().vertices_stride
+pub unsafe extern "C" fn vertices_count(mesh_id: usize) -> usize {
+    let mesh = get_mesh_by_id(mesh_id);
+    mesh.get_geometry().vertices.len() / mesh.get_geometry().vertices_stride
 }
 #[no_mangle]
-pub unsafe extern "C" fn faces_count(mesh_ptr:*mut Mesh) -> usize {
-    (*mesh_ptr).get_geometry_mut().faces_count()
+pub unsafe extern "C" fn faces_count(mesh_id: usize) -> usize {
+    get_mesh_by_id(mesh_id).get_geometry().faces_count()
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_scale(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
-    (*mesh_ptr).scaling.x = x;
-    (*mesh_ptr).scaling.y = y;
-    (*mesh_ptr).scaling.z = z;
-    (*mesh_ptr).on_update();
+pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    mesh.scaling.x = x;
+    mesh.scaling.y = y;
+    mesh.scaling.z = z;
+    mesh.on_update();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_dynamic_buffer(mesh_ptr:*const Mesh) {
-    (*mesh_ptr).update_dynamic_buffer();
+pub unsafe extern "C" fn update_dynamic_buffer(mesh_id: usize) {
+    get_mesh_by_id(mesh_id).update_dynamic_buffer();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_euler_angles(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
+pub unsafe extern "C" fn update_euler_angles(mesh_id: usize, x: f32, y: f32, z: f32) {
     // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
     // TODO: utilize SIMD
     let half_roll = z * 0.5;
@@ -136,117 +133,126 @@ pub unsafe extern "C" fn update_euler_angles(mesh_ptr:*mut Mesh, x: f32, y: f32,
     let cos_pitch = half_pitch.cos();
     let sin_yaw = half_yaw.sin();
     let cos_yaw = half_yaw.cos();
-
-    (*mesh_ptr).rotation.i = (cos_yaw * sin_pitch * cos_roll) + (sin_yaw * cos_pitch * sin_roll);
-    (*mesh_ptr).rotation.j = (sin_yaw * cos_pitch * cos_roll) - (cos_yaw * sin_pitch * sin_roll);
-    (*mesh_ptr).rotation.k = (cos_yaw * cos_pitch * sin_roll) - (sin_yaw * sin_pitch * cos_roll);
-    (*mesh_ptr).rotation.w = (cos_yaw * cos_pitch * cos_roll) + (sin_yaw * sin_pitch * sin_roll);
-    (*mesh_ptr).on_update();
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    mesh.rotation.i = (cos_yaw * sin_pitch * cos_roll) + (sin_yaw * cos_pitch * sin_roll);
+    mesh.rotation.j = (sin_yaw * cos_pitch * cos_roll) - (cos_yaw * sin_pitch * sin_roll);
+    mesh.rotation.k = (cos_yaw * cos_pitch * sin_roll) - (sin_yaw * sin_pitch * cos_roll);
+    mesh.rotation.w = (cos_yaw * cos_pitch * cos_roll) + (sin_yaw * sin_pitch * sin_roll);
+    mesh.on_update();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_rotation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32, w: f32) {
-    (*mesh_ptr).rotation.i = x;
-    (*mesh_ptr).rotation.j = y;
-    (*mesh_ptr).rotation.k = z;
-    (*mesh_ptr).rotation.w = w;
-    (*mesh_ptr).on_update();
+pub unsafe extern "C" fn update_rotation(mesh_id: usize, x: f32, y: f32, z: f32, w: f32) {
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    mesh.rotation.i = x;
+    mesh.rotation.j = y;
+    mesh.rotation.k = z;
+    mesh.rotation.w = w;
+    mesh.on_update();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_translation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
-    (*mesh_ptr).set_translation(x, y, z)
+pub unsafe extern "C" fn update_translation(mesh_id: usize, x: f32, y: f32, z: f32) {
+    get_mesh_by_id_mut(mesh_id).set_translation(x, y, z)
 }
 #[no_mangle]
-pub unsafe extern "C" fn apply_impulse(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
-    (*mesh_ptr).apply_impulse(x, y, z)
+pub unsafe extern "C" fn apply_impulse(mesh_id: usize, x: f32, y: f32, z: f32) {
+    get_mesh_by_id_mut(mesh_id).apply_impulse(x, y, z)
 }
 #[no_mangle]
-pub unsafe extern "C" fn label_field_pointer(mesh_ptr:*mut Mesh) -> *const String {
-    std::ptr::addr_of!((*mesh_ptr).label)
+pub unsafe extern "C" fn label_field_pointer(mesh_id:usize) -> *const String {
+    std::ptr::addr_of!(get_mesh_by_id(mesh_id).label)
 }
 #[no_mangle]
-pub unsafe extern "C" fn indices_field_pointer(mesh_ptr:*mut Mesh) -> *const Vec<usize> {
-    std::ptr::addr_of!((*mesh_ptr).get_geometry().indices)
+pub unsafe extern "C" fn indices_field_pointer(mesh_id: usize) -> *const Vec<usize> {
+    std::ptr::addr_of!(get_mesh_by_id(mesh_id).get_geometry().indices)
 }
 #[no_mangle]
-pub unsafe extern "C" fn gpu_alignment(mesh_ptr:*const Mesh) -> u32 {
-    (*mesh_ptr).gpu_alignment
+pub unsafe extern "C" fn gpu_alignment(mesh_id: usize) -> u32 {
+    get_mesh_by_id(mesh_id).gpu_alignment
 }
 #[no_mangle]
-pub unsafe extern "C" fn positions_count(mesh_ptr:*const Mesh) -> usize {
-    (*mesh_ptr).positions_count
+pub unsafe extern "C" fn positions_count(mesh_id: usize) -> usize {
+    get_mesh_by_id(mesh_id).positions_count
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_positions_count(mesh_ptr:*mut Mesh, positions_count:usize) {
-    (*mesh_ptr).positions_count = positions_count;
+pub unsafe extern "C" fn set_positions_count(mesh_id: usize, positions_count:usize) {
+    get_mesh_by_id_mut(mesh_id).positions_count = positions_count;
 }
 #[no_mangle]
-pub unsafe extern "C" fn id(mesh_ptr:*const Mesh) -> u32 {
-    (*mesh_ptr).id
-}
-#[no_mangle]
-pub unsafe extern "C" fn strip(mesh_ptr:*const Mesh) -> bool {
-    (*mesh_ptr).strip
-}
-#[no_mangle]
-pub unsafe extern "C" fn collider_planes_parallel_pointer(mesh_ptr:*mut Mesh) -> *const [f32; 4] {
-    (*mesh_ptr).get_geometry_mut().collider_planes_parallel.as_ptr()
-}
-#[no_mangle]
-pub unsafe extern "C" fn gpu_pointer(mesh_ptr:*const Mesh) -> *const Vec4<Vec4<f32>> {
+pub unsafe extern "C" fn get_mesh_by_id<'frame>(mesh_id: usize) -> &'frame Mesh {
     let engine2 = ENGINE.physic_engine();
-    &engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment].transformation
+    &engine2.meshes[mesh_id]
 }
-#[no_mangle]
-pub unsafe extern "C" fn translation_pointer(mesh_ptr:*const Mesh) -> *const Vec4<f32> {
-    let engine2 = ENGINE.physic_engine();
-    &engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment].transformation.w
-
-}
-#[no_mangle]
-pub unsafe extern "C" fn velocity_pointer(mesh_ptr:*const Mesh) -> *const [f32; 4] {
-    let engine2 = ENGINE.physic_engine();
-    &((*mesh_ptr).velocity)
-}
-#[no_mangle]
-pub unsafe extern "C" fn intersect_box_aa_sphere(mesh_ptr:*mut Mesh, collider:*const crate::collider::Collider, radius:f32) -> bool {
-    (*mesh_ptr).intersect_box_aa_sphere(&(*collider), radius)
-}
-#[no_mangle]
-pub unsafe extern "C" fn create_trimesh_collider(mesh_ptr:*mut Mesh) -> *mut Collider {
-    (*mesh_ptr).create_trimesh_collider()
-}
-#[no_mangle]
-pub unsafe extern "C" fn create_convex_hull_collider(mesh_ptr:*mut Mesh) -> *mut Collider {
-    (*mesh_ptr).create_convex_hull_collider()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn scale_x(mesh_ptr:*mut Mesh) -> f32 {
-    (*mesh_ptr).scaling.x
-}
-#[no_mangle]
-pub unsafe extern "C" fn scale_y(mesh_ptr:*mut Mesh) -> f32 {
-    (*mesh_ptr).scaling.y
-}
-#[no_mangle]
-pub unsafe extern "C" fn scale_z(mesh_ptr:*mut Mesh) -> f32 {
-    (*mesh_ptr).scaling.z
-}
-#[no_mangle]
-pub unsafe extern "C" fn vertices_stride(mesh_ptr:*mut Mesh) -> usize {
-    (*mesh_ptr).get_geometry_mut().vertices_stride
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_faces(mesh_ptr:*mut Mesh, ptr:*mut Plane, length:usize) {
-    let planes=Vec::from_raw_parts(ptr, length/4, length/4);
-    (*mesh_ptr).get_geometry_mut().collider_planes=Vec::with_capacity(planes.len());
-    (*mesh_ptr).get_geometry_mut().collider_planes_parallel=Vec::with_capacity(planes.len());
-    (*mesh_ptr).get_geometry_mut().faces.planes=planes;
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_color(mesh_ptr:*mut Mesh, data_0:f32, data_1:f32,data_2:f32,data_3:f32) {
+pub unsafe fn get_mesh_by_id_mut<'frame>(mesh_id: usize) -> &'frame mut Mesh {
     let engine2 = ENGINE.physic_engine_mut();
-    let gpu_mesh = &mut engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
+    &mut engine2.meshes[mesh_id]
+}
+#[no_mangle]
+pub unsafe extern "C" fn strip(mesh_id: usize) -> bool {
+    get_mesh_by_id(mesh_id).strip
+}
+#[no_mangle]
+pub unsafe extern "C" fn collider_planes_parallel_pointer(mesh_id: usize) -> *const [f32; 4] {
+    get_mesh_by_id(mesh_id).get_geometry().collider_planes_parallel.as_ptr()
+}
+#[no_mangle]
+pub unsafe extern "C" fn gpu_pointer(mesh_id: usize) -> *const Vec4<Vec4<f32>> {
+    let engine2 = ENGINE.physic_engine();
+    &engine2.gpu_meshes[get_mesh_by_id(mesh_id).gpu_mesh_alignment].transformation
+}
+#[no_mangle]
+pub unsafe extern "C" fn translation_pointer(mesh_id: usize) -> *const Vec4<f32> {
+    let engine2 = ENGINE.physic_engine();
+    &engine2.gpu_meshes[get_mesh_by_id(mesh_id).gpu_mesh_alignment].transformation.w
+}
+#[no_mangle]
+pub unsafe extern "C" fn rotation_pointer(mesh_id: usize) -> *const crate::math2::Quaternion {
+    &(get_mesh_by_id(mesh_id).rotation)
+}
+#[no_mangle]
+pub unsafe extern "C" fn velocity_pointer(mesh_id: usize) -> *const [f32; 4] {
+    &(get_mesh_by_id(mesh_id).velocity)
+}
+#[no_mangle]
+pub unsafe extern "C" fn intersect_box_aa_sphere(mesh_id: usize, collider:*const crate::collider::Collider, radius:f32) -> bool {
+    get_mesh_by_id_mut(mesh_id).intersect_box_aa_sphere(&(*collider), radius)
+}
+#[no_mangle]
+pub unsafe extern "C" fn create_trimesh_collider(mesh_id: usize) -> *mut Collider {
+    get_mesh_by_id(mesh_id).create_trimesh_collider()
+}
+#[no_mangle]
+pub unsafe extern "C" fn create_convex_hull_collider(mesh_id: usize) -> *mut Collider {
+    get_mesh_by_id(mesh_id).create_convex_hull_collider()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn scale_x(mesh_id: usize) -> f32 {
+    get_mesh_by_id(mesh_id).scaling.x
+}
+#[no_mangle]
+pub unsafe extern "C" fn scale_y(mesh_id: usize) -> f32 {
+    get_mesh_by_id(mesh_id).scaling.y
+}
+#[no_mangle]
+pub unsafe extern "C" fn scale_z(mesh_id: usize) -> f32 {
+    get_mesh_by_id(mesh_id).scaling.z
+}
+#[no_mangle]
+pub unsafe extern "C" fn vertices_stride(mesh_id: usize) -> usize {
+    get_mesh_by_id(mesh_id).get_geometry().vertices_stride
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr:*mut Plane, length:usize) {
+    let planes=Vec::from_raw_parts(ptr, length/4, length/4);
+    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
+    geometry.collider_planes=Vec::with_capacity(planes.len());
+    geometry.collider_planes_parallel=Vec::with_capacity(planes.len());
+    geometry.faces.planes=planes;
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_color(mesh_id: usize, data_0:f32, data_1:f32,data_2:f32,data_3:f32) {
+    let engine2 = ENGINE.physic_engine_mut();
+    let gpu_mesh = &mut engine2.gpu_meshes[get_mesh_by_id(mesh_id).gpu_mesh_alignment];
 
     gpu_mesh.color[0]=data_0;
     gpu_mesh.color[1]=data_1;
@@ -254,58 +260,62 @@ pub unsafe extern "C" fn set_color(mesh_ptr:*mut Mesh, data_0:f32, data_1:f32,da
     gpu_mesh.color[3]=data_3;
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_ambient(mesh_ptr:*mut Mesh, ambient_r:f32, ambient_g:f32, ambient_b:f32) {
+pub unsafe extern "C" fn set_ambient(mesh_id: usize, ambient_r:f32, ambient_g:f32, ambient_b:f32) {
     let engine2 = ENGINE.physic_engine_mut();
-    let gpu_mesh = &mut engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
+    let gpu_mesh = &mut engine2.gpu_meshes[get_mesh_by_id(mesh_id).gpu_mesh_alignment];
     gpu_mesh.ambient[0] = ambient_r;
     gpu_mesh.ambient[1] = ambient_g;
     gpu_mesh.ambient[2] = ambient_b;
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_shadow(mesh_ptr:*mut Mesh, shadow:f32) {
+pub unsafe extern "C" fn set_shadow(mesh_id: usize, shadow:f32) {
     let engine2 = ENGINE.physic_engine_mut();
-    let gpu_mesh = &mut engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
+    let gpu_mesh = &mut engine2.gpu_meshes[get_mesh_by_id(mesh_id).gpu_mesh_alignment];
     gpu_mesh.shadow = shadow;
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn collider_faces_pointer(mesh_ptr:*mut Mesh) -> *const ColliderPlane {
-    (*mesh_ptr).get_geometry_mut().collider_planes.as_ptr()
+pub unsafe extern "C" fn collider_faces_pointer(mesh_id: usize) -> *const ColliderPlane {
+    get_mesh_by_id(mesh_id).get_geometry().collider_planes.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_scenes(mesh_ptr:*mut Mesh, scenes: u32) {
+pub unsafe extern "C" fn set_scenes(mesh_id: usize, scenes: u32) {
     let engine2 = ENGINE.physic_engine_mut();
-    let gpu_mesh = &mut engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
+    let mesh = get_mesh_by_id(mesh_id);
+    let gpu_mesh = &mut engine2.gpu_meshes[mesh.gpu_mesh_alignment];
 
     gpu_mesh.scenes = scenes;
-    (*mesh_ptr).update_dynamic_buffer();
+    mesh.update_dynamic_buffer();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_scale_and_rotation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
-    (*mesh_ptr).scaling.x = x;
-    (*mesh_ptr).scaling.y = y;
-    (*mesh_ptr).scaling.z = z;
-    (*mesh_ptr).rotation.i = rx;
-    (*mesh_ptr).rotation.j = ry;
-    (*mesh_ptr).rotation.k = rz;
-    (*mesh_ptr).rotation.w = rw;
-    (*mesh_ptr).on_update();
+pub unsafe extern "C" fn update_scale_and_rotation(mesh_id: usize, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    mesh.scaling.x = x;
+    mesh.scaling.y = y;
+    mesh.scaling.z = z;
+    mesh.rotation.i = rx;
+    mesh.rotation.j = ry;
+    mesh.rotation.k = rz;
+    mesh.rotation.w = rw;
+    mesh.on_update();
 }
 #[no_mangle]
-pub unsafe extern "C" fn faces_pointer(mesh_ptr:*mut Mesh) -> *const Plane {
-    if !(*mesh_ptr).get_geometry_mut().static_faces && (*mesh_ptr).get_geometry_mut().faces.planes.len() == 0 {
+pub unsafe extern "C" fn faces_pointer(mesh_id: usize) -> *const Plane {
+    let geometry = get_mesh_by_id(mesh_id).get_geometry();
+    if !geometry.static_faces && geometry.faces.planes.len() == 0 {
         panic!("Not implemented yet, TODO: Generate faces");
-        //Remember to allocate memory for collider planes also and otger collider stuff also
+        //Remember to allocate memory for collider planes also and other collider stuff also
     }
-    return (*mesh_ptr).get_geometry_mut().faces.planes.as_ptr();
+    return geometry.faces.planes.as_ptr();
 }
 #[no_mangle]
-pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_ptr:*mut Mesh) -> *const Vec3<Vec4<f32>> {
+pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const Vec3<Vec4<f32>> {
     let engine2 = ENGINE.physic_engine();
-    let gpu_mesh = &engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
-
-    (*mesh_ptr).get_geometry_mut().update_bounding_box(&gpu_mesh.transformation);
-    (&(*mesh_ptr).get_geometry_mut().bounding_box.vectors_simd) as *const Vec3<Vec4<f32>>
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    let gpu_mesh = &engine2.gpu_meshes[mesh.gpu_mesh_alignment];
+    let geometry = mesh.get_geometry_mut();
+    geometry.update_bounding_box(&gpu_mesh.transformation);
+    (&geometry.bounding_box.vectors_simd) as *const Vec3<Vec4<f32>>
 }
 impl Mesh {
     pub fn draw(&self) -> *const usize {
@@ -379,7 +389,7 @@ impl Mesh {
         let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).density(2.0).restitution(0.5).build());
         Box::leak(collider)
     }
-    pub unsafe fn create_geometry<'a>(
+    pub fn create_geometry<'a>(
         &'static mut self,
         has_bounding:bool,
         vertices_stride:usize,
@@ -413,7 +423,6 @@ impl Mesh {
     }
 
     pub unsafe fn new<'a>(
-        id:u32,
         positions_count:usize,
         point_light:f32,
         directional_light:f32,
@@ -421,8 +430,9 @@ impl Mesh {
         strip:bool,
         fixed:bool,
         rigid_body: bool,
-        label: String,
-        engine2: &'static mut Engine2) {
+        label: String,) -> usize {
+        let engine2 = ENGINE.physic_engine_mut();
+        let id = engine2.meshes.len();
         let m = Mesh {
             id,
             gpu_mesh_alignment: engine2.gpu_meshes.len(),
@@ -485,9 +495,8 @@ impl Mesh {
         #[cfg(feature = "webgpu")]
         ENGINE.allocated_gpu_memory();
 
-        let new_id=engine2.meshes.len();
-        m.update_dynamic_buffer();
         engine2.meshes.push(m);
+        engine2.meshes[id].update_dynamic_buffer();
         if rigid_body {
             let rigid_body_builder:RigidBodyBuilder;
             if fixed {
@@ -497,9 +506,10 @@ impl Mesh {
             }
             let rigid_body=rigid_body_builder.build();
             let rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
-            engine2.meshes[new_id].rigid_body_handle = Some(rigid_body_handle);
-            engine2.rigid_bodies.insert(rigid_body_handle, &mut engine2.meshes[new_id]);
+            engine2.meshes[id].rigid_body_handle = Some(rigid_body_handle);
+            engine2.rigid_bodies.insert(rigid_body_handle, &mut engine2.meshes[id]);
         }
+        return id;
     }
     pub fn get_geometry(&self) -> &Geometry {
         if let Some(g) = &self.geometry {
@@ -552,9 +562,9 @@ impl Mesh {
         }
     }
     pub unsafe fn update_dynamic_buffer(&self) {
-        let engine2 = ENGINE.physic_engine();
+        let engine2 = ENGINE.physic_engine_mut();
         let gpu_mesh = &engine2.gpu_meshes[self.gpu_mesh_alignment];
-        ENGINE.gpu_queue2.push((&gpu_mesh, self.gpu_alignment));
+        engine2.gpu_queue2.insert(self.gpu_mesh_alignment, gpu_mesh);
     }
 
     pub fn on_update(&mut self) {
@@ -597,13 +607,13 @@ impl Mesh {
         self.scaling.z=z;
         self.on_update();
     }
-    pub unsafe fn set_point_light(&mut self, engine:&mut Engine, range:f32) {
+    pub unsafe fn set_point_light(&mut self, engine:&'static mut Engine, range:f32) {
         let engine2 = ENGINE.physic_engine_mut();
         let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
 
         gpu_mesh.set_point_light(engine, range, self.gpu_alignment);
     }
-    pub unsafe fn set_directional_light(&mut self, engine:&mut Engine, range:f32) {
+    pub unsafe fn set_directional_light(&mut self, engine:&'static mut Engine, range:f32) {
         let engine2 = ENGINE.physic_engine_mut();
         let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
 

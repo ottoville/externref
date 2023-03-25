@@ -87,7 +87,7 @@ TODO
             return
         const b1 = Buffer.create(engine.gpu, byteLength, [GPUBufferUsage.COPY_SRC], 'terrain_b1', (b) => {
             new Float32Array(b.getMappedRange()).set(
-                new Float32Array(engine.memory.buffer, engine.rust.vertices_pointer(this.mesh.ptr) + offset, byteLength / 4)
+                new Float32Array(engine.memory.buffer, engine.rust.vertices_pointer(this.mesh.id) + offset, byteLength / 4)
             )
         });
 
@@ -97,7 +97,7 @@ TODO
         if (!nofaces) {
             const facesByteLength = this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
             b2 = Buffer.create(engine.gpu, facesByteLength, [GPUBufferUsage.COPY_SRC], 'terrain_b2', b => {
-                new Float32Array(b.getMappedRange()).set(new Float32Array(engine.memory.buffer, engine.rust.faces_pointer(this.mesh.ptr), this.mesh.faces_count * 4))
+                new Float32Array(b.getMappedRange()).set(new Float32Array(engine.memory.buffer, engine.rust.faces_pointer(this.mesh.id), this.mesh.faces_count * 4))
             });
             b2.copyTo(commandEncoder, this.facet12ArrGPUBuffer, 0, 0, facesByteLength);
             engine.gpu.device.queue.submit([commandEncoder.finish()]);

@@ -80,7 +80,7 @@ export class IcoSphere extends SimpleIndexedMesh {
     set radius(radius: number) {
         this.update_scale(radius, radius, radius);
         const collider_ptr = engine.rust.create_ball_collider(radius);
-        engine.rust.add_collider(this.ptr, collider_ptr);
+        engine.rust.add_collider(this.id, collider_ptr);
     }
     constructor({
         order = 0,

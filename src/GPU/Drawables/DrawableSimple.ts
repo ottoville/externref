@@ -32,7 +32,7 @@ export class DrawableSimple<R extends RenderPipeline> extends DrawableDirect {
     ) {
         const dynamicBindGroups: [BindGroup, number][] = []
         if (node instanceof MainNode) {
-            const dynamicIndex = engine.rust.gpu_alignment(node.ptr);
+            const dynamicIndex = engine.rust.gpu_alignment(node.id);
             dynamicBindGroups.push([drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, dynamicIndex])
         }
         super(

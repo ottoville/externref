@@ -6,7 +6,7 @@ import type { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import type { RenderPipeline } from "../../RenderPipeline.js";
 
 export class NormalsMesh extends MainNode {
-    drawable: DrawableSimple<RenderPipeline> | undefined;
+    drawable: DrawableSimple<RenderPipeline>;
     constructor(targetNode: DrawableIndexed) {
         const positionsCount = targetNode.node.positions_count * 2
         super({ positionsCount, label: 'NormalsDebug' });

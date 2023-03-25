@@ -6,14 +6,14 @@ import type { Scene } from "../Scene.js";
 import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import type { Engine } from "../engine.js";
-import { BoundableNodeIndexed } from "../nodes/BoundableNodeIndexed.js";
+import { NodeIndexed } from "../nodes/NodeIndexed.js";
 import { PlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import { createTiledGround } from "../helpers.js";
 declare const engine: Engine;
 
-class PlaneMesh extends BoundableNodeIndexed {
+class PlaneMesh extends NodeIndexed {
     drawable: DrawableIndexed<RenderPipeline<PlaneAtGroundHeightVertShader>>;
     constructor(renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>, vertexBuffer: Float32Array) {
         super(
@@ -27,7 +27,6 @@ class PlaneMesh extends BoundableNodeIndexed {
                 rigid_body: false,
             },
             new Uint32Array());
-        //super({ positionsCount: verticesCount, label: 'plane'});
         this.drawable = new DrawableIndexed(
             {
                 renderPipeline,
@@ -117,7 +116,7 @@ export class paintPlane extends paintGround {
 
         const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
 
-        engine.rust.update_scale_and_rotation(this.#mesh.ptr, height / this.#columns, this.#mesh.scale_y, this.#mesh.scale_z,
+        engine.rust.update_scale_and_rotation(this.#mesh.id, height / this.#columns, this.#mesh.scale_y, this.#mesh.scale_z,
             0, Math.sin(halfYaw), 0, Math.cos(halfYaw))
     }
 
@@ -137,7 +136,7 @@ export class paintPlane extends paintGround {
 
         if (newValues) {
             this.#mesh.drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
-            this.#mesh.drawable.setIndexBuffer(new Uint32Array(newValues.indices));
+            this.#mesh.set_indices(new Uint32Array(newValues.indices));
         }
     }
 }

@@ -47,6 +47,25 @@ export type DataNodeProps = {
     so it is always small enought for gravity to hit on next tick.
 */
 
+export function allocate_vec(array: Uint32Array) : rust_pointer<"usize">
+export function allocate_vec(array: Float32Array) : rust_pointer<"f32">
+export function allocate_vec(array: Uint32Array | Float32Array): rust_pointer<"usize"> | rust_pointer<"f32"> {
+    let ptr: rust_pointer<'usize'> | rust_pointer<"f32">
+    if (array.buffer !== engine.rust.memory.buffer) {
+        if(array instanceof Float32Array) {
+            ptr = engine.rust.alloc_vector_f32(array.length);
+            new Float32Array(engine.rust.memory.buffer, ptr, array.length).set(array);
+        }
+        else {
+            ptr = engine.rust.alloc_vector_usize(array.length);
+            new Uint32Array(engine.rust.memory.buffer, ptr, array.length).set(array);
+        }
+    } else {
+        ptr = array.byteOffset as rust_pointer<'usize'> | rust_pointer<"f32">;
+    }
+    return ptr;
+}
+
 export const closeDistance = 0.0022
 export const closeDistanceSquared = closeDistance * closeDistance
 export abstract class DataNode extends MainNode {
@@ -75,38 +94,31 @@ export abstract class DataNode extends MainNode {
     #positionsAndCollider: [pointerToVec3: number, pointerToVec4: number][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
     get vertices() {
-        return new Float32Array(engine.memory.buffer, engine.rust.vertices_pointer(this.ptr), this.vertices_count * this.vertices_stride);
+        return new Float32Array(engine.memory.buffer, engine.rust.vertices_pointer(this.id), this.vertices_count * this.vertices_stride);
     }
     get vertices_count() {
-        return engine.rust.vertices_count(this.ptr);
+        return engine.rust.vertices_count(this.id);
     }
-
     get faces_count() {
-        return engine.rust.faces_count(this.ptr);
+        return engine.rust.faces_count(this.id);
     }
     set faces(faces: Float32Array) {
         const ptr = engine.rust.alloc_vector_f32(faces.length);
         new Float32Array(engine.rust.memory.buffer, ptr, faces.length).set(faces);
-        engine.rust.set_faces(this.ptr, ptr, faces.length);
+        engine.rust.set_faces(this.id, ptr, faces.length);
     }
     get vertices_stride(): number {
-        return engine.rust.vertices_stride(this.ptr);
+        return engine.rust.vertices_stride(this.id);
     }
     set_vertices(vertices: Float32Array) {
-        let ptr: rust_pointer<"f32">;
-        if(vertices.buffer !== engine.memory.buffer) {
-            ptr = engine.rust.alloc_vector_f32(vertices.length);
-            new Float32Array(engine.rust.memory.buffer, ptr, vertices.length).set(vertices);
-        } else {
-            ptr = vertices.byteOffset as rust_pointer<"f32">;
-        }
-        engine.rust.set_vertices(this.ptr, ptr, vertices.length);
+        const ptr = allocate_vec(vertices);
+        engine.rust.set_vertices(this.id, ptr, vertices.length);
     }
     get last_collider_world_vertices_pointer() {
-        return engine.rust.last_collider_world_vertices_pointer(this.ptr);
+        return engine.rust.last_collider_world_vertices_pointer(this.id);
     }
     create_collider() {
-        return engine.rust.create_trimesh_collider(this.ptr);
+        return engine.rust.create_trimesh_collider(this.id);
     }
     static override Meshes: Map<number, DataNode> = new Map();
     static CharacterCanCollideMeshes: Set<DataNode> = new Set();
@@ -132,13 +144,13 @@ export abstract class DataNode extends MainNode {
         this.#character_can_collide_to = character_can_collide_to;
 
         DataNode.Meshes.set(this.id, this);
-        engine.rust.create_geometry(this.ptr, true, verticesPositionStride, static_faces, mainNodeProps.strip ?? false);
+        engine.rust.create_geometry(this.id, true, verticesPositionStride, static_faces, mainNodeProps.strip ?? false);
         this.set_vertices(vertices);
         // queueMicrotask here so mesh will have indices initialized
         if (can_collide) {
             queueMicrotask(() => {
                 const collider_ptr = this.create_collider();
-                engine.rust.add_collider(this.ptr, collider_ptr)
+                engine.rust.add_collider(this.id, collider_ptr)
             });
         }
         if (character_can_collide_to) {
@@ -153,7 +165,7 @@ export abstract class DataNode extends MainNode {
             newLen = this.#vectorsVec4.push(position)
         }
         if (newLen === 3) {
-            const collider_faces_pointer = engine.rust.collider_faces_pointer(this.ptr);
+            const collider_faces_pointer = engine.rust.collider_faces_pointer(this.id);
             const faceIndex = this.#triangleFaces.length;
             this.#triangleFaces.push(new Triangle(
                 this.#vectorsVec4 as [number, number, number],
@@ -172,7 +184,7 @@ export abstract class DataNode extends MainNode {
     }
     get verticesArray() {
         const arr: Float32Array[] = [];
-        const vertices_pointer = engine.rust.vertices_pointer(this.ptr);
+        const vertices_pointer = engine.rust.vertices_pointer(this.id);
         for (let i = 0; i < this.vertices_count; i++) {
             arr.push(new Float32Array(engine.memory.buffer,
                 vertices_pointer + i * Float32Array.BYTES_PER_ELEMENT * this.vertices_stride,
@@ -205,7 +217,7 @@ export abstract class DataNode extends MainNode {
         this.#positionsAndCollider.length = 0;
         this.colliderVerticesV4.length = 0;
         //this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
-        const vertices_pointer = engine.rust.vertices_pointer(this.ptr);
+        const vertices_pointer = engine.rust.vertices_pointer(this.id);
         for (let i = 0; i < this.vertices_count; i++) {
             const pos = vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
             const colPos = this.last_collider_world_vertices_pointer + i * 4 * Float32Array.BYTES_PER_ELEMENT;
@@ -226,7 +238,7 @@ export abstract class DataNode extends MainNode {
             }
             new MutableTerraVector3(engine.memory.buffer, posAndCol[0]).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer, posAndCol[1]));
         });
-        const collider_planes_parallel_pointer = engine.rust.collider_planes_parallel_pointer(this.ptr);
+        const collider_planes_parallel_pointer = engine.rust.collider_planes_parallel_pointer(this.id);
         this.#triangleFaces.forEach(face => {
             face.updatePlane();
         })
@@ -281,8 +293,8 @@ export abstract class DataNode extends MainNode {
 
             //   TODO: Use wasm when this.faces_count % 4 == 0
             engine.wasm.testTriangles(
-                engine.rust.collider_faces_pointer(this.ptr),
-                engine.rust.collider_planes_parallel_pointer(this.ptr),
+                engine.rust.collider_faces_pointer(this.id),
+                engine.rust.collider_planes_parallel_pointer(this.id),
                 this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
                 this.id);
             /*

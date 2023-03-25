@@ -100,13 +100,13 @@ pub struct GPUMesh {
     ambient: [f32; 3],               //12
     shadow: f32,
     spotlight: [f32; 4],      //28
-    _id: u32,                 //29
+    _id: usize,                 //29
     point_light_squared: f32, //30
     directional_light: f32,   //31
     scenes: u32,              //bitmask           //48
 }
 impl GPUMesh {
-    pub fn set_point_light(&mut self, engine: &mut Engine, range: f32, gpu_alignment: u32) {
+    pub fn set_point_light(&mut self, engine: &'static mut Engine, range: f32, gpu_alignment: u32) {
         let old_value = self.point_light_squared;
         if range > 0.0 {
             self.point_light_squared = range * range;
@@ -129,7 +129,7 @@ impl GPUMesh {
             }
         }
     }
-    pub fn set_directional_light(&mut self, engine: &mut Engine, range: f32, gpu_alignment: u32) {
+    pub fn set_directional_light(&mut self, engine: &'static mut Engine, range: f32, gpu_alignment: u32) {
         let old_value = self.directional_light;
         if range > 0.0 {
             self.directional_light = range;

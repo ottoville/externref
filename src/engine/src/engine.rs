@@ -11,7 +11,7 @@ extern "C" {
     #[cfg(feature = "webgpu")]
     fn update_directional_lights(pointer: *const u32, length: usize);
     #[cfg(feature = "webgpu")]
-    fn handle_gpu_queue(pointerVec: *const [u32; 2], length: usize);
+    fn handle_gpu_queue(pointerVec: *const (usize, &GPUMesh), length: usize);
     #[cfg(feature = "webgpu")]
     fn updateAllocatedMemory(ptr: *const u32, length: usize);
     #[cfg(target_arch = "wasm32")]
@@ -19,45 +19,40 @@ extern "C" {
     #[cfg(target_arch = "wasm32")]
     fn jslog(number: *const u8);
     #[cfg(target_arch = "wasm32")]
-    fn mesh_on_collide(number: u32, status: bool);
+    fn mesh_on_collide(number: usize, status: bool);
     #[cfg(target_arch = "wasm32")]
-    fn mesh_on_physic_tick(number: u32);
+    fn mesh_on_physic_tick(number: usize);
 }
-pub struct Engine {
+pub struct Engine<'frame> {
     gpu_reserved_slots: u64,
-    pub gpu_queue2: Vec<(&'static GPUMesh, u32)>, //mesh + gpu alignment //pub gpu_queue2: Vec<(*const GPUMesh, u32)>,
     pub point_lights: Vec<u32>,
     pub directional_lights: Vec<u32>,
     pub allocated_gpu_memory: Vec<u32>,
-    pub engine2: Option<Engine2>,
+    pub engine2: Option<Engine2<'frame>>,
 }
 pub static mut ENGINE: Engine = Engine {
     gpu_reserved_slots:
         0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000, //ZERO:Free, ONE: Reserved
-    gpu_queue2: Vec::new(),
     point_lights: Vec::new(),
     directional_lights: Vec::new(),
     allocated_gpu_memory: Vec::new(),
     engine2: None,
 };
+static mut gpu_queue: Vec<(usize, &GPUMesh)> = vec![];
 
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 pub unsafe extern "C" fn renderloop() {
-    if ENGINE.gpu_queue2.len() > 0 {
+    let engine2 = ENGINE.physic_engine_mut();
+    if engine2.gpu_queue2.len() > 0 {
+        gpu_queue = Vec::from_iter(engine2.gpu_queue2.drain());
         handle_gpu_queue(
-            ENGINE.gpu_queue2.as_ptr() as *const [u32; 2],
-            ENGINE.gpu_queue2.len(),
+            gpu_queue.as_ptr(),
+            gpu_queue.len(),
         );
-        ENGINE.gpu_queue2.clear()
     }
 }
-#[no_mangle]
-#[cfg(feature = "webgpu")]
-pub unsafe extern "C" fn GPUMeshes() -> &'static GPUMesh {
-    &ENGINE.physic_engine().gpu_meshes[0]
-}
-pub struct Engine2 {
+pub struct Engine2<'frame> {
     pub physic_pipeline: PhysicsPipeline,
     pub rigid_body_set: RigidBodySet,
     pub collider_set: ColliderSet,
@@ -68,7 +63,8 @@ pub struct Engine2 {
     pub rigid_bodies: HashMap<RigidBodyHandle, &'static mut Mesh>,
     pub broad_phase: BroadPhase,
     pub gpu_meshes: Vec<GPUMesh>,
-    pub joint_set:ImpulseJointSet
+    pub joint_set:ImpulseJointSet,
+    pub gpu_queue2: HashMap<usize, &'frame GPUMesh>
 }
 pub fn create_js_string(mut str: String) -> *const u8 {
     str.truncate(512);
@@ -112,13 +108,14 @@ pub fn init_engine() {
         broad_phase: BroadPhase::new(),
         gpu_meshes: Vec::with_capacity(100),
         ccd_solver: CCDSolver::new(),
-        joint_set: ImpulseJointSet::new()
+        joint_set: ImpulseJointSet::new(),
+        gpu_queue2: HashMap::new()
     };
     unsafe {
         ENGINE.engine2 = Some(e);
     }
 }
-unsafe fn collider_to_mesh(e:&Engine2, collider_handle: ColliderHandle) -> Option<&&mut Mesh> {
+unsafe fn collider_to_mesh<'frame>(e:&'frame Engine2, collider_handle: ColliderHandle) -> Option<&'frame &'frame mut Mesh> {
     return match e.collider_set.get(collider_handle) {
         Some(collider) => match collider.parent() {
             Some(rigid_body_handle) => {
@@ -214,7 +211,7 @@ pub unsafe extern "C" fn physic_tick() {
 }
 //const GPU_QUEUE: Vec<(* const GPUMesh, u32)> = Vec::new();
 //const MESHES: Vec<*const Mesh> = Vec::new();
-impl Engine {
+impl Engine<'static> {
     pub fn physic_engine(&self) -> &Engine2 {
         match &self.engine2 {
             Some(e) => {
@@ -223,7 +220,7 @@ impl Engine {
             None => panic!("Engine not initialized"),
         }
     }
-    pub fn physic_engine_mut(&mut self) -> &mut Engine2 {
+    pub fn physic_engine_mut(&mut self) -> &'static mut Engine2 {
         match &mut self.engine2 {
             Some(e) => {
                 return e;
@@ -248,9 +245,6 @@ impl Engine {
                 self.allocated_gpu_memory.len(),
             );
         }
-    }
-    pub fn gpu_queue_pointer2(&self) -> *const (&GPUMesh, u32) {
-        return self.gpu_queue2.as_ptr();
     }
     #[cfg(feature = "webgpu")]
     pub fn update_point_lights(&self) {

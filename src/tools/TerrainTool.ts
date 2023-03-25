@@ -156,7 +156,7 @@ export class TerrainTool extends MainNode {
             throw (new Error('no scene'));
         this.scene = scene;
 
-        this.elevator = engine.rust.create_elevator(terrain.mesh.ptr);
+        this.elevator = engine.rust.create_elevator(terrain.mesh.id);
         this.drawable = new DrawableSimple({
             renderPipeline,
             vertexBuffers: [] as [],
@@ -208,7 +208,7 @@ export class TerrainTool extends MainNode {
             engine.inputManager?.deAttachCameraController();
 
             this.mouseinterval = setInterval(() => {
-                engine.rust.elevate(this.elevator, this.terrain.mesh.ptr, 200, 5 * this.direction);
+                engine.rust.elevate(this.elevator, this.terrain.mesh.id, 200, 5 * this.direction);
                 const elevator_length = engine.rust.get_length(this.elevator);
                 if (elevator_length > 0) {
                     this.terrain.updateSwap2(engine.rust.get_offset(this.elevator) * Float32Array.BYTES_PER_ELEMENT, elevator_length * Float32Array.BYTES_PER_ELEMENT)

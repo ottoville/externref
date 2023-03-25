@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 pub use crate::mesh::Mesh;
+use crate::mesh::get_mesh_by_id_mut;
 
 pub struct Elevator {
     vertices_horizontal:Vec<f32>,
@@ -15,8 +16,8 @@ pub struct Elevator {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_elevator(mesh_ptr:*mut Mesh) -> *mut Elevator {
-    Box::leak(Box::new(Elevator::new(&mut (*mesh_ptr))))
+pub unsafe extern "C" fn create_elevator(mesh_id: usize) -> *mut Elevator {
+    Box::leak(Box::new(Elevator::new(get_mesh_by_id_mut(mesh_id))))
 }
 
 #[no_mangle]
@@ -26,8 +27,8 @@ pub unsafe extern "C" fn mouse_position_pointer(elevator_ptr:*const Elevator) ->
 
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
-pub unsafe extern "C" fn elevate(elevator_ptr:*mut Elevator,mesh_ptr:*mut Mesh,radius:f32,height:f32) {
-    (*elevator_ptr)._elevate(&mut (*mesh_ptr),radius,height)
+pub unsafe extern "C" fn elevate(elevator_ptr:*mut Elevator, mesh_id: usize,radius:f32,height:f32) {
+    (*elevator_ptr)._elevate(get_mesh_by_id_mut(mesh_id),radius,height)
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_length(elevator_ptr:*const Elevator) -> usize {

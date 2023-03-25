@@ -110,9 +110,6 @@ export abstract class paintGround {
                     }
 
                     const dotang = this.ang360.distance(rad);
-                    /* let dotprod = height * distance * Math.cos(dotang.rad);
-                        let shadow = dotprod / height;
-                        width = Math.sqrt(Math.pow(distance, 2) - Math.pow(shadow, 2));*/
                     this.#size.width = Math.sqrt(distanceSquared - distanceSquared * Math.pow(Math.cos(dotang.rad), 2));
 
                     if (p1 * this.#drawVector[0] + p0 * this.#drawVector[1] < 0)  //Dot product

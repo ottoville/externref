@@ -614,34 +614,31 @@ export class GPU {
         }
         this.#ro.observe(canvas.parentElement);
     }
-    readonly #queue_map = new Map<number, number>();
 
     handle_gpu_queue(pointerVec: number, length: number) {
         this.#GPUQueueCommandEncoder = this.device.createCommandEncoder({ label: 'handle_gpu_queue_encoder' });
-        const pointers_to_gpumesh_and_offset = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
-        for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i += 2) {
-            const offset = pointers_to_gpumesh_and_offset[i + 1]!;
-            this.#queue_map.set(pointers_to_gpumesh_and_offset[i]!, offset);
-            if (offset >= this.#maxInstances) {
-                this.#maxInstances = offset + 10;
-                //  console.log('resize to ',maxInstances)
-                //   new Float32Array(engine.memory.buffer, engine.rust.GPUMeshes()+offset*this.GPUDataSizeBytes, offset*256);
-                this.GPUMeshes.resize(GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * this.#maxInstances)
-            }
-        }
         let tempOffset = 0;
-
-        Buffer.create(this, this.GPUDataSizeBytes * this.#queue_map.size, [GPUBufferUsage.COPY_SRC], 'handle_gpu_queue', (tempBuffer, gpu2) => {
-            this.#queue_map.forEach((offset, gpumeshPointer) => {
+        Buffer.create(this, this.GPUDataSizeBytes * length, [GPUBufferUsage.COPY_SRC], 'handle_gpu_queue', (tempBuffer, gpu2) => {
+            const pointers_to_gpumesh_and_offset = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
+            for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i += 2) {
+                const offset = pointers_to_gpumesh_and_offset[i]!;
+                if (offset >= this.#maxInstances) {
+                    this.#maxInstances = offset + 10;
+                    this.GPUMeshes.resize(GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * this.#maxInstances)
+                }
+            }
+            for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i += 2) {
+                const gpumeshPointer = pointers_to_gpumesh_and_offset[i + 1]!
+                const offset = pointers_to_gpumesh_and_offset[i]!;
                 const dataLength = this.GPUDataSizeBytes / 4;
                 const data = new Float32Array(engine.memory.buffer, gpumeshPointer, dataLength);
                 const dataInt = new Uint32Array(engine.memory.buffer, gpumeshPointer, dataLength);
                 const mesh = MainNode.Meshes.get(dataInt[28]!);
                 if (!mesh) {
-                    throw new Error("Tried to update non exist mesh with id " + dataInt[28]);
+                    console.warn("Tried to update non exist mesh with id ", dataInt[28]);
+                    continue;
                 }
                 mesh.onMeshChange.forEach((cb) => cb())
-
                 //Point light
                 if (data[29]! > 0) {
                     engine.updateLights = true;
@@ -649,8 +646,7 @@ export class GPU {
                 new Float32Array(tempBuffer.getMappedRange(tempOffset * this.GPUDataSizeBytes, this.GPUDataSizeBytes)).set(data);
                 //  console.log('copy to ',GPU.gpu_memory_index_size + offset * GPU.gpu_memory_index_size, offset)
                 gpu2.GPUMeshes.copyFrom(this.#GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * this.GPUDataSizeBytes, GPU.gpu_memory_index_size + offset * GPU.gpu_memory_index_size, this.GPUDataSizeBytes)
-            });
-            this.#queue_map.clear();
+            }
             gpu2.tempGPUBuffers.push(tempBuffer);
         });
     }

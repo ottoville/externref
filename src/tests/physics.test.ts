@@ -16,7 +16,7 @@ describe('Physics Has gravity and collision', function () {
         });
         const slope = new Box({ can_collide: true, label: 'gravitybixbox2', fixed: true });
         slope.update_scale(200, 5, 200);
-        slope.update_rotation(Math.sin(1.4), 0, 0, Math.cos(1.4));
+        slope.rotation = [Math.sin(1.4), 0, 0, Math.cos(1.4)];
         slope.translation = [23, 500, 23];
 
     }, 10000);

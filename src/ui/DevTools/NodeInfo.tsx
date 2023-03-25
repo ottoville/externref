@@ -1,7 +1,7 @@
 import { DrawableDirect } from "../../GPU/Drawables/DrawableDirect.js";
 import { MainNode } from "../../MainNode.js";
 import type { Drawable } from "../../GPU/Drawables/Drawable.js";
-import { ReadOnlyTerraVector3 } from "../../Math.js";
+import type { MutableTerraVector3, ReadOnlyTerraVector3 } from "../../Math.js";
 
 import { useEffect, useState } from "react";
 import { DataNode } from "../../nodes/DataNode.js";
@@ -9,14 +9,17 @@ import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
 
 export function NodeInfo({ drawable }: { drawable: Drawable }) {
     const [translation, setTranslation] = useState<ReadOnlyTerraVector3>();
+    const [rotation, setRotation] = useState<MutableTerraVector3>();
     useEffect(() => {
         if (drawable instanceof DrawableDirect && drawable.node instanceof MainNode) {
             const node = drawable.node;
             setTranslation(node.translation);
             const listener = () => {
                 setTranslation(node.translation);
+                setRotation(node.rotation.toEulerAngles());
             };
-            node.onMeshChange.add(listener)
+            node.onMeshChange.add(listener);
+            listener();
             return () => {
                 node.onMeshChange.delete(listener)
             }
@@ -27,7 +30,35 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
         <legend>{drawable.label}</legend>
         {drawable.renderPipeline.props.label}<br />
         {translation ? <>
-            Translation: X: {translation[0].toFixed(5)} Y: {translation[1].toFixed(5)} Z: {translation[2].toFixed(5)}
+            Translation: X: {translation[0].toFixed(5)} Y: {translation[1].toFixed(5)} Z: {translation[2].toFixed(5)}  <br />
+        </> : null}
+        {rotation ? <>
+            <fieldset>
+                <legend>Rotation</legend>
+                <label>X: {(180 / Math.PI * rotation[0]).toFixed(2)}<br />
+                    <input onChange={(evt) => {
+                        if (drawable instanceof DrawableDirect && drawable.node instanceof MainNode) {
+                            drawable.node.update_euler_angles(evt.target.valueAsNumber / 180 * Math.PI, rotation[1], rotation[2])
+                        }
+                    }} title="rotation X" type="range" min="-180" max="180" value={180 / Math.PI * rotation[0]} />
+                </label>
+                <br />
+                <label>Y: {(180 / Math.PI * rotation[1]).toFixed(2)}<br />
+                    <input onChange={(evt) => {
+                        if (drawable instanceof DrawableDirect && drawable.node instanceof MainNode) {
+                            drawable.node.update_euler_angles(rotation[0], evt.target.valueAsNumber / 180 * Math.PI, rotation[2])
+                        }
+                    }} title="rotation Y" type="range" min="-180" max="180" value={180 / Math.PI * rotation[1]} />
+                </label>
+                <br />
+                <label>Z: {(180 / Math.PI * rotation[2]).toFixed(2)}<br />
+                    <input onChange={(evt) => {
+                        if (drawable instanceof DrawableDirect && drawable.node instanceof MainNode) {
+                            drawable.node.update_euler_angles(rotation[0], rotation[1], evt.target.valueAsNumber / 180 * Math.PI)
+                        }
+                    }} title="rotation Z" type="range" min="-180" max="180" value={180 / Math.PI * rotation[2]} />
+                </label>
+            </fieldset>
         </> : null}
         <br />
         {drawable instanceof DrawableDirect && drawable.node instanceof DataNode ? <>

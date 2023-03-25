@@ -27,12 +27,12 @@ export class TerrainMesh extends BoundableNodeIndexed {
     }
     drawable: DrawableIndexed<RenderPipeline<GroundVertShader>> | undefined;
     override create_collider(): rust_pointer<"collider"> {
-        return engine.rust.create_trimesh_collider(this.ptr);
+        return engine.rust.create_trimesh_collider(this.id);
     }
     override set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array): void {
         super.set_indices_and_vertices(indices, vertices);
         const collider_ptr = this.create_collider();
-        engine.rust.add_collider(this.ptr, collider_ptr)
+        engine.rust.add_collider(this.id, collider_ptr)
     }
     constructor(
         scenes: Scene[],

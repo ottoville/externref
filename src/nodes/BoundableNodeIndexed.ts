@@ -1,36 +1,15 @@
-import { type canCollideCharacter, DataNode, DataNodeProps } from "./DataNode.js";
-import type { Engine, rust_pointer } from "../engine.js";
+import { type canCollideCharacter, DataNodeProps } from "./DataNode.js";
 import type { MainNodeProps } from "../MainNode.js";
-declare const engine: Engine;
+import { NodeIndexed } from "./NodeIndexed.js";
 
-export abstract class BoundableNodeIndexed extends DataNode implements canCollideCharacter {
-    set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array) {
-        const ptr = engine.rust.alloc_vector_usize(indices.length);
-        new Uint32Array(engine.rust.memory.buffer, ptr, indices.length).set(indices);
-
-        const ptr_vertices = engine.rust.alloc_vector_f32(vertices.length);
-        new Float32Array(engine.rust.memory.buffer, ptr_vertices, vertices.length).set(vertices);
-
-        engine.rust.set_indices_and_vertices(this.ptr, ptr, indices.length, ptr_vertices, vertices.length);
+export abstract class BoundableNodeIndexed extends NodeIndexed implements canCollideCharacter {
+    override set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array) {
+        super.set_indices_and_vertices(indices, vertices)
         this.rebuildTrianglePlanes();
     }
-    set_indices(indices: Uint32Array) {
-        let ptr: rust_pointer<'usize'>
-        if(indices.buffer !== engine.rust.memory.buffer) {
-            ptr = engine.rust.alloc_vector_usize(indices.length);
-            new Uint32Array(engine.rust.memory.buffer, ptr, indices.length).set(indices);
-        } else {
-            ptr = indices.byteOffset as rust_pointer<'usize'>;
-        }
-        engine.rust.set_indices(this.ptr, ptr, indices.length,);
+    override set_indices(indices: Uint32Array) {
+        super.set_indices(indices)
         this.rebuildTrianglePlanes();
-    }
-    get indices() {
-        const [indices_len, indices_ptr] = new Uint32Array(engine.rust.memory.buffer, engine.rust.indices_field_pointer(this.ptr), 2);
-        return new Uint32Array(engine.rust.memory.buffer, indices_ptr, indices_len);
-    }
-    get indices_count() {
-        return new Uint32Array(engine.rust.memory.buffer, engine.rust.indices_field_pointer(this.ptr), 1)[0]!;
     }
     constructor(
         dataNodeProps: DataNodeProps,
@@ -39,8 +18,8 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
     ) {
         super(
             dataNodeProps,
-            mainNodeProps);
-        this.set_indices(indicesView);
+            mainNodeProps, indicesView);
+        this.rebuildTrianglePlanes();
     }
     override set_vertices(vertices: Float32Array) {
         super.set_vertices(vertices);

@@ -15,7 +15,7 @@ pub struct Collider {
     collided_point_in_triangle: &'static Plane,
 }
 #[no_mangle]
-pub unsafe extern "C" fn collider() -> *const Collider {
+pub extern "C" fn collider() -> *const Collider {
     let coll = Box::new(Collider::new());
     Box::leak(coll)
 }
@@ -155,21 +155,23 @@ pub unsafe extern "C" fn collision_found(
     )
 }
 impl Collider {
-    pub unsafe fn new() -> Self {
-        Collider {
-            basepoint_world: [0.0, 0.0, 0.0, 0.0],
-            intersection_point: [0.0, 0.0, 0.0, 0.0],
-            collision_resolved: 1u32,
-            nearest_distance_squared: 0.0,
-            scaled_position: [0.0, 0.0, 0.0, 0.0],
-            scaled_velocity: [0.0, 0.0, 0.0, 0.0],
-            collided_mesh: 0u32,
-            speed: 0.0,
-            collided_point_in_triangle: *(0 as *const &'static Plane),
+    pub fn new() -> Self {
+        unsafe {
+            Collider {
+                basepoint_world: [0.0, 0.0, 0.0, 0.0],
+                intersection_point: [0.0, 0.0, 0.0, 0.0],
+                collision_resolved: 1u32,
+                nearest_distance_squared: 0.0,
+                scaled_position: [0.0, 0.0, 0.0, 0.0],
+                scaled_velocity: [0.0, 0.0, 0.0, 0.0],
+                collided_mesh: 0u32,
+                speed: 0.0,
+                collided_point_in_triangle: *(0 as *const &'static Plane),
+            }
         }
     }
 
-    unsafe fn collision_found(
+    fn collision_found(
         &mut self,
         t: f32,
         velocity_squared_length: f32,
@@ -190,7 +192,9 @@ impl Collider {
             if collided_point_in_triangle {
                 self.collided_point_in_triangle = collided_plane;
             } else {
-                self.collided_point_in_triangle = *(0 as *const &'static Plane)
+                unsafe {
+                    self.collided_point_in_triangle = *(0 as *const &'static Plane);
+                }
             }
         }
     }

@@ -37,6 +37,7 @@ import { UIRectangleTextureView } from "./UIRectangleTextureView.js";
 declare const engine: Engine;
 
 class Light extends MainNode {
+    drawable = undefined;
     constructor(scene: Scene) {
         super({ point_light: 0, directional_light: 1, label: 'Light', scenes: [scene] });
     }

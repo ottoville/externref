@@ -25,7 +25,7 @@ fn test_bounding_box() {
         let engine = ENGINE.physic_engine_mut();
         let engine2 = ENGINE.physic_engine_mut();
         let len = engine2.meshes.len();
-        Mesh::new(1, 24, 0.0, 0.0, 0.0, false, false, false, String::from("box"), engine);
+        Mesh::new(24, 0.0, 0.0, 0.0, false, false, false, String::from("box"));
         let m = &mut engine2.meshes[len];
         let mut geometry = Geometry::new(true, 6, false, false);
         geometry.set_vertices(box_positions.to_vec());

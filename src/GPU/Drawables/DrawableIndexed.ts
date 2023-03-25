@@ -1,13 +1,13 @@
 import { Buffer, type IndexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect, type MappedVertexBuffers } from "./DrawableDirect.js";
-import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
+import { NodeIndexed } from "../../nodes/NodeIndexed.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import { DrawableProps } from "./Drawable.js";
 declare const engine: Engine;
 
 export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends DrawableDirect {
-    node: BoundableNodeIndexed;
+    node: NodeIndexed;
     #indexBuffer: IndexBuffer | undefined
     #baseVertex: number;
     #firstIndex: number;
@@ -28,7 +28,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
             GPUIndexFormat = 'uint16',
         }:
             {
-                node: BoundableNodeIndexed;
+                node: NodeIndexed;
                 indexBuffer?: IndexBuffer;
                 baseVertex?: number;
                 instanceCount?: number;
@@ -41,7 +41,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
             {
                 ...drawableProps,
                 label: node.label,
-                dynamicBindGroups: [[drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, engine.rust.gpu_alignment(node.ptr)]]
+                dynamicBindGroups: [[drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, engine.rust.gpu_alignment(node.id)]]
             },
             {
                 instanceCount,

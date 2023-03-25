@@ -57,8 +57,6 @@ type ListenerOptions = {
     force?: boolean
 };
 export type rustWasm = {
-    GPUMeshes(): rust_pointer<"GPUMeshes">,
-
     collider(): rust_pointer<"legacy_collider">,
     intersection_point_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     collision_resolved_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
@@ -84,7 +82,7 @@ export type rustWasm = {
     basepoint_world_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     renderloop(): void,
 
-    new_mesh(id: number,
+    new_mesh(
         positions_count: number,
         point_light: number,
         directional_light: number,
@@ -92,61 +90,62 @@ export type rustWasm = {
         strip: boolean,
         fixed: boolean,
         rigid_body: boolean,
-        label: rust_pointer<"u8">): rust_pointer<"mesh">,
+        label: rust_pointer<"u8">): number,
     create_geometry(
-        mesh: rust_pointer<"mesh">,
+        mesh_id: number,
         has_bounding: boolean,
         vertices_stride: number,
         static_faces: boolean,
         strip: boolean): void,
-    add_collider(mesh: rust_pointer<"mesh">,
+    add_collider(mesh_id: number,
         collider: rust_pointer<"collider">): void
     memory: WebAssembly.Memory,
-    set_vertices(mesh: rust_pointer<"mesh">, ptr: rust_pointer<"f32">, length: number): void,
-    set_indices(mesh: rust_pointer<"mesh">, ptr: rust_pointer<"usize">, length: number): void,
-    set_indices_and_vertices(mesh: rust_pointer<"mesh">, indices: rust_pointer<"usize">, indices_length: number, vertices: rust_pointer<"f32">, vertices_length: number): void,
-    vertices_pointer(mesh: rust_pointer<"mesh">): number,
-    indices_field_pointer(mesh: rust_pointer<"mesh">): rust_pointer<'indices_indices'>,
-    last_collider_world_vertices_pointer(mesh: rust_pointer<"mesh">): number,
-    vertices_count(mesh: rust_pointer<"mesh">): number,
-    faces_count(mesh: rust_pointer<"mesh">): number,
+    set_vertices(mesh_id: number, ptr: rust_pointer<"f32">, length: number): void,
+    set_indices(mesh_id: number, ptr: rust_pointer<"usize">, length: number): void,
+    set_indices_and_vertices(mesh_id: number, indices: rust_pointer<"usize">, indices_length: number, vertices: rust_pointer<"f32">, vertices_length: number): void,
+    vertices_pointer(mesh_id: number): number,
+    indices_field_pointer(mesh_id: number): rust_pointer<'indices_indices'>,
+    last_collider_world_vertices_pointer(mesh_id: number): number,
+    vertices_count(mesh_id: number): number,
+    faces_count(mesh_id: number): number,
     alloc_vector_f32(size: number): rust_pointer<"f32">,
     alloc_vector_usize(size: number): rust_pointer<"usize">,
     alloc_string(size: number): rust_pointer<"u8">,
-    update_scale(mesh: rust_pointer<"mesh">, x: number, y: number, z: number): void,
-    update_rotation(mesh: rust_pointer<"mesh">, x: number, y: number, z: number, w: number): void,
-    update_euler_angles(mesh: rust_pointer<"mesh">, x: number, y: number, z: number): void,
-    update_translation(mesh: rust_pointer<"mesh">, x: number, y: number, z: number): void,
-    apply_impulse(mesh: rust_pointer<"mesh">, x: number, y: number, z: number): void,
-    update_dynamic_buffer(mesh: rust_pointer<"mesh">): void,
-    gpu_alignment(mesh: rust_pointer<"mesh">): number,
-    positions_count(mesh: rust_pointer<"mesh">): number,
-    set_positions_count(mesh: rust_pointer<"mesh">, positions_count: number): number,
-    id(mesh: rust_pointer<"mesh">): number,
-    strip(mesh: rust_pointer<"mesh">): number,
-    collider_planes_parallel_pointer(mesh: rust_pointer<"mesh">): rust_pointer<"collider_planes_parallel_pointer">,
-    gpu_pointer(mesh: rust_pointer<"mesh">): number,
-    label_field_pointer(mesh: rust_pointer<"mesh">): rust_pointer<"label_field">,
-    translation_pointer(mesh: rust_pointer<"mesh">): rust_pointer<"translation">,
-    velocity_pointer(mesh: rust_pointer<"mesh">): number,
-    intersect_box_aa_sphere(mesh: rust_pointer<"mesh">, collider_ptr: number, radius: number): boolean
-    scale_x(mesh: rust_pointer<"mesh">): number,
-    scale_y(mesh: rust_pointer<"mesh">): number,
-    scale_z(mesh: rust_pointer<"mesh">): number,
-    vertices_stride(mesh: rust_pointer<"mesh">): number,
-    set_faces(mesh: rust_pointer<"mesh">, ptr: number, length: number): void,
-    set_color(mesh: rust_pointer<"mesh">, d0: number, d1: number, d2: number, d3: number): void,
-    set_ambient(mesh: rust_pointer<"mesh">, r: number, g: number, b: number): void
-    set_shadow(mesh: rust_pointer<"mesh">, shadow: number): void
-    collider_faces_pointer(mesh: rust_pointer<"mesh">): rust_pointer<'collider_faces'>,
-    set_scenes(mesh: rust_pointer<"mesh">, scenes: number): void,
-    update_scale_and_rotation(mesh: rust_pointer<"mesh">, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number): void
-    faces_pointer(mesh: rust_pointer<"mesh">): number,
-    bounding_vectors_pointer_simd(mesh: rust_pointer<"mesh">): number,
+    update_scale(mesh_id: number, x: number, y: number, z: number): void,
+    update_rotation(mesh_id: number, x: number, y: number, z: number, w: number): void,
+    update_euler_angles(mesh_id: number, x: number, y: number, z: number): void,
+    update_translation(mesh_id: number, x: number, y: number, z: number): void,
+    apply_impulse(mesh_id: number, x: number, y: number, z: number): void,
+    update_dynamic_buffer(mesh_id: number): void,
+    gpu_alignment(mesh_id: number): number,
+    positions_count(mesh_id: number): number,
+    set_positions_count(mesh_id: number, positions_count: number): number,
+    get_mesh_by_id(id: number): rust_pointer<"mesh">,
+    strip(mesh_id: number): number,
+    collider_planes_parallel_pointer(mesh_id: number): rust_pointer<"collider_planes_parallel_pointer">,
+    gpu_pointer(mesh_id: number): number,
+    label_field_pointer(mesh_id: number): rust_pointer<"label_field">,
+    translation_pointer(mesh_id: number): rust_pointer<"translation">,
+    rotation_pointer(mesh_id: number): rust_pointer<"rotation">,
+    velocity_pointer(mesh_id: number): rust_pointer<"velocity">,
+    intersect_box_aa_sphere(mesh_id: number, collider_ptr: number, radius: number): boolean
+    scale_x(mesh_id: number): number,
+    scale_y(mesh_id: number): number,
+    scale_z(mesh_id: number): number,
+    vertices_stride(mesh_id: number): number,
+    set_faces(mesh_id: number, ptr: number, length: number): void,
+    set_color(mesh_id: number, d0: number, d1: number, d2: number, d3: number): void,
+    set_ambient(mesh_id: number, r: number, g: number, b: number): void
+    set_shadow(mesh_id: number, shadow: number): void
+    collider_faces_pointer(mesh_id: number): rust_pointer<'collider_faces'>,
+    set_scenes(mesh_id: number, scenes: number): void,
+    update_scale_and_rotation(mesh_id: number, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number): void
+    faces_pointer(mesh_id: number): number,
+    bounding_vectors_pointer_simd(mesh_id: number): number,
 
-    create_elevator(mesh: rust_pointer<"mesh">): rust_pointer<"elevator">,
+    create_elevator(mesh_id: number): rust_pointer<"elevator">,
     mouse_position_pointer(elevator_ptr: rust_pointer<"elevator">): number
-    elevate(elevator_ptr: rust_pointer<"elevator">, mesh: rust_pointer<"mesh">, radius: number, height: number): void
+    elevate(elevator_ptr: rust_pointer<"elevator">, mesh_id: number, radius: number, height: number): void
     get_length(elevator_ptr: rust_pointer<"elevator">): number
     get_offset(elevator_ptr: rust_pointer<"elevator">): number
 
@@ -155,8 +154,8 @@ export type rustWasm = {
 
     create_ball_collider(radius: number): rust_pointer<"collider">
     create_capsule_collider(half_height: number, radius: number, orientation: 0 | 1 | 2, collision_events: boolean): rust_pointer<"collider">,
-    create_trimesh_collider(mesh: rust_pointer<"mesh">): rust_pointer<"collider">
-    create_convex_hull_collider(mesh: rust_pointer<"mesh">): rust_pointer<"collider">
+    create_trimesh_collider(mesh_id: number): rust_pointer<"collider">
+    create_convex_hull_collider(mesh_id: number): rust_pointer<"collider">
     create_cuboid_collider(hx: number, hy: number, hz: number, border_radius: number, collision_events: boolean): rust_pointer<"collider">
     create_cone_collider(half_height: number, radius: number): rust_pointer<"collider">
 
