@@ -2,7 +2,7 @@
 import { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
-import { Buffer, IndexBuffer, VertexBuffer, GPUBufferUsage, CopyDstBuffer } from "../../GPU/Buffer/Buffer.js";
+import { Buffer, VertexBuffer, GPUBufferUsage, CopyDstBuffer } from "../../GPU/Buffer/Buffer.js";
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import type { DataNodeProps } from "../../nodes/DataNode.js";
@@ -15,7 +15,6 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         dataNodeProps: Omit<DataNodeProps, 'verticesPositionStride'>,
         mainNodeProps: Omit<MainNodeProps, 'strip'>,
         indicesView: Uint32Array,
-        iBuffer?: IndexBuffer,
         private vBufferGPU?: VertexBuffer | (CopyDstBuffer & VertexBuffer),
         topology: GPUPrimitiveTopology = "triangle-list",
         staticVertices = true
@@ -58,12 +57,6 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
                     node: this,
                 }
             )
-            if (!iBuffer) {
-                iBuffer = Buffer.create(engine.gpu, this.indices.byteLength, [GPUBufferUsage.INDEX], 'index_' + mainNodeProps.label, b => {
-                    new Uint32Array(b.getMappedRange()).set(this.indices);
-                })
-            }
-            this.drawable!.setIndexBuffer(iBuffer, undefined, undefined, this.indices.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');
         }
     }
     updateVertices(

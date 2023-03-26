@@ -57,6 +57,8 @@ type ListenerOptions = {
     force?: boolean
 };
 export type rustWasm = {
+    create_tiled_mesh_ptr(width: number, height: number): rust_pointer<'*mut usize'>,
+
     collider(): rust_pointer<"legacy_collider">,
     intersection_point_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     collision_resolved_pointer(collider_ptr: rust_pointer<"legacy_collider">): number

@@ -20,16 +20,14 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
         },
         {
             node,
-            indexBuffer,
             baseVertex = 0,
             instanceCount = 1,
             firstIndex = 0,
             firstInstance = 0,
-            GPUIndexFormat = 'uint16',
+            GPUIndexFormat = 'uint32',
         }:
             {
                 node: NodeIndexed;
-                indexBuffer?: IndexBuffer;
                 baseVertex?: number;
                 instanceCount?: number;
                 firstIndex?: number;
@@ -48,7 +46,9 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
             }
         );
         this.node = node;
-        this.#indexBuffer = indexBuffer;
+        const indices = node.indices;
+        if(indices.length > 0)
+            this.setIndexBuffer(indices);
         this.#baseVertex = baseVertex;
         this.#firstIndex = firstIndex;
         this.#firstInstance = firstInstance;

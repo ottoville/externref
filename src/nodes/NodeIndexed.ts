@@ -29,9 +29,16 @@ export abstract class NodeIndexed extends DataNode {
         mainNodeProps: MainNodeProps,
         indicesView: Uint32Array
     ) {
+        const { byteOffset, length } = indicesView;
         super(
             dataNodeProps,
             mainNodeProps);
+        /*
+            Reconstruct arraybufferView in case wasm have allocated more memory and old buffer is no longer valid.
+        */
+        if (indicesView.buffer.byteLength === 0) {
+            indicesView = new Uint32Array(engine.rust.memory.buffer, byteOffset, length)
+        }
         this.set_indices(indicesView);
     }
 }

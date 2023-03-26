@@ -103,7 +103,6 @@ export class Cone extends SimpleIndexedMesh {
             mainNodeProps,
             indices,
             undefined,
-            undefined,
             "triangle-list");
         this.color = color;
     }

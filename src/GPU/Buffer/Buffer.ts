@@ -241,8 +241,11 @@ export class ReadBuffer extends Buffer {
             engine.showError(e);
             return;
         }
-
-        await callback(arrbuff);
+        try {
+            await callback(arrbuff);
+        } catch(e) {
+            engine.showError(e);
+        }
         this.destroy();
     }
 }

@@ -50,6 +50,9 @@ export type DataNodeProps = {
 export function allocate_vec(array: Uint32Array) : rust_pointer<"usize">
 export function allocate_vec(array: Float32Array) : rust_pointer<"f32">
 export function allocate_vec(array: Uint32Array | Float32Array): rust_pointer<"usize"> | rust_pointer<"f32"> {
+    if(array.buffer.byteLength === 0) {
+        throw new Error("Cannot allocate deattached buffer");
+    }
     let ptr: rust_pointer<'usize'> | rust_pointer<"f32">
     if (array.buffer !== engine.rust.memory.buffer) {
         if(array instanceof Float32Array) {
