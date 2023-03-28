@@ -18,11 +18,8 @@ pub struct BoundingBox {
 #[test]
 fn test_bounding_box() {
     use crate::{meshes::meshes::{box_positions, box_indices}, engine::{init_engine}, mesh::ENGINE, Geometry};
-    #[no_mangle]
-    pub extern "C" fn jslog(number:*const u8) { }
     unsafe {
         init_engine();
-        let engine = ENGINE.physic_engine_mut();
         let engine2 = ENGINE.physic_engine_mut();
         let len = engine2.meshes.len();
         Mesh::new(24, 0.0, 0.0, 0.0, false, false, false, String::from("box"));

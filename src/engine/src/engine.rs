@@ -5,6 +5,13 @@ pub use crate::mesh::Mesh;
 pub use crate::GPUMesh;
 use rapier3d::{crossbeam, prelude::*};
 
+#[link(wasm_import_module = "console")]
+#[cfg(target_arch = "wasm32")]
+extern "C" {
+    fn log(number: &'static String);
+    fn warn(number: &'static String);
+}
+
 extern "C" {
     #[cfg(feature = "webgpu")]
     fn update_point_lights(pointer: *const u32, length: usize);
@@ -16,8 +23,6 @@ extern "C" {
     fn updateAllocatedMemory(ptr: *const u32, length: usize);
     #[cfg(target_arch = "wasm32")]
     fn jspanic(number: *const u8);
-    #[cfg(target_arch = "wasm32")]
-    fn jslog(number: *const u8);
     #[cfg(target_arch = "wasm32")]
     fn mesh_on_collide(number: usize, status: bool);
     #[cfg(target_arch = "wasm32")]
@@ -46,10 +51,7 @@ pub unsafe extern "C" fn renderloop() {
     let engine2 = ENGINE.physic_engine_mut();
     if engine2.gpu_queue2.len() > 0 {
         gpu_queue = Vec::from_iter(engine2.gpu_queue2.drain());
-        handle_gpu_queue(
-            gpu_queue.as_ptr(),
-            gpu_queue.len(),
-        );
+        handle_gpu_queue(gpu_queue.as_ptr(), gpu_queue.len());
     }
 }
 pub struct Engine2<'frame> {
@@ -63,9 +65,11 @@ pub struct Engine2<'frame> {
     pub rigid_bodies: HashMap<RigidBodyHandle, &'static mut Mesh>,
     pub broad_phase: BroadPhase,
     pub gpu_meshes: Vec<GPUMesh>,
-    pub joint_set:ImpulseJointSet,
-    pub gpu_queue2: HashMap<usize, &'frame GPUMesh>
+    pub joint_set: ImpulseJointSet,
+    pub gpu_queue2: HashMap<usize, &'frame GPUMesh>,
 }
+static mut LOG_STRING: String = String::new();
+// TODO, remove and use "str_ptr_from_vec" syntax
 pub fn create_js_string(mut str: String) -> *const u8 {
     str.truncate(512);
     let log_str = format!("{: <512}", str);
@@ -73,17 +77,29 @@ pub fn create_js_string(mut str: String) -> *const u8 {
     std::mem::forget(log_str);
     return ptr;
 }
-#[cfg(target_arch = "wasm32")]
-pub fn jslog_string(strings: Vec<String>) {
-    let mut newstr = String::new();
-    for str in strings.iter() {
-        newstr.push(' ');
-        newstr.push_str(str);
-    }
+fn str_ptr_from_vec(strings: Vec<String>) -> &'static String {
     unsafe {
-        jslog(create_js_string(newstr));
+        LOG_STRING.clear();
+        for str in strings.iter() {
+            LOG_STRING.push(' ');
+            LOG_STRING.push_str(str);
+        }
+        return &LOG_STRING;
     }
 }
+pub fn js_log(strings: Vec<String>) {
+    unsafe {
+        #[cfg(target_arch = "wasm32")]
+        log(str_ptr_from_vec(strings));
+    }
+}
+pub fn js_warn(strings: Vec<String>) {
+    unsafe {
+        #[cfg(target_arch = "wasm32")]
+        warn(str_ptr_from_vec(strings));
+    }
+}
+
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub extern "C" fn init_engine2() -> usize {
@@ -109,18 +125,19 @@ pub fn init_engine() {
         gpu_meshes: Vec::with_capacity(100),
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
-        gpu_queue2: HashMap::new()
+        gpu_queue2: HashMap::new(),
     };
     unsafe {
         ENGINE.engine2 = Some(e);
     }
 }
-unsafe fn collider_to_mesh<'frame>(e:&'frame Engine2, collider_handle: ColliderHandle) -> Option<&'frame &'frame mut Mesh> {
+unsafe fn collider_to_mesh<'frame>(
+    e: &'frame Engine2,
+    collider_handle: ColliderHandle,
+) -> Option<&'frame &'frame mut Mesh> {
     return match e.collider_set.get(collider_handle) {
         Some(collider) => match collider.parent() {
-            Some(rigid_body_handle) => {
-                e.rigid_bodies.get(&rigid_body_handle)
-            }
+            Some(rigid_body_handle) => e.rigid_bodies.get(&rigid_body_handle),
             None => None,
         },
         None => None,
@@ -143,9 +160,7 @@ pub unsafe extern "C" fn physic_tick() {
     let event_handler = ChannelEventCollector::new(collision_send, contact_send);
 
     let e = ENGINE.physic_engine_mut();
-    e.meshes.iter().for_each(|m|  {
-        mesh_on_physic_tick(m.id)
-    });
+    e.meshes.iter().for_each(|m| mesh_on_physic_tick(m.id));
     e.physic_pipeline.step(
         &gravity,
         &integration_parameters,
@@ -168,22 +183,14 @@ pub unsafe extern "C" fn physic_tick() {
             "Received collision event: {:?}",
             collision_event
         )]);*/
-        match collider_to_mesh(e,collision_event.collider1()) {
-            Some(m) => {
-                mesh_on_collide(m.id, collision_event.started())
-            }
-            None => jslog(create_js_string(
-                "Mesh not found for collider1".to_string(),
-            ))
+        match collider_to_mesh(e, collision_event.collider1()) {
+            Some(m) => mesh_on_collide(m.id, collision_event.started()),
+            None => js_log(vec!["Mesh not found for collider1".to_string()]),
         }
-        match collider_to_mesh(e,collision_event.collider2()) {
-            Some(m) => {
-                mesh_on_collide(m.id, collision_event.started())
-            }
-            None => jslog(create_js_string(
-                "Mesh not found for collider2".to_string(),
-            ))
-        }        
+        match collider_to_mesh(e, collision_event.collider2()) {
+            Some(m) => mesh_on_collide(m.id, collision_event.started()),
+            None => js_log(vec!["Mesh not found for collider2".to_string()]),
+        }
     }
     // Iter on each dynamic rigid-bodies that moved.
     for rigid_body_handle in e.island_manager.active_dynamic_bodies() {
@@ -203,9 +210,7 @@ pub unsafe extern "C" fn physic_tick() {
                     jslog_string(vec!["altitude".to_string(), pos.translation.y.to_string()]);
                 }*/
             }
-            None => jslog(create_js_string(
-                "Mesh not found for rigid body".to_string(),
-            )),
+            None => js_log(vec!["Mesh not found for rigid body".to_string()]),
         }
     }
 }

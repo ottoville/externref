@@ -196,9 +196,11 @@ pub unsafe extern "C" fn set_positions_count(mesh_id: usize, positions_count: us
     get_mesh_by_id_mut(mesh_id).positions_count = positions_count;
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_mesh_by_id<'frame>(mesh_id: usize) -> &'frame Mesh {
-    let engine2 = ENGINE.physic_engine();
-    &engine2.meshes[mesh_id]
+pub extern "C" fn get_mesh_by_id<'frame>(mesh_id: usize) -> &'frame Mesh {
+    unsafe {
+        let engine2 = ENGINE.physic_engine();
+        &engine2.meshes[mesh_id]
+    }
 }
 pub fn get_mesh_by_id_mut<'frame>(mesh_id: usize) -> &'frame mut Mesh {
     unsafe {
@@ -375,9 +377,7 @@ impl Mesh {
     //TODO: move to geometry
     pub fn create_trimesh_collider(&self) -> *mut Collider {
         let geometry = self.get_geometry();
-        let iterator = geometry
-            .vertices
-            .chunks(geometry.vertices_stride);
+        let iterator = geometry.vertices.chunks(geometry.vertices_stride);
         let mut vertices: Vec<Point<Real>> = Vec::with_capacity(self.positions_count);
         iterator.for_each(|i| {
             // TODO: ensure simd

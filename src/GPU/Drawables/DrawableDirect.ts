@@ -1,7 +1,7 @@
 import type { VertexBuffer } from "../Buffer/Buffer.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import type { VertexShader } from "../Shaders/VertexShader.js";
-import { Drawable, DrawableProps } from "./Drawable.js";
+import { Drawable, type DrawableProps } from "./Drawable.js";
 import type { MainNode } from "../../MainNode.js";
 import type { Engine } from "../../engine.js";
 declare const engine: Engine;
@@ -22,8 +22,6 @@ export type DrawableDirectProps = {
 }
 
 export abstract class DrawableDirect<N extends MainNode> extends Drawable<N> {
-    #instanceCount: number;
-    protected firstInstance: number;
     constructor(
         drawableProps: DrawableProps<N>,
         {
@@ -33,19 +31,17 @@ export abstract class DrawableDirect<N extends MainNode> extends Drawable<N> {
     ) {
         super(drawableProps);
         engine.rust.set_drawble_direct(this.node.id, instanceCount, firstInstance);
-
-        this.firstInstance = firstInstance;
-
-        if (instanceCount == 0)
-            console.warn('Added drawable with 0 instances, nothing will be drawn');
-        this.#instanceCount = instanceCount;
     }
-    set instanceCount(count: number) {
-        if (count === this.#instanceCount)
-            return;
-        this.#instanceCount = count;
+    protected set firstInstance(first_instance: number) {
+        engine.rust.set_first_instance(this.node.id, first_instance);
     }
-    get instanceCount() {
-        return this.#instanceCount;
+    protected get firstInstance() {
+        return engine.rust.get_first_instance(this.node.id);
+    }
+    protected set instanceCount(count: number) {
+        engine.rust.set_instance_count(this.node.id, count);
+    }
+    protected get instanceCount() {
+        return engine.rust.get_instance_count(this.node.id);
     }
 }

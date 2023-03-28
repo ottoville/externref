@@ -8,6 +8,14 @@ const wasi = new WASI.WASI({
 
 let instanceRust;
 const exportObj = {
+    console: {
+        log(ptr) {
+
+        },
+        warn(ptr) {
+            
+        }
+    },
     env: {
         now() {
             return performance.now()

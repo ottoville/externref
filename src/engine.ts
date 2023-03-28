@@ -12,6 +12,8 @@ import { MeshCamera } from "./controllers/MeshCamera.js";
 import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from "./nodes/DataNode.js";
 import type { CameraController } from "./controllers/CameraController.js";
 
+const textDecoder = new TextDecoder();
+
 function createError(e: unknown) {
     if (!(e instanceof Error)) {
         return new Error('Unknown error ' + e);
@@ -59,6 +61,10 @@ type ListenerOptions = {
 export type rustWasm = {
     add_drawble(mesh_id: number): void,
     set_drawble_direct(mesh_id: number, instance_count: number, first_instance: number): void,
+    get_instance_count(mesh_id: number): number,
+    get_first_instance(mesh_id: number): number,
+    set_instance_count(mesh_id: number, instance_count: number): void,
+    set_first_instance(mesh_id: number, first_instance: number): void,
 
     create_tiled_mesh_ptr(width: number, height: number): rust_pointer<'*mut usize'>,
 
@@ -220,6 +226,14 @@ export interface ColliderWasm {
 let deviceId = 0;
 type Events = 'pointerdown' | 'pointerup' | 'pointermove' | 'pointerleave' | 'wheel' | 'keydown' | 'keyup'
 
+function stringFromPtr(memory: WebAssembly.ExportValue | undefined, ptr: number) {
+    if (!(memory instanceof WebAssembly.Memory)) {
+        throw new Error('Webassembly module does not have memory');
+    }
+    const [/*cap*/, s_ptr, len] = new Uint32Array(memory.buffer, ptr, 3);
+    return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
+}
+
 export class Engine {
 
     /*
@@ -300,6 +314,14 @@ export class Engine {
         let rust: WebAssembly.WebAssemblyInstantiatedSource;
         let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
         const exportObj = {
+            console: {
+                log(ptr: number) {
+                    console.log(stringFromPtr(rust.instance.exports.memory, ptr));
+                },
+                warn(ptr: number) {
+                    console.warn(stringFromPtr(rust.instance.exports.memory, ptr))
+                }
+            },
             env: {
                 now() {
                     return performance.now()
@@ -308,16 +330,7 @@ export class Engine {
                     if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
                         throw new Error('Webassembly module does not have memory');
                     }
-                    console.error(new TextDecoder().decode(new Uint8Array(rust.instance.exports.memory.buffer, ptr, 512)).trimEnd())
-                },
-                jslog(ptr: number) {
-                    if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
-                        throw new Error('Webassembly module does not have memory');
-                    }
-                    console.log(new TextDecoder().decode(new Uint8Array(rust.instance.exports.memory.buffer, ptr, 512)).trimEnd())
-                },
-                jslog_number(number: number) {
-                    console.log(number)
+                    console.error(textDecoder.decode(new Uint8Array(rust.instance.exports.memory.buffer, ptr, 512)).trimEnd())
                 },
                 mesh_on_collide(mesh_id: number, started: boolean) {
                     const mesh = DataNode.Meshes.get(mesh_id);
