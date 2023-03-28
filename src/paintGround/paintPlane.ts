@@ -30,9 +30,7 @@ class PlaneMesh extends NodeIndexed {
         this.drawable = new DrawableIndexed(
             {
                 renderPipeline,
-                vertexBuffers: [vertexBuffer]
-            },
-            {
+                vertexBuffers: [vertexBuffer],
                 node: this,
             });
     }

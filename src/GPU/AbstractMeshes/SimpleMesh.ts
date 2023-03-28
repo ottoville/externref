@@ -30,8 +30,7 @@ export class SimpleMesh extends BoundableNodeSimple {
             this.drawable = new DrawableSimple({
                 renderPipeline,
                 vertexBuffers: [vBufferGPU],
-                renderPasses: undefined
-            }, {
+                renderPasses: undefined,
                 node: this,
             })
         }

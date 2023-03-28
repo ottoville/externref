@@ -1,8 +1,10 @@
 import type { VertexBuffer } from "../Buffer/Buffer.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import type { VertexShader } from "../Shaders/VertexShader.js";
-import { type DrawableNode } from "../../MainNode.js";
 import { Drawable, DrawableProps } from "./Drawable.js";
+import type { MainNode } from "../../MainNode.js";
+import type { Engine } from "../../engine.js";
+declare const engine: Engine;
 
 export type MappedVertexBuffers<R extends RenderPipeline> = R extends RenderPipeline<infer VERTEX_SHADER> ? (
     //extract VertexBuffers
@@ -14,19 +16,26 @@ export type MappedVertexBuffers<R extends RenderPipeline> = R extends RenderPipe
     ) : never
 ) : never
 
-export abstract class DrawableDirect extends Drawable {
+export type DrawableDirectProps = {
+    instanceCount?: number;
+    firstInstance?: number;
+}
+
+export abstract class DrawableDirect<N extends MainNode> extends Drawable<N> {
     #instanceCount: number;
-    abstract node: DrawableNode
+    protected firstInstance: number;
     constructor(
-        drawableProps: DrawableProps,
+        drawableProps: DrawableProps<N>,
         {
             instanceCount = 1,
-        }:
-            {
-                instanceCount: number;
-            }
+            firstInstance = 0,
+        }: DrawableDirectProps = {}
     ) {
         super(drawableProps);
+        engine.rust.set_drawble_direct(this.node.id, instanceCount, firstInstance);
+
+        this.firstInstance = firstInstance;
+
         if (instanceCount == 0)
             console.warn('Added drawable with 0 instances, nothing will be drawn');
         this.#instanceCount = instanceCount;
@@ -35,7 +44,6 @@ export abstract class DrawableDirect extends Drawable {
         if (count === this.#instanceCount)
             return;
         this.#instanceCount = count;
-        this.clearBundles();
     }
     get instanceCount() {
         return this.#instanceCount;

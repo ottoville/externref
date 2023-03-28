@@ -322,18 +322,19 @@ TODO
             }
         ] as const;
         //todo: remove unneeded flags
-        const terrainIndicesGPU = Buffer.create(gpu, this.#terrainIndicesLength, [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], 'terrainIndicesGPU');
+        const terrainIndicesGPU = Buffer.create(gpu, this.#terrainIndicesLength, [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], 'terrainIndicesGPUBuffer');
 
         passEncoder.setPipeline(computePipelineIndices);
 
-        passEncoder.setBindGroup(0, shaders.calculatePlaneIndices.props.bindGroupLayouts[0].createBindGroup('terrainIndicesGPU',
-            (bindGroup) => [
-                {
-                    binding: 0,
-                    resource: terrainIndicesGPU.getStorageBinding(bindGroup)
-                }
-            ]
-        ).bindGroup);
+        passEncoder.setBindGroup(0,
+            shaders.calculatePlaneIndices.props.bindGroupLayouts[0].createBindGroup('terrainIndicesGPUBindgroup',
+                (bindGroup) => [
+                    {
+                        binding: 0,
+                        resource: terrainIndicesGPU.getStorageBinding(bindGroup)
+                    }
+                ]
+            ).bindGroup);
         passEncoder.dispatchWorkgroups(...Terrain.#subdivisions);
 
         passEncoder.setPipeline(computePlaneHeights);

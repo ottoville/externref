@@ -47,8 +47,7 @@ export class Sea extends BoundableNodeSimple {
                         50000.0, 3.0, 50000.0
                     ]),
                 ],
-                renderPasses: undefined
-            }, {
+                renderPasses: undefined,
                 node: this,
             });
         }

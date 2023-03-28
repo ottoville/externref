@@ -8,6 +8,7 @@ import { Texture2D } from "../GPU/Texture2D.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
+import { MainNode } from "../MainNode.js";
 declare const engine: Engine;
 
 export const enum NumericUnit {
@@ -85,9 +86,7 @@ export type UIRectangleProps = {
 /*
     Draws rectangle.
 */
-export abstract class UIRectangle {
-    label: string;
-    positions_count: number;
+export abstract class UIRectangle extends MainNode {
 
     drawable?: DrawableSimple<RenderPipeline<UIVertShader>>;
     boundingBox = {
@@ -275,6 +274,10 @@ export abstract class UIRectangle {
     constructor(
         public props: UIRectangleProps,
         texture: TextureView<Texture2D> | ImageBitmap | OffscreenCanvas) {
+        props.label = props.label + '_UIRectangle';
+        super({
+            label: props.label
+        });
         const {
             canvaspipeline,
             renderPass,
@@ -283,7 +286,6 @@ export abstract class UIRectangle {
             events,
         } = props;
         this.positions_count = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6;
-        this.label = label + '_UIRectangle';
 
         this.uniformBuffer = Buffer.create(renderPass.gpu, 8 /* size of vec2<f32> */, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'UI_transform', (buff) => {
             this.updatePosition(buff.getMappedRange());
@@ -336,12 +338,13 @@ export abstract class UIRectangle {
             const drawable = new DrawableSimple({
                 renderPipeline: canvaspipeline,
                 renderPasses: new Set([renderPass]),
-                vertexBuffers: [vertices]
-            }, {
+                vertexBuffers: [vertices],
                 node: this,
+            }, {
                 instanceCount: 1,
-                firstVertex: 0,
                 firstInstance: 0,
+            }, {
+                firstVertex: 0,
             });
             this.drawable = drawable
             renderPass.onResize.set(this, () => {
@@ -366,7 +369,8 @@ export abstract class UIRectangle {
 
 
     }
-    destroy() {
+    override destroy() {
+        super.destroy()
         this.props.renderPass.onResize.delete(this);
         engine.clearInputListeners(this);
         this.drawable?.destroy();

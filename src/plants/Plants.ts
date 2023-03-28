@@ -11,6 +11,7 @@ import { Buffer, GPUBufferUsage } from "../GPU/Buffer/Buffer.js";
 import type { Engine } from "../engine.js";
 import { DrawableIndirect } from "../GPU/Drawables/DrawableIndirect.js";
 import { GrassHeightAtCoordinates } from "../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js";
+import { MainNode } from "../MainNode.js";
 declare const engine: Engine;
 
 /**
@@ -22,7 +23,8 @@ declare const engine: Engine;
  */
 const numBlades = 65535;
 
-export class Plants {
+export class Plants extends MainNode {
+    drawable?: DrawableIndirect | undefined;
     public opts = {
         radius: 86
     }
@@ -45,6 +47,9 @@ export class Plants {
         scene: Scene,
         terrainP: Promise<Terrain>,
     ) {
+        super({
+            label: 'Plants'
+        });
         const indirectBuffer = Buffer.create(scene.gpu, 4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST], 'indirectBuffer');
         const positionGPU = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], 'positionGPU');
         const shapeGPU = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], 'shapeGPU');
@@ -60,7 +65,7 @@ export class Plants {
                     stripIndexFormat: 'uint16'
                 }
             );
-            new DrawableIndirect({
+            this.drawable = new DrawableIndirect({
                 renderPipeline,
                 vertexBuffers: [
                     positionGPU, shapeGPU, new Float32Array([
@@ -73,7 +78,7 @@ export class Plants {
                         0.0, 1.0
                     ])
                 ],
-                label: 'Plants',
+                node: this
             }, indirectBuffer);
         }
 

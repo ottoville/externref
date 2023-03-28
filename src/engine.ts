@@ -57,6 +57,9 @@ type ListenerOptions = {
     force?: boolean
 };
 export type rustWasm = {
+    add_drawble(mesh_id: number): void,
+    set_drawble_direct(mesh_id: number, instance_count: number, first_instance: number): void,
+
     create_tiled_mesh_ptr(width: number, height: number): rust_pointer<'*mut usize'>,
 
     collider(): rust_pointer<"legacy_collider">,
@@ -157,7 +160,6 @@ export type rustWasm = {
     create_ball_collider(radius: number): rust_pointer<"collider">
     create_capsule_collider(half_height: number, radius: number, orientation: 0 | 1 | 2, collision_events: boolean): rust_pointer<"collider">,
     create_trimesh_collider(mesh_id: number): rust_pointer<"collider">
-    create_convex_hull_collider(mesh_id: number): rust_pointer<"collider">
     create_cuboid_collider(hx: number, hy: number, hz: number, border_radius: number, collision_events: boolean): rust_pointer<"collider">
     create_cone_collider(half_height: number, radius: number): rust_pointer<"collider">
 

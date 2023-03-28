@@ -11,23 +11,20 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
     const [translation, setTranslation] = useState<ReadOnlyTerraVector3>();
     const [rotation, setRotation] = useState<MutableTerraVector3>();
     useEffect(() => {
-        if (drawable instanceof DrawableDirect && drawable.node instanceof MainNode) {
-            const node = drawable.node;
-            setTranslation(node.translation);
-            const listener = () => {
-                setTranslation(node.translation);
-                setRotation(node.rotation.toEulerAngles());
-            };
-            node.onMeshChange.add(listener);
-            listener();
-            return () => {
-                node.onMeshChange.delete(listener)
-            }
+        setTranslation(drawable.node.translation);
+        const listener = () => {
+            setTranslation(drawable.node.translation);
+            setRotation(drawable.node.rotation.toEulerAngles());
+        };
+        drawable.node.onMeshChange.add(listener);
+        listener();
+        return () => {
+            drawable.node.onMeshChange.delete(listener)
         }
         return;
     }, [drawable])
     return <fieldset>
-        <legend>{drawable.label}</legend>
+        <legend>{drawable.node.label}</legend>
         {drawable.renderPipeline.props.label}<br />
         {translation ? <>
             Translation: X: {translation[0].toFixed(5)} Y: {translation[1].toFixed(5)} Z: {translation[2].toFixed(5)}  <br />

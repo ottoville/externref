@@ -26,8 +26,7 @@ export class NormalsMesh extends MainNode {
         this.drawable = new DrawableSimple({
             renderPipeline,
             renderPasses: undefined,
-            vertexBuffers: [vertexBuffer]
-        }, {
+            vertexBuffers: [vertexBuffer],
             node: this
         });
     }

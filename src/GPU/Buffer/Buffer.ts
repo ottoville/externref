@@ -2,6 +2,7 @@ import { type GPU } from "../../GPU.js";
 import type { Engine } from "../../engine.js";
 import type { BindGroup } from "../BindGroup.js";
 import { Bindable } from "../Bindable.js";
+import type { RenderPass } from "../../GPU/RenderPasses/RenderPass.js";
 declare const engine: Engine;
 export const enum GPUBufferUsage {
     MAP_READ = 0x0001,
@@ -32,10 +33,11 @@ export interface BindStorageBuffer extends Buffer {
     getStorageBinding: (bindGroup: BindGroup, offset?: GPUSize64, size?: GPUSize64) => GPUBufferBinding;
 }
 export interface VertexBuffer extends Buffer {
-    vertexBuffer: GPUBuffer;
+    getVertexBuffer(renderPass: RenderPass) : GPUBuffer
+
 }
 export interface IndexBuffer extends Buffer {
-    indexBuffer: GPUBuffer;
+    getIndexBuffer(renderPass: RenderPass) : GPUBuffer
 }
 export interface IndirectBuffer extends Buffer {
     indirectBuffer: GPUBuffer;
@@ -53,7 +55,7 @@ function bufferBinding(this: Buffer, label: string, bindGroup: BindGroup, offset
     return obj;
 }
 export class Buffer extends Bindable {
-
+    renderPasses: Set<RenderPass> = new Set();
     readonly QUERY_RESOLVE?: boolean
     protected usage: number;
     //uniform
@@ -135,10 +137,16 @@ export class Buffer extends Bindable {
             (this as unknown as BindStorageBuffer).getStorageBinding = bufferBinding.bind(this, 'STORAGE')
         }
         if (usages.includes(GPUBufferUsage.VERTEX)) {
-            (this as unknown as VertexBuffer).vertexBuffer = this.buffer
+            (this as unknown as VertexBuffer).getVertexBuffer = (renderPass: RenderPass) : GPUBuffer => {
+                this.renderPasses.add(renderPass);
+                return this.buffer;
+            }
         }
         if (usages.includes(GPUBufferUsage.INDEX)) {
-            (this as unknown as IndexBuffer).indexBuffer = this.buffer
+            (this as unknown as IndexBuffer).getIndexBuffer = (renderPass: RenderPass) : GPUBuffer => {
+                this.renderPasses.add(renderPass);
+                return this.buffer;
+            }
         }
         if (usages.includes(GPUBufferUsage.INDIRECT)) {
             (this as unknown as IndirectBuffer).indirectBuffer = this.buffer
@@ -189,6 +197,7 @@ export class Buffer extends Bindable {
     }
     override destroy() {
         this.buffer.destroy();
+        this.renderPasses.forEach(rp => rp.bundles.forEach(b => b.destroy()));
         super.destroy();
     }
 }

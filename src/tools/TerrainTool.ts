@@ -160,11 +160,12 @@ export class TerrainTool extends MainNode {
         this.drawable = new DrawableSimple({
             renderPipeline,
             vertexBuffers: [] as [],
-            renderPasses: undefined
-        }, {
+            renderPasses: undefined,
             node: this,
-            firstVertex: 0,
+        }, {
             instanceCount: 8,
+        }, {
+            firstVertex: 0,
         })
         this.#pick = { position: new MutableTerraVector3(engine.memory.buffer, engine.rust.mouse_position_pointer(this.elevator)), meshId: 0 };
         //scene.TerraCameras[0].subscribePickingRay();

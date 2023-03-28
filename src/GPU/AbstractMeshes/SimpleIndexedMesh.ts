@@ -51,9 +51,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
                 {
                     renderPipeline,
                     renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]),
-                    vertexBuffers: [vBufferGPU]
-                },
-                {
+                    vertexBuffers: [vBufferGPU],
                     node: this,
                 }
             )

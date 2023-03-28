@@ -4,11 +4,6 @@ import type { Engine } from "./engine.js";
 import type { ColliderJS } from "./Collider.js";
 import type { Drawable } from "./GPU/Drawables/Drawable.js";
 declare const engine: Engine;
-export interface DrawableNode {
-    positions_count: number;
-    label: string;
-    destroy(): void;
-}
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 export type MainNodeProps = {
@@ -24,7 +19,7 @@ export type MainNodeProps = {
     fixed?: boolean,
     rigid_body?: boolean,
 };
-export abstract class MainNode implements DrawableNode {
+export abstract class MainNode {
     abstract drawable?: Drawable | undefined
     acceleration2: [number, number, number] = [0, 0, 0];
     //Actual velocity that occured last tick

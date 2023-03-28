@@ -51,7 +51,7 @@ export class RenderPipeline<V extends VertexShader = VertexShader, F extends Fra
                 renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup.bindGroup)
             });
         }
-        drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart, dynamicIndices));
+        drawables.forEach(drawable => drawable.draw(renderPass, renderPassEncoder, BindGroupsStart, dynamicIndices));
         return drawables.size;
     }
 }
