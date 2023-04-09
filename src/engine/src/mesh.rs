@@ -11,6 +11,7 @@ pub use crate::geometry::Geometry;
 pub use crate::geometry::Plane;
 use crate::math2::Quaternion;
 use crate::math2::Vec3;
+use crate::math2::Vec3F32;
 use crate::math2::Vec4;
 pub use crate::terrain::elevator::Elevator;
 pub use crate::GPUMesh;
@@ -20,6 +21,7 @@ pub struct Mesh {
     pub id: usize,
     pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
     pub gpu_mesh_alignment: usize, //Alignment in engine.gpu_meshes vector
+    pub translation: Vec3F32,
     pub rotation: Quaternion,
     pub scaling: Vec3<f32>,
     pub geometry: Option<Geometry>,
@@ -30,8 +32,7 @@ pub struct Mesh {
     collider_handle: Option<ColliderHandle>,
     pub label: String,
     velocity: [f32; 4],
-    drawable: Option<DrawCommand>
-}
+    drawable: Option<DrawCommand>}
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh(
     positions_count: usize,
@@ -42,7 +43,6 @@ pub unsafe extern "C" fn new_mesh(
     fixed: bool,
     rigid_body: bool,
     label: *mut std::os::raw::c_char,
-    matrix_modifier: Option<*const Vec4<Vec4<f32>>>,
 ) -> usize {
     let cstr = std::ffi::CString::from_raw(label);
     match cstr.to_str() {
@@ -225,11 +225,9 @@ pub unsafe extern "C" fn gpu_pointer(mesh_id: usize) -> *const Vec4<Vec4<f32>> {
     &engine2.gpu_meshes[get_mesh_by_id(mesh_id).gpu_mesh_alignment].transformation
 }
 #[no_mangle]
-pub unsafe extern "C" fn translation_pointer(mesh_id: usize) -> *const Vec4<f32> {
-    let engine2 = ENGINE.physic_engine();
-    &engine2.gpu_meshes[get_mesh_by_id(mesh_id).gpu_mesh_alignment]
-        .transformation
-        .w
+pub unsafe extern "C" fn translation_pointer(mesh_id: usize) -> *const Vec3F32 {
+    &get_mesh_by_id(mesh_id).translation
+
 }
 #[no_mangle]
 pub unsafe extern "C" fn rotation_pointer(mesh_id: usize) -> *const crate::math2::Quaternion {
@@ -487,6 +485,11 @@ impl Mesh {
             gpu_alignment: ENGINE.allocate_gpu(),
             geometry: None,
             velocity: [0.0, 0.0, 0.0, 0.0],
+            translation: Vec3F32 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
             rotation: Quaternion {
                 i: 0.0,
                 j: 0.0,
@@ -589,9 +592,9 @@ impl Mesh {
     }
     pub unsafe fn set_translation(&mut self, x: f32, y: f32, z: f32) {
         self.update_translation(x, y, z);
-        let e = ENGINE.physic_engine_mut();
         match self.rigid_body_handle {
             Some(rigid_body_handle) => {
+                let e = ENGINE.physic_engine_mut();
                 let rigid_body = e.rigid_body_set.get_mut(rigid_body_handle);
                 match rigid_body {
                     Some(rigid_body) => rigid_body.set_translation(vector![x, y, z], true),
@@ -602,12 +605,16 @@ impl Mesh {
         }
     }
     pub unsafe fn update_translation(&mut self, x: f32, y: f32, z: f32) {
+        self.translation.x = x;
+        self.translation.y = y;
+        self.translation.z = z;
         let engine2 = ENGINE.physic_engine_mut();
         let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
 
         gpu_mesh.transformation.w.x = x;
         gpu_mesh.transformation.w.y = y;
         gpu_mesh.transformation.w.z = z;
+        self.on_update();
         self.update_dynamic_buffer();
     }
     pub unsafe fn apply_impulse(&mut self, x: f32, y: f32, z: f32) {
@@ -625,25 +632,22 @@ impl Mesh {
     }
     pub unsafe fn update_dynamic_buffer(&self) {
         let engine2 = ENGINE.physic_engine_mut();
-        let gpu_mesh = &engine2.gpu_meshes[self.gpu_mesh_alignment];
-        engine2.gpu_queue2.insert(self.gpu_mesh_alignment, gpu_mesh);
+        engine2.gpu_queue2.insert(self.id);
     }
 
     pub fn on_update(&mut self) {
         unsafe {
-            self.update_matrix();
             self.update_dynamic_buffer();
-            let e = ENGINE.physic_engine_mut();
-            let gpu_mesh = &mut e.gpu_meshes[self.gpu_mesh_alignment];
             if let Some(rigid_body_handle) = self.rigid_body_handle {
+                let e = ENGINE.physic_engine_mut();
                 let rigid_body = e.rigid_body_set.get_mut(rigid_body_handle);
                 match rigid_body {
                     Some(rigid_body) => {
                         rigid_body.set_translation(
                             vector![
-                                gpu_mesh.transformation.w.x,
-                                gpu_mesh.transformation.w.y,
-                                gpu_mesh.transformation.w.z
+                                self.translation.x,
+                                self.translation.y,
+                                self.translation.z
                             ],
                             true,
                         );
@@ -732,6 +736,10 @@ impl Mesh {
         gpu_mesh.transformation.z.x = (xz + wy) * sz;
         gpu_mesh.transformation.z.y = (yz - wx) * sz;
         gpu_mesh.transformation.z.z = (1.0 - (xx + yy)) * sz;
+
+        gpu_mesh.transformation.w.x = self.translation.x;
+        gpu_mesh.transformation.w.y = self.translation.y;
+        gpu_mesh.transformation.w.z = self.translation.z;
     }
     pub unsafe fn intersect_box_aa_sphere(
         &mut self,

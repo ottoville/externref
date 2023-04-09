@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::panic;
 
 pub use crate::mesh::Mesh;
 pub use crate::GPUMesh;
-use rapier3d::{crossbeam, prelude::*};
+use rapier3d::{prelude::*};
 
 #[link(wasm_import_module = "console")]
 #[cfg(target_arch = "wasm32")]
@@ -18,7 +18,7 @@ extern "C" {
     #[cfg(feature = "webgpu")]
     fn update_directional_lights(pointer: *const u32, length: usize);
     #[cfg(feature = "webgpu")]
-    fn handle_gpu_queue(pointerVec: *const (usize, &GPUMesh), length: usize);
+    fn handle_gpu_queue(pointerVec: *const usize, length: usize);
     #[cfg(feature = "webgpu")]
     fn updateAllocatedMemory(ptr: *const u32, length: usize);
     #[cfg(target_arch = "wasm32")]
@@ -28,12 +28,12 @@ extern "C" {
     #[cfg(target_arch = "wasm32")]
     fn mesh_on_physic_tick(number: usize);
 }
-pub struct Engine<'frame> {
+pub struct Engine {
     gpu_reserved_slots: u64,
     pub point_lights: Vec<u32>,
     pub directional_lights: Vec<u32>,
     pub allocated_gpu_memory: Vec<u32>,
-    pub engine2: Option<Engine2<'frame>>,
+    pub engine2: Option<Engine2>,
 }
 pub static mut ENGINE: Engine = Engine {
     gpu_reserved_slots:
@@ -43,18 +43,25 @@ pub static mut ENGINE: Engine = Engine {
     allocated_gpu_memory: Vec::new(),
     engine2: None,
 };
-static mut gpu_queue: Vec<(usize, &GPUMesh)> = vec![];
+static mut GPU_QUEUE: Vec<usize> = vec![];
 
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 pub unsafe extern "C" fn renderloop() {
+    use crate::mesh::{get_mesh_by_id_mut};
+
     let engine2 = ENGINE.physic_engine_mut();
     if engine2.gpu_queue2.len() > 0 {
-        gpu_queue = Vec::from_iter(engine2.gpu_queue2.drain());
-        handle_gpu_queue(gpu_queue.as_ptr(), gpu_queue.len());
+        GPU_QUEUE = Vec::from_iter(engine2.gpu_queue2.drain());
+        let iter = GPU_QUEUE.iter();
+        for mesh_id in iter {
+            let mesh = get_mesh_by_id_mut(*mesh_id);
+            mesh.update_matrix();
+        }
+        handle_gpu_queue(GPU_QUEUE.as_ptr(), GPU_QUEUE.len());
     }
 }
-pub struct Engine2<'frame> {
+pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
     pub rigid_body_set: RigidBodySet,
     pub collider_set: ColliderSet,
@@ -66,7 +73,7 @@ pub struct Engine2<'frame> {
     pub broad_phase: BroadPhase,
     pub gpu_meshes: Vec<GPUMesh>,
     pub joint_set: ImpulseJointSet,
-    pub gpu_queue2: HashMap<usize, &'frame GPUMesh>,
+    pub gpu_queue2: HashSet<usize>,
 }
 static mut LOG_STRING: String = String::new();
 // TODO, remove and use "str_ptr_from_vec" syntax
@@ -125,7 +132,7 @@ pub fn init_engine() {
         gpu_meshes: Vec::with_capacity(100),
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
-        gpu_queue2: HashMap::new(),
+        gpu_queue2: HashSet::new(),
     };
     unsafe {
         ENGINE.engine2 = Some(e);
@@ -147,6 +154,8 @@ unsafe fn collider_to_mesh<'frame>(
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn physic_tick() {
     //  jslog_number(&(ENGINE.physic_engine().meshes[0]) as *const Mesh as u32);
+
+    use rapier3d::crossbeam;
     let gravity = vector![0.0, -9.81, 0.0];
     let integration_parameters = IntegrationParameters::default();
 
@@ -216,7 +225,7 @@ pub unsafe extern "C" fn physic_tick() {
 }
 //const GPU_QUEUE: Vec<(* const GPUMesh, u32)> = Vec::new();
 //const MESHES: Vec<*const Mesh> = Vec::new();
-impl Engine<'static> {
+impl Engine {
     pub fn physic_engine(&self) -> &Engine2 {
         match &self.engine2 {
             Some(e) => {
@@ -225,7 +234,7 @@ impl Engine<'static> {
             None => panic!("Engine not initialized"),
         }
     }
-    pub fn physic_engine_mut(&mut self) -> &'static mut Engine2 {
+    pub fn physic_engine_mut(&mut self) -> & mut Engine2 {
         match &mut self.engine2 {
             Some(e) => {
                 return e;

@@ -619,25 +619,27 @@ export class GPU {
         this.#GPUQueueCommandEncoder = this.device.createCommandEncoder({ label: 'handle_gpu_queue_encoder' });
         let tempOffset = 0;
         Buffer.create(this, this.GPUDataSizeBytes * length, [GPUBufferUsage.COPY_SRC], 'handle_gpu_queue', (tempBuffer, gpu2) => {
-            const pointers_to_gpumesh_and_offset = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
-            for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i += 2) {
-                const offset = pointers_to_gpumesh_and_offset[i]!;
+            const pointers_to_gpumesh_and_offset = new Uint32Array(engine.memory.buffer, pointerVec, length);
+            const meshes: [mesh: MainNode, gpu_alignment: number][] = [];
+            for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i++) {
+                const meshID = pointers_to_gpumesh_and_offset[i]!;
+                const mesh = MainNode.Meshes.get(meshID);
+                if (!mesh) {
+                    console.warn("Tried to update non exist mesh with id ", meshID);
+                    continue;
+                }
+                const offset = engine.rust.gpu_alignment(meshID)
+                meshes.push([mesh, offset]);
                 if (offset >= this.#maxInstances) {
                     this.#maxInstances = offset + 10;
                     this.GPUMeshes.resize(GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * this.#maxInstances)
                 }
             }
-            for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i += 2) {
-                const gpumeshPointer = pointers_to_gpumesh_and_offset[i + 1]!
-                const offset = pointers_to_gpumesh_and_offset[i]!;
+            for (let i = 0; i < meshes.length; i++) {
+                const [mesh, offset] = meshes[i]!;
+                const gpumeshPointer = engine.rust.gpu_pointer(mesh.id);
                 const dataLength = this.GPUDataSizeBytes / 4;
                 const data = new Float32Array(engine.memory.buffer, gpumeshPointer, dataLength);
-                const dataInt = new Uint32Array(engine.memory.buffer, gpumeshPointer, dataLength);
-                const mesh = MainNode.Meshes.get(dataInt[28]!);
-                if (!mesh) {
-                    console.warn("Tried to update non exist mesh with id ", dataInt[28]);
-                    continue;
-                }
                 mesh.onMeshChange.forEach((cb) => cb())
                 //Point light
                 if (data[29]! > 0) {
