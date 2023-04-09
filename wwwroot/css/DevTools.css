@@ -2,6 +2,7 @@ aside {
     font-size: 10px;
     background-color: grey;
     color: white;
+    overflow: hidden;
     & button {
         padding:0;
         background-color: darkgrey;
@@ -33,4 +34,6 @@ aside {
 }
 #DevToolsAppContainer {
     direction: ltr;
+    overflow-y: scroll;
+    height: 100%;
 }
