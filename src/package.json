@@ -17,7 +17,7 @@
     "build-webpack-prod": "webpack --config webpack.config.canvas.mjs && webpack --config webpack.config.devtools.mjs",
     "eslint": "eslint --ext .ts,.tsx --quiet ./",
     "eslint-fix": "eslint --fix --ext .ts,.tsx --quiet ./",
-    "swa": "swa start ../wwwroot/ --ssl --ssl-cert=\"../server.crt\" --ssl-key=\"../server.key\"",
+    "swa": "swa start ../wwwroot/ --ssl --ssl-cert=\"../cert/localhost.crt\" --ssl-key=\"../cert/key.key\"",
     "test": "npm run test-unit && npm run test-integration && npm run test-wasm && npm run test-rust",
     "test-unit": "npm run buildRust-test && node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js --forceExit --detectOpenHandles --runInBand --silent=false",
     "test-integration": "npm run buildRust && start npm run swa && node --experimental-vm-modules node_modules/jest/bin/jest.js  --forceExit --detectOpenHandles --runInBand --silent=false --config=jest.integration.config.js",
