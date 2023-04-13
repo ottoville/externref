@@ -1,11 +1,11 @@
 import { GPU } from "../../GPU.js";
-import { DebugNormalsVertShader } from "../Shaders/debug_normals.vert.js";
+import { DebugNormalsVertShader } from "../Shaders/devtools/debug_normals.vert.js";
 import { ColorFragShader } from "../Shaders/Color.frag.js";
 
 export const NormalsPipeline = [
     'NormalsPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
         const debugNormalsVertShader = new DebugNormalsVertShader(gpu.positionAndTimeBindGroup, {
-            arrayStride: 48,
+            arrayStride: 32,
             stepMode: "vertex",
             attributes: [
                 {

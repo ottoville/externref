@@ -18,7 +18,7 @@ export class SimpleMesh extends BoundableNodeSimple {
         vBufferGPU?: VertexBuffer) {
         super({
             ...dataNodeProps,
-            verticesPositionStride: 6,
+            verticesPositionStride: 8,
         }, mainNodeProps);
         if (engine.gpu) {
             if (!vBufferGPU) {

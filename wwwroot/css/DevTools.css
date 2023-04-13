@@ -37,3 +37,7 @@ aside {
     overflow-y: scroll;
     height: 100%;
 }
+#meshes {
+    max-height: 200px;
+    overflow-y: scroll;
+}

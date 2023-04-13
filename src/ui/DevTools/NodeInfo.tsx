@@ -3,8 +3,9 @@ import type { Drawable } from "../../GPU/Drawables/Drawable.js";
 import type { MutableTerraVector3, ReadOnlyTerraVector3 } from "../../Math.js";
 
 import { useEffect, useState } from "react";
-import { DataNode } from "../../nodes/DataNode.js";
 import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
+import { DataNode } from "../../nodes/DataNode.js";
+import { NormalsMesh } from "../../GPU/Meshes/helpers/normals.js";
 
 export function NodeInfo({ drawable }: { drawable: Drawable }) {
     const [translation, setTranslation] = useState<ReadOnlyTerraVector3>();
@@ -66,10 +67,18 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
             </fieldset>
         </> : null}
         <br />
-        {drawable instanceof DrawableDirect && drawable.node instanceof DataNode ? <>
+        {drawable instanceof DrawableDirect ? <>
             Vertices count: {drawable.node.vertices_count}
             <br />
             {drawable.node instanceof BoundableNodeIndexed ? `Indices count: ${drawable.node.indices_count}` : ''}
+            <br />
+            {drawable.node instanceof DataNode ?
+                <><button type="button" onClick={() => {
+                    new NormalsMesh(drawable)
+                }}>Normals</button>
+                </> : null
+            }
+
         </> : ''}
     </fieldset>
 }

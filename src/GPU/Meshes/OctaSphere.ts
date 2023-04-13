@@ -41,9 +41,9 @@ function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, ha
     const indicesPerPath = cellsPerPatch * 3;
     let indicesCount = indicesPerPath * 8
     const totalFacesCount = num_faces_per_patch * 8
-    const totalVerticesCount = totalFacesCount * 3;
+    const totalVerticesCount = totalFacesCount * 4;
     const verticesAndNormals = new Float32Array(totalVerticesCount * 2);
-    const verticesStride = 6;
+    const verticesStride = 8;
     const verts: TerraVector3[] = new Array(totalFacesCount)
     for (let i = 0; i < totalFacesCount; i++) {
         verts[i] = new MutableTerraVector3(verticesAndNormals.buffer, i * verticesStride * Float32Array.BYTES_PER_ELEMENT);
@@ -211,7 +211,7 @@ function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, ha
 
     //Copy positions to normals;
     for (let i = 0; i < verticesAndNormals.length; i = i + verticesStride) {
-        verticesAndNormals.copyWithin(i + 3, i, i + 3);
+        verticesAndNormals.copyWithin(i + 4, i, i + 4);
     }
     const moveTuple = (
         tuple: readonly [Patch, Patch],

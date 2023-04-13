@@ -33,8 +33,8 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
     let z = Math.cos(progress);
     vertices.set(
         [
-            0, 0, 1, /* normals: */ 0, 0, 0,
-            x, 0, z, /* normals: */ 0, 0, 0
+            0, 0, 1, 1, /* normals: */ 0, 0, 0, 1,
+            x, 0, z, 1, /* normals: */ 0, 0, 0, 1,
         ]);
     indices.set([0, 1]);
     progress += facelen;
@@ -42,12 +42,12 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
         indices[i + 2] = i + 2;
         if (i % 2 === 0) {
             vertices.set(
-                [-x, 0, z, /* normals: */ 0, 0, 0], (i + 2) * stride);
+                [-x, 0, z, 1, /* normals: */ 0, 0, 0, 1], (i + 2) * stride);
         } else {
             x = cullMode * Math.sin(progress);
             z = Math.cos(progress);
             vertices.set(
-                [x, 0, z, /* normals: */ 0, 0, 0], (i + 2) * stride);
+                [x, 0, z, 1,/* normals: */ 0, 0, 0, 1], (i + 2) * stride);
             progress += facelen;
         }
     }
@@ -67,7 +67,7 @@ function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, i
     for (let i = 0; i < coneVertices.length; i = i + stride) {
         coneVertices[i + 1] = -1;
     }
-    const zeroIndice = coneVertices.push(0, 1, 0,  /* normals: */0, 0, 0) / stride - 1;
+    const zeroIndice = coneVertices.push(0, 1, 0,1,  /* normals: */0, 0, 0,1) / stride - 1;
 
     let indicesOrder = [0];
     const indicesOrder2: number[] = [];
@@ -94,7 +94,7 @@ export class Cone extends SimpleIndexedMesh {
         can_collide = false,
         color: [number, number, number, number] = [1, 0, 0, 0]
     ) {
-        const [vertices, indices] = createCone(14, 6);
+        const [vertices, indices] = createCone(14, 8);
         super(
             {
                 vertices,

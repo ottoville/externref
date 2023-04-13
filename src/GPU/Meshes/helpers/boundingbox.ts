@@ -5,7 +5,7 @@ import type { Engine } from "../../../engine.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
 import type { RenderPipeline } from "../../RenderPipeline.js";
-import type { DebugBoundingBoxVertShader } from "../../Shaders/debug_boundingbox.vert.js";
+import type { DebugBoundingBoxVertShader } from "../../Shaders/devtools/debug_boundingbox.vert.js";
 declare const engine: Engine;
 
 
@@ -13,13 +13,6 @@ export class BoundingBoxMesh extends MainNode {
     drawable: DrawableSimple<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
     constructor(targetNode: DrawableIndexed) {
         super({ positionsCount: 26, label: 'BoundingBoxDebug' });
-
-
-
-        if (!(targetNode.node instanceof MainNode)) {
-            console.warn("Cannot debug_bounding_box on UI elements")
-            return;
-        }
         const vectors_simd = new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(targetNode.node.id), 3 * 4 * 2);
         const vectors = new Float32Array([
             vectors_simd[0]!, vectors_simd[4]!, vectors_simd[8]!, 0,

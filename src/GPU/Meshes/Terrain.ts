@@ -5,7 +5,6 @@ import type { Engine, rust_pointer } from "../../engine.js";
 import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
 declare const engine: Engine;
 import type { IndexBuffer, VertexBuffer } from "../../GPU/Buffer/Buffer.js";
-import { NormalsMesh } from "./helpers/normals.js";
 import type { TextureView } from "../TextureView.js";
 import type { GroundVertShader } from "../Shaders/Ground.vert.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
@@ -71,8 +70,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 vertexBuffers: [this.vBuffer],
                 node: this,
             })
-            //@ts-expect-error
-            window.debugTerrain = () => new NormalsMesh(this.drawable);
 
             this.drawable.setStaticBindGroup('TerrainInitialTexture', (bindGroup) => {
                 return [

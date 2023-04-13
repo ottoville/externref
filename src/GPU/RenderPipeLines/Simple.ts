@@ -6,7 +6,7 @@ export const SimpleRenderPipeline = [
     'SimpleRenderPipeline', function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
         const simpleVertShader = new SimpleVertShader(gpu.positionAndTimeBindGroup,
             {
-                arrayStride: 6 * 4,
+                arrayStride: 8 * 4,
                 stepMode: "vertex",
                 attributes: [
                     {
@@ -17,7 +17,7 @@ export const SimpleRenderPipeline = [
                     }, {
                         // normals
                         shaderLocation: 1,
-                        offset: 12,
+                        offset: 16,
                         format: "float32x3"
                     }
                 ]

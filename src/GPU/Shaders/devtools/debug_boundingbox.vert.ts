@@ -1,6 +1,6 @@
-import { PipelineLayout } from '../PipelineLayout.js';
-import { VertexShader } from './VertexShader.js';
-import { GPU } from '../../GPU.js'
+import { PipelineLayout } from '../../PipelineLayout.js';
+import { VertexShader } from '../VertexShader.js';
+import { GPU } from '../../../GPU.js'
 type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"];
 
 export class DebugBoundingBoxVertShader extends VertexShader<

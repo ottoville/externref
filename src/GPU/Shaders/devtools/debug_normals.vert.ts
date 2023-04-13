@@ -1,6 +1,6 @@
-import { PipelineLayout } from '../PipelineLayout.js';
-import { VertexShader } from './VertexShader.js';
-import { GPU } from '../../GPU.js'
+import { PipelineLayout } from '../../PipelineLayout.js';
+import { VertexShader } from '../VertexShader.js';
+import { GPU } from '../../../GPU.js'
 
 type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"];
 
@@ -21,7 +21,7 @@ export class DebugNormalsVertShader extends VertexShader<
         this.createWGSL((
             [/*uniforms*/,],
             [scene,/*time, clusters_array, meshes, projection*/],
-            [/*world*/,]) => {
+            [world]) => {
 
             //////////////////////////////////
 
@@ -33,13 +33,23 @@ struct Output {
  };
 
 @vertex
-fn main(@location(0) position : vec3<f32>,
-  @location(1) normal : vec3<f32>,
+fn main(
+    @location(0) position : vec3<f32>,
+    @location(1) normal : vec3<f32>,
   @builtin(vertex_index) gl_VertexIndex : u32 ) -> Output {
     var output : Output;
-    var vertexPosition:vec4<f32> = vec4<f32>(position.xyz, 1.0);
+    var vertexPosition:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(position.xyz, 1.0);
     if(gl_VertexIndex % 2u == 1u) {
-        vertexPosition = vertexPosition + vec4<f32>(normal*30.0, 0.0);
+        /*
+            Drop translation part from matrix
+        */
+        var matt: mat3x3<f32> = mat3x3<f32>(
+            ${world.prop('transformation')}[0].xyz,
+            ${world.prop('transformation')}[1].xyz,
+            ${world.prop('transformation')}[2].xyz
+        );
+        var transformed_normal = normalize(matt * normal);
+        vertexPosition = vertexPosition + vec4<f32>(transformed_normal*20.0, 0.0);
     }
     output.Position = ${scene.prop('modelViewProjection')} * vertexPosition;
     output.color=vec3<f32>(0.0,1.0,0.0);

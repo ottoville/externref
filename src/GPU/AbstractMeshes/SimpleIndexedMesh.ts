@@ -22,7 +22,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         const strip = topology === 'triangle-strip' || topology === 'line-strip';
         super({
             ...dataNodeProps,
-            verticesPositionStride: 6,
+            verticesPositionStride: 8,
         }, {
             strip,
             ...mainNodeProps,

@@ -28,20 +28,22 @@ export function Meshes(props: { gpu: GPU }) {
         }
     }, [props.gpu]);
     const [selectedDrawable, setSelectedDrawable] = useState<Drawable>()
-    return <fieldset>
-        <legend>Rendered meshes</legend>
-        <ul>
-            {renderPipelines.map(([rp, variant]) => {
-                return <li key={rp.props.label}>
-                    Renderpipeline<br />
-                    <small>{rp.props.label}</small>
-                    <VariantList variant={variant} setSelectedDrawable={setSelectedDrawable}></VariantList>
-                </li>
-
-            })}
-        </ul>
+    return <>
+        <fieldset id="meshes">
+            <legend>Rendered meshes</legend>
+            <ul>
+                {renderPipelines.map(([rp, variant]) => {
+                    return <li key={rp.props.label}>
+                        Renderpipeline<br />
+                        <small>{rp.props.label}</small>
+                        <VariantList variant={variant} setSelectedDrawable={setSelectedDrawable}></VariantList>
+                    </li>
+                })}
+            </ul>
+        </fieldset>
         {selectedDrawable ?
-            <NodeInfo key={selectedDrawable.node.id} drawable = { selectedDrawable }></NodeInfo>
+            <NodeInfo key={selectedDrawable.node.id} drawable={selectedDrawable}></NodeInfo>
             : null}
-    </fieldset>
+    </>
+
 }

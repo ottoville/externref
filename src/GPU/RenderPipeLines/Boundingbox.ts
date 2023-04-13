@@ -1,5 +1,5 @@
 import { GPU } from "../../GPU.js";
-import { DebugBoundingBoxVertShader } from "../Shaders/debug_boundingbox.vert.js";
+import { DebugBoundingBoxVertShader } from "../Shaders/devtools/debug_boundingbox.vert.js";
 import { ColorFragShader } from "../Shaders/Color.frag.js";
 
 export const BoundingBoxPipeline = [

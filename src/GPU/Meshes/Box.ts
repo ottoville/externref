@@ -28,7 +28,7 @@ export class Box extends SimpleIndexedMesh {
     ) {
         super(
             {
-                vertices: new Float32Array(engine.rust.memory.buffer, engine.rust.get_box_vertices(), 144),
+                vertices: new Float32Array(engine.rust.memory.buffer, engine.rust.get_box_vertices(), 192),
                 can_collide,
             },
             {

@@ -28,6 +28,7 @@ export default {
         '../../nodes/BoundableNodeIndexed.js': '../../nodes/BoundableNodeIndexed.js',
         '../../GPU/Drawables/DrawableDirect.js': '../../GPU/Drawables/DrawableDirect.js',
         '../../controllers/ArcRotateCamera.js': '../../controllers/ArcRotateCamera.js',
-        '../../controllers/PositionCamera.js': '../../controllers/PositionCamera.js'
+        '../../controllers/PositionCamera.js': '../../controllers/PositionCamera.js',
+        '../../GPU/Meshes/helpers/normals.js': '../../GPU/Meshes/helpers/normals.js'
     },
 };

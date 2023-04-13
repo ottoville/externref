@@ -4,7 +4,6 @@ import { RenderPipelineVariant } from "../../GPU/RenderPasses/RenderPass.js";
 import type { Engine } from "../../engine.js";
 import { ArcRotateCamera } from "../../controllers/ArcRotateCamera.js";
 import { DrawableDirect } from "../../GPU/Drawables/DrawableDirect.js";
-import { MainNode } from "../../MainNode.js";
 declare const engine: Engine;
 
 export function VariantList(props: {
@@ -34,10 +33,9 @@ export function VariantList(props: {
                 <button className={'btn-small'} type="button"
                     onClick={() => {
                         if (engine.inputManager instanceof ArcRotateCamera) {
-                            if (drawable instanceof DrawableDirect && drawable.node instanceof MainNode) {
+                            if (drawable instanceof DrawableDirect) {
                                 const node = drawable.node;
                                 engine.inputManager.moveto(node.translation)
-
                             }
                         }
                     }}>🎥</button>

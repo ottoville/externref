@@ -53,11 +53,24 @@ export abstract class MainNode {
     get ptr() {
         return engine.rust.get_mesh_by_id(this.id);
     }
+    /**
+     * 
+     * @param scale Scale for x, y and z dimensions
+     */
     update_scale(scale: number): void
+    /**
+     * 
+     * @param x Scale for x dimension
+     * @param y Scale for y dimension
+     * @param z Scale for z dimension
+     */
     update_scale(x: number, y: number, z: number): void
     update_scale(x: number, y?: number, z?: number) {
         engine.rust.update_scale(this.id, x, y ?? x, z ?? x)
     }
+    /**
+     * Get rotation quaternion
+     */
     get rotation(): Quaternion {
         return new Quaternion(engine.memory.buffer, engine.rust.rotation_pointer(this.id));
     }
@@ -106,7 +119,7 @@ export abstract class MainNode {
     isStatic = false;
     static Meshes: Map<number, MainNode> = new Map();
 
-    get_transformation = () => new TerraMatrix(engine.memory.buffer, engine.rust.gpu_pointer(this.id))//new TerraMatrix(this.data.buffer);
+    get_transformation = () => new TerraMatrix(engine.memory.buffer, engine.rust.gpu_pointer(this.id));
 
     get translation(): ReadOnlyTerraVector3 {
         return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.translation_pointer(this.id));

@@ -13,9 +13,9 @@ function addMidPoint(vertices: Float32Array, a: number, b: number) {
         return i;
     }
     midCache.set(key, v);
-    vertices[3 * v + 0] = (vertices[3 * a + 0]! + vertices[3 * b + 0]!) / 2;
-    vertices[3 * v + 1] = (vertices[3 * a + 1]! + vertices[3 * b + 1]!) / 2;
-    vertices[3 * v + 2] = (vertices[3 * a + 2]! + vertices[3 * b + 2]!) / 2;
+    vertices[4 * v + 0] = (vertices[4 * a + 0]! + vertices[4 * b + 0]!) / 2;
+    vertices[4 * v + 1] = (vertices[4 * a + 1]! + vertices[4 * b + 1]!) / 2;
+    vertices[4 * v + 2] = (vertices[4 * a + 2]! + vertices[4 * b + 2]!) / 2;
     return v++;
 }
 const icosphere = (order = 0) => {
@@ -23,20 +23,20 @@ const icosphere = (order = 0) => {
     const f = 1.618033988749895 // (1 + 5 ** 0.5) / 2;
     const T = 4 ** order;
 
-    const vertices = new Float32Array((10 * T + 2) * 3);
+    const vertices = new Float32Array((10 * T + 2) * 4);
     vertices.set(Float32Array.of(
-        -1, f, 0,   //0.
-        1, f, 0,    //1.
-        -1, -f, 0,  //2.
-        1, -f, 0,   //3
-        0, -1, f,   //4.
-        0, 1, f,    //5.
-        0, -1, -f,  //6.
-        0, 1, -f,   //7.
-        f, 0, -1,   //8.
-        f, 0, 1,    //9.
-        -f, 0, -1,  //10.
-        -f, 0, 1)); //11.
+        -1, f, 0,1,   //0.
+        1, f, 0,1,    //1.
+        -1, -f, 0,1,  //2.
+        1, -f, 0,1,   //3
+        0, -1, f,1,   //4.
+        0, 1, f,1,    //5.
+        0, -1, -f,1,  //6.
+        0, 1, -f,1,   //7.
+        f, 0, -1,1,   //8.
+        f, 0, 1,1,    //9.
+        -f, 0, -1,1,  //10.
+        -f, 0, 1,1)); //11.
     let triangles = Uint32Array.of(
         0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11,
         11, 10, 2, 5, 11, 4, 1, 5, 9, 7, 1, 8, 10, 7, 6,
@@ -66,7 +66,7 @@ const icosphere = (order = 0) => {
         trianglesPrev = triangles;
     }
     // normalize vertices
-    for (let i = 0; i < vertices.length; i += 3) {
+    for (let i = 0; i < vertices.length; i += 4) {
         new MutableTerraVector3(vertices.buffer, i * Float32Array.BYTES_PER_ELEMENT).normalize();
     }
     return [vertices, triangles] as [vertices: Float32Array, indices: Uint32Array];
@@ -98,14 +98,13 @@ export class IcoSphere extends SimpleIndexedMesh {
     ) {
         const [vertices, indices] = icosphere(order);
         const verticesAndNormals = new Float32Array(vertices.length * 2);
-        for (let i = 0; i < vertices.length / 3; i++) {
-            verticesAndNormals[i * 6] = vertices[i * 3]!;
-            verticesAndNormals[i * 6 + 1] = vertices[i * 3 + 1]!;
-            verticesAndNormals[i * 6 + 2] = vertices[i * 3 + 2]!;
-
-            verticesAndNormals[i * 6 + 3] = vertices[i * 3]!;
-            verticesAndNormals[i * 6 + 4] = vertices[i * 3 + 1]!;
-            verticesAndNormals[i * 6 + 5] = vertices[i * 3 + 2]!;
+        for (let i = 0; i < vertices.length / 4; i++) {
+            verticesAndNormals[i * 8] = vertices[i * 4]!;
+            verticesAndNormals[i * 8 + 1] = vertices[i * 4 + 1]!;
+            verticesAndNormals[i * 8 + 2] = vertices[i * 4 + 2]!;
+            verticesAndNormals[i * 8 + 3] = 1.0;
+            // Copy positions to normals, on sphere those are same
+            verticesAndNormals.copyWithin(i * 8 + 4, i * 8, i * 8 + 4)
         }
         super(
             {
