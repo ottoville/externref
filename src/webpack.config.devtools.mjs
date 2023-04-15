@@ -29,6 +29,10 @@ export default {
         '../../GPU/Drawables/DrawableDirect.js': '../../GPU/Drawables/DrawableDirect.js',
         '../../controllers/ArcRotateCamera.js': '../../controllers/ArcRotateCamera.js',
         '../../controllers/PositionCamera.js': '../../controllers/PositionCamera.js',
-        '../../GPU/Meshes/helpers/normals.js': '../../GPU/Meshes/helpers/normals.js'
+        '../../GPU/Meshes/helpers/wireframe.js': '../../GPU/Meshes/helpers/wireframe.js',
+        '../../GPU/Meshes/helpers/normals.js': '../../GPU/Meshes/helpers/normals.js',
+        '../../GPU/Meshes/helpers/boundingbox.js': '../../GPU/Meshes/helpers/boundingbox.js',
+        '../../GPU/Drawables/DrawableIndexed.js': '../../GPU/Drawables/DrawableIndexed.js',
+        '../../nodes/NodeIndexed.js': '../../nodes/NodeIndexed.js'
     },
 };

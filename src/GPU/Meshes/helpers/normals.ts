@@ -10,7 +10,7 @@ export class NormalsMesh extends MainNode {
     drawable: DrawableSimple<RenderPipeline>;
     constructor(targetNode: DrawableDirect<DataNode>) {
         const positionsCount = targetNode.node.positions_count * 2
-        super({ positionsCount, label: 'NormalsDebug' });
+        super({ positionsCount, label: 'NormalsDebug', rigid_body: false });
 
         const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
         const vertices = targetNode.node.verticesArray;

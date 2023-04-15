@@ -1,6 +1,6 @@
 import { MainNode } from "../../../MainNode.js";
 import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
-import { BoundingBoxPipeline } from "../../RenderPipeLines/Boundingbox.js";
+import { DebugLinesPipeline } from "../../RenderPipeLines/DebugLinesPipeline.js";
 import type { Engine } from "../../../engine.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
@@ -12,7 +12,7 @@ declare const engine: Engine;
 export class BoundingBoxMesh extends MainNode {
     drawable: DrawableSimple<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
     constructor(targetNode: DrawableIndexed) {
-        super({ positionsCount: 26, label: 'BoundingBoxDebug' });
+        super({ positionsCount: 26, label: 'BoundingBoxDebug', rigid_body: false });
         const vectors_simd = new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(targetNode.node.id), 3 * 4 * 2);
         const vectors = new Float32Array([
             vectors_simd[0]!, vectors_simd[4]!, vectors_simd[8]!, 0,
@@ -51,7 +51,7 @@ export class BoundingBoxMesh extends MainNode {
             view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 25 * 4);
         });
         if (engine.gpu) {
-            const renderPipeline = engine.gpu.createRenderPipeline(BoundingBoxPipeline, { topology: 'line-strip', stripIndexFormat: 'uint32' });
+            const renderPipeline = engine.gpu.createRenderPipeline(DebugLinesPipeline, { topology: 'line-strip', stripIndexFormat: 'uint32' });
             this.drawable = new DrawableSimple({
                 renderPipeline,
                 renderPasses: undefined,

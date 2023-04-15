@@ -102,6 +102,7 @@ export type rustWasm = {
         fixed: boolean,
         rigid_body: boolean,
         label: rust_pointer<"u8">): number,
+    have_rigid_body(mesh_id: number): boolean,
     create_geometry(
         mesh_id: number,
         has_bounding: boolean,
@@ -688,21 +689,6 @@ export class Engine {
                         this.collider._slidePlaneNormal[2] *= norm;
                     }
                 }
-
-                //DEBUG START
-                /*
-                this.collider._slidePlaneNormal[0]= -0.5877852439880371
-                this.collider._slidePlaneNormal[1]= 0.80901700258255
-                this.collider._slidePlaneNormal[2]= 0
-                */
-                //DEBUG END
-
-
-                // console.log('slidePlaneNormal',...this.collider._slidePlaneNormal)
-
-                /*  this.#displacementVector[0] = slidePlaneNormalWorld[0] * this.collider.epsilon;
-                  this.#displacementVector[1] = slidePlaneNormalWorld[1] * this.collider.epsilon;
-                  this.#displacementVector[2] = slidePlaneNormalWorld[2] * this.collider.epsilon;*/
 
                 this.#displacementVector[0] = this.collider._slidePlaneNormal[0] * sphere.closeDistanceVector[0];
                 this.#displacementVector[1] = this.collider._slidePlaneNormal[1] * sphere.closeDistanceVector[1];

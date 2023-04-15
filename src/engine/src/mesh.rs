@@ -138,6 +138,10 @@ pub unsafe extern "C" fn update_dynamic_buffer(mesh_id: usize) {
     get_mesh_by_id(mesh_id).update_dynamic_buffer();
 }
 #[no_mangle]
+pub unsafe extern "C" fn have_rigid_body(mesh_id: usize) -> bool {
+    get_mesh_by_id(mesh_id).rigid_body_handle.is_some()
+}
+#[no_mangle]
 pub unsafe extern "C" fn update_euler_angles(mesh_id: usize, x: f32, y: f32, z: f32) {
     // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
     // TODO: utilize SIMD
@@ -409,9 +413,6 @@ impl Mesh {
                 });
             }
         }
-        /*  jslog_string(vec!["create_trimesh_collider".to_string(), vertices.len().to_string(), indices.len().to_string() ]);
-        jslog_string(vec![format!("{:?}", vertices)]);
-        jslog_string(vec![format!("{:?}", indices)]);*/
         let collider = Box::new(
             ColliderBuilder::trimesh(vertices, indices)
                 .density(2.0)

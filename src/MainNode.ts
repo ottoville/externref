@@ -141,6 +141,9 @@ export abstract class MainNode {
     intersect_box_aa_sphere(collider: ColliderJS, radius: number) {
         return engine.rust.intersect_box_aa_sphere(this.id, collider.collider_ptr, radius)
     }
+    get have_rigid_body() {
+        return engine.rust.have_rigid_body(this.id);
+    }
     constructor(
         { positionsCount = 0,
             point_light = 0,

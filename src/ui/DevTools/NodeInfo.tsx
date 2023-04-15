@@ -1,11 +1,14 @@
 import { DrawableDirect } from "../../GPU/Drawables/DrawableDirect.js";
 import type { Drawable } from "../../GPU/Drawables/Drawable.js";
 import type { MutableTerraVector3, ReadOnlyTerraVector3 } from "../../Math.js";
-
 import { useEffect, useState } from "react";
-import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
+import { WireFrameMesh } from "../../GPU/Meshes/helpers/wireframe.js";
 import { DataNode } from "../../nodes/DataNode.js";
 import { NormalsMesh } from "../../GPU/Meshes/helpers/normals.js";
+import { BoundingBoxMesh } from "../../GPU/Meshes/helpers/boundingbox.js";
+import { DrawableIndexed } from "../../GPU/Drawables/DrawableIndexed.js";
+import { NodeIndexed } from "../../nodes/NodeIndexed.js";
+import type { MainNode } from "../../MainNode.js";
 
 export function NodeInfo({ drawable }: { drawable: Drawable }) {
     const [translation, setTranslation] = useState<ReadOnlyTerraVector3>();
@@ -70,12 +73,20 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
         {drawable instanceof DrawableDirect ? <>
             Vertices count: {drawable.node.vertices_count}
             <br />
-            {drawable.node instanceof BoundableNodeIndexed ? `Indices count: ${drawable.node.indices_count}` : ''}
+            {drawable.node instanceof NodeIndexed ? `Indices count: ${drawable.node.indices_count}` : ''}
+            <br />
+            Rigid body: {(drawable.node as MainNode).have_rigid_body ? 'true' : 'false'}
             <br />
             {drawable.node instanceof DataNode ?
                 <><button type="button" onClick={() => {
                     new NormalsMesh(drawable)
                 }}>Normals</button>
+                <button type="button" onClick={() => {
+                    new WireFrameMesh(drawable)
+                }}>Wireframe</button>
+                {drawable instanceof DrawableIndexed ? <button type="button" onClick={() => {
+                    new BoundingBoxMesh(drawable)
+                }}>Bounding Box</button> : null}  
                 </> : null
             }
 
