@@ -17,7 +17,7 @@ pub struct BoundingBox {
 #[cfg(test)]
 #[test]
 fn test_bounding_box() {
-    use crate::{meshes::meshes::{box_positions, box_indices}, engine::{init_engine}, mesh::ENGINE, Geometry};
+    use crate::{meshes::meshes::{box_positions, box_indices}, engine::{init_engine}, mesh::{ENGINE, get_mesh_by_id_mut}, Geometry};
     unsafe {
         init_engine();
         let engine2 = ENGINE.physic_engine_mut();
@@ -37,10 +37,11 @@ fn test_bounding_box() {
         m.rotation.j = 0.0;
         m.rotation.k = 0.0;
         m.rotation.w = (1.1f32).cos();
-        m.on_update();
-        let gpu_mesh = &engine2.gpu_meshes[m.gpu_mesh_alignment];
+        let m2 = get_mesh_by_id_mut(m.id);
+
         let geo = m.get_geometry_mut();
-        geo.update_bounding_box(&gpu_mesh.transformation);
+
+        geo.update_bounding_box(m2.get_transformation());
 
         assert_eq!(geo.bounding_box.min.x, -377.0);
         assert_eq!(geo.bounding_box.min.y, 301.50122);

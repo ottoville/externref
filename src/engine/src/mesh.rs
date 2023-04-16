@@ -20,7 +20,9 @@ use rapier3d::prelude::*;
 pub struct Mesh {
     pub id: usize,
     pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
-    pub gpu_mesh_alignment: usize, //Alignment in engine.gpu_meshes vector
+    pub gpu_mesh_alignment: usize, //Alignment in engine.gpu_meshes vector,
+    transformation: Vec4<Vec4<f32>>,
+    pub transformation_is_dirty: bool,
     pub translation: Vec3F32,
     pub rotation: Quaternion,
     pub scaling: Vec3<f32>,
@@ -231,7 +233,6 @@ pub unsafe extern "C" fn gpu_pointer(mesh_id: usize) -> *const Vec4<Vec4<f32>> {
 #[no_mangle]
 pub unsafe extern "C" fn translation_pointer(mesh_id: usize) -> *const Vec3F32 {
     &get_mesh_by_id(mesh_id).translation
-
 }
 #[no_mangle]
 pub unsafe extern "C" fn rotation_pointer(mesh_id: usize) -> *const crate::math2::Quaternion {
@@ -362,11 +363,11 @@ pub unsafe extern "C" fn faces_pointer(mesh_id: usize) -> *const Plane {
 }
 #[no_mangle]
 pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const Vec3<Vec4<f32>> {
-    let engine2 = ENGINE.physic_engine();
     let mesh = get_mesh_by_id_mut(mesh_id);
-    let gpu_mesh = &engine2.gpu_meshes[mesh.gpu_mesh_alignment];
-    let geometry = mesh.get_geometry_mut();
-    geometry.update_bounding_box(&gpu_mesh.transformation);
+    let mesh2 = get_mesh_by_id_mut(mesh_id);
+    let transformation = mesh.get_transformation();
+    let geometry = mesh2.get_geometry_mut();
+    geometry.update_bounding_box(transformation);
     (&geometry.bounding_box.vectors_simd) as *const Vec3<Vec4<f32>>
 }
 impl Mesh {
@@ -376,6 +377,12 @@ impl Mesh {
 }
 
 impl Mesh {
+    pub fn get_transformation(&mut self) -> &Vec4<Vec4<f32>> {
+        if self.transformation_is_dirty {
+            self.update_matrix();
+        }
+        return &self.transformation;
+    }
     //TODO: move to geometry
     pub fn create_trimesh_collider(&self) -> *mut Collider {
         let geometry = self.get_geometry();
@@ -486,6 +493,33 @@ impl Mesh {
             gpu_alignment: ENGINE.allocate_gpu(),
             geometry: None,
             velocity: [0.0, 0.0, 0.0, 0.0],
+            transformation: Vec4 {
+                x: Vec4 {
+                    x: 1.0,
+                    y: 0.0,
+                    z: 0.0,
+                    w: 0.0,
+                },
+                y: Vec4 {
+                    x: 0.0,
+                    y: 1.0,
+                    z: 0.0,
+                    w: 0.0,
+                },
+                z: Vec4 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 1.0,
+                    w: 0.0,
+                },
+                w: Vec4 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                    w: 1.0,
+                },
+            },
+            transformation_is_dirty: true,
             translation: Vec3F32 {
                 x: 0.0,
                 y: 0.0,
@@ -639,17 +673,14 @@ impl Mesh {
     pub fn on_update(&mut self) {
         unsafe {
             self.update_dynamic_buffer();
+            self.transformation_is_dirty = true;
             if let Some(rigid_body_handle) = self.rigid_body_handle {
                 let e = ENGINE.physic_engine_mut();
                 let rigid_body = e.rigid_body_set.get_mut(rigid_body_handle);
                 match rigid_body {
                     Some(rigid_body) => {
                         rigid_body.set_translation(
-                            vector![
-                                self.translation.x,
-                                self.translation.y,
-                                self.translation.z
-                            ],
+                            vector![self.translation.x, self.translation.y, self.translation.z],
                             true,
                         );
                         rigid_body.set_rotation(
@@ -698,10 +729,7 @@ impl Mesh {
 
         gpu_mesh.set_directional_light(engine, range, self.gpu_alignment);
     }
-    pub unsafe fn update_matrix(&mut self) {
-        let engine2 = ENGINE.physic_engine_mut();
-        let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
-
+    pub fn update_matrix(&mut self) {
         let x: f32 = self.rotation.i;
         let y: f32 = self.rotation.j;
         let z: f32 = self.rotation.k;
@@ -726,21 +754,27 @@ impl Mesh {
         let sy = self.scaling.y;
         let sz = self.scaling.z;
 
-        gpu_mesh.transformation.x.x = (1.0 - (yy + zz)) * sx;
-        gpu_mesh.transformation.x.y = (xy + wz) * sx;
-        gpu_mesh.transformation.x.z = (xz - wy) * sx;
+        self.transformation.x.x = (1.0 - (yy + zz)) * sx;
+        self.transformation.x.y = (xy + wz) * sx;
+        self.transformation.x.z = (xz - wy) * sx;
 
-        gpu_mesh.transformation.y.x = (xy - wz) * sy;
-        gpu_mesh.transformation.y.y = (1.0 - (xx + zz)) * sy;
-        gpu_mesh.transformation.y.z = (yz + wx) * sy;
+        self.transformation.y.x = (xy - wz) * sy;
+        self.transformation.y.y = (1.0 - (xx + zz)) * sy;
+        self.transformation.y.z = (yz + wx) * sy;
 
-        gpu_mesh.transformation.z.x = (xz + wy) * sz;
-        gpu_mesh.transformation.z.y = (yz - wx) * sz;
-        gpu_mesh.transformation.z.z = (1.0 - (xx + yy)) * sz;
+        self.transformation.z.x = (xz + wy) * sz;
+        self.transformation.z.y = (yz - wx) * sz;
+        self.transformation.z.z = (1.0 - (xx + yy)) * sz;
 
-        gpu_mesh.transformation.w.x = self.translation.x;
-        gpu_mesh.transformation.w.y = self.translation.y;
-        gpu_mesh.transformation.w.z = self.translation.z;
+        self.transformation.w.x = self.translation.x;
+        self.transformation.w.y = self.translation.y;
+        self.transformation.w.z = self.translation.z;
+        unsafe {
+            let engine2 = ENGINE.physic_engine_mut();
+            let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
+            gpu_mesh.transformation = self.transformation;
+        }
+        self.transformation_is_dirty = false;
     }
     pub unsafe fn intersect_box_aa_sphere(
         &mut self,

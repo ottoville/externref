@@ -56,7 +56,9 @@ pub unsafe extern "C" fn renderloop() {
         let iter = GPU_QUEUE.iter();
         for mesh_id in iter {
             let mesh = get_mesh_by_id_mut(*mesh_id);
-            mesh.update_matrix();
+            if mesh.transformation_is_dirty {
+                mesh.update_matrix();
+            }
         }
         handle_gpu_queue(GPU_QUEUE.as_ptr(), GPU_QUEUE.len());
     }
