@@ -94,7 +94,6 @@ export type rustWasm = {
     renderloop(): void,
 
     new_mesh(
-        positions_count: number,
         point_light: number,
         directional_light: number,
         scenes: number,

@@ -51,7 +51,7 @@ export function allocate_vec(array: Uint32Array) : rust_pointer<"usize">
 export function allocate_vec(array: Float32Array) : rust_pointer<"f32">
 export function allocate_vec(array: Uint32Array | Float32Array): rust_pointer<"usize"> | rust_pointer<"f32"> {
     if(array.buffer.byteLength === 0) {
-        throw new Error("Cannot allocate deattached buffer");
+        throw new Error("Cannot allocate deattached or empty buffer");
     }
     let ptr: rust_pointer<'usize'> | rust_pointer<"f32">
     if (array.buffer !== engine.rust.memory.buffer) {
@@ -136,13 +136,9 @@ export abstract class DataNode extends MainNode {
             frontFace = 'cw',
             character_can_collide_to = true
         }: DataNodeProps,
-        mainNodeProps: Omit<MainNodeProps, 'positionsCount'>
+        mainNodeProps: MainNodeProps
     ) {
-        super(
-            {
-                positionsCount: vertices.length / verticesPositionStride,
-                ...mainNodeProps
-            });
+        super(mainNodeProps);
         this.#frontFace = frontFace;
         this.#character_can_collide_to = character_can_collide_to;
 

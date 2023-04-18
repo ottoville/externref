@@ -27,17 +27,22 @@ pub struct Mesh {
     pub rotation: Quaternion,
     pub scaling: Vec3<f32>,
     pub geometry: Option<Geometry>,
-    pub positions_count: usize,
+    /**
+      Force only this amount of positions to be drawn.
+      If not set, use vertexbuffer length by default
+      Hox: This is NOT amount of indices
+     */
+    pub positions_count: Option<usize>,
     pub strip: bool,
     pub draw_command: Option<DrawCommand>,
     pub rigid_body_handle: Option<RigidBodyHandle>,
     collider_handle: Option<ColliderHandle>,
     pub label: String,
     velocity: [f32; 4],
-    drawable: Option<DrawCommand>}
+    drawable: Option<DrawCommand>,
+}
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh(
-    positions_count: usize,
     point_light: f32,
     directional_light: f32,
     scenes: f32,
@@ -50,7 +55,6 @@ pub unsafe extern "C" fn new_mesh(
     match cstr.to_str() {
         Ok(str) => {
             return Mesh::new(
-                positions_count,
                 point_light,
                 directional_light,
                 scenes,
@@ -195,11 +199,11 @@ pub unsafe extern "C" fn gpu_alignment(mesh_id: usize) -> u32 {
 }
 #[no_mangle]
 pub unsafe extern "C" fn positions_count(mesh_id: usize) -> usize {
-    get_mesh_by_id(mesh_id).positions_count
+    get_mesh_by_id(mesh_id).get_positions_count()
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_positions_count(mesh_id: usize, positions_count: usize) {
-    get_mesh_by_id_mut(mesh_id).positions_count = positions_count;
+    get_mesh_by_id_mut(mesh_id).positions_count = Some(positions_count);
 }
 #[no_mangle]
 pub extern "C" fn get_mesh_by_id<'frame>(mesh_id: usize) -> &'frame Mesh {
@@ -377,6 +381,17 @@ impl Mesh {
 }
 
 impl Mesh {
+    pub fn get_positions_count(&self) -> usize {
+        match self.positions_count {
+            Some(positions_count) => {
+                return positions_count;
+            },
+            None => {
+                let geometry = self.get_geometry();
+                return geometry.vertices.len() / geometry.vertices_stride;        
+            }
+        }
+    }
     pub fn get_transformation(&mut self) -> &Vec4<Vec4<f32>> {
         if self.transformation_is_dirty {
             self.update_matrix();
@@ -387,7 +402,8 @@ impl Mesh {
     pub fn create_trimesh_collider(&self) -> *mut Collider {
         let geometry = self.get_geometry();
         let iterator = geometry.vertices.chunks(geometry.vertices_stride);
-        let mut vertices: Vec<Point<Real>> = Vec::with_capacity(self.positions_count);
+        let positions_count = self.get_positions_count();
+        let mut vertices: Vec<Point<Real>> = Vec::with_capacity(positions_count);
         iterator.for_each(|i| {
             // TODO: ensure simd
             vertices.push(Point::new(
@@ -401,9 +417,9 @@ impl Mesh {
             if self.strip {
                 panic!("Unindexed Trimesh collider with triangle strip is not yet supported");
             }
-            indices = Vec::with_capacity(self.positions_count);
+            indices = Vec::with_capacity(positions_count);
             let mut pos = 0;
-            while pos < self.positions_count {
+            while pos < positions_count {
                 indices.push([pos as u32, pos as u32 + 1, pos as u32 + 2]);
                 pos = pos + 3;
             }
@@ -476,7 +492,6 @@ impl Mesh {
     }
 
     pub unsafe fn new<'a>(
-        positions_count: usize,
         point_light: f32,
         directional_light: f32,
         scenes: f32,
@@ -536,7 +551,7 @@ impl Mesh {
                 y: 1.0,
                 z: 1.0,
             },
-            positions_count,
+            positions_count: Option::None,
             strip,
             draw_command: Option::None,
             rigid_body_handle: None,

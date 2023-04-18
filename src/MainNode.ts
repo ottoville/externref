@@ -7,10 +7,6 @@ declare const engine: Engine;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 export type MainNodeProps = {
-    /**
-     * Vertices count on vertex buffer. Hox: This is NOT amount of indices
-     */
-    positionsCount?: number,
     point_light?: number,
     directional_light?: number,
     strip?: boolean,
@@ -145,21 +141,22 @@ export abstract class MainNode {
         return engine.rust.have_rigid_body(this.id);
     }
     constructor(
-        { positionsCount = 0,
+        {
             point_light = 0,
             directional_light = 0,
             strip = false,
             label,
             scenes,
             fixed = false,
-            rigid_body = true }:
+            rigid_body = true,
+        }:
             MainNodeProps
     ) {
         const sceneids = scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1;
         const string_ptr = engine.rust.alloc_string(label.length);
         textEncoder.encodeInto(label,
             new Uint8Array(engine.rust.memory.buffer, string_ptr, label.length));
-        this.id = engine.rust.new_mesh(positionsCount, point_light, directional_light, sceneids, strip, fixed, rigid_body, string_ptr);
+        this.id = engine.rust.new_mesh(point_light, directional_light, sceneids, strip, fixed, rigid_body, string_ptr);
 
         MainNode.Meshes.set(this.id, this);
     }

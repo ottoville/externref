@@ -19,6 +19,11 @@ export type MappedVertexBuffers<R extends RenderPipeline> = R extends RenderPipe
 export type DrawableDirectProps = {
     instanceCount?: number;
     firstInstance?: number;
+    /**
+     * Force only this amount of positions to drawn.
+     * If not set, use vertexbuffer length by default
+     */
+    positionsCount?: number;
 }
 
 export abstract class DrawableDirect<N extends MainNode> extends Drawable<N> {

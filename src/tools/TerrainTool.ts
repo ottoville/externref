@@ -127,8 +127,8 @@ export class TerrainTool extends MainNode {
     constructor(
         public terrain: Terrain,
     ) {
-        super({ positionsCount: 4, label: 'TerrainTool' });
-
+        super({ label: 'TerrainTool' });
+        this.positions_count = 4;
         const getRenderPipeline = [
             'TerrainToolRenderpipeline', function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState,
             ) {

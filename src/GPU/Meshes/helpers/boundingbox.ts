@@ -12,7 +12,8 @@ declare const engine: Engine;
 export class BoundingBoxMesh extends MainNode {
     drawable: DrawableSimple<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
     constructor(targetNode: DrawableIndexed) {
-        super({ positionsCount: 26, label: 'BoundingBoxDebug', rigid_body: false });
+        super({ label: 'BoundingBoxDebug', rigid_body: false });
+        this.positions_count = 26;
         const vectors_simd = new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(targetNode.node.id), 3 * 4 * 2);
         const vectors = new Float32Array([
             vectors_simd[0]!, vectors_simd[4]!, vectors_simd[8]!, 0,
