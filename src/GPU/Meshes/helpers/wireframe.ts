@@ -3,6 +3,7 @@ import type { DrawableDirect } from "../../Drawables/DrawableDirect.js";
 import { NodeIndexed } from "../../../nodes/NodeIndexed.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DebugLinesPipeline } from "../../RenderPipeLines/DebugLinesPipeline.js";
+import { new_rust_mesh } from "../../../MainNode.js";
 
 export class WireFrameMesh extends NodeIndexed {
     drawable: DrawableIndexed<RenderPipeline>;
@@ -24,6 +25,10 @@ export class WireFrameMesh extends NodeIndexed {
             indices[i * 6 + 4] = targetIndices[i * 3 + 2]!
             indices[i * 6 + 5] = targetIndices[i * 3]!
         }
+        const mesh_id = new_rust_mesh({
+            label: 'WireframeDebug',
+            rigid_body: false,
+        });
         super(
             {
                 vertices: {
@@ -33,14 +38,12 @@ export class WireFrameMesh extends NodeIndexed {
                 can_collide: false,
                 character_can_collide_to: false
             },
-            {
-                label: 'WireframeDebug',
-                rigid_body: false,
-
-            }, indices);
-            this.translation = targetNode.node.translation;
-            this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
-            this.rotation = targetNode.node.rotation;    
+            mesh_id,
+            false,
+            indices);
+        this.translation = targetNode.node.translation;
+        this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
+        this.rotation = targetNode.node.rotation;
         const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline, { topology: 'line-list' });
         this.drawable = new DrawableIndexed({
             renderPipeline,

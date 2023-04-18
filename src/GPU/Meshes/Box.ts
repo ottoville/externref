@@ -1,6 +1,7 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 import type { Engine } from "../../engine.js";
+import { new_rust_mesh } from "../../MainNode.js";
 declare const engine: Engine;
 
 let uid = 0;
@@ -26,6 +27,12 @@ export class Box extends SimpleIndexedMesh {
                 fixed?: boolean
             }
     ) {
+        const mesh_id = new_rust_mesh({
+            label,
+            point_light,
+            scenes,
+            fixed,
+        })
         super(
             {
                 vertices: {
@@ -33,12 +40,7 @@ export class Box extends SimpleIndexedMesh {
                 },
                 can_collide,
             },
-            {
-                label,
-                point_light,
-                scenes,
-                fixed,
-            },
+            mesh_id,
             new Uint32Array(engine.rust.memory.buffer, engine.rust.get_box_indices(), 36));
         this.color = color;
     }

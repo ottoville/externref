@@ -5,7 +5,6 @@ import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { Buffer, VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
-import type { MainNodeProps } from "../../MainNode.js";
 import type { DataNodeProps } from "../../nodes/DataNode.js";
 
 declare const engine: Engine;
@@ -14,7 +13,8 @@ export class SimpleMesh extends BoundableNodeSimple {
     drawable: DrawableSimple<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
         dataNodeProps: Omit<DataNodeProps, 'vertices'> & { vertices: { view: Float32Array } },
-        mainNodeProps: Omit<MainNodeProps, "positionsCount">,
+        mesh_id: number,
+        strip = false,
         vBufferGPU?: VertexBuffer) {
         super({
             ...dataNodeProps,
@@ -22,10 +22,12 @@ export class SimpleMesh extends BoundableNodeSimple {
                 view: dataNodeProps.vertices.view,
                 stride: 8
             }
-        }, mainNodeProps);
+        },
+        mesh_id,
+        strip);
         if (engine.gpu) {
             if (!vBufferGPU) {
-                vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view.byteLength, [GPUBufferUsage.VERTEX], 'SimpleMeshVertex_' + mainNodeProps.label, b => {
+                vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view.byteLength, [GPUBufferUsage.VERTEX], 'SimpleMeshVertex_' + this.label, b => {
                     new Float32Array(b.getMappedRange()).set(dataNodeProps.vertices.view);
                 });
             }

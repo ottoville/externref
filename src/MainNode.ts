@@ -15,6 +15,23 @@ export type MainNodeProps = {
     fixed?: boolean,
     rigid_body?: boolean,
 };
+export function new_rust_mesh(
+    {
+        point_light = 0,
+        directional_light = 0,
+        strip = false,
+        label,
+        scenes,
+        fixed = false,
+        rigid_body = true,
+    }: MainNodeProps) {
+    const sceneids = scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1;
+    const string_ptr = engine.rust.alloc_string(label.length);
+    textEncoder.encodeInto(label,
+        new Uint8Array(engine.rust.memory.buffer, string_ptr, label.length));
+    return engine.rust.new_mesh(point_light, directional_light, sceneids, strip, fixed, rigid_body, string_ptr);
+
+}
 export abstract class MainNode {
     abstract drawable?: Drawable | undefined
     acceleration2: [number, number, number] = [0, 0, 0];
@@ -140,24 +157,8 @@ export abstract class MainNode {
     get have_rigid_body() {
         return engine.rust.have_rigid_body(this.id);
     }
-    constructor(
-        {
-            point_light = 0,
-            directional_light = 0,
-            strip = false,
-            label,
-            scenes,
-            fixed = false,
-            rigid_body = true,
-        }:
-            MainNodeProps
-    ) {
-        const sceneids = scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1;
-        const string_ptr = engine.rust.alloc_string(label.length);
-        textEncoder.encodeInto(label,
-            new Uint8Array(engine.rust.memory.buffer, string_ptr, label.length));
-        this.id = engine.rust.new_mesh(point_light, directional_light, sceneids, strip, fixed, rigid_body, string_ptr);
-
+    constructor(mesh_id:number) {
+        this.id = mesh_id;
         MainNode.Meshes.set(this.id, this);
     }
     destroy() {

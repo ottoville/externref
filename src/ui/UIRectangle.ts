@@ -9,6 +9,7 @@ import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
 import { DataNode } from "../nodes/DataNode.js";
+import { new_rust_mesh } from "../MainNode.js";
 declare const engine: Engine;
 
 export const enum NumericUnit {
@@ -277,6 +278,9 @@ export abstract class UIRectangle extends DataNode {
         public props: UIRectangleProps,
         texture: TextureView<Texture2D> | ImageBitmap | OffscreenCanvas) {
         props.label = props.label + '_UIRectangle';
+        const mesh_id = new_rust_mesh({
+            label: props.label
+        })
         super(
             {
                 vertices: {
@@ -285,9 +289,7 @@ export abstract class UIRectangle extends DataNode {
                 },
                 character_can_collide_to: false
             },
-            {
-                label: props.label
-            });
+            mesh_id);
         const {
             canvaspipeline,
             renderPass,

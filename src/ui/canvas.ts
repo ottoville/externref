@@ -11,7 +11,7 @@ import { Sea } from "../world/water.js";
 //import { LazyEval } from "../LazyEval.js";
 import { Sun } from "../world/sun.js";
 
-import { MainNode } from "../MainNode.js";
+import { MainNode, new_rust_mesh } from "../MainNode.js";
 import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 //import { savedCamera } from "../types/interfaces/index.js";
@@ -39,7 +39,7 @@ declare const engine: Engine;
 class Light extends MainNode {
     drawable = undefined;
     constructor(scene: Scene) {
-        super({ point_light: 0, directional_light: 1, label: 'Light', scenes: [scene] });
+        super(new_rust_mesh({ point_light: 0, directional_light: 1, label: 'Light', scenes: [scene] }));
     }
 }
 const errors: Error[] = []

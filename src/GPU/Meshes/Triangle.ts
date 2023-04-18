@@ -1,6 +1,7 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleMesh } from "../AbstractMeshes/SimpleMesh.js";
 import { Engine } from "../../engine.js";
+import { new_rust_mesh } from "MainNode.js";
 
 declare const engine: Engine;
 
@@ -26,11 +27,11 @@ export class Triangle extends SimpleMesh {
                 },
                 can_collide
             },
-            {
+            new_rust_mesh({
                 label,
                 scenes,
                 fixed: true
-            }
+            })
         )
         this.color = color;
     }

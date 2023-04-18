@@ -1,6 +1,7 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { TerraVector3, TerraVector4, Quaternion, MutableTerraVector3 } from "../../Math.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
+import { new_rust_mesh } from "../../MainNode.js";
 
 type Patch = {
     verticesForPatch: TerraVector3[];
@@ -347,6 +348,11 @@ export class OctaSphere extends SimpleIndexedMesh {
         scenes?: Scene[],
     ) {
         const [vertices, indices] = tessellate_octasphere_patch(2, width, height, depth);
+        const mesh_id = new_rust_mesh({
+            label,
+            scenes,
+            fixed
+        });
         super(
             {
                 vertices: {
@@ -355,11 +361,7 @@ export class OctaSphere extends SimpleIndexedMesh {
                 can_collide,
                 frontFace: 'ccw'
             },
-            {
-                label,
-                scenes,
-                fixed
-            },
+            mesh_id,
             indices)
     }
 }

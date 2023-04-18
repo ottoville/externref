@@ -4,6 +4,7 @@ import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
 import type { RenderPipeline } from "../../RenderPipeline.js";
 import type { DrawableDirect } from "../../Drawables/DrawableDirect.js";
 import { DataNode } from "../../../nodes/DataNode.js";
+import { new_rust_mesh } from "../../../MainNode.js";
 
 export class NormalsMesh extends DataNode {
     drawable: DrawableSimple<RenderPipeline>;
@@ -20,17 +21,18 @@ export class NormalsMesh extends DataNode {
         const vertexBuffer = Buffer.create(gpu, targetNode.node.positions_count * stride * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], 'vertex_debug_render_normals', b => {
             new Float32Array(b.getMappedRange()).set(newVertices)
         });
+        const mesh_id = new_rust_mesh({
+            label: 'NormalsDebug',
+            rigid_body: false,
+        });
         super({
             vertices: {
                 view: newVertices,
-                stride
+                stride: 8
             },
             character_can_collide_to: false,
         },
-            {
-                label: 'NormalsDebug',
-                rigid_body: false,
-            });
+            mesh_id);
 
 
         this.translation = targetNode.node.translation;

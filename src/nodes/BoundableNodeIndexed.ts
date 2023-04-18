@@ -1,5 +1,4 @@
 import { type canCollideCharacter, DataNodeProps } from "./DataNode.js";
-import type { MainNodeProps } from "../MainNode.js";
 import { NodeIndexed } from "./NodeIndexed.js";
 
 export abstract class BoundableNodeIndexed extends NodeIndexed implements canCollideCharacter {
@@ -13,12 +12,15 @@ export abstract class BoundableNodeIndexed extends NodeIndexed implements canCol
     }
     constructor(
         dataNodeProps: DataNodeProps,
-        mainNodeProps: MainNodeProps,
+        mesh_id: number,
+        strip = false,
         indicesView: Uint32Array
     ) {
         super(
             dataNodeProps,
-            mainNodeProps, indicesView);
+            mesh_id,
+            strip,
+            indicesView);
         this.rebuildTrianglePlanes();
     }
     override set_vertices(vertices: Float32Array) {

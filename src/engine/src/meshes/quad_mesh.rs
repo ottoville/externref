@@ -50,5 +50,5 @@ fn test_quad_mesh() {
     assert_eq!(indices, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 5, 9, 3, 10, 1, 11]);
 }
 pub unsafe fn create_quad_ground() -> usize {
-    Mesh::new(24, 0.0, 0.0, 0.0, false, false, false, String::from("box"))
+    Mesh::new(0.0, 0.0, 0.0, false, false, false, String::from("box"))
 }

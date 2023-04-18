@@ -1,4 +1,4 @@
-import { MainNode } from "../../../MainNode.js";
+import { MainNode, new_rust_mesh } from "../../../MainNode.js";
 import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
 import { DebugLinesPipeline } from "../../RenderPipeLines/DebugLinesPipeline.js";
 import type { Engine } from "../../../engine.js";
@@ -12,7 +12,7 @@ declare const engine: Engine;
 export class BoundingBoxMesh extends MainNode {
     drawable: DrawableSimple<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
     constructor(targetNode: DrawableIndexed) {
-        super({ label: 'BoundingBoxDebug', rigid_body: false });
+        super(new_rust_mesh({ label: 'BoundingBoxDebug', rigid_body: false }));
         this.positions_count = 26;
         const vectors_simd = new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(targetNode.node.id), 3 * 4 * 2);
         const vectors = new Float32Array([

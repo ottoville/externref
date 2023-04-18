@@ -1,6 +1,5 @@
 import { allocate_vec, DataNode, DataNodeProps } from "./DataNode.js";
 import type { Engine } from "../engine.js";
-import type { MainNodeProps } from "../MainNode.js";
 import type { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 declare const engine: Engine;
 
@@ -26,13 +25,15 @@ export abstract class NodeIndexed extends DataNode {
     }
     constructor(
         dataNodeProps: DataNodeProps,
-        mainNodeProps: MainNodeProps,
+        mesh_id: number,
+        strip = false,
         indicesView: Uint32Array
     ) {
         const { byteOffset, length } = indicesView;
         super(
             dataNodeProps,
-            mainNodeProps);
+            mesh_id,
+            strip);
         /*
             Reconstruct arraybufferView in case wasm have allocated more memory and old buffer is no longer valid.
         */

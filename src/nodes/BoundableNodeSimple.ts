@@ -1,14 +1,15 @@
-import type { MainNodeProps } from "../MainNode.js";
 import { type canCollideCharacter, DataNode, DataNodeProps } from "./DataNode.js";
 
 export abstract class BoundableNodeSimple extends DataNode implements canCollideCharacter {
     constructor(
         dataNodeProps: DataNodeProps,
-        mainNodeProps: Omit<MainNodeProps, 'positionsCount'>,
+        mesh_id: number,
+        strip = false,
     ) {
         super(
             dataNodeProps,
-            mainNodeProps);
+            mesh_id,
+            strip);
     }
     override set_vertices(vertices: Float32Array) {
         super.set_vertices(vertices);

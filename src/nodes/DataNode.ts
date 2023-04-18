@@ -1,5 +1,5 @@
 import { ObjectWorkerThread } from "../WorkerThread.js";
-import { MainNode, MainNodeProps } from "../MainNode.js";
+import { MainNode } from "../MainNode.js";
 import { MutableTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from "../Math.js";
 import type { ColliderJS } from "../Collider.js";
 import type { Engine, rust_pointer } from "../engine.js";
@@ -137,14 +137,15 @@ export abstract class DataNode extends MainNode {
             frontFace = 'cw',
             character_can_collide_to = true
         }: DataNodeProps,
-        mainNodeProps: MainNodeProps
+        mesh_id: number,
+        strip: boolean = false
     ) {
-        super(mainNodeProps);
+        super(mesh_id);
         this.#frontFace = frontFace;
         this.#character_can_collide_to = character_can_collide_to;
 
         DataNode.Meshes.set(this.id, this);
-        engine.rust.create_geometry(this.id, true, vertices.stride, static_faces, mainNodeProps.strip ?? false);
+        engine.rust.create_geometry(this.id, true, vertices.stride, static_faces, strip);
         this.set_vertices(vertices.view);
         // queueMicrotask here so mesh will have indices initialized
         if (can_collide) {

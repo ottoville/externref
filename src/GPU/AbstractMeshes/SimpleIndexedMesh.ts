@@ -6,14 +6,13 @@ import { Buffer, VertexBuffer, GPUBufferUsage, CopyDstBuffer } from "../../GPU/B
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import type { DataNodeProps } from "../../nodes/DataNode.js";
-import type { MainNodeProps } from "../../MainNode.js";
 declare const engine: Engine;
 
 export class SimpleIndexedMesh extends BoundableNodeIndexed {
     drawable: DrawableIndexed<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
         dataNodeProps: Omit<DataNodeProps, 'vertices'> & {vertices: {view: Float32Array}},
-        mainNodeProps: Omit<MainNodeProps, 'strip'>,
+        mesh_id: number,
         indicesView: Uint32Array,
         private vBufferGPU?: VertexBuffer | (CopyDstBuffer & VertexBuffer),
         topology: GPUPrimitiveTopology = "triangle-list",
@@ -26,10 +25,10 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
                 view: dataNodeProps.vertices.view,
                 stride: 8
             }
-        }, {
-            strip,
-            ...mainNodeProps,
-        }, indicesView);
+        },
+        mesh_id,
+        strip,
+        indicesView);
         const primitiveState: GPUPrimitiveState = {
             frontFace: dataNodeProps.frontFace ?? 'cw',
             topology };
@@ -38,11 +37,11 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         if (engine.gpu) {
             if (!vBufferGPU) {
                 if (!staticVertices) {
-                    vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view.byteLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], 'SimpleIndexedMeshVertex_' + mainNodeProps.label, b => {
+                    vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view.byteLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], 'SimpleIndexedMeshVertex_' + this.label, b => {
                         new Float32Array(b.getMappedRange()).set(dataNodeProps.vertices.view);
                     });
                 } else {
-                    vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view.byteLength, [GPUBufferUsage.VERTEX], 'SimpleIndexedMeshVertex_' + mainNodeProps.label, b => {
+                    vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view.byteLength, [GPUBufferUsage.VERTEX], 'SimpleIndexedMeshVertex_' + this.label, b => {
                         new Float32Array(b.getMappedRange()).set(dataNodeProps.vertices.view);
                     });
                 }

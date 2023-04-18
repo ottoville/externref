@@ -11,11 +11,16 @@ import { PlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeigh
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import { createTiledGround } from "../helpers.js";
+import { new_rust_mesh } from "../MainNode.js";
 declare const engine: Engine;
 
 class PlaneMesh extends NodeIndexed {
     drawable: DrawableIndexed<RenderPipeline<PlaneAtGroundHeightVertShader>>;
     constructor(renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>, vertexBuffer: Float32Array) {
+        const mesh_id = new_rust_mesh({
+            label: 'plane',
+            rigid_body: false,
+        });
         super(
             {
                 vertices: {
@@ -24,10 +29,8 @@ class PlaneMesh extends NodeIndexed {
                 },
                 character_can_collide_to: false
             },
-            {
-                label: 'plane',
-                rigid_body: false,
-            },
+            mesh_id,
+            false,
             new Uint32Array());
         this.drawable = new DrawableIndexed(
             {

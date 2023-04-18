@@ -1,6 +1,6 @@
 ﻿import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 import type { Engine } from "../../engine.js";
-import type { MainNodeProps } from "../../MainNode.js";
+import { MainNodeProps, new_rust_mesh } from "../../MainNode.js";
 import { MutableTerraVector3 } from "../../Math.js";
 declare const engine: Engine;
 
@@ -67,7 +67,7 @@ function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, i
     for (let i = 0; i < coneVertices.length; i = i + stride) {
         coneVertices[i + 1] = -1;
     }
-    const zeroIndice = coneVertices.push(0, 1, 0,1,  /* normals: */0, 0, 0,1) / stride - 1;
+    const zeroIndice = coneVertices.push(0, 1, 0, 1,  /* normals: */0, 0, 0, 1) / stride - 1;
 
     let indicesOrder = [0];
     const indicesOrder2: number[] = [];
@@ -95,6 +95,7 @@ export class Cone extends SimpleIndexedMesh {
         color: [number, number, number, number] = [1, 0, 0, 0]
     ) {
         const [vertices, indices] = createCone(14, 8);
+        const mesh_id = new_rust_mesh(mainNodeProps);
         super(
             {
                 vertices: {
@@ -102,7 +103,7 @@ export class Cone extends SimpleIndexedMesh {
                 },
                 can_collide,
             },
-            mainNodeProps,
+            mesh_id,
             indices,
             undefined,
             "triangle-list");

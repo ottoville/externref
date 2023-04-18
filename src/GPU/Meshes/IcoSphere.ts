@@ -2,6 +2,7 @@
 import type { Engine } from "../../engine.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 import { MutableTerraVector3 } from "../../Math.js";
+import { new_rust_mesh } from "../../MainNode.js";
 declare const engine: Engine;
 let v = 12;
 const midCache = new Map<number, number>(); // midpoint vertices cache to avoid duplicating shared vertices
@@ -25,18 +26,18 @@ const icosphere = (order = 0) => {
 
     const vertices = new Float32Array((10 * T + 2) * 4);
     vertices.set(Float32Array.of(
-        -1, f, 0,1,   //0.
-        1, f, 0,1,    //1.
-        -1, -f, 0,1,  //2.
-        1, -f, 0,1,   //3
-        0, -1, f,1,   //4.
-        0, 1, f,1,    //5.
-        0, -1, -f,1,  //6.
-        0, 1, -f,1,   //7.
-        f, 0, -1,1,   //8.
-        f, 0, 1,1,    //9.
-        -f, 0, -1,1,  //10.
-        -f, 0, 1,1)); //11.
+        -1, f, 0, 1,   //0.
+        1, f, 0, 1,    //1.
+        -1, -f, 0, 1,  //2.
+        1, -f, 0, 1,   //3
+        0, -1, f, 1,   //4.
+        0, 1, f, 1,    //5.
+        0, -1, -f, 1,  //6.
+        0, 1, -f, 1,   //7.
+        f, 0, -1, 1,   //8.
+        f, 0, 1, 1,    //9.
+        -f, 0, -1, 1,  //10.
+        -f, 0, 1, 1)); //11.
     let triangles = Uint32Array.of(
         0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11,
         11, 10, 2, 5, 11, 4, 1, 5, 9, 7, 1, 8, 10, 7, 6,
@@ -106,6 +107,11 @@ export class IcoSphere extends SimpleIndexedMesh {
             // Copy positions to normals, on sphere those are same
             verticesAndNormals.copyWithin(i * 8 + 4, i * 8, i * 8 + 4)
         }
+        const mesh_id = new_rust_mesh({
+            label,
+            scenes,
+            fixed
+        });
         super(
             {
                 vertices: {
@@ -114,11 +120,7 @@ export class IcoSphere extends SimpleIndexedMesh {
                 can_collide,
                 frontFace: 'ccw'
             },
-            {
-                label,
-                scenes,
-                fixed
-            }
-            , indices)
+            mesh_id,
+            indices)
     }
 }
