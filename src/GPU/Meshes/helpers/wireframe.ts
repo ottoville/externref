@@ -26,8 +26,10 @@ export class WireFrameMesh extends NodeIndexed {
         }
         super(
             {
-                vertices,
-                verticesPositionStride: stride,
+                vertices: {
+                    view: vertices,
+                    stride
+                },
                 can_collide: false,
                 character_can_collide_to: false
             },

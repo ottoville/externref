@@ -108,7 +108,9 @@ export class IcoSphere extends SimpleIndexedMesh {
         }
         super(
             {
-                vertices: verticesAndNormals,
+                vertices: {
+                    view: verticesAndNormals
+                },
                 can_collide,
                 frontFace: 'ccw'
             },

@@ -13,17 +13,20 @@ declare const engine: Engine;
 export class SimpleMesh extends BoundableNodeSimple {
     drawable: DrawableSimple<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
-        dataNodeProps: Omit<DataNodeProps, 'verticesPositionStride'>,
+        dataNodeProps: Omit<DataNodeProps, 'vertices'> & { vertices: { view: Float32Array } },
         mainNodeProps: Omit<MainNodeProps, "positionsCount">,
         vBufferGPU?: VertexBuffer) {
         super({
             ...dataNodeProps,
-            verticesPositionStride: 8,
+            vertices: {
+                view: dataNodeProps.vertices.view,
+                stride: 8
+            }
         }, mainNodeProps);
         if (engine.gpu) {
             if (!vBufferGPU) {
-                vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.byteLength, [GPUBufferUsage.VERTEX], 'SimpleMeshVertex_' + mainNodeProps.label, b => {
-                    new Float32Array(b.getMappedRange()).set(dataNodeProps.vertices);
+                vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view.byteLength, [GPUBufferUsage.VERTEX], 'SimpleMeshVertex_' + mainNodeProps.label, b => {
+                    new Float32Array(b.getMappedRange()).set(dataNodeProps.vertices.view);
                 });
             }
             const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline);

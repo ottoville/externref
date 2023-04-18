@@ -97,7 +97,9 @@ export class Cone extends SimpleIndexedMesh {
         const [vertices, indices] = createCone(14, 8);
         super(
             {
-                vertices,
+                vertices: {
+                    view: vertices
+                },
                 can_collide,
             },
             mainNodeProps,

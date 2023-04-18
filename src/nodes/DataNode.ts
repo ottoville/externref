@@ -35,8 +35,10 @@ export interface Ellipsoid {
 }
 
 export type DataNodeProps = {
-    vertices: Float32Array;
-    verticesPositionStride?: number;
+    vertices: {
+        view: Float32Array,
+        stride: number
+    }
     can_collide?: boolean;
     static_faces?: boolean;
     frontFace?: GPUFrontFace;
@@ -130,7 +132,6 @@ export abstract class DataNode extends MainNode {
     constructor(
         {
             vertices,
-            verticesPositionStride = 3,
             can_collide = false,
             static_faces = false,
             frontFace = 'cw',
@@ -143,8 +144,8 @@ export abstract class DataNode extends MainNode {
         this.#character_can_collide_to = character_can_collide_to;
 
         DataNode.Meshes.set(this.id, this);
-        engine.rust.create_geometry(this.id, true, verticesPositionStride, static_faces, mainNodeProps.strip ?? false);
-        this.set_vertices(vertices);
+        engine.rust.create_geometry(this.id, true, vertices.stride, static_faces, mainNodeProps.strip ?? false);
+        this.set_vertices(vertices.view);
         // queueMicrotask here so mesh will have indices initialized
         if (can_collide) {
             queueMicrotask(() => {

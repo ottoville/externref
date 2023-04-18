@@ -15,12 +15,15 @@ export class Sea extends BoundableNodeSimple {
     constructor(scenes: Scene[]) {
         super(
             {
-                vertices: new Float32Array([
-                    -50000.0, 3.0, -50000.0,
-                    50000.0, 3.0, -50000.0,
-                    -50000.0, 3.0, 50000.0,
-                    50000.0, 3.0, 50000.0
-                ]),
+                vertices: {
+                    view: Float32Array.of(
+                        -50000.0, 3.0, -50000.0,
+                        50000.0, 3.0, -50000.0,
+                        -50000.0, 3.0, 50000.0,
+                        50000.0, 3.0, 50000.0
+                    ),
+                    stride: 3
+                },
                 can_collide: false,
             },
             {

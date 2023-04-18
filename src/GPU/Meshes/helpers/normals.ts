@@ -21,8 +21,10 @@ export class NormalsMesh extends DataNode {
             new Float32Array(b.getMappedRange()).set(newVertices)
         });
         super({
-            vertices: newVertices,
-            verticesPositionStride: stride,
+            vertices: {
+                view: newVertices,
+                stride
+            },
             character_can_collide_to: false,
         },
             {

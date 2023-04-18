@@ -349,7 +349,9 @@ export class OctaSphere extends SimpleIndexedMesh {
         const [vertices, indices] = tessellate_octasphere_patch(2, width, height, depth);
         super(
             {
-                vertices,
+                vertices: {
+                    view: vertices
+                },
                 can_collide,
                 frontFace: 'ccw'
             },

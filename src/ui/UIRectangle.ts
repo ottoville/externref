@@ -279,7 +279,10 @@ export abstract class UIRectangle extends DataNode {
         props.label = props.label + '_UIRectangle';
         super(
             {
-                vertices: Float32Array.of(0,0,0,0,0,0,0,0,0),
+                vertices: {
+                    view: new Float32Array(9),
+                    stride: 3
+                },
                 character_can_collide_to: false
             },
             {

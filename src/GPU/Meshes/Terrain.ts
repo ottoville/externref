@@ -44,8 +44,10 @@ export class TerrainMesh extends BoundableNodeIndexed {
     ) {
         super(
             {
-                vertices,
-                verticesPositionStride,
+                vertices: {
+                    view: vertices,
+                    stride: verticesPositionStride
+                },
                 can_collide: true,
                 static_faces: true
 

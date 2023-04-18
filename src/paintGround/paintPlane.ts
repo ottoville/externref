@@ -18,8 +18,10 @@ class PlaneMesh extends NodeIndexed {
     constructor(renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>, vertexBuffer: Float32Array) {
         super(
             {
-                vertices: vertexBuffer,
-                verticesPositionStride: 2,
+                vertices: {
+                    view: vertexBuffer,
+                    stride: 2
+                },
                 character_can_collide_to: false
             },
             {

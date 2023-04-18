@@ -21,7 +21,9 @@ export class Triangle extends SimpleMesh {
     ) {
         super(
             {
-                vertices: positions,
+                vertices: {
+                    view: positions
+                },
                 can_collide
             },
             {
