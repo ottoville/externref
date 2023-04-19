@@ -26,11 +26,11 @@ export function new_rust_mesh(
         rigid_body = true,
     }: MainNodeProps) {
     const sceneids = scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1;
-    const string_ptr = engine.rust.alloc_string(label.length);
+    const vec_ptr = engine.rust.alloc_vector_u8(label.length);
+    const [string_ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3)
     textEncoder.encodeInto(label,
-        new Uint8Array(engine.rust.memory.buffer, string_ptr, label.length));
-    return engine.rust.new_mesh(point_light, directional_light, sceneids, strip, fixed, rigid_body, string_ptr);
-
+        new Uint8Array(engine.rust.memory.buffer, string_ptr, len));
+    return engine.rust.new_mesh(point_light, directional_light, sceneids, strip, fixed, rigid_body, string_ptr!, len!, cap!);
 }
 export abstract class MainNode {
     abstract drawable?: Drawable | undefined
@@ -157,7 +157,7 @@ export abstract class MainNode {
     get have_rigid_body() {
         return engine.rust.have_rigid_body(this.id);
     }
-    constructor(mesh_id:number) {
+    constructor(mesh_id: number) {
         this.id = mesh_id;
         MainNode.Meshes.set(this.id, this);
     }

@@ -4,6 +4,7 @@ import { NodeIndexed } from "../../../nodes/NodeIndexed.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DebugLinesPipeline } from "../../RenderPipeLines/DebugLinesPipeline.js";
 import { new_rust_mesh } from "../../../MainNode.js";
+import { allocate_vec } from "../../../nodes/DataNode.js";
 
 export class WireFrameMesh extends NodeIndexed {
     drawable: DrawableIndexed<RenderPipeline>;
@@ -32,7 +33,7 @@ export class WireFrameMesh extends NodeIndexed {
         super(
             {
                 vertices: {
-                    view: vertices,
+                    view: allocate_vec(vertices),
                     stride
                 },
                 can_collide: false,
@@ -40,7 +41,7 @@ export class WireFrameMesh extends NodeIndexed {
             },
             mesh_id,
             false,
-            indices);
+            allocate_vec(indices));
         this.translation = targetNode.node.translation;
         this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
         this.rotation = targetNode.node.rotation;

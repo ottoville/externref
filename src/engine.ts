@@ -66,7 +66,7 @@ export type rustWasm = {
     set_instance_count(mesh_id: number, instance_count: number): void,
     set_first_instance(mesh_id: number, first_instance: number): void,
 
-    create_tiled_mesh_ptr(width: number, height: number): rust_pointer<'*mut usize'>,
+    create_tiled_mesh_ptr(width: number, height:number): rust_pointer<'*const usize'>,
 
     collider(): rust_pointer<"legacy_collider">,
     intersection_point_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
@@ -100,7 +100,10 @@ export type rustWasm = {
         strip: boolean,
         fixed: boolean,
         rigid_body: boolean,
-        label: rust_pointer<"u8">): number,
+        label_ptr: number,
+        label_len: number,
+        label_cap: number
+        ): number,
     have_rigid_body(mesh_id: number): boolean,
     create_geometry(
         mesh_id: number,
@@ -111,17 +114,17 @@ export type rustWasm = {
     add_collider(mesh_id: number,
         collider: rust_pointer<"collider">): void
     memory: WebAssembly.Memory,
-    set_vertices(mesh_id: number, ptr: rust_pointer<"f32">, length: number): void,
-    set_indices(mesh_id: number, ptr: rust_pointer<"usize">, length: number): void,
-    set_indices_and_vertices(mesh_id: number, indices: rust_pointer<"usize">, indices_length: number, vertices: rust_pointer<"f32">, vertices_length: number): void,
+    set_vertices(mesh_id: number, ptr: rust_pointer<"f32">, length: number, cap: number): void,
+    set_indices(mesh_id: number, ptr: rust_pointer<"usize">, length: number, cap: number): void,
+    set_indices_and_vertices(mesh_id: number, indices: rust_pointer<"usize">, indices_length: number,indices_cap: number, vertices: rust_pointer<"f32">, vertices_length: number, vertices_cap: number): void,
     vertices_pointer(mesh_id: number): number,
     indices_field_pointer(mesh_id: number): rust_pointer<'indices_indices'>,
     last_collider_world_vertices_pointer(mesh_id: number): number,
     vertices_count(mesh_id: number): number,
     faces_count(mesh_id: number): number,
-    alloc_vector_f32(size: number): rust_pointer<"f32">,
+    alloc_vector_f32(size: number): rust_pointer<"usize">,
+    alloc_vector_u8(size: number): rust_pointer<"usize">,
     alloc_vector_usize(size: number): rust_pointer<"usize">,
-    alloc_string(size: number): rust_pointer<"u8">,
     update_scale(mesh_id: number, x: number, y: number, z: number): void,
     update_rotation(mesh_id: number, x: number, y: number, z: number, w: number): void,
     update_euler_angles(mesh_id: number, x: number, y: number, z: number): void,
@@ -144,7 +147,7 @@ export type rustWasm = {
     scale_y(mesh_id: number): number,
     scale_z(mesh_id: number): number,
     vertices_stride(mesh_id: number): number,
-    set_faces(mesh_id: number, ptr: number, length: number): void,
+    set_faces(mesh_id: number, ptr: number, length: number, cap: number): void,
     set_color(mesh_id: number, d0: number, d1: number, d2: number, d3: number): void,
     set_ambient(mesh_id: number, r: number, g: number, b: number): void
     set_shadow(mesh_id: number, shadow: number): void

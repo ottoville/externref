@@ -2,6 +2,7 @@
 import { TerraVector3, TerraVector4, Quaternion, MutableTerraVector3 } from "../../Math.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 import { new_rust_mesh } from "../../MainNode.js";
+import { allocate_vec } from "../../nodes/DataNode.js";
 
 type Patch = {
     verticesForPatch: TerraVector3[];
@@ -356,13 +357,13 @@ export class OctaSphere extends SimpleIndexedMesh {
         super(
             {
                 vertices: {
-                    view: vertices
+                    view: allocate_vec(vertices)
                 },
                 can_collide,
                 frontFace: 'ccw'
             },
             mesh_id,
-            indices)
+            allocate_vec(indices))
     }
 }
 

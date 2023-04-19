@@ -6,6 +6,7 @@ import type { Engine } from "../engine.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { WaterVertShader } from "../GPU/Shaders/Water.vert.js";
 import { new_rust_mesh } from "../MainNode.js";
+import { allocate_vec } from "../nodes/DataNode.js";
 declare const engine: Engine;
 
 export class Sea extends BoundableNodeSimple {
@@ -17,12 +18,12 @@ export class Sea extends BoundableNodeSimple {
         super(
             {
                 vertices: {
-                    view: Float32Array.of(
+                    view: allocate_vec(Float32Array.of(
                         -50000.0, 3.0, -50000.0,
                         50000.0, 3.0, -50000.0,
                         -50000.0, 3.0, 50000.0,
                         50000.0, 3.0, 50000.0
-                    ),
+                    )),
                     stride: 3
                 },
                 can_collide: false,

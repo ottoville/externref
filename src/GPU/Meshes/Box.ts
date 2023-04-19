@@ -1,6 +1,6 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
-import type { Engine } from "../../engine.js";
+import type { Engine, rust_pointer } from "../../engine.js";
 import { new_rust_mesh } from "../../MainNode.js";
 declare const engine: Engine;
 
@@ -33,15 +33,18 @@ export class Box extends SimpleIndexedMesh {
             scenes,
             fixed,
         })
+        const [ptr_vertices, len_vertices, cap_vertices] = new Uint32Array(engine.rust.memory.buffer, engine.rust.get_box_vertices(), 3)
+        const [ptr_ind, len_ind, cap_ind] = new Uint32Array(engine.rust.memory.buffer, engine.rust.get_box_indices(), 3)
+
         super(
             {
                 vertices: {
-                    view: new Float32Array(engine.rust.memory.buffer, engine.rust.get_box_vertices(), 192)
+                    view: [ptr_vertices as rust_pointer<"f32">, len_vertices!, cap_vertices!]
                 },
                 can_collide,
             },
             mesh_id,
-            new Uint32Array(engine.rust.memory.buffer, engine.rust.get_box_indices(), 36));
+            [ptr_ind as rust_pointer<"usize">, len_ind!, cap_ind!]);
         this.color = color;
     }
 }

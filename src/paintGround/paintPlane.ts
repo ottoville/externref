@@ -5,18 +5,19 @@ import type { Scene } from "../Scene.js";
 
 import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
-import type { Engine } from "../engine.js";
+import type { Engine, rust_pointer } from "../engine.js";
 import { NodeIndexed } from "../nodes/NodeIndexed.js";
 import { PlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import { createTiledGround } from "../helpers.js";
 import { new_rust_mesh } from "../MainNode.js";
+import { allocate_vec } from "../nodes/DataNode.js";
 declare const engine: Engine;
 
 class PlaneMesh extends NodeIndexed {
     drawable: DrawableIndexed<RenderPipeline<PlaneAtGroundHeightVertShader>>;
-    constructor(renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>, vertexBuffer: Float32Array) {
+    constructor(renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>, vertexBuffer: [ptr: rust_pointer<"f32">, len: number, cap: number]) {
         const mesh_id = new_rust_mesh({
             label: 'plane',
             rigid_body: false,
@@ -31,11 +32,11 @@ class PlaneMesh extends NodeIndexed {
             },
             mesh_id,
             false,
-            new Uint32Array());
+            allocate_vec(new Uint32Array()));
         this.drawable = new DrawableIndexed(
             {
                 renderPipeline,
-                vertexBuffers: [vertexBuffer],
+                vertexBuffers: [new Float32Array(engine.rust.memory.buffer, vertexBuffer[0], vertexBuffer[1])],
                 node: this,
             });
     }
@@ -82,8 +83,8 @@ export class paintPlane extends paintGround {
             }
         ], { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint32' })
 
-        this.#mesh = new PlaneMesh(renderPipeline, new Float32Array([0, 0, 0]));
-        this.#mesh.drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
+        this.#mesh = new PlaneMesh(renderPipeline, allocate_vec(Float32Array.of(0, 0, 0)));
+        this.#mesh.drawable.setVertexBuffer(0, Float32Array.of(0, 0, 0));
     }
     #startingPoint = new TerraVector2(2);
     /*public activate(callback: PTResultF) {
@@ -139,7 +140,7 @@ export class paintPlane extends paintGround {
 
         if (newValues) {
             this.#mesh.drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
-            this.#mesh.set_indices(new Uint32Array(newValues.indices));
+            this.#mesh.set_indices(allocate_vec(new Uint32Array(newValues.indices)));
         }
     }
 }

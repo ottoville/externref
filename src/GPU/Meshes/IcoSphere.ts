@@ -3,6 +3,7 @@ import type { Engine } from "../../engine.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 import { MutableTerraVector3 } from "../../Math.js";
 import { new_rust_mesh } from "../../MainNode.js";
+import { allocate_vec } from "../../nodes/DataNode.js";
 declare const engine: Engine;
 let v = 12;
 const midCache = new Map<number, number>(); // midpoint vertices cache to avoid duplicating shared vertices
@@ -115,12 +116,12 @@ export class IcoSphere extends SimpleIndexedMesh {
         super(
             {
                 vertices: {
-                    view: verticesAndNormals
+                    view: allocate_vec(verticesAndNormals)
                 },
                 can_collide,
                 frontFace: 'ccw'
             },
             mesh_id,
-            indices)
+            allocate_vec(indices))
     }
 }

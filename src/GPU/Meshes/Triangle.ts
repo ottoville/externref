@@ -1,7 +1,8 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleMesh } from "../AbstractMeshes/SimpleMesh.js";
 import { Engine } from "../../engine.js";
-import { new_rust_mesh } from "MainNode.js";
+import { new_rust_mesh } from "../../MainNode.js";
+import { allocate_vec } from "../../nodes/DataNode.js";
 
 declare const engine: Engine;
 
@@ -23,7 +24,7 @@ export class Triangle extends SimpleMesh {
         super(
             {
                 vertices: {
-                    view: positions
+                    view: allocate_vec(positions)
                 },
                 can_collide
             },

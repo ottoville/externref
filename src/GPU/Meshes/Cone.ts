@@ -2,6 +2,7 @@
 import type { Engine } from "../../engine.js";
 import { MainNodeProps, new_rust_mesh } from "../../MainNode.js";
 import { MutableTerraVector3 } from "../../Math.js";
+import { allocate_vec } from "../../nodes/DataNode.js";
 declare const engine: Engine;
 
 const douplePI = Math.PI * 2;
@@ -99,12 +100,12 @@ export class Cone extends SimpleIndexedMesh {
         super(
             {
                 vertices: {
-                    view: vertices
+                    view: allocate_vec(vertices)
                 },
                 can_collide,
             },
             mesh_id,
-            indices,
+            allocate_vec(indices),
             undefined,
             "triangle-list");
         this.color = color;

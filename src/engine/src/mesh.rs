@@ -28,10 +28,10 @@ pub struct Mesh {
     pub scaling: Vec3<f32>,
     pub geometry: Option<Geometry>,
     /**
-      Force only this amount of positions to be drawn.
-      If not set, use vertexbuffer length by default
-      Hox: This is NOT amount of indices
-     */
+     Force only this amount of positions to be drawn.
+     If not set, use vertexbuffer length by default
+     Hox: This is NOT amount of indices
+    */
     pub positions_count: Option<usize>,
     pub strip: bool,
     pub draw_command: Option<DrawCommand>,
@@ -49,25 +49,20 @@ pub unsafe extern "C" fn new_mesh(
     strip: bool,
     fixed: bool,
     rigid_body: bool,
-    label: *mut std::os::raw::c_char,
+    label_ptr: *mut u8,
+    label_len: usize,
+    label_cap: usize
 ) -> usize {
-    let cstr = std::ffi::CString::from_raw(label);
-    match cstr.to_str() {
-        Ok(str) => {
-            return Mesh::new(
-                point_light,
-                directional_light,
-                scenes,
-                strip,
-                fixed,
-                rigid_body,
-                str.to_string(),
-            );
-        }
-        Err(error) => {
-            panic!("{}", &error.to_string());
-        }
-    }
+    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
+    return Mesh::new(
+        point_light,
+        directional_light,
+        scenes,
+        strip,
+        fixed,
+        rigid_body,
+        label,
+    );
 }
 #[no_mangle]
 pub unsafe extern "C" fn create_geometry(
@@ -83,33 +78,6 @@ pub unsafe extern "C" fn create_geometry(
 pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *const Collider) {
     let coll = std::ptr::read(collider);
     get_mesh_by_id_mut(mesh_id).add_collider(coll, ENGINE.physic_engine_mut());
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_vertices(mesh_id: usize, ptr: *mut f32, length: usize) {
-    let vertices = Vec::from_raw_parts(ptr, length, length);
-    get_mesh_by_id_mut(mesh_id)
-        .get_geometry_mut()
-        .set_vertices(vertices);
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_indices(mesh_id: usize, ptr: *mut usize, length: usize) {
-    let indices = Vec::from_raw_parts(ptr, length, length);
-    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
-    geometry.set_indices(indices);
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_indices_and_vertices(
-    mesh_id: usize,
-    indices_ptr: *mut usize,
-    indices_length: usize,
-    vertices_ptr: *mut f32,
-    vertices_length: usize,
-) {
-    let indices = Vec::from_raw_parts(indices_ptr, indices_length, indices_length);
-    let vertices = Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_length);
-    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
-    geometry.indices = indices;
-    geometry.set_vertices(vertices);
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_pointer(mesh_id: usize) -> *const f32 {
@@ -276,14 +244,6 @@ pub unsafe extern "C" fn vertices_stride(mesh_id: usize) -> usize {
     get_mesh_by_id(mesh_id).get_geometry().vertices_stride
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize) {
-    let planes = Vec::from_raw_parts(ptr, length / 4, length / 4);
-    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
-    geometry.collider_planes = Vec::with_capacity(planes.len());
-    geometry.collider_planes_parallel = Vec::with_capacity(planes.len());
-    geometry.faces.planes = planes;
-}
-#[no_mangle]
 pub unsafe extern "C" fn set_color(
     mesh_id: usize,
     data_0: f32,
@@ -385,10 +345,10 @@ impl Mesh {
         match self.positions_count {
             Some(positions_count) => {
                 return positions_count;
-            },
+            }
             None => {
                 let geometry = self.get_geometry();
-                return geometry.vertices.len() / geometry.vertices_stride;        
+                return geometry.vertices.len() / geometry.vertices_stride;
             }
         }
     }

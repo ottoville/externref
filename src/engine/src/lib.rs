@@ -7,8 +7,8 @@ mod engine;
 mod geometry;
 mod math2;
 mod mesh;
-mod terrain;
 mod meshes;
+mod terrain;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
@@ -17,27 +17,40 @@ pub use crate::terrain::elevator::Elevator;
 use math2::Vec4;
 use rapier3d::prelude::*;
 
+static mut MULTIVALUE_USIZE: [usize; 6] = [0; 6];
+
 #[no_mangle]
-pub extern "C" fn alloc_vector_f32(size: usize) -> *mut f32 {
-    let mut buf = std::mem::ManuallyDrop::new(vec![0.0; size]);
-    buf.as_mut_ptr()
+pub unsafe extern "C" fn alloc_vector_f32(size: usize) -> *const usize {
+    let mut vec: Vec<f32> = Vec::with_capacity(size);
+    vec.set_len(size);    
+    let mut buf = std::mem::ManuallyDrop::new(vec);
+    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
+    MULTIVALUE_USIZE[1] = buf.len();
+    MULTIVALUE_USIZE[2] = buf.capacity();
+    return MULTIVALUE_USIZE.as_ptr();
 }
 #[no_mangle]
-pub extern "C" fn alloc_vector_usize(size: usize) -> *mut usize {
-    let mut buf = std::mem::ManuallyDrop::new(vec![0; size]);
-    buf.as_mut_ptr()
+pub unsafe extern "C" fn alloc_vector_usize(size: usize) -> *const usize {
+    let mut vec: Vec<usize> = Vec::with_capacity(size);
+    vec.set_len(size);    
+    let mut buf = std::mem::ManuallyDrop::new(vec);
+    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
+    MULTIVALUE_USIZE[1] = buf.len();
+    MULTIVALUE_USIZE[2] = buf.capacity();
+    return MULTIVALUE_USIZE.as_ptr();
 }
 #[no_mangle]
-pub extern "C" fn alloc_string(size: usize) -> *const std::os::raw::c_char {
-    let str = format!("{:0>l$}", "\0", l = size + 1);
-    let vec = str.as_bytes().to_vec();
-    match std::ffi::CString::from_vec_with_nul(vec) {
-        Ok(s) => s.into_raw(),
-        Err(e) => {
-            panic!("{}", e.to_string())
-        }
-    }
+pub unsafe extern "C" fn alloc_vector_u8(size: usize) -> *const usize {
+    let mut vec: Vec<u8> = Vec::with_capacity(size);
+    vec.set_len(size);
+    let mut buf = std::mem::ManuallyDrop::new(vec);
+
+    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
+    MULTIVALUE_USIZE[1] = buf.len();
+    MULTIVALUE_USIZE[2] = buf.capacity();
+    return MULTIVALUE_USIZE.as_ptr();
 }
+
 #[no_mangle]
 pub extern "C" fn create_ball_collider(radius: f32) -> *mut Collider {
     let collider = Box::new(ColliderBuilder::ball(radius).restitution(0.0).build());
@@ -72,12 +85,10 @@ pub extern "C" fn create_cuboid_collider(
     border_radius: f32,
     collision_events: bool,
 ) -> *mut Collider {
-
     let mut colliderbuilder = if border_radius > 0.0 {
         ColliderBuilder::round_cuboid(hx, hy, hz, border_radius).restitution(0.0)
     } else {
         ColliderBuilder::cuboid(hx, hy, hz).restitution(0.0)
-
     };
     if collision_events {
         colliderbuilder = colliderbuilder.active_events(ActiveEvents::COLLISION_EVENTS);
@@ -100,7 +111,7 @@ pub struct GPUMesh {
     ambient: [f32; 3],               //12
     shadow: f32,
     spotlight: [f32; 4],      //28
-    _id: usize,                 //29
+    _id: usize,               //29
     point_light_squared: f32, //30
     directional_light: f32,   //31
     scenes: u32,              //bitmask           //48
@@ -129,7 +140,12 @@ impl GPUMesh {
             }
         }
     }
-    pub fn set_directional_light(&mut self, engine: &'static mut Engine, range: f32, gpu_alignment: u32) {
+    pub fn set_directional_light(
+        &mut self,
+        engine: &'static mut Engine,
+        range: f32,
+        gpu_alignment: u32,
+    ) {
         let old_value = self.directional_light;
         if range > 0.0 {
             self.directional_light = range;

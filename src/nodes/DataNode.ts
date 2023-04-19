@@ -36,7 +36,7 @@ export interface Ellipsoid {
 
 export type DataNodeProps = {
     vertices: {
-        view: Float32Array,
+        view: [ptr: rust_pointer<"f32">, len: number, cap: number],
         stride: number
     }
     can_collide?: boolean;
@@ -49,26 +49,27 @@ export type DataNodeProps = {
     so it is always small enought for gravity to hit on next tick.
 */
 
-export function allocate_vec(array: Uint32Array) : rust_pointer<"usize">
-export function allocate_vec(array: Float32Array) : rust_pointer<"f32">
-export function allocate_vec(array: Uint32Array | Float32Array): rust_pointer<"usize"> | rust_pointer<"f32"> {
+export function allocate_vec(array: Uint32Array) : [ptr: rust_pointer<"usize">, len: number, cap: number]
+export function allocate_vec(array: Float32Array) : [ptr: rust_pointer<"f32">, len: number, cap: number]
+export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_pointer<"usize"> | rust_pointer<"f32">, len: number, cap: number] {
     if(array.buffer.byteLength === 0) {
         throw new Error("Cannot allocate deattached or empty buffer");
     }
-    let ptr: rust_pointer<'usize'> | rust_pointer<"f32">
-    if (array.buffer !== engine.rust.memory.buffer) {
-        if(array instanceof Float32Array) {
-            ptr = engine.rust.alloc_vector_f32(array.length);
-            new Float32Array(engine.rust.memory.buffer, ptr, array.length).set(array);
-        }
-        else {
-            ptr = engine.rust.alloc_vector_usize(array.length);
-            new Uint32Array(engine.rust.memory.buffer, ptr, array.length).set(array);
-        }
-    } else {
-        ptr = array.byteOffset as rust_pointer<'usize'> | rust_pointer<"f32">;
+    if (array.buffer === engine.rust.memory.buffer) {
+        throw new Error("Source buffer is already in rust");
     }
-    return ptr;
+    if(array instanceof Float32Array) {
+        const vec_ptr = engine.rust.alloc_vector_f32(array.length);
+        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3)
+        new Float32Array(engine.rust.memory.buffer, ptr, len).set(array);
+        return [ptr as rust_pointer<"f32">, len!, cap!];
+    }
+    else {
+        const vec_ptr = engine.rust.alloc_vector_usize(array.length);
+        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3)
+        new Uint32Array(engine.rust.memory.buffer, ptr, len).set(array);
+        return [ptr as rust_pointer<"usize">, len!, cap!];
+    }
 }
 
 export const closeDistance = 0.0022
@@ -108,16 +109,17 @@ export abstract class DataNode extends MainNode {
         return engine.rust.faces_count(this.id);
     }
     set faces(faces: Float32Array) {
-        const ptr = engine.rust.alloc_vector_f32(faces.length);
-        new Float32Array(engine.rust.memory.buffer, ptr, faces.length).set(faces);
-        engine.rust.set_faces(this.id, ptr, faces.length);
+        const vec_ptr = engine.rust.alloc_vector_f32(faces.length);
+        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3)
+
+        new Float32Array(engine.rust.memory.buffer, ptr, len).set(faces);
+        engine.rust.set_faces(this.id, ptr!, len!, cap!);
     }
     get vertices_stride(): number {
         return engine.rust.vertices_stride(this.id);
     }
-    set_vertices(vertices: Float32Array) {
-        const ptr = allocate_vec(vertices);
-        engine.rust.set_vertices(this.id, ptr, vertices.length);
+    set_vertices(vec: [ptr: rust_pointer<"f32">, len: number, cap: number]) {
+        engine.rust.set_vertices(this.id, ...vec);
     }
     get last_collider_world_vertices_pointer() {
         return engine.rust.last_collider_world_vertices_pointer(this.id);

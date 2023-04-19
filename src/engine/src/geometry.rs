@@ -1,6 +1,43 @@
 pub use crate::boundingbox::BoundingBox;
-use crate::math2::{Vec4, Vec3F32};
+use crate::{math2::{Vec4}, mesh::get_mesh_by_id_mut};
 
+#[no_mangle]
+pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize, cap: usize) {
+    let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);
+    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
+    geometry.collider_planes = Vec::with_capacity(planes.len());
+    geometry.collider_planes_parallel = Vec::with_capacity(planes.len());
+    geometry.faces.planes = planes;
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_indices(mesh_id: usize, ptr: *mut usize, length: usize, cap: usize) {
+    let indices = Vec::from_raw_parts(ptr, length, cap);
+    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
+    geometry.set_indices(indices);
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_vertices(mesh_id: usize, ptr: *mut f32, length: usize, cap: usize) {
+    let vertices = Vec::from_raw_parts(ptr, length, cap);
+    get_mesh_by_id_mut(mesh_id)
+        .get_geometry_mut()
+        .set_vertices(vertices);
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_indices_and_vertices(
+    mesh_id: usize,
+    indices_ptr: *mut usize,
+    indices_length: usize,
+    indices_cap: usize,
+    vertices_ptr: *mut f32,
+    vertices_length: usize,
+    vertices_cap: usize,
+) {
+    let indices = Vec::from_raw_parts(indices_ptr, indices_length, indices_cap);
+    let vertices = Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_cap);
+    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
+    geometry.indices = indices;
+    geometry.set_vertices(vertices);
+}
 pub struct ColliderPlane {
     _plane: Plane,
     _vectors: [f32; 3],

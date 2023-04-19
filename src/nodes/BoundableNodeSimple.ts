@@ -1,3 +1,4 @@
+import type { rust_pointer } from "../engine.js";
 import { type canCollideCharacter, DataNode, DataNodeProps } from "./DataNode.js";
 
 export abstract class BoundableNodeSimple extends DataNode implements canCollideCharacter {
@@ -11,8 +12,8 @@ export abstract class BoundableNodeSimple extends DataNode implements canCollide
             mesh_id,
             strip);
     }
-    override set_vertices(vertices: Float32Array) {
-        super.set_vertices(vertices);
+    override set_vertices(vec: [ptr: rust_pointer<"f32">, len: number, cap: number]) {
+        super.set_vertices(vec);
         this.rebuildTrianglePlanes();
     }
     rebuildTrianglePlanes() {

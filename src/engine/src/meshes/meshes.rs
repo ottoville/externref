@@ -1,3 +1,5 @@
+use crate::MULTIVALUE_USIZE;
+
 pub const box_positions : [f32; 192] =
     [
         // Left face        //normals
@@ -44,12 +46,19 @@ pub const box_indices : [usize; 36] =
         20, 21, 22, 20, 22, 23,   // left
     ];
 #[no_mangle]
-pub extern "C" fn get_box_vertices() -> *mut f32 {
+pub unsafe extern "C" fn get_box_vertices() -> *const usize {
     let mut buf = std::mem::ManuallyDrop::new(box_positions.to_vec());
-    buf.as_mut_ptr()
+    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
+    MULTIVALUE_USIZE[1] = buf.len();
+    MULTIVALUE_USIZE[2] = buf.capacity();
+    return MULTIVALUE_USIZE.as_ptr();
+
 }
 #[no_mangle]
-pub extern "C" fn get_box_indices() -> *mut usize {
+pub unsafe extern "C" fn get_box_indices() -> *const usize {
     let mut buf = std::mem::ManuallyDrop::new(box_indices.to_vec());
-    buf.as_mut_ptr()
+    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
+    MULTIVALUE_USIZE[1] = buf.len();
+    MULTIVALUE_USIZE[2] = buf.capacity();
+    return MULTIVALUE_USIZE.as_ptr();
 }

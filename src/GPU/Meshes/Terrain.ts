@@ -39,8 +39,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
         public initialTexture: TextureView,
         public vBuffer: VertexBuffer,
         public iBuffer: IndexBuffer,
-        vertices: Float32Array,
-        indicesView: Uint32Array,
+        vertices: [ptr: rust_pointer<"f32">, len: number, cap: number],
+        indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number],
         verticesPositionStride = 3
     ) {
         const mesh_id = new_rust_mesh({

@@ -3,7 +3,7 @@ import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
 import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
 import type { RenderPipeline } from "../../RenderPipeline.js";
 import type { DrawableDirect } from "../../Drawables/DrawableDirect.js";
-import { DataNode } from "../../../nodes/DataNode.js";
+import { DataNode, allocate_vec } from "../../../nodes/DataNode.js";
 import { new_rust_mesh } from "../../../MainNode.js";
 
 export class NormalsMesh extends DataNode {
@@ -27,7 +27,7 @@ export class NormalsMesh extends DataNode {
         });
         super({
             vertices: {
-                view: newVertices,
+                view: allocate_vec(newVertices),
                 stride: 8
             },
             character_can_collide_to: false,

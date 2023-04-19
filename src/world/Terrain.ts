@@ -16,6 +16,7 @@ import type { GPU } from '../GPU.js'
 import { CreateTerrainTexture } from "../GPU/Shaders/CreateTerrainTexture.comp.js";
 import { BindablePipelineLayout } from "../GPU/PipelineLayout.js";
 import { IntArray, MeshUniforms, PlaneArray, Slopes } from "../GPU/Shaders/structs/Structs.js";
+import { allocate_vec } from "../nodes/DataNode.js";
 declare const engine: Engine;
 
 
@@ -195,7 +196,6 @@ TODO
                 shaders.calculateNormals.createComputePipeline('main'),
                 shaders.createTexture.createComputePipeline('main')
             ]);
-
             const terrain = new Terrain(
                 gpu,
                 scenes,
@@ -350,7 +350,7 @@ TODO
         passEncoder.dispatchWorkgroups(Terrain.#subdivisions[0] + 1, Terrain.#subdivisions[1] + 1);
         const textureView = new TextureView(this.texture);
 
-        this.mesh = new TerrainMesh(scenes, textureView, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, new Float32Array(positionsCount * 12), new Uint32Array(this.#terrainIndicesLength / 4), 12);
+        this.mesh = new TerrainMesh(scenes, textureView, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, allocate_vec(new Float32Array(positionsCount * 12)), allocate_vec(new Uint32Array(this.#terrainIndicesLength / 4)), 12);
 
         this.#ready = caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {
             const textureSizeBytes = Int32Array.BYTES_PER_ELEMENT * (Terrain.#textureSize.width * Terrain.#textureSize.height);
