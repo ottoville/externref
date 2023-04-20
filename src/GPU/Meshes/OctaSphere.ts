@@ -9,29 +9,10 @@ type Patch = {
     patchPointsA: number[];
     patchPointsB: number[];
     patchPointsC: number[];
-    quat: {
-        euler: number[];
-        quaternion: Quaternion | null;
-    };
 };
 
 const HALF_PI = Math.PI * 0.5;
 // Clone patch
-const pathchesQuats = ([
-    { euler: [0, 1, 0], quaternion: null }, //d
-    { euler: [0, 2, 0], quaternion: null }, //d //w
-    { euler: [0, 3, 0], quaternion: null }, //w
-    { euler: [1, 0, 0], quaternion: null },
-    { euler: [1, 1, 0], quaternion: null }, //d
-    { euler: [1, 2, 0], quaternion: null }, //d //w
-    { euler: [1, 3, 0], quaternion: null } //w
-] as unknown as {
-    euler: number[];
-    quaternion: Quaternion | null;
-}[]);
-pathchesQuats.forEach(patch =>
-    patch.quaternion = Quaternion.FromRotationYawPitchRoll(patch.euler[1]! * HALF_PI, patch.euler[0]! * HALF_PI, patch.euler[2]! * HALF_PI)
-);
 const tmpVector = new MutableTerraVector3();
 const tmpQuaternion = new TerraVector4() as Quaternion;
 
@@ -73,40 +54,6 @@ function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, ha
     const pointsA: number[] = new Array(n);
     const pointsB: number[] = new Array(n);
     const pointsC: number[] = new Array(n);
-
-    const cornerPointsWidthDepth: number[] = new Array(8);
-    const cornerPointsWidthHeight: number[] = new Array(8);
-    const cornerPointsDepthHeight: number[] = new Array(8);
-    for (let i = 0; i < 4; i++) {
-        cornerPointsWidthDepth[i] = i * num_faces_per_patch + (num_faces_per_patch - 1)
-    }
-
-    cornerPointsWidthHeight[0] = 5 * num_faces_per_patch + n - 1;
-    cornerPointsWidthHeight[1] = 2 * num_faces_per_patch;
-    cornerPointsWidthHeight[2] = 1 * num_faces_per_patch + n - 1;
-    cornerPointsWidthHeight[3] = 6 * num_faces_per_patch + (num_faces_per_patch - 1);
-
-    cornerPointsWidthHeight[4] = 7 * num_faces_per_patch + n - 1;
-    cornerPointsWidthHeight[5] = 0 * num_faces_per_patch;
-    cornerPointsWidthHeight[6] = 3 * num_faces_per_patch + n - 1;
-    cornerPointsWidthHeight[7] = 4 * num_faces_per_patch + (num_faces_per_patch - 1);
-
-    cornerPointsDepthHeight[0] = 0 * num_faces_per_patch + n - 1;
-    cornerPointsDepthHeight[1] = 1 * num_faces_per_patch;
-    cornerPointsDepthHeight[2] = 4 * num_faces_per_patch + n - 1;
-    cornerPointsDepthHeight[3] = 5 * num_faces_per_patch + (num_faces_per_patch - 1);
-
-    cornerPointsDepthHeight[4] = 6 * num_faces_per_patch + n - 1;
-    cornerPointsDepthHeight[5] = 7 * num_faces_per_patch + (num_faces_per_patch - 1);
-    cornerPointsDepthHeight[6] = 2 * num_faces_per_patch + n - 1;
-    cornerPointsDepthHeight[7] = 3 * num_faces_per_patch;
-
-
-    for (let i = 4; i < 8; i++) {
-        cornerPointsWidthDepth[i] = i * num_faces_per_patch
-    }
-
-
 
     for (let i = 0; i < n; i++) {
         const theta = (HALF_PI * i) / (n - 1);
@@ -172,23 +119,34 @@ function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, ha
         patchPointsA: pointsA,
         patchPointsB: pointsB,
         patchPointsC: pointsC,
-        quat: {
-            euler: [0, 0, 0],
-            quaternion: null
-        }
     }
     for (let j = 0; j < num_faces_per_patch; j++) {
         firstPatch.verticesForPatch[j] = verts[j]!;
     }
-    const patches = pathchesQuats.map((quat, i) => {
+    const patches = [firstPatch, , , , , , , ,] as unknown as [Patch, Patch, Patch, Patch, Patch, Patch, Patch, Patch];
+    for (let i = 0; i < 7; i++) {
         const patchPointsA: number[] = new Array(n);
         const patchPointsB: number[] = new Array(n);
         const patchPointsC: number[] = new Array(n);
         const verticesForPatch: TerraVector3[] = new Array(num_faces_per_patch);
         let indexOf: number;
         for (let j = 0; j < num_faces_per_patch; j++) {
-            const vertice = verts[j]!.applyRotationQuaternionToRef(quat.quaternion!, verts[vert_index++]!);
-            verticesForPatch[j] = vertice;
+            if (i === 0) {
+                verts[vert_index++]!.set([verts[j]![2], verts[j]![1], -verts[j]![0]]);
+            } else if (i === 1) {
+                verts[vert_index++]!.set([-verts[j]![0], verts[j]![1], -verts[j]![2]]);
+            } else if (i === 2) {
+                verts[vert_index++]!.set([-verts[j]![2], verts[j]![1], verts[j]![0]]);
+            } else if (i === 3) {
+                verts[vert_index++]!.set([verts[j]![0], -verts[j]![2], verts[j]![1]]);
+            } else if (i === 4) {
+                verts[vert_index++]!.set([verts[j]![1], -verts[j]![2], -verts[j]![0]]);
+            } else if (i === 5) {
+                verts[vert_index++]!.set([-verts[j]![0], -verts[j]![2], -verts[j]![1]]);
+            } else if (i === 6) {
+                verts[vert_index++]!.set([-verts[j]![1], -verts[j]![2], verts[j]![0]]);
+            }
+            verticesForPatch[j] = verts[vert_index - 1]!;
             indexOf = pointsA.indexOf(j)
             if (indexOf !== -1) {
                 patchPointsA[indexOf] = vert_index - 1;
@@ -207,10 +165,8 @@ function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, ha
             indices[indices_count++] = indices[j * 3 + 1]! + (i + 1) * num_faces_per_patch;
             indices[indices_count++] = indices[j * 3 + 2]! + (i + 1) * num_faces_per_patch;
         }
-        return { verticesForPatch, patchPointsA, patchPointsB, patchPointsC, quat } as Patch;
-    });
-    patches.unshift(firstPatch)
-
+        patches[i + 1] = { verticesForPatch, patchPointsA, patchPointsB, patchPointsC };
+    };
     //Copy positions to normals;
     for (let i = 0; i < verticesAndNormals.length; i = i + verticesStride) {
         verticesAndNormals.copyWithin(i + 4, i, i + 4);
@@ -227,50 +183,146 @@ function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, ha
             vertex[axel] += half;
         })
     }
-    let idx: 0 | 1
-    const ConstructDepthAndWidth = (
-        tuples: readonly [readonly [Patch, Patch], readonly [Patch, Patch], readonly [Patch, Patch], readonly [Patch, Patch]]) => {
-        tuples.forEach((tuple, i) => {
-            moveTuple(tuple, 0, halfWidth);
-            idx = i % 2 as 0 | 1;
-            const leftPatch = tuple[idx ? 0 : 1];
-            indices_count = drawConnection(i < 2 ? leftPatch.patchPointsB : leftPatch.patchPointsC, indices, indices_count, tuple[idx].patchPointsA)
-        });
-    }
+    let pointsLeft: number[] = []
+    let pointsRight: number[] = []
+
     if (halfWidth > 0) {
         const widthTuples = [
-            [patches[2]!, patches[1]!],
-            [patches[3]!, patches[0]!],
             [patches[6]!, patches[5]!],
-            [patches[7]!, patches[4]!]
+            [patches[7]!, patches[4]!],
+            [patches[3]!, patches[0]!],
+            [patches[2]!, patches[1]!],
         ] as const;
-        ConstructDepthAndWidth(widthTuples);
+
+        widthTuples.forEach(tuple => {
+            moveTuple(tuple, 0, halfWidth);
+        });
+
+        let tuple = widthTuples[0];
+        pointsLeft.push(...tuple[0].patchPointsA.slice().reverse());
+        pointsRight.push(...tuple[1].patchPointsC.slice().reverse());
+        const firstPoints = [pointsLeft[0]!, pointsRight[0]!] as const
+
+        if (halfDepth === 0) {
+            /*
+                BOTTOM
+                Do not draw side when its area size is 0.
+                Draw what is in buffer and reset it.
+            */
+            indices_count = drawConnection(pointsLeft, indices, indices_count, pointsRight);
+        }
+
+        tuple = widthTuples[1];
+        pointsLeft.push(...tuple[0].patchPointsC);
+        pointsRight.push(...tuple[1].patchPointsA);
+        if (halfHeight === 0) {
+            /*
+                SIDE 1
+            */
+            indices_count = drawConnection(pointsLeft, indices, indices_count, pointsRight);
+        }
+
+        tuple = widthTuples[2];
+        pointsLeft.push(...tuple[0].patchPointsB);
+        pointsRight.push(...tuple[1].patchPointsA);
+        if (halfDepth === 0) {
+            /*
+                TOP
+                Do not draw side when its area size is 0.
+                Draw what is in buffer and reset it.
+            */
+            indices_count = drawConnection(pointsLeft, indices, indices_count, pointsRight);
+        }
+        tuple = widthTuples[3];
+        pointsLeft.push(...tuple[0].patchPointsA.slice().reverse());
+        pointsRight.push(...tuple[1].patchPointsB.slice().reverse());
+
+        if (halfHeight > 0) {
+            /*
+                SIDE 2
+            */
+            pointsLeft.push(firstPoints[0])
+            pointsRight.push(firstPoints[1])
+        }
+
+        indices_count = drawConnection(pointsLeft, indices, indices_count, pointsRight);
     }
     if (halfDepth > 0) {
         const depthTuples = [
-            [patches[1]!, patches[0]!],
-            [patches[2]!, patches[3]!],
             [patches[5]!, patches[4]!],
-            [patches[6]!, patches[7]!]
+            [patches[6]!, patches[7]!],
+            [patches[2]!, patches[3]!], 
+            [patches[1]!, patches[0]!], 
+
         ] as const;
-        ConstructDepthAndWidth(depthTuples);
+
+        depthTuples.forEach(tuple => {
+            moveTuple(tuple, 2, halfDepth);
+        });
+
+        let tuple = depthTuples[0];
+        pointsLeft.push(...tuple[0].patchPointsA.slice().reverse());
+        pointsRight.push(...tuple[1].patchPointsC.slice().reverse());
+
+        const firstPoints = [pointsLeft[0]!, pointsRight[0]!] as const
+
+        /*
+            BOTTOM has already been draw with width-draw
+            Flush the buffer.
+        */
+        indices_count = drawConnection(pointsLeft, indices, indices_count, pointsRight);
+
+        tuple = depthTuples[1];
+        pointsLeft.push(...tuple[0].patchPointsC);
+        pointsRight.push(...tuple[1].patchPointsA);
+
+        if (halfHeight === 0) {
+            /*
+            SIDE 3
+                Do not draw side when its area size is 0.
+                Draw what is in buffer and reset it.
+            */
+            indices_count = drawConnection(pointsLeft, indices, indices_count, pointsRight);
+        }
+
+        tuple = depthTuples[2];
+        pointsLeft.push(...tuple[0].patchPointsB);
+        pointsRight.push(...tuple[1].patchPointsA);
+        /*
+            TOP has already been draw with width-draw
+            Flush the buffer.
+        */
+        indices_count = drawConnection(pointsLeft, indices, indices_count, pointsRight);
+
+        tuple = depthTuples[3];
+        pointsLeft.push(...tuple[0].patchPointsA.slice().reverse());
+        pointsRight.push(...tuple[1].patchPointsB.slice().reverse());
+        if (halfHeight > 0) {
+            /*
+                SIDE 4
+                auringon puoleinen
+                Do not draw side when its area size is 0.
+                Close the circle
+            */
+            pointsLeft.push(firstPoints[0])
+            pointsRight.push(firstPoints[1])
+        }
+        indices_count = drawConnection(pointsLeft, indices, indices_count, pointsRight);
     }
     if (halfHeight > 0) {
         const heightTuples = [
-            [patches[4]!, patches[0]!],
-            [patches[5]!, patches[1]!],
+            [patches[7]!, patches[3]!],
             [patches[6]!, patches[2]!],
-            [patches[7]!, patches[3]!]
+            [patches[5]!, patches[1]!],
+            [patches[4]!, patches[0]!],
         ] as const;
-
-        heightTuples.forEach((tuple, i) => {
+        heightTuples.forEach(tuple => {
             moveTuple(tuple, 1, halfHeight);
-            idx = i % 2 as 0 | 1;
-            const [leftPoints, rightPoints] = idx ? [tuple[0].patchPointsB, tuple[1].patchPointsC] : [tuple[1].patchPointsC, tuple[0].patchPointsB]
-            indices_count = drawConnection(leftPoints, indices, indices_count, rightPoints, true);
-        })
+            pointsLeft.push(...tuple[0].patchPointsB);
+            pointsRight.push(...tuple[1].patchPointsC.slice().reverse());
+            indices_count = drawConnection(pointsLeft, indices, indices_count, pointsRight);
+        });
     }
-
     // Normalize coordinates
     if (halfWidth > 0 || halfHeight > 0 || halfDepth > 0) {
         const max = 1 + Math.max(halfWidth, halfHeight, halfDepth);
@@ -283,69 +335,30 @@ function tessellate_octasphere_patch(num_subdivisions: number, halfWidth = 0, ha
         }
     }
 
-    if (halfWidth > 0 && halfDepth > 0) {
-        indices[indices_count++] = cornerPointsWidthDepth[0]!;
-        indices[indices_count++] = cornerPointsWidthDepth[1]!;
-        indices[indices_count++] = cornerPointsWidthDepth[2]!;
-
-        indices[indices_count++] = cornerPointsWidthDepth[0]!;
-        indices[indices_count++] = cornerPointsWidthDepth[2]!;
-        indices[indices_count++] = cornerPointsWidthDepth[3]!;
-
-        indices[indices_count++] = cornerPointsWidthDepth[6]!;
-        indices[indices_count++] = cornerPointsWidthDepth[5]!;
-        indices[indices_count++] = cornerPointsWidthDepth[4]!;
-
-        indices[indices_count++] = cornerPointsWidthDepth[7]!;
-        indices[indices_count++] = cornerPointsWidthDepth[6]!;
-        indices[indices_count++] = cornerPointsWidthDepth[4]!;
-    }
-    if (halfWidth > 0 && halfHeight > 0) {
-        indices[indices_count++] = cornerPointsWidthHeight[0]!;
-        indices[indices_count++] = cornerPointsWidthHeight[1]!;
-        indices[indices_count++] = cornerPointsWidthHeight[2]!;
-
-        indices[indices_count++] = cornerPointsWidthHeight[3]!;
-        indices[indices_count++] = cornerPointsWidthHeight[1]!;
-        indices[indices_count++] = cornerPointsWidthHeight[0]!;
-
-        indices[indices_count++] = cornerPointsWidthHeight[7]!;
-        indices[indices_count++] = cornerPointsWidthHeight[5]!;
-        indices[indices_count++] = cornerPointsWidthHeight[6]!;
-
-        indices[indices_count++] = cornerPointsWidthHeight[4]!;
-        indices[indices_count++] = cornerPointsWidthHeight[7]!;
-        indices[indices_count++] = cornerPointsWidthHeight[6]!;
-    }
-    if (halfDepth > 0 && halfHeight > 0) {
-        indices[indices_count++] = cornerPointsDepthHeight[2]!;
-        indices[indices_count++] = cornerPointsDepthHeight[1]!;
-        indices[indices_count++] = cornerPointsDepthHeight[0]!;
-
-        indices[indices_count++] = cornerPointsDepthHeight[1]!;
-        indices[indices_count++] = cornerPointsDepthHeight[2]!;
-        indices[indices_count++] = cornerPointsDepthHeight[3]!;
-
-        indices[indices_count++] = cornerPointsDepthHeight[4]!;
-        indices[indices_count++] = cornerPointsDepthHeight[5]!;
-        indices[indices_count++] = cornerPointsDepthHeight[6]!;
-
-        indices[indices_count++] = cornerPointsDepthHeight[5]!;
-        indices[indices_count++] = cornerPointsDepthHeight[7]!;
-        indices[indices_count++] = cornerPointsDepthHeight[6]!;
-    }
     return [verticesAndNormals, indices] as const;
+}
+
+export type OctaSphereProps = {
+    width?: number,
+    height?: number,
+    depth?: number
 }
 
 let uid = 0;
 export class OctaSphere extends SimpleIndexedMesh {
+    protected width: number;
+    protected height: number;
+    protected depth: number;
+
     constructor(
+        {
+            width = 0,
+            height = 0,
+            depth = 0
+        }: OctaSphereProps,
         label = 'OctaSphere' + (uid++),
         can_collide = false,
         fixed = false,
-        protected width = 0,
-        protected height = 0,
-        protected depth = 0,
         scenes?: Scene[],
     ) {
         const [vertices, indices] = tessellate_octasphere_patch(2, width, height, depth);
@@ -364,21 +377,27 @@ export class OctaSphere extends SimpleIndexedMesh {
             },
             mesh_id,
             allocate_vec(indices))
+
+        this.width = width;
+        this.height = height;
+        this.depth = depth;
+
     }
 }
 
-function drawConnection(neighbor: number[], indices: Uint32Array, indices_count: number, myPoints: number[], reverse = false) {
+function drawConnection(neighbor: number[], indices: Uint32Array, indices_count: number, myPoints: number[]) {
     neighbor.forEach((point, index) => {
         if (index === neighbor.length - 1)
             return;
-        const idx = reverse ? (myPoints.length - 1) - index : index
         indices[indices_count++] = point;
-        indices[indices_count++] = myPoints[idx]!
+        indices[indices_count++] = myPoints[index]!
         indices[indices_count++] = neighbor[index + 1]!;
 
         indices[indices_count++] = neighbor[index + 1]!;
-        indices[indices_count++] = myPoints[idx]!
-        indices[indices_count++] = myPoints[idx + (reverse ? -1 : 1)]!
+        indices[indices_count++] = myPoints[index]!
+        indices[indices_count++] = myPoints[index + 1]!
     });
+    neighbor.length = 0;
+    myPoints.length = 0;
     return indices_count;
 }
