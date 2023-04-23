@@ -13,7 +13,10 @@ pub unsafe extern "C" fn create_octasphere(
     half_depth: f32,
 ) -> *const usize {
     let n = (2u32).pow(num_subdivisions + 1) as usize;
-    let num_faces_per_patch = if num_subdivisions == 1 { // (n * ((n + 1.0) / 2.0))
+    // (n * ((n + 1.0) / 2.0))
+    let num_faces_per_patch = if num_subdivisions == 0 {
+        3
+    } else if num_subdivisions == 1 {
         10
     } else if num_subdivisions == 2 {
         36
@@ -306,7 +309,7 @@ pub unsafe extern "C" fn create_octasphere(
         patches[5].patch_points_c.reverse();
         patches[2].patch_points_a.reverse();
         patches[1].patch_points_b.reverse();
-        let points =  [
+        let points = [
             [&patches[6].patch_points_a, &patches[5].patch_points_c],
             [&patches[7].patch_points_c, &patches[4].patch_points_a],
             [&patches[3].patch_points_b, &patches[0].patch_points_a],
@@ -318,24 +321,34 @@ pub unsafe extern "C" fn create_octasphere(
 
             points_left.extend(point_tuple[0]);
             points_right.extend(point_tuple[1]);
-            let dimension = if i % 2 == 1 {half_height } else { half_depth};
+            let dimension = if i % 2 == 1 { half_height } else { half_depth };
             if i < 3 && dimension == 0.0 {
                 /*
                     BOTTOM/SIDE1/TOP
                     Do not draw side when its area size is 0.
                     Draw what is in buffer and reset it.
                 */
-                indices_count = draw_connection(&mut points_left, &mut indices, indices_count, &mut points_right);
-            }   
+                indices_count = draw_connection(
+                    &mut points_left,
+                    &mut indices,
+                    indices_count,
+                    &mut points_right,
+                );
+            }
         }
-                /*
+        /*
             SIDE2, Draw last side if area is greater than zero, close the circle
         */
         if half_height > 0.0 {
             points_left.push(first_points[0]);
-            points_right.push(first_points[1]);     
+            points_right.push(first_points[1]);
         }
-        indices_count = draw_connection(&mut points_left, &mut indices, indices_count, &mut points_right);
+        indices_count = draw_connection(
+            &mut points_left,
+            &mut indices,
+            indices_count,
+            &mut points_right,
+        );
     }
     if half_depth > 0.0 {
         patches[5].patch_points_a.reverse();
