@@ -68,6 +68,8 @@ export type rustWasm = {
 
     create_tiled_mesh_ptr(width: number, height:number): rust_pointer<'*const usize'>,
 
+    create_octasphere(num_subdivisions: number, half_width: number, half_height: number, half_depth: number): rust_pointer<'*const usize'>
+
     collider(): rust_pointer<"legacy_collider">,
     intersection_point_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     collision_resolved_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
