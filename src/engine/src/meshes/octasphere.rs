@@ -21,7 +21,7 @@ pub unsafe extern "C" fn create_octasphere(
         146
     } else if num_subdivisions == 4 {
         528
-    } else if num_subdivisions == 4 {
+    } else if num_subdivisions == 5 {
         2080
     } else {
         panic!("Too many subdivisions")
