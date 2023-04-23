@@ -8,7 +8,6 @@ pub struct Vec3<T> {
     pub z: T,
 }
 #[repr(C, align(16))]
-#[derive(Copy, Clone)]
 pub struct Vec3F32 {
     pub x: f32,
     pub y: f32,
@@ -33,6 +32,70 @@ impl Vec3<f32> {
     }
 }
 impl Vec3F32 {
+    pub fn clone(&self) -> Vec3F32 {
+        Vec3F32 {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+        }
+    }
+    pub fn add(&mut self, x: f32, y: f32, z: f32) {
+        self.x += x;
+        self.y += y;
+        self.z += z;
+    }
+    pub fn dot(&self, other: &Vec3F32) -> f32 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
+    pub fn cross(&self, other: &Vec3F32) -> Vec3F32 {
+        //TODO utilize simd
+        Vec3F32 {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
+        }
+    }
+    pub fn normalize(&mut self) {
+        let len_sqrt = self.x * self.x + self.y * self.y + self.z * self.z;
+
+        if len_sqrt == 0.0 || len_sqrt == 1.0 {
+            return;
+        }
+        let scale = 1.0 / len_sqrt.sqrt();
+        self.x *= scale;
+        self.y *= scale;
+        self.z *= scale;
+    }
+    pub fn to_quaternion(&self, angle: f32) -> Quaternion {
+        // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
+        // assumes axis is normalized
+
+        let halfAngle = angle * 0.5;
+        let s = halfAngle.sin();
+        Quaternion {
+            i: self.x * s,
+            j: self.y * s,
+            k: self.z * s,
+            w: halfAngle.cos(),
+        }
+    }
+    pub fn apply_rotation_quaternion_to_ref(&self, q: Quaternion, result: &mut Vec3F32) {
+        let q0 = q.i;
+        let q1 = q.j;
+        let q2 = q.k;
+        let q3 = q.w;
+        let t0 = self.x;
+        let t1 = self.y;
+        let t2 = self.z;
+        let ix = q3 * t0 + q1 * t2 - q2 * t1;
+        let iy = q3 * t1 + q2 * t0 - q0 * t2;
+        let iz = q3 * t2 + q0 * t1 - q1 * t0;
+        let iw = -q0 * t0 - q1 * t1 - q2 * t2;
+
+        result.x = ix * q3 + iw * -q0 + iy * -q2 - iz * -q1;
+        result.y = iy * q3 + iw * -q1 + iz * -q0 - ix * -q2;
+        result.z = iz * q3 + iw * -q2 + ix * -q1 - iy * -q0;
+    }
     pub fn transform_to_ref(&self, m: &Vec4<Vec4<f32>>, other: &mut Vec3F32) {
         let rx = self.x * m.x.x + self.y * m.y.x + self.z * m.z.x + m.w.x;
         let ry = self.x * m.x.y + self.y * m.y.y + self.z * m.z.y + m.w.y;

@@ -1,4 +1,4 @@
-import { OctaSphere } from "./OctaSphere.js";
+import { OctaSphere, type OctaSphereProps } from "./OctaSphere.js";
 import type { Scene } from "../../Scene.js";
 import type { Engine } from "../../engine.js";
 declare const engine: Engine;
@@ -6,28 +6,33 @@ declare const engine: Engine;
 let uid = 0;
 
 export class RoundCuboid extends OctaSphere {
-
     constructor(
-        { label = 'RoundCuboid' + (uid++),
-            can_collide = false,
-            fixed = false,
+        {
             width = 0,
             height = 0,
-            depth = 0,
+            depth = 0
+        }: OctaSphereProps,
+        {
+            label = 'RoundCuboid' + (uid++),
+            can_collide = false,
+            fixed = false,
             borderRadius = 1,
             scenes
         }: {
             label?: string,
             can_collide?: boolean,
             fixed?: boolean,
-            width?: number,
-            height?: number,
-            depth?: number,
             borderRadius?: number,
             scenes?: Scene[]
         }
     ) {
-        super(label, can_collide, fixed, width / borderRadius, height / borderRadius, depth / borderRadius, scenes)
+        super(
+            {
+                width: width / borderRadius,
+                height: height / borderRadius,
+                depth: depth / borderRadius
+            },
+            label, can_collide, fixed, scenes)
     }
     override create_collider() {
         const max = Math.max(this.width, this.height, this.depth) * 0.5 + 1;

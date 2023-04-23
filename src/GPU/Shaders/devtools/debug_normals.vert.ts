@@ -49,7 +49,7 @@ fn main(
             ${world.prop('transformation')}[2].xyz
         );
         var transformed_normal = normalize(matt * normal);
-        vertexPosition = vertexPosition + vec4<f32>(transformed_normal*20.0, 0.0);
+        vertexPosition = vertexPosition + vec4<f32>(transformed_normal*10.0, 0.0);
     }
     output.Position = ${scene.prop('modelViewProjection')} * vertexPosition;
     output.color=vec3<f32>(0.0,1.0,0.0);

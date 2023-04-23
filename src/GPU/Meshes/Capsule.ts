@@ -18,19 +18,25 @@ export class Capsule extends OctaSphere {
         length: number,
         scenes?: Scene[],
     ) {
-        super(label, can_collide, fixed, orientation === CAPSULE_ORIENTATION.x ? length : 0, orientation === CAPSULE_ORIENTATION.y ? length : 0, orientation === CAPSULE_ORIENTATION.z ? length : 0, scenes)
+        super(
+            {
+                width: orientation === CAPSULE_ORIENTATION.x ? length : 0,
+                height: orientation === CAPSULE_ORIENTATION.y ? length : 0,
+                depth: orientation === CAPSULE_ORIENTATION.z ? length : 0
+            },
+            label, can_collide, fixed, scenes)
     }
     override create_collider() {
         if (this.height > 0 && this.width === 0 && this.depth === 0) {
-            const radius = this.scale_x/(this.height+1);
+            const radius = this.scale_x / (this.height + 1);
             return engine.rust.create_capsule_collider(this.scale_y - radius, radius, 0, false);
         }
         else if (this.height === 0 && this.width > 0 && this.depth === 0) {
-            const radius = this.scale_x/(this.width+1);
+            const radius = this.scale_x / (this.width + 1);
             return engine.rust.create_capsule_collider(this.scale_y - radius, radius, 1, false);
         }
         else {
-            const radius = this.scale_x/(this.depth+1);
+            const radius = this.scale_x / (this.depth + 1);
             return engine.rust.create_capsule_collider(this.scale_y - radius, radius, 2, false);
         }
     }
