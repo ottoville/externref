@@ -45,6 +45,14 @@ export class WireFrameMesh extends NodeIndexed {
         this.translation = targetNode.node.translation;
         this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
         this.rotation = targetNode.node.rotation;
+
+        //TODO: Share same transformation matrix instead of updating it from other
+        targetNode.node.onMeshChange.add(() => {
+            this.translation = targetNode.node.translation;
+            this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
+            this.rotation = targetNode.node.rotation;    
+        })
+
         const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline, { topology: 'line-list' });
         this.drawable = new DrawableIndexed({
             renderPipeline,
