@@ -97,8 +97,16 @@ export abstract class MainNode {
     /**
      * Update rotation using euler angler
      */
-    update_euler_angles(rad_x: number, rad_y: number, rad_z: number) {
-        engine.rust.update_euler_angles(this.id, rad_x, rad_y, rad_z);
+    set euler_angles(values: [rad_x: number, rad_y: number, rad_z: number]) {
+        engine.rust.update_euler_angles(this.id, ...values);
+    }
+    /**
+     * Get rotation using euler angler
+     */
+    //@ts-expect-error Should be allowed on next TS version
+    get euler_angles() : ReadOnlyTerraVector3 {
+        const ptr = engine.rust.rotation_pointer_euler(this.id)
+        return new ReadOnlyTerraVector3(engine.rust.memory.buffer, ptr);
     }
     set_scenes(id: number) {
         engine.rust.set_scenes(this.id, id);
@@ -140,6 +148,9 @@ export abstract class MainNode {
     set translation(value: [number, number, number] | ReadOnlyTerraVector3) {
         engine.rust.update_translation(this.id, value[0], value[1], value[2]);
     }
+    get scale(): ReadOnlyTerraVector3 {
+        return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.scale_pointer(this.id));
+    }
     // TODO force per ms?
     apply_impulse(value: [number, number, number] | TerraVector3) {
         engine.rust.apply_impulse(this.id, value[0], value[1], value[2]);
@@ -163,5 +174,6 @@ export abstract class MainNode {
     }
     destroy() {
         MainNode.Meshes.delete(this.id);
+        this.drawable?.destroy();
     }
 }

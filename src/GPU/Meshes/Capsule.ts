@@ -1,5 +1,4 @@
-import { OctaSphere } from "./OctaSphere.js";
-import type { Scene } from "../../Scene.js";
+import { MeshProperties, OctaSphere } from "./OctaSphere.js";
 import type { Engine } from "../../engine.js";
 declare const engine: Engine;
 
@@ -11,12 +10,10 @@ export const enum CAPSULE_ORIENTATION {
 }
 export class Capsule extends OctaSphere {
     constructor(
-        label = 'Capsule' + (uid++),
         can_collide = false,
-        fixed = false,
         orientation: CAPSULE_ORIENTATION,
         length: number,
-        scenes?: Scene[],
+        meshProperties: MeshProperties
     ) {
         super(
             {
@@ -24,7 +21,12 @@ export class Capsule extends OctaSphere {
                 height: orientation === CAPSULE_ORIENTATION.y ? length : 0,
                 depth: orientation === CAPSULE_ORIENTATION.z ? length : 0
             },
-            label, can_collide, fixed, scenes)
+            {
+                label: 'Capsule' + (uid++),
+                fixed: false,
+                ...meshProperties
+            },
+            can_collide)
     }
     override create_collider() {
         if (this.height > 0 && this.width === 0 && this.depth === 0) {

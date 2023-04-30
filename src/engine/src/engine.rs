@@ -3,7 +3,7 @@ use std::panic;
 
 pub use crate::mesh::Mesh;
 pub use crate::GPUMesh;
-use rapier3d::{prelude::*};
+use rapier3d::prelude::*;
 
 #[link(wasm_import_module = "console")]
 #[cfg(target_arch = "wasm32")]
@@ -48,7 +48,7 @@ static mut GPU_QUEUE: Vec<usize> = vec![];
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 pub unsafe extern "C" fn renderloop() {
-    use crate::mesh::{get_mesh_by_id_mut};
+    use crate::{mesh::get_mesh_by_id_mut};
 
     let engine2 = ENGINE.physic_engine_mut();
     if engine2.gpu_queue2.len() > 0 {
@@ -214,12 +214,8 @@ pub unsafe extern "C" fn physic_tick() {
                 m.rotation.j = newrot.y;
                 m.rotation.k = newrot.z;
                 m.rotation.w = newrot.w;
-                m.update_matrix();
                 let pos = rigid_body.position();
                 m.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
-                /*if m.label == "human" {
-                    jslog_string(vec!["altitude".to_string(), pos.translation.y.to_string()]);
-                }*/
             }
             None => js_log(vec!["Mesh not found for rigid body".to_string()]),
         }
@@ -236,7 +232,7 @@ impl Engine {
             None => panic!("Engine not initialized"),
         }
     }
-    pub fn physic_engine_mut(&mut self) -> & mut Engine2 {
+    pub fn physic_engine_mut(&mut self) -> &mut Engine2 {
         match &mut self.engine2 {
             Some(e) => {
                 return e;

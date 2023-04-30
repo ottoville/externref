@@ -143,6 +143,8 @@ export type rustWasm = {
     label_field_pointer(mesh_id: number): rust_pointer<"label_field">,
     translation_pointer(mesh_id: number): rust_pointer<"translation">,
     rotation_pointer(mesh_id: number): rust_pointer<"rotation">,
+    rotation_pointer_euler(mesh_id: number): rust_pointer<"f32">,
+    scale_pointer(mesh_id: number): rust_pointer<"scale">,
     velocity_pointer(mesh_id: number): rust_pointer<"velocity">,
     intersect_box_aa_sphere(mesh_id: number, collider_ptr: number, radius: number): boolean
     scale_x(mesh_id: number): number,

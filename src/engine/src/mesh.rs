@@ -9,12 +9,13 @@ pub use crate::engine::ENGINE;
 pub use crate::geometry::ColliderPlane;
 pub use crate::geometry::Geometry;
 pub use crate::geometry::Plane;
-use crate::math2::Quaternion;
+use crate::math::quaternion::Quaternion;
 use crate::math2::Vec3;
 use crate::math2::Vec3F32;
 use crate::math2::Vec4;
 pub use crate::terrain::elevator::Elevator;
 pub use crate::GPUMesh;
+use crate::MULTIVALUE_F32;
 use rapier3d::prelude::*;
 
 pub struct Mesh {
@@ -27,6 +28,7 @@ pub struct Mesh {
     pub rotation: Quaternion,
     pub scaling: Vec3<f32>,
     pub geometry: Option<Geometry>,
+    pub color: [f32; 4],
     /**
      Force only this amount of positions to be drawn.
      If not set, use vertexbuffer length by default
@@ -51,7 +53,7 @@ pub unsafe extern "C" fn new_mesh(
     rigid_body: bool,
     label_ptr: *mut u8,
     label_len: usize,
-    label_cap: usize
+    label_cap: usize,
 ) -> usize {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     return Mesh::new(
@@ -105,7 +107,7 @@ pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     mesh.scaling.x = x;
     mesh.scaling.y = y;
     mesh.scaling.z = z;
-    mesh.on_update();
+    mesh.on_update(true);
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_dynamic_buffer(mesh_id: usize) {
@@ -134,7 +136,7 @@ pub unsafe extern "C" fn update_euler_angles(mesh_id: usize, x: f32, y: f32, z: 
     mesh.rotation.j = (sin_yaw * cos_pitch * cos_roll) - (cos_yaw * sin_pitch * sin_roll);
     mesh.rotation.k = (cos_yaw * cos_pitch * sin_roll) - (sin_yaw * sin_pitch * cos_roll);
     mesh.rotation.w = (cos_yaw * cos_pitch * cos_roll) + (sin_yaw * sin_pitch * sin_roll);
-    mesh.on_update();
+    mesh.on_update(true);
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_rotation(mesh_id: usize, x: f32, y: f32, z: f32, w: f32) {
@@ -143,7 +145,7 @@ pub unsafe extern "C" fn update_rotation(mesh_id: usize, x: f32, y: f32, z: f32,
     mesh.rotation.j = y;
     mesh.rotation.k = z;
     mesh.rotation.w = w;
-    mesh.on_update();
+    mesh.on_update(true);
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_translation(mesh_id: usize, x: f32, y: f32, z: f32) {
@@ -207,8 +209,25 @@ pub unsafe extern "C" fn translation_pointer(mesh_id: usize) -> *const Vec3F32 {
     &get_mesh_by_id(mesh_id).translation
 }
 #[no_mangle]
-pub unsafe extern "C" fn rotation_pointer(mesh_id: usize) -> *const crate::math2::Quaternion {
+pub unsafe extern "C" fn rotation_pointer(mesh_id: usize) -> *const Quaternion {
     &(get_mesh_by_id(mesh_id).rotation)
+}
+#[no_mangle]
+pub unsafe extern "C" fn scale_pointer(mesh_id: usize) -> *const Vec3<f32> {
+    &get_mesh_by_id(mesh_id).scaling
+}
+#[no_mangle]
+pub unsafe extern "C" fn rotation_pointer_euler(mesh_id: usize) -> *const f32 {
+    let mut euler = Vec3F32 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+    get_mesh_by_id(mesh_id).rotation.to_euler_angles(&mut euler);
+    MULTIVALUE_F32[0] = euler.x;
+    MULTIVALUE_F32[1] = euler.y;
+    MULTIVALUE_F32[2] = euler.z;
+    return MULTIVALUE_F32.as_ptr();
 }
 #[no_mangle]
 pub unsafe extern "C" fn velocity_pointer(mesh_id: usize) -> *const [f32; 4] {
@@ -251,13 +270,12 @@ pub unsafe extern "C" fn set_color(
     data_2: f32,
     data_3: f32,
 ) {
-    let engine2 = ENGINE.physic_engine_mut();
-    let gpu_mesh = &mut engine2.gpu_meshes[get_mesh_by_id(mesh_id).gpu_mesh_alignment];
-
-    gpu_mesh.color[0] = data_0;
-    gpu_mesh.color[1] = data_1;
-    gpu_mesh.color[2] = data_2;
-    gpu_mesh.color[3] = data_3;
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    mesh.color[0] = data_0;
+    mesh.color[1] = data_1;
+    mesh.color[2] = data_2;
+    mesh.color[3] = data_3;
+    mesh.on_update(false);
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_ambient(
@@ -314,7 +332,7 @@ pub unsafe extern "C" fn update_scale_and_rotation(
     mesh.rotation.j = ry;
     mesh.rotation.k = rz;
     mesh.rotation.w = rw;
-    mesh.on_update();
+    mesh.on_update(true);
 }
 #[no_mangle]
 pub unsafe extern "C" fn faces_pointer(mesh_id: usize) -> *const Plane {
@@ -511,6 +529,7 @@ impl Mesh {
                 y: 1.0,
                 z: 1.0,
             },
+            color: [1.0, 0.0, 0.0, 0.0],
             positions_count: Option::None,
             strip,
             draw_command: Option::None,
@@ -614,18 +633,11 @@ impl Mesh {
             _ => {}
         }
     }
-    pub unsafe fn update_translation(&mut self, x: f32, y: f32, z: f32) {
+    pub fn update_translation(&mut self, x: f32, y: f32, z: f32) {
         self.translation.x = x;
         self.translation.y = y;
         self.translation.z = z;
-        let engine2 = ENGINE.physic_engine_mut();
-        let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
-
-        gpu_mesh.transformation.w.x = x;
-        gpu_mesh.transformation.w.y = y;
-        gpu_mesh.transformation.w.z = z;
-        self.on_update();
-        self.update_dynamic_buffer();
+        self.on_update(true);
     }
     pub unsafe fn apply_impulse(&mut self, x: f32, y: f32, z: f32) {
         let e = ENGINE.physic_engine_mut();
@@ -644,13 +656,18 @@ impl Mesh {
         let engine2 = ENGINE.physic_engine_mut();
         engine2.gpu_queue2.insert(self.id);
     }
-
-    pub fn on_update(&mut self) {
+    /**
+     * To be called when mesh property change
+     *  param physics: If change affects physics, set true when translation, rotation or scale changes.
+     */
+    pub fn on_update(&mut self, physics: bool) {
         unsafe {
             self.update_dynamic_buffer();
-            self.transformation_is_dirty = true;
+        }
+        self.transformation_is_dirty = true;
+        if physics {
             if let Some(rigid_body_handle) = self.rigid_body_handle {
-                let e = ENGINE.physic_engine_mut();
+                let e = unsafe { ENGINE.physic_engine_mut() };
                 let rigid_body = e.rigid_body_set.get_mut(rigid_body_handle);
                 match rigid_body {
                     Some(rigid_body) => {
@@ -671,26 +688,26 @@ impl Mesh {
                     None => panic!("Rigid body not found"),
                 };
             }
-        }
-        if let Some(geometry) = &mut self.geometry {
-            if geometry.bounding_box.has_bounding {
-                geometry.bounding_box.dirty = true;
+            if let Some(geometry) = &mut self.geometry {
+                if geometry.bounding_box.has_bounding {
+                    geometry.bounding_box.dirty = true;
+                }
             }
         }
     }
 
     pub fn set_scale_x(&mut self, x: f32) {
         self.scaling.x = x;
-        self.on_update();
+        self.on_update(true);
     }
     pub fn set_scale_y(&mut self, y: f32) {
         self.scaling.y = y;
-        self.on_update();
+        self.on_update(true);
     }
 
     pub fn set_scale_z(&mut self, z: f32) {
         self.scaling.z = z;
-        self.on_update();
+        self.on_update(true);
     }
     pub unsafe fn set_point_light(&mut self, engine: &'static mut Engine, range: f32) {
         let engine2 = ENGINE.physic_engine_mut();
@@ -747,6 +764,10 @@ impl Mesh {
         unsafe {
             let engine2 = ENGINE.physic_engine_mut();
             let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
+            gpu_mesh.color[0] = self.color[0];
+            gpu_mesh.color[1] = self.color[1];
+            gpu_mesh.color[2] = self.color[2];
+            gpu_mesh.color[3] = self.color[3];
             gpu_mesh.transformation = self.transformation;
         }
         self.transformation_is_dirty = false;

@@ -24,7 +24,6 @@ import { Triangle } from "../GPU/Meshes/Triangle.js";
 import { IcoSphere } from "../GPU/Meshes/IcoSphere.js";
 import { Cone } from "../GPU/Meshes/Cone.js";
 import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
-//@ts-ignore
 import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
 import { ArcRotateCamera } from "../controllers/ArcRotateCamera.js";
 import { Anchor, NumericUnit } from "./UIRectangle.js";
@@ -193,23 +192,38 @@ export class Canvas {
              slope.translation = [23, 500, 23];
          */
             const cone = new Cone({ label: 'cone' }, true);
-            cone.update_euler_angles(90, 0, 0);
+            cone.euler_angles = [90, 0, 0];
             cone.translation = [0, 900, -70];
             cone.update_scale(50, 50, 50)
             cone.radius = 50;
             cone.color = [1, 0, 0, 0];
 
 
-            const sphere2 = new Capsule('blueball1', true, false, CAPSULE_ORIENTATION.y, 3);
-            sphere2.translation = [60, 900, -70];
-            sphere2.radius = 50;
-            sphere2.color = [0, 0, 1, 0];
+            const capsule = new Capsule(true, CAPSULE_ORIENTATION.x, 3, {
+                label: 'capsule1',
+            });
+            capsule.translation = [60, 900, -70];
+            capsule.radius = 30;
+            capsule.color = [0, 0, 1, 0];
+            const capsule2 = new Capsule(true, CAPSULE_ORIENTATION.y, 3, {
+                label: 'capsule2',
+            });
+            capsule2.translation = [100, 900, -70];
+            capsule2.radius = 30;
+            capsule2.color = [0, 0, 1, 0];
 
-            /* const sphere3 = new Capsule('blueball2',true,false,CAPSULE_ORIENTATION.x,3);
-             sphere3.translation = [-60, 900, -70];
-             sphere3.radius = 50;
-             sphere3.color=[1,0,1,0];
-     */
+            const capsule3 = new Capsule(true, CAPSULE_ORIENTATION.z, 3, {
+                label: 'capsule3',
+            });
+            capsule3.translation = [140, 900, -70];
+            capsule3.radius = 30;
+            capsule3.color = [0, 0, 1, 0];
+
+
+            const roundCuboid = new RoundCuboid({ width: 40, height: 40, depth: 80 }, { borderRadius:10 }, {label: 'roundCuboid', fixed: true });
+            roundCuboid.translation = [200, 900, -70];
+            roundCuboid.color = [0, 0, 1, 0];
+
             const sphere4 = new IcoSphere({ label: 'blueball3', can_collide: true, fixed: false, order: 1 });
             sphere4.translation = [-100, 900, -70];
             sphere4.update_scale(30);
@@ -261,35 +275,21 @@ export class Canvas {
             }, gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view);
             this.setProgress(45);
 
-
-            const webSocket = new WebSocket('ws://localhost:8081');
+            const webSocket = new WebSocket('wss://localhost:8081/echo');
             webSocket.onopen = () => {
                 console.log('websocket onopen');
-                // progelem.value = 30;
-                try {
-
-                    webSocket.send(JSON.stringify({ action: 'init', data: { /* userinfo: state.userInfo, ticks */ } }));
-                    webSocket.onmessage = (e) => {
-                        const msg = JSON.parse(e.data);
-                        if (msg.action == 'init') {
-                            console.debug('going to init game', msg.currentPlayData)
-
-                        }
+                webSocket.send(JSON.stringify({ action: 'init', data: { /* userinfo: state.userInfo, ticks */ } }));
+                webSocket.onmessage = (e) => {
+                    console.log('message from WS', e)
+                    const msg = JSON.parse(e.data);
+                    if (msg.action == 'init') {
+                        console.debug('going to init game', msg.currentPlayData)
                     }
-                    //sceneInitedred();
-                } catch (e) {
-                    // sceneInitedrej(e);
                 }
+
             }
             webSocket.onerror = () => {
-                console.log('websocket onerror');
-                try {
-                    console.debug('initing without websocket connection');
-
-                    // sceneInitedred();
-                } catch (e) {
-                    // sceneInitedrej(e);
-                }
+                console.error('websocket onerror');
             }
         }).catch(e => {
             errors.push(e)

@@ -9,6 +9,7 @@ mod math2;
 mod mesh;
 mod meshes;
 mod terrain;
+mod math;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
@@ -18,6 +19,7 @@ use math2::Vec4;
 use rapier3d::prelude::*;
 
 static mut MULTIVALUE_USIZE: [usize; 6] = [0; 6];
+static mut MULTIVALUE_F32: [f32; 6] = [0.0; 6];
 
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_f32(size: usize) -> *const usize {

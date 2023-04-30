@@ -262,6 +262,9 @@ export class ReadOnlyTerraVector3 extends TerraVector3 {
 }
 
 export class MutableTerraVector3 extends TerraVector3 {
+    static override of(x: number, y: number, z: number) {
+        return super.of(x, y, z) as MutableTerraVector3;
+    }
     //Nominal typing
     readonly mutable = 1;
     declare 0: number
@@ -323,37 +326,6 @@ export class Quaternion extends TerraVector4 {
             cosYaw * cosPitch * sinRoll - sinYaw * sinPitch * cosRoll,
             cosYaw * cosPitch * cosRoll + sinYaw * sinPitch * sinRoll
         );
-    }
-    toEulerAngles() {
-        const result = new MutableTerraVector3();
-        const qz = this[2];
-        const qx = this[0];
-        const qy = this[1];
-        const qw = this[3];
-
-        const zAxisY = qy * qz - qx * qw;
-        const limit = 0.4999999;
-
-        if (zAxisY < -limit) {
-            result[1] = 2 * Math.atan2(qy, qw);
-            result[0] = Math.PI / 2;
-            result[2] = 0;
-
-        } else if (zAxisY > limit) {
-            result[1] = 2 * Math.atan2(qy, qw);
-            result[0] = -Math.PI / 2;
-            result[2] = 0;
-
-        } else {
-            const sqw = qw * qw;
-            const sqz = qz * qz;
-            const sqx = qx * qx;
-            const sqy = qy * qy;
-            result[2] = Math.atan2(2.0 * (qx * qy + qz * qw), -sqz - sqx + sqy + sqw);
-            result[0] = Math.asin(-2.0 * zAxisY);
-            result[1] = Math.atan2(2.0 * (qz * qx + qy * qw), sqz - sqx - sqy + sqw);
-        }
-        return result;
     }
 }
 /**

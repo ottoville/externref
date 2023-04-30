@@ -39,6 +39,9 @@ export type DataNodeProps = {
         view: [ptr: rust_pointer<"f32">, len: number, cap: number],
         stride: number
     }
+    /**
+     * Setting true will create collider in rapier
+     */
     can_collide?: boolean;
     static_faces?: boolean;
     frontFace?: GPUFrontFace;

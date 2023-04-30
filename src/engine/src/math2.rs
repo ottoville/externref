@@ -1,6 +1,8 @@
 #[cfg(target_arch = "wasm32")]
 use std::arch::wasm32::*;
 
+use crate::math::quaternion::Quaternion;
+
 #[derive(Copy, Clone)]
 pub struct Vec3<T> {
     pub x: T,
@@ -8,6 +10,14 @@ pub struct Vec3<T> {
     pub z: T,
 }
 #[repr(C, align(16))]
+pub struct PositionAndNormalAndColor {
+    pub position: Vec3F32,
+    pub normal: Vec3F32,
+    pub color: Vec3F32
+}
+#[repr(C, align(16))]
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Vec3F32 {
     pub x: f32,
     pub y: f32,
@@ -207,19 +217,19 @@ impl Vec4<f32> {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn min(&self, other: &Vec4<f32>) -> Vec4<f32> {
         Vec4 {
-            x:self.x.min(other.x),
-            y:self.y.min(other.y),
-            z:self.z.min(other.z),
-            w:self.w.min(other.w)
+            x: self.x.min(other.x),
+            y: self.y.min(other.y),
+            z: self.z.min(other.z),
+            w: self.w.min(other.w),
         }
     }
     #[cfg(not(target_arch = "wasm32"))]
     pub fn max(&self, other: &Vec4<f32>) -> Vec4<f32> {
         Vec4 {
-            x:self.x.max(other.x),
-            y:self.y.max(other.y),
-            z:self.z.max(other.z),
-            w:self.w.max(other.w)
+            x: self.x.max(other.x),
+            y: self.y.max(other.y),
+            z: self.z.max(other.z),
+            w: self.w.max(other.w),
         }
     }
     #[cfg(target_arch = "wasm32")]
@@ -227,7 +237,7 @@ impl Vec4<f32> {
         unsafe {
             let v0 = v128_load(self as *const Vec4<f32> as *const v128);
             let v1 = v128_load(other as *const Vec4<f32> as *const v128);
-            let res= f32x4_pmin(v0, v1);
+            let res = f32x4_pmin(v0, v1);
             return std::mem::transmute::<v128, Vec4<f32>>(res);
         }
     }
@@ -236,55 +246,9 @@ impl Vec4<f32> {
         unsafe {
             let v0 = v128_load(self as *const Vec4<f32> as *const v128);
             let v1 = v128_load(other as *const Vec4<f32> as *const v128);
-            let res= f32x4_pmax(v0, v1);
+            let res = f32x4_pmax(v0, v1);
             return std::mem::transmute::<v128, Vec4<f32>>(res);
         }
     }
 }
 
-
-pub struct Quaternion {
-    pub i: f32,
-    pub j: f32,
-    pub k: f32,
-    pub w: f32,
-}
-impl Quaternion {
-    pub fn to_matrix(&self) -> Vec4<Vec4<f32>> {
-        let ii = self.i * self.i;
-        let jj = self.j * self.j;
-        let kk = self.k * self.k;
-        let ij = self.i * self.j;
-        let kw = self.k * self.w;
-        let ki = self.k * self.i;
-        let jw = self.j * self.w;
-        let jk = self.j * self.k;
-        let iw = self.i * self.w;
-        let mut result:Vec4<Vec4<f32>>=Vec4 {
-            x: Vec4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
-            y: Vec4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
-            z: Vec4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
-            w: Vec4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 }
-        };
-        result.x.x = 1.0 - 2.0 * (jj + kk);
-        result.x.y = 2.0 * (ij + kw);
-        result.x.z = 2.0 * (ki - jw);
-        result.x.w = 0.0;
-
-        result.y.x = 2.0 * (ij - kw);
-        result.y.y = 1.0 - 2.0 * (kk + ii);
-        result.y.z = 2.0 * (jk + iw);
-        result.y.w = 0.0;
-
-        result.z.x = 2.0 * (ki + jw);
-        result.z.y = 2.0 * (jk - iw);
-        result.z.z = 1.0 - 2.0 * (jj + ii);
-        result.z.w = 0.0;
-
-        result.w.x = 0.0;
-        result.w.y = 0.0;
-        result.w.z = 0.0;
-        result.w.w = 1.0;
-        return result;
-    }
-}

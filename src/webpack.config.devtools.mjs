@@ -33,6 +33,7 @@ export default {
         '../../GPU/Meshes/helpers/normals.js': '../../GPU/Meshes/helpers/normals.js',
         '../../GPU/Meshes/helpers/boundingbox.js': '../../GPU/Meshes/helpers/boundingbox.js',
         '../../GPU/Drawables/DrawableIndexed.js': '../../GPU/Drawables/DrawableIndexed.js',
-        '../../nodes/NodeIndexed.js': '../../nodes/NodeIndexed.js'
+        '../../nodes/NodeIndexed.js': '../../nodes/NodeIndexed.js',
+        '../../Math.js': '../../Math.js'
     },
 };
