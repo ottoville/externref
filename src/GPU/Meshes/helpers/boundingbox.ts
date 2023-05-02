@@ -1,4 +1,4 @@
-import { MainNode, new_rust_mesh } from "../../../MainNode.js";
+import { new_rust_mesh } from "../../../MainNode.js";
 import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
 import { DebugLinesPipeline } from "../../RenderPipeLines/DebugLinesPipeline.js";
 import type { Engine } from "../../../engine.js";
@@ -6,14 +6,13 @@ import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
 import type { RenderPipeline } from "../../RenderPipeline.js";
 import type { DebugBoundingBoxVertShader } from "../../Shaders/devtools/debug_boundingbox.vert.js";
+import { DataNode, allocate_vec } from "../../../nodes/DataNode.js";
 declare const engine: Engine;
 
 
-export class BoundingBoxMesh extends MainNode {
+export class BoundingBoxMesh extends DataNode {
     drawable: DrawableSimple<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
     constructor(targetNode: DrawableIndexed) {
-        super(new_rust_mesh({ label: 'BoundingBoxDebug', rigid_body: false }));
-        this.positions_count = 26;
         const vectors_simd = new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(targetNode.node.id), 3 * 4 * 2);
         const vectors = new Float32Array([
             vectors_simd[0]!, vectors_simd[4]!, vectors_simd[8]!, 0,
@@ -28,29 +27,43 @@ export class BoundingBoxMesh extends MainNode {
         ]);
         const positions_amount = 26;
         const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
+        const vertices = new Float32Array(positions_amount * 4);
+        vertices.set(vectors);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 4 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 8 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 6 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 9 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 1 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 10 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 5 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 11 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 2 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 12 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 0 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 13 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 3 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 14 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 15 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 0 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 16 * 4);
+
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 6 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 17 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 2 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 18 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 4 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 19 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 0 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 20 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 21 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 1 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 22 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 3 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 23 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 5 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 24 * 4);
+        vertices.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 25 * 4);
+
         const debug_render_boundingbox_vertexBuffer = Buffer.create(gpu, positions_amount * 4 * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], 'vertex_debug_bounding_box', b => {
             const view = new Float32Array(b.getMappedRange());
-            view.set(vectors);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 4 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 8 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 6 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 9 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 1 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 10 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 5 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 11 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 2 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 12 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 0 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 13 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 3 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 14 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 15 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 0 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 16 * 4);
+            view.set(vertices);
+                    });
+        super(
+            {
+                vertices: {
+                    view: allocate_vec(vertices),
+                    stride: 4
+                }
+            },
+            new_rust_mesh({ label: 'BoundingBox_'+targetNode.node.label, rigid_body: false }));
+        this.positions_count = 26;
 
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 6 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 17 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 2 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 18 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 4 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 19 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 0 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 20 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 21 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 1 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 22 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 3 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 23 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 5 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 24 * 4);
-            view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 25 * 4);
-        });
+        
         if (engine.gpu) {
             const renderPipeline = engine.gpu.createRenderPipeline(DebugLinesPipeline, { topology: 'line-strip', stripIndexFormat: 'uint32' });
             this.drawable = new DrawableSimple({

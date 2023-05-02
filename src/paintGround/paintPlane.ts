@@ -10,14 +10,17 @@ import { NodeIndexed } from "../nodes/NodeIndexed.js";
 import { PlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
-import { createTiledGround } from "../helpers.js";
 import { new_rust_mesh } from "../MainNode.js";
-import { allocate_vec } from "../nodes/DataNode.js";
 declare const engine: Engine;
 
 class PlaneMesh extends NodeIndexed {
     drawable: DrawableIndexed<RenderPipeline<PlaneAtGroundHeightVertShader>>;
-    constructor(renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>, vertexBuffer: [ptr: rust_pointer<"f32">, len: number, cap: number]) {
+    constructor(
+        renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>) {
+
+        const ptrs = engine.rust.create_tiled_mesh_ptr(200, 200);
+        const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer, ptrs, 6)
+
         const mesh_id = new_rust_mesh({
             label: 'plane',
             rigid_body: false,
@@ -25,18 +28,18 @@ class PlaneMesh extends NodeIndexed {
         super(
             {
                 vertices: {
-                    view: vertexBuffer,
-                    stride: 2
+                    view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!],
+                    stride: 8
                 },
                 character_can_collide_to: false
             },
             mesh_id,
             false,
-            allocate_vec(new Uint32Array()));
+            [ind_ptr as rust_pointer<"usize">, ind_len!, ind_cap!]);
         this.drawable = new DrawableIndexed(
             {
                 renderPipeline,
-                vertexBuffers: [new Float32Array(engine.rust.memory.buffer, vertexBuffer[0], vertexBuffer[1])],
+                vertexBuffers: [this.vertices],
                 node: this,
             });
     }
@@ -44,6 +47,10 @@ class PlaneMesh extends NodeIndexed {
 
 export class paintPlane extends paintGround {
     #mesh: PlaneMesh
+    #widthVector: [number, number] = [0,0];
+    #startingPoint = new TerraVector2(2);
+    #meshPosition: [number, number, number] = [0, 0, 0]
+
     constructor(
         scene: Scene,
         ground: Terrain,
@@ -59,14 +66,14 @@ export class paintPlane extends paintGround {
                 const planeVertShader = new PlaneAtGroundHeightVertShader(
                     ground.TerrainHeightsbindGroupTree,
                     {
-                        arrayStride: 4 * 2,
-                        stepMode: "vertex" as GPUVertexStepMode,
+                        arrayStride: 4 * 8,
+                        stepMode: "vertex",
                         attributes: [
                             {
                                 // position
                                 shaderLocation: 0,
                                 offset: 0,
-                                format: "float32x2"
+                                format: "float32x3"
                             }
                         ]
                     }, Terrain.settings
@@ -81,66 +88,34 @@ export class paintPlane extends paintGround {
                         }
                     });
             }
-        ], { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint32' })
+        ], { topology: 'triangle-list', cullMode: 'back', frontFace: 'cw' })
 
-        this.#mesh = new PlaneMesh(renderPipeline, allocate_vec(Float32Array.of(0, 0, 0)));
-        this.#mesh.drawable.setVertexBuffer(0, Float32Array.of(0, 0, 0));
+        this.#mesh = new PlaneMesh(renderPipeline);
     }
-    #startingPoint = new TerraVector2(2);
-    /*public activate(callback: PTResultF) {
-        super.activate(callback);
-    }*/
     override destroy() {
         super.destroy();
         this.#mesh.destroy();
-        this.#mesh.drawable.destroy();
-        this.#columns = 0;
-        this.#rows = 0;
     }
 
     onMainPointerDown(startingPoint: TerraVector2) {
         this.#startingPoint = startingPoint;
     }
-    #columns = 0;
-    #rows = 0;
-    #rowGenerator: Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }> | null = null;
-
     onMainPointerUp(height: number): void {
-        this.#rowGenerator = null;
-        this.#rows = 0;
-        this.#columns = Math.floor(height / 10);
-        this.#mesh.translation = [this.#startingPoint[0] - 0.5, 5, this.#startingPoint[1] - 1];
-        /* this.#mesh.translation[0] = this.#startingPoint[0] - 0.5
-         this.#mesh.translation[1] = 5;
-         this.#mesh.translation[2] = this.#startingPoint[1] - 1;*/
-
-        // const rotQ = Quaternion.RotationYawPitchRoll(this.ang360.rad - Math.PI, 0, 0)
-        //Quaternion.RotationYawPitchRollToRef(this.ang360.rad - Math.PI, 0, 0, rotQ);
-        // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
-
+        this.#widthVector = [this.drawVector[1]/this.size.height, this.drawVector[0]/this.size.height]
         const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
-
-        engine.rust.update_scale_and_rotation(this.#mesh.id, height / this.#columns, this.#mesh.scale_y, this.#mesh.scale_z,
-            0, Math.sin(halfYaw), 0, Math.cos(halfYaw))
+        this.#meshPosition = [this.#startingPoint[0] + this.drawVector[0]*-0.5, 5, this.#startingPoint[1] + this.drawVector[1]*0.5];
+        this.#mesh.translation = this.#meshPosition;
+        engine.rust.update_scale_and_rotation(this.#mesh.id, height * 0.5, this.#mesh.scale_y, this.#mesh.scale_z,
+            0, Math.sin(halfYaw), 0, Math.cos(halfYaw));
     }
 
     onAreaDraw(width: number) {
-        let newValues: { positions: number[], indices: number[] } | null = null;
-        if (!this.#rowGenerator) {
-            this.#rowGenerator = createTiledGround(this.#columns);
-        }
-
-        const newRows = Math.max(1, Math.floor(width / 10));
-        if (newRows > this.#rows) {
-            do {
-                newValues = this.#rowGenerator.next().value;
-            } while (++this.#rows < newRows);
-        }
-        this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, width / this.#rows)
-
-        if (newValues) {
-            this.#mesh.drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
-            this.#mesh.set_indices(allocate_vec(new Uint32Array(newValues.indices)));
-        }
+        const halfWidth = width * 0.5;
+        this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, halfWidth);
+        this.#mesh.translation = [
+            this.#meshPosition[0] - halfWidth * this.#widthVector[0],
+            this.#meshPosition[1],
+            this.#meshPosition[2] - halfWidth * this.#widthVector[1]
+        ]
     }
 }

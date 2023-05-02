@@ -10,6 +10,7 @@ import { DrawableIndexed } from "../../GPU/Drawables/DrawableIndexed.js";
 import { NodeIndexed } from "../../nodes/NodeIndexed.js";
 import type { MainNode } from "../../MainNode.js";
 import { Rotation } from "./Rotation.js";
+import { Primitives } from "./Primitives.js";
 
 export function NodeInfo({ drawable }: { drawable: Drawable }) {
     const [translation, setTranslation] = useState(new ReadOnlyTerraVector3());
@@ -17,8 +18,8 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
     useEffect(() => {
         setTranslation(drawable.node.translation);
         const listener = () => {
-            setTranslation(drawable.node.translation);
-            setScale(drawable.node.scale);
+            setTranslation(new ReadOnlyTerraVector3(drawable.node.translation));
+            setScale(new ReadOnlyTerraVector3(drawable.node.scale));
         };
         drawable.node.onMeshChange.add(listener);
         listener();
@@ -66,27 +67,32 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
                 }} title="scale Z" type="number" step="0.1" value={scale[2].toFixed(3)} />
             </label>
         </fieldset>
+        {drawable.node instanceof DataNode ?
+            <Primitives node={drawable.node}></Primitives>
+            : null}
         <br />
-        {drawable instanceof DrawableDirect ? <>
-            Vertices count: {drawable.node.vertices_count}
-            <br />
-            {drawable.node instanceof NodeIndexed ? `Indices count: ${drawable.node.indices_count}` : ''}
-            <br />
-            Rigid body: {(drawable.node as MainNode).have_rigid_body ? 'true' : 'false'}
-            <br />
-            {drawable.node instanceof DataNode ?
-                <><button type="button" onClick={() => {
-                    new NormalsMesh(drawable)
-                }}>Normals</button>
-                    <button type="button" onClick={() => {
-                        new WireFrameMesh(drawable)
-                    }}>Wireframe</button>
-                    {drawable instanceof DrawableIndexed ? <button type="button" onClick={() => {
-                        new BoundingBoxMesh(drawable)
-                    }}>Bounding Box</button> : null}
-                </> : null
-            }
+        {
+            drawable instanceof DrawableDirect ? <>
+                Vertices count: {drawable.node.vertices_count}
+                <br />
+                {drawable.node instanceof NodeIndexed ? `Indices count: ${drawable.node.indices_count}` : ''}
+                <br />
+                Rigid body: {(drawable.node as MainNode).have_rigid_body ? 'true' : 'false'}
+                <br />
+                {drawable.node instanceof DataNode ?
+                    <><button type="button" onClick={() => {
+                        new NormalsMesh(drawable)
+                    }}>Normals</button>
+                        <button type="button" onClick={() => {
+                            new WireFrameMesh(drawable)
+                        }}>Wireframe</button>
+                        {drawable instanceof DrawableIndexed ? <button type="button" onClick={() => {
+                            new BoundingBoxMesh(drawable)
+                        }}>Bounding Box</button> : null}
+                    </> : null
+                }
 
-        </> : ''}
+            </> : ''
+        }
     </fieldset>
 }

@@ -1,6 +1,15 @@
 pub use crate::boundingbox::BoundingBox;
-use crate::{math2::{Vec4}, mesh::get_mesh_by_id_mut};
+use crate::{math2::{Vec4, Vec3F32, Vec3}, mesh::get_mesh_by_id_mut};
 
+#[no_mangle]
+pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const Vec3<Vec4<f32>> {
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mesh2 = get_mesh_by_id_mut(mesh_id);
+    let transformation = mesh.get_transformation();
+    let geometry = mesh2.get_geometry_mut();
+    geometry.update_bounding_box(transformation);
+    (&geometry.bounding_box.vectors_simd) as *const Vec3<Vec4<f32>>
+}
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize, cap: usize) {
     let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);

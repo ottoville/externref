@@ -343,15 +343,7 @@ pub unsafe extern "C" fn faces_pointer(mesh_id: usize) -> *const Plane {
     }
     return geometry.faces.planes.as_ptr();
 }
-#[no_mangle]
-pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const Vec3<Vec4<f32>> {
-    let mesh = get_mesh_by_id_mut(mesh_id);
-    let mesh2 = get_mesh_by_id_mut(mesh_id);
-    let transformation = mesh.get_transformation();
-    let geometry = mesh2.get_geometry_mut();
-    geometry.update_bounding_box(transformation);
-    (&geometry.bounding_box.vectors_simd) as *const Vec3<Vec4<f32>>
-}
+
 impl Mesh {
     pub fn draw(&self) -> *const usize {
         &self.draw_command as *const _ as *const usize

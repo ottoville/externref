@@ -20,7 +20,7 @@ export abstract class paintGround {
     protected ang360: Angle = new Angle(0);
     #end_position: Float32Array = new Float32Array(2);
     #start_position = new TerraVector2(2);
-    #size = {
+    protected size = {
         width: 0,
         height: 0
     }
@@ -40,7 +40,7 @@ export abstract class paintGround {
         engine.clearInputListeners(this);
     }
 
-    #drawVector = new TerraVector2(2);
+    protected drawVector = new TerraVector2(2);
 
     #drawArea: ListenerObj<'pointermove'> = {
         object: this,
@@ -50,21 +50,21 @@ export abstract class paintGround {
                 if (pickInfo) {
                     this.#end_position[0] = pickInfo.position[0];
                     this.#end_position[1] = pickInfo.position[2];
-                    this.#drawVector[0] = this.#start_position[0] - this.#end_position[0];
-                    this.#drawVector[1] = (this.#start_position[1] - this.#end_position[1]) * -1
+                    this.drawVector[0] = this.#start_position[0] - this.#end_position[0];
+                    this.drawVector[1] = (this.#start_position[1] - this.#end_position[1]) * -1
 
-                    if (this.#drawVector[0] === 0) {
+                    if (this.drawVector[0] === 0) {
                         return;
                     }
-                    this.#size.height = Math.sqrt(this.#drawVector[0] * this.#drawVector[0] + this.#drawVector[1] * this.#drawVector[1])
+                    this.size.height = Math.sqrt(this.drawVector[0] * this.drawVector[0] + this.drawVector[1] * this.drawVector[1])
 
-                    const rad = Math.atan(Math.abs(this.#drawVector[1]) / Math.abs(this.#drawVector[0]));
-                    if (this.#drawVector[1] < 0) {
-                        if (this.#drawVector[0] > 0)
+                    const rad = Math.atan(Math.abs(this.drawVector[1]) / Math.abs(this.drawVector[0]));
+                    if (this.drawVector[1] < 0) {
+                        if (this.drawVector[0] > 0)
                             this.ang360 = new Angle(fullRad - rad);
                         else
                             this.ang360 = new Angle(Math.PI + rad);
-                    } else if (this.#drawVector[0] < 0)
+                    } else if (this.drawVector[0] < 0)
                         this.ang360 = new Angle(Math.PI - rad);
                     else
                         this.ang360 = new Angle(rad);
@@ -110,11 +110,11 @@ export abstract class paintGround {
                     }
 
                     const dotang = this.ang360.distance(rad);
-                    this.#size.width = Math.sqrt(distanceSquared - distanceSquared * Math.pow(Math.cos(dotang.rad), 2));
+                    this.size.width = Math.sqrt(distanceSquared - distanceSquared * Math.pow(Math.cos(dotang.rad), 2));
 
-                    if (p1 * this.#drawVector[0] + p0 * this.#drawVector[1] < 0)  //Dot product
-                        this.#size.width *= -1;
-                    this.onAreaDraw(this.#size.width);
+                    if (p1 * this.drawVector[0] + p0 * this.drawVector[1] < 0)  //Dot product
+                        this.size.width *= -1;
+                    this.onAreaDraw(this.size.width);
                 }
             }).catch(err => engine.showError(err))
             return true;
@@ -130,7 +130,7 @@ export abstract class paintGround {
             // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
             //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
             engine.addInputListener(this.#mainPointerDown);
-            this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: this.#size });
+            this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: this.size });
         }
     }
     #pointerUp: ListenerObj<'pointerup'> = {
@@ -143,7 +143,7 @@ export abstract class paintGround {
             if (this.#end_position[0] == 0)
                 return;
             try {
-                this.onMainPointerUp(this.#size.height, this.#end_position);
+                this.onMainPointerUp(this.size.height, this.#end_position);
             } catch (e) {
                 console.log(e);
             } finally {
