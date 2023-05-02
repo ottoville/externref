@@ -4,6 +4,7 @@ import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 
 type BindGroupLayouts = Terrain["TerrainHeightsbindGroupTree"]["bindGroupLayouts"];
+
 export class PlaneAtGroundHeightVertShader extends VertexShader<
     { main: PipelineLayout },
     [GPUVertexBufferLayout],
@@ -39,10 +40,10 @@ struct Output {
  @builtin(position) Position : vec4<f32>
 };
 @vertex
-fn main(@location(0) position : vec3<f32>) -> Output {
+fn main(@location(0) position : vec4<f32>) -> Output {
    var output:Output;
-   var worldPos:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(position.x, 0.0, position.y, 1.0);
-   worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz);
+   var worldPos:vec4<f32> = ${world.prop('transformation')} * position;
+   worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 1.0;
    output.Position = ${scene.prop('modelViewProjection')} * worldPos;
    output.color = vec3<f32>(1.0,1.0,1.0);
    return output;

@@ -159,7 +159,7 @@ export type rustWasm = {
     set_scenes(mesh_id: number, scenes: number): void,
     update_scale_and_rotation(mesh_id: number, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number): void
     faces_pointer(mesh_id: number): number,
-    bounding_vectors_pointer_simd(mesh_id: number): number,
+    bounding_vectors_pointer_simd(mesh_id: number): rust_pointer<'*const usize'>,
 
     create_elevator(mesh_id: number): rust_pointer<"elevator">,
     mouse_position_pointer(elevator_ptr: rust_pointer<"elevator">): number

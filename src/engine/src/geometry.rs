@@ -1,14 +1,33 @@
 pub use crate::boundingbox::BoundingBox;
-use crate::{math2::{Vec4, Vec3F32, Vec3}, mesh::get_mesh_by_id_mut};
+use crate::{math2::{Vec4, Vec3F32}, mesh::get_mesh_by_id_mut, MULTIVALUE_USIZE};
 
 #[no_mangle]
-pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const Vec3<Vec4<f32>> {
+pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const usize {
     let mesh = get_mesh_by_id_mut(mesh_id);
     let mesh2 = get_mesh_by_id_mut(mesh_id);
     let transformation = mesh.get_transformation();
     let geometry = mesh2.get_geometry_mut();
     geometry.update_bounding_box(transformation);
-    (&geometry.bounding_box.vectors_simd) as *const Vec3<Vec4<f32>>
+
+/*
+    Convert SIMD lanes to XYZ
+ */
+    let vectors:Vec<f32> = vec![
+        geometry.bounding_box.vectors_simd[0].x.x, geometry.bounding_box.vectors_simd[0].y.x, geometry.bounding_box.vectors_simd[0].z.x, 0.0,
+        geometry.bounding_box.vectors_simd[0].x.y, geometry.bounding_box.vectors_simd[0].y.y, geometry.bounding_box.vectors_simd[0].z.y, 0.0,
+        geometry.bounding_box.vectors_simd[0].x.z, geometry.bounding_box.vectors_simd[0].y.z, geometry.bounding_box.vectors_simd[0].z.z, 0.0,
+        geometry.bounding_box.vectors_simd[0].x.w, geometry.bounding_box.vectors_simd[0].y.w, geometry.bounding_box.vectors_simd[0].z.w, 0.0,
+
+        geometry.bounding_box.vectors_simd[1].x.x, geometry.bounding_box.vectors_simd[1].y.x, geometry.bounding_box.vectors_simd[1].z.x, 0.0,
+        geometry.bounding_box.vectors_simd[1].x.y, geometry.bounding_box.vectors_simd[1].y.y, geometry.bounding_box.vectors_simd[1].z.y, 0.0,
+        geometry.bounding_box.vectors_simd[1].x.z, geometry.bounding_box.vectors_simd[1].y.z, geometry.bounding_box.vectors_simd[1].z.z, 0.0,
+        geometry.bounding_box.vectors_simd[1].x.w, geometry.bounding_box.vectors_simd[1].y.w, geometry.bounding_box.vectors_simd[1].z.w, 0.0,
+    ];
+    let mut buf = std::mem::ManuallyDrop::new(vectors);
+    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
+    MULTIVALUE_USIZE[1] = buf.len();
+    MULTIVALUE_USIZE[2] = buf.capacity();
+    return MULTIVALUE_USIZE.as_ptr();
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize, cap: usize) {
