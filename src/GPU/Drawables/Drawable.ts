@@ -111,7 +111,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         this.#dynamicBindGroups.forEach(([{ bindGroup }, offset], i) => {
             const di = dynamicIndex[i];
             if (di) {
-                renderEncoder.setBindGroup(di, bindGroup, [GPU.gpu_memory_index_size + offset * GPU.gpu_memory_index_size]);
+                renderEncoder.setBindGroup(di, bindGroup, [offset * GPU.gpu_memory_index_size]);
             }
         });
         if (this.#staticBindGroup) {

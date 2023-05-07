@@ -7,8 +7,11 @@ import type { Terrain } from '../../world/Terrain.js';
 
 
 type BindLayouts = readonly [
-    BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
-    BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
+    BGLayout<[BufLayout<ShaderStage.COMPUTE, typeof Vertices>]>,
+    BGLayout<[
+        BufLayout<ShaderStage.COMPUTE, typeof IntArray>,
+        BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>
+    ]>,
 ];
 export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
     constructor(gpu: GPU, settings: typeof Terrain.settings) {
@@ -78,11 +81,11 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
           let k:u32 = next.x * ${subdivisions_plus_one};
       
       
-          let v1arr:vec3<f32> = ${vertices.variableName}.vert[j + i].position;
-          let v2arr:vec3<f32> =  ${vertices.variableName}.vert[j + i + u32(1)].position;
+          let v1arr:vec3<f32> = ${vertices.prop('vert')}[j + i].position;
+          let v2arr:vec3<f32> =  ${vertices.prop('vert')}[j + i + u32(1)].position;
       
-          let v1v3:vec3<f32> = ${vertices.variableName}.vert[k + i].position - v1arr;
-          let v1v4:vec3<f32> = ${vertices.variableName}.vert[k + i + u32(1)].position - v1arr;
+          let v1v3:vec3<f32> = ${vertices.prop('vert')}[k + i].position - v1arr;
+          let v1v4:vec3<f32> = ${vertices.prop('vert')}[k + i + u32(1)].position - v1arr;
       
           //   cd = (terrainPositions[k + i + 2] - v1arr[2]) / (terrainPositions[k + i + 3] - v1arr[0]);
       
@@ -99,13 +102,13 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
           let norm2:vec3<f32> = normalize(cross(v1v2, v1v4));
       
       
-          ${slopes.variableName}.numbers[GlobalInvocationID.x * ${settings.subdivisions[0]} + GlobalInvocationID.y] = h;
+          ${slopes.prop('numbers')}[GlobalInvocationID.x * ${settings.subdivisions[0]} + GlobalInvocationID.y] = h;
       
-          ${facet12.variableName}.plane[(GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].norm = norm1;
-          ${facet12.variableName}.plane[(GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].d = dot(norm1,v1arr) * -1.0;
+          ${facet12.prop('plane')}[(GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].norm = norm1;
+          ${facet12.prop('plane')}[(GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].d = dot(norm1,v1arr) * -1.0;
       
-          ${facet12.variableName}.plane[${facetSize} +  (GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].norm = norm2;
-          ${facet12.variableName}.plane[${facetSize} + (GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].d = dot(norm2,v2arr) * -1.0;
+          ${facet12.prop('plane')}[${facetSize} +  (GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].norm = norm2;
+          ${facet12.prop('plane')}[${facetSize} + (GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].d = dot(norm2,v2arr) * -1.0;
       
           return;
         }

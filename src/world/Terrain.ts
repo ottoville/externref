@@ -349,7 +349,6 @@ TODO
         passEncoder.setBindGroup(1, slopesLayout.createBindGroup('bindGroupHeightsRead2', _heightsBindGroupEntries).bindGroup)
         passEncoder.dispatchWorkgroups(Terrain.#subdivisions[0] + 1, Terrain.#subdivisions[1] + 1);
         const textureView = new TextureView(this.texture);
-
         this.mesh = new TerrainMesh(scenes, textureView, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, allocate_vec(new Float32Array(positionsCount * 12)), allocate_vec(new Uint32Array(this.#terrainIndicesLength / 4)), 12);
 
         this.#ready = caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {

@@ -3,17 +3,18 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { FloatArray } from './structs/Structs.js';
 import type { Terrain } from '../../world/Terrain.js';
+import { SlopesLayout } from './CreateTerrainTexture.comp.js';
 
 type BindLayouts = readonly [
-    BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
-    BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>,
+    BGLayout<[BufLayout<ShaderStage.COMPUTE, typeof FloatArray>]>,
+    SlopesLayout,
 ]
 export class CalculateNormals extends ComputeShader<
     { main: PipelineLayout },
     BindLayouts> {
     constructor(
         settings: typeof Terrain.settings,
-        slopesLayout: BGLayout<[BufLayout<ShaderStage.COMPUTE>, BufLayout<ShaderStage.COMPUTE>]>
+        slopesLayout: SlopesLayout
     ) {
         const bindLayouts = [
             new BGLayout(slopesLayout.gpu, 'normalsBindGroupLayout',
@@ -45,7 +46,6 @@ export class CalculateNormals extends ComputeShader<
         const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
         this.createWGSL(([normals], [/*slopes*/, facet12]) => {
             /////////////////
-
             return /* wgsl */ `
    @compute @workgroup_size(1)
    fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
@@ -97,9 +97,9 @@ export class CalculateNormals extends ComputeShader<
        //7 and 8   far
        
    
-       ${normals.variableName}.numbers[j + i + 4u]=normalized.x;
-       ${normals.variableName}.numbers[j + i + 5u]=normalized.y;
-       ${normals.variableName}.numbers[j + i + 6u]=normalized.z;
+       ${normals.prop('numbers')}[j + i + 4u]=normalized.x;
+       ${normals.prop('numbers')}[j + i + 5u]=normalized.y;
+       ${normals.prop('numbers')}[j + i + 6u]=normalized.z;
       
        return;
     }

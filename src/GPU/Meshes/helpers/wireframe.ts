@@ -27,7 +27,7 @@ export class WireFrameMesh extends NodeIndexed {
             indices[i * 6 + 5] = targetIndices[i * 3]!
         }
         const mesh_id = new_rust_mesh({
-            label: 'WireframeDebug',
+            label: 'Wireframe_'+targetNode.node.label,
             rigid_body: false,
         });
         super(

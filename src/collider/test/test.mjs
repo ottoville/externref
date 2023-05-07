@@ -43,8 +43,6 @@ const exportObj = {
         },
         handle_gpu_queue(pointerVec, length) {
         },
-        updateAllocatedMemory(allocated_gpu_memory_ptr, length) {
-        },
         update_directional_lights(pointer, length) {
         },
         update_point_lights(pointer, length) {

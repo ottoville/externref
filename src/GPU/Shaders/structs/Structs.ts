@@ -88,8 +88,6 @@ export const Indices = new Struct('Indices', {
 })
 export const MeshArray = new Struct('MeshArray',
     {
-        length: ['', 'u32'],
-        pointers: ['', 'array<u32, 63>'],
         mesh: ['', 'array<MeshUniforms>']
     },
     [MeshUniforms]

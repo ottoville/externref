@@ -1,6 +1,8 @@
 use std::collections::{HashMap, HashSet};
+use std::num::NonZeroUsize;
 use std::panic;
 
+use crate::freelist::FreeList;
 pub use crate::mesh::Mesh;
 pub use crate::GPUMesh;
 use rapier3d::prelude::*;
@@ -14,13 +16,11 @@ extern "C" {
 
 extern "C" {
     #[cfg(feature = "webgpu")]
-    fn update_point_lights(pointer: *const u32, length: usize);
+    fn update_point_lights(pointer: *const NonZeroUsize, length: usize);
     #[cfg(feature = "webgpu")]
-    fn update_directional_lights(pointer: *const u32, length: usize);
+    fn update_directional_lights(pointer: *const NonZeroUsize, length: usize);
     #[cfg(feature = "webgpu")]
     fn handle_gpu_queue(pointerVec: *const usize, length: usize);
-    #[cfg(feature = "webgpu")]
-    fn updateAllocatedMemory(ptr: *const u32, length: usize);
     #[cfg(target_arch = "wasm32")]
     fn jspanic(number: *const u8);
     #[cfg(target_arch = "wasm32")]
@@ -29,18 +29,13 @@ extern "C" {
     fn mesh_on_physic_tick(number: usize);
 }
 pub struct Engine {
-    gpu_reserved_slots: u64,
-    pub point_lights: Vec<u32>,
-    pub directional_lights: Vec<u32>,
-    pub allocated_gpu_memory: Vec<u32>,
+    pub point_lights: Vec<NonZeroUsize>,
+    pub directional_lights: Vec<NonZeroUsize>,
     pub engine2: Option<Engine2>,
 }
 pub static mut ENGINE: Engine = Engine {
-    gpu_reserved_slots:
-        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000, //ZERO:Free, ONE: Reserved
     point_lights: Vec::new(),
     directional_lights: Vec::new(),
-    allocated_gpu_memory: Vec::new(),
     engine2: None,
 };
 static mut GPU_QUEUE: Vec<usize> = vec![];
@@ -49,7 +44,6 @@ static mut GPU_QUEUE: Vec<usize> = vec![];
 #[cfg(feature = "webgpu")]
 pub unsafe extern "C" fn renderloop() {
     use crate::{mesh::get_mesh_by_id_mut};
-
     let engine2 = ENGINE.physic_engine_mut();
     if engine2.gpu_queue2.len() > 0 {
         GPU_QUEUE = Vec::from_iter(engine2.gpu_queue2.drain());
@@ -73,9 +67,10 @@ pub struct Engine2 {
     pub meshes: Vec<Mesh>,
     pub rigid_bodies: HashMap<RigidBodyHandle, &'static mut Mesh>,
     pub broad_phase: BroadPhase,
-    pub gpu_meshes: Vec<GPUMesh>,
     pub joint_set: ImpulseJointSet,
     pub gpu_queue2: HashSet<usize>,
+    pub gpu_meshes2: FreeList<GPUMesh>
+
 }
 static mut LOG_STRING: String = String::new();
 // TODO, remove and use "str_ptr_from_vec" syntax
@@ -131,10 +126,10 @@ pub fn init_engine() {
         meshes: Vec::with_capacity(100),
         rigid_bodies: HashMap::new(),
         broad_phase: BroadPhase::new(),
-        gpu_meshes: Vec::with_capacity(100),
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
         gpu_queue2: HashSet::new(),
+        gpu_meshes2: FreeList::new()
     };
     unsafe {
         ENGINE.engine2 = Some(e);
@@ -240,24 +235,7 @@ impl Engine {
             None => panic!("Engine not initialized"),
         }
     }
-    #[cfg(feature = "webgpu")]
-    pub fn allocated_gpu_memory(&mut self) {
-        self.allocated_gpu_memory.clear();
-        self.allocated_gpu_memory.push(0);
-        for i in 0..60 {
-            let bit = (self.gpu_reserved_slots >> i) & 1u64;
-            if bit == 1u64 {
-                self.allocated_gpu_memory.push(i)
-            }
-        }
-        self.allocated_gpu_memory[0] = self.allocated_gpu_memory.len() as u32;
-        unsafe {
-            updateAllocatedMemory(
-                self.allocated_gpu_memory.as_ptr(),
-                self.allocated_gpu_memory.len(),
-            );
-        }
-    }
+
     #[cfg(feature = "webgpu")]
     pub fn update_point_lights(&self) {
         unsafe {
@@ -272,22 +250,5 @@ impl Engine {
                 self.directional_lights.len(),
             );
         }
-    }
-
-    pub fn allocate_gpu(&mut self) -> u32 {
-        //ZERO:Free, ONE: Reserved
-        let free_index = self.gpu_reserved_slots.trailing_ones();
-        if free_index < 60u32 {
-            //set bit to 1
-            self.gpu_reserved_slots |= 1u64 << free_index;
-        } else {
-            //TODO
-        }
-        return free_index;
-    }
-    #[cfg(feature = "webgpu")]
-    pub fn de_allocate_gpu(&mut self, address: u32) {
-        self.gpu_reserved_slots &= !(1u64 << address);
-        self.allocated_gpu_memory();
     }
 }

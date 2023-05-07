@@ -180,7 +180,7 @@ export class GPU {
         this.clusterSizeinBytes = totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
         this.updateViewShader = new UpdateView(this)
 
-        this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * this.#maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], 'GPUMeshes')
+        this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size * this.#maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], 'GPUMeshes')
         this.#GPUPointLights = Buffer.create(this, this.#gpu_max_point_lights * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'GPUPointLights')
         this.#GPUDirectionalLights = Buffer.create(this, 63 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'GPUDirectionalLights')
 
@@ -628,11 +628,11 @@ export class GPU {
                     console.warn("Tried to update non exist mesh with id ", meshID);
                     continue;
                 }
-                const offset = engine.rust.gpu_alignment(meshID)
+                const offset = engine.rust.gpu_alignment(meshID);
                 meshes.push([mesh, offset]);
                 if (offset >= this.#maxInstances) {
                     this.#maxInstances = offset + 10;
-                    this.GPUMeshes.resize(GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * this.#maxInstances)
+                    this.GPUMeshes.resize(GPU.gpu_memory_index_size * this.#maxInstances)
                 }
             }
             for (let i = 0; i < meshes.length; i++) {
@@ -646,20 +646,13 @@ export class GPU {
                     engine.updateLights = true;
                 }
                 new Float32Array(tempBuffer.getMappedRange(tempOffset * this.GPUDataSizeBytes, this.GPUDataSizeBytes)).set(data);
-                //  console.log('copy to ',GPU.gpu_memory_index_size + offset * GPU.gpu_memory_index_size, offset)
-                gpu2.GPUMeshes.copyFrom(this.#GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * this.GPUDataSizeBytes, GPU.gpu_memory_index_size + offset * GPU.gpu_memory_index_size, this.GPUDataSizeBytes)
+                gpu2.GPUMeshes.copyFrom(this.#GPUQueueCommandEncoder!,
+                    tempBuffer,
+                    tempOffset++ * this.GPUDataSizeBytes,
+                    offset * GPU.gpu_memory_index_size, this.GPUDataSizeBytes)
             }
             gpu2.tempGPUBuffers.push(tempBuffer);
         });
-    }
-    //TODO: Queue this call and do it only once per frame
-    updateAllocatedMemory(allocated_gpu_memory_ptr: number, length: number) {
-        const renderEncoder = this.device.createCommandEncoder({ label: 'updateAllocatedMemory_encoder' });
-        const buffLength = Uint32Array.BYTES_PER_ELEMENT * length;
-        const tempBuffer = Buffer.create(this, buffLength, [GPUBufferUsage.COPY_SRC], 'tempBuffer', tempBuffer2 => {
-            new Uint32Array(tempBuffer2.getMappedRange(0, buffLength)).set(new Uint32Array(engine.rust.memory.buffer, allocated_gpu_memory_ptr, length));
-        });
-        tempBuffer.copyTo(renderEncoder, this.GPUMeshes, 0, 0, buffLength);
     }
     update_directional_lights(pointer: number, length: number) {
         const lights = new Uint32Array(engine.memory.buffer, pointer, length);

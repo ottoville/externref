@@ -108,7 +108,7 @@ export class UpdateView extends ComputeShader<
         
           
           var lightCount=0u;
-          for(var pointerIndex:u32=0u; pointerIndex < ${directional_lights.prop('length')}; pointerIndex = pointerIndex + 1u) {
+          for(var pointerIndex:u32 = 0u; pointerIndex < ${directional_lights.prop('length')}; pointerIndex = pointerIndex + 1u) {
             let meshIndex = ${directional_lights.prop('pointers')}[pointerIndex];
             let mesh=${meshes.prop('mesh')}[meshIndex];
             ${clusters.prop('lights')}[tileIndex*63u + lightCount] = meshIndex;
@@ -118,7 +118,7 @@ export class UpdateView extends ComputeShader<
             }
           }
           let cluster=${clusters.prop('bounds')}[tileIndex];
-          for(var pointerIndex:u32=0u; pointerIndex < ${point_lights.prop('length')}; pointerIndex = pointerIndex + 1u) {
+          for(var pointerIndex:u32 = 0u; pointerIndex < ${point_lights.prop('length')}; pointerIndex = pointerIndex + 1u) {
             let meshIndex = ${point_lights.prop('pointers')}[pointerIndex];
             let mesh=${meshes.prop('mesh')}[meshIndex];
             // TODO: Preselect lights with CPU

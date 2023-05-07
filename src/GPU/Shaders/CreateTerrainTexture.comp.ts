@@ -5,7 +5,7 @@ import type { Terrain } from '../../world/Terrain.js';
 import { Struct } from './structs/Structs.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 
-type SlopesLayout = BGLayout<[BufLayout<ShaderStage.COMPUTE, Struct<{
+export type SlopesLayout = BGLayout<[BufLayout<ShaderStage.COMPUTE, Struct<{
     numbers: [string, string];
 }>>, BufLayout<ShaderStage.COMPUTE, Struct<{
     plane: [string, string];

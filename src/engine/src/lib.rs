@@ -1,5 +1,4 @@
 #!cfg(target_arch = "wasm32")]
-
 mod boundingbox;
 mod collider;
 mod drawable;
@@ -10,6 +9,9 @@ mod mesh;
 mod meshes;
 mod terrain;
 mod math;
+mod freelist;
+
+use std::num::NonZeroUsize;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
@@ -119,7 +121,7 @@ pub struct GPUMesh {
     scenes: u32,              //bitmask           //48
 }
 impl GPUMesh {
-    pub fn set_point_light(&mut self, engine: &'static mut Engine, range: f32, gpu_alignment: u32) {
+    pub fn set_point_light(&mut self, engine: &'static mut Engine, range: f32, gpu_alignment: NonZeroUsize) {
         let old_value = self.point_light_squared;
         if range > 0.0 {
             self.point_light_squared = range * range;
@@ -146,7 +148,7 @@ impl GPUMesh {
         &mut self,
         engine: &'static mut Engine,
         range: f32,
-        gpu_alignment: u32,
+        gpu_alignment: NonZeroUsize,
     ) {
         let old_value = self.directional_light;
         if range > 0.0 {
