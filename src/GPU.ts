@@ -52,7 +52,7 @@ export class GPU {
 
     readonly #DynamicBindGroups: WeakSet<BindGroup> = new WeakSet();
 
-    readonly pendingCommandBuffers: Set<GPUCommandBuffer> = new Set();
+    readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
     readonly tempGPUBuffers: GPUBuffer[] = [];
 
     readonly rootCameralayout: BindablePipelineLayout<[
@@ -254,7 +254,7 @@ export class GPU {
         )
         this.rootCameralayout = new BindablePipelineLayout({
             label: 'rootCamera',
-            bindGroupLayouts: [this.sizeBindGroupLayout, this.uniformBindGroupLayoutWithTime] as  [typeof this.sizeBindGroupLayout, typeof this.uniformBindGroupLayoutWithTime],
+            bindGroupLayouts: [this.sizeBindGroupLayout, this.uniformBindGroupLayoutWithTime] as [typeof this.sizeBindGroupLayout, typeof this.uniformBindGroupLayoutWithTime],
         });
         const BindGroupLayoutPosition = new BGLayout(this,
             'BindGroupLayoutPosition',
@@ -665,7 +665,7 @@ export class GPU {
             gpu_buffer.set(lights, 1);
         });
         tempBuffer.copyTo(commandEncoder, this.#GPUDirectionalLights, 0, 0, byteLength);
-        this.pendingCommandBuffers.add(commandEncoder.finish());
+        this.pendingCommandBuffers.push(commandEncoder.finish({ label: 'update_directional_lights' }));
     }
     update_point_lights(pointer: number, length: number) {
         const lights = new Uint32Array(engine.memory.buffer, pointer, length);
@@ -678,7 +678,7 @@ export class GPU {
             gpu_buffer.set(lights, 1);
         });
         tempBuffer.copyTo(commandEncoder, this.#GPUPointLights, 0, 0, byteLength);
-        this.pendingCommandBuffers.add(commandEncoder.finish());
+        this.pendingCommandBuffers.push(commandEncoder.finish({ label: 'update_point_lights' }));
     }
     readonly timeAndDeltaBuffer = new ArrayBuffer(8);
     readonly deltaView = new Float32Array(this.timeAndDeltaBuffer, 4, 1);
@@ -729,10 +729,11 @@ export class GPU {
             // Rust render loop start
             this.#GPUQueueCommandEncoder = null;
             engine.rust.renderloop();
-            //@ts-ignore bug in TS
-            const commandBuff = this.#GPUQueueCommandEncoder?.finish() ?? null;
+            //@ts-expect-error bug in TS
+            const commandBuff = this.#GPUQueueCommandEncoder?.finish({ label: 'renderloop' }) ?? null;
             if (commandBuff) {
-                this.pendingCommandBuffers.add(commandBuff);
+                // Insert this to begin of the array to get all changes to mesh properties affected first
+                this.pendingCommandBuffers.unshift(commandBuff);
             }
             // Rust render loop end
             const lightPass = renderEncoder.beginComputePass({ label: 'lightPassEncoder' });
@@ -752,13 +753,14 @@ export class GPU {
             engine.updateLights = false;
 
             this.#renderPasses.forEach(renderPass => {
+                //Do the actual drawing
                 renderPass.render(renderEncoder)
             })
         } catch (e) {
             console.error(e);
         }
 
-        this.pendingCommandBuffers.add(renderEncoder.finish())
+        this.pendingCommandBuffers.push(renderEncoder.finish({ label: 'renderencoder' }))
         this.device.queue.submit(this.pendingCommandBuffers);
         // Cluster debug
         /*
@@ -768,7 +770,7 @@ export class GPU {
             });
             debugNumber=debugNumber+1;
         }*/
-        this.pendingCommandBuffers.clear();
+        this.pendingCommandBuffers.length = 0;
         this.tempGPUBuffers.forEach(buff => buff.destroy());
         this.tempGPUBuffers.length = 0;
         if (!this.#renderStarted) {

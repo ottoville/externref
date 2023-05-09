@@ -1,4 +1,4 @@
-use crate::{math2::Vec3F32, mesh::Mesh, MULTIVALUE_USIZE};
+use crate::{math2::{Vec3F32, PositionAndNormalAndUV, Vec2F32}, mesh::Mesh, MULTIVALUE_USIZE};
 
 #[no_mangle]
 pub unsafe extern "C" fn create_tiled_mesh_ptr(width: f32, height: f32) -> *const usize {
@@ -6,8 +6,8 @@ pub unsafe extern "C" fn create_tiled_mesh_ptr(width: f32, height: f32) -> *cons
     let drop_pos = std::mem::ManuallyDrop::new(positions);
     let drop_ind = std::mem::ManuallyDrop::new(indices);
     MULTIVALUE_USIZE[0] = drop_pos.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = drop_pos.len() * 8;
-    MULTIVALUE_USIZE[2] = drop_pos.capacity() * 8;
+    MULTIVALUE_USIZE[1] = drop_pos.len() * 12;
+    MULTIVALUE_USIZE[2] = drop_pos.capacity() * 12;
     MULTIVALUE_USIZE[3] = drop_ind.as_ptr() as usize;
     MULTIVALUE_USIZE[4] = drop_ind.len();
     MULTIVALUE_USIZE[5] = drop_ind.capacity();
@@ -17,7 +17,7 @@ pub unsafe extern "C" fn create_tiled_mesh_ptr(width: f32, height: f32) -> *cons
 fn create_tiled_mesh(
     faces_x_count: usize,
     faces_y_count: usize,
-) -> (Vec<[Vec3F32; 2]>, Vec<usize>) {
+) -> (Vec<PositionAndNormalAndUV>, Vec<usize>) {
     let width = faces_x_count as f32;
     let height = faces_y_count as f32;
     let max = width.max(height) * 0.5;
@@ -25,25 +25,29 @@ fn create_tiled_mesh(
     let positions_y_count = faces_y_count + 1;
 
     let mut indices_matrix: Vec<usize> = Vec::with_capacity(faces_x_count * faces_y_count * 6);
-    let mut position_matrix: Vec<[Vec3F32; 2]> =
+    let mut position_matrix: Vec<PositionAndNormalAndUV> =
         Vec::with_capacity(positions_y_count * positions_x_count);
 
     for h in 0..=faces_y_count {
         let z = (h as f32 - (height * 0.5)) / max;
         for w in 0..=faces_x_count {
             let x = w as f32;
-            position_matrix.push([
-                Vec3F32 {
-                    x: (x - (width * 0.5)) / max,
-                    y: 0.0,
-                    z,
-                },
-                Vec3F32 {
-                    x: 0.0,
-                    y: 1.0,
-                    z: 0.0,
-                },
-            ]);
+            position_matrix.push(
+                PositionAndNormalAndUV {
+                    position: Vec3F32 {
+                        x: (x - (width * 0.5)) / max,
+                        y: 0.0,
+                        z,
+                    }, normal: Vec3F32 {
+                        x: 0.0,
+                        y: 1.0,
+                        z: 0.0,
+                    }, 
+                    uv: Vec2F32 {
+                        u: 0.0,
+                        v: 1.0,
+                    }
+                });
             if w != 0 && h != 0 {
                 indices_matrix.push((h * positions_x_count) + (w));
                 indices_matrix.push((h * positions_x_count) + (w - 1));
@@ -66,13 +70,13 @@ fn test_quad_mesh() {
     let mut positions: Vec<Vec3F32> = Vec::with_capacity(vertices.len());
     let mut i: usize = 0;
     positions.resize_with(vertices.len(), || {
-        let position = &vertices[i][0];
+        let position = &vertices[i].position;
         max = max.max(position.x).max(position.z);
         min = min.min(position.x).min(position.z);
 
-        assert_eq!(vertices[i][1].x, 0.0);
-        assert_eq!(vertices[i][1].y, 1.0);
-        assert_eq!(vertices[i][1].z, 0.0);
+        assert_eq!(vertices[i].normal.x, 0.0);
+        assert_eq!(vertices[i].normal.y, 1.0);
+        assert_eq!(vertices[i].normal.z, 0.0);
 
         i += 1;
         return position.clone();

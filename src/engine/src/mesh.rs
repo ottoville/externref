@@ -1,4 +1,5 @@
 use core::panic;
+use std::num::NonZeroUsize;
 
 pub use crate::boundingbox::BoundingBox;
 pub use crate::drawable::DrawCommand;
@@ -20,8 +21,7 @@ use rapier3d::prelude::*;
 
 pub struct Mesh {
     pub id: usize,
-    pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
-    pub gpu_mesh_alignment: usize, //Alignment in engine.gpu_meshes vector,
+    pub gpu_mesh_alignment: std::num::NonZeroUsize, //Alignment in engine.gpu_meshes2 vector,
     transformation: Vec4<Vec4<f32>>,
     pub transformation_is_dirty: bool,
     pub translation: Vec3F32,
@@ -164,8 +164,8 @@ pub unsafe extern "C" fn indices_field_pointer(mesh_id: usize) -> *const Vec<usi
     std::ptr::addr_of!(get_mesh_by_id(mesh_id).get_geometry().indices)
 }
 #[no_mangle]
-pub unsafe extern "C" fn gpu_alignment(mesh_id: usize) -> u32 {
-    get_mesh_by_id(mesh_id).gpu_alignment
+pub unsafe extern "C" fn gpu_alignment(mesh_id: usize) -> NonZeroUsize {
+    get_mesh_by_id(mesh_id).gpu_mesh_alignment
 }
 #[no_mangle]
 pub unsafe extern "C" fn positions_count(mesh_id: usize) -> usize {
@@ -472,10 +472,45 @@ impl Mesh {
     ) -> usize {
         let engine2 = ENGINE.physic_engine_mut();
         let id = engine2.meshes.len();
+        let idx = engine2.gpu_meshes.add(GPUMesh {
+            transformation: Vec4 {
+                x: Vec4 {
+                    x: 1.0,
+                    y: 0.0,
+                    z: 0.0,
+                    w: 0.0,
+                },
+                y: Vec4 {
+                    x: 0.0,
+                    y: 1.0,
+                    z: 0.0,
+                    w: 0.0,
+                },
+                z: Vec4 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 1.0,
+                    w: 0.0,
+                },
+                w: Vec4 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                    w: 1.0,
+                },
+            },
+            ambient: [0.0, 0.0, 0.0],
+            shadow: 0.0,
+            color: [0.0, 0.0, 0.0, 0.0],
+            spotlight: [0.0, 0.0, 0.0, 0.0],
+            _id: id,
+            point_light_squared: point_light * point_light,
+            directional_light,
+            scenes: scenes as u32,
+        });
         let m = Mesh {
             id,
-            gpu_mesh_alignment: engine2.gpu_meshes.len(),
-            gpu_alignment: ENGINE.allocate_gpu(),
+            gpu_mesh_alignment: idx,
             geometry: None,
             velocity: [0.0, 0.0, 0.0, 0.0],
             transformation: Vec4 {
@@ -530,54 +565,16 @@ impl Mesh {
             label,
             drawable: Option::None,
         };
-        engine2.gpu_meshes.push(GPUMesh {
-            transformation: Vec4 {
-                x: Vec4 {
-                    x: 1.0,
-                    y: 0.0,
-                    z: 0.0,
-                    w: 0.0,
-                },
-                y: Vec4 {
-                    x: 0.0,
-                    y: 1.0,
-                    z: 0.0,
-                    w: 0.0,
-                },
-                z: Vec4 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 1.0,
-                    w: 0.0,
-                },
-                w: Vec4 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                    w: 1.0,
-                },
-            },
-            ambient: [0.0, 0.0, 0.0],
-            shadow: 0.0,
-            color: [0.0, 0.0, 0.0, 0.0],
-            spotlight: [0.0, 0.0, 0.0, 0.0],
-            _id: id,
-            point_light_squared: point_light * point_light,
-            directional_light,
-            scenes: scenes as u32,
-        });
         if point_light > 0.0 {
-            ENGINE.point_lights.push(m.gpu_alignment);
+            ENGINE.point_lights.push(m.gpu_mesh_alignment);
             #[cfg(feature = "webgpu")]
             ENGINE.update_point_lights();
         }
         if directional_light > 0.0 {
-            ENGINE.directional_lights.push(m.gpu_alignment);
+            ENGINE.directional_lights.push(m.gpu_mesh_alignment);
             #[cfg(feature = "webgpu")]
             ENGINE.update_directional_lights();
         }
-        #[cfg(feature = "webgpu")]
-        ENGINE.allocated_gpu_memory();
 
         engine2.meshes.push(m);
         engine2.meshes[id].update_dynamic_buffer();
@@ -646,7 +643,7 @@ impl Mesh {
     }
     pub unsafe fn update_dynamic_buffer(&self) {
         let engine2 = ENGINE.physic_engine_mut();
-        engine2.gpu_queue2.insert(self.id);
+        engine2.gpu_queue.insert(self.id);
     }
     /**
      * To be called when mesh property change
@@ -704,14 +701,12 @@ impl Mesh {
     pub unsafe fn set_point_light(&mut self, engine: &'static mut Engine, range: f32) {
         let engine2 = ENGINE.physic_engine_mut();
         let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
-
-        gpu_mesh.set_point_light(engine, range, self.gpu_alignment);
+        gpu_mesh.set_point_light(engine, range, self.gpu_mesh_alignment);
     }
     pub unsafe fn set_directional_light(&mut self, engine: &'static mut Engine, range: f32) {
         let engine2 = ENGINE.physic_engine_mut();
         let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
-
-        gpu_mesh.set_directional_light(engine, range, self.gpu_alignment);
+        gpu_mesh.set_directional_light(engine, range, self.gpu_mesh_alignment);
     }
     pub fn update_matrix(&mut self) {
         let x: f32 = self.rotation.i;
@@ -783,14 +778,13 @@ impl Mesh {
 impl Drop for Mesh {
     fn drop(&mut self) {
         unsafe {
-            let engine2 = ENGINE.physic_engine();
+            let engine2 = ENGINE.physic_engine_mut();
             let gpu_mesh = &engine2.gpu_meshes[self.gpu_mesh_alignment];
-
             if gpu_mesh.point_light_squared > 0.0 {
                 let index = ENGINE
                     .point_lights
                     .iter()
-                    .position(|x| *x == self.gpu_alignment)
+                    .position(|x| *x == self.gpu_mesh_alignment)
                     .unwrap();
                 ENGINE.point_lights.swap_remove(index);
                 #[cfg(feature = "webgpu")]
@@ -800,14 +794,14 @@ impl Drop for Mesh {
                 let index = ENGINE
                     .directional_lights
                     .iter()
-                    .position(|x| *x == self.gpu_alignment)
+                    .position(|x| *x == self.gpu_mesh_alignment)
                     .unwrap();
                 ENGINE.directional_lights.swap_remove(index);
                 #[cfg(feature = "webgpu")]
                 ENGINE.update_directional_lights();
             }
             #[cfg(feature = "webgpu")]
-            ENGINE.de_allocate_gpu(self.gpu_alignment);
+            engine2.gpu_meshes.remove(self.gpu_mesh_alignment)
         }
     }
 }

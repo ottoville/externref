@@ -356,9 +356,6 @@ export class Engine {
                 handle_gpu_queue(pointerVec: number, length: number) {
                     engine.gpu?.handle_gpu_queue(pointerVec, length);
                 },
-                updateAllocatedMemory(allocated_gpu_memory_ptr: number, length: number) {
-                    engine.gpu?.updateAllocatedMemory(allocated_gpu_memory_ptr, length);
-                },
                 update_directional_lights(pointer: number, length: number) {
                     engine.gpu?.update_directional_lights(pointer, length)
                 },

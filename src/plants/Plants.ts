@@ -125,7 +125,7 @@ export class Plants extends MainNode {
 
                 shapeGPUSwap.copyTo(commandEncoder, shapeGPU, 0, 0, numBlades * 4 * 4);
                 indirectBuffer.updateBufferRaw(commandEncoder, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
-                scene.gpu.pendingCommandBuffers.add(commandEncoder.finish());
+                scene.gpu.pendingCommandBuffers.push(commandEncoder.finish());
             });
             await this.#worker.message(WorkerReturn.Promise, 'init', {
                 //  positions: this.offset,

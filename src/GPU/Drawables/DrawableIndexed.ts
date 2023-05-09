@@ -12,6 +12,10 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
     #baseVertex: number;
     #firstIndex: number;
     #GPUIndexFormat: GPUIndexFormat;
+    /**
+     * Override indices_count. When not set, defaults to index buffer size
+     */
+    indices_count?: number;
     constructor(
         drawableProps: Omit<DrawableProps<NodeIndexed>, 'label'> & {
             renderPipeline: R,
@@ -81,12 +85,12 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass) {
         if (this.#indexBuffer) {
             renderEncoder.setIndexBuffer(this.#indexBuffer.getIndexBuffer(renderPass), this.#GPUIndexFormat);
-            const indices_count = this.node.indices_count;
+            const indices_count = this.indices_count ?? this.node.indices_count;
             if (indices_count === 0) {
                 console.warn('wont draw', this.node.label, ', zero indices')
             } else {
-                console.debug('drawIndexed', this.node.label, 'indices', this.node.indices_count, 'instanceCount', this.instanceCount, 'indexFormat',this.#GPUIndexFormat, 'indexBufferSize', this.#indexBuffer.size)
-                renderEncoder.drawIndexed(this.node.indices_count, this.instanceCount, this.#firstIndex, this.#baseVertex, this.firstInstance);
+                console.debug('drawIndexed', this.node.label, 'indices', indices_count, 'instanceCount', this.instanceCount, 'indexFormat',this.#GPUIndexFormat, 'indexBufferSize', this.#indexBuffer.size)
+                renderEncoder.drawIndexed(indices_count, this.instanceCount, this.#firstIndex, this.#baseVertex, this.firstInstance);
             }
         } else {
             console.warn('wont draw', this.node.label, ', no indexBuffer')

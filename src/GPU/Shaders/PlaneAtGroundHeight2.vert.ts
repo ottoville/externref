@@ -1,9 +1,8 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-import type { Terrain } from '../../world/Terrain.js';
-import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
+import type { GPU } from '../../GPU.js';
 
-type BindGroupLayouts = Terrain["TerrainHeightsbindGroupTree"]["bindGroupLayouts"];
+type BindGroupLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"];
 
 export class PlaneAtGroundHeightVertShader2 extends VertexShader<
     { main: PipelineLayout },
@@ -11,8 +10,7 @@ export class PlaneAtGroundHeightVertShader2 extends VertexShader<
     BindGroupLayouts> {
     constructor(
         pipelineLayout: PipelineLayout<BindGroupLayouts>,
-        buffers: GPUVertexBufferLayout,
-        settings: typeof Terrain.settings) {
+        buffers: GPUVertexBufferLayout) {
         const entryPoints = {
             main: pipelineLayout
         }
@@ -26,14 +24,14 @@ export class PlaneAtGroundHeightVertShader2 extends VertexShader<
         this.createWGSL((
             [/*uniforms*/,],
             [scene,/*time, clusters_array, meshes, projection*/],
-            [world],
-            [slopes, facet12]) => {
+            [world]) => {
 
             //////////////////////////////////
+            //      ${getHeightAtCoordinates(settings, heightMap, facet12)}
+            //worldPos.y = (f32(textureLoad(${heightMap}, vec2<u32>(u32(worldPos.x), u32(worldPos.z)), 0).x)) * 500.0; //500 is max height
 
             return /* wgsl */ `
 
-      ${getHeightAtCoordinates(settings, slopes, facet12)}
 
 struct Output {
  @location(0) color : vec3<f32>,
@@ -42,9 +40,8 @@ struct Output {
 @vertex
 fn main(@location(0) position : vec4<f32>) -> Output {
    var output:Output;
-
    var worldPos:vec4<f32> = ${world.prop('transformation')} * position;
-   worldPos.y = getHeightAtCoordinates(worldPos.xz)+2.0;
+
    output.Position = ${scene.prop('modelViewProjection')} * worldPos;
    output.color = vec3<f32>(1.0,1.0,1.0);
    //output.position=vec3<f32>(worldPos.xyz);

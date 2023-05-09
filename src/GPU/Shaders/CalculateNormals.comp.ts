@@ -57,13 +57,13 @@ export class CalculateNormals extends ComputeShader<
        let rows:u32 = GlobalInvocationID.x * ${settings.subdivisions[0]};
        let last_y:u32=GlobalInvocationID.y - 1u;
        
-       let norm1:vec3<f32> = ${facet12.variableName}.plane[rows +  GlobalInvocationID.y].norm;
-       let norm2:vec3<f32> = ${facet12.variableName}.plane[${facetSize} +  (rows +  GlobalInvocationID.y)].norm;
-       let norm4:vec3<f32> = ${facet12.variableName}.plane[${facetSize} +  rows +  last_y].norm;
+       let norm1:vec3<f32> = ${facet12.prop('plane')}[rows +  GlobalInvocationID.y].norm;
+       let norm2:vec3<f32> = ${facet12.prop('plane')}[${facetSize} +  (rows +  GlobalInvocationID.y)].norm;
+       let norm4:vec3<f32> = ${facet12.prop('plane')}[${facetSize} +  rows +  last_y].norm;
        let last_x:u32 = GlobalInvocationID.x - 1u;
-       let norm5:vec3<f32> = ${facet12.variableName}.plane[last_x * ${settings.subdivisions[0]} +  GlobalInvocationID.y].norm;
-       let norm7:vec3<f32> = ${facet12.variableName}.plane[last_x * ${settings.subdivisions[0]} +  last_y].norm;
-       let norm8:vec3<f32> = ${facet12.variableName}.plane[${facetSize} + last_x * ${settings.subdivisions[0]} +  last_y].norm;
+       let norm5:vec3<f32> = ${facet12.prop('plane')}[last_x * ${settings.subdivisions[0]} +  GlobalInvocationID.y].norm;
+       let norm7:vec3<f32> = ${facet12.prop('plane')}[last_x * ${settings.subdivisions[0]} +  last_y].norm;
+       let norm8:vec3<f32> = ${facet12.prop('plane')}[${facetSize} + last_x * ${settings.subdivisions[0]} +  last_y].norm;
    
        let normalized:vec3<f32> = normalize(norm1 + norm2 + norm4 + norm5 + norm7 + norm8);
        

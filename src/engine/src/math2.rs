@@ -10,10 +10,21 @@ pub struct Vec3<T> {
     pub z: T,
 }
 #[repr(C, align(16))]
+pub struct PositionAndNormalAndUV {
+    pub position: Vec3F32,
+    pub normal: Vec3F32,
+    pub uv: Vec2F32
+}
+#[repr(C, align(16))]
 pub struct PositionAndNormalAndColor {
     pub position: Vec3F32,
     pub normal: Vec3F32,
     pub color: Vec3F32
+}
+#[repr(C, align(16))]
+pub struct Vec2F32 {
+    pub u: f32,
+    pub v: f32,
 }
 #[repr(C, align(16))]
 #[derive(Debug)]
@@ -140,10 +151,15 @@ impl Vec4<Vec4<f32>> {
         result.w.z = self.w.x * other.x.z + self.w.y * other.y.z + self.w.z * other.z.z + self.w.w * other.w.z;
         result.w.w = self.w.x * other.x.w + self.w.y * other.y.w + self.w.z * other.z.w + self.w.w * other.w.w;
     }
+    /**
+     Multiply matrix with other matrix.
+     To multiply matrix in place, use std::ptr::addr_of! macro to give original pointer
+     */
     #[cfg(target_arch = "wasm32")]
-    pub unsafe fn multiply(&self, other:&Vec4<Vec4<f32>>, result:&mut Vec4<Vec4<f32>>) {
+    pub unsafe fn multiply(&self, other: &Vec4<Vec4<f32>>, result_pointer: *mut Vec4<Vec4<f32>>) {
         use std::arch::wasm32::*;
-        
+        let mut result = *result_pointer;
+
         let v0 = v128_load(&other.x as *const Vec4<f32> as *const v128);
         let v1 = v128_load(&other.y as *const Vec4<f32> as *const v128);
         let v2 = v128_load(&other.z as *const Vec4<f32> as *const v128);

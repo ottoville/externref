@@ -25,7 +25,7 @@ export class TerraCamera {
     readonly #uniformBufferSize = /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ + 4 * 4;
     readonly #direction = new MutableTerraVector3([1, 0, 0])
 
-    readonly #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
+    readonly #viewProjectionPositionBuffer = new ArrayBuffer(this.#uniformBufferSize)
 
     readonly projectionViewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 0);
     readonly projectionViewInverted: TerraMatrix = new TerraMatrix();

@@ -67,12 +67,12 @@ export abstract class MainNode {
         return engine.rust.get_mesh_by_id(this.id);
     }
     /**
-     * 
+     *
      * @param scale Scale for x, y and z dimensions
      */
     update_scale(scale: number): void
     /**
-     * 
+     *
      * @param x Scale for x dimension
      * @param y Scale for y dimension
      * @param z Scale for z dimension

@@ -45,8 +45,8 @@ static mut GPU_QUEUE: Vec<usize> = vec![];
 pub unsafe extern "C" fn renderloop() {
     use crate::{mesh::get_mesh_by_id_mut};
     let engine2 = ENGINE.physic_engine_mut();
-    if engine2.gpu_queue2.len() > 0 {
-        GPU_QUEUE = Vec::from_iter(engine2.gpu_queue2.drain());
+    if engine2.gpu_queue.len() > 0 {
+        GPU_QUEUE = Vec::from_iter(engine2.gpu_queue.drain());
         let iter = GPU_QUEUE.iter();
         for mesh_id in iter {
             let mesh = get_mesh_by_id_mut(*mesh_id);
@@ -68,8 +68,8 @@ pub struct Engine2 {
     pub rigid_bodies: HashMap<RigidBodyHandle, &'static mut Mesh>,
     pub broad_phase: BroadPhase,
     pub joint_set: ImpulseJointSet,
-    pub gpu_queue2: HashSet<usize>,
-    pub gpu_meshes2: FreeList<GPUMesh>
+    pub gpu_queue: HashSet<usize>,
+    pub gpu_meshes: FreeList<GPUMesh>
 
 }
 static mut LOG_STRING: String = String::new();
@@ -128,8 +128,8 @@ pub fn init_engine() {
         broad_phase: BroadPhase::new(),
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
-        gpu_queue2: HashSet::new(),
-        gpu_meshes2: FreeList::new()
+        gpu_queue: HashSet::new(),
+        gpu_meshes: FreeList::new()
     };
     unsafe {
         ENGINE.engine2 = Some(e);
