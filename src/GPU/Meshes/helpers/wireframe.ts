@@ -16,7 +16,7 @@ export class WireFrameMesh extends NodeIndexed {
             const slice = v.slice(0, stride);
             vertices.set(slice, i * stride);
         });
-        const targetIndices = targetNode.node.indices;
+        const targetIndices = targetNode.node.indexed.indices;
         const indices = new Uint32Array(targetIndices.length * 2)
         for (let i = 0; i < targetIndices.length / 3; i++) {
             indices[i * 6] = targetIndices[i * 3]!

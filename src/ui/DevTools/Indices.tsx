@@ -1,6 +1,6 @@
 import type { NodeIndexed } from "../../nodes/NodeIndexed.js"
 
-export function Indices({node} : {node: NodeIndexed}) {
+export function Indices({ node } : {node: NodeIndexed}) {
     const verticesArray = node.verticesArray;
     return <table>
         <thead>
@@ -11,7 +11,7 @@ export function Indices({node} : {node: NodeIndexed}) {
             </tr>
         </thead>
         <tbody className="indices">
-            {Array.from(node.indices).map((index, i) => {
+            {Array.from(node.indexed.indices).map((index, i) => {
                 return <tr key={i}>
                     <td>{i}</td>
                     <td>{index}</td>

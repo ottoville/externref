@@ -23,7 +23,7 @@ export class BoundingBoxMesh extends NodeIndexed {
         super(
             {
                 vertices: {
-                    view:  [ptr as rust_pointer<"f32">, len!, cap!],
+                    view: [ptr as rust_pointer<"f32">, len!, cap!],
                     stride: 4
                 }
             },

@@ -75,7 +75,7 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
             drawable instanceof DrawableDirect ? <>
                 Vertices count: {drawable.node.vertices_count}
                 <br />
-                {drawable.node instanceof NodeIndexed ? `Indices count: ${drawable.node.indices_count}` : ''}
+                {drawable.node instanceof NodeIndexed ? `Indices count: ${drawable.node.indexed.indices_count}` : ''}
                 <br />
                 Rigid body: {(drawable.node as MainNode).have_rigid_body ? 'true' : 'false'}
                 <br />
@@ -83,12 +83,12 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
                     <><button type="button" onClick={() => {
                         new NormalsMesh(drawable)
                     }}>Normals</button>
-                        <button type="button" onClick={() => {
-                            new WireFrameMesh(drawable)
-                        }}>Wireframe</button>
-                        {drawable instanceof DrawableIndexed ? <button type="button" onClick={() => {
-                            new BoundingBoxMesh(drawable)
-                        }}>Bounding Box</button> : null}
+                    <button type="button" onClick={() => {
+                        new WireFrameMesh(drawable)
+                    }}>Wireframe</button>
+                    {drawable instanceof DrawableIndexed ? <button type="button" onClick={() => {
+                        new BoundingBoxMesh(drawable)
+                    }}>Bounding Box</button> : null}
                     </> : null
                 }
 

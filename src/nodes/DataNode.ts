@@ -143,7 +143,7 @@ export abstract class DataNode extends MainNode {
             character_can_collide_to = true
         }: DataNodeProps,
         mesh_id: number,
-        strip: boolean = false
+        strip = false
     ) {
         super(mesh_id);
         this.#frontFace = frontFace;

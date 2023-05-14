@@ -1,27 +1,25 @@
 import { rust_pointer } from "engine.js";
-import { type canCollideCharacter, DataNodeProps } from "./DataNode.js";
-import { NodeIndexed } from "./NodeIndexed.js";
+import { type canCollideCharacter, DataNodeProps, DataNode } from "./DataNode.js";
+import { IndexedTrait, NodeIndexed2 } from "./NodeIndexed2.js";
 
-export abstract class BoundableNodeIndexed extends NodeIndexed implements canCollideCharacter {
-    override set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array) {
-        super.set_indices_and_vertices(indices, vertices)
-        this.rebuildTrianglePlanes();
-    }
-    override set_indices(vec: [ptr: rust_pointer<"usize">, len: number, cap: number]) {
-        super.set_indices(vec)
-        this.rebuildTrianglePlanes();
-    }
+export abstract class BoundableNodeIndexed extends DataNode implements canCollideCharacter, IndexedTrait {
+    indexed: NodeIndexed2;
     constructor(
         dataNodeProps: DataNodeProps,
         mesh_id: number,
         strip = false,
-        indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number]
+        indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number],
+        onIndicesChange?: () => void
     ) {
         super(
             dataNodeProps,
             mesh_id,
-            strip,
-            indicesView);
+            strip);
+        this.indexed = new NodeIndexed2(this, indicesView, () => {
+            if(onIndicesChange)
+                onIndicesChange();
+            this.rebuildTrianglePlanes()
+        });
         this.rebuildTrianglePlanes();
     }
     override set_vertices(vertices:  [ptr: rust_pointer<"f32">, len: number, cap: number]) {
@@ -29,9 +27,9 @@ export abstract class BoundableNodeIndexed extends NodeIndexed implements canCol
         this.rebuildTrianglePlanes();
     }
     rebuildTrianglePlanes() {
-        if (!this.initCollider())
+        if (!this.initCollider() || !this.indexed /* This function is called from super constructor when indices are not initialized yet */)
             return;
-        this.indices.forEach((indice: number) => {
+        this.indexed.indices.forEach((indice: number) => {
             const position = this.colliderVerticesV4[indice]
             if (typeof (position) === 'undefined') {
                 throw (new Error('position ' + indice + ' not found'));

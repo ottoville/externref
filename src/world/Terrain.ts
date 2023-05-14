@@ -54,7 +54,6 @@ TODO
 
     readonly mesh: TerrainMesh;
 
-    //readonly TerrainHeightsbindGroupTree: BindablePipelineLayout;
     TerrainHeightsbindGroupTree: BindablePipelineLayout<[
         typeof this.gpu.sizeBindGroupLayout,
         typeof this.gpu.uniformBindGroupLayoutWithTime,
@@ -218,7 +217,7 @@ TODO
             response.headers.set('content-length', (this.mesh.vertices_count * Float32Array.BYTES_PER_ELEMENT * this.mesh.vertices_stride).toString());
             response.headers.set('content-type', 'application/octet-stream');
 
-            const indices = this.mesh.indices;
+            const indices = this.mesh.indexed.indices;
             const response2 = new Response(indices);
             response2.headers.set('content-length', indices.byteLength.toString());
             response2.headers.set('content-type', 'application/octet-stream');
@@ -404,7 +403,7 @@ TODO
             });
             gpuReadBufferPositions.readAndDestroy(readbuff => {
                 return gpuReadBufferIndices.readAndDestroy(buff => {
-                    this.mesh.set_indices_and_vertices(new Uint32Array(buff), new Float32Array(readbuff));
+                    this.mesh.indexed.set_indices_and_vertices(new Uint32Array(buff), new Float32Array(readbuff));
                     this.updateSwap2(0, readbuff.byteLength, true);
                     this.#serialize();
                 });
