@@ -352,7 +352,6 @@ export class GPU {
                         },
                         {
                             writeMask: 0xF,
-                            textureViewDescriptor: undefined,
                             context: undefined
                         },
                         {
@@ -381,7 +380,6 @@ export class GPU {
                 {
                     writeMask: 0xF,
                     context: undefined,
-                    textureViewDescriptor: undefined
                 })
         );
         this.renderPassWater = new DepthRenderPass(
@@ -397,7 +395,6 @@ export class GPU {
                             size: { width: 300, height: 300 }
                         },
                         {
-                            textureViewDescriptor: undefined,
                             writeMask: 0xF,
                             context: undefined
                         },
@@ -423,7 +420,6 @@ export class GPU {
             }, {
                 writeMask: 0xF,
                 context: undefined,
-                textureViewDescriptor: undefined
             })
         );
 
@@ -507,7 +503,6 @@ export class GPU {
                     {
                         context: context,
                         writeMask: 0xF,
-                        textureViewDescriptor: undefined
                     },
                     {
                         clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },

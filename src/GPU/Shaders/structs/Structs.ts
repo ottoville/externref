@@ -76,7 +76,7 @@ export const Slopes = new Struct('Slopes', {
 })
 export const Vertice = new Struct('Vertice', {
     position: ['', 'vec3<f32>'],
-    normals: ['', 'vec3<f32>'],
+    normal: ['', 'vec3<f32>'],
     uv: ['@size(16)', 'vec2<f32>']
 })
 export const Vertices = new Struct('Vertices', {

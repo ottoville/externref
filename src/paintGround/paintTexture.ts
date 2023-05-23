@@ -3,7 +3,8 @@ import type { Terrain } from "../world/Terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
 import { TerraVector2 } from "../Math.js";
-import { Texture2D } from "../GPU/Texture2D.js";
+import type { Texture } from "../GPU/Texture.js";
+import type { Texture2dSize } from "../GPU/RenderTargets/RenderPassTarget.js";
 
 export class paintTexture extends paintGround {
     private subTextureCache: subTexture = { x: 0, z: 0, width: 0, height: 0, imageData: null };
@@ -21,7 +22,7 @@ export class paintTexture extends paintGround {
     constructor(
         scene: Scene,
         ground: Terrain,
-        protected readonly zonedt: Texture2D<"rgba8unorm", 23>,
+        protected readonly zonedt: Texture<"rgba8unorm", 23, Texture2dSize>,
         private textureWidth: number,
         private textureHeight: number,
         private ratio: number,

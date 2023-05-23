@@ -1,10 +1,13 @@
 import { TextureView } from "../TextureView.js";
-import { Texture2D, type Texture2DParams } from "../Texture2D.js";
+export type Texture2dSize = {
+    readonly width: GPUIntegerCoordinate;
+    readonly height: GPUIntegerCoordinate;
+}
 import { RenderTarget } from "./RenderTarget.js";
-import type { RenderTargetTextureUsageValue } from "../Texture.js";
+import type { RenderTargetTextureUsageValue, Texture, TextureParams, TextureUsageType } from "../Texture.js";
 
 export type RenderPassTargetOptions = {
-    textureViewDescriptor: GPUTextureViewDescriptor | undefined,
+    textureViewDescriptor?: GPUTextureViewDescriptor | undefined,
     writeMask: GPUColorWriteFlags;
     context: GPUCanvasContext | undefined;
 }
@@ -13,9 +16,9 @@ F extends GPUTextureFormat = GPUTextureFormat,
 U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     extends RenderTarget<F, U>
 {
-    public view: TextureView<Texture2D<F, U>>;
+    public view: TextureView<Texture<F, U, Texture2dSize>>;
     constructor(
-        textureOptions: Texture2DParams<F, U>,
+        textureOptions: TextureParams<F, Exclude<U, TextureUsageType["STORAGE_BINDING"]>, Texture2dSize>,
         public renderTargetOptions: RenderPassTargetOptions
     ) {
         super(textureOptions);

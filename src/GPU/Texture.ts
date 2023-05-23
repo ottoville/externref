@@ -13,13 +13,24 @@ export type TextureSize = {
     readonly height: GPUIntegerCoordinate;
     readonly depthOrArrayLayers: GPUIntegerCoordinate;
 }
-
-export type TextureParams<F, U> = {
+export type TextureParams<F extends GPUTextureFormat, U extends Exclude<TextureUsageValue, TextureUsageType["STORAGE_BINDING"]>, S extends TextureSize> = {
     gpu: GPU;
     format: F;
     usages: U;
     label: string;
-    size: TextureSize;
+    size: S;
+    initialSampleCount?: 1 | 4;
+}
+export type TextureParamsStorage<S extends TextureSize> = {
+    gpu: GPU;
+    /**
+     * Allowed formats for STORAGE_BINDING see https://www.w3.org/TR/webgpu/#plain-color-formats
+     */
+    format: "rgba8unorm" | "rgba8snorm" | "rgba8uint" | "rgba8sint" | /* when bgra8unorm-storage is enanabled "bgra8unorm" |*/ "rgba16uint" | "rgba16sint" | "rgba16float" |
+        "r32uint" | "r32sint" | "r32float" | "rg32uint" | "rg32sint" | "rg32float" | "rgba32uint" | "rgba32sint" | "rgba32float";
+    usages: TextureUsageType["STORAGE_BINDING"];
+    label: string;
+    size: S;
     initialSampleCount?: 1 | 4;
 }
 let n = 0;
@@ -63,12 +74,19 @@ export type RenderTargetTextureUsageValue = ValueOf<RenderTargetTextureUsage>
 
 export class Texture<
     F extends GPUTextureFormat,
-    U extends TextureUsageValue
+    U extends TextureUsageValue,
+    S extends TextureSize = TextureSize,
 > {
     texture: GPUTexture;
     views: Set<TextureView<typeof this>> = new Set();
-    resize(size: TextureSize, sampleCount: 1 | 4) {
-        this.size = size;
+    protected initialSampleCount: 1 | 4 = 1;
+    constructor(
+        public props : TextureParams<F,Exclude<U, TextureUsageType["STORAGE_BINDING"]>,S> | TextureParamsStorage<S>
+    ) {
+        this.texture = this.createTexture(props.initialSampleCount);
+    }
+    resize(size: S, sampleCount: 1 | 4) {
+        this.props.size = size;
         this.createTexture(sampleCount);
     }
     destroy() {
@@ -79,7 +97,7 @@ export class Texture<
         this.views.forEach(view => view.destroy());
     }
     protected createTexture(sampleCount: 1 | 4 = 1, debug = false) {
-        let label = this.label;
+        let label = this.props.label;
         if(debug) {
             label+='debug'+n;
             console.log('create texture', label);
@@ -88,19 +106,19 @@ export class Texture<
         //Texture is undefined on initial call
         if (this.texture)
             this.destroy();
-        let usages = this.usages as number;
+        let usages = this.props.usages as number;
         if (debug) {
             usages |= GPUTextureUsage['COPY_SRC'];
         }
-        if(this.size.width === 0) {
+        if(this.props.size.width === 0) {
             throw new Error('Texture must have width')
-        } else if('height' in this.size && this.size.height === 0) {
+        } else if('height' in this.props.size && this.props.size.height === 0) {
             throw new Error('Texture must have height')
         }
-        this.texture = this.gpu.device.createTexture({
-            size: this.size,
+        this.texture = this.props.gpu.device.createTexture({
+            size: this.props.size,
             sampleCount: sampleCount,
-            format: this.format,
+            format: this.props.format,
             usage: usages,
             label
         });
@@ -108,30 +126,4 @@ export class Texture<
 
         return this.texture;
     }
-    protected gpu: GPU;
-    public format: F;
-    protected usages: U;
-    public label: string;
-    public size: TextureSize;
-    protected initialSampleCount: 1 | 4 = 1
-
-    constructor(
-        {
-            gpu,
-            format,
-            usages,
-            label,
-            size,
-            initialSampleCount = 1
-        }: TextureParams<F, U>
-    ) {
-        this.gpu = gpu;
-        this.format = format;
-        this.usages = usages;
-        this.label = label;
-        this.size = size;
-        this.initialSampleCount = initialSampleCount
-        this.texture = this.createTexture(initialSampleCount);
-    }
-
 }

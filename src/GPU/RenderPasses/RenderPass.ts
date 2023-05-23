@@ -86,7 +86,7 @@ export class RenderPass<U extends {
         const renderBundle = new RenderBundleEncoder(this, GPURenderBundleEncoderDescriptor, (renderBundleEncoder) => {
             Object.values(this.colorRenderTargets).some(rt => {
                 if (rt.texture.sampleCount === 0 && rt.view.bindGroups.size === 0) {
-                    console.warn('Rendertarget ', rt.label, ' is not binded as texture, render result will be shown.')
+                    console.warn('Rendertarget ', rt.props.label, ' is not binded as texture, render result will be shown.')
                 }
             })
             //@ts-ignore

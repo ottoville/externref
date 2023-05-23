@@ -104,12 +104,7 @@ export class Buffer extends Bindable {
             b = new Buffer(gpu, size, usages, typeof mappedAtCreation !== "undefined", label)
         }
         if (mappedAtCreation) {
-            // try {
             mappedAtCreation(b.buffer, gpu);
-            // } catch(e) {
-            //   engine.showError(e);
-            //     return;
-            // }
             b.buffer.unmap();
         }
         return b;
@@ -118,6 +113,9 @@ export class Buffer extends Bindable {
     constructor(protected gpu: GPU, public size: number, protected usages: number[], mappedAtCreation = false, public label: string) {
         if (size === 0)
             throw (new Error('Cannot create zero sized buffer'));
+        if(size > 268435456) {
+            throw new Error('Tried to create buffer '+label+' but its too large with size '+size)
+        }
         super();
         this.usage = usages.reduce((prev, curr) => prev | curr, 0);
 
@@ -215,7 +213,7 @@ class copySrcBuffer extends Buffer {
     }
     resize(size: number) {
         try {
-            const commandEncoder = this.gpu.device.createCommandEncoder({ label: 'bufferResizeEncoder' })
+            const commandEncoder = this.gpu.device.createCommandEncoder({ label: 'bufferResizeEncoder' });
             const newBuffer = this.gpu.device.createBuffer({ usage: this.usage | GPUBufferUsage.COPY_DST, size, label: this.label });
             commandEncoder.copyBufferToBuffer(this.buffer, 0, newBuffer, 0, this.size);
             this.gpu.device.queue.submit([commandEncoder.finish()]);

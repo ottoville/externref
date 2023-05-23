@@ -2,14 +2,13 @@ import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/Terrain.js';
-import { Struct } from './structs/Structs.js';
+import { PlaneArray, Slopes } from './structs/Structs.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 
-export type SlopesLayout = BGLayout<[BufLayout<ShaderStage.COMPUTE, Struct<{
-    numbers: [string, string];
-}>>, BufLayout<ShaderStage.COMPUTE, Struct<{
-    plane: [string, string];
-}>>]>;
+export type SlopesLayout = BGLayout<[
+    BufLayout<ShaderStage.COMPUTE, typeof Slopes>,
+    BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>
+]>;
 
 type BindLayouts = readonly [
     SlopesLayout,

@@ -3,13 +3,13 @@ import { Buffer, type CopyDstBuffer, GPUBufferUsage, BindUniformBuffer } from ".
 import { TextureView } from "../GPU/TextureView.js";
 import type { Engine, ListenerObj } from "../engine.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
-import { TextureUsageEnums } from "../GPU/Texture.js";
-import { Texture2D } from "../GPU/Texture2D.js";
+import { type Texture, TextureUsageEnums, type TextureUsageValue } from "../GPU/Texture.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
 import { DataNode, allocate_vec } from "../nodes/DataNode.js";
 import { new_rust_mesh } from "../MainNode.js";
+import type { Texture2dSize } from "../GPU/RenderTargets/RenderPassTarget.js";
 declare const engine: Engine;
 
 export const enum NumericUnit {
@@ -98,13 +98,13 @@ export abstract class UIRectangle extends DataNode {
     }
     texture?: RenderTarget<"bgra8unorm", (typeof TextureUsageEnums)["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"]> | undefined;
     uniformBuffer: CopyDstBuffer & BindUniformBuffer;
-    textureView: TextureView<Texture2D>;
+    textureView: TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>>;
     createTextureView(
         copySource: ImageBitmap | OffscreenCanvas,
     ) {
         if (this.drawable && this.texture) {
-            if (copySource.width > this.texture.size.width ||
-                copySource.height > this.texture.size.height) {
+            if (copySource.width > this.texture.props.size.width ||
+                copySource.height > this.texture.props.size.height) {
                 this.texture.destroy()
                 this.texture = undefined;
                 const vertices = this.#updateBoundingBoxAndVerticesSuper();
@@ -135,7 +135,7 @@ export abstract class UIRectangle extends DataNode {
         this.textureView = new TextureView(this.texture);
         return this.textureView;
     }
-    abstract createTexture(): TextureView<Texture2D>
+    abstract createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>>
     protected updatePosition(buffer: ArrayBuffer) {
         const b = new Float32Array(buffer)
         if (this.props.translate.x.value[1] === NumericUnit["%"]) {
@@ -276,7 +276,7 @@ export abstract class UIRectangle extends DataNode {
 
     constructor(
         public props: UIRectangleProps,
-        texture: TextureView<Texture2D> | ImageBitmap | OffscreenCanvas) {
+        texture: TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>> | ImageBitmap | OffscreenCanvas) {
         props.label = props.label + '_UIRectangle';
         const mesh_id = new_rust_mesh({
             label: props.label

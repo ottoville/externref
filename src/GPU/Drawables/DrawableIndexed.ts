@@ -7,7 +7,7 @@ import type { RenderPass } from "../../GPU/RenderPasses/RenderPass.js";
 import type { IndexedTrait } from "../../nodes/NodeIndexed2.js";
 declare const engine: Engine;
 
-export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends DrawableDirect<IndexedTrait> {
+export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extends IndexedTrait = IndexedTrait> extends DrawableDirect<N> {
     #indexBuffer: IndexBuffer | undefined
     #baseVertex: number;
     #firstIndex: number;
@@ -17,7 +17,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
      */
     indices_count?: number;
     constructor(
-        drawableProps: Omit<DrawableProps<IndexedTrait>, 'label'> & {
+        drawableProps: Omit<DrawableProps<N>, 'label'> & {
             renderPipeline: R,
             vertexBuffers: MappedVertexBuffers<R>
         },

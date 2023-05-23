@@ -59,7 +59,11 @@ export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
             'texture_depth_multisampled_2d'
             | 'texture_2d<u32>'
             | 'texture_2d<f32>'
+            | 'texture_2d_array<f32>'
             | 'texture_storage_2d<rgba8unorm,write>'
+            | 'texture_storage_2d_array<rgba8unorm,write>'
+            | 'texture_storage_2d<rgba32float,write>'
+            | 'texture_storage_2d<rgba8sint,write>'
     ) {
         super(entry, variableName, structName)
     }

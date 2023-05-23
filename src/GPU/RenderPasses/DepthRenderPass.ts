@@ -15,7 +15,7 @@ export class DepthRenderPass<T extends {
         renderPassProps: RenderPassProps<T>,
         depthRenderTargets: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
     ) {
-        renderPassProps.GPURenderBundleEncoderDescriptor = { depthStencilFormat: depthRenderTargets.format }
+        renderPassProps.GPURenderBundleEncoderDescriptor = { depthStencilFormat: depthRenderTargets.props.format }
         super(renderPassProps);
         this.depthRenderTarget = depthRenderTargets;
     }
@@ -40,7 +40,7 @@ export class DepthRenderPass<T extends {
             depthStencil: {
                 depthWriteEnabled: renderpipeline.props.depthBuffer?.depthWriteEnabled ?? true,
                 depthCompare: renderpipeline.props.depthBuffer?.depthCompare ?? 'greater',
-                format: this.depthRenderTarget.format
+                format: this.depthRenderTarget.props.format
             }
         }
     }

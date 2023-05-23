@@ -32,7 +32,7 @@ export class NormalsMesh extends DataNode {
             },
             character_can_collide_to: false,
         },
-            mesh_id);
+        mesh_id);
 
 
         this.translation = targetNode.node.translation;

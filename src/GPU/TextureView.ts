@@ -9,28 +9,26 @@ export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> 
 
     //TODO: set private
     view: GPUTextureView;
-    readonly #descriptor: GPUTextureViewDescriptor
-    constructor(public texture: T, descriptor?: GPUTextureViewDescriptor) {
+    readonly descriptor: Readonly<GPUTextureViewDescriptor>;
+    constructor(public texture: T, descriptor: GPUTextureViewDescriptor = {}) {
         super();
-        this.#descriptor = {
-            label: texture.label + 'View',
-            ...descriptor
-        }
+        descriptor.label = texture.props.label + 'View';
+        this.descriptor = Object.freeze(descriptor);
         this.view = this.reCreate();
         texture.views.add(this);
     }
     reCreate(debug = false) {
         this.destroy();
-        let label = this.#descriptor.label ?? '';
+        let label = this.descriptor.label ?? '';
         if (debug) {
-            label = (this.#descriptor.label!) + 'debug' + n;
+            label = (this.descriptor.label!) + 'debug' + n;
             console.log('create textureview', label)
             n += 1;
         }
         this.view = this.texture.texture.createView(
             {
-                ...this.#descriptor,
-                label: label
+                ...this.descriptor,
+                label: label,
             });
         return this.view;
     }
