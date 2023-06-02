@@ -1,14 +1,15 @@
 import type { RenderPipeline } from "../../RenderPipeline.js";
 import type { DrawableDirect } from "../../Drawables/DrawableDirect.js";
-import { NodeIndexed } from "../../../nodes/NodeIndexed.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DebugLinesPipeline } from "../../RenderPipeLines/DebugLinesPipeline.js";
 import { new_rust_mesh } from "../../../MainNode.js";
-import { allocate_vec } from "../../../nodes/DataNode.js";
+import { DataNode, allocate_vec } from "../../../nodes/DataNode.js";
+import { IndexedTrait, NodeIndexed2 } from "../../../nodes/NodeIndexed2.js";
 
-export class WireFrameMesh extends NodeIndexed {
+export class WireFrameMesh extends DataNode implements IndexedTrait {
     drawable: DrawableIndexed<RenderPipeline>;
-    constructor(targetNode: DrawableDirect<NodeIndexed>) {
+    indexed: NodeIndexed2;
+    constructor(targetNode: DrawableDirect<IndexedTrait & DataNode>) {
         const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
         const stride = 4
         const vertices = new Float32Array(targetNode.node.positions_count * 4);
@@ -40,8 +41,8 @@ export class WireFrameMesh extends NodeIndexed {
                 character_can_collide_to: false
             },
             mesh_id,
-            false,
-            allocate_vec(indices));
+            false);
+        this.indexed = new NodeIndexed2(this, allocate_vec(indices))
         this.translation = targetNode.node.translation;
         this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
         this.rotation = targetNode.node.rotation;

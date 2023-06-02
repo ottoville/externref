@@ -7,7 +7,6 @@ import { DataNode } from "../../nodes/DataNode.js";
 import { NormalsMesh } from "../../GPU/Meshes/helpers/normals.js";
 import { BoundingBoxMesh } from "../../GPU/Meshes/helpers/boundingbox.js";
 import { DrawableIndexed } from "../../GPU/Drawables/DrawableIndexed.js";
-import { NodeIndexed } from "../../nodes/NodeIndexed.js";
 import type { MainNode } from "../../MainNode.js";
 import { Rotation } from "./Rotation.js";
 import { Primitives } from "./Primitives.js";
@@ -75,7 +74,7 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
             drawable instanceof DrawableDirect ? <>
                 Vertices count: {drawable.node.vertices_count}
                 <br />
-                {drawable.node instanceof NodeIndexed ? `Indices count: ${drawable.node.indexed.indices_count}` : ''}
+                {'indexed' in drawable.node ? `Indices count: ${drawable.node.indexed.indices_count}` : ''}
                 <br />
                 Rigid body: {(drawable.node as MainNode).have_rigid_body ? 'true' : 'false'}
                 <br />
