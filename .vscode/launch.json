@@ -13,7 +13,6 @@
             "runtimeExecutable": "canary",
             "runtimeArgs": [
                 "--remote-debugging-port=9222",
-                "--enable-unsafe-webgpu",
                 "--enable-features=SharedArrayBuffer"
             ],
             "url": "https://localhost:4280",
@@ -26,10 +25,9 @@
             "type": "msedge",
             "name": "Launch Microsoft Edge",
             "request": "launch",
-            "runtimeExecutable": "canary",
+            "runtimeExecutable": "stable",
             "runtimeArgs": [
                 "--remote-debugging-port=9222",
-                "--enable-unsafe-webgpu",
                 "--enable-features=SharedArrayBuffer"
             ],
             "url": "https://localhost:4280", // Provide your project's url to finish configuring
