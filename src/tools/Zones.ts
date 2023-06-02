@@ -4,9 +4,8 @@ import { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";
 import type { Engine, ListenerObj } from "../engine.js";
-import { TextureUsageEnums } from "../GPU/Texture.js";
+import { RenderTarget, TextureUsageEnums } from "../GPU/Texture.js";
 import { TextureView } from "../GPU/TextureView.js";
-import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import type { TopMenuButtonProps } from "../ui/topMenu.js";
 import { Button, ButtonProps } from "../ui/Button.js";
 import { UINode } from "../ui/UINode.js";

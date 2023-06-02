@@ -1,12 +1,11 @@
-﻿import type { Scene } from "../Scene.js";
+import type { Scene } from "../Scene.js";
 import { TerrainTool } from "../tools/TerrainTool.js";
 import { TerrainMesh } from "../GPU/Meshes/Terrain.js";
 import type { Engine } from "../engine.js";
 import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer/Buffer.js";
 import type { BindGroup } from "../GPU/BindGroup.js";
-import { TextureUsageEnums } from "../GPU/Texture.js";
+import { RenderTarget, Texture, TextureUsageEnums, copyDstTexture, copySrcTexture } from "../GPU/Texture.js";
 import { TextureView } from "../GPU/TextureView.js";
-import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import { CalculatePlaneIndices } from "../GPU/Shaders/calculatePlaneIndices.comp.js";
 import { CalculatePlaneHeights } from "../GPU/Shaders/calculatePlaneHeights.comp.js";
 import { CalculateNormals } from "../GPU/Shaders/CalculateNormals.comp.js";
@@ -118,11 +117,11 @@ TODO
         const positionsLength = Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
         const uvsLength = Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
         const normalsLength = Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
-        const verticesBufferSize = positionsLength + uvsLength + normalsLength
+        const verticesBufferSize = positionsLength + uvsLength + normalsLength;
         const t = await caches.match(new Request('/terrain')).then(async cachedvertices => {
             if (cachedvertices) {
                 const cachedBuffer = await Terrain.fromSave(cachedvertices);
-                var terrainPositionAndUvsAndNormalsGPU = Buffer.create(gpu, verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'terrainPositionAndUvsAndNormalsGPU',
+                var terrainPositionAndUvsAndNormalsGPU = Buffer.create(gpu, verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'terrainPositionAndUvsAndNormalsGPU0',
                     b => {
                         new Uint8Array(b.getMappedRange()).set(new Uint8Array(cachedBuffer));
                     })
@@ -143,7 +142,7 @@ TODO
 
                 const commandEncoder = gpu.device.createCommandEncoder({ label: 'loadFromTexture_encoder' });
                 const passEncoder = commandEncoder.beginComputePass({ label: 'loadFromTexture_encoder_pass_encoder' });
-                var terrainPositionAndUvsAndNormalsGPU = Buffer.create(gpu, verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'terrainPositionAndUvsAndNormalsGPU')
+                var terrainPositionAndUvsAndNormalsGPU = Buffer.create(gpu, verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'terrainPositionAndUvsAndNormalsGPU1')
                 const sourceBindGroup = CreateGroundFromHeightMapShader.props.bindGroupLayouts[0].createBindGroup('sourceBindGroup', (bindGroup) => [
                     {
                         binding: 0,
@@ -242,7 +241,12 @@ TODO
         }
     }
 
-    readonly texture: RenderTarget<"rgba8unorm", 31>;
+    readonly texture:
+        RenderTarget<
+        "rgba8unorm",
+            (typeof TextureUsageEnums)["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"],
+            { readonly width: 8192; readonly height: 8192; }> &
+        copyDstTexture & copySrcTexture;
 
     constructor(
         public gpu: GPU,
@@ -261,7 +265,7 @@ TODO
         this.slopeArrGPUBuffer = Buffer.create(gpu, Int32Array.BYTES_PER_ELEMENT * Terrain.#subdivisions[0] * Terrain.#subdivisions[1], [GPUBufferUsage.STORAGE], 'slopeArrGPUBuffer');
         this.facet12ArrGPUBuffer = Buffer.create(gpu, Float32Array.BYTES_PER_ELEMENT * Terrain.#subdivisions[0] * Terrain.#subdivisions[1] * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'facet12ArrGPUBuffer');
         this.facet12ArrGPUBufferSwap = new WriteBuffer(gpu, Float32Array.BYTES_PER_ELEMENT * Terrain.#subdivisions[0] * Terrain.#subdivisions[1] * 4 * 2, 'facet12ArrGPUBufferSwap');
-        this.texture = new RenderTarget({
+        this.texture = Texture.create({
             gpu,
             format: 'rgba8unorm',
             label: 'Terrain',
@@ -337,7 +341,7 @@ TODO
         passEncoder.dispatchWorkgroups(...Terrain.#subdivisions);
 
         passEncoder.setPipeline(computePlaneHeights);
-        passEncoder.setBindGroup(0, shaders.computePlaneHeights.props.bindGroupLayouts[0].createBindGroup('terrainPositionAndUvsAndNormalsGPU', terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup);
+        passEncoder.setBindGroup(0, shaders.computePlaneHeights.props.bindGroupLayouts[0].createBindGroup('terrainPositionAndUvsAndNormalsGPU_Bindgroup', terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup);
 
         passEncoder.setBindGroup(1, shaders.computePlaneHeights.props.bindGroupLayouts[1].createBindGroup('_heightsBindGroupEntries', _heightsBindGroupEntries).bindGroup)
         passEncoder.dispatchWorkgroups(...Terrain.#subdivisions);
@@ -410,34 +414,4 @@ TODO
             });
         }).catch(err => engine.showError(err))
     }
-    /*
-    #ratioX = Terrain.subdivisionsX / this.width;
-    #ratioY = Terrain.subdivisionsY / this.height;
-    getHeightAtCoordinates(x: number, z: number): number {
-        let facet: Float32Array;
-        let col = ((x + this.#maxX) * this.#ratioX) | 0;
-        let row = (-(z + this.#maxZ) * this.#ratioY + Terrain.subdivisionsY) | 0;
-        console.log(col, row);
-        let pos: number = row * Terrain.subdivisionsX + col;
-        try {
-             //HOX!  this.facet1Arr and this.facet2Arr has now been combinet to this.facet12ArrCPUBuffer,
-             //look and example from terrainWorker how to access its indices.
-
-            if (z < -1 * x + this.slopeArr[pos]) {
-                //@ts-ignore
-                facet = new Float32Array(this.facet1Arr.buffer, pos << 4, 4) // << 4 =  4 *  Float32Array.BYTES_PER_ELEMENT
-            }
-            else {
-                //@ts-ignore
-                facet = new Float32Array(this.facet2Arr.buffer, pos << 4, 4) // << 4 = 4 *  Float32Array.BYTES_PER_ELEMENT
-            }
-        } catch (e) {
-            if (e instanceof RangeError) {
-                console.warn('Invalid coordinate to getHeightAtCoordinates ' + x + ' ' + z);
-                return this.getHeightAtCoordinates(Math.min(Math.max(x, this.#minX + 1), this.#maxX - 1), Math.min(Math.max(z, this.#minZ + 1), this.#maxZ - 1))
-            }
-            throw (e);
-        }
-        return -(facet[0] * x + facet[2] * z + facet[3]) / facet[1];
-    }*/
 }

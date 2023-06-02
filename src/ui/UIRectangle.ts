@@ -3,8 +3,7 @@ import { Buffer, type CopyDstBuffer, GPUBufferUsage, BindUniformBuffer } from ".
 import { TextureView } from "../GPU/TextureView.js";
 import type { Engine, ListenerObj } from "../engine.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
-import { type Texture, TextureUsageEnums, type TextureUsageValue } from "../GPU/Texture.js";
-import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
+import { type Texture, TextureUsageEnums, type TextureUsageValue, RenderTarget } from "../GPU/Texture.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
 import { DataNode, allocate_vec } from "../nodes/DataNode.js";
