@@ -33,8 +33,10 @@ export class Box extends SimpleIndexedMesh {
             scenes,
             fixed,
         })
-        const [ptr_vertices, len_vertices, cap_vertices] = new Uint32Array(engine.rust.memory.buffer, engine.rust.get_box_vertices(), 3)
-        const [ptr_ind, len_ind, cap_ind] = new Uint32Array(engine.rust.memory.buffer, engine.rust.get_box_indices(), 3)
+        const boxVertices = engine.rust.get_box_vertices();
+        const [ptr_vertices, len_vertices, cap_vertices] = new Uint32Array(engine.rust.memory.buffer, boxVertices, 3);
+        const boxIndices = engine.rust.get_box_indices();
+        const [ptr_ind, len_ind, cap_ind] = new Uint32Array(engine.rust.memory.buffer, boxIndices, 3)
 
         super(
             {

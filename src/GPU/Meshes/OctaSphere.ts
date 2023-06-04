@@ -29,34 +29,34 @@ export class OctaSphere extends IndexedColoredMesh {
         meshProperties: MeshProperties,
         can_collide = false,
     ) {
-    const ptrs = engine.rust.create_octasphere(2, width, height, depth);
-    const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer, ptrs, 6)
+        const ptrs = engine.rust.create_octasphere(2, width, height, depth);
+        const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer, ptrs, 6)
 
-    const mesh_id = new_rust_mesh({
-        label: 'OctaSphere' + (uid++),
-        fixed: false,
-        ...meshProperties
-    });
-    const vertices = new Float32Array(engine.rust.memory.buffer, pos_ptr, pos_len!);
-    for (let i = 0; i < vertices.length; i += 12) {
-        vertices[i + 8] = Math.random();
-        vertices[i + 9] = Math.random();
-        vertices[i + 10] = Math.random();
-    }
-    super(
-        {
-            vertices: {
-                view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!] // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
+        const mesh_id = new_rust_mesh({
+            label: 'OctaSphere' + (uid++),
+            fixed: false,
+            ...meshProperties
+        });
+        const vertices = new Float32Array(engine.rust.memory.buffer, pos_ptr, pos_len!);
+        for (let i = 0; i < vertices.length; i += 12) {
+            vertices[i + 8] = Math.random();
+            vertices[i + 9] = Math.random();
+            vertices[i + 10] = Math.random();
+        }
+        super(
+            {
+                vertices: {
+                    view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!] // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
+                },
+                can_collide,
+                frontFace: 'ccw'
             },
-            can_collide,
-            frontFace: 'ccw'
-        },
-        mesh_id,
-        [ind_ptr as rust_pointer<"usize">, ind_len!, ind_cap!])
+            mesh_id,
+            [ind_ptr as rust_pointer<"usize">, ind_len!, ind_cap!])
 
-    this.width = width;
-    this.height = height;
-    this.depth = depth;
+        this.width = width;
+        this.height = height;
+        this.depth = depth;
 
-}
+    }
 }

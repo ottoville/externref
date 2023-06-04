@@ -61,7 +61,7 @@ describe('Lights ', function () {
             const renderTarget = engine.gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!;
 
             const data = await renderTarget.toBitmap();
-            let bytesPerRow = renderTarget.size.width * renderTarget.bytes_per_fixel;
+            let bytesPerRow = renderTarget.props.size.width * renderTarget.bytes_per_fixel;
             const missAlignment = bytesPerRow % 256;
 
             if (missAlignment !== 0) {
