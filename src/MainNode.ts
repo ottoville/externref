@@ -103,7 +103,6 @@ export abstract class MainNode {
     /**
      * Get rotation using euler angler
      */
-    //@ts-expect-error Should be allowed on next TS version
     get euler_angles() : ReadOnlyTerraVector3 {
         const ptr = engine.rust.rotation_pointer_euler(this.id)
         return new ReadOnlyTerraVector3(engine.rust.memory.buffer, ptr);
