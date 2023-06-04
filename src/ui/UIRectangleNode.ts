@@ -1,14 +1,13 @@
 import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
-import type { GPU } from "../GPU.js"
 import { UINode } from "./UINode.js";
 import { UIRectangleBackground } from "./UIRectangleBackground.js";
 import { UIRectangleTextOnly } from "./UIRectangleTextOnly.js";
+import type { GPU } from "../GPU.js";
 import type { Engine } from "../engine.js";
 declare const engine: Engine;
 
 export type UIRectangleNodeProps = {
     UIRectangleProps: Omit<UIRectangleProps, "canvaspipeline" | "renderPass">,
-    gpu: GPU,
     bitmap?: ImageBitmap | Promise<ImageBitmap> | undefined,
     text: string,
     onClick?: ((menuName?: string) => void) | undefined
@@ -27,9 +26,8 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
     constructor(props: P) {
         super(props);
     }
-    #instance?: Promise<UIRectangle> | UIRectangle;
-    override destroy() {
-        super.destroy();
+    #instance?: Promise<UIRectangle> | UIRectangle | undefined;
+    destroyInstance() {
         if (this.#instance) {
             if (this.#instance instanceof UIRectangle) {
                 this.#instance.destroy();
@@ -37,6 +35,11 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
                 this.#instance.then(instance => instance.destroy()).catch(err => engine.showError(err));
             }
         }
+        this.#instance = undefined;
+    }
+    override destroy() {
+        super.destroy();
+        this.destroyInstance();
     }
     createBackgroundInstance(commonProps: UIRectangleProps, bitmap: ImageBitmap) {
         return new UIRectangleBackground(commonProps, {
@@ -45,8 +48,14 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
             border_height: 0.2
         }, this.props.text);
     }
-    render() {
-        const { gpu, onClick, bitmap, text, children } = this.props
+    render(gpu: GPU, force: boolean) {
+        if(force) {
+            /*
+                When GPU is destroyed and switching to new GPU
+            */
+            this.destroyInstance();
+        }
+        const { onClick, bitmap, text, children } = this.props
         const commonProps: UIRectangleProps = {
             canvaspipeline: gpu.UIPipeline,
             renderPass: gpu.renderPassCanvas,
@@ -74,7 +83,7 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
                 this.#instance = new UIRectangleTextOnly(commonProps, text);
             }
         } else if (this.#instance instanceof UIRectangleBackground || this.#instance instanceof UIRectangleTextOnly) {
-            if (text !== this.#instance.text) {
+            if (force || text !== this.#instance.text) {
                 this.#instance.text = text;
                 this.#instance.createTexture()
             }

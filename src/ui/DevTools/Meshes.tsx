@@ -7,6 +7,8 @@ import type { Drawable } from "../../GPU/Drawables/Drawable.js";
 import { useEffect, useState } from "react";
 import { VariantList } from "./VariantList.js";
 import { NodeInfo } from "./NodeInfo.js";
+import type { Engine } from "../../engine.js";
+declare const engine: Engine;
 
 const getPositionBindGroupForScreen = (gpu: GPU) => Array.from(gpu.renderPassScreen.renderPipelines)
     .filter((map): map is [RenderPipeline, RenderPipelineVariant] => {
@@ -15,18 +17,24 @@ const getPositionBindGroupForScreen = (gpu: GPU) => Array.from(gpu.renderPassScr
     })
 
 
-export function Meshes(props: { gpu: GPU }) {
+export function Meshes() {
     const [renderPipelines, setRenderPipelines] = useState<ReturnType<typeof getPositionBindGroupForScreen>>([])
     useEffect(() => {
-        const listener = () => {
-            setRenderPipelines(getPositionBindGroupForScreen(props.gpu))
-        };
-        props.gpu.renderPassScreen.onRenderPipelinesChange.add(listener)
-        listener();
+        let renderPassScreen: GPU["renderPassScreen"] | undefined = undefined;
+        let listener: () => void
+        engine.getGPU(gpu => {
+            listener = () => {
+                setRenderPipelines(getPositionBindGroupForScreen(gpu))
+            };
+            gpu.renderPassScreen.onRenderPipelinesChange.add(listener);
+            renderPassScreen = gpu.renderPassScreen;
+            listener();
+
+        })
         return () => {
-            props.gpu.renderPassScreen.onRenderPipelinesChange.delete(listener);
+            renderPassScreen?.onRenderPipelinesChange.delete(listener);
         }
-    }, [props.gpu]);
+    }, [engine]);
     const [selectedDrawable, setSelectedDrawable] = useState<Drawable>()
     return <>
         <fieldset id="meshes">

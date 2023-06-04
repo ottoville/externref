@@ -1,5 +1,4 @@
-﻿import { TerraCamera } from "../TerraCamera.js";
-import { Engine } from "../engine.js";
+﻿import { Engine } from "../engine.js";
 
 
 import { Plants } from "../plants/Plants.js";
@@ -133,20 +132,13 @@ export class Canvas {
             this.setProgress(40);
 
             const gpu = await terraEngine.GPUReady;
-            const waterCamera = new TerraCamera('waterCamera', engine.mainCamera);
-            waterCamera.initForGPU(gpu.renderPassWater, gpu, engine.mainCamera.projection!)
-            waterCamera.beforeViewUpdate.add((position, direction) => {
-                position[1] -= (position[1] - 3) * 2;
-                direction[1] = -direction[1];
-            });
-
 
             this.setProgress(41);
 
-            createSettingsMenu.addKeydownListener(gpu);
-            new createTimeControls({ gpu });
-            new CreateFPSMeter({ gpu })
-            new Scene('main', gpu, [engine.mainCamera, waterCamera], (terrascene) => {
+            createSettingsMenu.addKeydownListener();
+            new createTimeControls();
+            new CreateFPSMeter();
+            new Scene('main', gpu, (terrascene) => {
                 new Sun(gpu, [terrascene]);
                 // Initial scene objects here
 
@@ -177,12 +169,13 @@ export class Canvas {
                 this.setProgress(100);
                 return terrainInited;
             });
-            //@ts-expect-error
-            const debugscene = new Scene('static', terraEngine.gpu, [engine.mainCamera], (scene) => {
+            //Debug scene
+            new Scene('static', terraEngine.gpu!, (scene) => {
                 const sun = new Light(scene);
                 sun.translation = [0, 1, 0]
                 sun.ambient = [0, 0, 0];
                 sun.shadow = 1; // shadow to 1 (no shadow)
+                return undefined
             });
 
             /* const slope = new Box(
@@ -220,7 +213,7 @@ export class Canvas {
             capsule3.color = [0, 0, 1, 0];
 
 
-            const roundCuboid = new RoundCuboid({ width: 40, height: 40, depth: 80 }, { borderRadius:10 }, {label: 'roundCuboid', fixed: true });
+            const roundCuboid = new RoundCuboid({ width: 40, height: 40, depth: 80 }, { borderRadius: 10 }, { label: 'roundCuboid', fixed: true });
             roundCuboid.translation = [200, 900, -70];
             roundCuboid.color = [0, 0, 1, 0];
 

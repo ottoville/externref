@@ -1,17 +1,18 @@
 import { paintTexture } from "../paintGround/paintTexture.js";
 import { Terrain } from "../world/Terrain.js";
 import { PTDresult } from "../types/interfaces/index.js";
-
+import type { GPU } from "../GPU.js";
 import type { Scene } from "../Scene.js";
 import type { Engine, ListenerObj } from "../engine.js";
 import { RenderTarget, TextureUsageEnums } from "../GPU/Texture.js";
 import { TextureView } from "../GPU/TextureView.js";
 import type { TopMenuButtonProps } from "../ui/topMenu.js";
-import { Button, ButtonProps } from "../ui/Button.js";
+import { Button } from "../ui/Button.js";
 import { UINode } from "../ui/UINode.js";
 import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
+import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 declare const engine: Engine;
-export class Zones extends Button<object, ButtonProps & TopMenuButtonProps> {
+export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMenuButtonProps> {
     #PT?: paintTexture;
     #size = 5120;
     readonly #ratio: number //texture coordinates
@@ -19,7 +20,7 @@ export class Zones extends Button<object, ButtonProps & TopMenuButtonProps> {
     scene: Scene;
     #wasOpen = false;
     constructor(
-        props: ButtonProps & TopMenuButtonProps,
+        props: UIRectangleNodeProps & TopMenuButtonProps,
     ) {
         super(props);
         const initialScene = props.terrain.scenes[0];
@@ -46,8 +47,8 @@ export class Zones extends Button<object, ButtonProps & TopMenuButtonProps> {
             })
         }
     }
-    override render() {
-        super.render();
+    override render(gpu: GPU, force: boolean) {
+        super.render(gpu, force);
         if (this.props.open && !this.#wasOpen) {
             this.#wasOpen = true;
             this.#zoneTexture = new RenderTarget({
@@ -90,8 +91,8 @@ export class Zones extends Button<object, ButtonProps & TopMenuButtonProps> {
             this.props.terrain.mesh.setTextureView(new TextureView(this.#zoneTexture));
             this.props.terrain.mesh.set_scenes(staticScene.id);
             return [
-                UINode.createCtrProps(Button,
-                    {
+                UINode.createCtrProps(UIRectangleNode,
+                    Button({
                         ...this.props,
                         UIRectangleProps: {
                             label: 'residentalButton',
@@ -108,7 +109,7 @@ export class Zones extends Button<object, ButtonProps & TopMenuButtonProps> {
                         onClick: () => {
                             this.paintZone()
                         }
-                    }
+                    })
                 )
             ]
         } else if (!this.props.open && this.#wasOpen) {

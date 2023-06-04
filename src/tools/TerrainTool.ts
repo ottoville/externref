@@ -10,19 +10,20 @@ import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import type { TopMenuButtonProps } from "../ui/topMenu.js";
-import { Button, type ButtonProps } from "../ui/Button.js";
+import { Button } from "../ui/Button.js";
 import { UINode } from "../ui/UINode.js";
 import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
+import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
 
 type TerrainToolButtonState = { subMenu: 'lower' | 'raise' | undefined };
-export class TerrainToolButton extends Button<TerrainToolButtonState,
-    ButtonProps & TopMenuButtonProps> {
+export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState,
+UIRectangleNodeProps & TopMenuButtonProps> {
     #wasOpen = false;
     constructor(
-        props: ButtonProps & TopMenuButtonProps,
+        props: UIRectangleNodeProps & TopMenuButtonProps,
     ) {
         super(props);
         this.state = {
@@ -51,8 +52,8 @@ export class TerrainToolButton extends Button<TerrainToolButtonState,
         }
     }
     #tool?: TerrainTool
-    override render() {
-        super.render();
+    override render(gpu: GPU, force: boolean) {
+        super.render(gpu, force);
         if (this.state.subMenu === 'lower') {
             this.#tool?.lower();
             this.props.menuTree.level = 2;
@@ -68,7 +69,7 @@ export class TerrainToolButton extends Button<TerrainToolButtonState,
             }
             engine.addInputListener(this.#inputListener);
             return [
-                UINode.createCtrProps(Button, {
+                UINode.createCtrProps(UIRectangleNode, Button({
                     ...this.props,
                     UIRectangleProps: {
                         label: 'Lower',
@@ -88,7 +89,7 @@ export class TerrainToolButton extends Button<TerrainToolButtonState,
                             subMenu: 'lower'
                         })
                     }
-                }), UINode.createCtrProps(Button, {
+                })), UINode.createCtrProps(UIRectangleNode, Button({
                     ...this.props,
                     UIRectangleProps: {
                         label: 'Raise',
@@ -107,7 +108,7 @@ export class TerrainToolButton extends Button<TerrainToolButtonState,
                             subMenu: 'raise'
                         })
                     }
-                })
+                }))
             ]
         } else if (!this.props.open && this.#wasOpen) {
             this.#wasOpen = false;

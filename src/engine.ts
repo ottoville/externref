@@ -4,7 +4,6 @@ import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import type { TerraVector3 } from "./Math.js";
 import { TerraCamera } from "./TerraCamera.js";
-import { Projection } from "./GPU/Projection.js";
 //@ts-ignore
 import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 //@ts-ignore
@@ -271,6 +270,12 @@ export class Engine {
     GPUReady: Promise<GPU>;
     canvas?: HTMLCanvasElement;
     devTools?: HTMLElement;
+    GPUSubscribions: Set<((gpu: GPU) => void)> = new Set();
+    getGPU(cb: (gpu: GPU) => void) {
+        this.GPUSubscribions.add(cb);
+        if(this.gpu)
+            cb(this.gpu)
+    }
     static async initEngine(
         nodes: {
             canvas: HTMLCanvasElement,
@@ -432,15 +437,32 @@ export class Engine {
     async createGPU(GPUDataSize: number, cb: (gpu: GPU) => void, adapter: GPUAdapter | null) {
         let device: GPUDevice | undefined;
         let forceFallbackAdapter = false;
+        let forceLowPower = false;
         do {
-            console.log('Getting adapter, fallback:', forceFallbackAdapter)
-            adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter })
+            console.log('Getting adapter, low-power:', forceLowPower,'fallback:', forceFallbackAdapter)
+            adapter = await window.navigator.gpu.requestAdapter(
+                {
+                    powerPreference: forceLowPower ? 'low-power' : 'high-performance',
+                    forceFallbackAdapter
+                })
             if (!adapter) {
-                if (forceFallbackAdapter) {
+                if (forceFallbackAdapter && forceLowPower) {
                     throw new Error('Could not get adapter');
                 }
-                console.log('Failed to get adapter')
-                forceFallbackAdapter = true;
+                console.log('Failed to get adapter');
+                // Try with fallback adapter
+                if(!forceLowPower && !forceFallbackAdapter) {
+                    forceFallbackAdapter = true;
+                }
+                // Did not succeed with fallback adapter, try with low power
+                else if(!forceLowPower && forceFallbackAdapter) {
+                    forceFallbackAdapter = false
+                    forceLowPower = true
+                }
+                // Did not owrk with low power, try low power with fallback adapter
+                else if(forceLowPower && !forceFallbackAdapter) {
+                    forceFallbackAdapter = true;
+                }
                 continue;
             }
             try {
@@ -460,7 +482,7 @@ export class Engine {
         device.lost.then(reason => {
             console.error('GPU device lost', reason);
             const newGPU = this.createGPU(GPUDataSize, cb, adapter);
-            this.gpu!.destroy(newGPU);
+            this.gpu!.destroy();
             this.gpu = undefined;
             this.GPUReady = newGPU;
         }).catch((ee) => {
@@ -539,7 +561,7 @@ export class Engine {
 
         //@ts-ignore
         globalThis.engine = this;
-        this.mainCamera = new TerraCamera('mainCamera');
+        this.mainCamera = new TerraCamera('mainCamera', "renderPassScreen");
 
         if (nodes?.canvas) {
             (['pointerup', 'pointerdown', 'pointermove', 'wheel', 'pointerleave', 'keydown', 'keyup'] as const).forEach(eventType => {
@@ -574,9 +596,16 @@ export class Engine {
                     }
                 }, { passive: false });
             });
-
+            const waterCamera = new TerraCamera('waterCamera', "renderPassWater", this.mainCamera);
+            waterCamera.beforeViewUpdate.add((position, direction) => {
+                position[1] -= (position[1] - 3) * 2;
+                direction[1] = -direction[1];
+            });
             this.GPUReady = this.createGPU(GPUDataSize, gpu => {
-                this.mainCamera.initForGPU(gpu.renderPassScreen, gpu, new Projection(gpu));
+                this.GPUSubscribions.forEach(cb => {
+                    cb(gpu);
+                });
+
                 gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
                 //@ts-ignore
                 window.printRenderTarget = () => {

@@ -1,11 +1,10 @@
-import type { GPU } from "../../GPU.js";
 
 import { createRoot } from 'react-dom/client';
 import { Meshes } from "./Meshes.js";
 import { Cameras } from "./Cameras.js";
 
 
-export const DevToolsApp = (container: HTMLElement, gpu: GPU) => {
+export const DevToolsApp = (container: HTMLElement) => {
     const root = createRoot(container);
     container.style.display = 'block';
     root.render(
@@ -15,7 +14,7 @@ export const DevToolsApp = (container: HTMLElement, gpu: GPU) => {
                 container.style.display = 'none';
             }}>Close</button>
 
-            <Meshes gpu={gpu}></Meshes>
+            <Meshes></Meshes>
             <Cameras></Cameras>
         </div>)
 }

@@ -161,13 +161,7 @@ export class GPU {
     }
     #GPUQueueCommandEncoder: GPUCommandEncoder | null = null;
     #renderFrame = 0;
-    destroy(newGPU: Promise<GPU>) {
-        // eslint-disable-next-line promise/catch-or-return
-        newGPU.then(gpu => {
-            this.cameras.forEach(camera => {
-                camera.initForGPU(gpu.renderPassScreen, gpu, new Projection(gpu));
-            })
-        })
+    destroy() {
         this.#ro.disconnect();
         cancelAnimationFrame(this.#renderFrame);
         this.destroyed = true;

@@ -1,20 +1,21 @@
 import { paintPlane } from "../paintGround/paintPlane.js";
 import type { Plants } from "../plants/Plants.js";
-
+import type { GPU } from "../GPU.js";
 import type { PTDresult } from "../types/interfaces/index.js";
 import type { Engine, ListenerObj } from "../engine.js";
 import { UINode } from "../ui/UINode.js";
 import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
 import type { TopMenuButtonProps } from "../ui/topMenu.js";
-import { Button, type ButtonProps } from "../ui/Button.js";
+import { Button } from "../ui/Button.js";
+import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 declare const engine: Engine;
 
 
-export class PlantsUI extends Button<object, ButtonProps & TopMenuButtonProps> {
+export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & TopMenuButtonProps> {
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
     scene = engine.scenes.get('main');
-    constructor(props: ButtonProps & TopMenuButtonProps,
+    constructor(props: UIRectangleNodeProps & TopMenuButtonProps,
     ) {
         super(props);
         if (!this.scene) {
@@ -31,14 +32,14 @@ export class PlantsUI extends Button<object, ButtonProps & TopMenuButtonProps> {
         }
     }
     #wasOpen = false;
-    override render() {
-        super.render();
+    override render(gpu: GPU, force: boolean) {
+        super.render(gpu, force);
         if (this.props.open) {
             this.#wasOpen = true
             engine.addInputListener(this.#inputListener);
             return [
-                UINode.createCtrProps(Button,
-                    {
+                UINode.createCtrProps(UIRectangleNode,
+                    Button({
                         ...this.props,
                         UIRectangleProps: {
                             label: 'createGrassButton',
@@ -53,7 +54,7 @@ export class PlantsUI extends Button<object, ButtonProps & TopMenuButtonProps> {
                         },
                         text: 'Create grass (1)',
                         onClick: () => this.activateDraw()
-                    })
+                    }))
             ]
         } else if (this.#wasOpen) {
             this.#wasOpen = false;
