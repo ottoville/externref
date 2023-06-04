@@ -126,13 +126,14 @@ TODO
                         new Uint8Array(b.getMappedRange()).set(new Uint8Array(cachedBuffer));
                     })
             } else {
-                const CreateGroundFromHeightMapShader = new CreateGroundFromHeightMap(gpu, this.settings);
-
-                const computePipelineP = CreateGroundFromHeightMapShader.createComputePipeline('main')
-
                 const b = await (await fetch('/images/tenerife250.webp')).blob();
-
                 const bitmap = await createImageBitmap(b);
+
+                const CreateGroundFromHeightMapShader = new CreateGroundFromHeightMap(gpu, this.settings, bitmap);
+
+                const CreateGroundFromHeightMapPipelineP = CreateGroundFromHeightMapShader.createComputePipeline('main')
+
+
                 const texture = gpu.device.createTexture({
                     format: 'rgba8unorm',
                     size: [bitmap.width, bitmap.height],
@@ -151,9 +152,9 @@ TODO
                     {
                         binding: 1,
                         resource: texture.createView()
-                    }
+                    },
                 ]);
-                passEncoder.setPipeline(await computePipelineP);
+                passEncoder.setPipeline(await CreateGroundFromHeightMapPipelineP);
                 passEncoder.setBindGroup(0, sourceBindGroup.bindGroup);
                 passEncoder.dispatchWorkgroups(Terrain.#subdivisions[0] + 1, Terrain.#subdivisions[1] + 1);
                 passEncoder.end();
