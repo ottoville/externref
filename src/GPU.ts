@@ -162,6 +162,7 @@ export class GPU {
     #GPUQueueCommandEncoder: GPUCommandEncoder | null = null;
     #renderFrame = 0;
     destroy() {
+        console.log('destroy GPU', this.device.label);
         this.#ro.disconnect();
         cancelAnimationFrame(this.#renderFrame);
         this.destroyed = true;
@@ -549,6 +550,9 @@ export class GPU {
             const entry = entries[0];
             if (!entry)
                 return;
+            if(entry.contentRect.width === 0) {
+                return;
+            }
             window.cancelAnimationFrame(this.#renderFrame)
             if (resizeHandler)
                 clearTimeout(resizeHandler)

@@ -200,6 +200,9 @@ export class RenderPass<U extends {
         return renderPipelineDescriptor;
     }
     resize(width: number, height: number) {
+        if(width === 0) {
+            throw new Error('Cannot resize renderpass to zero width');
+        }
         [this.size.width, this.size.height] = this.#getSizeOnResize(width, height);
         this.#updateSizeBindGroup();
         for (const rt of Object.values(this.colorRenderTargets)) {

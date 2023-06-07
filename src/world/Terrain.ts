@@ -413,6 +413,6 @@ TODO
                     this.#serialize();
                 });
             });
-        }).catch(err => engine.showError(err))
+        }).catch(err => engine.showError(err, gpu))
     }
 }

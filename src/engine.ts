@@ -1,4 +1,4 @@
-﻿import { Physics } from "./physics.js";
+import { Physics } from "./physics.js";
 import { GPU } from "./GPU.js";
 import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
@@ -273,7 +273,7 @@ export class Engine {
     GPUSubscribions: Set<((gpu: GPU) => void)> = new Set();
     getGPU(cb: (gpu: GPU) => void) {
         this.GPUSubscribions.add(cb);
-        if(this.gpu)
+        if (this.gpu)
             cb(this.gpu)
     }
     static async initEngine(
@@ -418,13 +418,14 @@ export class Engine {
     }
     readonly cameras: Set<TerraCamera> = new Set();
 
-    showError(e: unknown) {
-        if (e instanceof DOMException) {
+    showError(e: unknown, gpu?: GPU) {
+        if (e instanceof Error) {
             if (
                 (e.message.includes("Device") && e.message.includes("is lost")) ||
-                (e.cause instanceof DOMException && e.cause.message.includes("Device") && e.cause.message.includes("is lost"))
+                (e.cause instanceof Error && e.cause.message.includes("Device") && e.cause.message.includes("is lost"))
             ) {
                 //When device is lost new device will be set in GPU.ts
+                console.log('Omit error on lost device, current GPU:', engine.gpu?.device.label, 'destroyed:', engine.gpu?.destroyed, 'error GPU:', gpu?.device.label, 'destroyed:', gpu?.destroyed)
                 return;
             }
             this.showErrorError(e);
@@ -439,7 +440,7 @@ export class Engine {
         let forceFallbackAdapter = false;
         let forceLowPower = false;
         do {
-            console.log('Getting adapter, low-power:', forceLowPower,'fallback:', forceFallbackAdapter)
+            console.log('Getting adapter, low-power:', forceLowPower, 'fallback:', forceFallbackAdapter)
             adapter = await window.navigator.gpu.requestAdapter(
                 {
                     powerPreference: forceLowPower ? 'low-power' : 'high-performance',
@@ -451,16 +452,16 @@ export class Engine {
                 }
                 console.log('Failed to get adapter');
                 // Try with fallback adapter
-                if(!forceLowPower && !forceFallbackAdapter) {
+                if (!forceLowPower && !forceFallbackAdapter) {
                     forceFallbackAdapter = true;
                 }
                 // Did not succeed with fallback adapter, try with low power
-                else if(!forceLowPower && forceFallbackAdapter) {
+                else if (!forceLowPower && forceFallbackAdapter) {
                     forceFallbackAdapter = false
                     forceLowPower = true
                 }
                 // Did not owrk with low power, try low power with fallback adapter
-                else if(forceLowPower && !forceFallbackAdapter) {
+                else if (forceLowPower && !forceFallbackAdapter) {
                     forceFallbackAdapter = true;
                 }
                 continue;
@@ -494,7 +495,7 @@ export class Engine {
 
         const gpu = new GPU(this.canvas!, device, GPUDataSize);
         this.gpu = gpu;
-        console.log('new GPU initialized');
+        console.log('new GPU initialized ', device.label);
         cb(gpu)
         return gpu;
 
@@ -554,9 +555,9 @@ export class Engine {
         public showErrorError: (e: Error) => void,
         GPUDataSize: number,
     ) {
-        if(nodes) {
-            this.canvas=nodes.canvas;
-            this.devTools=nodes.devTools;
+        if (nodes) {
+            this.canvas = nodes.canvas;
+            this.devTools = nodes.devTools;
         }
 
         //@ts-ignore
@@ -568,7 +569,7 @@ export class Engine {
                 // keyup and keydown wont trigger if listener is canvas
                 nodes.canvas.ownerDocument.addEventListener(eventType, (e) => {
                     // Do not trigger on devtools
-                    if(!(eventType ==='keydown' || eventType === 'keyup') && e.target !== nodes.canvas) {
+                    if (!(eventType === 'keydown' || eventType === 'keyup') && e.target !== nodes.canvas) {
                         return;
                     }
                     const UIEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {

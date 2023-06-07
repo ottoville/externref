@@ -57,7 +57,6 @@ function bufferBinding(this: Buffer, label: string, bindGroup: BindGroup, offset
 export class Buffer extends Bindable {
     renderPasses: Set<RenderPass> = new Set();
     readonly QUERY_RESOLVE?: boolean
-    protected usage: number;
     //uniform
     static create(gpu: GPU, size: number, usages: [GPUBufferUsage.UNIFORM], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): BindUniformBuffer
     static create(gpu: GPU, size: number, usages: [GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE, GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): BindUniformBuffer & BindStorageBuffer
@@ -110,16 +109,19 @@ export class Buffer extends Bindable {
         return b;
     }
     protected buffer: GPUBuffer;
-    constructor(protected gpu: GPU, public size: number, protected usages: number[], mappedAtCreation = false, public label: string) {
+    constructor(protected gpu: GPU, size: number, protected usages: number[], mappedAtCreation = false, public label: string) {
         if (size === 0)
             throw (new Error('Cannot create zero sized buffer'));
         if(size > 268435456) {
             throw new Error('Tried to create buffer '+label+' but its too large with size '+size)
         }
         super();
-        this.usage = usages.reduce((prev, curr) => prev | curr, 0);
 
-        const desc: GPUBufferDescriptor = { usage: this.usage, size, mappedAtCreation }
+        const desc: GPUBufferDescriptor = {
+            usage: usages.reduce((prev, curr) => prev | curr, 0),
+            size,
+            mappedAtCreation
+        }
         if (label)
             desc.label = label;
         try {
@@ -207,17 +209,16 @@ class copySrcBuffer extends Buffer {
         buffer.copyFrom(commandEncoder, this.buffer, sourceOffset, destinationOffset, copySize);
     }
     createReadCopy(commandEncoder: GPUCommandEncoder) {
-        const gpuReadBuffer = new ReadBuffer(this.gpu, this.size, this.label + '_readCopy');
-        gpuReadBuffer.copyFrom(commandEncoder, this.buffer, 0, 0, this.size);
+        const gpuReadBuffer = new ReadBuffer(this.gpu, this.buffer.size, this.label + '_readCopy');
+        gpuReadBuffer.copyFrom(commandEncoder, this.buffer, 0, 0, this.buffer.size);
         return gpuReadBuffer;
     }
     resize(size: number) {
         try {
             const commandEncoder = this.gpu.device.createCommandEncoder({ label: 'bufferResizeEncoder' });
-            const newBuffer = this.gpu.device.createBuffer({ usage: this.usage | GPUBufferUsage.COPY_DST, size, label: this.label });
-            commandEncoder.copyBufferToBuffer(this.buffer, 0, newBuffer, 0, this.size);
+            const newBuffer = this.gpu.device.createBuffer({ usage: this.buffer.usage | GPUBufferUsage.COPY_DST, size, label: this.label });
+            commandEncoder.copyBufferToBuffer(this.buffer, 0, newBuffer, 0, this.buffer.size);
             this.gpu.device.queue.submit([commandEncoder.finish()]);
-            this.size = size;
             this.destroy();
             this.buffer = newBuffer;
         } catch (e) {
@@ -245,7 +246,7 @@ export class ReadBuffer extends Buffer {
             await this.buffer.mapAsync(GPUMapMode.READ);
             arrbuff = this.buffer.getMappedRange();
         } catch (e) {
-            engine.showError(e);
+            engine.showError(e, this.gpu);
             return;
         }
         try {

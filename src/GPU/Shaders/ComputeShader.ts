@@ -17,8 +17,7 @@ export abstract class ComputeShader<
             label: this.module.label + ' ' + (entryPoint as string),
             layout: this.props.entryPoints[entryPoint]!.layout
         }).catch((err: unknown) => {
-            console.error('createComputePipelineAsync failed on,', this.module.label, ', wgsl:', this.wgsl, { cause: err })
-            throw (new Error('createComputePipelineAsync failed', { cause: err }));
+            throw (new Error('createComputePipelineAsync failed on '+this.module.label+' , wgsl:' + this.wgsl, { cause: err }));
         });
     }
     protected override createWGSL(cb: (...args: { [K in keyof B]: FilterCompute<B[K]["entries"]> }) => string) {

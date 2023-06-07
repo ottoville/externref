@@ -89,7 +89,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
             if (indices_count === 0) {
                 console.warn('wont draw', this.node.label, ', zero indices')
             } else {
-                console.debug('drawIndexed', this.node.label, 'indices', indices_count, 'instanceCount', this.instanceCount, 'indexFormat',this.#GPUIndexFormat, 'indexBufferSize', this.#indexBuffer.size)
+                console.debug('drawIndexed', this.node.label, 'indices', indices_count, 'instanceCount', this.instanceCount, 'indexFormat',this.#GPUIndexFormat)
                 renderEncoder.drawIndexed(indices_count, this.instanceCount, this.#firstIndex, this.#baseVertex, this.firstInstance);
             }
         } else {

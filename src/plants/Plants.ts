@@ -151,6 +151,6 @@ export class Plants extends MainNode {
                     resource: shapeGPUSwap.getStorageBinding(bindGroup1)
                 },
             ]);
-        }).catch(err => engine.showError(err));
+        }).catch(err => engine.showError(err, scene.gpu));
     }
 }
