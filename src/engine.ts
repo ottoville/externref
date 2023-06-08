@@ -104,7 +104,7 @@ export type rustWasm = {
         label_ptr: number,
         label_len: number,
         label_cap: number
-        ): number,
+    ): number,
     have_rigid_body(mesh_id: number): boolean,
     create_geometry(
         mesh_id: number,
@@ -271,8 +271,12 @@ export class Engine {
     canvas?: HTMLCanvasElement;
     devTools?: HTMLElement;
     GPUSubscribions: Set<((gpu: GPU) => void)> = new Set();
-    getGPU(cb: (gpu: GPU) => void) {
-        this.GPUSubscribions.add(cb);
+    GPUSubscribionsOnce: Set<((gpu: GPU) => void)> = new Set();
+    getGPU(cb: (gpu: GPU) => void, once = false) {
+        if (once)
+            this.GPUSubscribionsOnce.add(cb);
+        else
+            this.GPUSubscribions.add(cb);
         if (this.gpu)
             cb(this.gpu)
     }
@@ -422,7 +426,9 @@ export class Engine {
         if (e instanceof Error) {
             if (
                 (e.message.includes("Device") && e.message.includes("is lost")) ||
-                (e.cause instanceof Error && e.cause.message.includes("Device") && e.cause.message.includes("is lost"))
+                (e.cause instanceof Error && e.cause.message.includes("Device") && e.cause.message.includes("is lost")) ||
+                (e.message === "Device destroyed before callback") ||
+                (e.cause instanceof Error && e.cause.message === "Device destroyed before callback")
             ) {
                 //When device is lost new device will be set in GPU.ts
                 console.log('Omit error on lost device, current GPU:', engine.gpu?.device.label, 'destroyed:', engine.gpu?.destroyed, 'error GPU:', gpu?.device.label, 'destroyed:', gpu?.destroyed)
@@ -483,7 +489,7 @@ export class Engine {
         device.lost.then(reason => {
             console.error('GPU device lost', reason);
             const newGPU = this.createGPU(GPUDataSize, cb, adapter);
-            this.gpu!.destroy();
+            this.gpu!.onDeviceLost();
             this.gpu = undefined;
             this.GPUReady = newGPU;
         }).catch((ee) => {
@@ -606,6 +612,10 @@ export class Engine {
                 this.GPUSubscribions.forEach(cb => {
                     cb(gpu);
                 });
+                this.GPUSubscribionsOnce.forEach(cb => {
+                    cb(gpu);
+                });
+                this.GPUSubscribionsOnce.clear();
 
                 gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
                 //@ts-ignore

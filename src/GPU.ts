@@ -1,4 +1,4 @@
-﻿import { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
+import { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
 import { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
 
 import { ColorRenderTarget } from "./GPU/RenderTargets/ColorRenderTarget.js";
@@ -161,7 +161,19 @@ export class GPU {
     }
     #GPUQueueCommandEncoder: GPUCommandEncoder | null = null;
     #renderFrame = 0;
+    /**
+     * Manually destroy the device.
+     * Needed to mark device as destroyed before device.lost will resolve
+     * so errors from mapAsync etc. can be handled gracefully.
+     */
     destroy() {
+        this.destroyed = true;
+        this.device.destroy();
+    }
+    /**
+     * Called from device.lost callback when device is lost
+     */
+    onDeviceLost() {
         console.log('destroy GPU', this.device.label);
         this.#ro.disconnect();
         cancelAnimationFrame(this.#renderFrame);

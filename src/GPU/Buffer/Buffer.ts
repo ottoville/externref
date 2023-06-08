@@ -246,13 +246,15 @@ export class ReadBuffer extends Buffer {
             await this.buffer.mapAsync(GPUMapMode.READ);
             arrbuff = this.buffer.getMappedRange();
         } catch (e) {
-            engine.showError(e, this.gpu);
+            if(!this.gpu.destroyed) {
+                engine.showError(e, this.gpu);
+            }
             return;
         }
         try {
             await callback(arrbuff);
         } catch(e) {
-            engine.showError(e);
+            engine.showError(e, this.gpu);
         }
         this.destroy();
     }
