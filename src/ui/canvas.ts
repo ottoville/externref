@@ -93,11 +93,11 @@ export class Canvas {
         }, {
             rust: fetch('/engine.wasm').then(response => {
                 if (response.body) {
-                    const reader = response.body.getReader();
                     const contentLengthHeader = response.headers.get('Content-Length');
                     if (!contentLengthHeader) {
                         return response;
                     }
+                    const reader = response.body.getReader();
                     const contentLength = parseInt(contentLengthHeader);
                     let receivedLength = 0; // received that many bytes at the moment
                     let done = false
@@ -122,7 +122,6 @@ export class Canvas {
                         }
                     });
                     return new Response(reableStream, { headers: response.headers });
-
                 }
                 return response;
             }), collider: fetch('../collider/colliderSimdO.wasm')
