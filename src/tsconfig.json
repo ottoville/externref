@@ -47,11 +47,11 @@
     "workers",
     "lib",
     "service-worker.ts",
-    "runTest.ts",
     "**/*.test.integration.ts",
     "**/*.test.ts",
-    "**/*.tesX.ts",
-    "tests.json"
+    "tests.json",
+    "cypress",
+    "cypress.config.ts"
   ],
   "references": [
     { "path": "./tsconfig.workers.json" },
