@@ -17,7 +17,7 @@ pub struct BoundingBox {
 #[cfg(test)]
 #[test]
 fn test_bounding_box() {
-    use crate::{meshes::meshes::{box_positions, box_indices}, engine::{init_engine}, mesh::{ENGINE, get_mesh_by_id_mut}, Geometry};
+    use crate::{meshes::meshes::{BOX_POSITIONS, BOX_INDICES}, engine::{init_engine}, mesh::{ENGINE, get_mesh_by_id_mut}, Geometry};
     unsafe {
         init_engine();
         let engine2 = ENGINE.physic_engine_mut();
@@ -25,8 +25,8 @@ fn test_bounding_box() {
         Mesh::new(0.0, 0.0, 0.0, false, false, false, String::from("box"));
         let m = &mut engine2.meshes[len];
         let mut geometry = Geometry::new(true, 6, false, false);
-        geometry.set_vertices(box_positions.to_vec());
-        geometry.indices = box_indices.to_vec();
+        geometry.set_vertices(BOX_POSITIONS.to_vec());
+        geometry.indices = BOX_INDICES.to_vec();
         m.geometry = Some(geometry);
 
         m.scaling.x = 500.0;

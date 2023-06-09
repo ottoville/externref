@@ -36,7 +36,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
         public iBuffer: IndexBuffer,
         vertices: [ptr: rust_pointer<"f32">, len: number, cap: number],
         indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number],
-        verticesPositionStride = 3
+        verticesPositionStride: number
     ) {
         const mesh_id = new_rust_mesh({
             label: 'terrain',
@@ -66,7 +66,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 magFilter: "linear",
                 minFilter: "linear",
             });
-            const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline);
+            const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline, {}, { stride: verticesPositionStride });
             this.drawable = new DrawableIndexed({
                 renderPipeline,
                 renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]),

@@ -3,10 +3,10 @@ import { GPU } from "../../GPU.js";
 import { SimpleFragShader } from "../Shaders/Simple.frag.js";
 
 export const ColoredRenderPipeline = [
-    'SimpleRenderPipeline', function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
+    'ColoredRenderPipeline', function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {stride: number}) {
         const simpleVertShader = new VertexColorShader(gpu.positionAndTimeBindGroup,
             {
-                arrayStride: 12 * 4,
+                arrayStride: vertexBufferProps.stride * 4,
                 stepMode: "vertex",
                 attributes: [
                     {

@@ -22,6 +22,8 @@ import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, P
 import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 import { UIFragShader } from "./GPU/Shaders/UI.frag.js";
 import { MainNode } from "./MainNode.js";
+import type { VertexShader } from "./GPU/Shaders/VertexShader.js";
+import type { FragmentShader } from "./GPU/Shaders/FragmentShader.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -37,7 +39,10 @@ window.resetDebugNumber = () => {
     debugNumber = 0;
 }
 */
-type CreateRenderPipelineCB<R extends RenderPipeline> = readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R];
+type CreateRenderPipelineCB<R extends RenderPipeline, V extends ({ stride: number }) = { stride: number }> = readonly [
+    label: string,
+    create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState, vertexBufferProps: V) => R
+]
 
 export class GPU {
     #maxInstances = 10;
@@ -140,10 +145,10 @@ export class GPU {
         TextLayout<ShaderStage.FRAGMENT>]>
     destroyed = false;
     fps = 0
-    createRenderPipeline<R extends RenderPipeline>(desc: CreateRenderPipelineCB<R>, primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
-    createRenderPipeline<R extends RenderPipeline>(desc: CreateRenderPipelineCB<R>, primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
-    createRenderPipeline<R extends RenderPipeline>(desc: CreateRenderPipelineCB<R>, primitive?: Omit<GPUPrimitiveState, 'topology'>): R
-    createRenderPipeline<R extends RenderPipeline>(desc: CreateRenderPipelineCB<R>, primitive: GPUPrimitiveState = {}): R {
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V, F>>, V extends VertexShader, F extends FragmentShader>(desc: D, primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V, F>>, V extends VertexShader, F extends FragmentShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V, F>>, V extends VertexShader, F extends FragmentShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'topology'>, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V, F>>, V extends VertexShader, F extends FragmentShader>(desc: D, primitive: GPUPrimitiveState = {}, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]> {
         const primitiveWithDefaults: GPUPrimitiveState = {
             topology: 'triangle-list',
             frontFace: 'cw',
@@ -152,12 +157,12 @@ export class GPU {
         }
         const [label, createRenderPipeline] = desc;
         const hash = label + Object.values(primitiveWithDefaults).sort().join();
-        let renderPipeline = GPU.#renderPipelines.get(hash) as R | undefined;
+        let renderPipeline = GPU.#renderPipelines.get(hash);
         if (!renderPipeline) {
-            renderPipeline = createRenderPipeline(this, hash, primitiveWithDefaults);
+            renderPipeline = createRenderPipeline(this, hash, primitiveWithDefaults, vertexBufferProps);
             GPU.#renderPipelines.set(hash, renderPipeline);
         }
-        return renderPipeline;
+        return renderPipeline as ReturnType<D["1"]>;
     }
     #GPUQueueCommandEncoder: GPUCommandEncoder | null = null;
     #renderFrame = 0;
@@ -562,7 +567,7 @@ export class GPU {
             const entry = entries[0];
             if (!entry)
                 return;
-            if(entry.contentRect.width === 0) {
+            if (entry.contentRect.width === 0) {
                 return;
             }
             window.cancelAnimationFrame(this.#renderFrame)

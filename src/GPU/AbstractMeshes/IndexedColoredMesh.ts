@@ -16,7 +16,7 @@ export class IndexedColoredMesh extends BoundableNodeIndexed {
         dataNodeProps: Omit<DataNodeProps, 'vertices'> & {vertices: {view: [ptr: rust_pointer<"f32">, len: number, cap: number]}},
         mesh_id: number,
         indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number],
-        private vBufferGPU?: VertexBuffer | (CopyDstBuffer & VertexBuffer),
+        vBufferGPU?: VertexBuffer | (CopyDstBuffer & VertexBuffer),
         topology: GPUPrimitiveTopology = "triangle-list",
         staticVertices = true
     ) {
@@ -47,9 +47,8 @@ export class IndexedColoredMesh extends BoundableNodeIndexed {
                         new Float32Array(b.getMappedRange()).set(new Float32Array(engine.rust.memory.buffer, dataNodeProps.vertices.view[0], dataNodeProps.vertices.view[1]));
                     });
                 }
-                this.vBufferGPU = vBufferGPU;
             }
-            const renderPipeline = engine.gpu.createRenderPipeline(ColoredRenderPipeline, primitiveState);
+            const renderPipeline = engine.gpu.createRenderPipeline(ColoredRenderPipeline, primitiveState, { stride: 12 });
 
             this.drawable = new DrawableIndexed(
                 {
@@ -59,25 +58,6 @@ export class IndexedColoredMesh extends BoundableNodeIndexed {
                     node: this,
                 }
             )
-        }
-    }
-    updateVertices(
-        bufferOffset: number,
-        data: SharedArrayBuffer | BufferSource,
-        dataOffset?: number | undefined,
-        writeSize?: number | undefined,
-        commandEncoder?: GPUCommandEncoder,) {
-        if (!this.vBufferGPU) {
-            throw new Error('vBufferGPU missing');
-        }
-        if ('write' in this.vBufferGPU) {
-            if (commandEncoder) {
-                this.vBufferGPU.updateBufferRaw(commandEncoder, data)
-            } else {
-                this.vBufferGPU.write(bufferOffset, data, dataOffset, writeSize)
-            }
-        } else {
-            throw new Error('Cant update SimpleIndexedMesh vertices when they are set static')
         }
     }
 }

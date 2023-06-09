@@ -63,11 +63,11 @@ export class paintPlane extends paintGround {
             callback(p);
         });
         const renderPipeline = ground.gpu.createRenderPipeline([
-            'paintPlaneRenderpipeline', (_gpu, label, primitive) => {
+            'paintPlaneRenderpipeline', (_gpu, label, primitive, vertexBufferProps) => {
                 const planeVertShader = new PlaneAtGroundHeightVertShader(
                     ground.TerrainHeightsbindGroupTree,
                     {
-                        arrayStride: 4 * 12,
+                        arrayStride: vertexBufferProps.stride * 4,
                         stepMode: "vertex",
                         attributes: [
                             {
@@ -89,7 +89,8 @@ export class paintPlane extends paintGround {
                         }
                     });
             }
-        ], { topology: 'triangle-list', cullMode: 'back', frontFace: 'cw' });
+        ], { topology: 'triangle-list', cullMode: 'back', frontFace: 'cw' },
+        { stride: 12 });
 
         this.#mesh = new PlaneMesh(renderPipeline);
     }

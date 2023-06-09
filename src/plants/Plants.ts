@@ -63,6 +63,9 @@ export class Plants extends MainNode {
                     topology: 'triangle-strip',
                     cullMode: 'none',
                     stripIndexFormat: 'uint16'
+                },
+                {
+                    stride: 4
                 }
             );
             this.drawable = new DrawableIndirect({

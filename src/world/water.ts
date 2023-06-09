@@ -42,6 +42,8 @@ export class Sea extends BoundableNodeSimple {
                 topology: 'triangle-strip',
                 stripIndexFormat: 'uint16',
                 frontFace: 'cw'
+            }, {
+                stride: 3
             });
             this.drawable = new DrawableSimple({
                 renderPipeline,

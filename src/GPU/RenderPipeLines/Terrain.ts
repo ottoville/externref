@@ -4,10 +4,12 @@ import { GroundFragShader } from "../Shaders/Ground.frag.js";
 
 
 export const TerrainRenderPipeline = [
-    'TerrainRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
+    'TerrainRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
+        stride: number;
+    }) {
         const groundVertShader = new GroundVertShader(gpu.lightsTextureBindGroup,
             {
-                arrayStride: 48,
+                arrayStride: vertexBufferProps.stride * 4,
                 stepMode: "vertex",
                 attributes: [
                     {

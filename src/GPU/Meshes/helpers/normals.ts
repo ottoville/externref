@@ -38,7 +38,7 @@ export class NormalsMesh extends DataNode {
         this.translation = targetNode.node.translation;
         this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
         this.rotation = targetNode.node.rotation;
-        const renderPipeline = gpu.createRenderPipeline(NormalsPipeline, { topology: 'line-list' });
+        const renderPipeline = gpu.createRenderPipeline(NormalsPipeline, { topology: 'line-list' }, { stride: 8 });
         this.drawable = new DrawableSimple({
             renderPipeline,
             renderPasses: undefined,

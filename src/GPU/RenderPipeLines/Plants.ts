@@ -3,10 +3,10 @@ import { GrassVertShader } from "../Shaders/Grass.vert.js";
 import { ColorFragShader } from "../Shaders/Color.frag.js";
 
 export const PlantsRenderPipeline = [
-    'PlantsRenderPipeline', function PlantsRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
+    'PlantsRenderPipeline', function PlantsRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {stride: number}) {
         const grassVertShader = new GrassVertShader(gpu.rootCameralayout, [
             {
-                arrayStride: 4 * 4,
+                arrayStride: vertexBufferProps.stride * 4,
                 stepMode: "instance",
                 attributes: [
                     { // position

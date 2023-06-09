@@ -2,7 +2,7 @@ import type { GPU } from "../../GPU.js";
 import { WaterVertShader } from "../../GPU/Shaders/Water.vert.js";
 import { WaterFragShader } from "../Shaders/Water.frag.js";
 export const WaterRenderPipeline = [
-    'WaterRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
+    'WaterRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: { stride: number }) {
         //TODO: Reuse sampler with terrain.ts?
         const sampler = gpu.device.createSampler({
             magFilter: "nearest",
@@ -11,7 +11,7 @@ export const WaterRenderPipeline = [
         });
 
         const waterVertShader = new WaterVertShader(gpu.bindGroupTextureWater, {
-            arrayStride: 12,
+            arrayStride: vertexBufferProps.stride * 4,
             stepMode: 'vertex',
             attributes: [
                 {

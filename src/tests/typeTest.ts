@@ -5,6 +5,10 @@
 
 import { Texture, TextureUsageEnums } from "GPU/Texture";
 import type { Engine } from "../engine.js";
+import { SimpleRenderPipeline } from "../GPU/RenderPipeLines/Simple.js";
+import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
+import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
+import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 declare const engine: Engine;
 
 Texture.create({
@@ -65,3 +69,47 @@ const text3 = Texture.create({
 console.log(text3.copyFrom)
 //Should be fine
 console.log(text3.copyTo)
+
+
+
+const primitiveState: GPUPrimitiveState = {
+    frontFace: 'cw',
+    topology: 'triangle-strip' };
+
+//@ts-expect-error Needs stride
+engine.gpu!.createRenderPipeline(SimpleRenderPipeline, primitiveState, undefined );
+//Should be fine
+const renderPipeline = engine.gpu!.createRenderPipeline(SimpleRenderPipeline, primitiveState, { stride: 4 } );
+new DrawableIndexed(
+    {
+        renderPipeline,
+        renderPasses: new Set([]),
+        //@ts-expect-error The renderPipeline needs vertexBuffer
+        vertexBuffers: [] as [],
+        //@ts-ignore
+        node: {},
+    }
+)
+
+//@ts-expect-error Cannot have stride
+engine.gpu!.createRenderPipeline(SunRenderPipeline, {
+    topology: 'triangle-strip',
+    cullMode: 'none',
+    stripIndexFormat: 'uint16'
+}, { stride: 8 });
+
+//Should be fine
+const renderPipeline2 = engine.gpu!.createRenderPipeline(SunRenderPipeline, {
+    topology: 'triangle-strip',
+    cullMode: 'none',
+    stripIndexFormat: 'uint16'
+}, undefined);
+
+new DrawableSimple({
+    renderPipeline: renderPipeline2,
+    renderPasses: new Set([]),
+    //@ts-expect-error The renderpipeline does not need vertexBuffer
+    vertexBuffers: [new Float32Array()],
+    //@ts-ignore
+    node: {},
+})

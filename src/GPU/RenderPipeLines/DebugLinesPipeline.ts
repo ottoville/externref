@@ -3,9 +3,11 @@ import { DebugBoundingBoxVertShader } from "../Shaders/devtools/debug_boundingbo
 import { ColorFragShader } from "../Shaders/Color.frag.js";
 
 export const DebugLinesPipeline = [
-    'DebugLinesPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
+    'DebugLinesPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
+        stride: number;
+    }) {
         const shader = new DebugBoundingBoxVertShader(gpu.positionAndTimeBindGroup, {
-            arrayStride: 16,
+            arrayStride: vertexBufferProps.stride * 4,
             stepMode: "vertex",
             attributes: [
                 {

@@ -40,7 +40,7 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
             {
                 topology: 'line-strip',
                 stripIndexFormat: 'uint32'
-            }
+            }, { stride: 4 }
         );
         this.drawable = new DrawableIndexed({
             renderPipeline,

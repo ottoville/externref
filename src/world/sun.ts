@@ -45,14 +45,13 @@ export class Sun extends MainNode {
     }
     drawable: DrawableSimple<RenderPipeline<SunVertShader>> | undefined;
     constructor(gpu: GPU, scenes: Scene[]) {
-        
         super(new_rust_mesh({ directional_light: 1, label: 'sun', scenes }));
         this.positions_count = 14
         const renderPipeline = gpu.createRenderPipeline(SunRenderPipeline, {
             topology: 'triangle-strip',
             cullMode: 'none',
             stripIndexFormat: 'uint16'
-        });
+        }, undefined);
         this.drawable = new DrawableSimple({
             renderPipeline,
             renderPasses: new Set([gpu.renderPassScreen, gpu.renderPassWater]),

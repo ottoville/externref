@@ -48,7 +48,7 @@ export class WireFrameMesh_vertexBuffer extends MainNode implements IndexedTrait
             this.rotation = targetNode.node.rotation;
         })
 
-        const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline_vertexBuffer, { topology: 'line-list' });
+        const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline_vertexBuffer, { topology: 'line-list' }, { stride: 12 });
         this.drawable = new DrawableIndexed({
             renderPipeline,
             renderPasses: undefined,

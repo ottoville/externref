@@ -151,7 +151,7 @@ export class TerrainTool extends MainNode {
         const renderPipeline = terrain.gpu.createRenderPipeline(getRenderPipeline, {
             topology: 'triangle-list',
             cullMode: 'none'
-        })
+        }, undefined)
         const scene = engine.scenes.get('main');
         if (!scene)
             throw (new Error('no scene'));
