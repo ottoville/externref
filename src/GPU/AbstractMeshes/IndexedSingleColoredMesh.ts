@@ -1,19 +1,16 @@
-import type { rust_pointer } from "../../engine.js";
-import type { VertexBuffer, CopyDstBuffer } from "../../GPU/Buffer/Buffer.js";
+import type { rust_vec_ptr } from "../../engine.js";
 import type { DataNodeProps } from "../../nodes/DataNode.js";
-import { SimpleIndexedMesh } from "./SimpleIndexedMesh.js";
+import { SimpleIndexedMesh, type SimpleIndexedMeshProps } from "./SimpleIndexedMesh.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 /**
  * Mesh where whole mesh is single colored
  */
 export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
     constructor(
-        dataNodeProps: Omit<DataNodeProps, 'vertices'> & {vertices: {view: [ptr: rust_pointer<"f32">, len: number, cap: number]}},
+        dataNodeProps: Omit<DataNodeProps, 'vertices'> & {vertices: {view: rust_vec_ptr<"f32">}},
         mesh_id: number,
-        indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number],
-        vBufferGPU?: VertexBuffer | (CopyDstBuffer & VertexBuffer),
-        topology: GPUPrimitiveTopology = "triangle-list",
-        staticVertices = true
+        indicesView: rust_vec_ptr<"usize">,
+        simpleIndexedMeshProps?: SimpleIndexedMeshProps
     ) {
         super(
             {
@@ -26,8 +23,6 @@ export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
             mesh_id,
             indicesView,
             SimpleRenderPipeline,
-            vBufferGPU,
-            topology,
-            staticVertices);
+            simpleIndexedMeshProps);
     }
 }

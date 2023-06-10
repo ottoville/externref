@@ -1,6 +1,6 @@
 ﻿import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
 import { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
-import { Engine, rust_pointer } from "../../engine.js";
+import type { Engine, rust_vec_ptr } from "../../engine.js";
 import { Buffer, VertexBuffer, GPUBufferUsage, CopyDstBuffer } from "../../GPU/Buffer/Buffer.js";
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
@@ -10,16 +10,20 @@ import { VertexShader } from "../../GPU/Shaders/VertexShader.js";
 import { PipelineLayout } from "../../GPU/PipelineLayout.js";
 declare const engine: Engine;
 
+export type SimpleIndexedMeshProps = {
+    vBufferGPU?: VertexBuffer | (CopyDstBuffer & VertexBuffer),
+    topology?: GPUPrimitiveTopology,
+    staticVertices?: boolean
+};
+
 export class SimpleIndexedMesh extends BoundableNodeIndexed {
     drawable: DrawableIndexed<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
         dataNodeProps: DataNodeProps,
         mesh_id: number,
-        indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number],
+        indicesView: rust_vec_ptr<"usize">,
         createRenderPipeline: CreateRenderPipelineCB<RenderPipeline<VertexShader<{ [index: string]: PipelineLayout }, [GPUVertexBufferLayout]>>>,
-        vBufferGPU?: VertexBuffer | (CopyDstBuffer & VertexBuffer),
-        topology: GPUPrimitiveTopology = "triangle-list",
-        staticVertices = true
+        { vBufferGPU, topology = "triangle-list", staticVertices = true }: SimpleIndexedMeshProps = { topology: "triangle-list", staticVertices: true }
     ) {
         const strip = topology === 'triangle-strip' || topology === 'line-strip';
         super(dataNodeProps,

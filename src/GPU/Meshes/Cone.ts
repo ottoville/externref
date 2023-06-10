@@ -105,9 +105,7 @@ export class Cone extends IndexedSingleColoredMesh {
                 can_collide,
             },
             mesh_id,
-            allocate_vec(indices),
-            undefined,
-            "triangle-list");
+            allocate_vec(indices));
         this.color = color;
     }
     override create_collider() {

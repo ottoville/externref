@@ -1,4 +1,4 @@
-import { rust_pointer } from "engine.js";
+import type { rust_vec_ptr } from "engine.js";
 import { type canCollideCharacter, DataNodeProps, DataNode } from "./DataNode.js";
 import { IndexedTrait, NodeIndexed2 } from "./NodeIndexed2.js";
 
@@ -8,7 +8,7 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
         dataNodeProps: DataNodeProps,
         mesh_id: number,
         strip = false,
-        indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number],
+        indicesView: rust_vec_ptr<"usize">,
         onIndicesChange?: () => void
     ) {
         super(
@@ -22,7 +22,7 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
         });
         this.rebuildTrianglePlanes();
     }
-    override set_vertices(vertices:  [ptr: rust_pointer<"f32">, len: number, cap: number]) {
+    override set_vertices(vertices:  rust_vec_ptr<"f32">) {
         super.set_vertices(vertices);
         this.rebuildTrianglePlanes();
     }

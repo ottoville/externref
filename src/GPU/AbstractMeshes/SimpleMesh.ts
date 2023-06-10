@@ -1,6 +1,6 @@
 ﻿import { BoundableNodeSimple } from "../../nodes/BoundableNodeSimple.js";
 import { DrawableSimple } from "../Drawables/DrawableSimple.js";
-import { Engine, rust_pointer } from "../../engine.js";
+import type { Engine, rust_vec_ptr } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { Buffer, VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
@@ -12,7 +12,7 @@ declare const engine: Engine;
 export class SimpleMesh extends BoundableNodeSimple {
     drawable: DrawableSimple<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
-        dataNodeProps: Omit<DataNodeProps, 'vertices'> & { vertices: { view: [ptr: rust_pointer<"f32">, len: number, cap: number] } },
+        dataNodeProps: Omit<DataNodeProps, 'vertices'> & { vertices: { view: rust_vec_ptr<"f32"> } },
         mesh_id: number,
         strip = false,
         vBufferGPU?: VertexBuffer) {

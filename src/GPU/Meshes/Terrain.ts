@@ -1,7 +1,7 @@
 ﻿import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
 import type { Scene } from "../../Scene.js";
 import { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
-import type { Engine, rust_pointer } from "../../engine.js";
+import type { Engine, rust_pointer, rust_vec_ptr } from "../../engine.js";
 import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
 declare const engine: Engine;
 import type { IndexBuffer, VertexBuffer } from "../../GPU/Buffer/Buffer.js";
@@ -34,8 +34,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
         public initialTexture: TextureView,
         public vBuffer: VertexBuffer,
         public iBuffer: IndexBuffer,
-        vertices: [ptr: rust_pointer<"f32">, len: number, cap: number],
-        indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number],
+        vertices: rust_vec_ptr<"f32">,
+        indicesView: rust_vec_ptr<"usize">,
         verticesPositionStride: number
     ) {
         const mesh_id = new_rust_mesh({

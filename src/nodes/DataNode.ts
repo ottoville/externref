@@ -2,7 +2,7 @@ import { ObjectWorkerThread } from "../WorkerThread.js";
 import { MainNode } from "../MainNode.js";
 import { MutableTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from "../Math.js";
 import type { ColliderJS } from "../Collider.js";
-import type { Engine, rust_pointer } from "../engine.js";
+import type { Engine, rust_pointer, rust_vec_ptr } from "../engine.js";
 declare const engine: Engine;
 
 const worker = new ObjectWorkerThread('mesh.js', { type: 'module' });
@@ -36,7 +36,7 @@ export interface Ellipsoid {
 
 export type DataNodeProps = {
     vertices: {
-        view: [ptr: rust_pointer<"f32">, len: number, cap: number],
+        view: rust_vec_ptr<"f32">,
         stride: number
     }
     /**
@@ -52,8 +52,8 @@ export type DataNodeProps = {
     so it is always small enought for gravity to hit on next tick.
 */
 
-export function allocate_vec(array: Uint32Array) : [ptr: rust_pointer<"usize">, len: number, cap: number]
-export function allocate_vec(array: Float32Array) : [ptr: rust_pointer<"f32">, len: number, cap: number]
+export function allocate_vec(array: Uint32Array) : rust_vec_ptr<"usize">
+export function allocate_vec(array: Float32Array) : rust_vec_ptr<"f32">
 export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_pointer<"usize"> | rust_pointer<"f32">, len: number, cap: number] {
     if(array.buffer.byteLength === 0) {
         throw new Error("Cannot allocate deattached or empty buffer");
@@ -121,7 +121,7 @@ export abstract class DataNode extends MainNode {
     get vertices_stride(): number {
         return engine.rust.vertices_stride(this.id);
     }
-    set_vertices(vec: [ptr: rust_pointer<"f32">, len: number, cap: number]) {
+    set_vertices(vec: rust_vec_ptr<"f32">) {
         engine.rust.set_vertices(this.id, ...vec);
     }
     get last_collider_world_vertices_pointer() {

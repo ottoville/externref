@@ -57,6 +57,9 @@ type ListenerOptions = {
      */
     force?: boolean
 };
+
+export type rust_vec_ptr<T> = [ptr: rust_pointer<T>, len: number, cap: number]
+
 export type rustWasm = {
     add_drawble(mesh_id: number): void,
     set_drawble_direct(mesh_id: number, instance_count: number, first_instance: number): void,
