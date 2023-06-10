@@ -5,35 +5,31 @@ import { Buffer, VertexBuffer, GPUBufferUsage, CopyDstBuffer } from "../../GPU/B
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import type { DataNodeProps } from "../../nodes/DataNode.js";
-import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
+import type { CreateRenderPipelineCB } from "../../GPU.js";
+import { VertexShader } from "../../GPU/Shaders/VertexShader.js";
+import { PipelineLayout } from "../../GPU/PipelineLayout.js";
 declare const engine: Engine;
-/**
- * Mesh where whole mesh is single colored
- */
+
 export class SimpleIndexedMesh extends BoundableNodeIndexed {
     drawable: DrawableIndexed<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
-        dataNodeProps: Omit<DataNodeProps, 'vertices'> & {vertices: {view: [ptr: rust_pointer<"f32">, len: number, cap: number]}},
+        dataNodeProps: DataNodeProps,
         mesh_id: number,
         indicesView: [ptr: rust_pointer<"usize">, len: number, cap: number],
+        createRenderPipeline: CreateRenderPipelineCB<RenderPipeline<VertexShader<{ [index: string]: PipelineLayout }, [GPUVertexBufferLayout]>>>,
         vBufferGPU?: VertexBuffer | (CopyDstBuffer & VertexBuffer),
         topology: GPUPrimitiveTopology = "triangle-list",
         staticVertices = true
     ) {
         const strip = topology === 'triangle-strip' || topology === 'line-strip';
-        super({
-            ...dataNodeProps,
-            vertices: {
-                view: dataNodeProps.vertices.view,
-                stride: 8
-            }
-        },
-        mesh_id,
-        strip,
-        indicesView);
+        super(dataNodeProps,
+            mesh_id,
+            strip,
+            indicesView);
         const primitiveState: GPUPrimitiveState = {
             frontFace: dataNodeProps.frontFace ?? 'cw',
-            topology };
+            topology
+        };
         if (strip)
             primitiveState.stripIndexFormat = 'uint32';
         if (engine.gpu) {
@@ -48,7 +44,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
                     });
                 }
             }
-            const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline, primitiveState, { stride: 8 } );
+            const renderPipeline = engine.gpu.createRenderPipeline(createRenderPipeline, primitiveState, { stride: dataNodeProps.vertices.stride });
 
             this.drawable = new DrawableIndexed(
                 {

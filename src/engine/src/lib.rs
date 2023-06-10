@@ -23,36 +23,31 @@ use rapier3d::prelude::*;
 static mut MULTIVALUE_USIZE: [usize; 6] = [0; 6];
 static mut MULTIVALUE_F32: [f32; 6] = [0.0; 6];
 
-#[no_mangle]
-pub unsafe extern "C" fn alloc_vector_f32(size: usize) -> *const usize {
-    let mut vec: Vec<f32> = Vec::with_capacity(size);
-    vec.set_len(size);    
-    let mut buf = std::mem::ManuallyDrop::new(vec);
+unsafe fn create_multivalue_vector<T>(vector: Vec<T>) -> *const usize {
+    let mut buf = std::mem::ManuallyDrop::new(vector);
     MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
     MULTIVALUE_USIZE[1] = buf.len();
     MULTIVALUE_USIZE[2] = buf.capacity();
     return MULTIVALUE_USIZE.as_ptr();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn alloc_vector_f32(size: usize) -> *const usize {
+    let mut vec: Vec<f32> = Vec::with_capacity(size);
+    vec.set_len(size);    
+    return create_multivalue_vector(vec);
 }
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_usize(size: usize) -> *const usize {
     let mut vec: Vec<usize> = Vec::with_capacity(size);
     vec.set_len(size);    
-    let mut buf = std::mem::ManuallyDrop::new(vec);
-    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
-    MULTIVALUE_USIZE[1] = buf.len();
-    MULTIVALUE_USIZE[2] = buf.capacity();
-    return MULTIVALUE_USIZE.as_ptr();
+    return create_multivalue_vector(vec)
 }
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_u8(size: usize) -> *const usize {
     let mut vec: Vec<u8> = Vec::with_capacity(size);
     vec.set_len(size);
-    let mut buf = std::mem::ManuallyDrop::new(vec);
-
-    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
-    MULTIVALUE_USIZE[1] = buf.len();
-    MULTIVALUE_USIZE[2] = buf.capacity();
-    return MULTIVALUE_USIZE.as_ptr();
+    return create_multivalue_vector(vec)
 }
 
 #[no_mangle]

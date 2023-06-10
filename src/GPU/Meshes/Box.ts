@@ -1,11 +1,11 @@
 ﻿import type { Scene } from "../../Scene.js";
-import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 import type { Engine, rust_pointer } from "../../engine.js";
 import { new_rust_mesh } from "../../MainNode.js";
+import { IndexedSingleColoredMesh } from "../AbstractMeshes/IndexedSingleColoredMesh.js";
 declare const engine: Engine;
 
 let uid = 0;
-export class Box extends SimpleIndexedMesh {
+export class Box extends IndexedSingleColoredMesh {
     override create_collider() {
         //TODO do not automaticly set collision events
         return engine.rust.create_cuboid_collider(this.scale_x, this.scale_y, this.scale_z, 0, true);

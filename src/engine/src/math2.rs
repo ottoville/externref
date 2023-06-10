@@ -129,6 +129,34 @@ impl Vec3F32 {
 }
 
 impl Vec4<Vec4<f32>> {
+    pub fn identity() -> Vec4<Vec4<f32>> {
+        Vec4 {
+            x: Vec4 {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+                w: 0.0,
+            },
+            y: Vec4 {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+                w: 0.0,
+            },
+            z: Vec4 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+                w: 0.0,
+            },
+            w: Vec4 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                w: 1.0,
+            },
+        } 
+    }
     #[cfg(not(target_arch = "wasm32"))]
     pub unsafe fn multiply(&self, other:&Vec4<Vec4<f32>>, result:&mut Vec4<Vec4<f32>>) {
         result.x.x = self.x.x * other.x.x + self.x.y * other.y.x + self.x.z * other.z.x + self.x.w * other.w.x;

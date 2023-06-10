@@ -1,5 +1,5 @@
 pub use crate::boundingbox::BoundingBox;
-use crate::{math2::{Vec4, Vec3F32}, mesh::get_mesh_by_id_mut, MULTIVALUE_USIZE};
+use crate::{math2::{Vec4}, mesh::get_mesh_by_id_mut, create_multivalue_vector};
 
 #[no_mangle]
 pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const usize {
@@ -23,11 +23,7 @@ pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const
         geometry.bounding_box.vectors_simd[1].x.z, geometry.bounding_box.vectors_simd[1].y.z, geometry.bounding_box.vectors_simd[1].z.z, 0.0,
         geometry.bounding_box.vectors_simd[1].x.w, geometry.bounding_box.vectors_simd[1].y.w, geometry.bounding_box.vectors_simd[1].z.w, 0.0,
     ];
-    let mut buf = std::mem::ManuallyDrop::new(vectors);
-    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
-    MULTIVALUE_USIZE[1] = buf.len();
-    MULTIVALUE_USIZE[2] = buf.capacity();
-    return MULTIVALUE_USIZE.as_ptr();
+    return create_multivalue_vector(vectors);
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize, cap: usize) {

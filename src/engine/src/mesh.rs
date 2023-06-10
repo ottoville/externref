@@ -473,32 +473,7 @@ impl Mesh {
         let engine2 = ENGINE.physic_engine_mut();
         let id = engine2.meshes.len();
         let idx = engine2.gpu_meshes.add(GPUMesh {
-            transformation: Vec4 {
-                x: Vec4 {
-                    x: 1.0,
-                    y: 0.0,
-                    z: 0.0,
-                    w: 0.0,
-                },
-                y: Vec4 {
-                    x: 0.0,
-                    y: 1.0,
-                    z: 0.0,
-                    w: 0.0,
-                },
-                z: Vec4 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 1.0,
-                    w: 0.0,
-                },
-                w: Vec4 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                    w: 1.0,
-                },
-            },
+            transformation: Vec4::identity(),
             ambient: [0.0, 0.0, 0.0],
             shadow: 0.0,
             color: [0.0, 0.0, 0.0, 0.0],
@@ -513,32 +488,7 @@ impl Mesh {
             gpu_mesh_alignment: idx,
             geometry: None,
             velocity: [0.0, 0.0, 0.0, 0.0],
-            transformation: Vec4 {
-                x: Vec4 {
-                    x: 1.0,
-                    y: 0.0,
-                    z: 0.0,
-                    w: 0.0,
-                },
-                y: Vec4 {
-                    x: 0.0,
-                    y: 1.0,
-                    z: 0.0,
-                    w: 0.0,
-                },
-                z: Vec4 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 1.0,
-                    w: 0.0,
-                },
-                w: Vec4 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                    w: 1.0,
-                },
-            },
+            transformation: Vec4::identity(),
             transformation_is_dirty: true,
             translation: Vec3F32 {
                 x: 0.0,

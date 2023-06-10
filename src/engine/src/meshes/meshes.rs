@@ -1,6 +1,6 @@
-use crate::MULTIVALUE_USIZE;
+use crate::create_multivalue_vector;
 
-pub const box_positions : [f32; 192] =
+pub const BOX_POSITIONS : [f32; 192] =
     [
         // Left face        //normals
         -1.0, 1.0, -1.0, 1.0,   0.0, 1.0, 0.0,1.0, 
@@ -36,7 +36,7 @@ pub const box_positions : [f32; 192] =
         -1.0, -1.0, 1.0, 1.0, 0.0, 1.0, 0.0,1.0, 
     ];
 
-pub const box_indices : [usize; 36] =
+pub const BOX_INDICES : [usize; 36] =
     [
         0, 1, 2, 0, 2, 3,    // front
         4, 5, 6, 4, 6, 7,    // back
@@ -47,18 +47,9 @@ pub const box_indices : [usize; 36] =
     ];
 #[no_mangle]
 pub unsafe extern "C" fn get_box_vertices() -> *const usize {
-    let mut buf = std::mem::ManuallyDrop::new(box_positions.to_vec());
-    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
-    MULTIVALUE_USIZE[1] = buf.len();
-    MULTIVALUE_USIZE[2] = buf.capacity();
-    return MULTIVALUE_USIZE.as_ptr();
-
+    return create_multivalue_vector(BOX_POSITIONS.to_vec());
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_box_indices() -> *const usize {
-    let mut buf = std::mem::ManuallyDrop::new(box_indices.to_vec());
-    MULTIVALUE_USIZE[0] = buf.as_mut_ptr() as usize;
-    MULTIVALUE_USIZE[1] = buf.len();
-    MULTIVALUE_USIZE[2] = buf.capacity();
-    return MULTIVALUE_USIZE.as_ptr();
+    return create_multivalue_vector(BOX_INDICES.to_vec());
 }

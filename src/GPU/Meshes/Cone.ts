@@ -1,8 +1,8 @@
-﻿import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
-import type { Engine } from "../../engine.js";
+﻿import type { Engine } from "../../engine.js";
 import { MainNodeProps, new_rust_mesh } from "../../MainNode.js";
 import { MutableTerraVector3 } from "../../Math.js";
 import { allocate_vec } from "../../nodes/DataNode.js";
+import { IndexedSingleColoredMesh } from "../AbstractMeshes/IndexedSingleColoredMesh.js";
 declare const engine: Engine;
 
 const douplePI = Math.PI * 2;
@@ -89,7 +89,7 @@ function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, i
     }
     return [Float32Array.from(coneVertices), Uint32Array.from(coneIndices)] as const;
 }
-export class Cone extends SimpleIndexedMesh {
+export class Cone extends IndexedSingleColoredMesh {
     constructor(
         mainNodeProps: Omit<MainNodeProps, 'strip'>,
         can_collide = false,

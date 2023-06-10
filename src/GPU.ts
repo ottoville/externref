@@ -23,7 +23,6 @@ import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 import { UIFragShader } from "./GPU/Shaders/UI.frag.js";
 import { MainNode } from "./MainNode.js";
 import type { VertexShader } from "./GPU/Shaders/VertexShader.js";
-import type { FragmentShader } from "./GPU/Shaders/FragmentShader.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -39,9 +38,9 @@ window.resetDebugNumber = () => {
     debugNumber = 0;
 }
 */
-type CreateRenderPipelineCB<R extends RenderPipeline, V extends ({ stride: number }) = { stride: number }> = readonly [
+export type CreateRenderPipelineCB<R extends RenderPipeline, VP extends ({ stride: number }) = { stride: number }> = readonly [
     label: string,
-    create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState, vertexBufferProps: V) => R
+    create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState, vertexBufferProps: VP) => R
 ]
 
 export class GPU {
@@ -145,10 +144,10 @@ export class GPU {
         TextLayout<ShaderStage.FRAGMENT>]>
     destroyed = false;
     fps = 0
-    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V, F>>, V extends VertexShader, F extends FragmentShader>(desc: D, primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
-    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V, F>>, V extends VertexShader, F extends FragmentShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
-    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V, F>>, V extends VertexShader, F extends FragmentShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'topology'>, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
-    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V, F>>, V extends VertexShader, F extends FragmentShader>(desc: D, primitive: GPUPrimitiveState = {}, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]> {
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'topology'>, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: GPUPrimitiveState = {}, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]> {
         const primitiveWithDefaults: GPUPrimitiveState = {
             topology: 'triangle-list',
             frontFace: 'cw',
@@ -156,7 +155,7 @@ export class GPU {
             ...primitive
         }
         const [label, createRenderPipeline] = desc;
-        const hash = label + Object.values(primitiveWithDefaults).sort().join();
+        const hash = label + [...Object.values(primitiveWithDefaults), ...Object.values(vertexBufferProps ?? {})].sort().join();
         let renderPipeline = GPU.#renderPipelines.get(hash);
         if (!renderPipeline) {
             renderPipeline = createRenderPipeline(this, hash, primitiveWithDefaults, vertexBufferProps);
