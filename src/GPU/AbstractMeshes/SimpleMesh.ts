@@ -1,7 +1,7 @@
 ﻿import { BoundableNodeSimple } from "../../nodes/BoundableNodeSimple.js";
 import { DrawableSimple } from "../Drawables/DrawableSimple.js";
 import type { Engine, rust_vec_ptr } from "../../engine.js";
-import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
+import { SimpleRenderPipeline } from "../RenderPipeLines/SimpleRenderPipeline.js";
 import { Buffer, VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import type { SimpleVertShader } from "../Shaders/Simple.vert.js";

@@ -1,6 +1,16 @@
 import { VertexColorShader } from "../Shaders/VertexColor.vert.js";
 import { GPU } from "../../GPU.js";
-import { SimpleFragShader } from "../Shaders/Simple.frag.js";
+import { simpleAttributes } from "./SimpleRenderPipeline.js";
+
+const simpleAttributesWithColor = Object.freeze([
+    ...simpleAttributes,
+    {
+        // color
+        shaderLocation: 2,
+        offset: 32,
+        format: "float32x3"
+    }
+] as const);
 
 export const ColoredRenderPipeline = [
     'ColoredRenderPipeline', function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {stride: number}) {
@@ -8,31 +18,13 @@ export const ColoredRenderPipeline = [
             {
                 arrayStride: vertexBufferProps.stride * 4,
                 stepMode: "vertex",
-                attributes: [
-                    {
-                        // position
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: "float32x3",
-                    }, {
-                        // normals
-                        shaderLocation: 1,
-                        offset: 16,
-                        format: "float32x3"
-                    }, {
-                        // color
-                        shaderLocation: 2,
-                        offset: 32,
-                        format: "float32x3"
-                    }
-                ]
+                attributes: simpleAttributesWithColor
             });
-        const simpleFragShader = new SimpleFragShader(gpu.positionAndTimeBindGroup);
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
                 label,
                 vertexShader: simpleVertShader,
-                fragmentShader: simpleFragShader,
+                fragmentShader: gpu.simpleFragShader,
                 renderPipeline: {
                     primitive,
                 }

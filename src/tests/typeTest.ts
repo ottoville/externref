@@ -5,7 +5,7 @@
 
 import { Texture, TextureUsageEnums } from "GPU/Texture";
 import type { Engine } from "../engine.js";
-import { SimpleRenderPipeline } from "../GPU/RenderPipeLines/Simple.js";
+import { SimpleRenderPipeline } from "../GPU/RenderPipeLines/SimpleRenderPipeline.js";
 import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
 import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";

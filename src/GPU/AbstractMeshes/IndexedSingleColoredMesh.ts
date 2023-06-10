@@ -1,7 +1,7 @@
 import type { rust_vec_ptr } from "../../engine.js";
 import type { DataNodeProps } from "../../nodes/DataNode.js";
 import { SimpleIndexedMesh, type SimpleIndexedMeshProps } from "./SimpleIndexedMesh.js";
-import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
+import { SimpleRenderPipeline } from "../RenderPipeLines/SimpleRenderPipeline.js";
 /**
  * Mesh where whole mesh is single colored
  */

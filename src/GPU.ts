@@ -23,6 +23,7 @@ import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 import { UIFragShader } from "./GPU/Shaders/UI.frag.js";
 import { MainNode } from "./MainNode.js";
 import type { VertexShader } from "./GPU/Shaders/VertexShader.js";
+import { SimpleFragShader } from "./GPU/Shaders/Simple.frag.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -144,6 +145,7 @@ export class GPU {
         TextLayout<ShaderStage.FRAGMENT>]>
     destroyed = false;
     fps = 0
+    simpleFragShader: SimpleFragShader;
     createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
     createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
     createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'topology'>, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
@@ -286,6 +288,7 @@ export class GPU {
             }
         ]);
         this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot', BindGroupLayoutPosition)
+        this.simpleFragShader = new SimpleFragShader(this.positionAndTimeBindGroup);
         this.lightsTextureBindGroup = this.positionAndTimeBindGroup.createAppendedLayout('lightsBindGroupTexture2Layout',
             new BGLayout(this,
                 'lightsBindGroupTexture2',
