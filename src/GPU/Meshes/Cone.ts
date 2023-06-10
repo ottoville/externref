@@ -100,7 +100,8 @@ export class Cone extends IndexedSingleColoredMesh {
         super(
             {
                 vertices: {
-                    view: allocate_vec(vertices)
+                    view: allocate_vec(vertices),
+                    stride: 8
                 },
                 can_collide,
             },

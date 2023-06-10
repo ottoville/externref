@@ -7,19 +7,13 @@ import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
  */
 export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
     constructor(
-        dataNodeProps: Omit<DataNodeProps, 'vertices'> & {vertices: {view: rust_vec_ptr<"f32">}},
+        dataNodeProps: DataNodeProps,
         mesh_id: number,
         indicesView: rust_vec_ptr<"usize">,
         simpleIndexedMeshProps?: SimpleIndexedMeshProps
     ) {
         super(
-            {
-                ...dataNodeProps,
-                vertices: {
-                    view: dataNodeProps.vertices.view,
-                    stride: 8
-                }
-            },
+            dataNodeProps,
             mesh_id,
             indicesView,
             SimpleRenderPipeline,

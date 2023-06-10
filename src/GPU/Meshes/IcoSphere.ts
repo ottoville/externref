@@ -116,7 +116,8 @@ export class IcoSphere extends IndexedSingleColoredMesh {
         super(
             {
                 vertices: {
-                    view: allocate_vec(verticesAndNormals)
+                    view: allocate_vec(verticesAndNormals),
+                    stride: 8
                 },
                 can_collide,
                 frontFace: 'ccw'

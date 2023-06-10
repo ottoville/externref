@@ -46,7 +46,8 @@ export class OctaSphere extends IndexedColoredMesh {
         super(
             {
                 vertices: {
-                    view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!] // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
+                    view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!], // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
+                    stride: 12
                 },
                 can_collide,
                 frontFace: 'ccw'

@@ -41,7 +41,8 @@ export class Box extends IndexedSingleColoredMesh {
         super(
             {
                 vertices: {
-                    view: [ptr_vertices as rust_pointer<"f32">, len_vertices!, cap_vertices!]
+                    view: [ptr_vertices as rust_pointer<"f32">, len_vertices!, cap_vertices!],
+                    stride: 8
                 },
                 can_collide,
             },

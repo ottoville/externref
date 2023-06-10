@@ -7,21 +7,16 @@ import { SimpleIndexedMesh, type SimpleIndexedMeshProps } from "./SimpleIndexedM
  */
 export class IndexedColoredMesh extends SimpleIndexedMesh {
     constructor(
-        dataNodeProps: Omit<DataNodeProps, 'vertices'> & {vertices: {view: rust_vec_ptr<"f32">}},
+        dataNodeProps: DataNodeProps,
         mesh_id: number,
         indicesView: rust_vec_ptr<"usize">,
         simpleIndexedMeshProps?: SimpleIndexedMeshProps
     ) {
-        super({
-            ...dataNodeProps,
-            vertices: {
-                view: dataNodeProps.vertices.view,
-                stride: 12
-            }
-        },
-        mesh_id,
-        indicesView,
-        ColoredRenderPipeline,
-        simpleIndexedMeshProps);
+        super(
+            dataNodeProps,
+            mesh_id,
+            indicesView,
+            ColoredRenderPipeline,
+            simpleIndexedMeshProps);
     }
 }
