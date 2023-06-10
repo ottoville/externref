@@ -3,7 +3,7 @@ import type { DrawableDirect } from "../../Drawables/DrawableDirect.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { MainNode, new_rust_mesh } from "../../../MainNode.js";
 import { VertexBuffer } from "../../Buffer/Buffer.js";
-import { DebugLinesPipeline_vertexBuffer } from "../../RenderPipeLines/DebugLinesPipeline_vertexBuffer.js";
+import { DebugLinesPipeline } from "../../RenderPipeLines/DebugLinesPipeline.js";
 import { allocate_vec } from "../../../nodes/DataNode.js";
 import { IndexedTrait, NodeIndexed2 } from "../../../nodes/NodeIndexed2.js";
 import type { Engine } from "../../../engine.js";
@@ -48,7 +48,7 @@ export class WireFrameMesh_vertexBuffer extends MainNode implements IndexedTrait
             this.rotation = targetNode.node.rotation;
         })
 
-        const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline_vertexBuffer, { topology: 'line-list' }, { stride: 12 });
+        const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline, { topology: 'line-list' }, { stride: 12 });
         this.drawable = new DrawableIndexed({
             renderPipeline,
             renderPasses: undefined,
