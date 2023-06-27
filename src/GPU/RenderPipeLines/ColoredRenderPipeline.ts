@@ -1,13 +1,13 @@
-import { createVertexColorShader } from "../Shaders/VertexColor.vert.js";
-import { GPU } from "../../GPU.js";
-import { simpleAttributes } from "./SimpleRenderPipeline.js";
-import { VertexBufferLayout2 } from "../Shaders/VertexShader.js";
+import { createVertexColorShader } from '../Shaders/VertexColor.vert.js';
+import { GPU } from '../../GPU.js';
+import { simpleAttributes } from './SimpleRenderPipeline.js';
+import { VertexBufferLayout2 } from '../Shaders/VertexShader.js';
 
 export const simpleAttributesWithColor = Object.freeze({
     ...simpleAttributes,
     color:
     {
-        format: "float32x3",
+        format: 'float32x3',
         offset: 32,
         shaderFormat: 'vec3<f32>',
         shaderLocation: 2,
@@ -20,7 +20,7 @@ export const ColoredRenderPipeline = [
         const buffers = {
             arrayStride: vertexBufferProps.stride * 4,
             attributes2: simpleAttributesWithColor,
-            stepMode: "vertex",
+            stepMode: 'vertex',
         } as VertexBufferLayout2<typeof simpleAttributesWithColor>
         const vertexShader = createVertexColorShader(gpu.positionAndTimeBindGroup, buffers)
         return gpu.positionAndTimeBindGroup.addRenderPipeline(

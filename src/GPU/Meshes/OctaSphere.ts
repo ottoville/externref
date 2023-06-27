@@ -1,7 +1,7 @@
-﻿import type { Scene } from "../../Scene.js";
-import { new_rust_mesh } from "../../MainNode.js";
-import type { Engine, rust_pointer } from "../../engine.js";
-import { IndexedColoredMesh } from "../AbstractMeshes/IndexedColoredMesh.js";
+﻿import type { Scene } from '../../Scene.js';
+import { new_rust_mesh } from '../../MainNode.js';
+import type { Engine, rust_pointer } from '../../engine.js';
+import { IndexedColoredMesh } from '../AbstractMeshes/IndexedColoredMesh.js';
 declare const engine: Engine;
 
 export type OctaSphereProps = {
@@ -49,11 +49,11 @@ export class OctaSphere extends IndexedColoredMesh {
                 frontFace: 'ccw',
                 vertices: {
                     stride: 12,
-                    view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!], // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
+                    view: [pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!], // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
                 },
             },
             mesh_id,
-            [ind_ptr as rust_pointer<"usize">, ind_len!, ind_cap!])
+            [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!])
 
         this.width = width;
         this.height = height;

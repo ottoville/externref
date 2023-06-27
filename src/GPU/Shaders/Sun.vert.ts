@@ -4,7 +4,7 @@ import { VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js'
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
-type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
+type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
 
 
 export class SunVertShader extends VertexShader<BindLayouts> {
@@ -15,7 +15,7 @@ export class SunVertShader extends VertexShader<BindLayouts> {
                 main: new VertexShaderFunction(
                     new Struct('Output', { Position: ['@builtin(position)', 'vec4<f32>'] }),
                     pipelineLayout,
-                    `@builtin(vertex_index) VertexIndex : u32,`,
+                    '@builtin(vertex_index) VertexIndex : u32,',
                     [], ([
                         [/*uniforms*/,],
                         [scene,/*time, clusters_array, meshes, projection*/],

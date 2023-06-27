@@ -1,7 +1,7 @@
-import type { TextureView } from "../GPU/TextureView.js";
-import { UIRectangle } from "./UIRectangle.js";
-import type { Texture, TextureUsageValue } from "../GPU/Texture.js";
-import type { Texture2dSize } from "../GPU/RenderTargets/RenderPassTarget.js";
+import type { TextureView } from '../GPU/TextureView.js';
+import { UIRectangle } from './UIRectangle.js';
+import type { Texture, TextureUsageValue } from '../GPU/Texture.js';
+import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
 
 export class UIRectangleTextureView extends UIRectangle {
     createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>> {
@@ -35,7 +35,7 @@ export class UIRectangleTextureView extends UIRectangle {
 
             ]);
 
-        if (borderSize.width[0] > 0 || (borderSize.height !== "auto" && borderSize.height[0] > 0)) {
+        if (borderSize.width[0] > 0 || (borderSize.height !== 'auto' && borderSize.height[0] > 0)) {
             //Left content_size
             vertices.set(
                 [

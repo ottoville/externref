@@ -3,7 +3,7 @@ import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js'
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { Struct, pickOutput } from './structs/Structs.js';
-type BindLayouts = GPU["lightsTextureBindGroup"]["bindGroupLayouts"]
+type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts']
 
 export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2) {
     return new VertexShader({
@@ -21,7 +21,7 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
                     scenes: ['@location(4) @interpolate(flat)', 'u32'],
                 }),
                 pipelineLayout,
-                ``,
+                '',
                 [buffers], ([
                     [/*uniforms*/,],
                     [scene,/*time, clusters_array, meshes, projection*/],
@@ -43,7 +43,7 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
             return output;
             `
             ),
-            pick: new VertexShaderFunction(pickOutput, pipelineLayout, ``, [buffers], ([
+            pick: new VertexShaderFunction(pickOutput, pipelineLayout, '', [buffers], ([
                 [/*uniforms*/,],
                 [scene,/*time, clusters_array, meshes, projection*/],
                 [world]

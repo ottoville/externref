@@ -1,6 +1,6 @@
-import { MainNode } from "../../MainNode.js";
-import { ReadOnlyTerraVector3 } from "../../Math.js";
-import { useEffect, useRef } from "react";
+import { MainNode } from '../../MainNode.js';
+import { ReadOnlyTerraVector3 } from '../../Math.js';
+import { useEffect, useRef } from 'react';
 
 export function Rotation({ node }: { node: MainNode }) {
     const rotationX = useRef<HTMLInputElement>(null)

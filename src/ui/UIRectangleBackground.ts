@@ -1,19 +1,19 @@
-import { TextureView } from "../GPU/TextureView.js";
-import type { UIRectangleProps } from "./UIRectangle.js";
-import type { TextUV } from "./UIRectangleTextOnly.js";
-import { UIRectangleText } from "./UIRectangleText.js";
-import type { Texture, TextureUsageValue } from "../GPU/Texture.js";
-import type { Texture2dSize } from "../GPU/RenderTargets/RenderPassTarget.js";
+import { TextureView } from '../GPU/TextureView.js';
+import type { UIRectangleProps } from './UIRectangle.js';
+import type { TextUV } from './UIRectangleTextOnly.js';
+import { UIRectangleText } from './UIRectangleText.js';
+import type { Texture, TextureUsageValue } from '../GPU/Texture.js';
+import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
 export const font = '80pt serif';
 
 export function createBackground(width: number, height: number, text: string, originalAspectRatio?: number) {
     const copySource2 = new OffscreenCanvas(width, height);
-    const ctx = copySource2.getContext("2d")
+    const ctx = copySource2.getContext('2d')
     if (!ctx) {
         throw new Error('Cant get 2d context for texture text');
     }
 
-    ctx.textBaseline = "top";
+    ctx.textBaseline = 'top';
     ctx.font = font;
     const measuredSize = ctx.measureText(text);
 
@@ -75,8 +75,8 @@ function createTexture(
             0, backgroundAsset.texture.height,
             extendedSize.width, textSize.height)
         ctx.font = font;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
         const verticalTextMargin = textSize.height - originalTextHeight;
         ctx.fillText(
             text,
@@ -133,7 +133,7 @@ export class UIRectangleBackground extends UIRectangleText {
 
                 ]);
         }
-        if (borderSize.width[0] > 0 || (borderSize.height !== "auto" && borderSize.height[0] > 0)) {
+        if (borderSize.width[0] > 0 || (borderSize.height !== 'auto' && borderSize.height[0] > 0)) {
             //Left content_size
             vertices.set(
                 [

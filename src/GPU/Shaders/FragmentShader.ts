@@ -1,6 +1,6 @@
-import { BGLayout, BindGroupLayoutEntry, ShaderStage } from "../BindGroupLayout.js";
-import { Shader, ShaderParams } from "./Shader.js";
-import { FragmentShaderFunction } from "./ShaderFunction.js";
+import { BGLayout, BindGroupLayoutEntry, ShaderStage } from '../BindGroupLayout.js';
+import { Shader, ShaderParams } from './Shader.js';
+import { FragmentShaderFunction } from './ShaderFunction.js';
 
 export class FragmentShader<
     const B extends readonly BGLayout[] = readonly BGLayout[],
@@ -8,7 +8,7 @@ export class FragmentShader<
 > extends Shader<E> {
     constructor(
         public override props: ShaderParams<E, B>,
-        constantCode?: (...args: { [K in keyof B]: FilterFragment<B[K]["entries"]> }) => string,
+        constantCode?: (...args: { [K in keyof B]: FilterFragment<B[K]['entries']> }) => string,
     ) {
         //@ts-expect-error TODO
         super(props, GPUShaderStage.FRAGMENT, constantCode);

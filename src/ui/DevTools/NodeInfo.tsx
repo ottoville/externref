@@ -1,15 +1,15 @@
-import { DrawableDirect } from "../../GPU/Drawables/DrawableDirect.js";
-import type { Drawable } from "../../GPU/Drawables/Drawable.js";
-import { ReadOnlyTerraVector3 } from "../../Math.js";
-import { useEffect, useState } from "react";
-import { WireFrameMesh } from "../../GPU/Meshes/helpers/wireframe.js";
-import { DataNode } from "../../nodes/DataNode.js";
-import { NormalsMesh } from "../../GPU/Meshes/helpers/normals.js";
-import { BoundingBoxMesh } from "../../GPU/Meshes/helpers/boundingbox.js";
-import { DrawableIndexed } from "../../GPU/Drawables/DrawableIndexed.js";
-import type { MainNode } from "../../MainNode.js";
-import { Rotation } from "./Rotation.js";
-import { Primitives } from "./Primitives.js";
+import { DrawableDirect } from '../../GPU/Drawables/DrawableDirect.js';
+import type { Drawable } from '../../GPU/Drawables/Drawable.js';
+import { ReadOnlyTerraVector3 } from '../../Math.js';
+import { useEffect, useState } from 'react';
+import { WireFrameMesh } from '../../GPU/Meshes/helpers/wireframe.js';
+import { DataNode } from '../../nodes/DataNode.js';
+import { NormalsMesh } from '../../GPU/Meshes/helpers/normals.js';
+import { BoundingBoxMesh } from '../../GPU/Meshes/helpers/boundingbox.js';
+import { DrawableIndexed } from '../../GPU/Drawables/DrawableIndexed.js';
+import type { MainNode } from '../../MainNode.js';
+import { Rotation } from './Rotation.js';
+import { Primitives } from './Primitives.js';
 
 export function NodeInfo({ drawable }: { drawable: Drawable }) {
     const [translation, setTranslation] = useState(new ReadOnlyTerraVector3());

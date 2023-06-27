@@ -1,9 +1,9 @@
-﻿import { paintGround } from "./paintGround.js";
-import type { Terrain } from "../world/Terrain.js";
+﻿import { paintGround } from './paintGround.js';
+import type { Terrain } from '../world/Terrain.js';
 //import { Vector3 } from "../lib/babylon/Maths/math.vector.js";
 //import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
 
-import type { Scene } from "../Scene.js";
+import type { Scene } from '../Scene.js';
 
 export class paintLine extends paintGround {
     onMainPointerUp(/*height: number, end_position: Float32Array*/): void {

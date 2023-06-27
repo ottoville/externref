@@ -1,5 +1,5 @@
-import type { BufLayout, ShaderStage } from "../BindGroupLayout.js";
-import type { ProjectionStruct, Struct } from "./structs/Structs.js";
+import type { BufLayout, ShaderStage } from '../BindGroupLayout.js';
+import type { ProjectionStruct, Struct } from './structs/Structs.js';
 
 export const getClusterIndex = (uniforms: BufLayout<number, Struct<{
     screenDimensions: [string, string];

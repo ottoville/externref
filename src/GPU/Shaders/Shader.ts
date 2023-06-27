@@ -1,7 +1,7 @@
-import { type BGLayout, BufLayout, type ShaderStage, BindGroupLayoutEntry } from "../BindGroupLayout.js";
-import { Struct } from "./structs/Structs.js";
-import type { GPU } from "../../GPU.js"
-import { ComputeShaderFunction, type ShaderFunction } from "./ShaderFunction.js";
+import { type BGLayout, BufLayout, type ShaderStage, BindGroupLayoutEntry } from '../BindGroupLayout.js';
+import type { Struct } from './structs/Structs.js';
+import type { GPU } from '../../GPU.js'
+import { ComputeShaderFunction, type ShaderFunction } from './ShaderFunction.js';
 
 export type ShaderParams<E extends { [index: string]: ShaderFunction } = { [index: string]: ShaderFunction },
     B extends readonly BGLayout[] = readonly BGLayout[]> = {

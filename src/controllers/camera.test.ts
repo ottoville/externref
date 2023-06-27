@@ -1,7 +1,7 @@
 import { describe, beforeAll, it, expect } from '@jest/globals'
-import { ArcRotateCamera } from "./ArcRotateCamera.js";
-import { MeshCamera } from "./MeshCamera.js";
-import { Engine } from "../engine.js";
+import { ArcRotateCamera } from './ArcRotateCamera.js';
+import { MeshCamera } from './MeshCamera.js';
+import { Engine } from '../engine.js';
 import fs from 'fs';
 
 describe(

@@ -1,6 +1,6 @@
-import { BGLayout, BindGroupLayoutEntry, ShaderStage } from "../BindGroupLayout.js";
-import { Shader, type ShaderParams } from "./Shader.js";
-import type { VertexShaderFunction } from "./ShaderFunction.js";
+import { BGLayout, BindGroupLayoutEntry, ShaderStage } from '../BindGroupLayout.js';
+import { Shader, type ShaderParams } from './Shader.js';
+import type { VertexShaderFunction } from './ShaderFunction.js';
 
 export interface VertexAttribute extends GPUVertexAttribute {
     shaderFormat: string;
@@ -38,7 +38,7 @@ export class VertexShader<
 
     constructor(
         props: ShaderParams<E, B>,
-        constantCode?: (...args: { [K in keyof B]: FilterVertex<B[K]["entries"]> }) => string,
+        constantCode?: (...args: { [K in keyof B]: FilterVertex<B[K]['entries']> }) => string,
     ) {
         //@ts-expect-error TODO
         super(props, GPUShaderStage.VERTEX, constantCode);

@@ -6,7 +6,7 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from '../../GPU.js'
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
-type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
+type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
 
 export class SingleColorFragShader extends FragmentShader<
 BindLayouts> {
@@ -19,7 +19,7 @@ BindLayouts> {
                         Diffuse: ['@location(0)', 'vec4<f32>'],
                     }),
                     pipelineLayout,
-                    ``, ([
+                    '', ([
                         [/*uniforms*/,],
                         [/*scene, time, clusters_array, meshes, projection*/,],
                         [world]

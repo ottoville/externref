@@ -2,7 +2,7 @@
 
 declare var DB: Promise<IDBDatabase>;
 
-importScripts("/js/DB.js");
+importScripts('/js/DB.js');
 const numBlades = 70000;
 const BLADE_WIDTH = 0.0025;
 const BLADE_HEIGHT_MIN = 0.3

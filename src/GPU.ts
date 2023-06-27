@@ -1,29 +1,29 @@
-﻿import { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
-import { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
+﻿import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
+import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 
-import { ColorRenderTarget } from "./GPU/RenderTargets/ColorRenderTarget.js";
-import { Projection, PROJECTION_BUFFER_SIZE } from "./GPU/Projection.js";
-import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
-import type { BindGroup } from "./GPU/BindGroup.js";
-import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer, GPUBufferUsage } from "./GPU/Buffer/Buffer.js";
+import { ColorRenderTarget } from './GPU/RenderTargets/ColorRenderTarget.js';
+import { Projection, PROJECTION_BUFFER_SIZE } from './GPU/Projection.js';
+import { MSAARenderTarget } from './GPU/RenderTargets/MSAARenderTarget.js';
+import type { BindGroup } from './GPU/BindGroup.js';
+import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer, GPUBufferUsage } from './GPU/Buffer/Buffer.js';
 
-import type { Engine, } from "./engine.js";
-import { Uint16Vector2 } from "./Math.js";
-import { DepthRenderTarget } from "./GPU/RenderTargets/DepthRenderTarget.js";
-import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
-import { TerraCamera } from "./TerraCamera.js";
-import { TextureUsageEnums, TextureUsageType } from "./GPU/Texture.js";
-import { BGLayout, BufLayout, SampLayout, TextLayout, ShaderStage } from "./GPU/BindGroupLayout.js";
-import { createUpdateViewShader, UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
-import { createClustersCompShader } from "./GPU/Shaders/Clusters.comp.js";
-import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
-import { RenderPipeline } from "./GPU/RenderPipeline.js";
-import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct } from "./GPU/Shaders/structs/Structs.js";
-import { createUIVertShader, position_uv_attrs, UIVertShader } from "./GPU/Shaders/UI.vert.js";
-import { createUIFragmentShader } from "./GPU/Shaders/UI.frag.js";
-import { MainNode } from "./MainNode.js";
-import type { VertexShader } from "./GPU/Shaders/VertexShader.js";
-import { createSimpleFragShader, SimpleFragShader } from "./GPU/Shaders/Simple.frag.js";
+import type { Engine, } from './engine.js';
+import { Uint16Vector2 } from './Math.js';
+import { DepthRenderTarget } from './GPU/RenderTargets/DepthRenderTarget.js';
+import { DepthRenderPass } from './GPU/RenderPasses/DepthRenderPass.js';
+import { TerraCamera } from './TerraCamera.js';
+import { TextureUsageEnums, TextureUsageType } from './GPU/Texture.js';
+import { BGLayout, BufLayout, SampLayout, TextLayout, ShaderStage } from './GPU/BindGroupLayout.js';
+import { createUpdateViewShader, UpdateView } from './GPU/Shaders/UpdateView.comp.js';
+import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
+import { SharedPipelineLayout, BindablePipelineLayout } from './GPU/PipelineLayout.js';
+import { RenderPipeline } from './GPU/RenderPipeline.js';
+import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct } from './GPU/Shaders/structs/Structs.js';
+import { createUIVertShader, position_uv_attrs, UIVertShader } from './GPU/Shaders/UI.vert.js';
+import { createUIFragmentShader } from './GPU/Shaders/UI.frag.js';
+import { MainNode } from './MainNode.js';
+import type { VertexShader } from './GPU/Shaders/VertexShader.js';
+import { createSimpleFragShader, SimpleFragShader } from './GPU/Shaders/Simple.frag.js';
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -95,13 +95,13 @@ export class GPU {
         y: 1
     }
     readonly renderPassScreen: PickableRenderPass<{
-        gRenderTargetDiffuse: MSAARenderTarget<"bgra8unorm", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
+        gRenderTargetDiffuse: MSAARenderTarget<'bgra8unorm', TextureUsageType['RENDER_ATTACHMENT|TEXTURE_BINDING']>;
     }>;
 
     readonly renderPassWater: DepthRenderPass<{
-        diffuse: ColorRenderTarget<"bgra8unorm", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
+        diffuse: ColorRenderTarget<'bgra8unorm', TextureUsageType['RENDER_ATTACHMENT|TEXTURE_BINDING']>;
     }>;
-    readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, TextureUsageType["RENDER_ATTACHMENT"]>; }>;
+    readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, TextureUsageType['RENDER_ATTACHMENT']>; }>;
 
     readonly #updateViewBindGroup: BindGroup;
     readonly clustersInRow: [number, number, number] = [32, 18, 48];
@@ -121,7 +121,7 @@ export class GPU {
     ]>;
 
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-    readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
+    readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<'r32uint', TextureUsageType['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']>; }>;
     readonly sizeBindGroupLayout: BGLayout<[
         BufLayout<number, typeof Uniforms>]>;
 
@@ -146,10 +146,10 @@ export class GPU {
     destroyed = false;
     fps = 0
     simpleFragShader: SimpleFragShader;
-    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
-    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
-    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'topology'>, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
-    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: GPUPrimitiveState = {}, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]> {
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }, vertexBufferProps: Parameters<D['1']>[3]): ReturnType<D['1']>
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }, vertexBufferProps: Parameters<D['1']>[3]): ReturnType<D['1']>
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'topology'>, vertexBufferProps: Parameters<D['1']>[3]): ReturnType<D['1']>
+    createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: GPUPrimitiveState = {}, vertexBufferProps: Parameters<D['1']>[3]): ReturnType<D['1']> {
         const primitiveWithDefaults: GPUPrimitiveState = {
             cullMode: 'back',
             frontFace: 'cw',
@@ -163,7 +163,7 @@ export class GPU {
             renderPipeline = createRenderPipeline(this, hash, primitiveWithDefaults, vertexBufferProps);
             GPU.#renderPipelines.set(hash, renderPipeline);
         }
-        return renderPipeline as ReturnType<D["1"]>;
+        return renderPipeline as ReturnType<D['1']>;
     }
     #GPUQueueCommandEncoder: GPUCommandEncoder | null = null;
     #renderFrame = 0;
@@ -217,7 +217,7 @@ export class GPU {
                 {
                     buffer: {
                         minBindingSize: 144,
-                        type: "uniform",
+                        type: 'uniform',
                     },
                     visibility: ShaderStage.VERTEX_AND_FRAGMENT,
 
@@ -226,7 +226,7 @@ export class GPU {
                 {
                     buffer: {
                         minBindingSize: 8,
-                        type: "uniform",
+                        type: 'uniform',
                     },
                     visibility: ShaderStage.VERTEX,
 
@@ -244,7 +244,7 @@ export class GPU {
                 {   // mesh array for lights
                     buffer: {
                         minBindingSize: 512,
-                        type: "read-only-storage",
+                        type: 'read-only-storage',
                     },
                     visibility: ShaderStage.FRAGMENT,
                 }, 'meshes', MeshArray),
@@ -252,7 +252,7 @@ export class GPU {
                 {   //projection
                     buffer: {
                         minBindingSize: PROJECTION_BUFFER_SIZE,
-                        type: "uniform",
+                        type: 'uniform',
                     },
                     visibility: ShaderStage.FRAGMENT,
 
@@ -279,7 +279,7 @@ export class GPU {
                     buffer: {
                         hasDynamicOffset: true,
                         minBindingSize: GPU.gpu_memory_index_size,
-                        type: "uniform",
+                        type: 'uniform',
                     },
                     visibility: ShaderStage.VERTEX_AND_FRAGMENT,
                 }, 'world', MeshUniforms)
@@ -327,11 +327,11 @@ export class GPU {
             colorRenderTargets: {
                 gRenderTargetId: new ColorRenderTarget(
                     {
-                        format: "r32uint",
+                        format: 'r32uint',
                         gpu: this,
                         label: 'idTexture',
                         size: { height: 300, width: 300 },
-                        usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
+                        usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'],
                     },
                     {
                         context: undefined,
@@ -363,11 +363,11 @@ export class GPU {
                 colorRenderTargets: {
                     gRenderTargetDiffuse: new MSAARenderTarget(
                         {
-                            format: "bgra8unorm",
+                            format: 'bgra8unorm',
                             gpu: this,
                             label: 'diffuseTexture',
                             size: { height: 300, width: 300 },
-                            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
+                            usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
                         },
                         {
                             context: undefined,
@@ -396,7 +396,7 @@ export class GPU {
                     initialSampleCount: 4,
                     label: 'depthTexture_renderPassScreen',
                     size: { height: 300, width: 300 },
-                    usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
+                    usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'],
                 },
                 {
                     context: undefined,
@@ -408,11 +408,11 @@ export class GPU {
                 colorRenderTargets: {
                     diffuse: new ColorRenderTarget(
                         {
-                            format: "bgra8unorm",
+                            format: 'bgra8unorm',
                             gpu: this,
                             label: 'diffuseTextureWater',
                             size: { height: 300, width: 300 },
-                            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
+                            usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
                         },
                         {
                             context: undefined,
@@ -438,7 +438,7 @@ export class GPU {
                 initialSampleCount: 1,
                 label: 'depthTexture_renderPassWater',
                 size: { height: 300, width: 300 },
-                usages: TextureUsageEnums["RENDER_ATTACHMENT|COPY_SRC"],
+                usages: TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'],
             }, {
                 context: undefined,
                 writeMask: 0xF,
@@ -465,7 +465,7 @@ export class GPU {
                 {
                     buffer: {
                         minBindingSize: 8,
-                        type: "uniform",
+                        type: 'uniform',
                     },
                     visibility: ShaderStage.VERTEX,
 
@@ -484,7 +484,7 @@ export class GPU {
         const uiVertShader = createUIVertShader(this.#canvasRootLayout, {
             arrayStride: 4 * 4,
             attributes2: position_uv_attrs,
-            stepMode: "vertex",
+            stepMode: 'vertex',
         })
         this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
             {
@@ -636,7 +636,7 @@ export class GPU {
                 const meshID = pointers_to_gpumesh_and_offset[i]!;
                 const mesh = MainNode.Meshes.get(meshID);
                 if (!mesh) {
-                    console.warn("Tried to update non exist mesh with id ", meshID);
+                    console.warn('Tried to update non exist mesh with id ', meshID);
                     continue;
                 }
                 const offset = engine.rust.gpu_alignment(meshID);

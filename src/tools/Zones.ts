@@ -1,22 +1,22 @@
-import { paintTexture } from "../paintGround/paintTexture.js";
-import { Terrain } from "../world/Terrain.js";
-import { PTDresult } from "../types/interfaces/index.js";
-import type { GPU } from "../GPU.js";
-import type { Scene } from "../Scene.js";
-import type { Engine, ListenerObj } from "../engine.js";
-import { RenderTarget, TextureUsageEnums } from "../GPU/Texture.js";
-import { TextureView } from "../GPU/TextureView.js";
-import type { TopMenuButtonProps } from "../ui/topMenu.js";
-import { Button } from "../ui/Button.js";
-import { UINode } from "../ui/UINode.js";
-import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
-import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
+import { paintTexture } from '../paintGround/paintTexture.js';
+import { Terrain } from '../world/Terrain.js';
+import { PTDresult } from '../types/interfaces/index.js';
+import type { GPU } from '../GPU.js';
+import type { Scene } from '../Scene.js';
+import type { Engine, ListenerObj } from '../engine.js';
+import { RenderTarget, TextureUsageEnums } from '../GPU/Texture.js';
+import { TextureView } from '../GPU/TextureView.js';
+import type { TopMenuButtonProps } from '../ui/topMenu.js';
+import { Button } from '../ui/Button.js';
+import { UINode } from '../ui/UINode.js';
+import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
+import { UIRectangleNode, type UIRectangleNodeProps } from '../ui/UIRectangleNode.js';
 declare const engine: Engine;
 export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMenuButtonProps> {
     #PT?: paintTexture;
     #size = 5120;
     readonly #ratio: number //texture coordinates
-    #zoneTexture?: RenderTarget<"rgba8unorm", 23>;
+    #zoneTexture?: RenderTarget<'rgba8unorm', 23>;
     scene: Scene;
     #wasOpen = false;
     constructor(
@@ -33,7 +33,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
     }
     #inputListener: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
-            if (e.code === "Digit1") {
+            if (e.code === 'Digit1') {
                 this.paintZone();
             }
         },
@@ -44,7 +44,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
     paintZone() {
         if (this.#zoneTexture) {
             this.#PT = new paintTexture(this.scene, this.props.terrain, this.#zoneTexture, 5120, 5120, this.#ratio, (response) => {
-                engine.DB?.transaction("zones", 'readwrite').objectStore("zones").put(response);
+                engine.DB?.transaction('zones', 'readwrite').objectStore('zones').put(response);
             })
         }
     }
@@ -53,11 +53,11 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
         if (this.props.open && !this.#wasOpen) {
             this.#wasOpen = true;
             this.#zoneTexture = new RenderTarget({
-                format: "rgba8unorm",
+                format: 'rgba8unorm',
                 gpu: engine.gpu!,
                 label: 'ZoneTexture',
                 size: { height: 5120, width: 5120 },
-                usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC"],
+                usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'],
 
             });
             engine.addInputListener(this.#inputListener);
@@ -67,13 +67,13 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                 if (!ctx)
                     throw (new Error('getting 2d context failed'));
                 ctx.beginPath();
-                ctx.fillStyle = "yellow";
+                ctx.fillStyle = 'yellow';
                 ctx.fillRect(0, 0, 5120, 5120);
                 const centerX = this.#size / 2;
                 const centerZ = this.#size / 2;
-                engine.DB.transaction("zones").objectStore("zones").getAll().onsuccess = (evt) => {
-                    ctx.strokeStyle = "blue";
-                    ctx.fillStyle = "blue";
+                engine.DB.transaction('zones').objectStore('zones').getAll().onsuccess = (evt) => {
+                    ctx.strokeStyle = 'blue';
+                    ctx.fillStyle = 'blue';
                     ctx.lineWidth = 1;
                     //@ts-ignore
                     ((evt.target.result) as PTDresult[]).forEach(z => {
@@ -98,11 +98,11 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                         ...this.props,
                         UIRectangleProps: {
                             label: 'residentalButton',
-                            scale: { min_width: 0.15, unit: NumericUnit["%"], y: 0.07 },
+                            scale: { min_width: 0.15, unit: NumericUnit['%'], y: 0.07 },
                             translate: {
                                 x: {
                                     anchor: Anchor.CENTER,
-                                    value: [-0.8, NumericUnit["%"]],
+                                    value: [-0.8, NumericUnit['%']],
                                 },
                                 y: this.props.subMenuPosition
                             },

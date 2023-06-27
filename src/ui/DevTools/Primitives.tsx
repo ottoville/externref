@@ -1,8 +1,8 @@
-import { DataNode } from "../../nodes/DataNode.js"
-import { Vertex } from "./Vertex.js"
-import { useRef, useState } from "react"
-import { Indices } from "./Indices.js";
-import type { IndexedTrait } from "../../nodes/NodeIndexed2.js";
+import { DataNode } from '../../nodes/DataNode.js'
+import { Vertex } from './Vertex.js'
+import { useRef, useState } from 'react'
+import { Indices } from './Indices.js';
+import type { IndexedTrait } from '../../nodes/NodeIndexed2.js';
 
 export function Primitives({ node }: { node: DataNode | IndexedTrait}) {
     const indices = useRef<HTMLDetailsElement>(null);

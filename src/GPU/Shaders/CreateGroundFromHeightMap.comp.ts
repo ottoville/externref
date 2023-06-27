@@ -18,7 +18,7 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
                         buffer: {
                             hasDynamicOffset: false,
                             minBindingSize: 48,
-                            type: "storage",
+                            type: 'storage',
                         },
                         visibility: ShaderStage.COMPUTE,
 
@@ -39,7 +39,7 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
-                main: new ComputeShaderFunction(`@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>`,
+                main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     ([[positions, pixels]]) => /* wgsl */ `
                 let coords=vec2<f32>(
@@ -63,7 +63,7 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
                 `)
             },
             gpu,
-            label: "CreateGroundFromHeightMap.comp",
+            label: 'CreateGroundFromHeightMap.comp',
         }, () => /* wgsl */ `
             const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0); 
 

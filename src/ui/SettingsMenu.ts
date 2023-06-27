@@ -1,8 +1,8 @@
-import { UINode } from "./UINode.js";
-import { Anchor, NumericUnit } from "./UIRectangle.js";
-import { Button } from "./Button.js";
-import type { Engine } from "../engine.js";
-import { UIRectangleNode } from "./UIRectangleNode.js";
+import { UINode } from './UINode.js';
+import { Anchor, NumericUnit } from './UIRectangle.js';
+import { Button } from './Button.js';
+import type { Engine } from '../engine.js';
+import { UIRectangleNode } from './UIRectangleNode.js';
 declare const engine: Engine;
 
 // eslint-disable-next-line @typescript-eslint/ban-types

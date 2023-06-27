@@ -3,7 +3,7 @@ import { type VertexBufferLayout2, VertexShader } from '../VertexShader.js';
 import { GPU } from '../../../GPU.js'
 import { VertexShaderFunction } from '../ShaderFunction.js';
 import { colorOutput } from '../structs/Structs.js';
-type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"];
+type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createDebugBoundingBoxVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2) {
     return new VertexShader({
@@ -11,7 +11,7 @@ export function createDebugBoundingBoxVertShader(pipelineLayout: PipelineLayout<
         entryPoints: {
             main: new VertexShaderFunction(colorOutput,
                 pipelineLayout,
-                ``,
+                '',
                 [buffers], ([
                     [/*uniforms*/,],
                     [scene,/*time, clusters_array, meshes, projection*/],

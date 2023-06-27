@@ -1,5 +1,5 @@
 //type Angle={rad:number, deg:number}
-import type { TerraVector2 } from "../../Math";
+import type { TerraVector2 } from '../../Math';
 
 
 type subTexture = {

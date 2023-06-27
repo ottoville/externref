@@ -1,4 +1,4 @@
-import type { RenderPass } from "./RenderPasses/RenderPass.js";
+import type { RenderPass } from './RenderPasses/RenderPass.js';
 export class RenderBundleEncoder {
     #renderBundle: GPURenderBundle | undefined
     GPURenderBundleEncoderDescriptor: GPURenderBundleEncoderDescriptor;

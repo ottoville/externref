@@ -1,12 +1,12 @@
 //let tempplane: BABYLON.Mesh | null
 //let end_position: Vector2
 const fullRad = Math.PI * 2
-import { TerraVector2, Angle } from "../Math.js";
+import { TerraVector2, Angle } from '../Math.js';
 
-import type { Terrain } from "../world/Terrain.js";
-import type { PTResultF } from "../types/interfaces/index.js";
-import type { Scene } from "../Scene.js";
-import type { Engine, ListenerObj } from "../engine.js";
+import type { Terrain } from '../world/Terrain.js';
+import type { PTResultF } from '../types/interfaces/index.js';
+import type { Scene } from '../Scene.js';
+import type { Engine, ListenerObj } from '../engine.js';
 declare const engine: Engine;
 
 

@@ -1,9 +1,9 @@
 import { describe, beforeAll, it, jest, expect } from '@jest/globals'
 import { Page, Browser } from 'puppeteer-core';
 
-import { Box as Box2 } from "../GPU/Meshes/Box.js";
+import { Box as Box2 } from '../GPU/Meshes/Box.js';
 
-import type { Engine } from "../engine.js";
+import type { Engine } from '../engine.js';
 //@ts-ignore
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 

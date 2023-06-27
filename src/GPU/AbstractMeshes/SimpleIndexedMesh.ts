@@ -1,14 +1,14 @@
-﻿import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
-import { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
-import type { Engine, rust_vec_ptr } from "../../engine.js";
-import { Buffer, VertexBuffer, GPUBufferUsage, CopyDstBuffer } from "../../GPU/Buffer/Buffer.js";
-import type { SimpleVertShader } from "../Shaders/Simple.vert.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
-import type { DataNodeProps } from "../../nodes/DataNode.js";
-import type { CreateRenderPipelineCB } from "../../GPU.js";
-import { VertexBufferLayout2, VertexShader } from "../../GPU/Shaders/VertexShader.js";
-import { VertexShaderFunction } from "../Shaders/ShaderFunction.js";
-import { BGLayout } from "../BindGroupLayout.js";
+﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
+import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
+import type { Engine, rust_vec_ptr } from '../../engine.js';
+import { Buffer, VertexBuffer, GPUBufferUsage, CopyDstBuffer } from '../../GPU/Buffer/Buffer.js';
+import type { SimpleVertShader } from '../Shaders/Simple.vert.js';
+import type { RenderPipeline } from '../RenderPipeline.js';
+import type { DataNodeProps } from '../../nodes/DataNode.js';
+import type { CreateRenderPipelineCB } from '../../GPU.js';
+import { VertexBufferLayout2, VertexShader } from '../../GPU/Shaders/VertexShader.js';
+import { VertexShaderFunction } from '../Shaders/ShaderFunction.js';
+import { BGLayout } from '../BindGroupLayout.js';
 declare const engine: Engine;
 
 export type SimpleIndexedMeshProps = {
@@ -21,9 +21,9 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
     constructor(
         dataNodeProps: DataNodeProps,
         mesh_id: number,
-        indicesView: rust_vec_ptr<"usize">,
+        indicesView: rust_vec_ptr<'usize'>,
         createRenderPipeline: CreateRenderPipelineCB<RenderPipeline<VertexShader<readonly BGLayout[], { main: VertexShaderFunction<readonly BGLayout[], readonly [VertexBufferLayout2]> }>>>,
-        { vBufferGPU, topology = "triangle-list", staticVertices = true }: SimpleIndexedMeshProps = { staticVertices: true, topology: "triangle-list" }
+        { vBufferGPU, topology = 'triangle-list', staticVertices = true }: SimpleIndexedMeshProps = { staticVertices: true, topology: 'triangle-list' }
     ) {
         const strip = topology === 'triangle-strip' || topology === 'line-strip';
         super(dataNodeProps,

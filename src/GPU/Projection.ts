@@ -1,6 +1,6 @@
-import { TerraMatrix } from "../Math.js";
-import type { GPU } from "../GPU.js";
-import { BindUniformBuffer, Buffer, GPUBufferUsage } from "../GPU/Buffer/Buffer.js";
+import { TerraMatrix } from '../Math.js';
+import type { GPU } from '../GPU.js';
+import { BindUniformBuffer, Buffer, GPUBufferUsage } from '../GPU/Buffer/Buffer.js';
 export const PROJECTION_BUFFER_SIZE = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 export class Projection {
     readonly projectionReversedZ = new TerraMatrix();

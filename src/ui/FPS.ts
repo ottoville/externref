@@ -1,7 +1,7 @@
-import { UIRectangleNode } from "./UIRectangleNode.js";
-import { UINode } from "./UINode.js";
-import { Anchor, NumericUnit } from "./UIRectangle.js";
-import type { Engine } from "../engine.js";
+import { UIRectangleNode } from './UIRectangleNode.js';
+import { UINode } from './UINode.js';
+import { Anchor, NumericUnit } from './UIRectangle.js';
+import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
 type MenuState = {

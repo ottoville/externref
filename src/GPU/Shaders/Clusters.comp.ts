@@ -5,7 +5,7 @@ import { ComputeShader } from './ComputeShader.js';
 import { ProjectionStruct, UpdateClustersBufferLayout } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js'
 import { ComputeShaderFunction } from './ShaderFunction.js';
-export function createClustersCompShader(sizeGroup: GPU["sizeBindGroupLayout"]) {
+export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) {
     const bindLayouts = [
         sizeGroup,
         new BGLayout(sizeGroup.gpu, 'CreateClustersLayout2',
@@ -29,7 +29,7 @@ export function createClustersCompShader(sizeGroup: GPU["sizeBindGroupLayout"]) 
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new ComputeShaderFunction(
-                `@builtin(global_invocation_id) global_id : vec3<u32>`,
+                '@builtin(global_invocation_id) global_id : vec3<u32>',
                 pipelineLayout,
                 ([[uniforms], [clusters, screentoview]]) => /* wgsl */ `
             let tileIndex = global_id.x +
@@ -59,7 +59,7 @@ ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, 
             `)
         },
         gpu: pipelineLayout.gpu,
-        label: "Clusters.comp",
+        label: 'Clusters.comp',
     }, ([uniforms], [_clusters, screentoview]) => /* wgsl */ `
     fn clipToView(clip : vec4<f32>) -> vec4<f32> {
         //View space transform

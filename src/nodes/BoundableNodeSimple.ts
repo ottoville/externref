@@ -1,5 +1,5 @@
-import type { rust_vec_ptr } from "../engine.js";
-import { type canCollideCharacter, DataNode, DataNodeProps } from "./DataNode.js";
+import type { rust_vec_ptr } from '../engine.js';
+import { type canCollideCharacter, DataNode, DataNodeProps } from './DataNode.js';
 
 export abstract class BoundableNodeSimple extends DataNode implements canCollideCharacter {
     constructor(
@@ -12,7 +12,7 @@ export abstract class BoundableNodeSimple extends DataNode implements canCollide
             mesh_id,
             strip);
     }
-    override set_vertices(vec: rust_vec_ptr<"f32">) {
+    override set_vertices(vec: rust_vec_ptr<'f32'>) {
         super.set_vertices(vec);
         this.rebuildTrianglePlanes();
     }

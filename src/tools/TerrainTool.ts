@@ -1,19 +1,19 @@
-﻿import type { Terrain } from "../world/Terrain.js";
-import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
-import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
-import { MainNode, new_rust_mesh } from "../MainNode.js";
-import type { GPU } from "../GPU.js"
-import { MutableTerraVector3, TerraVector3 } from "../Math.js";
-import type { Engine, ListenerObj, rust_pointer } from "../engine.js";
-import type { Scene } from "../Scene.js";
-import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
-import { createColorFragmentShader } from "../GPU/Shaders/Color.frag.js";
-import type { TopMenuButtonProps } from "../ui/topMenu.js";
-import { Button } from "../ui/Button.js";
-import { UINode } from "../ui/UINode.js";
-import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
-import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
+﻿import type { Terrain } from '../world/Terrain.js';
+import { WorkerReturn, WorkerThread } from '../WorkerThread.js';
+import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
+import { MainNode, new_rust_mesh } from '../MainNode.js';
+import type { GPU } from '../GPU.js'
+import { MutableTerraVector3, TerraVector3 } from '../Math.js';
+import type { Engine, ListenerObj, rust_pointer } from '../engine.js';
+import type { Scene } from '../Scene.js';
+import { HelperVertShader } from '../GPU/Shaders/helper.vert.js';
+import type { RenderPipeline } from '../GPU/RenderPipeline.js';
+import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
+import type { TopMenuButtonProps } from '../ui/topMenu.js';
+import { Button } from '../ui/Button.js';
+import { UINode } from '../ui/UINode.js';
+import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
+import { UIRectangleNode, type UIRectangleNodeProps } from '../ui/UIRectangleNode.js';
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
@@ -32,11 +32,11 @@ UIRectangleNodeProps & TopMenuButtonProps> {
     }
     #inputListener: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
-            if (e.code === "Digit1") {
+            if (e.code === 'Digit1') {
                 this.setState({
                     subMenu: 'lower'
                 })
-            } else if (e.code === "Digit2") {
+            } else if (e.code === 'Digit2') {
                 this.setState({
                     subMenu: 'raise'
                 })
@@ -73,12 +73,12 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                     ...this.props,
                     UIRectangleProps: {
                         label: 'Lower',
-                        scale: { min_width: 0.10, unit: NumericUnit["%"], y: 0.07 },
+                        scale: { min_width: 0.10, unit: NumericUnit['%'], y: 0.07 },
                         translate: {
                             x:
                             {
                                 anchor: Anchor.CENTER,
-                                value: [-0.85, NumericUnit["%"]],
+                                value: [-0.85, NumericUnit['%']],
                             },
                             y: this.props.subMenuPosition
                         },
@@ -93,11 +93,11 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                     ...this.props,
                     UIRectangleProps: {
                         label: 'Raise',
-                        scale: { min_width: 0.10, unit: NumericUnit["%"], y: 0.07 },
+                        scale: { min_width: 0.10, unit: NumericUnit['%'], y: 0.07 },
                         translate: {
                             x: {
                                 anchor: Anchor.CENTER,
-                                value: [-0.6, NumericUnit["%"]],
+                                value: [-0.6, NumericUnit['%']],
                             },
                             y: this.props.subMenuPosition
                         },
@@ -120,7 +120,7 @@ UIRectangleNodeProps & TopMenuButtonProps> {
     }
 }
 export class TerrainTool extends MainNode {
-    elevator: rust_pointer<"elevator">
+    elevator: rust_pointer<'elevator'>
     drawable: DrawableSimple<RenderPipeline<HelperVertShader>>;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
     scene: Scene;

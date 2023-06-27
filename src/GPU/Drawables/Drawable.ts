@@ -1,11 +1,11 @@
-﻿import type { RenderPass } from "../RenderPasses/RenderPass.js";
-import { GPU } from "../../GPU.js"
-import { Buffer, type VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
+﻿import type { RenderPass } from '../RenderPasses/RenderPass.js';
+import { GPU } from '../../GPU.js'
+import { Buffer, type VertexBuffer, GPUBufferUsage } from '../Buffer/Buffer.js';
 
-import type { Engine } from "../../engine.js";
-import { BindGroup } from "../BindGroup.js";
-import { RenderPipeline } from "../RenderPipeline.js";
-import { MainNode } from "../../MainNode.js";
+import type { Engine } from '../../engine.js';
+import { BindGroup } from '../BindGroup.js';
+import { RenderPipeline } from '../RenderPipeline.js';
+import { MainNode } from '../../MainNode.js';
 declare const engine: Engine;
 
 export type DrawableProps<N extends MainNode> = {

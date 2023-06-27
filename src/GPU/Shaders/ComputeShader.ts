@@ -1,17 +1,17 @@
-import { BGLayout, BindGroupLayoutEntry, ShaderStage } from "../BindGroupLayout.js";
-import { Shader, ShaderParams } from "./Shader.js";
-import type { ComputeShaderFunction } from "./ShaderFunction.js";
+import { BGLayout, BindGroupLayoutEntry, ShaderStage } from '../BindGroupLayout.js';
+import { Shader, ShaderParams } from './Shader.js';
+import type { ComputeShaderFunction } from './ShaderFunction.js';
 export class ComputeShader<
     B extends readonly BGLayout[],
     E extends { [index: string]: ComputeShaderFunction<B> } = { [index: string]: ComputeShaderFunction<B> },
 > extends Shader<E> {
     constructor(
         public override props: ShaderParams<E, B>,
-        constantCode?: (...args: { [K in keyof B]: FilterCompute<B[K]["entries"]> }) => string,
+        constantCode?: (...args: { [K in keyof B]: FilterCompute<B[K]['entries']> }) => string,
     ) {
         //@ts-expect-error TODO
         super(props, GPUShaderStage.COMPUTE, constantCode);
-        const bindGroups = this.getFilteredBindGroups(GPUShaderStage.COMPUTE) as { [K in keyof B]: FilterCompute<B[K]["entries"]> };
+        const bindGroups = this.getFilteredBindGroups(GPUShaderStage.COMPUTE) as { [K in keyof B]: FilterCompute<B[K]['entries']> };
         if (constantCode)
             this.wgsl += constantCode(...bindGroups)
         for (const key in props.entryPoints) {

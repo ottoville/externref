@@ -1,8 +1,8 @@
-import { type GPU } from "../../GPU.js";
-import type { Engine } from "../../engine.js";
-import type { BindGroup } from "../BindGroup.js";
-import { Bindable } from "../Bindable.js";
-import type { RenderPass } from "../../GPU/RenderPasses/RenderPass.js";
+import { type GPU } from '../../GPU.js';
+import type { Engine } from '../../engine.js';
+import type { BindGroup } from '../BindGroup.js';
+import { Bindable } from '../Bindable.js';
+import type { RenderPass } from '../../GPU/RenderPasses/RenderPass.js';
 declare const engine: Engine;
 export const enum GPUBufferUsage {
     MAP_READ = 0x0001,
@@ -97,10 +97,10 @@ export class Buffer extends Bindable {
     static create(gpu: GPU, size: number, usages: number[], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void) {
         let b: Buffer;
         if (usages.includes(GPUBufferUsage.COPY_SRC)) {
-            b = new copySrcBuffer(gpu, size, usages, typeof mappedAtCreation !== "undefined", label);
+            b = new copySrcBuffer(gpu, size, usages, typeof mappedAtCreation !== 'undefined', label);
         }
         else {
-            b = new Buffer(gpu, size, usages, typeof mappedAtCreation !== "undefined", label)
+            b = new Buffer(gpu, size, usages, typeof mappedAtCreation !== 'undefined', label)
         }
         if (mappedAtCreation) {
             mappedAtCreation(b.buffer, gpu);

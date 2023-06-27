@@ -1,6 +1,6 @@
-﻿import type { DataNode } from "./nodes/DataNode.js";
-import type { MainNode } from "./MainNode.js";
-import type { Engine } from "./engine.js";
+﻿import type { DataNode } from './nodes/DataNode.js';
+import type { MainNode } from './MainNode.js';
+import type { Engine } from './engine.js';
 
 const MIN_TICK_DELTA = 110;
 const GRAVITY = 9.80665;

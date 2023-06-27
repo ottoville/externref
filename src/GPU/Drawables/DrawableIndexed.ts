@@ -1,10 +1,10 @@
-import { Buffer, type IndexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
-import type { Engine } from "../../engine.js";
-import { DrawableDirect, DrawableDirectProps, type MappedVertexBuffers } from "./DrawableDirect.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
-import type { DrawableProps } from "./Drawable.js";
-import type { RenderPass } from "../../GPU/RenderPasses/RenderPass.js";
-import type { IndexedTrait } from "../../nodes/NodeIndexed2.js";
+import { Buffer, type IndexBuffer, GPUBufferUsage } from '../Buffer/Buffer.js';
+import type { Engine } from '../../engine.js';
+import { DrawableDirect, DrawableDirectProps, type MappedVertexBuffers } from './DrawableDirect.js';
+import type { RenderPipeline } from '../RenderPipeline.js';
+import type { DrawableProps } from './Drawable.js';
+import type { RenderPass } from '../../GPU/RenderPasses/RenderPass.js';
+import type { IndexedTrait } from '../../nodes/NodeIndexed2.js';
 declare const engine: Engine;
 
 export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extends IndexedTrait = IndexedTrait> extends DrawableDirect<N> {

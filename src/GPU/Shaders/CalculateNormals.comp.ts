@@ -23,7 +23,7 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
                         buffer: {
                             hasDynamicOffset: false,
                             minBindingSize: 32,
-                            type: "storage",
+                            type: 'storage',
                         },
                         visibility: ShaderStage.COMPUTE,
                     }, 'normals', FloatArray)),
@@ -38,7 +38,7 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
-                main: new ComputeShaderFunction(`@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>`,
+                main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     ([[normals], [/*slopes*/, facet12]]) => /* wgsl */ `
                 let stride : u32 = 12u;
@@ -68,6 +68,6 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
             },
             gpu: pipelineLayout.gpu,
             label: 'CalculateNormals.comp',
-        }, () => `@compute @workgroup_size(1)`);
+        }, () => '@compute @workgroup_size(1)');
     }
 }

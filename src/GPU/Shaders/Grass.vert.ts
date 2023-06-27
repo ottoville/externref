@@ -6,33 +6,33 @@ import { Struct } from './structs/Structs.js';
 
 export const positionAttr = Object.freeze({
     position: {
-        format: "float32x4",
+        format: 'float32x4',
         offset: 0,
-        shaderFormat: "vec4<f32>",
+        shaderFormat: 'vec4<f32>',
         shaderLocation: 0,
     }
 } as const);
 
 export const shapeAttr = Object.freeze({
     shape: {
-        format: "float32x4",
+        format: 'float32x4',
         offset: 0,
-        shaderFormat: "vec4<f32>",
+        shaderFormat: 'vec4<f32>',
         shaderLocation: 1,
     }
 } as const)
 
 export const vertexPositionAttr = Object.freeze({
     vertex_position: {
-        format: "float32x2",
+        format: 'float32x2',
         offset: 0,
-        shaderFormat: "vec2<f32>",
+        shaderFormat: 'vec2<f32>',
         shaderLocation: 2,
     }
 } as const)
 
 
-type BindLayouts = GPU["rootCameralayout"]["bindGroupLayouts"]
+type BindLayouts = GPU['rootCameralayout']['bindGroupLayouts']
 export function createGrassVertShader(
     pipelineLayout: PipelineLayout<BindLayouts>,
     buffers: [VertexBufferLayout2<typeof positionAttr>, VertexBufferLayout2<typeof shapeAttr>, VertexBufferLayout2<typeof vertexPositionAttr>]
@@ -46,7 +46,7 @@ export function createGrassVertShader(
                     color: ['@location(0)', 'vec3<f32>'],
                 }),
                 pipelineLayout,
-                ``,
+                '',
                 buffers,
                 ([
                     [/*uniform*/,],

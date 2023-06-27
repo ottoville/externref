@@ -1,5 +1,5 @@
-import { MeshProperties, OctaSphere } from "./OctaSphere.js";
-import type { Engine } from "../../engine.js";
+import { MeshProperties, OctaSphere } from './OctaSphere.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 let uid = 0;

@@ -1,21 +1,21 @@
-import type { Scene } from "../Scene.js";
-import { TerrainTool } from "../tools/TerrainTool.js";
-import { TerrainMesh } from "../GPU/Meshes/Terrain.js";
-import type { Engine } from "../engine.js";
-import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer/Buffer.js";
-import type { BindGroup } from "../GPU/BindGroup.js";
-import { RenderTarget, Texture, TextureUsageEnums, copyDstTexture, copySrcTexture } from "../GPU/Texture.js";
-import { TextureView } from "../GPU/TextureView.js";
-import { CalculatePlaneIndices } from "../GPU/Shaders/calculatePlaneIndices.comp.js";
-import { CalculatePlaneHeights } from "../GPU/Shaders/calculatePlaneHeights.comp.js";
-import { CalculateNormals } from "../GPU/Shaders/CalculateNormals.comp.js";
-import { BGLayout, BufLayout, ShaderStage } from "../GPU/BindGroupLayout.js";
-import { CreateGroundFromHeightMap } from "../GPU/Shaders/CreateGroundFromHeightMap.comp.js";
+import type { Scene } from '../Scene.js';
+import { TerrainTool } from '../tools/TerrainTool.js';
+import { TerrainMesh } from '../GPU/Meshes/Terrain.js';
+import type { Engine } from '../engine.js';
+import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindStorageBuffer, VertexBuffer } from '../GPU/Buffer/Buffer.js';
+import type { BindGroup } from '../GPU/BindGroup.js';
+import { RenderTarget, Texture, TextureUsageEnums, copyDstTexture, copySrcTexture } from '../GPU/Texture.js';
+import { TextureView } from '../GPU/TextureView.js';
+import { CalculatePlaneIndices } from '../GPU/Shaders/calculatePlaneIndices.comp.js';
+import { CalculatePlaneHeights } from '../GPU/Shaders/calculatePlaneHeights.comp.js';
+import { CalculateNormals } from '../GPU/Shaders/CalculateNormals.comp.js';
+import { BGLayout, BufLayout, ShaderStage } from '../GPU/BindGroupLayout.js';
+import { CreateGroundFromHeightMap } from '../GPU/Shaders/CreateGroundFromHeightMap.comp.js';
 import type { GPU } from '../GPU.js'
-import { CreateTerrainTexture } from "../GPU/Shaders/CreateTerrainTexture.comp.js";
-import { BindablePipelineLayout } from "../GPU/PipelineLayout.js";
-import { IntArray, MeshUniforms, PlaneArray, Slopes } from "../GPU/Shaders/structs/Structs.js";
-import { allocate_vec } from "../nodes/DataNode.js";
+import { CreateTerrainTexture } from '../GPU/Shaders/CreateTerrainTexture.comp.js';
+import { BindablePipelineLayout } from '../GPU/PipelineLayout.js';
+import { IntArray, MeshUniforms, PlaneArray, Slopes } from '../GPU/Shaders/structs/Structs.js';
+import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 
 
@@ -167,7 +167,7 @@ TODO
                         buffer: {
                             hasDynamicOffset: false,
                             minBindingSize: 32,
-                            type: "read-only-storage",
+                            type: 'read-only-storage',
                         },
                         visibility: ShaderStage.COMPUTE,
                     }, 'slopes', Slopes),
@@ -176,7 +176,7 @@ TODO
                         buffer: {
                             hasDynamicOffset: false,
                             minBindingSize: 32,
-                            type: "read-only-storage",
+                            type: 'read-only-storage',
                         },
                         visibility: ShaderStage.COMPUTE,
 
@@ -245,8 +245,8 @@ TODO
 
     readonly texture:
         RenderTarget<
-        "rgba8unorm",
-            (typeof TextureUsageEnums)["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"],
+        'rgba8unorm',
+            (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'],
             { readonly width: 8192; readonly height: 8192; }> &
         copyDstTexture & copySrcTexture;
 
@@ -272,7 +272,7 @@ TODO
             gpu,
             label: 'Terrain',
             size: Terrain.#textureSize,
-            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"]
+            usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING']
         })
         const _heightsBindGroupEntries = (bindGroup: BindGroup) => [
             {
@@ -289,7 +289,7 @@ TODO
                 {
                     buffer: {
                         minBindingSize: 32,
-                        type: "read-only-storage",
+                        type: 'read-only-storage',
                     },
                     visibility: ShaderStage.VERTEX,
                 }, 'slopes', IntArray),
@@ -297,7 +297,7 @@ TODO
                 {
                     buffer: {
                         minBindingSize: 32,
-                        type: "read-only-storage",
+                        type: 'read-only-storage',
                     },
                     visibility: ShaderStage.VERTEX,
                 }, 'facet12', PlaneArray)
@@ -391,12 +391,12 @@ TODO
                 const gpuCommands = commandEncoder.finish();
                 gpu.device.queue.submit([gpuCommands]);
                 const c = new OffscreenCanvas(Terrain.#textureSize.width, Terrain.#textureSize.height);
-                const ctx = c.getContext("2d");
+                const ctx = c.getContext('2d');
                 if (!ctx)
                     throw (new Error('get 2d context failed'));
                 gpuReadBuffer.readAndDestroy(async arrayBuffer => {
                     ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer), c.width, c.height), 0, 0);
-                    const blob = await c.convertToBlob({ quality: 1, type: "image/webp" })
+                    const blob = await c.convertToBlob({ quality: 1, type: 'image/webp' })
                     TerrainTool.saveTexture(await blob.arrayBuffer(), [Terrain.#textureSize.width, Terrain.#textureSize.height]);
                 })
             }

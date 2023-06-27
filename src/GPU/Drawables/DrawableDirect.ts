@@ -1,11 +1,11 @@
-import type { VertexBuffer } from "../Buffer/Buffer.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
-import type { VertexShader } from "../Shaders/VertexShader.js";
-import { Drawable, type DrawableProps } from "./Drawable.js";
-import type { MainNode } from "../../MainNode.js";
-import type { Engine } from "../../engine.js";
-import { VertexShaderFunction } from "../Shaders/ShaderFunction.js";
-import { BGLayout } from "../BindGroupLayout.js";
+import type { VertexBuffer } from '../Buffer/Buffer.js';
+import type { RenderPipeline } from '../RenderPipeline.js';
+import type { VertexShader } from '../Shaders/VertexShader.js';
+import { Drawable, type DrawableProps } from './Drawable.js';
+import type { MainNode } from '../../MainNode.js';
+import type { Engine } from '../../engine.js';
+import { VertexShaderFunction } from '../Shaders/ShaderFunction.js';
+import { BGLayout } from '../BindGroupLayout.js';
 declare const engine: Engine;
 
 export type MappedVertexBuffers<R extends RenderPipeline, B extends readonly BGLayout[] = readonly BGLayout[]> = R extends RenderPipeline<infer VERTEX_SHADER> ? (

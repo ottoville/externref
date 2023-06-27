@@ -1,7 +1,7 @@
 
 import { createRoot } from 'react-dom/client';
-import { Meshes } from "./Meshes.js";
-import { Cameras } from "./Cameras.js";
+import { Meshes } from './Meshes.js';
+import { Cameras } from './Cameras.js';
 
 
 export const DevToolsApp = (container: HTMLElement) => {

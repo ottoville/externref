@@ -1,5 +1,5 @@
-import type { GPU } from "../GPU.js";
-import type { TextureView } from "./TextureView.js";
+import type { GPU } from '../GPU.js';
+import type { TextureView } from './TextureView.js';
 
 
 
@@ -13,7 +13,7 @@ export type TextureSize = {
     readonly height: GPUIntegerCoordinate;
     readonly depthOrArrayLayers: GPUIntegerCoordinate;
 }
-export type TextureParams<F extends GPUTextureFormat, U extends Exclude<TextureUsageValue, TextureUsageType["STORAGE_BINDING"]>, S extends TextureSize> = {
+export type TextureParams<F extends GPUTextureFormat, U extends Exclude<TextureUsageValue, TextureUsageType['STORAGE_BINDING']>, S extends TextureSize> = {
     gpu: GPU;
     format: F;
     usages: U;
@@ -24,8 +24,8 @@ export type TextureParams<F extends GPUTextureFormat, U extends Exclude<TextureU
 /**
      * Allowed formats for STORAGE_BINDING see https://www.w3.org/TR/webgpu/#plain-color-formats
      */
-type STORAGE_FORMATS = "rgba8unorm" | "rgba8snorm" | "rgba8uint" | "rgba8sint" | /* when bgra8unorm-storage is enanabled "bgra8unorm" |*/ "rgba16uint" | "rgba16sint" | "rgba16float" |
-"r32uint" | "r32sint" | "r32float" | "rg32uint" | "rg32sint" | "rg32float" | "rgba32uint" | "rgba32sint" | "rgba32float";
+type STORAGE_FORMATS = 'rgba8unorm' | 'rgba8snorm' | 'rgba8uint' | 'rgba8sint' | /* when bgra8unorm-storage is enanabled "bgra8unorm" |*/ 'rgba16uint' | 'rgba16sint' | 'rgba16float' |
+'r32uint' | 'r32sint' | 'r32float' | 'rg32uint' | 'rg32sint' | 'rg32float' | 'rgba32uint' | 'rgba32sint' | 'rgba32float';
 
 export type TextureParamsStorage<
 F extends STORAGE_FORMATS,
@@ -47,26 +47,26 @@ export const enum TextureUsageEnums {
     STORAGE_BINDING = 8,
     TEXTURE_BINDING = 4,
     RENDER_ATTACHMENT = 16,
-    "RENDER_ATTACHMENT|COPY_SRC" = 17,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING" = 20,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC" = 21,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST" = 22,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC" = 23,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING" = 31,
-    "STORAGE_BINDING|COPY_SRC" = 9
+    'RENDER_ATTACHMENT|COPY_SRC' = 17,
+    'RENDER_ATTACHMENT|TEXTURE_BINDING' = 20,
+    'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC' = 21,
+    'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST' = 22,
+    'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC' = 23,
+    'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING' = 31,
+    'STORAGE_BINDING|COPY_SRC' = 9
 }
 /*
     Cannot use const enum because TS would allow any number to enum https://stackoverflow.com/a/53496839
 */
 interface RenderTargetTextureUsage {
     readonly RENDER_ATTACHMENT :  16,
-    readonly "RENDER_ATTACHMENT|COPY_SRC" :  17,
-    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING" : 20,
-    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC" : 21,
-    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST" : 22,
-    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC" :23,
-    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING" : 31,
-    readonly "STORAGE_BINDING|COPY_SRC": 9
+    readonly 'RENDER_ATTACHMENT|COPY_SRC' :  17,
+    readonly 'RENDER_ATTACHMENT|TEXTURE_BINDING' : 20,
+    readonly 'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC' : 21,
+    readonly 'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST' : 22,
+    readonly 'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC' :23,
+    readonly 'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING' : 31,
+    readonly 'STORAGE_BINDING|COPY_SRC': 9
 }
 export interface TextureUsageType extends RenderTargetTextureUsage {
     readonly COPY_DST : 2,
@@ -78,26 +78,26 @@ export interface TextureUsageType extends RenderTargetTextureUsage {
 type ValueOf<T> = T[keyof T];
 export type TextureUsageValue = ValueOf<TextureUsageType>
 export type RenderTargetTextureUsageValue = ValueOf<RenderTargetTextureUsage>
-type COPY_SRC_TEXTURE = typeof TextureUsageEnums["COPY_SRC"] |
-                        typeof TextureUsageEnums["RENDER_ATTACHMENT|COPY_SRC"] |
-                        typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC"] |
-                        typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"] |
-                        typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"] |
-                        typeof TextureUsageEnums["STORAGE_BINDING|COPY_SRC"]
-type COPY_DST_TEXTURE = typeof TextureUsageEnums["COPY_DST"] |
-                        typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"] |
-                        typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC"] |
-                        typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"];
-type STORAGE_BINDING_TEXTURE = typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"] |
-                                typeof TextureUsageEnums["STORAGE_BINDING"] |
-                                typeof TextureUsageEnums["STORAGE_BINDING|COPY_SRC"];
-type RENDER_TARGET_TEXTURE = typeof TextureUsageEnums["RENDER_ATTACHMENT"] |
-                                typeof TextureUsageEnums["RENDER_ATTACHMENT|COPY_SRC"] |
-                                typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"] |
-                                typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"] |
-                                typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC"] |
-                                typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"] |
-                                typeof TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"];
+type COPY_SRC_TEXTURE = typeof TextureUsageEnums['COPY_SRC'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'] |
+                        typeof TextureUsageEnums['STORAGE_BINDING|COPY_SRC']
+type COPY_DST_TEXTURE = typeof TextureUsageEnums['COPY_DST'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'];
+type STORAGE_BINDING_TEXTURE = typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'] |
+                                typeof TextureUsageEnums['STORAGE_BINDING'] |
+                                typeof TextureUsageEnums['STORAGE_BINDING|COPY_SRC'];
+type RENDER_TARGET_TEXTURE = typeof TextureUsageEnums['RENDER_ATTACHMENT'] |
+                                typeof TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'] |
+                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'] |
+                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'] |
+                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'] |
+                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'] |
+                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'];
 
 
 
@@ -107,7 +107,7 @@ export class Texture<
     S extends TextureSize = TextureSize,
 > {
     static create<F extends GPUTextureFormat, U extends Exclude<COPY_DST_TEXTURE & COPY_SRC_TEXTURE, RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F,U,S>): Texture<F, U, S> & copySrcTexture & copyDstTexture
-    static create<F extends STORAGE_FORMATS, U extends typeof TextureUsageEnums["STORAGE_BINDING"], S extends TextureSize = TextureSize>(props : TextureParamsStorage<F, U, S>): Texture<F, U, S>
+    static create<F extends STORAGE_FORMATS, U extends typeof TextureUsageEnums['STORAGE_BINDING'], S extends TextureSize = TextureSize>(props : TextureParamsStorage<F, U, S>): Texture<F, U, S>
 
     static create<F extends GPUTextureFormat, U extends RENDER_TARGET_TEXTURE & COPY_DST_TEXTURE & COPY_SRC_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F,U,S>): RenderTarget<F, U, S> & copyDstTexture & copySrcTexture
     static create<F extends GPUTextureFormat, U extends RENDER_TARGET_TEXTURE & COPY_DST_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F,U,S>): RenderTarget<F, U, S> & copyDstTexture
@@ -120,8 +120,8 @@ export class Texture<
     static create<F extends GPUTextureFormat, U extends Exclude<COPY_DST_TEXTURE, RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F,U,S>): Texture<F, U, S> & copyDstTexture
     static create<F extends GPUTextureFormat, U extends Exclude<COPY_SRC_TEXTURE, STORAGE_BINDING_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F,U,S>): Texture<F,U,S> & copySrcTexture
     static create<F extends GPUTextureFormat, U extends Exclude<TextureUsageValue, STORAGE_BINDING_TEXTURE | RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F,U,S>): Texture<F, U ,S>
-    static create<F extends GPUTextureFormat, U extends TextureUsageValue, S extends TextureSize = TextureSize>(props : TextureParams<F,Exclude<U, TextureUsageType["STORAGE_BINDING"]>,S>) {
-        if (props.usages & TextureUsageEnums["RENDER_ATTACHMENT"]) {
+    static create<F extends GPUTextureFormat, U extends TextureUsageValue, S extends TextureSize = TextureSize>(props : TextureParams<F,Exclude<U, TextureUsageType['STORAGE_BINDING']>,S>) {
+        if (props.usages & TextureUsageEnums['RENDER_ATTACHMENT']) {
             //@ts-expect-error
             return new RenderTarget<F, RENDER_TARGET_TEXTURE, RenderTargetSize>(props);
         }
@@ -133,10 +133,10 @@ export class Texture<
     protected initialSampleCount: 1 | 4 = 1;
     constructor(
         //@ts-expect-error Texture is always created with static "create" method, giving correct generics
-        public props : TextureParams<F,Exclude<U, TextureUsageType["STORAGE_BINDING"]>,S> | TextureParamsStorage<F, U, S>
+        public props : TextureParams<F,Exclude<U, TextureUsageType['STORAGE_BINDING']>,S> | TextureParamsStorage<F, U, S>
     ) {
         this.texture = this.createTexture(props.initialSampleCount);
-        if (props.usages & TextureUsageEnums["COPY_DST"]) {
+        if (props.usages & TextureUsageEnums['COPY_DST']) {
             (this as unknown as copyDstTexture).copyFrom = (commandEncoder, from, sourceDetails, destinationDetails, copySize) => {
                 commandEncoder.copyTextureToTexture(
                     {
@@ -151,7 +151,7 @@ export class Texture<
                 );
             }
         }
-        if (props.usages & TextureUsageEnums["COPY_SRC"]) {
+        if (props.usages & TextureUsageEnums['COPY_SRC']) {
             (this as unknown as copySrcTexture).copyTo = (commandEncoder, destination, sourceDetails, destinationDetails, copySize) => {
                 destination.copyFrom(commandEncoder, this as unknown as (Texture<F, COPY_SRC_TEXTURE, S> & copySrcTexture), sourceDetails, destinationDetails, copySize);
             }
@@ -348,7 +348,7 @@ export class RenderTarget<
                 throw new Error('Blob creation failed');
             }
             console.log(URL.createObjectURL(b));
-        }, "image/jpeg", 0.96);
+        }, 'image/jpeg', 0.96);
 
     }
 }

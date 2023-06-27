@@ -1,36 +1,36 @@
-﻿import { Engine } from "../engine.js";
+﻿import { Engine } from '../engine.js';
 
 
-import { Plants } from "../plants/Plants.js";
-import { PlantsUI } from "../tools/plantsUI.js";
+import { Plants } from '../plants/Plants.js';
+import { PlantsUI } from '../tools/plantsUI.js';
 /*import { CameraTAB } from "../tools/camera.js";
 import { BuildingsUI } from "../tools/buildings.js";*/
-import { Terrain } from "../world/Terrain.js";
-import { Sea } from "../world/water.js";
+import { Terrain } from '../world/Terrain.js';
+import { Sea } from '../world/water.js';
 //import { LazyEval } from "../LazyEval.js";
-import { Sun } from "../world/sun.js";
+import { Sun } from '../world/sun.js';
 
-import { MainNode, new_rust_mesh } from "../MainNode.js";
-import { Scene } from "../Scene.js";
-import { Human } from "../human.js";
+import { MainNode, new_rust_mesh } from '../MainNode.js';
+import { Scene } from '../Scene.js';
+import { Human } from '../human.js';
 //import { savedCamera } from "../types/interfaces/index.js";
 
 //@ts-ignore
-import { Box } from "../GPU/Meshes/Box.js";
+import { Box } from '../GPU/Meshes/Box.js';
 //@ts-ignore
-import { Triangle } from "../GPU/Meshes/Triangle.js";
+import { Triangle } from '../GPU/Meshes/Triangle.js';
 //@ts-ignore
-import { IcoSphere } from "../GPU/Meshes/IcoSphere.js";
-import { Cone } from "../GPU/Meshes/Cone.js";
-import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
-import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
-import { ArcRotateCamera } from "../controllers/ArcRotateCamera.js";
-import { Anchor, NumericUnit } from "./UIRectangle.js";
-import { createTopMenu } from "./topMenu.js";
-import { createSettingsMenu } from "./SettingsMenu.js";
-import { createTimeControls } from "./TimeControls.js";
-import { CreateFPSMeter } from "./FPS.js";
-import { UIRectangleTextureView } from "./UIRectangleTextureView.js";
+import { IcoSphere } from '../GPU/Meshes/IcoSphere.js';
+import { Cone } from '../GPU/Meshes/Cone.js';
+import { Capsule, CAPSULE_ORIENTATION } from '../GPU/Meshes/Capsule.js';
+import { RoundCuboid } from '../GPU/Meshes/RoundCuboid.js';
+import { ArcRotateCamera } from '../controllers/ArcRotateCamera.js';
+import { Anchor, NumericUnit } from './UIRectangle.js';
+import { createTopMenu } from './topMenu.js';
+import { createSettingsMenu } from './SettingsMenu.js';
+import { createTimeControls } from './TimeControls.js';
+import { CreateFPSMeter } from './FPS.js';
+import { UIRectangleTextureView } from './UIRectangleTextureView.js';
 
 declare const engine: Engine;
 
@@ -255,7 +255,7 @@ export class Canvas {
                 label: 'UICanvas',
                 renderPass: gpu.renderPassCanvas,
 
-                scale: { min_width: 1, unit: NumericUnit["%"], y: 1 },
+                scale: { min_width: 1, unit: NumericUnit['%'], y: 1 },
                 translate: {
                     x: {
                         anchor: Anchor.CENTER,

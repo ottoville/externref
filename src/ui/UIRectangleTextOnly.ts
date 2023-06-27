@@ -1,6 +1,6 @@
-import type { UIRectangleProps } from "./UIRectangle.js";
-import { createBackground, font } from "./UIRectangleBackground.js";
-import { UIRectangleText } from "./UIRectangleText.js";
+import type { UIRectangleProps } from './UIRectangle.js';
+import { createBackground, font } from './UIRectangleBackground.js';
+import { UIRectangleText } from './UIRectangleText.js';
 
 export type TextUV = [
     topLeft: [number, number],
@@ -18,8 +18,8 @@ function createTextureForTextOnly(
     copySource2.height = textSize.height;
 
     ctx.font = font;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
     const verticalTextMargin = textSize.height - originalTextHeight;
     ctx.fillText(
         text,

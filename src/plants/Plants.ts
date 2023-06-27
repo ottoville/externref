@@ -1,17 +1,17 @@
-import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
-import { Terrain } from "../world/Terrain.js";
+import { WorkerThread, WorkerReturn } from '../WorkerThread.js';
+import { Terrain } from '../world/Terrain.js';
 //import simplex from '../simplex.js'
 
-import { PTDresult } from "../types/interfaces/index.js";
+import { PTDresult } from '../types/interfaces/index.js';
 
-import type { Scene } from "../Scene.js";
-import { PlantsRenderPipeline } from "../GPU/RenderPipeLines/Plants.js";
-import { Buffer, GPUBufferUsage } from "../GPU/Buffer/Buffer.js";
+import type { Scene } from '../Scene.js';
+import { PlantsRenderPipeline } from '../GPU/RenderPipeLines/Plants.js';
+import { Buffer, GPUBufferUsage } from '../GPU/Buffer/Buffer.js';
 
-import type { Engine } from "../engine.js";
-import { DrawableIndirect } from "../GPU/Drawables/DrawableIndirect.js";
-import { GrassHeightAtCoordinates } from "../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js";
-import { MainNode, new_rust_mesh } from "../MainNode.js";
+import type { Engine } from '../engine.js';
+import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
+import { GrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
+import { MainNode, new_rust_mesh } from '../MainNode.js';
 declare const engine: Engine;
 
 /**

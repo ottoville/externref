@@ -1,7 +1,7 @@
-﻿import type { Scene } from "../../Scene.js";
-import { SimpleMesh } from "../AbstractMeshes/SimpleMesh.js";
-import { new_rust_mesh } from "../../MainNode.js";
-import { allocate_vec } from "../../nodes/DataNode.js";
+﻿import type { Scene } from '../../Scene.js';
+import { SimpleMesh } from '../AbstractMeshes/SimpleMesh.js';
+import { new_rust_mesh } from '../../MainNode.js';
+import { allocate_vec } from '../../nodes/DataNode.js';
 
 
 const positions = new Float32Array([

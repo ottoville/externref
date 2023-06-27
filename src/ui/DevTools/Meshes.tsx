@@ -1,13 +1,13 @@
-import type { GPU } from "../../GPU.js";
+import type { GPU } from '../../GPU.js';
 
-import type { RenderPipeline } from "../../GPU/RenderPipeline.js";
-import type { RenderPipelineVariant } from "../../GPU/RenderPasses/RenderPass.js";
-import type { Drawable } from "../../GPU/Drawables/Drawable.js";
+import type { RenderPipeline } from '../../GPU/RenderPipeline.js';
+import type { RenderPipelineVariant } from '../../GPU/RenderPasses/RenderPass.js';
+import type { Drawable } from '../../GPU/Drawables/Drawable.js';
 
-import { useEffect, useState } from "react";
-import { VariantList } from "./VariantList.js";
-import { NodeInfo } from "./NodeInfo.js";
-import type { Engine } from "../../engine.js";
+import { useEffect, useState } from 'react';
+import { VariantList } from './VariantList.js';
+import { NodeInfo } from './NodeInfo.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 const getPositionBindGroupForScreen = (gpu: GPU) => Array.from(gpu.renderPassScreen.renderPipelines)
@@ -20,7 +20,7 @@ const getPositionBindGroupForScreen = (gpu: GPU) => Array.from(gpu.renderPassScr
 export function Meshes() {
     const [renderPipelines, setRenderPipelines] = useState<ReturnType<typeof getPositionBindGroupForScreen>>([])
     useEffect(() => {
-        let renderPassScreen: GPU["renderPassScreen"] | undefined = undefined;
+        let renderPassScreen: GPU['renderPassScreen'] | undefined = undefined;
         let listener: () => void
         engine.getGPU(gpu => {
             listener = () => {

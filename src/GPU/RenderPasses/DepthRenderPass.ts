@@ -1,8 +1,8 @@
-import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
-import { RenderPass, RenderPassProps } from "./RenderPass.js";
-import type { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
-import type { RenderTargetTextureUsageValue } from "../Texture.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
+import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
+import { RenderPass, RenderPassProps } from './RenderPass.js';
+import type { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
+import type { RenderTargetTextureUsageValue } from '../Texture.js';
+import type { RenderPipeline } from '../RenderPipeline.js';
 
 export class DepthRenderPass<T extends {
     [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
@@ -29,7 +29,7 @@ export class DepthRenderPass<T extends {
         renderPassDescriptor.depthStencilAttachment = {
             depthClearValue: this.depthRenderTarget.clearValue,
             depthLoadOp: 'clear',
-            depthStoreOp: "store",
+            depthStoreOp: 'store',
             view: this.depthRenderTarget.view.getAsRenderTarget(this),
         }
         return renderPassDescriptor;

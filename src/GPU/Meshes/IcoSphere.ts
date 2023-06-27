@@ -1,9 +1,9 @@
-﻿import type { Scene } from "../../Scene.js";
-import type { Engine } from "../../engine.js";
-import { MutableTerraVector3 } from "../../Math.js";
-import { new_rust_mesh } from "../../MainNode.js";
-import { allocate_vec } from "../../nodes/DataNode.js";
-import { IndexedSingleColoredMesh } from "../AbstractMeshes/IndexedSingleColoredMesh.js";
+﻿import type { Scene } from '../../Scene.js';
+import type { Engine } from '../../engine.js';
+import { MutableTerraVector3 } from '../../Math.js';
+import { new_rust_mesh } from '../../MainNode.js';
+import { allocate_vec } from '../../nodes/DataNode.js';
+import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
 declare const engine: Engine;
 let v = 12;
 const midCache = new Map<number, number>(); // midpoint vertices cache to avoid duplicating shared vertices

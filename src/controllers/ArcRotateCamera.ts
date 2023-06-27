@@ -1,7 +1,7 @@
-﻿import type { Engine, ListenerObj } from "../engine.js";
-import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix } from "../Math.js";
-import type { TerraCamera } from "../TerraCamera.js";
-import { CameraController } from "./CameraController.js";
+﻿import type { Engine, ListenerObj } from '../engine.js';
+import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix } from '../Math.js';
+import type { TerraCamera } from '../TerraCamera.js';
+import { CameraController } from './CameraController.js';
 let pointerDownButton = 0;
 const panningSensibility = 20;
 const angularSensibilityX = 3000;
@@ -26,7 +26,7 @@ export class ArcRotateCamera extends CameraController {
         if (this.#serializeRequested || !engine.DB)
             return;
         this.#serializeRequested = true;
-        const request = engine.DB.transaction("save", "readwrite").objectStore("save").put({
+        const request = engine.DB.transaction('save', 'readwrite').objectStore('save').put({
             data: {
                 alpha: this.#alpha,
                 beta: this.#beta,
@@ -83,7 +83,7 @@ export class ArcRotateCamera extends CameraController {
     constructor(private camera: TerraCamera, initial = false) {
         super();
         if (initial && engine.DB) {
-            engine.DB.transaction("save").objectStore("save").get(["camera", "ArchRotateCamera"]).onsuccess = evt => {
+            engine.DB.transaction('save').objectStore('save').get(['camera', 'ArchRotateCamera']).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = (evt.target as IDBRequest).result.data as serialized | undefined;
                     if (restored) {

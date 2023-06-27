@@ -5,7 +5,7 @@ import type { simpleAttributesWithColor } from '../RenderPipeLines/ColoredRender
 import { pickOutput, typicalOutput } from './structs/Structs.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 
-type BindLayouts = Readonly<GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]>;
+type BindLayouts = Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>;
 
 /**
   Shader where each vertex carries a color property
@@ -18,7 +18,7 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
             main: new VertexShaderFunction(
                 typicalOutput,
                 pipelineLayout,
-                ``,
+                '',
                 [buffers], ([
                     [,],
                     [scene],
@@ -39,7 +39,7 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
       return output;` ),
             pick: new VertexShaderFunction(pickOutput,
                 pipelineLayout,
-                ``,
+                '',
                 [buffers], ([
                     [,],
                     [scene],

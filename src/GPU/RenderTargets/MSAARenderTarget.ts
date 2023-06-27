@@ -1,13 +1,13 @@
-import { ColorRenderTarget, ColorRenderTargetParams } from "./ColorRenderTarget.js";
-import { RenderPassTarget, type RenderPassTargetOptions, type Texture2dSize } from "./RenderPassTarget.js";
-import type { RenderTargetTextureUsageValue, TextureParams, TextureUsageType } from "../Texture.js";
+import { ColorRenderTarget, ColorRenderTargetParams } from './ColorRenderTarget.js';
+import { RenderPassTarget, type RenderPassTargetOptions, type Texture2dSize } from './RenderPassTarget.js';
+import type { RenderTargetTextureUsageValue, TextureParams, TextureUsageType } from '../Texture.js';
 
 export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     extends ColorRenderTarget<F, U> {
     readonly resolveTexture?: RenderPassTarget<F, U>
     readonly #resolveView: () => GPUTextureView;
     constructor(
-        textureOptions: TextureParams<F, Exclude<U, TextureUsageType["STORAGE_BINDING"]>, Texture2dSize>,
+        textureOptions: TextureParams<F, Exclude<U, TextureUsageType['STORAGE_BINDING']>, Texture2dSize>,
         renderTargetOptions: RenderPassTargetOptions,
         options: ColorRenderTargetParams
     ) {
@@ -35,7 +35,7 @@ export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U e
         const obj = super.createColorAttachment();
         obj.view = this.view.view;
         obj.resolveTarget = this.#resolveView();
-        obj.storeOp = "discard"
+        obj.storeOp = 'discard'
         return obj;
     }
 }

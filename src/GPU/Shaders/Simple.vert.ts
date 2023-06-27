@@ -5,7 +5,7 @@ import type { simpleAttributes } from '../RenderPipeLines/SimpleRenderPipeline.j
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { pickOutput, typicalOutput } from './structs/Structs.js';
 
-type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
+type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
 
 /**
   Shader where mesh is single colored
@@ -17,7 +17,7 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
             main: new VertexShaderFunction(
                 typicalOutput,
                 pipelineLayout,
-                ``,
+                '',
                 [buffers], ([
                     [/*uniforms*/,],
                     [scene,/*time, clusters_array, meshes, projection*/],
@@ -40,7 +40,7 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
           `),
             pick: new VertexShaderFunction(pickOutput,
                 pipelineLayout,
-                ``,
+                '',
                 [buffers],
                 ([
                     [/*uniforms*/,],

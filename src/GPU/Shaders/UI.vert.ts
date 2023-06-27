@@ -3,19 +3,19 @@ import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js'
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
-type BindLayouts = [GPU["BindGroupLayoutCanvas"]]
+type BindLayouts = [GPU['BindGroupLayoutCanvas']]
 
 export const position_uv_attrs = Object.freeze({
     position: {
-        format: "float32x2",
+        format: 'float32x2',
         offset: 0,
-        shaderFormat: "vec2<f32>",
+        shaderFormat: 'vec2<f32>',
         shaderLocation: 0,
     },
     uv: {
-        format: "float32x2",
+        format: 'float32x2',
         offset: 8,
-        shaderFormat: "vec2<f32>",
+        shaderFormat: 'vec2<f32>',
         shaderLocation: 1,
     }
 } as const)
@@ -29,7 +29,7 @@ export function createUIVertShader(pipelineLayout: PipelineLayout<BindLayouts>, 
                 v_uv: ['@location(0)', 'vec2<f32>'],
             }),
             pipelineLayout,
-            ``,
+            '',
             [buffers],
             ([[uniforms,/*texture*/]], [{ position, uv }]) => /* wgsl */ `
       var output : Output;   

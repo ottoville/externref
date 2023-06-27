@@ -1,8 +1,8 @@
-import { ObjectWorkerThread } from "../WorkerThread.js";
-import { MainNode } from "../MainNode.js";
-import { MutableTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from "../Math.js";
-import type { ColliderJS } from "../Collider.js";
-import type { Engine, rust_pointer, rust_vec_ptr } from "../engine.js";
+import { ObjectWorkerThread } from '../WorkerThread.js';
+import { MainNode } from '../MainNode.js';
+import { MutableTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from '../Math.js';
+import type { ColliderJS } from '../Collider.js';
+import type { Engine, rust_pointer, rust_vec_ptr } from '../engine.js';
 declare const engine: Engine;
 
 const worker = new ObjectWorkerThread('mesh.js', { type: 'module' });
@@ -36,7 +36,7 @@ export interface Ellipsoid {
 
 export type DataNodeProps = {
     vertices: {
-        view: rust_vec_ptr<"f32">,
+        view: rust_vec_ptr<'f32'>,
         stride: number
     }
     /**
@@ -52,26 +52,26 @@ export type DataNodeProps = {
     so it is always small enought for gravity to hit on next tick.
 */
 
-export function allocate_vec(array: Uint32Array) : rust_vec_ptr<"usize">
-export function allocate_vec(array: Float32Array) : rust_vec_ptr<"f32">
-export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_pointer<"usize"> | rust_pointer<"f32">, len: number, cap: number] {
+export function allocate_vec(array: Uint32Array) : rust_vec_ptr<'usize'>
+export function allocate_vec(array: Float32Array) : rust_vec_ptr<'f32'>
+export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_pointer<'usize'> | rust_pointer<'f32'>, len: number, cap: number] {
     if(array.buffer.byteLength === 0) {
-        throw new Error("Cannot allocate deattached or empty buffer");
+        throw new Error('Cannot allocate deattached or empty buffer');
     }
     if (array.buffer === engine.rust.memory.buffer) {
-        throw new Error("Source buffer is already in rust");
+        throw new Error('Source buffer is already in rust');
     }
     if(array instanceof Float32Array) {
         const vec_ptr = engine.rust.alloc_vector_f32(array.length);
         const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3)
         new Float32Array(engine.rust.memory.buffer, ptr, len).set(array);
-        return [ptr as rust_pointer<"f32">, len!, cap!];
+        return [ptr as rust_pointer<'f32'>, len!, cap!];
     }
     else {
         const vec_ptr = engine.rust.alloc_vector_usize(array.length);
         const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3)
         new Uint32Array(engine.rust.memory.buffer, ptr, len).set(array);
-        return [ptr as rust_pointer<"usize">, len!, cap!];
+        return [ptr as rust_pointer<'usize'>, len!, cap!];
     }
 }
 
@@ -121,7 +121,7 @@ export abstract class DataNode extends MainNode {
     get vertices_stride(): number {
         return engine.rust.vertices_stride(this.id);
     }
-    set_vertices(vec: rust_vec_ptr<"f32">) {
+    set_vertices(vec: rust_vec_ptr<'f32'>) {
         engine.rust.set_vertices(this.id, ...vec);
     }
     get last_collider_world_vertices_pointer() {

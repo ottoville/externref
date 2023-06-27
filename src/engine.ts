@@ -1,15 +1,15 @@
-﻿import { Physics } from "./physics.js";
-import { GPU } from "./GPU.js";
-import { ColliderJS } from "./Collider.js";
-import type { Scene } from "./Scene.js";
-import type { TerraVector3 } from "./Math.js";
-import { TerraCamera } from "./TerraCamera.js";
+﻿import { Physics } from './physics.js';
+import { GPU } from './GPU.js';
+import { ColliderJS } from './Collider.js';
+import type { Scene } from './Scene.js';
+import type { TerraVector3 } from './Math.js';
+import { TerraCamera } from './TerraCamera.js';
 //@ts-ignore
-import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
+import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
 //@ts-ignore
-import { MeshCamera } from "./controllers/MeshCamera.js";
-import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from "./nodes/DataNode.js";
-import type { CameraController } from "./controllers/CameraController.js";
+import { MeshCamera } from './controllers/MeshCamera.js';
+import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from './nodes/DataNode.js';
+import type { CameraController } from './controllers/CameraController.js';
 
 const textDecoder = new TextDecoder();
 
@@ -72,19 +72,19 @@ export type rustWasm = {
 
     create_octasphere(num_subdivisions: number, half_width: number, half_height: number, half_depth: number): rust_pointer<'*const usize'>
 
-    collider(): rust_pointer<"legacy_collider">,
-    intersection_point_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
-    collision_resolved_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
-    nearest_distance_squared_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
-    set_nearest_distance_squared(collider_ptr: rust_pointer<"legacy_collider">, distance: number): void
-    get_nearest_distance_squared(collider_ptr: rust_pointer<"legacy_collider">): number
-    scaled_position_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
-    scaled_velocity_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
-    collided_mesh_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
-    collided_point_in_triangle_pointer(collider_ptr: rust_pointer<"legacy_collider">): rust_pointer<'Plane'>
+    collider(): rust_pointer<'legacy_collider'>,
+    intersection_point_pointer(collider_ptr: rust_pointer<'legacy_collider'>): number
+    collision_resolved_pointer(collider_ptr: rust_pointer<'legacy_collider'>): number
+    nearest_distance_squared_pointer(collider_ptr: rust_pointer<'legacy_collider'>): number
+    set_nearest_distance_squared(collider_ptr: rust_pointer<'legacy_collider'>, distance: number): void
+    get_nearest_distance_squared(collider_ptr: rust_pointer<'legacy_collider'>): number
+    scaled_position_pointer(collider_ptr: rust_pointer<'legacy_collider'>): number
+    scaled_velocity_pointer(collider_ptr: rust_pointer<'legacy_collider'>): number
+    collided_mesh_pointer(collider_ptr: rust_pointer<'legacy_collider'>): number
+    collided_point_in_triangle_pointer(collider_ptr: rust_pointer<'legacy_collider'>): rust_pointer<'Plane'>
     //set_collided_point_in_triangle_pointer(collider_ptr: rust_pointer<"legacy_collider">, plane: rust_pointer<'Plane'>): void
     collision_found(
-        collider_ptr: rust_pointer<"legacy_collider">,
+        collider_ptr: rust_pointer<'legacy_collider'>,
         t: number,
         velocitySquaredLength: number,
         collision_point_x: number,
@@ -93,8 +93,8 @@ export type rustWasm = {
         collided_point_in_triangle: boolean,
         collided_plane: number): void,
     get_lowest_root(a: number, b: number, c: number, maxR: number): number
-    set_speed(collider_ptr: rust_pointer<"legacy_collider">, speed: number): void
-    basepoint_world_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    set_speed(collider_ptr: rust_pointer<'legacy_collider'>, speed: number): void
+    basepoint_world_pointer(collider_ptr: rust_pointer<'legacy_collider'>): number
     renderloop(): void,
 
     new_mesh(
@@ -116,19 +116,19 @@ export type rustWasm = {
         static_faces: boolean,
         strip: boolean): void,
     add_collider(mesh_id: number,
-        collider: rust_pointer<"collider">): void
+        collider: rust_pointer<'collider'>): void
     memory: WebAssembly.Memory,
-    set_vertices(mesh_id: number, ptr: rust_pointer<"f32">, length: number, cap: number): void,
-    set_indices(mesh_id: number, ptr: rust_pointer<"usize">, length: number, cap: number): void,
-    set_indices_and_vertices(mesh_id: number, indices: rust_pointer<"usize">, indices_length: number, indices_cap: number, vertices: rust_pointer<"f32">, vertices_length: number, vertices_cap: number): void,
+    set_vertices(mesh_id: number, ptr: rust_pointer<'f32'>, length: number, cap: number): void,
+    set_indices(mesh_id: number, ptr: rust_pointer<'usize'>, length: number, cap: number): void,
+    set_indices_and_vertices(mesh_id: number, indices: rust_pointer<'usize'>, indices_length: number, indices_cap: number, vertices: rust_pointer<'f32'>, vertices_length: number, vertices_cap: number): void,
     vertices_pointer(mesh_id: number): number,
     indices_field_pointer(mesh_id: number): rust_pointer<'indices_indices'>,
     last_collider_world_vertices_pointer(mesh_id: number): number,
     vertices_count(mesh_id: number): number,
     faces_count(mesh_id: number): number,
-    alloc_vector_f32(size: number): rust_pointer<"usize">,
-    alloc_vector_u8(size: number): rust_pointer<"usize">,
-    alloc_vector_usize(size: number): rust_pointer<"usize">,
+    alloc_vector_f32(size: number): rust_pointer<'usize'>,
+    alloc_vector_u8(size: number): rust_pointer<'usize'>,
+    alloc_vector_usize(size: number): rust_pointer<'usize'>,
     update_scale(mesh_id: number, x: number, y: number, z: number): void,
     update_rotation(mesh_id: number, x: number, y: number, z: number, w: number): void,
     update_euler_angles(mesh_id: number, x: number, y: number, z: number): void,
@@ -138,16 +138,16 @@ export type rustWasm = {
     gpu_alignment(mesh_id: number): number,
     positions_count(mesh_id: number): number,
     set_positions_count(mesh_id: number, positions_count: number): number,
-    get_mesh_by_id(id: number): rust_pointer<"mesh">,
+    get_mesh_by_id(id: number): rust_pointer<'mesh'>,
     strip(mesh_id: number): number,
-    collider_planes_parallel_pointer(mesh_id: number): rust_pointer<"collider_planes_parallel_pointer">,
+    collider_planes_parallel_pointer(mesh_id: number): rust_pointer<'collider_planes_parallel_pointer'>,
     gpu_pointer(mesh_id: number): number,
-    label_field_pointer(mesh_id: number): rust_pointer<"label_field">,
-    translation_pointer(mesh_id: number): rust_pointer<"translation">,
-    rotation_pointer(mesh_id: number): rust_pointer<"rotation">,
-    rotation_pointer_euler(mesh_id: number): rust_pointer<"f32">,
-    scale_pointer(mesh_id: number): rust_pointer<"scale">,
-    velocity_pointer(mesh_id: number): rust_pointer<"velocity">,
+    label_field_pointer(mesh_id: number): rust_pointer<'label_field'>,
+    translation_pointer(mesh_id: number): rust_pointer<'translation'>,
+    rotation_pointer(mesh_id: number): rust_pointer<'rotation'>,
+    rotation_pointer_euler(mesh_id: number): rust_pointer<'f32'>,
+    scale_pointer(mesh_id: number): rust_pointer<'scale'>,
+    velocity_pointer(mesh_id: number): rust_pointer<'velocity'>,
     intersect_box_aa_sphere(mesh_id: number, collider_ptr: number, radius: number): boolean
     scale_x(mesh_id: number): number,
     scale_y(mesh_id: number): number,
@@ -163,23 +163,23 @@ export type rustWasm = {
     faces_pointer(mesh_id: number): number,
     bounding_vectors_pointer_simd(mesh_id: number): rust_pointer<'*const usize'>,
 
-    create_elevator(mesh_id: number): rust_pointer<"elevator">,
-    mouse_position_pointer(elevator_ptr: rust_pointer<"elevator">): number
-    elevate(elevator_ptr: rust_pointer<"elevator">, mesh_id: number, radius: number, height: number): void
-    get_length(elevator_ptr: rust_pointer<"elevator">): number
-    get_offset(elevator_ptr: rust_pointer<"elevator">): number
+    create_elevator(mesh_id: number): rust_pointer<'elevator'>,
+    mouse_position_pointer(elevator_ptr: rust_pointer<'elevator'>): number
+    elevate(elevator_ptr: rust_pointer<'elevator'>, mesh_id: number, radius: number, height: number): void
+    get_length(elevator_ptr: rust_pointer<'elevator'>): number
+    get_offset(elevator_ptr: rust_pointer<'elevator'>): number
 
     init_engine2(): number
     physic_tick(): void
 
-    create_ball_collider(radius: number): rust_pointer<"collider">
-    create_capsule_collider(half_height: number, radius: number, orientation: 0 | 1 | 2, collision_events: boolean): rust_pointer<"collider">,
-    create_trimesh_collider(mesh_id: number): rust_pointer<"collider">
-    create_cuboid_collider(hx: number, hy: number, hz: number, border_radius: number, collision_events: boolean): rust_pointer<"collider">
-    create_cone_collider(half_height: number, radius: number): rust_pointer<"collider">
+    create_ball_collider(radius: number): rust_pointer<'collider'>
+    create_capsule_collider(half_height: number, radius: number, orientation: 0 | 1 | 2, collision_events: boolean): rust_pointer<'collider'>,
+    create_trimesh_collider(mesh_id: number): rust_pointer<'collider'>
+    create_cuboid_collider(hx: number, hy: number, hz: number, border_radius: number, collision_events: boolean): rust_pointer<'collider'>
+    create_cone_collider(half_height: number, radius: number): rust_pointer<'collider'>
 
-    get_box_vertices(): rust_pointer<"f32">
-    get_box_indices(): rust_pointer<"u32">
+    get_box_vertices(): rust_pointer<'f32'>
+    get_box_indices(): rust_pointer<'u32'>
 }
 
 function Dot(left: readonly [number, number, number] | Float32Array | TerraVector3, right: readonly [number, number, number] | Float32Array | TerraVector3): number {
@@ -187,7 +187,7 @@ function Dot(left: readonly [number, number, number] | Float32Array | TerraVecto
 }
 const ObjectStores = {
     maps: <ObjStoreDetails>{
-        parameters: { autoIncrement: true, keyPath: "id" },
+        parameters: { autoIncrement: true, keyPath: 'id' },
         version: 4,
     },
     plantae: <ObjStoreDetails>{
@@ -197,16 +197,16 @@ const ObjectStores = {
             { keyPath: 'grid', name: 'grid', options: { unique: false }, version: 6 },
             { keyPath: ['gridx', 'gridz'], name: 'gridxz', options: { unique: false }, version: 6 },
         ],
-        parameters: { autoIncrement: true, keyPath: "id" },
+        parameters: { autoIncrement: true, keyPath: 'id' },
         version: 2,
 
     },
     save: <ObjStoreDetails>{
-        parameters: { autoIncrement: false, keyPath: ["type", "name"] },
+        parameters: { autoIncrement: false, keyPath: ['type', 'name'] },
         version: 3,
     },
     zones: <ObjStoreDetails>{
-        parameters: { autoIncrement: true, keyPath: "id" },
+        parameters: { autoIncrement: true, keyPath: 'id' },
         version: 1,
     },
 };
@@ -230,7 +230,7 @@ export interface ColliderWasm {
         collidedPointInTrianglePointer: number,
         rust_collider_ptr: rust_pointer<'legacy_collider'>): void;
     memory: WebAssembly.Memory
-    testTriangles: (position: rust_pointer<"collider_faces">, positionParallel: rust_pointer<"collider_planes_parallel_pointer">, length: number, meshID: number) => void
+    testTriangles: (position: rust_pointer<'collider_faces'>, positionParallel: rust_pointer<'collider_planes_parallel_pointer'>, length: number, meshID: number) => void
     _initialize: () => void
 }
 let deviceId = 0;
@@ -294,7 +294,7 @@ export class Engine {
         let DB: Promise<EarthDatabase> | undefined = undefined;
         if (typeof (indexedDB) === 'object') {
             DB = new Promise<EarthDatabase>(function (res) {
-                var IDB = indexedDB.open("City", 6);
+                var IDB = indexedDB.open('City', 6);
                 IDB.onerror = function (e) {
                     showError(createError(e))
                 }
@@ -428,10 +428,10 @@ export class Engine {
     showError(e: unknown, gpu?: GPU) {
         if (e instanceof Error) {
             if (
-                (e.message.includes("Device") && e.message.includes("is lost")) ||
-                (e.cause instanceof Error && e.cause.message.includes("Device") && e.cause.message.includes("is lost")) ||
-                (e.message === "Device destroyed before callback") ||
-                (e.cause instanceof Error && e.cause.message === "Device destroyed before callback")
+                (e.message.includes('Device') && e.message.includes('is lost')) ||
+                (e.cause instanceof Error && e.cause.message.includes('Device') && e.cause.message.includes('is lost')) ||
+                (e.message === 'Device destroyed before callback') ||
+                (e.cause instanceof Error && e.cause.message === 'Device destroyed before callback')
             ) {
                 //When device is lost new device will be set in GPU.ts
                 console.log('Omit error on lost device, current GPU:', engine.gpu?.device.label, 'destroyed:', engine.gpu?.destroyed, 'error GPU:', gpu?.device.label, 'destroyed:', gpu?.destroyed)
@@ -571,7 +571,7 @@ export class Engine {
 
         //@ts-ignore
         globalThis.engine = this;
-        this.mainCamera = new TerraCamera('mainCamera', "renderPassScreen");
+        this.mainCamera = new TerraCamera('mainCamera', 'renderPassScreen');
 
         if (nodes?.canvas) {
             (['pointerup', 'pointerdown', 'pointermove', 'wheel', 'pointerleave', 'keydown', 'keyup'] as const).forEach(eventType => {
@@ -606,7 +606,7 @@ export class Engine {
                     }
                 }, { passive: false });
             });
-            const waterCamera = new TerraCamera('waterCamera', "renderPassWater", this.mainCamera);
+            const waterCamera = new TerraCamera('waterCamera', 'renderPassWater', this.mainCamera);
             waterCamera.beforeViewUpdate.add((position, direction) => {
                 position[1] -= (position[1] - 3) * 2;
                 direction[1] = -direction[1];

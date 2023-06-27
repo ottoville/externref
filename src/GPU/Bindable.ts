@@ -1,4 +1,4 @@
-import type { BindGroup } from "./BindGroup";
+import type { BindGroup } from './BindGroup';
 
 export abstract class Bindable {
     public readonly bindGroups:Set<BindGroup>=new Set();

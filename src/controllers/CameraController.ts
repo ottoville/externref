@@ -1,6 +1,6 @@
-import type { CameraControl } from "../TerraCamera.js";
-import { closeDistance, Ellipsoid } from "../nodes/DataNode.js";
-import { TerraMatrix } from "../Math.js";
+import type { CameraControl } from '../TerraCamera.js';
+import { closeDistance, Ellipsoid } from '../nodes/DataNode.js';
+import { TerraMatrix } from '../Math.js';
 export const enum ARROW_KEYS {
     UP = 1,
     RIGHT = 2,

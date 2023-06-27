@@ -5,7 +5,7 @@ import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
 
-type BindGroupLayouts = Terrain["TerrainHeightsbindGroupTree"]["bindGroupLayouts"];
+type BindGroupLayouts = Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts'];
 
 export function createPlaneAtGroundHeightVertShader(
     pipelineLayout: PipelineLayout<BindGroupLayouts>,
@@ -21,7 +21,7 @@ export function createPlaneAtGroundHeightVertShader(
                     color: ['@location(0)', 'vec3<f32>'],
                 }),
                 pipelineLayout,
-                ``,
+                '',
                 [buffers],
                 ([
                     [/*uniforms*/,],

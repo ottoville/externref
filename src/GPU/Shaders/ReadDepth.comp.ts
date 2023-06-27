@@ -22,7 +22,7 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                         buffer: {
                             hasDynamicOffset: false,
                             minBindingSize: 16,
-                            type: "storage",
+                            type: 'storage',
                         },
                         visibility: ShaderStage.COMPUTE,
                     }, 'depth_and_mesh', Depth_And_Mesh)
@@ -65,7 +65,7 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: new ComputeShaderFunction(
-                    `@builtin(global_invocation_id) global_id : vec3<u32>`,
+                    '@builtin(global_invocation_id) global_id : vec3<u32>',
                     pipelineLayout,
                     ([[/*depth_and_mesh*/,], [depth_texture, mesh_texture, mouse]]) => `
                     depth_and_mesh.depth=textureLoad(${depth_texture.variableName}, ${mouse.prop('position')}, 1);
@@ -73,7 +73,7 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                 `)
             },
             gpu,
-            label: "ReadDepth.comp",
-        }, () => `@compute @workgroup_size(1, 1, 1)`);
+            label: 'ReadDepth.comp',
+        }, () => '@compute @workgroup_size(1, 1, 1)');
     }
 }

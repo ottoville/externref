@@ -1,14 +1,14 @@
-import { MutableTerraVector3, ReadOnlyTerraVector3, TerraVector3 } from "../../Math.js";
-import { MainNode } from "../../MainNode.js";
-import { MSAARenderTarget } from "../RenderTargets/MSAARenderTarget.js";
-import type { BindGroup } from "../BindGroup.js";
-import { type BindUniformBuffer, type CopyDstBuffer, Buffer, GPUBufferUsage } from "../Buffer/Buffer.js";
-import { RenderPassProps } from "./RenderPass.js";
-import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
-import { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
-import { DepthRenderPass } from "./DepthRenderPass.js";
-import type { RenderTargetTextureUsageValue } from "../Texture.js";
-import { ReadDepth } from "../../GPU/Shaders/ReadDepth.comp.js";
+import { MutableTerraVector3, ReadOnlyTerraVector3, TerraVector3 } from '../../Math.js';
+import { MainNode } from '../../MainNode.js';
+import { MSAARenderTarget } from '../RenderTargets/MSAARenderTarget.js';
+import type { BindGroup } from '../BindGroup.js';
+import { type BindUniformBuffer, type CopyDstBuffer, Buffer, GPUBufferUsage } from '../Buffer/Buffer.js';
+import { RenderPassProps } from './RenderPass.js';
+import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
+import { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
+import { DepthRenderPass } from './DepthRenderPass.js';
+import type { RenderTargetTextureUsageValue } from '../Texture.js';
+import { ReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
 
 export class PickableRenderPass<T extends {
     [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
@@ -151,7 +151,7 @@ export class PickableRenderPass<T extends {
             //The entire subresource must be copied when the format (TextureFormat::Depth32Float) is a depth/stencil format or the sample count (1) is > 1.
             encoder.copyTextureToBuffer(
                 {
-                    aspect: "depth-only",
+                    aspect: 'depth-only',
                     origin: { x: 0, y: 0, z: 0 },
                     texture: this.depthRenderTarget.texture,
                 },

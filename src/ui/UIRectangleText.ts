@@ -1,4 +1,4 @@
-import { UIRectangle } from "./UIRectangle.js";
+import { UIRectangle } from './UIRectangle.js';
 
 export abstract class UIRectangleText extends UIRectangle {
     protected textUV: [

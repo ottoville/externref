@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { Drawable } from "../../GPU/Drawables/Drawable.js";
-import { RenderPipelineVariant } from "../../GPU/RenderPasses/RenderPass.js";
-import type { Engine } from "../../engine.js";
-import { ArcRotateCamera } from "../../controllers/ArcRotateCamera.js";
-import { DrawableDirect } from "../../GPU/Drawables/DrawableDirect.js";
+import { useEffect, useState } from 'react';
+import { Drawable } from '../../GPU/Drawables/Drawable.js';
+import { RenderPipelineVariant } from '../../GPU/RenderPasses/RenderPass.js';
+import type { Engine } from '../../engine.js';
+import { ArcRotateCamera } from '../../controllers/ArcRotateCamera.js';
+import { DrawableDirect } from '../../GPU/Drawables/DrawableDirect.js';
 declare const engine: Engine;
 
 export function VariantList(props: {

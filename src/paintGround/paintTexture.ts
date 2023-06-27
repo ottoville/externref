@@ -1,10 +1,10 @@
-﻿import { paintGround } from "./paintGround.js";
-import type { Terrain } from "../world/Terrain.js";
-import type { subTexture, PTResultF } from "../types/interfaces/index.js";
-import type { Scene } from "../Scene.js";
-import { TerraVector2 } from "../Math.js";
-import type { Texture } from "../GPU/Texture.js";
-import type { Texture2dSize } from "../GPU/RenderTargets/RenderPassTarget.js";
+﻿import { paintGround } from './paintGround.js';
+import type { Terrain } from '../world/Terrain.js';
+import type { subTexture, PTResultF } from '../types/interfaces/index.js';
+import type { Scene } from '../Scene.js';
+import { TerraVector2 } from '../Math.js';
+import type { Texture } from '../GPU/Texture.js';
+import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
 
 export class paintTexture extends paintGround {
     private subTextureCache: subTexture = { height: 0, imageData: null, width: 0, x: 0, z: 0,  };
@@ -22,7 +22,7 @@ export class paintTexture extends paintGround {
     constructor(
         scene: Scene,
         ground: Terrain,
-        protected readonly zonedt: Texture<"rgba8unorm", 23, Texture2dSize>,
+        protected readonly zonedt: Texture<'rgba8unorm', 23, Texture2dSize>,
         private textureWidth: number,
         private textureHeight: number,
         private ratio: number,
@@ -73,7 +73,7 @@ export class paintTexture extends paintGround {
         const c = new OffscreenCanvas(cwidth + alignment / 4, cheight);
         const buffersize = c.width * c.height * 4
 
-        const ctx = c.getContext("2d");
+        const ctx = c.getContext('2d');
         if (!ctx)
             throw (new Error('cannot get 2D context'));
         let imageData = ctx.createImageData(c.width, c.height);
@@ -83,7 +83,7 @@ export class paintTexture extends paintGround {
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
         });
         const tempTexture = this.scene.gpu.device.createTexture({
-            format: "rgba8unorm",
+            format: 'rgba8unorm',
             size: { height: c.height, width: c.width },
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
         });
@@ -145,7 +145,7 @@ export class paintTexture extends paintGround {
         ctx.rotate(rad * -1);
         ctx.translate(cwidth / -2, c.height / -2);
         ctx.translate(((cwidth - absDimensions.w) / 2), (c.height - absDimensions.h) / 2);
-        ctx.fillStyle = "red";
+        ctx.fillStyle = 'red';
         ctx.rect(0, 0, absDimensions.w, absDimensions.h);
 
         ctx.fill();

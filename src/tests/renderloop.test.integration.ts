@@ -1,4 +1,4 @@
-import type { Engine } from "../engine.js";
+import type { Engine } from '../engine.js';
 import type { Page, Browser } from 'puppeteer-core';
 
 import { describe, beforeAll, it, expect } from '@jest/globals'

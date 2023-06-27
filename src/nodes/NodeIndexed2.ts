@@ -1,11 +1,11 @@
-import type { Engine, rust_vec_ptr } from "../engine.js";
-import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
-import type { MainNode } from "MainNode.js";
-import { allocate_vec } from "./DataNode.js";
+import type { Engine, rust_vec_ptr } from '../engine.js';
+import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
+import type { MainNode } from 'MainNode.js';
+import { allocate_vec } from './DataNode.js';
 declare const engine: Engine;
 export type IndexedTrait = MainNode & {indexed: NodeIndexed2};
 export class NodeIndexed2 {
-    set_indices(vec: rust_vec_ptr<"usize">, initial=false) {
+    set_indices(vec: rust_vec_ptr<'usize'>, initial=false) {
         engine.rust.set_indices(this.node.id, ...vec);
         if (this.node.drawable && !(this.node.drawable instanceof DrawableIndexed)) {
             throw (new Error('Node is not indexed'));
@@ -34,7 +34,7 @@ export class NodeIndexed2 {
     }
     constructor(
         protected node: MainNode,
-        indicesView: rust_vec_ptr<"usize">,
+        indicesView: rust_vec_ptr<'usize'>,
         private onIndicesChange?: () => void
     ) {
         this.set_indices(indicesView, true);

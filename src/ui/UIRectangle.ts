@@ -1,14 +1,14 @@
-import type { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
-import { Buffer, type CopyDstBuffer, GPUBufferUsage, BindUniformBuffer } from "../GPU/Buffer/Buffer.js";
-import { TextureView } from "../GPU/TextureView.js";
-import type { Engine, ListenerObj } from "../engine.js";
-import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
-import { type Texture, TextureUsageEnums, type TextureUsageValue, RenderTarget } from "../GPU/Texture.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
-import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
-import { DataNode, allocate_vec } from "../nodes/DataNode.js";
-import { new_rust_mesh } from "../MainNode.js";
-import type { Texture2dSize } from "../GPU/RenderTargets/RenderPassTarget.js";
+import type { RenderPass } from '../GPU/RenderPasses/RenderPass.js';
+import { Buffer, type CopyDstBuffer, GPUBufferUsage, BindUniformBuffer } from '../GPU/Buffer/Buffer.js';
+import { TextureView } from '../GPU/TextureView.js';
+import type { Engine, ListenerObj } from '../engine.js';
+import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
+import { type Texture, TextureUsageEnums, type TextureUsageValue, RenderTarget } from '../GPU/Texture.js';
+import type { RenderPipeline } from '../GPU/RenderPipeline.js';
+import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
+import { DataNode, allocate_vec } from '../nodes/DataNode.js';
+import { new_rust_mesh } from '../MainNode.js';
+import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
 declare const engine: Engine;
 
 export const enum NumericUnit {
@@ -95,7 +95,7 @@ export abstract class UIRectangle extends DataNode {
         right: 0,
         top: 0,
     }
-    texture?: RenderTarget<"bgra8unorm", (typeof TextureUsageEnums)["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"]> | undefined;
+    texture?: RenderTarget<'bgra8unorm', (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST']> | undefined;
     uniformBuffer: CopyDstBuffer & BindUniformBuffer;
     textureView: TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>>;
     createTextureView(
@@ -114,11 +114,11 @@ export abstract class UIRectangle extends DataNode {
         if (!this.texture) {
             this.texture = new RenderTarget(
                 {
-                    format: "bgra8unorm",
+                    format: 'bgra8unorm',
                     gpu: this.props.renderPass.gpu,
                     label: 'button_' + this.props.label + '_UIRectangle_text',
                     size: { height: copySource.height, width: copySource.width },
-                    usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"],
+                    usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
                 }
             );
         }
@@ -137,7 +137,7 @@ export abstract class UIRectangle extends DataNode {
     abstract createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>>
     protected updatePosition(buffer: ArrayBuffer) {
         const b = new Float32Array(buffer)
-        if (this.props.translate.x.value[1] === NumericUnit["%"]) {
+        if (this.props.translate.x.value[1] === NumericUnit['%']) {
             var XPosition = this.props.translate.x.value[0]
         } else { //pixels
             var XPosition = (this.props.translate.x.value[0] / this.props.renderPass.size.width) * 2;
@@ -148,7 +148,7 @@ export abstract class UIRectangle extends DataNode {
             XPosition = XPosition - 1
         }
         b[0] = XPosition
-        if (this.props.translate.y.value[1] === NumericUnit["%"]) {
+        if (this.props.translate.y.value[1] === NumericUnit['%']) {
             var YPosition = this.props.translate.y.value[0];
         } else { //pixels
             var YPosition = (this.props.translate.y.value[0] / this.props.renderPass.size.height) * 2
@@ -169,14 +169,14 @@ export abstract class UIRectangle extends DataNode {
             this.uniformBuffer.write(0, buff)
         }
         let widthPixels: number;
-        if (scale.unit === NumericUnit["%"]) {
+        if (scale.unit === NumericUnit['%']) {
             widthPixels = renderPass.size.width * scale.min_width
         } else {
             widthPixels = scale.min_width
         }
         if (originalAspectRatio) {
             const heightPixels = widthPixels * originalAspectRatio;
-            if (scale.unit === NumericUnit["%"]) {
+            if (scale.unit === NumericUnit['%']) {
                 scale.y = heightPixels / renderPass.size.height;
             } else {
                 scale.y = heightPixels;
@@ -188,13 +188,13 @@ export abstract class UIRectangle extends DataNode {
             if (originalAspectRatio)
                 halfHeight = halfWidth * originalAspectRatio;
             else {
-                if (scale.unit === NumericUnit["%"])
+                if (scale.unit === NumericUnit['%'])
                     halfHeight = renderPass.size.height * scale.y * 0.5
                 else
                     halfHeight = scale.y * 0.5
             }
             let movementXPixels = translate.x.value[0];
-            if (translate.x.value[1] === NumericUnit["%"]) {
+            if (translate.x.value[1] === NumericUnit['%']) {
                 movementXPixels = translate.x.value[0] * renderPass.size.width * 0.5
             }
             if (translate.x.anchor === Anchor.RIGHT) {
@@ -204,7 +204,7 @@ export abstract class UIRectangle extends DataNode {
                 movementXPixels = movementXPixels + renderPass.size.width * 0.5
             }
             let movementYPixels = translate.y.value[0];
-            if (translate.y.value[1] === NumericUnit["%"]) {
+            if (translate.y.value[1] === NumericUnit['%']) {
                 movementYPixels = translate.y.value[0] * renderPass.size.height * 0.5
             }
             if (translate.y.anchor === Anchor.BOTTOM) {
@@ -225,7 +225,7 @@ export abstract class UIRectangle extends DataNode {
         let heightBorderPixels: number
         let widthBorderRelative: number
         let heightBorderRelative: number
-        if (borderSize.width[1] === NumericUnit["%"]) {
+        if (borderSize.width[1] === NumericUnit['%']) {
             widthBorderPixels = renderPass.size.width * borderSize.width[0];
             widthBorderRelative = borderSize.width[0]
         } else {
@@ -233,7 +233,7 @@ export abstract class UIRectangle extends DataNode {
             widthBorderRelative = widthBorderPixels / renderPass.size.width
         }
         if (borderSize.height !== 'auto') {
-            if (borderSize.height[1] === NumericUnit["%"]) {
+            if (borderSize.height[1] === NumericUnit['%']) {
                 heightBorderPixels = renderPass.size.height * borderSize.height[0];
                 heightBorderRelative = borderSize.height[0]
             } else {
@@ -245,7 +245,7 @@ export abstract class UIRectangle extends DataNode {
         }
         let outer_sizeX: number;
         let outer_sizeY: number;
-        if (scale.unit === NumericUnit["%"]) {
+        if (scale.unit === NumericUnit['%']) {
             outer_sizeX = scale.min_width
             outer_sizeY = scale.y
         } else {

@@ -1,6 +1,6 @@
-﻿import type { GPU } from "./GPU.js";
-import type { Engine } from "./engine.js";
-import type { Terrain } from "./world/Terrain.js";
+﻿import type { GPU } from './GPU.js';
+import type { Engine } from './engine.js';
+import type { Terrain } from './world/Terrain.js';
 declare const engine:Engine;
 
 let sceneID=1;

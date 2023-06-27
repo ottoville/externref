@@ -1,7 +1,7 @@
-import type { Texture, TextureUsageValue } from "./Texture.js";
-import type { BindGroup } from "./BindGroup.js";
-import { Bindable } from "./Bindable.js";
-import type { RenderPass } from "./RenderPasses/RenderPass.js";
+import type { Texture, TextureUsageValue } from './Texture.js';
+import type { BindGroup } from './BindGroup.js';
+import { Bindable } from './Bindable.js';
+import type { RenderPass } from './RenderPasses/RenderPass.js';
 let n = 0;
 export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> = Texture<GPUTextureFormat, TextureUsageValue>> extends Bindable {
     //To track when texture is assigned as render target

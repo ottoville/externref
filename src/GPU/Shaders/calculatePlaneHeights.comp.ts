@@ -23,7 +23,7 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                         buffer: {
                             hasDynamicOffset: false,
                             minBindingSize: 48,
-                            type: "read-only-storage",
+                            type: 'read-only-storage',
                         },
                         visibility: ShaderStage.COMPUTE,
 
@@ -34,7 +34,7 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                         buffer: {
                             hasDynamicOffset: false,
                             minBindingSize: 32,
-                            type: "storage",
+                            type: 'storage',
                         },
                         visibility: ShaderStage.COMPUTE,
                     }, 'slopes', IntArray),
@@ -43,7 +43,7 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                         buffer: {
                             hasDynamicOffset: false,
                             minBindingSize: 32,
-                            type: "storage",
+                            type: 'storage',
                         },
                         visibility: ShaderStage.COMPUTE,
 
@@ -60,7 +60,7 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
-                main: new ComputeShaderFunction(`@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>`,
+                main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     ([[vertices], [slopes, facet12]]) => /* wgsl */ `
                 
@@ -111,7 +111,7 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                 `)
             },
             gpu: pipelineLayout.gpu,
-            label: "calculatePlaneHeights.comp",
+            label: 'calculatePlaneHeights.comp',
         }, () => `
             const cd: f32 = -1.0;
             @compute @workgroup_size(1)

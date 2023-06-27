@@ -4,7 +4,7 @@ import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
-type BindGroupLayouts = Terrain["TerrainHeightsbindGroupTree"]["bindGroupLayouts"];
+type BindGroupLayouts = Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts'];
 
 export class HelperVertShader extends VertexShader<BindGroupLayouts> {
     constructor(

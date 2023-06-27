@@ -8,7 +8,7 @@ import { getClusterIndex } from './getClusterIndex.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
 
-type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
+type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
 
 export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader({
@@ -74,7 +74,7 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
             pick: new FragmentShaderFunction<typeof pipelineLayout.bindGroupLayouts>(
                 new Struct('PickOutput', { ID: ['@location(0)', 'u32'] }),
                 pipelineLayout,
-                `@location(0) @interpolate(flat)  id : u32`,
+                '@location(0) @interpolate(flat)  id : u32',
                 ([
                     [,],
                     [/*scene*/,],

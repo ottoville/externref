@@ -1,8 +1,8 @@
-﻿import type { RenderPass } from "./RenderPasses/RenderPass.js";
-import type { BindGroup } from "./BindGroup.js";
-import type { RenderPipelineLayout } from "./PipelineLayout.js";
-import type { VertexShader } from "./Shaders/VertexShader.js";
-import type { FragmentShader } from "./Shaders/FragmentShader.js";
+﻿import type { RenderPass } from './RenderPasses/RenderPass.js';
+import type { BindGroup } from './BindGroup.js';
+import type { RenderPipelineLayout } from './PipelineLayout.js';
+import type { VertexShader } from './Shaders/VertexShader.js';
+import type { FragmentShader } from './Shaders/FragmentShader.js';
 
 export type RenderPipelineProps<V extends VertexShader, F extends FragmentShader> = {
     label: string,

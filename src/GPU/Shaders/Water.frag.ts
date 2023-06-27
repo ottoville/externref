@@ -1,9 +1,9 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
-import type { GPU } from "GPU.js"
+import type { GPU } from 'GPU.js'
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
-type BindLayouts = GPU["bindGroupTextureWater"]["bindGroupLayouts"]
+type BindLayouts = GPU['bindGroupTextureWater']['bindGroupLayouts']
 export class WaterFragShader extends FragmentShader<BindLayouts> {
     constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
         super({

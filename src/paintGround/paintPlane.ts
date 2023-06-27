@@ -1,17 +1,17 @@
-﻿import { paintGround } from "./paintGround.js";
-import { Terrain } from "../world/Terrain.js";
-import type { PTResultF } from "../types/interfaces/index.js";
-import type { Scene } from "../Scene.js";
+﻿import { paintGround } from './paintGround.js';
+import { Terrain } from '../world/Terrain.js';
+import type { PTResultF } from '../types/interfaces/index.js';
+import type { Scene } from '../Scene.js';
 
-import { TerraVector2 } from "../Math.js";
-import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
-import type { Engine, rust_pointer } from "../engine.js";
-import { PlaneAtGroundHeightVertShader, createPlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
-import { new_rust_mesh } from "../MainNode.js";
-import { DataNode } from "../nodes/DataNode.js";
-import { IndexedTrait, NodeIndexed2 } from "../nodes/NodeIndexed2.js";
-import { createColorFragmentShader } from "../GPU/Shaders/Color.frag.js";
+import { TerraVector2 } from '../Math.js';
+import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
+import type { Engine, rust_pointer } from '../engine.js';
+import { PlaneAtGroundHeightVertShader, createPlaneAtGroundHeightVertShader } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
+import type { RenderPipeline } from '../GPU/RenderPipeline.js';
+import { new_rust_mesh } from '../MainNode.js';
+import { DataNode } from '../nodes/DataNode.js';
+import { IndexedTrait, NodeIndexed2 } from '../nodes/NodeIndexed2.js';
+import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 declare const engine: Engine;
 
 class PlaneMesh extends DataNode implements IndexedTrait {
@@ -32,13 +32,13 @@ class PlaneMesh extends DataNode implements IndexedTrait {
                 character_can_collide_to: false,
                 vertices: {
                     stride: renderPipeline.props.vertexShader.props.entryPoints.main.vertexBufferLayout[0].arrayStride,
-                    view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!],
+                    view: [pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!],
 
                 },
             },
             mesh_id,
             false);
-        this.indexed = new NodeIndexed2(this, [ind_ptr as rust_pointer<"usize">, ind_len!, ind_cap!])
+        this.indexed = new NodeIndexed2(this, [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!])
         this.drawable = new DrawableIndexed(
             {
                 node: this,
@@ -71,13 +71,13 @@ export class paintPlane extends paintGround {
                         arrayStride: vertexBufferProps.stride * 4,
                         attributes2: Object.freeze({
                             position: {
-                                format: "float32x3",
+                                format: 'float32x3',
                                 offset: 0,
-                                shaderFormat: "vec4<f32>",
+                                shaderFormat: 'vec4<f32>',
                                 shaderLocation: 0,
                             }
                         } as const),
-                        stepMode: "vertex",
+                        stepMode: 'vertex',
                     }, Terrain.settings
                 );
                 return ground.TerrainHeightsbindGroupTree.addRenderPipeline(

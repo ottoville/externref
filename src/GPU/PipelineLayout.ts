@@ -1,9 +1,9 @@
-﻿import { BindGroup } from "./BindGroup.js";
-import type { BGLayout, BindGroupLayoutEntry, MapToGPUBindGroupEntry } from "./BindGroupLayout.js";
-import { RenderPipeline, type RenderPipelineProps } from "./RenderPipeline.js";
-import type { VertexShader } from "./Shaders/VertexShader.js";
-import type { GPU } from "../GPU.js"
-import type { FragmentShader } from "./Shaders/FragmentShader.js";
+﻿import { BindGroup } from './BindGroup.js';
+import type { BGLayout, BindGroupLayoutEntry, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
+import { RenderPipeline, type RenderPipelineProps } from './RenderPipeline.js';
+import type { VertexShader } from './Shaders/VertexShader.js';
+import type { GPU } from '../GPU.js'
+import type { FragmentShader } from './Shaders/FragmentShader.js';
 type extractGeneric<Type> = Type extends BGLayout<infer X> ? MapToGPUBindGroupEntry<X> : never
 type Last<T extends BGLayout[]> = T extends [...BGLayout[], infer R] ? R : never
 // eslint-disable-next-line @typescript-eslint/no-shadow

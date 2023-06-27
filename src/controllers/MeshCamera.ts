@@ -1,9 +1,9 @@
-import { MutableTerraVector3 } from "../Math.js";
-import type { TerraCamera } from "../TerraCamera.js";
-import type { Engine, ListenerObj } from "../engine";
-import { ARROW_KEYS, CameraController } from "./CameraController.js";
-import { Anchor, NumericUnit, UIRectangle } from "../ui/UIRectangle.js";
-import { UIRectangleBackground } from "../ui/UIRectangleBackground.js";
+import { MutableTerraVector3 } from '../Math.js';
+import type { TerraCamera } from '../TerraCamera.js';
+import type { Engine, ListenerObj } from '../engine';
+import { ARROW_KEYS, CameraController } from './CameraController.js';
+import { Anchor, NumericUnit, UIRectangle } from '../ui/UIRectangle.js';
+import { UIRectangleBackground } from '../ui/UIRectangleBackground.js';
 declare const engine: Engine;
 
 const cursorBitmap: Promise<ImageBitmap> = typeof globalThis.createImageBitmap !== 'undefined' ? fetch('/assets/cursor.webp').then(asset => asset.blob()).then(createImageBitmap) : Promise.resolve<ImageBitmap>({} as ImageBitmap);
@@ -45,7 +45,7 @@ export class MeshCamera extends CameraController {
                     label: 'cursor',
                     originalAspectRatio: 1,
                     renderPass: gpu.renderPassCanvas,
-                    scale: { min_width: 0.01, unit: NumericUnit["%"], y: 0.01 },
+                    scale: { min_width: 0.01, unit: NumericUnit['%'], y: 0.01 },
                     translate: {
                         x: {
                             anchor: Anchor.CENTER,

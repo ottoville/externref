@@ -1,7 +1,7 @@
-import type { Engine } from "../engine";
-import { MutableTerraVector3, TerraVector3 } from "../Math.js";
-import type { TerraCamera } from "../TerraCamera.js";
-import { ARROW_KEYS, CameraController } from "./CameraController.js";
+import type { Engine } from '../engine';
+import { MutableTerraVector3, TerraVector3 } from '../Math.js';
+import type { TerraCamera } from '../TerraCamera.js';
+import { ARROW_KEYS, CameraController } from './CameraController.js';
 
 declare const engine: Engine;
 
@@ -30,7 +30,7 @@ export class PositionCamera extends CameraController {
             });
         }
         if (initial && engine.DB) {
-            engine.DB.transaction("save").objectStore("save").get(["camera", "PositionCamera"]).onsuccess = evt => {
+            engine.DB.transaction('save').objectStore('save').get(['camera', 'PositionCamera']).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = ((evt.target as IDBRequest).result as {
                         data: {
@@ -63,7 +63,7 @@ export class PositionCamera extends CameraController {
         if (this.#serializeRequested || !engine.DB)
             return;
         this.#serializeRequested = true;
-        const request = engine.DB.transaction("save", "readwrite").objectStore("save").put({
+        const request = engine.DB.transaction('save', 'readwrite').objectStore('save').put({
             data: {
                 angle: this.#angle,
                 position: this.#position,

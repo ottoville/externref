@@ -1,17 +1,17 @@
-import { UIRectangle, UIRectangleProps } from "./UIRectangle.js";
-import { UINode } from "./UINode.js";
-import { UIRectangleBackground } from "./UIRectangleBackground.js";
-import { UIRectangleTextOnly } from "./UIRectangleTextOnly.js";
-import type { GPU } from "../GPU.js";
-import type { Engine } from "../engine.js";
+import { UIRectangle, UIRectangleProps } from './UIRectangle.js';
+import { UINode } from './UINode.js';
+import { UIRectangleBackground } from './UIRectangleBackground.js';
+import { UIRectangleTextOnly } from './UIRectangleTextOnly.js';
+import type { GPU } from '../GPU.js';
+import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
 export type UIRectangleNodeProps = {
-    UIRectangleProps: Omit<UIRectangleProps, "canvaspipeline" | "renderPass">,
+    UIRectangleProps: Omit<UIRectangleProps, 'canvaspipeline' | 'renderPass'>,
     bitmap?: ImageBitmap | Promise<ImageBitmap> | undefined,
     text: string,
     onClick?: ((menuName?: string) => void) | undefined
-    children?: (ReturnType<typeof UINode["createCtrProps"]> | null)[] | null | undefined
+    children?: (ReturnType<typeof UINode['createCtrProps']> | null)[] | null | undefined
 }
 export class UIRectangleNode<S extends object = object, P extends UIRectangleNodeProps = UIRectangleNodeProps> extends UINode<P, S> {
     static instances: Map<UINode, UIRectangleNode> = new Map()

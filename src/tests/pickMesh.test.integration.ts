@@ -1,9 +1,9 @@
 import { describe, beforeAll, it, jest, expect } from '@jest/globals'
 import type { Page, Browser } from 'puppeteer-core';
 
-import { Box as Box2 } from "../GPU/Meshes/Box.js";
+import { Box as Box2 } from '../GPU/Meshes/Box.js';
 
-import type { Engine } from "../engine.js";
+import type { Engine } from '../engine.js';
 import type { TerraVector3 } from '../Math.js';
 import type { MainNode } from '../MainNode.js';
 //@ts-ignore

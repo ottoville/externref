@@ -1,14 +1,14 @@
-﻿import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
-import type { Scene } from "../../Scene.js";
-import { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
-import type { Engine, rust_pointer, rust_vec_ptr } from "../../engine.js";
-import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
+﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
+import type { Scene } from '../../Scene.js';
+import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
+import type { Engine, rust_pointer, rust_vec_ptr } from '../../engine.js';
+import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
-import type { IndexBuffer, VertexBuffer } from "../../GPU/Buffer/Buffer.js";
-import type { TextureView } from "../TextureView.js";
-import type { GroundVertShader } from "../Shaders/Ground.vert.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
-import { new_rust_mesh } from "../../MainNode.js";
+import type { IndexBuffer, VertexBuffer } from '../../GPU/Buffer/Buffer.js';
+import type { TextureView } from '../TextureView.js';
+import type { GroundVertShader } from '../Shaders/Ground.vert.js';
+import type { RenderPipeline } from '../RenderPipeline.js';
+import { new_rust_mesh } from '../../MainNode.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
@@ -26,7 +26,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
         });
     }
     drawable: DrawableIndexed<RenderPipeline<GroundVertShader>> | undefined;
-    override create_collider(): rust_pointer<"collider"> {
+    override create_collider(): rust_pointer<'collider'> {
         return engine.rust.create_trimesh_collider(this.id);
     }
     constructor(
@@ -34,8 +34,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
         public initialTexture: TextureView,
         public vBuffer: VertexBuffer,
         public iBuffer: IndexBuffer,
-        vertices: rust_vec_ptr<"f32">,
-        indicesView: rust_vec_ptr<"usize">,
+        vertices: rust_vec_ptr<'f32'>,
+        indicesView: rust_vec_ptr<'usize'>,
         verticesPositionStride: number
     ) {
         const mesh_id = new_rust_mesh({
@@ -63,8 +63,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
         );
         if (engine.gpu) {
             this.sampler = engine.gpu.device.createSampler({
-                magFilter: "linear",
-                minFilter: "linear",
+                magFilter: 'linear',
+                minFilter: 'linear',
             });
             const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline, {}, { stride: verticesPositionStride });
             this.drawable = new DrawableIndexed({

@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type returnNode<T extends UINode> = { ctr: new (props: any) => T, props: object }
-import type { GPU } from "../GPU.js"
-import type { Engine } from "../engine.js";
+import type { GPU } from '../GPU.js'
+import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
 export abstract class UINode<P extends object = object, S extends object = object> {

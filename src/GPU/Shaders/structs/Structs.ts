@@ -1,5 +1,5 @@
 /* eslint-disable sort-keys */
-import { BufLayout, ShaderStage } from "../../BindGroupLayout.js";
+import { BufLayout, ShaderStage } from '../../BindGroupLayout.js';
 
 export class Struct<T extends { [index: string]: [properties: string, type: string] } = { [index: string]: [size: string, type: string] }> {
     constructor(public name: string, public properties: T, public depedencies?: Struct[]) {
@@ -130,7 +130,7 @@ export const UpdateClustersBufferLayout = new BufLayout(
     {
         visibility: ShaderStage.COMPUTE,
         buffer: {
-            type: "storage",
+            type: 'storage',
             hasDynamicOffset: false,
             minBindingSize: 7962624
         }

@@ -15,7 +15,7 @@ export function createColorFragmentShader<B extends readonly BGLayout[]>(pipelin
             main: new FragmentShaderFunction(
                 new Struct('Output', { Diffuse: ['@location(0)', 'vec4<f32>'] }),
                 pipelineLayout,
-                `@location(0) color:vec3<f32>`,
+                '@location(0) color:vec3<f32>',
                 () => /* wgsl */`
         var output:Output;
         output.Diffuse = vec4<f32>(color,1.0);

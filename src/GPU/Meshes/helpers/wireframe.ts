@@ -1,10 +1,10 @@
-import type { RenderPipeline } from "../../RenderPipeline.js";
-import type { DrawableDirect } from "../../Drawables/DrawableDirect.js";
-import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
-import { DebugLinesPipeline } from "../../RenderPipeLines/DebugLinesPipeline.js";
-import { new_rust_mesh } from "../../../MainNode.js";
-import { DataNode, allocate_vec } from "../../../nodes/DataNode.js";
-import { IndexedTrait, NodeIndexed2 } from "../../../nodes/NodeIndexed2.js";
+import type { RenderPipeline } from '../../RenderPipeline.js';
+import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
+import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
+import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
+import { new_rust_mesh } from '../../../MainNode.js';
+import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
+import { IndexedTrait, NodeIndexed2 } from '../../../nodes/NodeIndexed2.js';
 
 export class WireFrameMesh extends DataNode implements IndexedTrait {
     drawable: DrawableIndexed<RenderPipeline>;

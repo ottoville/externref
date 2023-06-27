@@ -5,7 +5,7 @@ import { VertexShaderFunction } from '../ShaderFunction.js';
 import { Struct } from '../structs/Structs.js';
 import { simpleAttributes } from '../../RenderPipeLines/SimpleRenderPipeline.js';
 
-type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"];
+type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof simpleAttributes>) {
     return new VertexShader({
@@ -17,7 +17,7 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
                     color: ['@location(0)', 'vec3<f32>']
                 }),
                 pipelineLayout,
-                `@builtin(vertex_index) gl_VertexIndex : u32,`,
+                '@builtin(vertex_index) gl_VertexIndex : u32,',
                 [buffers],
                 ([
                     [/*uniforms*/,],

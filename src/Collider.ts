@@ -1,9 +1,9 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
-import type { Ellipsoid } from "./nodes/DataNode.js";
-import type { Engine, rustWasm, rust_pointer } from "./engine.js";
-import { MutableTerraVector3, TerraVector3, TerraVector4, Triangle } from "./Math.js";
+import type { Ellipsoid } from './nodes/DataNode.js';
+import type { Engine, rustWasm, rust_pointer } from './engine.js';
+import { MutableTerraVector3, TerraVector3, TerraVector4, Triangle } from './Math.js';
 declare const engine: Engine;
 
 // TODO: change to readonlyTerraVector
@@ -18,7 +18,7 @@ function CrossToRef(left: readonly [number, number, number], right: readonly [nu
 export class ColliderJS {
     #velocitySquaredLength!: number;
     finalPosition: MutableTerraVector3;
-    collider_ptr: rust_pointer<"legacy_collider">;
+    collider_ptr: rust_pointer<'legacy_collider'>;
     didCollide = false;
     getLowestRoot(a: number, b: number, c: number, maxR: number) {
         //TODO: This will give false negative if determinant is zero

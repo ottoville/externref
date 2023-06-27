@@ -1,12 +1,12 @@
-import type { GPU } from "../GPU.js"
-import type { Terrain } from "../world/Terrain.js";
-import type { Engine, ListenerObj } from "../engine.js";
-import { UINode } from "./UINode.js";
-import { TerrainToolButton } from "../tools/TerrainTool.js";
-import { PlantsUI } from "../tools/plantsUI.js";
-import { Anchor, NumericUnit, VerticalPosition } from "./UIRectangle.js";
-import { Zones } from "../tools/Zones.js";
-import { Button } from "./Button.js"
+import type { GPU } from '../GPU.js'
+import type { Terrain } from '../world/Terrain.js';
+import type { Engine, ListenerObj } from '../engine.js';
+import { UINode } from './UINode.js';
+import { TerrainToolButton } from '../tools/TerrainTool.js';
+import { PlantsUI } from '../tools/plantsUI.js';
+import { Anchor, NumericUnit, VerticalPosition } from './UIRectangle.js';
+import { Zones } from '../tools/Zones.js';
+import { Button } from './Button.js'
 declare const engine: Engine;
 
 type MenuState = {
@@ -34,7 +34,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
         cb: (e: KeyboardEvent) => {
             if (this.state.menuOpenName === undefined) {
                 this.menuTree.level = 1;
-                if (e.code === "Digit1" || e.code === "Digit2" || e.code === "Digit3") {
+                if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3') {
                     const num = e.code.at(-1);
                     if (num) {
                         const menu = keyBoardMap[parseInt(num) - 1];
@@ -74,14 +74,14 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                     ...Button({
                         UIRectangleProps: {
                             label: 'Plants',
-                            scale: { min_width: 0.07,unit: NumericUnit["%"], y: 0.04 },
+                            scale: { min_width: 0.07,unit: NumericUnit['%'], y: 0.04 },
                             translate: {
                                 x: {
                                     anchor: Anchor.CENTER,
-                                    value: [-0.9, NumericUnit["%"]],
+                                    value: [-0.9, NumericUnit['%']],
                                 }, y: {
                                     anchor: Anchor.CENTER,
-                                    value: [0.9, NumericUnit["%"]],
+                                    value: [0.9, NumericUnit['%']],
                                 }
                             }
                         },
@@ -96,14 +96,14 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...Button({
                             UIRectangleProps: {
                                 label: 'Terrain',
-                                scale: { min_width: 0.07, unit: NumericUnit["%"], y: 0.04 },
+                                scale: { min_width: 0.07, unit: NumericUnit['%'], y: 0.04 },
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,
-                                        value: [-0.75, NumericUnit["%"]],
+                                        value: [-0.75, NumericUnit['%']],
                                     }, y: {
                                         anchor: Anchor.CENTER,
-                                        value: [0.9, NumericUnit["%"]],
+                                        value: [0.9, NumericUnit['%']],
                                     }
                                 }
                             },
@@ -119,14 +119,14 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...Button({
                             UIRectangleProps: {
                                 label: 'Zones',
-                                scale: { min_width: 0.07, unit: NumericUnit["%"], y: 0.04 },
+                                scale: { min_width: 0.07, unit: NumericUnit['%'], y: 0.04 },
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,
-                                        value: [-0.6, NumericUnit["%"]],
+                                        value: [-0.6, NumericUnit['%']],
                                     }, y: {
                                         anchor: Anchor.CENTER,
-                                        value: [0.9, NumericUnit["%"]],
+                                        value: [0.9, NumericUnit['%']],
                                     }
                                 }
                             },

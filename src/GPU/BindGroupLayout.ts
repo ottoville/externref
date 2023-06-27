@@ -1,7 +1,7 @@
-import type { GPU } from "../GPU.js";
-import { BindGroup } from "./BindGroup.js";
-import type { RenderPass } from "./RenderPasses/RenderPass.js";
-import type { Struct } from "./Shaders/structs/Structs.js";
+import type { GPU } from '../GPU.js';
+import { BindGroup } from './BindGroup.js';
+import type { RenderPass } from './RenderPasses/RenderPass.js';
+import type { Struct } from './Shaders/structs/Structs.js';
 
 
 export interface GPUBindGroupTextureEntry {
@@ -47,7 +47,7 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
 
         super(entry, variableName, struct.name)
     }
-    prop(member: keyof S["properties"] & string) {
+    prop(member: keyof S['properties'] & string) {
         return `${this.variableName}.${member}`
     }
 }

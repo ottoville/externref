@@ -1,7 +1,7 @@
 import { describe, beforeAll, it, expect, jest } from '@jest/globals'
 
-import { Box } from "../GPU/Meshes/Box.js";
-import { Engine } from "../engine.js";
+import { Box } from '../GPU/Meshes/Box.js';
+import { Engine } from '../engine.js';
 import fs from 'fs';
 jest.setTimeout(16000)
 

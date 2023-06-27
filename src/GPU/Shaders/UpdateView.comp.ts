@@ -13,7 +13,7 @@ export function createUpdateViewShader(gpu: GPU) {
                     buffer: {
                         hasDynamicOffset: false,
                         minBindingSize: 512,
-                        type: "read-only-storage",
+                        type: 'read-only-storage',
                     },
                     visibility: ShaderStage.COMPUTE,
                 }, 'meshes', MeshArray),
@@ -22,7 +22,7 @@ export function createUpdateViewShader(gpu: GPU) {
                     buffer: {
                         hasDynamicOffset: false,
                         minBindingSize: 16,
-                        type: "read-only-storage",
+                        type: 'read-only-storage',
                     },
                     visibility: ShaderStage.COMPUTE,
                 }, 'point_lights', Lights),
@@ -31,7 +31,7 @@ export function createUpdateViewShader(gpu: GPU) {
                     buffer: {
                         hasDynamicOffset: false,
                         minBindingSize: 16,
-                        type: "read-only-storage",
+                        type: 'read-only-storage',
 
                     },
                     visibility: ShaderStage.COMPUTE,
@@ -58,7 +58,7 @@ export function createUpdateViewShader(gpu: GPU) {
         {
             bindGroupLayouts: bindLayouts,
             entryPoints: {
-                main: new ComputeShaderFunction(`@builtin(global_invocation_id) global_id : vec3<u32>`,
+                main: new ComputeShaderFunction('@builtin(global_invocation_id) global_id : vec3<u32>',
                     pipelineLayout,
                     ([[meshes, point_lights, directional_lights], [clusters, viewUniforms]]) => /* wgsl */ `
                 let tileIndex = global_id.x +
@@ -99,7 +99,7 @@ ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
         `),
             },
             gpu,
-            label: "UpdateView.comp",
+            label: 'UpdateView.comp',
         },
         () => /* wgsl */ `
           fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {

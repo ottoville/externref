@@ -1,11 +1,11 @@
-import { GPU } from "../../GPU.js";
-import { createDebugBoundingBoxVertShader } from "../Shaders/devtools/debug_boundingbox.vert.js";
-import { createColorFragmentShader } from "../Shaders/Color.frag.js";
+import { GPU } from '../../GPU.js';
+import { createDebugBoundingBoxVertShader } from '../Shaders/devtools/debug_boundingbox.vert.js';
+import { createColorFragmentShader } from '../Shaders/Color.frag.js';
 const positionAttr = Object.freeze({
     position: {
-        format: "float32x3",
+        format: 'float32x3',
         offset: 0,
-        shaderFormat: "vec3<f32>",
+        shaderFormat: 'vec3<f32>',
         shaderLocation: 0,
     }
 } as const)
@@ -16,7 +16,7 @@ export const DebugLinesPipeline = [
         const shader = createDebugBoundingBoxVertShader(gpu.positionAndTimeBindGroup, {
             arrayStride: vertexBufferProps.stride * 4,
             attributes2: positionAttr,
-            stepMode: "vertex",
+            stepMode: 'vertex',
         });
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {

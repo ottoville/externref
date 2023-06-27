@@ -1,7 +1,7 @@
-﻿import type { Scene } from "../../Scene.js";
-import type { Engine, rust_pointer } from "../../engine.js";
-import { new_rust_mesh } from "../../MainNode.js";
-import { IndexedSingleColoredMesh } from "../AbstractMeshes/IndexedSingleColoredMesh.js";
+﻿import type { Scene } from '../../Scene.js';
+import type { Engine, rust_pointer } from '../../engine.js';
+import { new_rust_mesh } from '../../MainNode.js';
+import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
 declare const engine: Engine;
 
 let uid = 0;
@@ -43,11 +43,11 @@ export class Box extends IndexedSingleColoredMesh {
                 can_collide,
                 vertices: {
                     stride: 8,
-                    view: [ptr_vertices as rust_pointer<"f32">, len_vertices!, cap_vertices!],
+                    view: [ptr_vertices as rust_pointer<'f32'>, len_vertices!, cap_vertices!],
                 },
             },
             mesh_id,
-            [ptr_ind as rust_pointer<"usize">, len_ind!, cap_ind!]);
+            [ptr_ind as rust_pointer<'usize'>, len_ind!, cap_ind!]);
         this.color = color;
     }
 }

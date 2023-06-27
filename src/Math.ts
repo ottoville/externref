@@ -1,4 +1,4 @@
-﻿import type { Engine, rust_pointer } from "./engine";
+﻿import type { Engine, rust_pointer } from './engine';
 declare const engine: Engine;
 
 export class TerraMatrix extends Float32Array {

@@ -1,6 +1,6 @@
-import { GPU } from "../../GPU.js";
-import { createGrassVertShader, positionAttr, shapeAttr, vertexPositionAttr } from "../Shaders/Grass.vert.js";
-import { createColorFragmentShader } from "../Shaders/Color.frag.js";
+import { GPU } from '../../GPU.js';
+import { createGrassVertShader, positionAttr, shapeAttr, vertexPositionAttr } from '../Shaders/Grass.vert.js';
+import { createColorFragmentShader } from '../Shaders/Color.frag.js';
 
 
 export const PlantsRenderPipeline = [
@@ -9,12 +9,12 @@ export const PlantsRenderPipeline = [
             {
                 arrayStride: vertexBufferProps.stride * 4,
                 attributes2: positionAttr,
-                stepMode: "instance",
+                stepMode: 'instance',
             },
             {
                 arrayStride: 4 * 4,
                 attributes2: shapeAttr,
-                stepMode: "instance",
+                stepMode: 'instance',
             }, {
                 arrayStride: 8,
                 attributes2: vertexPositionAttr,

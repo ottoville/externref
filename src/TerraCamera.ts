@@ -1,11 +1,11 @@
-﻿import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix } from "./Math.js";
-import { Projection } from "./GPU/Projection.js";
-import type { Engine } from "./engine.js";
-import type { GPU } from "./GPU.js";
-import type { BindGroup } from "./GPU/BindGroup.js";
-import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, GPUBufferUsage } from "./GPU/Buffer/Buffer.js";
-import type { CameraController } from "./controllers/CameraController.js";
-import { BGLayout } from "./GPU/BindGroupLayout.js";
+﻿import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix } from './Math.js';
+import { Projection } from './GPU/Projection.js';
+import type { Engine } from './engine.js';
+import type { GPU } from './GPU.js';
+import type { BindGroup } from './GPU/BindGroup.js';
+import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, GPUBufferUsage } from './GPU/Buffer/Buffer.js';
+import type { CameraController } from './controllers/CameraController.js';
+import { BGLayout } from './GPU/BindGroupLayout.js';
 declare const engine: Engine;
 
 export type CameraControl = { updatePosition(cb: (position: MutableTerraVector3) => void): void; updateDirection(cb: (direction: MutableTerraVector3) => void): void; }
@@ -51,7 +51,7 @@ export class TerraCamera {
     public gpu?: GPU
 
     onUpdatePosition: Set<() => void> = new Set();
-    constructor(public label: string, renderPassName: "renderPassScreen" | "renderPassWater", parent?: TerraCamera) {
+    constructor(public label: string, renderPassName: 'renderPassScreen' | 'renderPassWater', parent?: TerraCamera) {
         engine.getGPU(gpu => {
             const projection = parent?.projection ?? new Projection(gpu);
             const renderPass = gpu[renderPassName];

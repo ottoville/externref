@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/extensions
-import { ApplicationInsights } from "./bundled.js";
+import { ApplicationInsights } from './bundled.js';
 
 /* eslint-disable indent */
 const app = document.getElementById('app')
@@ -20,7 +20,7 @@ window.render = async (play = false) => {
     const creditentials = await fetch('/.auth/me').then(response => response.json());
     appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
     if (play) {
-        const { Canvas } = await import("./ui/canvas.js")
+        const { Canvas } = await import('./ui/canvas.js')
         return new Canvas(app);
     }
     app.innerHTML =`<div>

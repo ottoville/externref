@@ -1,12 +1,12 @@
-﻿import type { Scene } from "../Scene.js";
-import { MainNode, new_rust_mesh } from "../MainNode.js";
-import { Angle } from "../Math.js";
-import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
-import type { Engine } from "../engine.js";
-import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
-import type { GPU } from "../GPU.js"
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
-import type { SunVertShader } from "../GPU/Shaders/Sun.vert.js";
+﻿import type { Scene } from '../Scene.js';
+import { MainNode, new_rust_mesh } from '../MainNode.js';
+import { Angle } from '../Math.js';
+import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
+import type { Engine } from '../engine.js';
+import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
+import type { GPU } from '../GPU.js'
+import type { RenderPipeline } from '../GPU/RenderPipeline.js';
+import type { SunVertShader } from '../GPU/Shaders/Sun.vert.js';
 declare const engine: Engine;
 
 const zAngle = Math.cos(Math.PI * 0.2);

@@ -1,11 +1,11 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
-import type { GPU } from "../../GPU.js"
+import type { GPU } from '../../GPU.js'
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
 
 type BindLayouts = [
-    GPU["BindGroupLayoutCanvas"]
+    GPU['BindGroupLayoutCanvas']
 ]
 export function createUIFragmentShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader(

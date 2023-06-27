@@ -3,12 +3,12 @@
  * This file is not intent to build or include in any build.
  */
 
-import { Texture, TextureUsageEnums } from "GPU/Texture";
-import type { Engine } from "../engine.js";
-import { SimpleRenderPipeline } from "../GPU/RenderPipeLines/SimpleRenderPipeline.js";
-import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
-import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
-import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
+import { Texture, TextureUsageEnums } from 'GPU/Texture';
+import type { Engine } from '../engine.js';
+import { SimpleRenderPipeline } from '../GPU/RenderPipeLines/SimpleRenderPipeline.js';
+import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
+import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
+import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 declare const engine: Engine;
 
 Texture.create({
@@ -17,7 +17,7 @@ Texture.create({
     label: 'normalsTexture',
     size: { depthOrArrayLayers: 1, height: 100, width: 100 },
     //@ts-expect-error format "r8unorm" is not allowed with STORAGE_BINDING
-    usages: TextureUsageEnums["STORAGE_BINDING"]
+    usages: TextureUsageEnums['STORAGE_BINDING']
 });
 Texture.create({
     format: 'r8unorm',
@@ -25,7 +25,7 @@ Texture.create({
     label: 'normalsTexture',
     size: { depthOrArrayLayers: 1, height: 100, width: 100 },
     //@ts-expect-error format "r8unorm" is not allowed with STORAGE_BINDING
-    usages: TextureUsageEnums["STORAGE_BINDING|COPY_SRC"]
+    usages: TextureUsageEnums['STORAGE_BINDING|COPY_SRC']
 });
 //This should be fine
 const text1 = Texture.create({
@@ -33,7 +33,7 @@ const text1 = Texture.create({
     gpu: engine.gpu!,
     label: 'normalsTexture',
     size: { depthOrArrayLayers: 1, height: 100, width: 100,  },
-    usages: TextureUsageEnums["STORAGE_BINDING"]
+    usages: TextureUsageEnums['STORAGE_BINDING']
 });
 //@ts-expect-error text1 should not have copy_dst flag.
 console.log(text1.copyFrom);
@@ -45,7 +45,7 @@ const text2 = Texture.create({
     gpu: engine.gpu!,
     label: 'test',
     size: { height: 100, width: 100 },
-    usages: TextureUsageEnums["COPY_DST"]
+    usages: TextureUsageEnums['COPY_DST']
 });
 //This should be fine
 console.log(text2.copyFrom)
@@ -55,7 +55,7 @@ Texture.create({
     label: 'test',
     size: { width: 100 },
     //@ts-expect-error RenderTarget cannot be one dimensional
-    usages: TextureUsageEnums["RENDER_ATTACHMENT"]
+    usages: TextureUsageEnums['RENDER_ATTACHMENT']
 });
 //This should be fine
 const text3 = Texture.create({
@@ -63,7 +63,7 @@ const text3 = Texture.create({
     gpu: engine.gpu!,
     label: 'test',
     size: { height: 100, width: 100 },
-    usages: TextureUsageEnums["COPY_SRC"]
+    usages: TextureUsageEnums['COPY_SRC']
 });
 //@ts-expect-error text3 should not have copy_dst flag
 console.log(text3.copyFrom)

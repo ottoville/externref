@@ -1,12 +1,12 @@
-import { new_rust_mesh } from "../../../MainNode.js";
-import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
-import { DebugLinesPipeline } from "../../RenderPipeLines/DebugLinesPipeline.js";
-import type { Engine, rust_pointer } from "../../../engine.js";
-import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
-import type { RenderPipeline } from "../../RenderPipeline.js";
-import type { DebugBoundingBoxVertShader } from "../../Shaders/devtools/debug_boundingbox.vert.js";
-import { DataNode, allocate_vec } from "../../../nodes/DataNode.js";
-import { IndexedTrait, NodeIndexed2 } from "../../../nodes/NodeIndexed2.js";
+import { new_rust_mesh } from '../../../MainNode.js';
+import { Buffer, GPUBufferUsage } from '../../Buffer/Buffer.js'
+import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
+import type { Engine, rust_pointer } from '../../../engine.js';
+import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
+import type { RenderPipeline } from '../../RenderPipeline.js';
+import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
+import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
+import { IndexedTrait, NodeIndexed2 } from '../../../nodes/NodeIndexed2.js';
 declare const engine: Engine;
 
 
@@ -25,7 +25,7 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
             {
                 vertices: {
                     stride: 4,
-                    view: [ptr as rust_pointer<"f32">, len!, cap!],
+                    view: [ptr as rust_pointer<'f32'>, len!, cap!],
                 }
             },
             new_rust_mesh({ label: 'BoundingBox_' + targetNode.node.label, rigid_body: false }),

@@ -6,8 +6,8 @@ import { MeshUniforms, colorOutput } from './structs/Structs.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 
 type BindLayouts = [
-    GPU["sizeBindGroupLayout"],
-    GPU["uniformBindGroupLayoutWithTime"],
+    GPU['sizeBindGroupLayout'],
+    GPU['uniformBindGroupLayoutWithTime'],
     BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,
 
 ]
@@ -20,7 +20,7 @@ export class Plane extends VertexShader<BindLayouts> {
                 main: new VertexShaderFunction(
                     colorOutput,
                     pipelineLayout,
-                    ``,
+                    '',
                     [buffers], ([
                         [/*uniforms*/,],
                         [scene,/*time, clusters_array, meshes, projection*/],

@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react"
-import type { TerraCamera } from "../../TerraCamera.js";
-import type { Engine } from "../../engine.js";
-import { PositionCamera } from "../../controllers/PositionCamera.js";
-import type { CameraController } from "../../controllers/CameraController.js";
+import { useEffect, useState } from 'react'
+import type { TerraCamera } from '../../TerraCamera.js';
+import type { Engine } from '../../engine.js';
+import { PositionCamera } from '../../controllers/PositionCamera.js';
+import type { CameraController } from '../../controllers/CameraController.js';
 declare const engine: Engine;
 function Camera(props: { camera: TerraCamera }) {
     const [cameraPosition, setCameraPosition] = useState<readonly [number, number, number]>([0, 0, 0]);

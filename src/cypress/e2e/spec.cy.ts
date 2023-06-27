@@ -1,17 +1,17 @@
-import type { Engine } from "../../engine.js";
+import type { Engine } from '../../engine.js';
 
-describe("open menu", () => {
-    it("tests open menu", () => {
+describe('open menu', () => {
+    it('tests open menu', () => {
         cy.viewport(1280, 219);
-        cy.visit("https://localhost:4280/");
-        cy.get("button").click();
-        cy.get("canvas", {
+        cy.visit('https://localhost:4280/');
+        cy.get('button').click();
+        cy.get('canvas', {
             timeout: 10000
         });
-        cy.get("#progressBarContainer", {
+        cy.get('#progressBarContainer', {
             timeout: 10000
         }).should('not.exist');
-        cy.get('body').type("{esc}");
+        cy.get('body').type('{esc}');
         // eslint-disable-next-line promise/catch-or-return
         cy.window().then((w) => {
             //@ts-expect-error
@@ -33,7 +33,7 @@ describe("open menu", () => {
         })
         // eslint-disable-next-line promise/catch-or-return
         cy.wait(4000).then(() => {
-            cy.get("canvas").matchImage();
+            cy.get('canvas').matchImage();
         });
 
     });

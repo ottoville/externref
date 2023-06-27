@@ -1,13 +1,13 @@
-import { paintPlane } from "../paintGround/paintPlane.js";
-import type { Plants } from "../plants/Plants.js";
-import type { GPU } from "../GPU.js";
-import type { PTDresult } from "../types/interfaces/index.js";
-import type { Engine, ListenerObj } from "../engine.js";
-import { UINode } from "../ui/UINode.js";
-import { Anchor, NumericUnit } from "../ui/UIRectangle.js";
-import type { TopMenuButtonProps } from "../ui/topMenu.js";
-import { Button } from "../ui/Button.js";
-import { UIRectangleNode, type UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
+import { paintPlane } from '../paintGround/paintPlane.js';
+import type { Plants } from '../plants/Plants.js';
+import type { GPU } from '../GPU.js';
+import type { PTDresult } from '../types/interfaces/index.js';
+import type { Engine, ListenerObj } from '../engine.js';
+import { UINode } from '../ui/UINode.js';
+import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
+import type { TopMenuButtonProps } from '../ui/topMenu.js';
+import { Button } from '../ui/Button.js';
+import { UIRectangleNode, type UIRectangleNodeProps } from '../ui/UIRectangleNode.js';
 declare const engine: Engine;
 
 
@@ -24,7 +24,7 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
     }
     #inputListener: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
-            if (e.code === "Digit1") {
+            if (e.code === 'Digit1') {
                 this.activateDraw()
             }
         },

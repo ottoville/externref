@@ -1,8 +1,8 @@
-﻿import { MutableTerraVector3, Quaternion, ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
-import type { Scene } from "./Scene.js";
-import type { Engine } from "./engine.js";
-import type { ColliderJS } from "./Collider.js";
-import type { Drawable } from "./GPU/Drawables/Drawable.js";
+﻿import { MutableTerraVector3, Quaternion, ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from './Math.js';
+import type { Scene } from './Scene.js';
+import type { Engine } from './engine.js';
+import type { ColliderJS } from './Collider.js';
+import type { Drawable } from './GPU/Drawables/Drawable.js';
 declare const engine: Engine;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();

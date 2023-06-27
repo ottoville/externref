@@ -1,12 +1,12 @@
-﻿import { BoundableNodeSimple } from "../nodes/BoundableNodeSimple.js";
-import type { Scene } from "../Scene.js";
-import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
-import { WaterRenderPipeline } from "../GPU/RenderPipeLines/Water.js";
-import type { Engine } from "../engine.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
-import type { WaterVertShader } from "../GPU/Shaders/Water.vert.js";
-import { new_rust_mesh } from "../MainNode.js";
-import { allocate_vec } from "../nodes/DataNode.js";
+﻿import { BoundableNodeSimple } from '../nodes/BoundableNodeSimple.js';
+import type { Scene } from '../Scene.js';
+import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
+import { WaterRenderPipeline } from '../GPU/RenderPipeLines/Water.js';
+import type { Engine } from '../engine.js';
+import type { RenderPipeline } from '../GPU/RenderPipeline.js';
+import type { WaterVertShader } from '../GPU/Shaders/Water.vert.js';
+import { new_rust_mesh } from '../MainNode.js';
+import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 
 export class Sea extends BoundableNodeSimple {

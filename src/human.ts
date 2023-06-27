@@ -1,10 +1,10 @@
 ﻿//@ts-ignore
-import { TerraMatrix } from "./Math.js";
-import { MeshCamera } from "./controllers/MeshCamera.js";
-import type { Engine } from "./engine.js";
-import { Box } from "./GPU/Meshes/Box.js";
-import type { Scene } from "./Scene.js";
-import { ARROW_KEYS } from "./controllers/CameraController.js";
+import { TerraMatrix } from './Math.js';
+import { MeshCamera } from './controllers/MeshCamera.js';
+import type { Engine } from './engine.js';
+import { Box } from './GPU/Meshes/Box.js';
+import type { Scene } from './Scene.js';
+import { ARROW_KEYS } from './controllers/CameraController.js';
 declare const engine: Engine;
 const maxAcceleration = 10;
 export const closeDistance = 0.0022

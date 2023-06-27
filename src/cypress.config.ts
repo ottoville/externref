@@ -1,6 +1,6 @@
 /* eslint-disable sort-keys */
-import { defineConfig } from "cypress";
-import { initPlugin } from "@frsource/cypress-plugin-visual-regression-diff/plugins";
+import { defineConfig } from 'cypress';
+import { initPlugin } from '@frsource/cypress-plugin-visual-regression-diff/plugins';
 
 export default defineConfig({
     e2e: {
@@ -10,13 +10,13 @@ export default defineConfig({
 
             // implement node event listeners here
             on('before:browser:launch', (browser = {
-                name: "",
-                family: "chromium",
-                channel: "",
-                displayName: "",
-                version: "",
-                majorVersion: "",
-                path: "",
+                name: '',
+                family: 'chromium',
+                channel: '',
+                displayName: '',
+                version: '',
+                majorVersion: '',
+                path: '',
                 isHeaded: false,
                 isHeadless: false
             }, launchOptions) => {
