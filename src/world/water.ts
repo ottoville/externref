@@ -17,35 +17,37 @@ export class Sea extends BoundableNodeSimple {
     constructor(scenes: Scene[]) {
         super(
             {
+                can_collide: false,
                 vertices: {
+                    stride: 3,
                     view: allocate_vec(Float32Array.of(
                         -50000.0, 3.0, -50000.0,
                         50000.0, 3.0, -50000.0,
                         -50000.0, 3.0, 50000.0,
                         50000.0, 3.0, 50000.0
                     )),
-                    stride: 3
                 },
-                can_collide: false,
             },
             new_rust_mesh({
-                strip: true,
-                label: 'water',
-                scenes,
                 fixed: true,
-                rigid_body: false
+                label: 'water',
+                rigid_body: false,
+                scenes,
+                strip: true,
             }),
             true
         ); //48
         if (engine.gpu) {
             const renderPipeline = engine.gpu.createRenderPipeline(WaterRenderPipeline, {
-                topology: 'triangle-strip',
+                frontFace: 'cw',
                 stripIndexFormat: 'uint16',
-                frontFace: 'cw'
+                topology: 'triangle-strip',
             }, {
                 stride: 3
             });
             this.drawable = new DrawableSimple({
+                node: this,
+                renderPasses: undefined,
                 renderPipeline,
                 vertexBuffers: [
                     new Float32Array([
@@ -55,8 +57,6 @@ export class Sea extends BoundableNodeSimple {
                         50000.0, 3.0, 50000.0
                     ]),
                 ],
-                renderPasses: undefined,
-                node: this,
             });
         }
     }

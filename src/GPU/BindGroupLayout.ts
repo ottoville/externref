@@ -85,12 +85,13 @@ export class BGLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]>
     entries: Readonly<T>;
     constructor(public gpu: GPU, label: string, ...entries: T) {
         this.layout = gpu.device.createBindGroupLayout({
-            label, entries: entries.map((entry, i) => {
+            entries: entries.map((entry, i) => {
                 return {
                     ...entry.entry,
                     binding: i
                 }
-            })
+            }),
+            label
         });
         this.entries = entries;
         for (const e of entries) {

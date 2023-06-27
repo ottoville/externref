@@ -54,7 +54,7 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
                   
                       if(cluster_lights_count>0u) {
                         for (var light_pointer_index : u32 = 0u; light_pointer_index < cluster_lights_count; light_pointer_index = light_pointer_index + 1u) {
-                          let light_index:u32 = ${clusters_array.prop('lights') }[cluster_index*63u + light_pointer_index];
+                          let light_index:u32 = ${clusters_array.prop('lights')}[cluster_index*63u + light_pointer_index];
                           let light = ${meshes.prop('mesh')}[light_index];
                           if((scenes & light.scenes) != 0u) {
                             let light_position:vec3<f32> = light.transformation[3].xyz;
@@ -96,8 +96,8 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
                     `
                 )
             },
+            gpu: pipelineLayout.gpu,
             label: 'Ground.frag',
-            gpu: pipelineLayout.gpu
         }, ([uniforms],
             [/*scene*/, _clusters_array, _meshes, projection],
             [/*world*/,],

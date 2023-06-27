@@ -24,10 +24,10 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
     //TODO: Do not re-create on every render?
     createColorAttachment() {
         const obj:GPURenderPassColorAttachment = {
-            view: this.renderTargetOptions.context ? this.renderTargetOptions.context.getCurrentTexture().createView() : this.view.view,
             clearValue: this.#clearValue,
             loadOp: "clear",
-            storeOp: "store"
+            storeOp: "store",
+            view: this.renderTargetOptions.context ? this.renderTargetOptions.context.getCurrentTexture().createView() : this.view.view,
         }
         return obj;
     }

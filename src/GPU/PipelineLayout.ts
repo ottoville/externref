@@ -63,16 +63,16 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
     }
     createSharedLayout<T extends BGLayout<BindGroupLayoutEntry[]>>(label: string, layout: T) {
         const p = new SharedPipelineLayout({
-            label,
             bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
+            label,
         })
         this.subBindGroups.push(p);
         return p;
     }
     createAppendedLayout<T extends BGLayout<BindGroupLayoutEntry[]>>(label: string, layout: T) {
         const p = new BindablePipelineLayout({
-            label,
             bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
+            label,
         })
         this.subBindGroups.push(p);
         return p;
@@ -87,8 +87,8 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
             }
         }
         const p = new BindablePipelineLayout({
-            label,
             bindGroupLayouts: [...this.bindGroupLayouts, sharedBindgroup.layout] as [...B, typeof sharedBindgroup.layout],
+            label,
         }, sharedBindgroup)
         this.subBindGroups.push(p);
         //@ts-expect-error bug in TS?

@@ -3,17 +3,17 @@ import { createSimpleVertShader } from "../Shaders/Simple.vert.js";
 
 export const simpleAttributes = Object.freeze(
     {
-        position: {
-            shaderLocation: 0,
-            offset: 0,
-            format: "float32x3",
-            shaderFormat: 'vec3<f32>'
-        },
         normal: {
-            shaderLocation: 1,
-            offset: 16,
             format: "float32x3",
-            shaderFormat: 'vec3<f32>'
+            offset: 16,
+            shaderFormat: 'vec3<f32>',
+            shaderLocation: 1,
+        },
+        position: {
+            format: "float32x3",
+            offset: 0,
+            shaderFormat: 'vec3<f32>',
+            shaderLocation: 0,
         }
     } as const
 );
@@ -23,17 +23,17 @@ export const SimpleRenderPipeline = [
         const simpleVertShader = createSimpleVertShader(gpu.positionAndTimeBindGroup,
             {
                 arrayStride: vertexBufferProps.stride * 4,
+                attributes2: simpleAttributes,
                 stepMode: "vertex",
-                attributes2: simpleAttributes
             });
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
-                label,
-                vertexShader: simpleVertShader,
                 fragmentShader: gpu.simpleFragShader,
+                label,
                 renderPipeline: {
                     primitive,
-                }
+                },
+                vertexShader: simpleVertShader,
             });
     }
 ] as const

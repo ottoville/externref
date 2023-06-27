@@ -13,17 +13,17 @@ export const WaterRenderPipeline = [
 
         const waterVertShader = createWaterVertShader(gpu.bindGroupTextureWater, {
             arrayStride: vertexBufferProps.stride * 4,
+            attributes2: positionAttr,
             stepMode: 'vertex',
-            attributes2: positionAttr
         });
         return gpu.bindGroupTextureWater.addRenderPipeline(
             {
-                label,
-                vertexShader: waterVertShader,
                 fragmentShader: new WaterFragShader(gpu.bindGroupTextureWater),
+                label,
                 renderPipeline: {
                     primitive,
-                }
+                },
+                vertexShader: waterVertShader,
             },
             (bindGroup) =>
                 [

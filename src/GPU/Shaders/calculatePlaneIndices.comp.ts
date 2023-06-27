@@ -13,22 +13,22 @@ export class CalculatePlaneIndices extends ComputeShader<BindLayouts> {
             new BGLayout(gpu, 'calculateIndicesBindGroupLayout',
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
-                        }
+                            minBindingSize: 32,
+                            type: "storage",
+                        },
+                        visibility: ShaderStage.COMPUTE,
+
                     }, 'indices', Indices))
         ] as const
 
         const pipelineLayout = new PipelineLayout({
+            bindGroupLayouts: bindLayouts,
             label: 'calculatePlaneIndicesPipeline',
-            bindGroupLayouts: bindLayouts
         });
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            label: "calculatePlaneIndices.comp",
             entryPoints: {
                 main: new ComputeShaderFunction(`@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>`,
                     pipelineLayout,
@@ -48,7 +48,8 @@ export class CalculatePlaneIndices extends ComputeShader<BindLayouts> {
         
                 `)
             },
-            gpu: pipelineLayout.gpu
+            gpu: pipelineLayout.gpu,
+            label: "calculatePlaneIndices.comp",
         }, () => `@compute @workgroup_size(1)`);
     }
 }

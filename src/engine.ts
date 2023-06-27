@@ -186,28 +186,29 @@ function Dot(left: readonly [number, number, number] | Float32Array | TerraVecto
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
 const ObjectStores = {
-    zones: <ObjStoreDetails>{
-        version: 1,
-        parameters: { keyPath: "id", autoIncrement: true },
+    maps: <ObjStoreDetails>{
+        parameters: { autoIncrement: true, keyPath: "id" },
+        version: 4,
     },
     plantae: <ObjStoreDetails>{
-        version: 2,
-        parameters: { keyPath: "id", autoIncrement: true },
         indices: [
-            { version: 3, name: 'family', keyPath: 'family', options: { unique: false } },
-            { version: 6, name: 'x', keyPath: 'x', options: { unique: false } },
-            { version: 6, name: 'grid', keyPath: 'grid', options: { unique: false } },
-            { version: 6, name: 'gridxz', keyPath: ['gridx', 'gridz'], options: { unique: false } },
-        ]
+            { keyPath: 'family', name: 'family', options: { unique: false }, version: 3 },
+            { keyPath: 'x', name: 'x', options: { unique: false }, version: 6 },
+            { keyPath: 'grid', name: 'grid', options: { unique: false }, version: 6 },
+            { keyPath: ['gridx', 'gridz'], name: 'gridxz', options: { unique: false }, version: 6 },
+        ],
+        parameters: { autoIncrement: true, keyPath: "id" },
+        version: 2,
+
     },
     save: <ObjStoreDetails>{
+        parameters: { autoIncrement: false, keyPath: ["type", "name"] },
         version: 3,
-        parameters: { keyPath: ["type", "name"], autoIncrement: false }
     },
-    maps: <ObjStoreDetails>{
-        version: 4,
-        parameters: { keyPath: "id", autoIncrement: true }
-    }
+    zones: <ObjStoreDetails>{
+        parameters: { autoIncrement: true, keyPath: "id" },
+        version: 1,
+    },
 };
 
 type ObjectStore = keyof typeof ObjectStores;
@@ -342,8 +343,8 @@ export class Engine {
                 }
             },
             env: {
-                now() {
-                    return performance.now()
+                handle_gpu_queue(pointerVec: number, length: number) {
+                    engine.gpu?.handle_gpu_queue(pointerVec, length);
                 },
                 jspanic(ptr: number) {
                     if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
@@ -365,8 +366,8 @@ export class Engine {
                         cb(0)
                     }
                 },
-                handle_gpu_queue(pointerVec: number, length: number) {
-                    engine.gpu?.handle_gpu_queue(pointerVec, length);
+                now() {
+                    return performance.now()
                 },
                 update_directional_lights(pointer: number, length: number) {
                     engine.gpu?.update_directional_lights(pointer, length)
@@ -395,19 +396,19 @@ export class Engine {
 
 
             const colliderExportObj = {
-                rust: rust.instance.exports,
                 console: {
-                    log: function (arg: string) {
-                        console.log(arg);
-                    },
                     error: function (line: number) {
                         console.error('Some error in webassembly on line', line)
                         throw (new Error('Some error in webassembly on line ' + line));
-                    }
+                    },
+                    log: function (arg: string) {
+                        console.log(arg);
+                    },
                 },
                 env: {
                     memory: rust.instance.exports.memory
-                }
+                },
+                rust: rust.instance.exports,
             };
             if (wasmBinaries.collider instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.collider)) {
                 colliderWasm = await WebAssembly.instantiate(wasmBinaries.collider, colliderExportObj);
@@ -451,8 +452,8 @@ export class Engine {
             console.log('Getting adapter, low-power:', forceLowPower, 'fallback:', forceFallbackAdapter)
             adapter = await window.navigator.gpu.requestAdapter(
                 {
+                    forceFallbackAdapter,
                     powerPreference: forceLowPower ? 'low-power' : 'high-performance',
-                    forceFallbackAdapter
                 })
             if (!adapter) {
                 if (forceFallbackAdapter && forceLowPower) {
@@ -509,13 +510,13 @@ export class Engine {
 
     }
     #inputMaps = {
-        pointerdown: new Set<ListenerObj>(),
-        pointerup: new Set<ListenerObj>,
-        pointermove: new Set<ListenerObj>,
-        pointerleave: new Set<ListenerObj>,
-        wheel: new Set<ListenerObj>,
         keydown: new Set<ListenerObj>,
         keyup: new Set<ListenerObj>,
+        pointerdown: new Set<ListenerObj>(),
+        pointerleave: new Set<ListenerObj>,
+        pointermove: new Set<ListenerObj>,
+        pointerup: new Set<ListenerObj>,
+        wheel: new Set<ListenerObj>,
     };
 
     /*

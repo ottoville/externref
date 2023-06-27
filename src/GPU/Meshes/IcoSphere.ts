@@ -109,18 +109,18 @@ export class IcoSphere extends IndexedSingleColoredMesh {
             verticesAndNormals.copyWithin(i * 8 + 4, i * 8, i * 8 + 4)
         }
         const mesh_id = new_rust_mesh({
+            fixed,
             label,
             scenes,
-            fixed
         });
         super(
             {
-                vertices: {
-                    view: allocate_vec(verticesAndNormals),
-                    stride: 8
-                },
                 can_collide,
-                frontFace: 'ccw'
+                frontFace: 'ccw',
+                vertices: {
+                    stride: 8,
+                    view: allocate_vec(verticesAndNormals),
+                },
             },
             mesh_id,
             allocate_vec(indices))

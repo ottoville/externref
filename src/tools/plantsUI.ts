@@ -23,13 +23,13 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
         }
     }
     #inputListener: ListenerObj<'keydown'> = {
-        object: this,
-        type: 'keydown',
         cb: (e: KeyboardEvent) => {
             if (e.code === "Digit1") {
                 this.activateDraw()
             }
-        }
+        },
+        object: this,
+        type: 'keydown',
     }
     #wasOpen = false;
     override render(gpu: GPU, force: boolean) {
@@ -43,17 +43,17 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
                         ...this.props,
                         UIRectangleProps: {
                             label: 'createGrassButton',
-                            scale: { min_width: 180, y: 50, unit: NumericUnit.px },
+                            scale: { min_width: 180, unit: NumericUnit.px, y: 50 },
                             translate: {
                                 x: {
+                                    anchor: Anchor.LEFT,
                                     value: [100, NumericUnit.px],
-                                    anchor: Anchor.LEFT
                                 },
                                 y: this.props.subMenuPosition
                             },
                         },
+                        onClick: () => this.activateDraw(),
                         text: 'Create grass (1)',
-                        onClick: () => this.activateDraw()
                     }))
             ]
         } else if (this.#wasOpen) {

@@ -7,24 +7,22 @@ type BindLayouts = [GPU["BindGroupLayoutCanvas"]]
 
 export const position_uv_attrs = Object.freeze({
     position: {
-        shaderLocation: 0,
-        offset: 0,
         format: "float32x2",
-        shaderFormat: "vec2<f32>"
+        offset: 0,
+        shaderFormat: "vec2<f32>",
+        shaderLocation: 0,
     },
     uv: {
-        shaderLocation: 1,
-        offset: 8,
         format: "float32x2",
-        shaderFormat: "vec2<f32>"
+        offset: 8,
+        shaderFormat: "vec2<f32>",
+        shaderLocation: 1,
     }
 } as const)
 
 export function createUIVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof position_uv_attrs>) {
     return new VertexShader({
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-        label: 'UI.vert',
-        gpu: pipelineLayout.gpu,
         entryPoints: {
             main: new VertexShaderFunction(new Struct('Output', {
                 Position: ['@builtin(position)', 'vec4<f32>'],
@@ -39,7 +37,10 @@ export function createUIVertShader(pipelineLayout: PipelineLayout<BindLayouts>, 
       output.v_uv=${uv};
       return output;
     `),
-        }
+        },
+        gpu: pipelineLayout.gpu,
+        label: 'UI.vert',
+
     })
 }
 export type UIVertShader = ReturnType<typeof createUIVertShader>

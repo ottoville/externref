@@ -33,8 +33,8 @@ export class OctaSphere extends IndexedColoredMesh {
         const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer, ptrs, 6)
 
         const mesh_id = new_rust_mesh({
-            label: 'OctaSphere' + (uid++),
             fixed: false,
+            label: 'OctaSphere' + (uid++),
             ...meshProperties
         });
         const vertices = new Float32Array(engine.rust.memory.buffer, pos_ptr, pos_len!);
@@ -45,12 +45,12 @@ export class OctaSphere extends IndexedColoredMesh {
         }
         super(
             {
-                vertices: {
-                    view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!], // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
-                    stride: 12
-                },
                 can_collide,
-                frontFace: 'ccw'
+                frontFace: 'ccw',
+                vertices: {
+                    stride: 12,
+                    view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!], // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
+                },
             },
             mesh_id,
             [ind_ptr as rust_pointer<"usize">, ind_len!, ind_cap!])

@@ -18,8 +18,8 @@ export function createBackground(width: number, height: number, text: string, or
     const measuredSize = ctx.measureText(text);
 
     const textSize = {
+        height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent,
         width: measuredSize.width,
-        height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent
     }
     const originalTextHeight = textSize.height;
     if (originalAspectRatio) {
@@ -33,7 +33,7 @@ export function createBackground(width: number, height: number, text: string, or
             textSize.height = textSize.width * originalAspectRatio;
         }
     }
-    return { originalTextHeight, textSize, measuredSize, copySource2, ctx }
+    return { copySource2, ctx, measuredSize, originalTextHeight, textSize }
 }
 function createTexture(
     backgroundAsset: {
@@ -50,21 +50,21 @@ function createTexture(
         const { originalTextHeight, textSize, measuredSize, copySource2, ctx } = createBackground(backgroundAsset.texture.width, backgroundAsset.texture.height, text, originalAspectRatio)
         copySource = copySource2;
         const extendedSize = {
+            height: backgroundAsset.texture.height + textSize.height,
             width: Math.max(backgroundAsset.texture.width, textSize.width),
-            height: backgroundAsset.texture.height + textSize.height
         }
         copySource.width = extendedSize.width;
         copySource.height = extendedSize.height;
         ctx.drawImage(backgroundAsset.texture, 0, 0);
 
         const borderSizeInPixel = {
+            height: backgroundAsset.texture.height * backgroundAsset.border_height,
             width: backgroundAsset.texture.width * backgroundAsset.border_width,
-            height: backgroundAsset.texture.height * backgroundAsset.border_height
         }
 
         const contentSize = {
-            width: backgroundAsset.texture.width - borderSizeInPixel.width * 2,
             height: backgroundAsset.texture.height - borderSizeInPixel.height * 2,
+            width: backgroundAsset.texture.width - borderSizeInPixel.width * 2,
         }
 
         ctx.drawImage(
@@ -113,10 +113,10 @@ export class UIRectangleBackground extends UIRectangleText {
         const { borderSize } = this.props
         const texture = this.backgroundAsset.texture;
         const container_uvs = {
-            top: (1 - this.backgroundAsset.border_height) * texture.height,
             bottom: this.backgroundAsset.border_height * texture.height,
+            left: (1 - this.backgroundAsset.border_width) * texture.width,
             right: this.backgroundAsset.border_width * texture.width,
-            left: (1 - this.backgroundAsset.border_width) * texture.width
+            top: (1 - this.backgroundAsset.border_height) * texture.height,
         }
         if (this.text) {
             super.updateBoundingBoxAndVertices(args)

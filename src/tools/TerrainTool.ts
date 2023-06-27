@@ -31,8 +31,6 @@ UIRectangleNodeProps & TopMenuButtonProps> {
         }
     }
     #inputListener: ListenerObj<'keydown'> = {
-        object: this,
-        type: 'keydown',
         cb: (e: KeyboardEvent) => {
             if (e.code === "Digit1") {
                 this.setState({
@@ -49,7 +47,9 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                     subMenu: undefined
                 })
             }
-        }
+        },
+        object: this,
+        type: 'keydown',
     }
     #tool?: TerrainTool
     override render(gpu: GPU, force: boolean) {
@@ -73,41 +73,41 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                     ...this.props,
                     UIRectangleProps: {
                         label: 'Lower',
-                        scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
+                        scale: { min_width: 0.10, unit: NumericUnit["%"], y: 0.07 },
                         translate: {
                             x:
                             {
+                                anchor: Anchor.CENTER,
                                 value: [-0.85, NumericUnit["%"]],
-                                anchor: Anchor.CENTER
                             },
                             y: this.props.subMenuPosition
                         },
                     },
-                    text: 'Lower (1)',
                     onClick: () => {
                         this.setState({
                             subMenu: 'lower'
                         })
-                    }
+                    },
+                    text: 'Lower (1)',
                 })), UINode.createCtrProps(UIRectangleNode, Button({
                     ...this.props,
                     UIRectangleProps: {
                         label: 'Raise',
-                        scale: { min_width: 0.10, y: 0.07, unit: NumericUnit["%"] },
+                        scale: { min_width: 0.10, unit: NumericUnit["%"], y: 0.07 },
                         translate: {
                             x: {
+                                anchor: Anchor.CENTER,
                                 value: [-0.6, NumericUnit["%"]],
-                                anchor: Anchor.CENTER
                             },
                             y: this.props.subMenuPosition
                         },
                     },
-                    text: 'Raise (2)',
                     onClick: () => {
                         this.setState({
                             subMenu: 'raise'
                         })
-                    }
+                    },
+                    text: 'Raise (2)',
                 }))
             ]
         } else if (!this.props.open && this.#wasOpen) {
@@ -136,12 +136,12 @@ export class TerrainTool extends MainNode {
                 const helperVertShader = new HelperVertShader(terrain.settings, terrain.TerrainHeightsbindGroupTree);
                 const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
                     {
-                        label,
-                        vertexShader: helperVertShader,
                         fragmentShader: createColorFragmentShader(terrain.TerrainHeightsbindGroupTree),
+                        label,
                         renderPipeline: {
                             primitive
-                        }
+                        },
+                        vertexShader: helperVertShader,
                     }
                 )
                 return renderPipeline
@@ -149,8 +149,8 @@ export class TerrainTool extends MainNode {
         ] as const
 
         const renderPipeline = terrain.gpu.createRenderPipeline(getRenderPipeline, {
+            cullMode: 'none',
             topology: 'triangle-list',
-            cullMode: 'none'
         }, undefined)
         const scene = engine.scenes.get('main');
         if (!scene)
@@ -159,16 +159,16 @@ export class TerrainTool extends MainNode {
 
         this.elevator = engine.rust.create_elevator(terrain.mesh.id);
         this.drawable = new DrawableSimple({
+            node: this,
+            renderPasses: undefined,
             renderPipeline,
             vertexBuffers: [] as [],
-            renderPasses: undefined,
-            node: this,
         }, {
             instanceCount: 8,
         }, {
             firstVertex: 0,
         })
-        this.#pick = { position: new MutableTerraVector3(engine.memory.buffer, engine.rust.mouse_position_pointer(this.elevator)), meshId: 0 };
+        this.#pick = { meshId: 0, position: new MutableTerraVector3(engine.memory.buffer, engine.rust.mouse_position_pointer(this.elevator)) };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*
@@ -200,8 +200,6 @@ export class TerrainTool extends MainNode {
     private mouseinterval = 0;
 
     #pointerdownf: ListenerObj<'pointerdown'> = {
-        object: this,
-        type: 'pointerdown',
         cb: (evt: PointerEvent): void => {
             if (evt.button !== 0) {
                 return;
@@ -216,16 +214,18 @@ export class TerrainTool extends MainNode {
                     this.terrain.updateSwap2(engine.rust.get_offset(this.elevator) * Float32Array.BYTES_PER_ELEMENT, elevator_length * Float32Array.BYTES_PER_ELEMENT)
                 }
             }, 17);
-        }
+        },
+        object: this,
+        type: 'pointerdown',
     }
     #pointerupf: ListenerObj<'pointerup'> = {
-        object: this,
-        type: 'pointerup',
-        options: { once: true },
         cb: (): void => {
             engine.inputManager?.attachCameraController();
             clearInterval(this.mouseinterval);
-        }
+        },
+        object: this,
+        options: { once: true },
+        type: 'pointerup',
     }
     override destroy = (): void => {
         this.drawable.destroy();
@@ -234,8 +234,6 @@ export class TerrainTool extends MainNode {
         super.destroy();
     };
     #mouseListener: ListenerObj<'pointermove'> = {
-        object: this,
-        type: 'pointermove',
         cb: () => {
             /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
                 this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
@@ -249,7 +247,9 @@ export class TerrainTool extends MainNode {
                     this.translation = [pickInfo.position[0], 0, pickInfo.position[2]];
                 }
             }).catch(err => engine.showError(err));
-        }
+        },
+        object: this,
+        type: 'pointermove',
     }
     raise = (): void => {
         this.direction = 1;

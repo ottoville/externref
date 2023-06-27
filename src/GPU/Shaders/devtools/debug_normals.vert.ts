@@ -43,8 +43,8 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
             return output;
             `)
         },
+        gpu: pipelineLayout.gpu,
         label: 'debug_normals.vert',
-        gpu: pipelineLayout.gpu
     })
 }
 export type DebugNormalsVertShader = ReturnType<typeof createDebugNormalsVertShader>

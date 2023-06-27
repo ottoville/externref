@@ -151,9 +151,9 @@ export class GPU {
     createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: Omit<GPUPrimitiveState, 'topology'>, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]>
     createRenderPipeline<D extends CreateRenderPipelineCB<RenderPipeline<V>>, V extends VertexShader>(desc: D, primitive: GPUPrimitiveState = {}, vertexBufferProps: Parameters<D["1"]>[3]): ReturnType<D["1"]> {
         const primitiveWithDefaults: GPUPrimitiveState = {
-            topology: 'triangle-list',
-            frontFace: 'cw',
             cullMode: 'back',
+            frontFace: 'cw',
+            topology: 'triangle-list',
             ...primitive
         }
         const [label, createRenderPipeline] = desc;
@@ -215,70 +215,73 @@ export class GPU {
         this.uniformBindGroupLayoutWithTime = new BGLayout(this, 'uniformBindGroupLayoutWithTime',
             new BufLayout(
                 {
-                    visibility: ShaderStage.VERTEX_AND_FRAGMENT,
                     buffer: {
+                        minBindingSize: 144,
                         type: "uniform",
-                        minBindingSize: 144
-                    }
+                    },
+                    visibility: ShaderStage.VERTEX_AND_FRAGMENT,
+
                 }, 'scene', Scene),
             new BufLayout(
                 {
-                    visibility: ShaderStage.VERTEX,
                     buffer: {
+                        minBindingSize: 8,
                         type: "uniform",
-                        minBindingSize: 8
-                    }
+                    },
+                    visibility: ShaderStage.VERTEX,
+
                 }, 'time', Time),
             new BufLayout(
                 {
                     //clusters
-                    visibility: ShaderStage.FRAGMENT,
                     buffer: {
+                        minBindingSize: 7962624, //Must be in sync with Struct Clusters in shader
                         type: 'read-only-storage',
-                        minBindingSize: 7962624 //Must be in sync with Struct Clusters in shader
-                    }
+                    },
+                    visibility: ShaderStage.FRAGMENT,
                 }, 'clusters_array', Clusters),
             new BufLayout(
                 {   // mesh array for lights
-                    visibility: ShaderStage.FRAGMENT,
                     buffer: {
+                        minBindingSize: 512,
                         type: "read-only-storage",
-                        minBindingSize: 512
-                    }
+                    },
+                    visibility: ShaderStage.FRAGMENT,
                 }, 'meshes', MeshArray),
             new BufLayout(
                 {   //projection
-                    visibility: ShaderStage.FRAGMENT,
                     buffer: {
+                        minBindingSize: PROJECTION_BUFFER_SIZE,
                         type: "uniform",
-                        minBindingSize: PROJECTION_BUFFER_SIZE
-                    }
+                    },
+                    visibility: ShaderStage.FRAGMENT,
+
                 }, 'projection', ProjectionStruct)
         );
         this.sizeBindGroupLayout = new BGLayout(this, 'sizeBindGroupLayout',
             new BufLayout(
                 {
-                    visibility: ShaderStage.FRAGMENT | ShaderStage.COMPUTE,
                     buffer: {
+                        minBindingSize: 16,
                         type: 'uniform',
-                        minBindingSize: 16
-                    }
+                    },
+                    visibility: ShaderStage.FRAGMENT | ShaderStage.COMPUTE,
                 }, 'uniforms', Uniforms)
         )
         this.rootCameralayout = new BindablePipelineLayout({
-            label: 'rootCamera',
             bindGroupLayouts: [this.sizeBindGroupLayout, this.uniformBindGroupLayoutWithTime] as [typeof this.sizeBindGroupLayout, typeof this.uniformBindGroupLayoutWithTime],
+            label: 'rootCamera',
         });
         const BindGroupLayoutPosition = new BGLayout(this,
             'BindGroupLayoutPosition',
             new BufLayout(
                 {
-                    visibility: ShaderStage.VERTEX_AND_FRAGMENT,
                     buffer: {
-                        type: "uniform",
                         hasDynamicOffset: true,
-                        minBindingSize: GPU.gpu_memory_index_size
-                    }
+                        minBindingSize: GPU.gpu_memory_index_size,
+                        type: "uniform",
+                    },
+                    visibility: ShaderStage.VERTEX_AND_FRAGMENT,
                 }, 'world', MeshUniforms)
         );
         this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition', bindGroup => [
@@ -294,14 +297,14 @@ export class GPU {
                 'lightsBindGroupTexture2',
                 new SampLayout(
                     {
-                        visibility: ShaderStage.FRAGMENT,
                         sampler: {
                         },
+                        visibility: ShaderStage.FRAGMENT,
                     }, 'mySampler', 'sampler'),
                 new TextLayout(
                     {
+                        texture: {},
                         visibility: ShaderStage.FRAGMENT,
-                        texture: {}
                     }, 'myTexture', 'texture_2d<f32>')
             ));
         this.bindGroupTextureWater = this.positionAndTimeBindGroup.createSharedLayout('lightsBindGroupTexture2PipelineLayout',
@@ -309,131 +312,136 @@ export class GPU {
                 'lightsBindGroupTexture2water',
                 new SampLayout(
                     {
-                        visibility: ShaderStage.FRAGMENT,
                         sampler: {
                         },
+                        visibility: ShaderStage.FRAGMENT,
                     }, 'mySampler', 'sampler'),
                 new TextLayout(
                     {
+                        texture: {},
                         visibility: ShaderStage.FRAGMENT,
-                        texture: {}
                     }, 'diffuseTexture', 'texture_2d<f32>')
             ));
 
         this.pickRenderPass = new RenderPass({
-            gpu: this,
             colorRenderTargets: {
                 gRenderTargetId: new ColorRenderTarget(
                     {
-                        gpu: this,
                         format: "r32uint",
-                        usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
+                        gpu: this,
                         label: 'idTexture',
-                        size: { width: 300, height: 300 }
+                        size: { height: 300, width: 300 },
+                        usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
                     },
                     {
+                        context: undefined,
+                        textureViewDescriptor: { arrayLayerCount: 1, baseArrayLayer: 0 },
                         writeMask: 0xF,
-                        textureViewDescriptor: { baseArrayLayer: 0, arrayLayerCount: 1 },
-                        context: undefined
+
                     },
                     {
+                        blend: undefined,
+                        // eslint-disable-next-line sort-keys
                         clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-                        blend: undefined
                     })
             },
-            sampleCount: 1,
-            size: { width: canvas.width, height: canvas.height },
+            entryPoint: 'pick',
             getSizeOnResize: (w, h) => {
                 return [w, h]
             },
-            entryPoint: 'pick',
+            gpu: this,
+            label: 'pickRenderPass',
             rootLayout: this.rootCameralayout,
-            label: 'pickRenderPass'
+            sampleCount: 1,
+            size: { height: canvas.height, width: canvas.width },
+
         }
         );
 
         this.renderPassScreen = new PickableRenderPass(
             {
-                gpu: this,
                 colorRenderTargets: {
                     gRenderTargetDiffuse: new MSAARenderTarget(
                         {
-                            gpu: this,
                             format: "bgra8unorm",
-                            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
+                            gpu: this,
                             label: 'diffuseTexture',
-                            size: { width: 300, height: 300 }
+                            size: { height: 300, width: 300 },
+                            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
                         },
                         {
+                            context: undefined,
                             writeMask: 0xF,
-                            context: undefined
                         },
                         {
-                            clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 0.0 },
                             blend: undefined,
+                            // eslint-disable-next-line sort-keys
+                            clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 0.0 },
                         }),
                 },
-                sampleCount: 4,
-                size: { width: canvas.width, height: canvas.height },
+                entryPoint: 'main',
                 getSizeOnResize: (w, h) => {
                     return [w, h]
                 },
-                entryPoint: 'main',
+                gpu: this,
+                label: 'renderPassScreen',
                 rootLayout: this.rootCameralayout,
-                label: 'renderPassScreen'
+                sampleCount: 4,
+                size: { height: canvas.height, width: canvas.width },
             },
             new DepthRenderTarget(0,
                 {
                     format: 'depth32float',
-                    usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
-                    label: 'depthTexture_renderPassScreen',
+                    gpu: this,
                     initialSampleCount: 4,
-                    size: { width: 300, height: 300 },
-                    gpu: this
+                    label: 'depthTexture_renderPassScreen',
+                    size: { height: 300, width: 300 },
+                    usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
                 },
                 {
-                    writeMask: 0xF,
                     context: undefined,
+                    writeMask: 0xF,
                 })
         );
         this.renderPassWater = new DepthRenderPass(
             {
-                gpu: this,
                 colorRenderTargets: {
                     diffuse: new ColorRenderTarget(
                         {
-                            gpu: this,
                             format: "bgra8unorm",
-                            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
+                            gpu: this,
                             label: 'diffuseTextureWater',
-                            size: { width: 300, height: 300 }
+                            size: { height: 300, width: 300 },
+                            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
                         },
                         {
+                            context: undefined,
                             writeMask: 0xF,
-                            context: undefined
                         },
                         {
+                            blend: undefined,
+                            // eslint-disable-next-line sort-keys
                             clearValue: { r: 0.023, g: 0.25, b: 0.45, a: 1.0 },
-                            blend: undefined
                         }),
                 },
-                sampleCount: 1,
-                size: { width: canvas.width, height: canvas.height },
-                getSizeOnResize: (w, h) => [w >> 2, h >> 2],
                 entryPoint: 'main',
+                getSizeOnResize: (w, h) => [w >> 2, h >> 2],
+                gpu: this,
+                label: 'renderPassWater',
                 rootLayout: this.rootCameralayout,
-                label: 'renderPassWater'
+                sampleCount: 1,
+                size: { height: canvas.height, width: canvas.width },
             },
             new DepthRenderTarget(0, {
                 format: 'depth32float',
-                usages: TextureUsageEnums["RENDER_ATTACHMENT|COPY_SRC"],
-                label: 'depthTexture_renderPassWater',
-                size: { width: 300, height: 300 },
+                gpu: this,
                 initialSampleCount: 1,
-                gpu: this
+                label: 'depthTexture_renderPassWater',
+                size: { height: 300, width: 300 },
+                usages: TextureUsageEnums["RENDER_ATTACHMENT|COPY_SRC"],
             }, {
-                writeMask: 0xF,
                 context: undefined,
+                writeMask: 0xF,
             })
         );
 
@@ -455,80 +463,84 @@ export class GPU {
         this.BindGroupLayoutCanvas = new BGLayout(this, 'BindGroupLayoutUI',
             new BufLayout(
                 {
-                    visibility: ShaderStage.VERTEX,
                     buffer: {
+                        minBindingSize: 8,
                         type: "uniform",
-                        minBindingSize: 8
-                    }
+                    },
+                    visibility: ShaderStage.VERTEX,
+
                 }, 'uniforms', UIUniforms),
             new TextLayout(
                 {
-                    visibility: ShaderStage.FRAGMENT,
                     texture: {
-                    }
+                    },
+                    visibility: ShaderStage.FRAGMENT,
                 }, 'texture', 'texture_2d<f32>')
         )
         this.#canvasRootLayout = new BindablePipelineLayout({
+            bindGroupLayouts: [this.BindGroupLayoutCanvas] as [typeof this.BindGroupLayoutCanvas],
             label: 'canvasRootLayout',
-            bindGroupLayouts: [this.BindGroupLayoutCanvas] as [typeof this.BindGroupLayoutCanvas]
         });
         const uiVertShader = createUIVertShader(this.#canvasRootLayout, {
             arrayStride: 4 * 4,
+            attributes2: position_uv_attrs,
             stepMode: "vertex",
-            attributes2: position_uv_attrs
         })
         this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
             {
-                label: 'UIRenderPipeline',
-                vertexShader: uiVertShader,
                 fragmentShader: createUIFragmentShader(this.#canvasRootLayout),
+                label: 'UIRenderPipeline',
                 renderPipeline: {
                     primitive: {
+                        frontFace: 'ccw',
                         topology: 'triangle-list',
-                        frontFace: 'ccw'
                     }
                 },
+                vertexShader: uiVertShader,
             });
 
         this.renderPassCanvas = new RenderPass({
-            gpu: this,
             colorRenderTargets: {
                 swap: new ColorRenderTarget(
                     {
-                        gpu: this,
                         format: this.#presentationFormat,
-                        usages: TextureUsageEnums.RENDER_ATTACHMENT,
+                        gpu: this,
                         label: 'canvasTexture',
-                        size: { width: 300, height: 300 }
+                        size: { height: 300, width: 300 },
+                        usages: TextureUsageEnums.RENDER_ATTACHMENT,
+
                     },
                     {
                         context: context,
                         writeMask: 0xF,
                     },
                     {
-                        clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                         blend: {
                             alpha: {
+                                dstFactor: 'one-minus-src-alpha',
                                 operation: 'add',
                                 srcFactor: 'one',
-                                dstFactor: 'one-minus-src-alpha'
                             },
                             color: {
+                                dstFactor: 'one-minus-src-alpha',
                                 operation: 'add',
                                 srcFactor: 'src-alpha',
-                                dstFactor: 'one-minus-src-alpha'
                             }
-                        }
+                        },
+                        // eslint-disable-next-line sort-keys
+                        clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                     })
             },
-            sampleCount: 1,
-            size: { width: canvas.width, height: canvas.height },
+            entryPoint: 'main',
             getSizeOnResize: (w, h) => {
                 return [w, h]
             },
-            entryPoint: 'main',
+            gpu: this,
+            label: 'renderPassCanvas',
             rootLayout: this.#canvasRootLayout,
-            label: 'renderPassCanvas'
+            sampleCount: 1,
+            size: { height: canvas.height, width: canvas.width },
+
         });
 
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
@@ -549,8 +561,8 @@ export class GPU {
 
         let resizeHandler: null | ReturnType<typeof setTimeout> = null;
         const maxResolution = {
+            height: 1080,
             width: 1920,
-            height: 1080
         }
         this.#ro = new window.ResizeObserver(entries => {
             const entry = entries[0];

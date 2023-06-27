@@ -33,12 +33,12 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
         });
         super(
             {
-                vertices: {
-                    view: allocate_vec(vertices),
-                    stride
-                },
                 can_collide: false,
-                character_can_collide_to: false
+                character_can_collide_to: false,
+                vertices: {
+                    stride,
+                    view: allocate_vec(vertices),
+                },
             },
             mesh_id,
             false);
@@ -56,10 +56,10 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
 
         const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline, { topology: 'line-list' }, { stride });
         this.drawable = new DrawableIndexed({
-            renderPipeline,
+            node: this,
             renderPasses: undefined,
+            renderPipeline,
             vertexBuffers: [vertices],
-            node: this
         });
     }
 }

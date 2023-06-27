@@ -9,17 +9,17 @@ export const NormalsPipeline = [
     }) {
         const debugNormalsVertShader = createDebugNormalsVertShader(gpu.positionAndTimeBindGroup, {
             arrayStride: vertexBufferProps.stride * 4,
+            attributes2: simpleAttributes,
             stepMode: "vertex",
-            attributes2: simpleAttributes
         });
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
-                label,
-                vertexShader: debugNormalsVertShader,
                 fragmentShader: createColorFragmentShader(gpu.positionAndTimeBindGroup),
+                label,
                 renderPipeline: {
                     primitive
-                }
+                },
+                vertexShader: debugNormalsVertShader,
             })
     }
 ] as const

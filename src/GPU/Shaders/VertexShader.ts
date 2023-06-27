@@ -6,15 +6,15 @@ export interface VertexAttribute extends GPUVertexAttribute {
     shaderFormat: string;
 }
 
-export interface VertexBufferLayout2<A extends {[index: string]: GPUVertexAttribute} = {[index: string]: VertexAttribute}> extends Omit<GPUVertexBufferLayout, 'attributes'> {
+export interface VertexBufferLayout2<A extends { [index: string]: GPUVertexAttribute } = { [index: string]: VertexAttribute }> extends Omit<GPUVertexBufferLayout, 'attributes'> {
     /**
      * An array defining the layout of the vertex attributes within each element.
      */
     attributes2: A;
-  }
+}
 
 // eslint-disable-next-line @typescript-eslint/no-shadow
-type Head<T extends readonly BGLayout[]> = T extends [ ...infer Head, BGLayout ] ? Head : never[];
+type Head<T extends readonly BGLayout[]> = T extends [...infer Head, BGLayout] ? Head : never[];
 
 export type VertexBuffers = readonly [VertexBufferLayout2]
     | readonly [VertexBufferLayout2, VertexBufferLayout2]
@@ -23,15 +23,17 @@ export type VertexBuffers = readonly [VertexBufferLayout2]
 
 export class VertexShader<
     B extends readonly BGLayout[] = readonly BGLayout[],
-    E extends { [index: string]:  VertexShaderFunction<
-        /**
-         * Function must have same bindgrouplayouts than pipelineLayout,
-         * but not every one of then must be defined for shader. Eg. it is allowed to attach shader
-         * with less or no bindgrouplayout, but it is not allowed to attach shader with different or more
-         * bindgrouplayouts than the pipelineLayout has.
-        */
-        B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []
-        , readonly VertexBufferLayout2[] | (readonly [])> } = { [index: string]:  VertexShaderFunction<B, readonly VertexBufferLayout2[] | (readonly [])> },
+    E extends {
+        [index: string]: VertexShaderFunction<
+            /**
+             * Function must have same bindgrouplayouts than pipelineLayout,
+             * but not every one of then must be defined for shader. Eg. it is allowed to attach shader
+             * with less or no bindgrouplayout, but it is not allowed to attach shader with different or more
+             * bindgrouplayouts than the pipelineLayout has.
+            */
+            B | Head<B> | Head<Head<B>> | Head<Head<Head<B>>> | Head<Head<Head<Head<B>>>> | Head<Head<Head<Head<Head<B>>>>> | readonly never[]
+            , readonly VertexBufferLayout2[] | (readonly [])>
+    } = { [index: string]: VertexShaderFunction<B, readonly VertexBufferLayout2[] | (readonly [])> },
 > extends Shader<E> {
 
     constructor(

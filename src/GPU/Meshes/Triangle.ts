@@ -21,15 +21,15 @@ export class Triangle extends SimpleMesh {
     ) {
         super(
             {
+                can_collide,
                 vertices: {
                     view: allocate_vec(positions)
                 },
-                can_collide
             },
             new_rust_mesh({
+                fixed: true,
                 label,
                 scenes,
-                fixed: true
             })
         )
         this.color = color;

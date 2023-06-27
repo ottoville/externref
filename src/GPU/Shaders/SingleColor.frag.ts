@@ -29,8 +29,8 @@ BindLayouts> {
                     return output;
               `),
             },
+            gpu: pipelineLayout.gpu,
             label: 'SingleColor.frag',
-            gpu: pipelineLayout.gpu
         });
     }
 }

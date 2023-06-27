@@ -31,7 +31,7 @@ describe('Lights ', function () {
             //@ts-expect-error
             const engine: Engine = window.engine;
             const b = new Box({ can_collide: false, label: 'redBox' });
-            const b2 = new Box({ can_collide: false, label: 'greenBox', color: [0, 1, 0, 0] });
+            const b2 = new Box({ can_collide: false, color: [0, 1, 0, 0] , label: 'greenBox' });
             //green on left, red on right
             b.translation = [0, 400, -300]
             b2.translation = [0, 400, 300]

@@ -10,8 +10,6 @@ type BindLayouts = [
 export function createUIFragmentShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader(
         {
-            label: 'UI.frag',
-            gpu: pipelineLayout.gpu,
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: new FragmentShaderFunction(new Struct('Output', {
@@ -31,7 +29,9 @@ export function createUIFragmentShader(pipelineLayout: PipelineLayout<BindLayout
                     return output;
         
                 `),
-            }
+            },
+            gpu: pipelineLayout.gpu,
+            label: 'UI.frag',
         }
     )
 }

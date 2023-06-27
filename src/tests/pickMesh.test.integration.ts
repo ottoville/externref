@@ -56,7 +56,7 @@ describe('Pick box ', function () {
                     res([await engine.gpu!.renderPassScreen.pickPosition(true), await engine.gpu!.renderPassScreen.pickMesh(undefined)]);
                 })
             });
-            return [pickedPosition, { position: pickedMesh?.position, label: pickedMesh?.mesh.label }, b.id] as const;
+            return [pickedPosition, { label: pickedMesh?.mesh.label, position: pickedMesh?.position }, b.id] as const;
         });
         expect(pickInfo0).not.toBeNull();
         expect(pickInfo.label).not.toBeNull();

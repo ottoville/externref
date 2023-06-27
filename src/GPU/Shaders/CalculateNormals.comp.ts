@@ -20,24 +20,23 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
             new BGLayout(slopesLayout.gpu, 'normalsBindGroupLayout',
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
-                        }
+                            minBindingSize: 32,
+                            type: "storage",
+                        },
+                        visibility: ShaderStage.COMPUTE,
                     }, 'normals', FloatArray)),
             slopesLayout
         ] as const
 
         const pipelineLayout = new PipelineLayout({
+            bindGroupLayouts: bindLayouts,
             label: 'calculateNormalsPipeline',
-            bindGroupLayouts: bindLayouts
         });
 
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            label: 'CalculateNormals.comp',
             entryPoints: {
                 main: new ComputeShaderFunction(`@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>`,
                     pipelineLayout,
@@ -67,7 +66,8 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
        ${normals.prop('numbers')}[j + i + 6u]=normalized.z;
                 `)
             },
-            gpu: pipelineLayout.gpu
+            gpu: pipelineLayout.gpu,
+            label: 'CalculateNormals.comp',
         }, () => `@compute @workgroup_size(1)`);
     }
 }

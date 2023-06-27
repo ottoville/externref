@@ -1,3 +1,4 @@
+/* eslint-disable sort-keys */
 import { BufLayout, ShaderStage } from "../../BindGroupLayout.js";
 
 export class Struct<T extends { [index: string]: [properties: string, type: string] } = { [index: string]: [size: string, type: string] }> {
@@ -14,6 +15,8 @@ export const typicalOutput = new Struct('Output', {
     position: ['@location(3)', 'vec3<f32>'],
     scenes: ['@location(4) @interpolate(flat)', 'u32'],
 });
+
+
 
 export const pickOutput = new Struct('PickOutput', {
     Position: ['@builtin(position)', 'vec4<f32>'],

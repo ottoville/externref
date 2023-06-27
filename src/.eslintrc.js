@@ -1,3 +1,4 @@
+/* eslint-disable sort-keys */
 // eslint-disable-next-line no-undef
 module.exports = {
     root: true,
@@ -53,7 +54,8 @@ module.exports = {
         "object-curly-spacing": [2, "always"],
         "no-trailing-spaces": 2,
         "key-spacing": ["error", { "afterColon": true }],
-        "indent": ["error", 4, { "SwitchCase": 1 }]
+        "indent": ["error", 4, { "SwitchCase": 1 }],
+        "sort-keys": ["error", "asc", { "caseSensitive": true, "natural": false, "minKeys": 2 }]
     },
     settings: {
         "import/resolver": {

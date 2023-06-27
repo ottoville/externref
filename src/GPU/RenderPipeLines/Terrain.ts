@@ -4,23 +4,25 @@ import { GroundFragShader } from "../Shaders/Ground.frag.js";
 
 const attributes = Object.freeze(
     {
-        position: {
-            shaderLocation: 0,
-            offset: 0,
-            format: "float32x3",
-            shaderFormat: "vec3<f32>"
-        },
         normal: {
-            shaderLocation: 1,
-            offset: 16,
             format: "float32x3",
-            shaderFormat: "vec3<f32>"
+            offset: 16,
+            shaderFormat: "vec3<f32>",
+            shaderLocation: 1,
+        },
+        position: {
+            format: "float32x3",
+            offset: 0,
+            shaderFormat: "vec3<f32>",
+
+            shaderLocation: 0,
         },
         uv: {
-            shaderLocation: 2,
-            offset: 32,
             format: "float32x2",
-            shaderFormat: "vec2<f32>"
+            offset: 32,
+            shaderFormat: "vec2<f32>",
+            shaderLocation: 2,
+
         }
     } as const
 )
@@ -32,19 +34,19 @@ export const TerrainRenderPipeline = [
         const groundVertShader = createGroundVertShader(gpu.lightsTextureBindGroup,
             {
                 arrayStride: vertexBufferProps.stride * 4,
+                attributes2: attributes,
                 stepMode: "vertex",
-                attributes2: attributes
             }
 
         );
         return gpu.lightsTextureBindGroup.addRenderPipeline(
             {
-                label,
-                vertexShader: groundVertShader,
                 fragmentShader: new GroundFragShader(gpu.lightsTextureBindGroup),
+                label,
                 renderPipeline: {
                     primitive
-                }
+                },
+                vertexShader: groundVertShader,
             });
     }
 ] as const

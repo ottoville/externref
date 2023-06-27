@@ -19,9 +19,9 @@ export class BindGroup<L extends BGLayout = BGLayout> {
         if (this.#dirty || !this.#bindGroup) {
             const entries = this.entriesf(this);
             this.#bindGroup = this.layout.gpu.device.createBindGroup({
-                layout: this.layout.layout,
                 entries,
-                label: this.label
+                label: this.label,
+                layout: this.layout.layout,
             });
             this.#dirty = false;
         }

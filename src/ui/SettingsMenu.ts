@@ -23,14 +23,14 @@ export class createSettingsMenu extends UINode<{}> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'MSAA',
-                    scale: { min_width: 200, y: 50, unit: NumericUnit.px },
+                    scale: { min_width: 200, unit: NumericUnit.px, y: 50 },
                     translate: {
                         x: {
+                            anchor: Anchor.CENTER,
                             value: [0],
-                            anchor: Anchor.CENTER
                         }, y: {
+                            anchor: Anchor.CENTER,
                             value: [0],
-                            anchor: Anchor.CENTER
                         },
                     },
                 },
@@ -39,43 +39,43 @@ export class createSettingsMenu extends UINode<{}> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'Close',
-                    scale: { min_width: 200, y: 50, unit: NumericUnit.px },
+                    scale: { min_width: 200, unit: NumericUnit.px, y: 50 },
                     translate: {
                         x: {
+                            anchor: Anchor.CENTER,
                             value: [0],
-                            anchor: Anchor.CENTER
                         }, y: {
+                            anchor: Anchor.CENTER,
                             value: [-60, NumericUnit.px],
-                            anchor: Anchor.CENTER
                         }
                     },
                 },
-                text: 'Close',
                 onClick: () => {
                     this.destroy();
-                }
+                },
+                text: 'Close',
             })),
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'DevTools',
-                    scale: { min_width: 200, y: 50, unit: NumericUnit.px },
+                    scale: { min_width: 200, unit: NumericUnit.px, y: 50 },
                     translate: {
                         x: {
+                            anchor: Anchor.CENTER,
                             value: [0],
-                            anchor: Anchor.CENTER
                         }, y: {
+                            anchor: Anchor.CENTER,
                             value: [-120, NumericUnit.px],
-                            anchor: Anchor.CENTER
                         }
                     },
                 },
-                text: 'DevTools',
                 onClick: () => {
                     import('./DevTools/DevTools.js')
                         .then(({ DevTools }) => DevTools(engine.devTools!))
                         .catch(err => engine.showError(err));
                     this.destroy();
-                }
+                },
+                text: 'DevTools',
             }))
         ];
     }

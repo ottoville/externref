@@ -32,13 +32,14 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
         this.#ratio = Terrain.size[0] / this.#size //texture coordinates
     }
     #inputListener: ListenerObj<'keydown'> = {
-        object: this,
-        type: 'keydown',
         cb: (e: KeyboardEvent) => {
             if (e.code === "Digit1") {
                 this.paintZone();
             }
-        }
+        },
+        object: this,
+        type: 'keydown',
+
     }
     paintZone() {
         if (this.#zoneTexture) {
@@ -52,11 +53,12 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
         if (this.props.open && !this.#wasOpen) {
             this.#wasOpen = true;
             this.#zoneTexture = new RenderTarget({
-                gpu: engine.gpu!,
-                size: { width: 5120, height: 5120 },
                 format: "rgba8unorm",
+                gpu: engine.gpu!,
+                label: 'ZoneTexture',
+                size: { height: 5120, width: 5120 },
                 usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC"],
-                label: 'ZoneTexture'
+
             });
             engine.addInputListener(this.#inputListener);
             if (engine.DB) {
@@ -81,7 +83,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                         ctx.fillRect(0, 0, -(z.size.height / this.#ratio), -(z.size.width / this.#ratio));
                     });
                     ctx.stroke();
-                    this.#zoneTexture?.copyFromExternalImage({ source: texture }, {}, { width: 5120, height: 5120 });
+                    this.#zoneTexture?.copyFromExternalImage({ source: texture }, {}, { height: 5120, width: 5120 });
                 }
             }
             const staticScene = engine.scenes.get('static');
@@ -96,19 +98,19 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                         ...this.props,
                         UIRectangleProps: {
                             label: 'residentalButton',
-                            scale: { min_width: 0.15, y: 0.07, unit: NumericUnit["%"] },
+                            scale: { min_width: 0.15, unit: NumericUnit["%"], y: 0.07 },
                             translate: {
                                 x: {
+                                    anchor: Anchor.CENTER,
                                     value: [-0.8, NumericUnit["%"]],
-                                    anchor: Anchor.CENTER
                                 },
                                 y: this.props.subMenuPosition
                             },
                         },
-                        text: 'Residental (1)',
                         onClick: () => {
                             this.paintZone()
-                        }
+                        },
+                        text: 'Residental (1)',
                     })
                 )
             ]

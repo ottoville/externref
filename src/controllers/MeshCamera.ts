@@ -37,28 +37,29 @@ export class MeshCamera extends CameraController {
         if (gpu) {
             cursorBitmap.then(bitmap => {
                 this.cursor = new UIRectangleBackground({
-                    canvaspipeline: gpu.UIPipeline,
-                    renderPass: gpu.renderPassCanvas,
-                    label: 'cursor',
                     borderSize: {
-                        width: [0],
                         height: 'auto',
+                        width: [0],
                     },
-                    scale: { min_width: 0.01, y: 0.01, unit: NumericUnit["%"] },
+                    canvaspipeline: gpu.UIPipeline,
+                    label: 'cursor',
+                    originalAspectRatio: 1,
+                    renderPass: gpu.renderPassCanvas,
+                    scale: { min_width: 0.01, unit: NumericUnit["%"], y: 0.01 },
                     translate: {
                         x: {
+                            anchor: Anchor.CENTER,
                             value: [0],
-                            anchor: Anchor.CENTER
                         }, y: {
+                            anchor: Anchor.CENTER,
                             value: [0],
-                            anchor: Anchor.CENTER
                         }
                     },
-                    originalAspectRatio: 1,
                 }, {
-                    texture: bitmap,
+                    border_height: 0,
                     border_width: 0,
-                    border_height: 0
+                    texture: bitmap,
+
                 })
             }).catch(err => {
                 engine.showError(err);
@@ -92,19 +93,17 @@ export class MeshCamera extends CameraController {
         });
     }
     #lockPointerListener: ListenerObj<'pointerdown'> = {
-        object: this,
-        type: 'pointerdown',
         cb: () => {
             this.#lockPointer()
-        }
+        },
+        object: this,
+        type: 'pointerdown',
     }
 
     serialize = () => {
         return;
     }
     #keydownfunction: ListenerObj<'keydown'> = {
-        object: this,
-        type: 'keydown',
         cb: (e: KeyboardEvent) => {
             if (e.key === 'ArrowUp') {
                 this.arrowKeysDown |= ARROW_KEYS.UP;
@@ -118,21 +117,22 @@ export class MeshCamera extends CameraController {
             else if (e.key === 'ArrowRight') {
                 this.arrowKeysDown |= ARROW_KEYS.RIGHT;
             }
-        }
+        },
+        object: this,
+        type: 'keydown',
+
     }
     #pointerMoveFunction: ListenerObj<'pointermove'> = {
+        cb: (e: PointerEvent) => {
+            this.pointerMovement = { x: e.movementX, y: e.movementY }
+        },
         object: this,
-        type: 'pointermove',
         options: {
             force: true
         },
-        cb: (e: PointerEvent) => {
-            this.pointerMovement = { x: e.movementX, y: e.movementY }
-        }
+        type: 'pointermove',
     }
     #keyupfunction: ListenerObj<'keyup'> = {
-        object: this,
-        type: 'keyup',
         cb: (e: KeyboardEvent) => {
             if (e.key === 'ArrowUp') {
                 this.arrowKeysDown &= ~ARROW_KEYS.UP;
@@ -147,7 +147,9 @@ export class MeshCamera extends CameraController {
             else if (e.key === 'ArrowRight') {
                 this.arrowKeysDown &= ~ARROW_KEYS.RIGHT;
             }
-        }
+        },
+        object: this,
+        type: 'keyup',
     }
     lastTranslation = new MutableTerraVector3();
 }

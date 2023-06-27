@@ -18,10 +18,10 @@ export class UIRectangleTextureView extends UIRectangle {
         const { borderSize } = this.props
         const textureSize = this.textureView.texture.props.size;
         const uvs = {
-            top: textureSize.height,
             bottom: 0,
+            left: textureSize.width,
             right: 0,
-            left: textureSize.width
+            top: textureSize.height,
         }
         vertices.set(
             [

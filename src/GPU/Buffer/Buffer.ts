@@ -45,8 +45,8 @@ export interface IndirectBuffer extends Buffer {
 function bufferBinding(this: Buffer, label: string, bindGroup: BindGroup, offset = 0, bindingSize?: GPUSize64): GPUBufferBinding & GPUObjectBase {
     const obj: GPUBufferBinding & GPUObjectBase = {
         buffer: this.buffer,
+        label: label + '_Binding_for_buffer_' + this.label,
         offset,
-        label: label + '_Binding_for_buffer_' + this.label
     }
     if (bindingSize) {
         obj.size = bindingSize;
@@ -118,9 +118,9 @@ export class Buffer extends Bindable {
         super();
 
         const desc: GPUBufferDescriptor = {
-            usage: usages.reduce((prev, curr) => prev | curr, 0),
+            mappedAtCreation,
             size,
-            mappedAtCreation
+            usage: usages.reduce((prev, curr) => prev | curr, 0),
         }
         if (label)
             desc.label = label;
@@ -216,7 +216,7 @@ class copySrcBuffer extends Buffer {
     resize(size: number) {
         try {
             const commandEncoder = this.gpu.device.createCommandEncoder({ label: 'bufferResizeEncoder' });
-            const newBuffer = this.gpu.device.createBuffer({ usage: this.buffer.usage | GPUBufferUsage.COPY_DST, size, label: this.label });
+            const newBuffer = this.gpu.device.createBuffer({ label: this.label, size, usage: this.buffer.usage | GPUBufferUsage.COPY_DST });
             commandEncoder.copyBufferToBuffer(this.buffer, 0, newBuffer, 0, this.buffer.size);
             this.gpu.device.queue.submit([commandEncoder.finish()]);
             this.destroy();

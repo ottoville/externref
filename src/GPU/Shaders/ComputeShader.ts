@@ -12,9 +12,9 @@ export class ComputeShader<
         //@ts-expect-error TODO
         super(props, GPUShaderStage.COMPUTE, constantCode);
         const bindGroups = this.getFilteredBindGroups(GPUShaderStage.COMPUTE) as { [K in keyof B]: FilterCompute<B[K]["entries"]> };
-        if(constantCode)
-            this.wgsl+=constantCode(...bindGroups)
-        for(const key in props.entryPoints) {
+        if (constantCode)
+            this.wgsl += constantCode(...bindGroups)
+        for (const key in props.entryPoints) {
             const entryPoint = props.entryPoints[key]!;
             this.wgsl += entryPoint.createCode(bindGroups, key);
         }
@@ -22,13 +22,13 @@ export class ComputeShader<
     createComputePipeline(entryPoint: keyof E) {
         return this.props.gpu.device.createComputePipelineAsync({
             compute: {
+                entryPoint: entryPoint as string,
                 module: this.module,
-                entryPoint: entryPoint as string
             },
             label: this.module.label + ' ' + (entryPoint as string),
             layout: this.props.entryPoints[entryPoint]!.pipelineLayout.layout
         }).catch((err: unknown) => {
-            throw (new Error('createComputePipelineAsync failed on '+this.module.label+' , wgsl:' + this.wgsl, { cause: err }));
+            throw (new Error('createComputePipelineAsync failed on ' + this.module.label + ' , wgsl:' + this.wgsl, { cause: err }));
         });
     }
 }

@@ -26,11 +26,11 @@ export class NormalsMesh extends DataNode {
             rigid_body: false,
         });
         super({
-            vertices: {
-                view: allocate_vec(newVertices),
-                stride: 8
-            },
             character_can_collide_to: false,
+            vertices: {
+                stride: 8,
+                view: allocate_vec(newVertices),
+            },
         },
         mesh_id);
 
@@ -40,10 +40,10 @@ export class NormalsMesh extends DataNode {
         this.rotation = targetNode.node.rotation;
         const renderPipeline = gpu.createRenderPipeline(NormalsPipeline, { topology: 'line-list' }, { stride: 8 });
         this.drawable = new DrawableSimple({
-            renderPipeline,
+            node: this,
             renderPasses: undefined,
+            renderPipeline,
             vertexBuffers: [vertexBuffer],
-            node: this
         });
     }
 }

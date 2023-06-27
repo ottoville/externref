@@ -8,27 +8,27 @@ export const PlantsRenderPipeline = [
         const grassVertShader = createGrassVertShader(gpu.rootCameralayout, [
             {
                 arrayStride: vertexBufferProps.stride * 4,
+                attributes2: positionAttr,
                 stepMode: "instance",
-                attributes2: positionAttr
             },
             {
                 arrayStride: 4 * 4,
+                attributes2: shapeAttr,
                 stepMode: "instance",
-                attributes2: shapeAttr
             }, {
                 arrayStride: 8,
+                attributes2: vertexPositionAttr,
                 stepMode: 'vertex',
-                attributes2: vertexPositionAttr
             }
         ]);
         return gpu.rootCameralayout.addRenderPipeline(
             {
-                label,
-                vertexShader: grassVertShader,
                 fragmentShader: createColorFragmentShader(gpu.rootCameralayout),
+                label,
                 renderPipeline: {
                     primitive
-                }
+                },
+                vertexShader: grassVertShader,
             })
     }
 ] as const

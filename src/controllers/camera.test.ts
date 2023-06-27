@@ -16,8 +16,8 @@ describe(
             engine = await Engine.initEngine(undefined, (e) => {
                 console.log('error', e.message);
             }, {
+                collider: fs.readFileSync('../wwwroot/collider/colliderSimdO.wasm'),
                 rust: fs.readFileSync('../node/wasm32-unknown-unknown/debug/engine.wasm'),
-                collider: fs.readFileSync('../wwwroot/collider/colliderSimdO.wasm')
             });
             //@ts-expect-error
             const control = engine!.mainCamera.attachControllerForCamera({

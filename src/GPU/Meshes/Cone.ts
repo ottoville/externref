@@ -99,11 +99,11 @@ export class Cone extends IndexedSingleColoredMesh {
         const mesh_id = new_rust_mesh(mainNodeProps);
         super(
             {
-                vertices: {
-                    view: allocate_vec(vertices),
-                    stride: 8
-                },
                 can_collide,
+                vertices: {
+                    stride: 8,
+                    view: allocate_vec(vertices),
+                },
             },
             mesh_id,
             allocate_vec(indices));

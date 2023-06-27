@@ -13,7 +13,6 @@ type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
 export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader({
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-        label: 'Simple.frag',
         entryPoints: {
             main: new FragmentShaderFunction<typeof pipelineLayout.bindGroupLayouts>(
                 new Struct('Output', { Diffuse: ['@location(0)', 'vec4<f32>'] }),
@@ -84,7 +83,8 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
   output.ID = id;
   return output;`),
         },
-        gpu: pipelineLayout.gpu
+        gpu: pipelineLayout.gpu,
+        label: 'Simple.frag',
     }, ([uniforms,],
         [/*scene*/, /*clusters_array*/, /*meshes*/, projection],
         [/*world*/,]) => `

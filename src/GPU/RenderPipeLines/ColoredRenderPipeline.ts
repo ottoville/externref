@@ -7,11 +7,10 @@ export const simpleAttributesWithColor = Object.freeze({
     ...simpleAttributes,
     color:
     {
-        // color
-        shaderLocation: 2,
-        offset: 32,
         format: "float32x3",
-        shaderFormat: 'vec3<f32>'
+        offset: 32,
+        shaderFormat: 'vec3<f32>',
+        shaderLocation: 2,
     }
 
 } as const);
@@ -20,18 +19,18 @@ export const ColoredRenderPipeline = [
     'ColoredRenderPipeline', function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: { stride: number }) {
         const buffers = {
             arrayStride: vertexBufferProps.stride * 4,
+            attributes2: simpleAttributesWithColor,
             stepMode: "vertex",
-            attributes2: simpleAttributesWithColor
         } as VertexBufferLayout2<typeof simpleAttributesWithColor>
         const vertexShader = createVertexColorShader(gpu.positionAndTimeBindGroup, buffers)
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
-                label,
-                vertexShader,
                 fragmentShader: gpu.simpleFragShader,
+                label,
                 renderPipeline: {
                     primitive,
-                }
+                },
+                vertexShader,
             });
     }
 ] as const

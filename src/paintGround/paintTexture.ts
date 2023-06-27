@@ -7,11 +7,11 @@ import type { Texture } from "../GPU/Texture.js";
 import type { Texture2dSize } from "../GPU/RenderTargets/RenderPassTarget.js";
 
 export class paintTexture extends paintGround {
-    private subTextureCache: subTexture = { x: 0, z: 0, width: 0, height: 0, imageData: null };
+    private subTextureCache: subTexture = { height: 0, imageData: null, width: 0, x: 0, z: 0,  };
     private height = 0;
     onMainPointerUp(height: number): void {
         this.height = height;
-        this.subTextureCache = { x: 0, z: 0, width: 0, height: 0, imageData: null }
+        this.subTextureCache = { height: 0, imageData: null, width: 0, x: 0, z: 0 }
     }
     #offsetX = 0;
     #offsetY = 0;
@@ -83,13 +83,13 @@ export class paintTexture extends paintGround {
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
         });
         const tempTexture = this.scene.gpu.device.createTexture({
-            size: { width: c.width, height: c.height },
             format: "rgba8unorm",
+            size: { height: c.height, width: c.width },
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
         });
         const encoder = this.scene.gpu.device.createCommandEncoder({ label: 'drawSubImage_encoder' });
         encoder.copyTextureToTexture(
-            { texture: this.zonedt.texture, origin: { x: minX, y: minZ } },
+            { origin: { x: minX, y: minZ }, texture: this.zonedt.texture },
             { texture: tempTexture },
             [c.width, c.height, 1]);
         if (width && this.subTextureCache.imageData) {
@@ -105,8 +105,8 @@ export class paintTexture extends paintGround {
                 const intersectionoffsetDestinationX = leftX - minX
                 const intersectionoffsetDestinationY = topY - minZ;
                 encoder.copyTextureToTexture(
-                    { texture: this.subTextureCache.imageData, origin: { x: intersectionoffsetSourceX, y: intersectionoffsetSourceY } }, //origin: [subX, subZ, 1]
-                    { texture: tempTexture, origin: { x: intersectionoffsetDestinationX, y: intersectionoffsetDestinationY } },
+                    { origin: { x: intersectionoffsetSourceX, y: intersectionoffsetSourceY }, texture: this.subTextureCache.imageData }, //origin: [subX, subZ, 1]
+                    { origin: { x: intersectionoffsetDestinationX, y: intersectionoffsetDestinationY }, texture: tempTexture },
                     [rightX - leftX, bottomY - topY, 1]);
             } else {
                 console.log('Rectangles do not overlap, or overlap has an area of zero (edge/corner overlap)')
@@ -120,7 +120,7 @@ export class paintTexture extends paintGround {
         if (cacheImage) {
             encoder2.copyTextureToTexture(
                 { texture: cacheImage },
-                { texture: this.zonedt.texture, origin: { x: this.subTextureCache.x, y: this.subTextureCache.z } },
+                { origin: { x: this.subTextureCache.x, y: this.subTextureCache.z }, texture: this.zonedt.texture },
                 [this.subTextureCache.width, this.subTextureCache.height, 1]);
         }
         if (typeof (this.subTextureCache) !== 'undefined') {
@@ -140,7 +140,7 @@ export class paintTexture extends paintGround {
 
         ctx.restore();
         ctx.beginPath();
-        const absDimensions: { w: number; h: number } = { w: Math.abs(height), h: Math.abs(width) }
+        const absDimensions: { w: number; h: number } = { h: Math.abs(width), w: Math.abs(height) }
         ctx.translate(cwidth / 2, c.height / 2);
         ctx.rotate(rad * -1);
         ctx.translate(cwidth / -2, c.height / -2);
@@ -151,20 +151,20 @@ export class paintTexture extends paintGround {
         ctx.fill();
         imageData = ctx.getImageData(0, 0, c.width, c.height);
         const tempBuffer2 = this.scene.gpu.device.createBuffer({
+            mappedAtCreation: true,
             size: buffersize,
             usage: GPUBufferUsage.COPY_SRC,
-            mappedAtCreation: true
         });
         new Uint8ClampedArray(tempBuffer2.getMappedRange()).set(new Uint8ClampedArray(imageData.data.buffer));
         tempBuffer2.unmap();
 
         encoder2.copyBufferToTexture({ buffer: tempBuffer2, bytesPerRow: c.width * 4 }, {
-            texture: this.zonedt.texture,
             origin: {
                 x: minX,
                 y: minZ
-            }
-        }, { width: c.width, height: c.height });
+            },
+            texture: this.zonedt.texture,
+        }, { height: c.height, width: c.width });
         this.scene.gpu.device.queue.submit([encoder2.finish()]);
         if (cacheImage)
             cacheImage.destroy();

@@ -23,61 +23,64 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
             new BGLayout(gpu, 'slopesBindGroupLayout',
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "read-only-storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
+                            minBindingSize: 32,
+                            type: "read-only-storage",
                         },
+                        visibility: ShaderStage.COMPUTE,
                     }, 'slopes', IntArray),
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "read-only-storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
+                            minBindingSize: 32,
+                            type: "read-only-storage",
                         },
+                        visibility: ShaderStage.COMPUTE,
+
                     }, 'facet12', PlaneArray),
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
+                            minBindingSize: 32,
+                            type: "storage",
                         },
+                        visibility: ShaderStage.COMPUTE,
+
                     }, 'positionAndRotate', PositionAndRotateArray),
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
+                            minBindingSize: 32,
+                            type: "storage",
                         },
+                        visibility: ShaderStage.COMPUTE,
+
                     }, 'shapes', FloatArray),
             ),
             new BGLayout(gpu, 'positionsBindGroupLayout',
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "read-only-storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
+                            minBindingSize: 32,
+                            type: "read-only-storage",
                         },
+                        visibility: ShaderStage.COMPUTE,
+
                     }, 'positions', Vec2Array))
         ] as const
 
 
         const pipelineLayout = new PipelineLayout({
+            bindGroupLayouts: bindLayouts,
             label: 'GetHeightAtCoordinatesPipeLine',
-            bindGroupLayouts: bindLayouts
         });
         super({
             bindGroupLayouts: bindLayouts,
-            label: "GetHeightAtCoordinates.comp",
             entryPoints: {
                 main: new ComputeShaderFunction(
                     `@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>`,
@@ -96,7 +99,8 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                 return;
                 `)
             },
-            gpu
+            gpu,
+            label: "GetHeightAtCoordinates.comp",
         }, ([slopes, facet12, _positionAndRotate, _shapes], [_positions]) => /* wgsl */ `
         const PI:f32 = 3.141592653589793;
         //

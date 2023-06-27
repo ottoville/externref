@@ -22,9 +22,10 @@ export class RoundCuboid extends OctaSphere {
     ) {
         super(
             {
-                width: width / borderRadius,
+                depth: depth / borderRadius,
                 height: height / borderRadius,
-                depth: depth / borderRadius
+                width: width / borderRadius,
+
             }, {
                 label: 'RoundCuboid' + (uid++),
                 ...meshProperties

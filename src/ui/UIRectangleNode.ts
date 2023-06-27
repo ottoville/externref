@@ -43,9 +43,9 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
     }
     createBackgroundInstance(commonProps: UIRectangleProps, bitmap: ImageBitmap) {
         return new UIRectangleBackground(commonProps, {
-            texture: bitmap,
+            border_height: 0.2,
             border_width: 0.2,
-            border_height: 0.2
+            texture: bitmap,
         }, this.props.text);
     }
     render(gpu: GPU, force: boolean) {

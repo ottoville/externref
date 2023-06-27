@@ -23,7 +23,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         mesh_id: number,
         indicesView: rust_vec_ptr<"usize">,
         createRenderPipeline: CreateRenderPipelineCB<RenderPipeline<VertexShader<readonly BGLayout[], { main: VertexShaderFunction<readonly BGLayout[], readonly [VertexBufferLayout2]> }>>>,
-        { vBufferGPU, topology = "triangle-list", staticVertices = true }: SimpleIndexedMeshProps = { topology: "triangle-list", staticVertices: true }
+        { vBufferGPU, topology = "triangle-list", staticVertices = true }: SimpleIndexedMeshProps = { staticVertices: true, topology: "triangle-list" }
     ) {
         const strip = topology === 'triangle-strip' || topology === 'line-strip';
         super(dataNodeProps,
@@ -51,10 +51,10 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
             const renderPipeline = engine.gpu.createRenderPipeline(createRenderPipeline, primitiveState, { stride: dataNodeProps.vertices.stride });
             this.drawable = new DrawableIndexed(
                 {
-                    renderPipeline,
-                    renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]),
-                    vertexBuffers: [vBufferGPU],
                     node: this,
+                    renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]),
+                    renderPipeline,
+                    vertexBuffers: [vBufferGPU],
                 }
             )
         }

@@ -31,16 +31,16 @@ TODO
     // 1000 * 1000: 40 - 50ms when no collision
     static readonly #subdivisions = [64, 64] as const;
     static readonly size = [10000, 10000] as const;
-    static readonly #textureSize = { width: 8192, height: 8192 } as const;
+    static readonly #textureSize = { height: 8192, width: 8192 } as const;
 
 
     static readonly settings = {
-        subdivisions: subdivisions,
-        size: terrainSize,
-        minmax: [-2, 500] as const,
+        facetSize: subdivisions[0] * subdivisions[1],
         maxXZ: [terrainSize[0] / 2.0, terrainSize[1] / 2.0] as const,
-        textureSize: { width: 8192, height: 8192 } as const,
-        facetSize: subdivisions[0] * subdivisions[1]
+        minmax: [-2, 500] as const,
+        size: terrainSize,
+        subdivisions: subdivisions,
+        textureSize: { height: 8192, width: 8192 } as const,
     } as const
     settings = Terrain.settings;
 
@@ -164,27 +164,28 @@ TODO
             const slopesLayout = new BGLayout(gpu, 'slopesAndFacesBindGroupLayoutReadOnly',
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "read-only-storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
+                            minBindingSize: 32,
+                            type: "read-only-storage",
                         },
+                        visibility: ShaderStage.COMPUTE,
                     }, 'slopes', Slopes),
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "read-only-storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
-                        }
+                            minBindingSize: 32,
+                            type: "read-only-storage",
+                        },
+                        visibility: ShaderStage.COMPUTE,
+
                     }, 'facet12', PlaneArray));
 
             const shaders = {
+                calculateNormals: new CalculateNormals(this.settings, slopesLayout),
                 calculatePlaneIndices: new CalculatePlaneIndices(gpu, this.settings),
                 computePlaneHeights: new CalculatePlaneHeights(gpu, this.settings),
-                calculateNormals: new CalculateNormals(this.settings, slopesLayout),
                 createTexture: new CreateTerrainTexture(this.settings, slopesLayout)
             }
 
@@ -267,8 +268,8 @@ TODO
         this.facet12ArrGPUBuffer = Buffer.create(gpu, Float32Array.BYTES_PER_ELEMENT * Terrain.#subdivisions[0] * Terrain.#subdivisions[1] * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'facet12ArrGPUBuffer');
         this.facet12ArrGPUBufferSwap = new WriteBuffer(gpu, Float32Array.BYTES_PER_ELEMENT * Terrain.#subdivisions[0] * Terrain.#subdivisions[1] * 4 * 2, 'facet12ArrGPUBufferSwap');
         this.texture = Texture.create({
-            gpu,
             format: 'rgba8unorm',
+            gpu,
             label: 'Terrain',
             size: Terrain.#textureSize,
             usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"]
@@ -286,19 +287,19 @@ TODO
         this.heightsLayout = new BGLayout(gpu, 'terrainBindGroupLayout',
             new BufLayout(
                 {
-                    visibility: ShaderStage.VERTEX,
                     buffer: {
+                        minBindingSize: 32,
                         type: "read-only-storage",
-                        minBindingSize: 32
                     },
+                    visibility: ShaderStage.VERTEX,
                 }, 'slopes', IntArray),
             new BufLayout(
                 {
-                    visibility: ShaderStage.VERTEX,
                     buffer: {
+                        minBindingSize: 32,
                         type: "read-only-storage",
-                        minBindingSize: 32
-                    }
+                    },
+                    visibility: ShaderStage.VERTEX,
                 }, 'facet12', PlaneArray)
         )
         this.TerrainHeightsbindGroupTree = gpu.positionAndTimeBindGroup.addChildBindGroupLayout('terrainPipelineLayout',
@@ -395,7 +396,7 @@ TODO
                     throw (new Error('get 2d context failed'));
                 gpuReadBuffer.readAndDestroy(async arrayBuffer => {
                     ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer), c.width, c.height), 0, 0);
-                    const blob = await c.convertToBlob({ type: "image/webp", quality: 1 })
+                    const blob = await c.convertToBlob({ quality: 1, type: "image/webp" })
                     TerrainTool.saveTexture(await blob.arrayBuffer(), [Terrain.#textureSize.width, Terrain.#textureSize.height]);
                 })
             }

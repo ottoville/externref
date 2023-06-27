@@ -30,8 +30,8 @@ export class WaterFragShader extends FragmentShader<BindLayouts> {
         
                 `),
             },
+            gpu: pipelineLayout.gpu,
             label: 'Water.frag',
-            gpu: pipelineLayout.gpu
         });
     }
 }

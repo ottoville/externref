@@ -11,8 +11,6 @@ import { Struct } from './structs/Structs.js';
 export function createColorFragmentShader<B extends readonly BGLayout[]>(pipelineLayout: PipelineLayout<B>) {
     return new FragmentShader<B>({
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-        label: 'color.frag',
-        gpu: pipelineLayout.gpu,
         entryPoints: {
             main: new FragmentShaderFunction(
                 new Struct('Output', { Diffuse: ['@location(0)', 'vec4<f32>'] }),
@@ -22,6 +20,8 @@ export function createColorFragmentShader<B extends readonly BGLayout[]>(pipelin
         var output:Output;
         output.Diffuse = vec4<f32>(color,1.0);
         return output;`)
-        }
+        },
+        gpu: pipelineLayout.gpu,
+        label: 'color.frag',
     })
 }

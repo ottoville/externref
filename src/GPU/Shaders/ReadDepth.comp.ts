@@ -19,51 +19,50 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
             new BGLayout(gpu, 'DepthAndMeshLayout',
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 16
-                        }
+                            minBindingSize: 16,
+                            type: "storage",
+                        },
+                        visibility: ShaderStage.COMPUTE,
                     }, 'depth_and_mesh', Depth_And_Mesh)
             ),
             new BGLayout(gpu, 'DepthTextureLayout',
                 new TextLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         texture: {
                             multisampled: true,
                             sampleType: 'depth'
-                        }
+                        },
+                        visibility: ShaderStage.COMPUTE,
                     }, 'depth_texture', 'texture_depth_multisampled_2d'),
                 new TextLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         texture: {
                             multisampled: false,
                             sampleType: 'uint'
-                        }
+                        },
+                        visibility: ShaderStage.COMPUTE,
                     }, 'mesh_texture', 'texture_2d<u32>'),
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: 'uniform',
                             hasDynamicOffset: false,
-                            minBindingSize: 8
-                        }
+                            minBindingSize: 8,
+                            type: 'uniform',
+                        },
+                        visibility: ShaderStage.COMPUTE,
                     }, 'mouse', Mouse)
             )
         ] as const;
 
 
         const pipelineLayout = new PipelineLayout({
+            bindGroupLayouts: bindLayouts,
             label: 'ReadDepthPipeline',
-            bindGroupLayouts: bindLayouts
         });
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            label: "ReadDepth.comp",
             entryPoints: {
                 main: new ComputeShaderFunction(
                     `@builtin(global_invocation_id) global_id : vec3<u32>`,
@@ -73,7 +72,8 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                     depth_and_mesh.mesh=textureLoad(${mesh_texture.variableName}, ${mouse.prop('position')}, 0).r;
                 `)
             },
-            gpu
+            gpu,
+            label: "ReadDepth.comp",
         }, () => `@compute @workgroup_size(1, 1, 1)`);
     }
 }

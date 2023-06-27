@@ -188,11 +188,11 @@ export class Texture<
             throw new Error('Texture must have height')
         }
         this.texture = this.props.gpu.device.createTexture({
-            size: this.props.size,
-            sampleCount: sampleCount,
             format: this.props.format,
+            label,
+            sampleCount: sampleCount,
+            size: this.props.size,
             usage: usages,
-            label
         });
         this.views.forEach(view => view.reCreate(debug));
 
@@ -288,8 +288,8 @@ export class RenderTarget<
         });
         encoder.copyTextureToBuffer(
             {
+                origin: [0, 0, depth],
                 texture: this.texture,
-                origin: [0, 0, depth]
             },
             {
                 buffer: buffer,

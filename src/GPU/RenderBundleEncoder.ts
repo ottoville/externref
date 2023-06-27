@@ -23,8 +23,8 @@ export class RenderBundleEncoder {
         private record: (renderBundleEncoder: RenderBundleEncoder) => void) {
         this.GPURenderBundleEncoderDescriptor = {
             colorFormats: Object.values(renderPass.colorRenderTargets).map(rt => rt.texture.format),
-            sampleCount: renderPass.sampleCount,
             label: renderPass.label,
+            sampleCount: renderPass.sampleCount,
             ...renderBundleEncoderDescriptor
         };
         this.renderBundleEncoder = this.renderPass.gpu.device.createRenderBundleEncoder(this.GPURenderBundleEncoderDescriptor);

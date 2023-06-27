@@ -44,8 +44,8 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
      return output;
                 `)
             },
+            gpu: pipelineLayout.gpu,
             label: 'helper.vert',
-            gpu: pipelineLayout.gpu
         }, ([/*uniforms*/,],
             [_scene, _time,/*clusters_array, meshes, projection*/],
             [_world],

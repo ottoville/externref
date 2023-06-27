@@ -39,19 +39,19 @@ export class TerrainMesh extends BoundableNodeIndexed {
         verticesPositionStride: number
     ) {
         const mesh_id = new_rust_mesh({
-            label: 'terrain',
-            scenes,
             fixed: true,
-            rigid_body: false
+            label: 'terrain',
+            rigid_body: false,
+            scenes,
         });
         super(
             {
-                vertices: {
-                    view: vertices,
-                    stride: verticesPositionStride
-                },
                 can_collide: true,
-                static_faces: true
+                static_faces: true,
+                vertices: {
+                    stride: verticesPositionStride,
+                    view: vertices,
+                },
             },
             mesh_id,
             false,
@@ -68,10 +68,10 @@ export class TerrainMesh extends BoundableNodeIndexed {
             });
             const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline, {}, { stride: verticesPositionStride });
             this.drawable = new DrawableIndexed({
-                renderPipeline,
-                renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]),
-                vertexBuffers: [this.vBuffer],
                 node: this,
+                renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]),
+                renderPipeline,
+                vertexBuffers: [this.vBuffer],
             })
 
             this.drawable.setStaticBindGroup('TerrainInitialTexture', (bindGroup) => {

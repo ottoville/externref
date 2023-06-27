@@ -20,44 +20,45 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
             new BGLayout(gpu, 'verticesBindGroupLayout',
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "read-only-storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 48
-                        }
+                            minBindingSize: 48,
+                            type: "read-only-storage",
+                        },
+                        visibility: ShaderStage.COMPUTE,
+
                     }, 'vertices', Vertices)),
             new BGLayout(gpu, 'slopesAndFacesBindGroupLayout',
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
+                            minBindingSize: 32,
+                            type: "storage",
                         },
+                        visibility: ShaderStage.COMPUTE,
                     }, 'slopes', IntArray),
                 new BufLayout(
                     {
-                        visibility: ShaderStage.COMPUTE,
                         buffer: {
-                            type: "storage",
                             hasDynamicOffset: false,
-                            minBindingSize: 32
-                        }
+                            minBindingSize: 32,
+                            type: "storage",
+                        },
+                        visibility: ShaderStage.COMPUTE,
+
                     }, 'facet12', PlaneArray))
         ] as const
 
         const pipelineLayout = new PipelineLayout({
+            bindGroupLayouts: bindLayouts,
             label: 'calculatePlaneHeightsPipeline',
-            bindGroupLayouts: bindLayouts
         });
         const subdivisions_plus_one = settings.subdivisions[0] + 1;
         const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
 
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            label: "calculatePlaneHeights.comp",
             entryPoints: {
                 main: new ComputeShaderFunction(`@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>`,
                     pipelineLayout,
@@ -109,7 +110,8 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
           return;
                 `)
             },
-            gpu: pipelineLayout.gpu
+            gpu: pipelineLayout.gpu,
+            label: "calculatePlaneHeights.comp",
         }, () => `
             const cd: f32 = -1.0;
             @compute @workgroup_size(1)

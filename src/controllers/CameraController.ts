@@ -32,21 +32,21 @@ export abstract class CameraController implements Ellipsoid {
             get 0() {
                 return collisionRadius[0]
             },
-            get 1() {
-                return collisionRadius[1]
-            },
-            get 2() {
-                return collisionRadius[2]
-            },
             set 0(v: number) {
                 collisionRadius[0] = v;
                 collisionsScalingMatrix[0] = 1.0 / v;
                 myCloseDistance[0] = closeDistance / v
             },
+            get 1() {
+                return collisionRadius[1]
+            },
             set 1(v: number) {
                 collisionRadius[1] = v;
                 collisionsScalingMatrix[5] = 1.0 / v;
                 myCloseDistance[1] = closeDistance / v
+            },
+            get 2() {
+                return collisionRadius[2]
             },
             set 2(v: number) {
                 collisionRadius[2] = v;

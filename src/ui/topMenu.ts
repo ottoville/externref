@@ -31,8 +31,6 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
     }
     menuTree = { level: 0 }
     #inputListener: ListenerObj<'keydown'> = {
-        object: this,
-        type: 'keydown',
         cb: (e: KeyboardEvent) => {
             if (this.state.menuOpenName === undefined) {
                 this.menuTree.level = 1;
@@ -53,19 +51,21 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                     menuOpenName: undefined
                 })
             }
-        }
+        },
+        object: this,
+        type: 'keydown',
     }
     render() {
         const props = this.props;
         const commonProps =
         {
             gpu: props.gpu,
-            terrain: props.terrain,
             onClick: this.setActiveMenu,
             subMenuPosition: {
+                anchor: Anchor.TOP,
                 value: [70, NumericUnit.px],
-                anchor: Anchor.TOP
             } as const,
+            terrain: props.terrain,
         }
         keyBoardMap.length = 0;
         const menus =
@@ -74,44 +74,44 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                     ...Button({
                         UIRectangleProps: {
                             label: 'Plants',
-                            scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
+                            scale: { min_width: 0.07,unit: NumericUnit["%"], y: 0.04 },
                             translate: {
                                 x: {
+                                    anchor: Anchor.CENTER,
                                     value: [-0.9, NumericUnit["%"]],
-                                    anchor: Anchor.CENTER
                                 }, y: {
+                                    anchor: Anchor.CENTER,
                                     value: [0.9, NumericUnit["%"]],
-                                    anchor: Anchor.CENTER
                                 }
                             }
                         },
                         text: 'Plants (1)',
                     }),
                     ...commonProps,
-                    open: this.state.menuOpenName === 'Plants',
                     menuTree: this.menuTree,
+                    open: this.state.menuOpenName === 'Plants',
                 }),
                 UINode.createCtrProps(TerrainToolButton,
                     {
                         ...Button({
                             UIRectangleProps: {
                                 label: 'Terrain',
-                                scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
+                                scale: { min_width: 0.07, unit: NumericUnit["%"], y: 0.04 },
                                 translate: {
                                     x: {
+                                        anchor: Anchor.CENTER,
                                         value: [-0.75, NumericUnit["%"]],
-                                        anchor: Anchor.CENTER
                                     }, y: {
+                                        anchor: Anchor.CENTER,
                                         value: [0.9, NumericUnit["%"]],
-                                        anchor: Anchor.CENTER
                                     }
                                 }
                             },
                             text: 'Terrain (2)',
                         }),
                         ...commonProps,
-                        open: this.state.menuOpenName === 'Terrain',
                         menuTree: this.menuTree,
+                        open: this.state.menuOpenName === 'Terrain',
                     }
                 ),
                 UINode.createCtrProps(Zones,
@@ -119,14 +119,14 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...Button({
                             UIRectangleProps: {
                                 label: 'Zones',
-                                scale: { min_width: 0.07, y: 0.04, unit: NumericUnit["%"] },
+                                scale: { min_width: 0.07, unit: NumericUnit["%"], y: 0.04 },
                                 translate: {
                                     x: {
+                                        anchor: Anchor.CENTER,
                                         value: [-0.6, NumericUnit["%"]],
-                                        anchor: Anchor.CENTER
                                     }, y: {
+                                        anchor: Anchor.CENTER,
                                         value: [0.9, NumericUnit["%"]],
-                                        anchor: Anchor.CENTER
                                     }
                                 }
                             },

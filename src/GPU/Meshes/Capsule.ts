@@ -17,13 +17,14 @@ export class Capsule extends OctaSphere {
     ) {
         super(
             {
-                width: orientation === CAPSULE_ORIENTATION.x ? length : 0,
+                depth: orientation === CAPSULE_ORIENTATION.z ? length : 0,
                 height: orientation === CAPSULE_ORIENTATION.y ? length : 0,
-                depth: orientation === CAPSULE_ORIENTATION.z ? length : 0
+                width: orientation === CAPSULE_ORIENTATION.x ? length : 0,
+
             },
             {
-                label: 'Capsule' + (uid++),
                 fixed: false,
+                label: 'Capsule' + (uid++),
                 ...meshProperties
             },
             can_collide)

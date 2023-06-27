@@ -90,10 +90,10 @@ export abstract class UIRectangle extends DataNode {
 
     drawable?: DrawableSimple<RenderPipeline<UIVertShader>>;
     boundingBox = {
+        bottom: 0,
         left: 0,
-        top: 0,
         right: 0,
-        bottom: 0
+        top: 0,
     }
     texture?: RenderTarget<"bgra8unorm", (typeof TextureUsageEnums)["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"]> | undefined;
     uniformBuffer: CopyDstBuffer & BindUniformBuffer;
@@ -114,11 +114,11 @@ export abstract class UIRectangle extends DataNode {
         if (!this.texture) {
             this.texture = new RenderTarget(
                 {
-                    gpu: this.props.renderPass.gpu,
                     format: "bgra8unorm",
-                    usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"],
+                    gpu: this.props.renderPass.gpu,
                     label: 'button_' + this.props.label + '_UIRectangle_text',
-                    size: { width: copySource.width, height: copySource.height }
+                    size: { height: copySource.height, width: copySource.width },
+                    usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"],
                 }
             );
         }
@@ -130,7 +130,7 @@ export abstract class UIRectangle extends DataNode {
                     y: 0
                 }
             },
-            { width: copySource.width, height: copySource.height });
+            { height: copySource.height, width: copySource.width });
         this.textureView = new TextureView(this.texture);
         return this.textureView;
     }
@@ -260,7 +260,7 @@ export abstract class UIRectangle extends DataNode {
         }
         const positionsCount = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6
         const vertices =  new Float32Array(positionsCount * 4);
-        return this.updateBoundingBoxAndVertices({ vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY })
+        return this.updateBoundingBoxAndVertices({ content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, vertices })
 
     }
     abstract updateBoundingBoxAndVertices(
@@ -282,11 +282,11 @@ export abstract class UIRectangle extends DataNode {
         })
         super(
             {
+                character_can_collide_to: false,
                 vertices: {
+                    stride: 3,
                     view: allocate_vec(new Float32Array(9)),
-                    stride: 3
                 },
-                character_can_collide_to: false
             },
             mesh_id);
         const {
@@ -314,28 +314,29 @@ export abstract class UIRectangle extends DataNode {
             }
             let pointerDown = false;
             engine.addInputListener({
-                object: this,
-                type: 'pointerup',
-                options: { ui: true },
                 cb: (e) => {
                     if (pointerDown && checkClickArea(e)) {
                         onClick(e);
                         return true;
                     }
                     return false;
-                }
+                },
+                object: this,
+                options: { ui: true },
+                type: 'pointerup',
+
             } as ListenerObj<'pointerup'>)
             engine.addInputListener({
-                object: this,
-                type: 'pointerdown',
-                options: { ui: true },
                 cb: (e) => {
                     if (checkClickArea(e)) {
                         pointerDown = true;
                         return true;
                     }
                     return false;
-                }
+                },
+                object: this,
+                options: { ui: true },
+                type: 'pointerdown',
             } as ListenerObj<'pointerdown'>)
         }
 
@@ -349,13 +350,13 @@ export abstract class UIRectangle extends DataNode {
             this.set_vertices(allocate_vec(vertices));
 
             const drawable = new DrawableSimple({
-                renderPipeline: canvaspipeline,
-                renderPasses: new Set([renderPass]),
-                vertexBuffers: [vertices],
                 node: this,
+                renderPasses: new Set([renderPass]),
+                renderPipeline: canvaspipeline,
+                vertexBuffers: [vertices],
             }, {
-                instanceCount: 1,
                 firstInstance: 0,
+                instanceCount: 1,
             }, {
                 firstVertex: 0,
             });

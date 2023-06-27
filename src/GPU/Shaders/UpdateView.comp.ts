@@ -10,54 +10,53 @@ export function createUpdateViewShader(gpu: GPU) {
         new BGLayout(gpu, 'UpdateViewLayout',
             new BufLayout(
                 {
-                    visibility: ShaderStage.COMPUTE,
                     buffer: {
-                        type: "read-only-storage",
                         hasDynamicOffset: false,
-                        minBindingSize: 512
-                    }
+                        minBindingSize: 512,
+                        type: "read-only-storage",
+                    },
+                    visibility: ShaderStage.COMPUTE,
                 }, 'meshes', MeshArray),
             new BufLayout(
                 {
-                    visibility: ShaderStage.COMPUTE,
                     buffer: {
-                        type: "read-only-storage",
                         hasDynamicOffset: false,
-                        minBindingSize: 16
-                    }
+                        minBindingSize: 16,
+                        type: "read-only-storage",
+                    },
+                    visibility: ShaderStage.COMPUTE,
                 }, 'point_lights', Lights),
             new BufLayout(
                 {
-                    visibility: ShaderStage.COMPUTE,
                     buffer: {
-                        type: "read-only-storage",
                         hasDynamicOffset: false,
-                        minBindingSize: 16
-                    }
+                        minBindingSize: 16,
+                        type: "read-only-storage",
+
+                    },
+                    visibility: ShaderStage.COMPUTE,
                 }, 'directional_lights', Lights)
         ),
         new BGLayout(gpu, 'UpdateClustersLayout',
             UpdateClustersBufferLayout,
             new BufLayout(
                 {
-                    visibility: ShaderStage.COMPUTE,
                     buffer: {
-                        type: 'uniform',
                         hasDynamicOffset: false,
-                        minBindingSize: 144
-                    }
+                        minBindingSize: 144,
+                        type: 'uniform',
+                    },
+                    visibility: ShaderStage.COMPUTE,
                 }, 'viewUniforms', ViewUniforms)
         )
     ] as const;
     const pipelineLayout = new PipelineLayout({
-        label: 'UpdateViewPipeline',
-        bindGroupLayouts: bindLayouts
+        bindGroupLayouts: bindLayouts,
+        label: 'UpdateViewPipeline'
     });
     return new ComputeShader(
         {
             bindGroupLayouts: bindLayouts,
-            label: "UpdateView.comp",
-            gpu,
             entryPoints: {
                 main: new ComputeShaderFunction(`@builtin(global_invocation_id) global_id : vec3<u32>`,
                     pipelineLayout,
@@ -98,7 +97,9 @@ for(var pointerIndex:u32 = 0u; pointerIndex < ${point_lights.prop('length')}; po
 }
 ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
         `),
-            }
+            },
+            gpu,
+            label: "UpdateView.comp",
         },
         () => /* wgsl */ `
           fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {

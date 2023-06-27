@@ -38,8 +38,8 @@ export class Plants extends MainNode {
             // console.log('sending grass to worker, took ', new Date().getTime() - d);
             this.#worker.message(WorkerReturn.noReturn, 'save',
                 {
+                    angle: area.rad,
                     area: area,
-                    angle: area.rad
                 }, [])
         }).catch(err => engine.showError(err))
     }
@@ -60,15 +60,16 @@ export class Plants extends MainNode {
         if (engine.gpu) {
             const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline,
                 {
-                    topology: 'triangle-strip',
                     cullMode: 'none',
-                    stripIndexFormat: 'uint16'
+                    stripIndexFormat: 'uint16',
+                    topology: 'triangle-strip',
                 },
                 {
                     stride: 4
                 }
             );
             this.drawable = new DrawableIndirect({
+                node: this,
                 renderPipeline,
                 vertexBuffers: [
                     positionGPU, shapeGPU, Float32Array.of(
@@ -81,7 +82,6 @@ export class Plants extends MainNode {
                         0.0, 1.0
                     )
                 ],
-                node: this
             }, indirectBuffer);
         }
 
@@ -131,9 +131,8 @@ export class Plants extends MainNode {
                 scene.gpu.pendingCommandBuffers.push(commandEncoder.finish());
             });
             await this.#worker.message(WorkerReturn.Promise, 'init', {
-                //  positions: this.offset,
-                shape: shapes,
                 noises: noises,
+                shape: shapes,
             }, []);
 
             const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1', bindGroup1 => [

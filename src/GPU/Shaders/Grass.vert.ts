@@ -6,28 +6,28 @@ import { Struct } from './structs/Structs.js';
 
 export const positionAttr = Object.freeze({
     position: {
-        shaderLocation: 0,
-        offset: 0,
         format: "float32x4",
-        shaderFormat: "vec4<f32>"
+        offset: 0,
+        shaderFormat: "vec4<f32>",
+        shaderLocation: 0,
     }
 } as const);
 
 export const shapeAttr = Object.freeze({
     shape: {
-        shaderLocation: 1,
-        offset: 0,
         format: "float32x4",
-        shaderFormat: "vec4<f32>"
+        offset: 0,
+        shaderFormat: "vec4<f32>",
+        shaderLocation: 1,
     }
 } as const)
 
 export const vertexPositionAttr = Object.freeze({
     vertex_position: {
-        shaderLocation: 2,
-        offset: 0,
         format: "float32x2",
-        shaderFormat: "vec2<f32>"
+        offset: 0,
+        shaderFormat: "vec2<f32>",
+        shaderLocation: 2,
     }
 } as const)
 
@@ -107,8 +107,8 @@ export function createGrassVertShader(
                 `
             )
         },
+        gpu: pipelineLayout.gpu,
         label: 'grass.vert',
-        gpu: pipelineLayout.gpu
     }, () => /* wgsl */ `
     const bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
 const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(

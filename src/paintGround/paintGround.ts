@@ -21,8 +21,8 @@ export abstract class paintGround {
     #end_position: Float32Array = new Float32Array(2);
     #start_position = new TerraVector2(2);
     protected size = {
+        height: 0,
         width: 0,
-        height: 0
     }
     constructor(
         protected scene: Scene,
@@ -43,8 +43,6 @@ export abstract class paintGround {
     protected drawVector = new TerraVector2(2);
 
     #drawArea: ListenerObj<'pointermove'> = {
-        object: this,
-        type: 'pointermove',
         cb: () => {
             engine.gpu!.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
                 if (pickInfo) {
@@ -75,16 +73,15 @@ export abstract class paintGround {
             }).catch(err => {
                 engine.showError(err);
             })
-        }
+        },
+        object: this,
+        type: 'pointermove',
     }
     abstract onMainPointerDown(startingPoint: Float32Array): void;
     abstract onMainPointerUp(height: number, end_position: Float32Array): void;
     abstract onAreaDraw(width: number): void;
     #mouseMoved = false;
     #mousemove: ListenerObj<'pointermove'> = {
-        type: 'pointermove',
-        object: this,
-        options: { priority: true },
         cb: () => {
             if (!this.#mouseMoved) {
                 engine.addInputListener(this.#finalClick);
@@ -118,12 +115,13 @@ export abstract class paintGround {
                 }
             }).catch(err => engine.showError(err))
             return true;
-        }
+        },
+        object: this,
+        options: { priority: true },
+        type: 'pointermove',
+
     }
     #finalClick: ListenerObj<'pointerup'> = {
-        object: this,
-        type: 'pointerup',
-        options: { once: true },
         cb: () => {
             engine.removeInputListener(this.#mousemove);
             this.#mouseMoved = false;
@@ -131,12 +129,13 @@ export abstract class paintGround {
             //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
             engine.addInputListener(this.#mainPointerDown);
             this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: this.size });
-        }
+        },
+        object: this,
+        options: { once: true },
+        type: 'pointerup',
+
     }
     #pointerUp: ListenerObj<'pointerup'> = {
-        object: this,
-        type: 'pointerup',
-        options: { once: true },
         cb: () => {
             engine.removeInputListener(this.#drawArea)
             //fix race condition
@@ -149,15 +148,13 @@ export abstract class paintGround {
             } finally {
                 engine.addInputListener(this.#mousemove);
             }
-        }
+        },
+        object: this,
+        options: { once: true },
+        type: 'pointerup',
+
     }
     #mainPointerDown: ListenerObj<'pointerdown'> = {
-        object: this,
-        type: 'pointerdown',
-        options: {
-            once: true,
-            priority: true
-        },
         cb: (evt) => {
             if (evt.button !== 0) {
                 engine.addInputListener(this.#mainPointerDown);
@@ -179,7 +176,13 @@ export abstract class paintGround {
                 }
             }).catch(err => engine.showError(err));
             return true;
-        }
+        },
+        object: this,
+        options: {
+            once: true,
+            priority: true
+        },
+        type: 'pointerdown',
     };
 }
 

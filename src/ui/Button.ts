@@ -12,8 +12,8 @@ export function Button(props: ButtonProps) {
         UIRectangleProps: {
             ...props.UIRectangleProps,
             borderSize: {
-                width: [8, NumericUnit.px],
                 height: 'auto',
+                width: [8, NumericUnit.px],
             } as const
         }
     }

@@ -13,8 +13,6 @@ type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"]
 export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof simpleAttributes>) {
     return new VertexShader({
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-        label: 'Simple.vert',
-        gpu: pipelineLayout.gpu,
         entryPoints: {
             main: new VertexShaderFunction(
                 typicalOutput,
@@ -62,7 +60,9 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
               return output;
           
             `),
-        }
+        },
+        gpu: pipelineLayout.gpu,
+        label: 'Simple.vert',
     })
 }
 export type SimpleVertShader = ReturnType<typeof createSimpleVertShader>

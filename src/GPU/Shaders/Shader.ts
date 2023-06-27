@@ -84,8 +84,8 @@ export abstract class Shader<
         this.module = this.props.gpu.device.createShaderModule(
             {
                 code: this.wgsl,
+                hints: pipelineLayouts,
                 label: this.props.label,
-                hints: pipelineLayouts
             });
     }
 }

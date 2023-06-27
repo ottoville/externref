@@ -25,21 +25,21 @@ export class CreateFPSMeter extends UINode<{}, MenuState> {
         return [
             UINode.createCtrProps(UIRectangleNode, {
                 UIRectangleProps: {
+                    borderSize: {
+                        height: 'auto',
+                        width: [0, NumericUnit.px],
+                    },
                     label: 'FPS',
-                    scale: { min_width: 10, y: 30, unit: NumericUnit.px },
+                    scale: { min_width: 10, unit: NumericUnit.px, y: 30 },
                     translate: {
                         x: {
+                            anchor: Anchor.LEFT,
                             value: [15, NumericUnit.px],
-                            anchor: Anchor.LEFT
                         },
                         y: {
+                            anchor: Anchor.BOTTOM,
                             value: [25, NumericUnit.px],
-                            anchor: Anchor.BOTTOM
                         }
-                    },
-                    borderSize: {
-                        width: [0, NumericUnit.px],
-                        height: 'auto',
                     },
                 },
                 text: this.state.fps.toString(),

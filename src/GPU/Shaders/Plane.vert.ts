@@ -34,8 +34,8 @@ export class Plane extends VertexShader<BindLayouts> {
                 return output;
                 `)
             },
+            gpu: pipelineLayout.gpu,
             label: 'plane.vert',
-            gpu: pipelineLayout.gpu
         });
     }
 }

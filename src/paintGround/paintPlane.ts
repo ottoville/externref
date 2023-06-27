@@ -29,20 +29,21 @@ class PlaneMesh extends DataNode implements IndexedTrait {
         });
         super(
             {
+                character_can_collide_to: false,
                 vertices: {
+                    stride: renderPipeline.props.vertexShader.props.entryPoints.main.vertexBufferLayout[0].arrayStride,
                     view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!],
-                    stride: renderPipeline.props.vertexShader.props.entryPoints.main.vertexBufferLayout[0].arrayStride
+
                 },
-                character_can_collide_to: false
             },
             mesh_id,
             false);
         this.indexed = new NodeIndexed2(this, [ind_ptr as rust_pointer<"usize">, ind_len!, ind_cap!])
         this.drawable = new DrawableIndexed(
             {
+                node: this,
                 renderPipeline,
                 vertexBuffers: [this.vertices],
-                node: this,
             });
     }
 }
@@ -68,28 +69,28 @@ export class paintPlane extends paintGround {
                     ground.TerrainHeightsbindGroupTree,
                     {
                         arrayStride: vertexBufferProps.stride * 4,
-                        stepMode: "vertex",
                         attributes2: Object.freeze({
                             position: {
-                                shaderLocation: 0,
-                                offset: 0,
                                 format: "float32x3",
-                                shaderFormat: "vec4<f32>"
+                                offset: 0,
+                                shaderFormat: "vec4<f32>",
+                                shaderLocation: 0,
                             }
-                        } as const)
+                        } as const),
+                        stepMode: "vertex",
                     }, Terrain.settings
                 );
                 return ground.TerrainHeightsbindGroupTree.addRenderPipeline(
                     {
-                        label,
-                        vertexShader: planeVertShader,
                         fragmentShader: createColorFragmentShader(ground.TerrainHeightsbindGroupTree),
+                        label,
                         renderPipeline: {
                             primitive,
-                        }
+                        },
+                        vertexShader: planeVertShader,
                     });
             }
-        ], { topology: 'triangle-list', cullMode: 'back', frontFace: 'cw' },
+        ], { cullMode: 'back', frontFace: 'cw', topology: 'triangle-list' },
         { stride: 12 });
 
         this.#mesh = new PlaneMesh(renderPipeline);

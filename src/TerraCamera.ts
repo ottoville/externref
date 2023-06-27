@@ -109,15 +109,15 @@ export class TerraCamera {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const me = this;
         this.#controls = {
-            updatePosition(cb: (position: MutableTerraVector3) => void) {
-                cb(me.#positionMutable);
-                me.#doUpdateView |= VIEW_UPDATED.POSITION;
-            },
             updateDirection(cb: (direction: MutableTerraVector3) => void) {
                 cb(me.#direction);
                 if (me.viewArr[2] !== me.#direction[0] || me.viewArr[6] !== me.#direction[1] || me.viewArr[10] !== me.#direction[2]) {
                     me.#doUpdateView |= VIEW_UPDATED.DIRECTION;
                 }
+            },
+            updatePosition(cb: (position: MutableTerraVector3) => void) {
+                cb(me.#positionMutable);
+                me.#doUpdateView |= VIEW_UPDATED.POSITION;
             }
         }
         if (parent) {

@@ -6,10 +6,10 @@ import { Struct } from './structs/Structs.js';
 export const positionAttr = Object.freeze(
     {
         position: {
-            shaderLocation: 0,
-            offset: 0,
             format: "float32x3",
-            shaderFormat: "vec3<f32>"
+            offset: 0,
+            shaderFormat: "vec3<f32>",
+            shaderLocation: 0,
         }
     } as const
 )
@@ -22,7 +22,9 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
                 new Struct('Output', {
                     Position: ['@builtin(position)', 'vec4<f32>'],
                     v_uv: ['@location(0)', 'vec4<f32>'],
+                    // eslint-disable-next-line sort-keys
                     position: ['@location(1)', 'vec3<f32>'],
+                    // eslint-disable-next-line sort-keys
                     id: ['@location(2) @interpolate(flat)', 'u32'],
                 }),
                 pipelineLayout,
@@ -46,8 +48,8 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
                     `
             )
         },
+        gpu: pipelineLayout.gpu,
         label: 'water.vert',
-        gpu: pipelineLayout.gpu
     })
 }
 export type WaterVertShader = ReturnType<typeof createWaterVertShader>

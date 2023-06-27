@@ -34,14 +34,14 @@ export class PickableRenderPass<T extends {
                 return pickPositionPipeline;
             });
             this.#pickBuffer = renderPassProps.gpu.device.createBuffer({
+                label: 'pickBuffer',
                 size: 4 * 4, //depth + meshID (four pixel)
                 usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
-                label: 'pickBuffer'
             });
             this.#pickBufferRead = renderPassProps.gpu.device.createBuffer({
+                label: 'pickBufferRead',
                 size: 4 + 4, //depth + meshID (four pixel)
                 usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-                label: 'pickBufferRead'
             });
             this.#mousePositionBuffer = Buffer.create(renderPassProps.gpu, 8, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'mousePositionBuffer');
 
@@ -77,9 +77,9 @@ export class PickableRenderPass<T extends {
         if (offset !== 0)
             this.#rowBytes = this.#rowBytes - offset + 256
         return this.gpu.device.createBuffer({
+            label: 'pickBuffer',
             size: this.#rowBytes * this.size.height,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-            label: 'pickBuffer'
         });
     }
     override resize(width: number, height: number) {
@@ -151,9 +151,9 @@ export class PickableRenderPass<T extends {
             //The entire subresource must be copied when the format (TextureFormat::Depth32Float) is a depth/stencil format or the sample count (1) is > 1.
             encoder.copyTextureToBuffer(
                 {
-                    texture: this.depthRenderTarget.texture,
                     aspect: "depth-only",
-                    origin: { x: 0, y: 0, z: 0 }
+                    origin: { x: 0, y: 0, z: 0 },
+                    texture: this.depthRenderTarget.texture,
                 },
                 {
                     buffer: this.#pickBuffer,
@@ -165,8 +165,8 @@ export class PickableRenderPass<T extends {
             if (mesh) {
                 encoder.copyTextureToBuffer(
                     {
+                        origin: { x: this.gpu.mousePosition[0], y: this.gpu.mousePosition[1], z: 0 },
                         texture: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.texture,
-                        origin: { x: this.gpu.mousePosition[0], y: this.gpu.mousePosition[1], z: 0 }
                     },
                     {
                         buffer: this.#pickBuffer,
@@ -207,7 +207,7 @@ export class PickableRenderPass<T extends {
             new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(camera.projectionViewInverted, result);
             if (mesh) {
                 this.pickPromiseMesh = null;
-                return { position: result, meshId: zAndID[1] };
+                return { meshId: zAndID[1], position: result };
             } else
                 this.pickPromise = null;
             return { position: result };
@@ -242,7 +242,7 @@ export class PickableRenderPass<T extends {
             if (predicate && !predicate(mesh)) {
                 return null;
             } else {
-                return { position: pickInfo.position, mesh };
+                return { mesh, position: pickInfo.position };
             }
         }
     }

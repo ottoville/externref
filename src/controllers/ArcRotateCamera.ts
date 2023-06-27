@@ -27,15 +27,16 @@ export class ArcRotateCamera extends CameraController {
             return;
         this.#serializeRequested = true;
         const request = engine.DB.transaction("save", "readwrite").objectStore("save").put({
-            type: 'camera',
-            name: 'ArchRotateCamera',
             data: {
                 alpha: this.#alpha,
                 beta: this.#beta,
+                position: new Float32Array(engine.mainCamera.position as unknown as number[]) as { 0: number, 1: number, 2: number } & Float32Array,
                 radius: this.#radius,
                 target: this.#target,
-                position: new Float32Array(engine.mainCamera.position as unknown as number[]) as { 0: number, 1: number, 2: number } & Float32Array
-            } as serialized
+            } as serialized,
+            name: 'ArchRotateCamera',
+            type: 'camera',
+
         });
         request.onsuccess = () => {
             this.#serializeRequested = false;
@@ -107,8 +108,6 @@ export class ArcRotateCamera extends CameraController {
         }
     }
     #cameraMove: ListenerObj<'pointermove'> = {
-        type: 'pointermove',
-        object: this,
         cb: (e) => {
             e.preventDefault();
             if (pointerDownButton == 2) {
@@ -118,11 +117,12 @@ export class ArcRotateCamera extends CameraController {
                 this.#inertialAlphaOffset += e.movementX / angularSensibilityX;
                 this.#inertialBetaOffset -= e.movementY / angularSensibilityY;
             }
-        }
+        },
+        object: this,
+        type: 'pointermove',
+
     }
     #cameraWheel: ListenerObj<'wheel'> = {
-        object: this,
-        type: 'wheel',
         cb: (e) => {
             e.preventDefault();
             let delta = -e.deltaY / (3 * 40);
@@ -131,7 +131,9 @@ export class ArcRotateCamera extends CameraController {
             if (delta) {
                 this.inertialRadiusOffset += delta;
             }
-        }
+        },
+        object: this,
+        type: 'wheel',
     }
     MoveToPlace = () => {
         if (this.#targetMovingfrom && this.#targetMovingTo) {
@@ -162,8 +164,6 @@ export class ArcRotateCamera extends CameraController {
     }
     pointerDown = false;
     #cameraPointerDown: ListenerObj<'pointerdown'> = {
-        object: this,
-        type: 'pointerdown',
         cb: (e: PointerEvent) => {
             this.pointerDown = true;
             pointerDownButton = e.button;
@@ -178,28 +178,30 @@ export class ArcRotateCamera extends CameraController {
             }
             engine.addInputListener(this.#cameraMove);
             const onceUp: ListenerObj<'pointerup'> = {
-                object: this,
-                type: 'pointerup',
-                options: { once: true },
                 cb: () => {
                     engine.removeInputListener(this.#cameraMove)
                     engine.removeInputListener(onceLeave);
                     this.pointerDown = false;
-                }
+                },
+                object: this,
+                options: { once: true },
+                type: 'pointerup',
             }
             const onceLeave: ListenerObj<'pointerleave'> = {
-                object: this,
-                type: 'pointerleave',
-                options: { once: true },
                 cb: () => {
                     engine.removeInputListener(this.#cameraMove);
                     engine.removeInputListener(onceUp);
                     this.pointerDown = false;
-                }
+                },
+                object: this,
+                options: { once: true },
+                type: 'pointerleave',
             }
             engine.addInputListener(onceLeave);
             engine.addInputListener(onceUp)
-        }
+        },
+        object: this,
+        type: 'pointerdown',
     }
     deAttachCameraController() {
         engine.clearInputListeners(this);
@@ -209,11 +211,6 @@ export class ArcRotateCamera extends CameraController {
         engine.addInputListener(this.#cameraWheel);
         engine.addInputListener(this.#cameraPointerDown);
         engine.addInputListener({
-            object: this,
-            type: 'pointermove',
-            options: {
-                force: true
-            },
             cb: (e) => {
                 if (this.camera.gpu) {
                     const gpu = this.camera.gpu
@@ -221,7 +218,12 @@ export class ArcRotateCamera extends CameraController {
                     Atomics.store(gpu.mousePosition, 1, e.clientY * gpu.scale.y)
                     Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
                 }
-            }
+            },
+            object: this,
+            options: {
+                force: true
+            },
+            type: 'pointermove',
         } as ListenerObj<'pointermove'>
         );
     }

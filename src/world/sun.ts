@@ -48,15 +48,15 @@ export class Sun extends MainNode {
         super(new_rust_mesh({ directional_light: 1, label: 'sun', scenes }));
         this.positions_count = 14
         const renderPipeline = gpu.createRenderPipeline(SunRenderPipeline, {
-            topology: 'triangle-strip',
             cullMode: 'none',
-            stripIndexFormat: 'uint16'
+            stripIndexFormat: 'uint16',
+            topology: 'triangle-strip',
         }, undefined);
         this.drawable = new DrawableSimple({
-            renderPipeline,
-            renderPasses: new Set([gpu.renderPassScreen, gpu.renderPassWater]),
-            vertexBuffers: [] as [],
             node: this,
+            renderPasses: new Set([gpu.renderPassScreen, gpu.renderPassWater]),
+            renderPipeline,
+            vertexBuffers: [] as [],
         })
 
         engine.physics.movables.push(this);

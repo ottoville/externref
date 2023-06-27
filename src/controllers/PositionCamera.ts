@@ -64,12 +64,12 @@ export class PositionCamera extends CameraController {
             return;
         this.#serializeRequested = true;
         const request = engine.DB.transaction("save", "readwrite").objectStore("save").put({
-            type: 'camera',
-            name: 'PositionCamera',
             data: {
+                angle: this.#angle,
                 position: this.#position,
-                angle: this.#angle
-            }
+            },
+            name: 'PositionCamera',
+            type: 'camera',
         });
         request.onsuccess = () => {
             this.#serializeRequested = false;

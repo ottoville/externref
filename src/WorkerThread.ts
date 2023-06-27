@@ -52,7 +52,7 @@ abstract class MainWorker extends Worker2 {
 }
 export class WorkerThread extends MainWorker {
     message<T>(returntype: WorkerReturn, action: string, data: object, options: Transferable[]): Promise<T> {
-        const toWorker: WMessage = { type: returntype, action: action, data: data };
+        const toWorker: WMessage = { action: action, data: data, type: returntype };
         return new Promise((res, rej) => {
             toWorker.id = this.operations.push([res,rej]) - 1
             super.postMessage(toWorker, options);
@@ -63,16 +63,16 @@ export class ObjectWorkerThread extends MainWorker {
     signal(objectID: number, action: string, options: Transferable[], args?: unknown[]): void {
         super.postMessage({
             action: action, data: {
+                args: typeof (args) !== 'undefined' ? args : [],
                 objId: objectID,
-                args: typeof (args) !== 'undefined' ? args : []
             }
         }, options);
     }
     message<T>(objectID: number, action: string, args?: unknown[], options?: Transferable[]): Promise<T> {
         const toWorker: WMessage = {
             action: action, data: {
+                args: typeof(args)!=='undefined'?args:[],
                 objId: objectID,
-                args: typeof(args)!=='undefined'?args:[]
             }
         };
         return new Promise((res, rej) => {

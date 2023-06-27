@@ -38,8 +38,8 @@ export function createPlaneAtGroundHeightVertShader(
             `
             )
         },
+        gpu: pipelineLayout.gpu,
         label: 'PlaneAtGroundHeight.vert',
-        gpu: pipelineLayout.gpu
     }, ([/*uniforms*/,],
         [_scene,/*time, clusters_array, meshes, projection*/],
         [_world],

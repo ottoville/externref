@@ -39,8 +39,8 @@ export class SunVertShader extends VertexShader<BindLayouts> {
                   `
                 )
             },
+            gpu: pipelineLayout.gpu,
             label: 'Sun.vert',
-            gpu: pipelineLayout.gpu
         }, () => /* wgsl */ `
           const sunDistance: f32= 1495000.0;  //divided by 100000 correct one
           const vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(

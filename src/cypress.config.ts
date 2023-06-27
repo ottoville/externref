@@ -1,3 +1,4 @@
+/* eslint-disable sort-keys */
 import { defineConfig } from "cypress";
 import { initPlugin } from "@frsource/cypress-plugin-visual-regression-diff/plugins";
 

@@ -37,7 +37,7 @@ declare const engine: Engine;
 class Light extends MainNode {
     drawable = undefined;
     constructor(scene: Scene) {
-        super(new_rust_mesh({ point_light: 0, directional_light: 1, label: 'Light', scenes: [scene] }));
+        super(new_rust_mesh({ directional_light: 1, label: 'Light', point_light: 0, scenes: [scene] }));
     }
 }
 const errors: Error[] = []
@@ -91,6 +91,7 @@ export class Canvas {
             errors.push(e);
             this.showError();
         }, {
+            collider: fetch('../collider/colliderSimdO.wasm'),
             rust: fetch('/engine.wasm').then(response => {
                 if (response.body) {
                     const contentLengthHeader = response.headers.get('Content-Length');
@@ -124,7 +125,7 @@ export class Canvas {
                     return new Response(reableStream, { headers: response.headers });
                 }
                 return response;
-            }), collider: fetch('../collider/colliderSimdO.wasm')
+            })
         }).then(async terraEngine => {
             if (!terraEngine)
                 return;
@@ -145,7 +146,7 @@ export class Canvas {
                 //new testPlane(terrascene);
                 const archRotateController = new ArcRotateCamera(engine.mainCamera, true);
                 engine.mainCamera.attachControllerForCamera(archRotateController);
-                const human = new Human({ scenes: [terrascene], inputEnabled: false });
+                const human = new Human({ inputEnabled: false, scenes: [terrascene] });
                 // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
                 human.translation = [403.4, 1000, 23];
                 document.addEventListener('keydown', e => {
@@ -212,11 +213,11 @@ export class Canvas {
             capsule3.color = [0, 0, 1, 0];
 
 
-            const roundCuboid = new RoundCuboid({ width: 40, height: 40, depth: 80 }, { borderRadius: 10 }, { label: 'roundCuboid', fixed: true });
+            const roundCuboid = new RoundCuboid({ depth: 80, height: 40, width: 40 }, { borderRadius: 10 }, { fixed: true, label: 'roundCuboid' });
             roundCuboid.translation = [200, 900, -70];
             roundCuboid.color = [0, 0, 1, 0];
 
-            const sphere4 = new IcoSphere({ label: 'blueball3', can_collide: true, fixed: false, order: 1 });
+            const sphere4 = new IcoSphere({ can_collide: true, fixed: false, label: 'blueball3', order: 1 });
             sphere4.translation = [-100, 900, -70];
             sphere4.update_scale(30);
             sphere4.color = [1, 0, 1, 0];
@@ -246,22 +247,23 @@ export class Canvas {
 
 
             new UIRectangleTextureView({
-                canvaspipeline: gpu.UIPipeline,
-                renderPass: gpu.renderPassCanvas,
-                label: 'UICanvas',
                 borderSize: {
+                    height: [0],
                     width: [0],
-                    height: [0]
                 },
-                scale: { min_width: 1, y: 1, unit: NumericUnit["%"] },
+                canvaspipeline: gpu.UIPipeline,
+                label: 'UICanvas',
+                renderPass: gpu.renderPassCanvas,
+
+                scale: { min_width: 1, unit: NumericUnit["%"], y: 1 },
                 translate: {
                     x: {
+                        anchor: Anchor.CENTER,
                         value: [0],
-                        anchor: Anchor.CENTER
                     },
                     y: {
+                        anchor: Anchor.CENTER,
                         value: [0],
-                        anchor: Anchor.CENTER
                     }
                 },
             }, gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view);

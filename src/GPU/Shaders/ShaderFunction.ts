@@ -22,8 +22,10 @@ export class VertexShaderFunction<B extends readonly BGLayout[] = readonly BGLay
         this.#code = code;
         this.vertexBufferLayout = Object.freeze(vertexBufferLayout);
         this.buffers = vertexBufferLayout.map(layout => {
-            return { ...layout,
-                attributes: Object.values(layout.attributes2) }
+            return {
+                ...layout,
+                attributes: Object.values(layout.attributes2)
+            }
         })
     }
     createCode(bindGroups: { [K in keyof B]: FilterVertex<B[K]["entries"]>; }, name: string) {

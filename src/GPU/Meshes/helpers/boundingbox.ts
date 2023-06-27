@@ -24,8 +24,8 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
         super(
             {
                 vertices: {
+                    stride: 4,
                     view: [ptr as rust_pointer<"f32">, len!, cap!],
-                    stride: 4
                 }
             },
             new_rust_mesh({ label: 'BoundingBox_' + targetNode.node.label, rigid_body: false }),
@@ -38,15 +38,15 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
 
         const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline,
             {
+                stripIndexFormat: 'uint32',
                 topology: 'line-strip',
-                stripIndexFormat: 'uint32'
             }, { stride: 4 }
         );
         this.drawable = new DrawableIndexed({
-            renderPipeline,
+            node: this,
             renderPasses: undefined,
+            renderPipeline,
             vertexBuffers: [debug_render_boundingbox_vertexBuffer],
-            node: this
         });
     }
 }

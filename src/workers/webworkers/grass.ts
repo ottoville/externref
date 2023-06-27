@@ -26,6 +26,27 @@ function clamp(value: number, min: number, max: number) {
 }
 const grids2: Map<string, number[]> = new Map()
 const methods = {
+    deGrowMemory: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
+        new Float32Array(data.data.positions, 0, grasspositions.length).set(grasspositions);
+        grasspositions = new Float32Array(data.data.positions);
+    },
+    get: async () => {
+        const trans = (await DB).transaction(['plantae']);
+        trans.objectStore('plantae').getAll().onsuccess = (evt) => {
+            bladecount = Math.min((<IDBRequest>evt.target).result.length, grasspositions.length);
+            trans.oncomplete = () => globalThis.postMessage({ count: bladecount, type: 'updated' })
+            for (let i = 0; i < bladecount; i++) {
+                const r = (<IDBRequest>evt.target).result[i];
+                grasspositions.set(r.pos, i * 2);
+            }
+        }
+    },
+    growMemory: (size: number) => {
+        //console.log('grow memory to ', size)
+        const newArray = new Float32Array(new SharedArrayBuffer(size * 4));
+        newArray.set(grasspositions);
+        grasspositions = newArray;
+    },
     init: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
         globalThis.postMessage({ id: data.id });
         caches.match(new Request('/grass')).then(response => {
@@ -35,20 +56,10 @@ const methods = {
                 return fetch('/assets/grass').then(response2 => response2.arrayBuffer())
             }
         }).then(arrayBuffer => {
-            globalThis.postMessage({ type: 'updated', buffer: arrayBuffer });
+            globalThis.postMessage({ buffer: arrayBuffer, type: 'updated' });
         }).catch(e => {
             console.error('Error in web worker', e)
         })
-    },
-    growMemory: (size: number) => {
-        //console.log('grow memory to ', size)
-        const newArray = new Float32Array(new SharedArrayBuffer(size * 4));
-        newArray.set(grasspositions);
-        grasspositions = newArray;
-    },
-    deGrowMemory: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
-        new Float32Array(data.data.positions, 0, grasspositions.length).set(grasspositions);
-        grasspositions = new Float32Array(data.data.positions);
     },
     save: async (data: WMessage<{ angle: number, area: { size: { width: number, height: number }, coord: Float32Array } }>) => {
         const grassPerSquareMeter = 8
@@ -132,7 +143,7 @@ const methods = {
                grasspositions[i * 2 + 1] = plantaes[i].pos[1]
            }*/
         console.log('update grass, count', grasspositions.length / 2);
-        globalThis.postMessage({ type: 'updated', count: grasspositions.length / 2, buffer: grasspositions.buffer });
+        globalThis.postMessage({ buffer: grasspositions.buffer, count: grasspositions.length / 2, type: 'updated' });
 
         const response = new Response(grasspositions);
         response.headers.set('content-length', grasspositions.buffer.byteLength.toString());
@@ -141,17 +152,6 @@ const methods = {
         const cache = await cacheP;
         cache.put(new Request('/grass'), response);
 
-    },
-    get: async () => {
-        const trans = (await DB).transaction(['plantae']);
-        trans.objectStore('plantae').getAll().onsuccess = (evt) => {
-            bladecount = Math.min((<IDBRequest>evt.target).result.length, grasspositions.length);
-            trans.oncomplete = () => globalThis.postMessage({ type: 'updated', count: bladecount })
-            for (let i = 0; i < bladecount; i++) {
-                const r = (<IDBRequest>evt.target).result[i];
-                grasspositions.set(r.pos, i * 2);
-            }
-        }
     }
 }
 onmessage = (e: WorkerMessage) => {

@@ -27,10 +27,10 @@ export class DepthRenderPass<T extends {
         const renderPassDescriptor = super.GPURenderPassDescriptor;
 
         renderPassDescriptor.depthStencilAttachment = {
-            view: this.depthRenderTarget.view.getAsRenderTarget(this),
             depthClearValue: this.depthRenderTarget.clearValue,
             depthLoadOp: 'clear',
-            depthStoreOp: "store"
+            depthStoreOp: "store",
+            view: this.depthRenderTarget.view.getAsRenderTarget(this),
         }
         return renderPassDescriptor;
     }
@@ -38,8 +38,8 @@ export class DepthRenderPass<T extends {
         return {
             ...super.onDecoratePipeline(renderpipeline),
             depthStencil: {
-                depthWriteEnabled: renderpipeline.props.depthBuffer?.depthWriteEnabled ?? true,
                 depthCompare: renderpipeline.props.depthBuffer?.depthCompare ?? 'greater',
+                depthWriteEnabled: renderpipeline.props.depthBuffer?.depthWriteEnabled ?? true,
                 format: this.depthRenderTarget.props.format
             }
         }

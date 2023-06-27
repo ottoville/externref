@@ -41,8 +41,8 @@ export function Rotation({ node }: { node: MainNode }) {
     }, [node]);
     return <fieldset>
         <legend>Rotation</legend>
-        <label> X: 
-            <input style={{verticalAlign: 'middle'}}
+        <label> X:
+            <input style={{ verticalAlign: 'middle' }}
                 ref={rotationX}
                 onChange={() => {
                     changeRotation();
@@ -50,21 +50,21 @@ export function Rotation({ node }: { node: MainNode }) {
         </label> {rotationX.current && (180 / Math.PI * rotationX.current?.valueAsNumber).toFixed(2)}
         <br />
         <label>Y:
-            <input style={{verticalAlign: 'middle'}}
+            <input style={{ verticalAlign: 'middle' }}
                 ref={rotationY}
                 onChange={() => {
                     changeRotation();
                 }} title="rotation Y" type="range" min="-3.14" max="3.14" step="0.01" />
-                {rotationY.current && (180 / Math.PI * rotationY.current.valueAsNumber).toFixed(2)}
+            {rotationY.current && (180 / Math.PI * rotationY.current.valueAsNumber).toFixed(2)}
         </label>
         <br />
         <label>Z:
-            <input style={{verticalAlign: 'middle'}}
+            <input style={{ verticalAlign: 'middle' }}
                 ref={rotationZ}
                 onChange={() => {
                     changeRotation();
                 }} title="rotation Z" type="range" min="-3.14" max="3.14" step="0.01" />
-                {rotationZ.current && (180 / Math.PI * rotationZ.current.valueAsNumber).toFixed(2)}
+            {rotationZ.current && (180 / Math.PI * rotationZ.current.valueAsNumber).toFixed(2)}
         </label>
     </fieldset>
 }
