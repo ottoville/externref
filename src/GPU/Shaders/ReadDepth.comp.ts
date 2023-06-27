@@ -3,6 +3,7 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 import { Depth_And_Mesh, Mouse, Struct } from './structs/Structs.js';
+import { ComputeShaderFunction } from './ShaderFunction.js';
 
 type BindLayouts = readonly [
     BGLayout<[BufLayout<ShaderStage.COMPUTE>]>,
@@ -12,7 +13,7 @@ type BindLayouts = readonly [
             position: [string, string];
         }>>
     ]>]
-export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
+export class ReadDepth extends ComputeShader<BindLayouts> {
     constructor(gpu: GPU) {
         const bindLayouts = [
             new BGLayout(gpu, 'DepthAndMeshLayout',
@@ -64,23 +65,15 @@ export class ReadDepth extends ComputeShader<{ main: PipelineLayout }, BindLayou
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             label: "ReadDepth.comp",
             entryPoints: {
-                main: pipelineLayout
+                main: new ComputeShaderFunction(
+                    `@builtin(global_invocation_id) global_id : vec3<u32>`,
+                    pipelineLayout,
+                    ([[/*depth_and_mesh*/,], [depth_texture, mesh_texture, mouse]]) => `
+                    depth_and_mesh.depth=textureLoad(${depth_texture.variableName}, ${mouse.prop('position')}, 1);
+                    depth_and_mesh.mesh=textureLoad(${mesh_texture.variableName}, ${mouse.prop('position')}, 0).r;
+                `)
             },
             gpu
-        });
-        this.createWGSL(([/*depth_and_mesh*/,], [depth_texture, mesh_texture, mouse]) => {
-            ///////////////////////////
-            return /* wgsl */ `
-                     @compute @workgroup_size(1, 1, 1)
-                     fn main(
-                         @builtin(global_invocation_id) global_id : vec3<u32>
-                     ) {
-                     
-                         depth_and_mesh.depth=textureLoad(${depth_texture.variableName}, ${mouse.prop('position')}, 1);
-                         depth_and_mesh.mesh=textureLoad(${mesh_texture.variableName}, ${mouse.prop('position')}, 0).r;
-                     }  
-                         `;
-            ///////////////////////////
-        })
+        }, () => `@compute @workgroup_size(1, 1, 1)`);
     }
 }

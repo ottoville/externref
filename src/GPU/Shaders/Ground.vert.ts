@@ -1,76 +1,60 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { VertexShader } from './VertexShader.js';
+import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js'
+import { VertexShaderFunction } from './ShaderFunction.js';
+import { Struct, pickOutput } from './structs/Structs.js';
 type BindLayouts = GPU["lightsTextureBindGroup"]["bindGroupLayouts"]
 
-export class GroundVertShader extends VertexShader<
-    { main: PipelineLayout },
-    [GPUVertexBufferLayout],
-    BindLayouts> {
-    constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-
-        super({
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            entryPoints: {
-                main: pipelineLayout
-            },
-            label: 'Ground.vert',
-            gpu: pipelineLayout.gpu
-        }, [buffers]);
-        this.createWGSL((
-            [/*uniforms*/,],
-            [scene,/*time, clusters_array, meshes, projection*/],
-            [world]) => {
-
-
-            //////////////////////////////////
-
-            return /* wgsl */ `
-struct Output {
-  @builtin(position) Position : vec4<f32>,
-  @location(0) v_uv : vec2<f32>,
-  @location(1) normal : vec3<f32>,
-  @location(2) position : vec3<f32>,
-  @location(3) @interpolate(flat) id : u32,  
-  @location(4) @interpolate(flat) scenes : u32  
- };
-
-
-@vertex
-fn main(@location(0) position : vec3<f32>,
-        @location(1) uv : vec2<f32>,
-        @location(2) normal : vec3<f32> ) -> Output {
-  var output : Output;
-  output.Position = ${scene.prop('modelViewProjection')} * vec4<f32>(position.xyz, 1.0);
-  //shading = dot(normal, lights.sunDirection)*lights.shadow;
-  //ambient=lights.ambient;
-
-  output.v_uv=uv; 
-  output.normal=normal;
-  output.position=position;
-
-  //let localPosition:vec4<f32> = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
-  //output.position=localPosition.xyz;//position;
-  output.id=${world.prop('id')};
-  output.scenes=${world.prop('scenes')};
-  return output;
+export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2) {
+    return new VertexShader({
+        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+        entryPoints: {
+            main: new VertexShaderFunction(
+                new Struct('Output', {
+                    Position: ['@builtin(position)', 'vec4<f32>'],
+                    v_uv: ['@location(0)', 'vec2<f32>'],
+                    normal: ['@location(1)', 'vec3<f32>'],
+                    position: ['@location(2)', 'vec3<f32>'],
+                    id: ['@location(3) @interpolate(flat)', 'u32'],
+                    scenes: ['@location(4) @interpolate(flat)', 'u32'],
+                }),
+                pipelineLayout,
+                ``,
+                [buffers], ([
+                    [/*uniforms*/,],
+                    [scene,/*time, clusters_array, meshes, projection*/],
+                    [world]
+                ]) => /* wgsl */ `
+            var output : Output;
+            output.Position = ${scene.prop('modelViewProjection')} * vec4<f32>(position.xyz, 1.0);
+            //shading = dot(normal, lights.sunDirection)*lights.shadow;
+            //ambient=lights.ambient;
+          
+            output.v_uv=uv; 
+            output.normal=normal;
+            output.position=position;
+          
+            //let localPosition:vec4<f32> = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
+            //output.position=localPosition.xyz;//position;
+            output.id=${world.prop('id')};
+            output.scenes=${world.prop('scenes')};
+            return output;
+            `
+            ),
+            pick: new VertexShaderFunction(pickOutput, pipelineLayout, ``, [buffers], ([
+                [/*uniforms*/,],
+                [scene,/*time, clusters_array, meshes, projection*/],
+                [world]
+            ]) => /* wgsl */ `
+                var output : PickOutput;
+                output.Position = ${scene.prop('modelViewProjection') } * vec4<f32>(position.xyz, 1.0);
+                output.id=${world.prop('id') };
+                return output;
+            `),
+        },
+        label: 'Ground.vert',
+        gpu: pipelineLayout.gpu
+    })
 }
-struct PickOutput {
-  @builtin(position) Position : vec4<f32>,
-  @location(0) @interpolate(flat) id : u32
-};
-@vertex
-fn pick(@location(0) position : vec3<f32>,
-        @location(1) uv : vec2<f32>,
-        @location(2) normal : vec3<f32> ) -> PickOutput {
-  var output : PickOutput;
-  output.Position = ${scene.prop('modelViewProjection') } * vec4<f32>(position.xyz, 1.0);
-  output.id=${world.prop('id') };
-  return output;
-}
-  `;
-            //////////////
 
-        })
-    }
-}
+export type GroundVertShader = ReturnType<typeof createGroundVertShader>;

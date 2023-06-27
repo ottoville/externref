@@ -71,7 +71,7 @@ export class Plants extends MainNode {
             this.drawable = new DrawableIndirect({
                 renderPipeline,
                 vertexBuffers: [
-                    positionGPU, shapeGPU, new Float32Array([
+                    positionGPU, shapeGPU, Float32Array.of(
                         0.02, 0.0,
                         -0.02, 0.0,
                         0.014, 0.29,
@@ -79,7 +79,7 @@ export class Plants extends MainNode {
                         0.007, 0.57,
                         -0.007, 0.57,
                         0.0, 1.0
-                    ])
+                    )
                 ],
                 node: this
             }, indirectBuffer);

@@ -8,7 +8,7 @@ import type { Engine, ListenerObj, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
-import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
+import { createColorFragmentShader } from "../GPU/Shaders/Color.frag.js";
 import type { TopMenuButtonProps } from "../ui/topMenu.js";
 import { Button } from "../ui/Button.js";
 import { UINode } from "../ui/UINode.js";
@@ -138,7 +138,7 @@ export class TerrainTool extends MainNode {
                     {
                         label,
                         vertexShader: helperVertShader,
-                        fragmentShader: new ColorFragShader(terrain.TerrainHeightsbindGroupTree),
+                        fragmentShader: createColorFragmentShader(terrain.TerrainHeightsbindGroupTree),
                         renderPipeline: {
                             primitive
                         }

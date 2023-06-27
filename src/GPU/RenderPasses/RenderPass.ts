@@ -140,20 +140,21 @@ export class RenderPass<U extends {
                 ...this.onDecoratePipeline(renderPipeline),
                 label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label
             };
-            console.debug('Create renderpipeline ', params)
+            console.debug('Create renderpipeline ',renderPipeline.props.label, params)
             const variantP = this.gpu.device.createRenderPipelineAsync(
                 params
             ).catch((err: unknown) => {
                 if (err instanceof DOMException) {
                     if (err.message.includes(renderPipeline.props.vertexShader.module.label)) {
-                        console.error('createRenderPipelineAsync failed, vertex wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err })
+                        console.error('createRenderPipelineAsync failed, vertex',renderPipeline.props.vertexShader.module.label,'wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err })
                     }
                     else if (err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
-                        console.error('createRenderPipelineAsync failed, fragment wgsl:', renderPipeline.props.fragmentShader.wgsl, { cause: err })
+                        console.error('createRenderPipelineAsync failed, fragment',renderPipeline.props.fragmentShader.module.label,'wgsl:', renderPipeline.props.fragmentShader.wgsl, { cause: err })
                     } else {
-                        console.error('createRenderPipelineAsync failed, vertex wgsl:',
-                            renderPipeline.props.vertexShader.wgsl, { cause: err });
-                        console.error('fragment wgsl:', renderPipeline.props.fragmentShader.wgsl)
+                        console.error('createRenderPipelineAsync failed, vertex', renderPipeline.props.vertexShader.module.label,' wgsl:',
+                            renderPipeline.props.vertexShader.wgsl,
+                            'fragment',renderPipeline.props.fragmentShader.module,' wgsl:', renderPipeline.props.fragmentShader.wgsl,
+                            { cause: err });
                     }
                 }
                 throw (new Error('createRenderPipelineAsync failed', { cause: err }));
@@ -177,7 +178,8 @@ export class RenderPass<U extends {
     protected onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>): Omit<GPURenderPipelineDescriptor, 'layout'> {
         const renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'layout'> = {
             vertex: {
-                ...renderpipeline.props.vertexShader,
+                module: renderpipeline.props.vertexShader.module,
+                buffers: renderpipeline.props.vertexShader.props.entryPoints[this.#entryPoint]!.buffers,
                 entryPoint: this.#entryPoint,
             },
             fragment: {

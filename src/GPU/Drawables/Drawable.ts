@@ -12,7 +12,7 @@ export type DrawableProps<N extends MainNode> = {
     renderPipeline: Readonly<RenderPipeline>;
     renderPasses?: Set<RenderPass> | undefined;
     dynamicBindGroups?: [BindGroup, number][];
-    vertexBuffers: (ArrayBufferView | VertexBuffer)[] | undefined;
+    vertexBuffers: readonly (ArrayBufferView | VertexBuffer)[] | undefined;
     node: N
 
 }

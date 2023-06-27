@@ -1,57 +1,50 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { VertexShader } from './VertexShader.js';
+import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
+import { VertexShaderFunction } from './ShaderFunction.js';
+import { Struct } from './structs/Structs.js';
 
 type BindGroupLayouts = Terrain["TerrainHeightsbindGroupTree"]["bindGroupLayouts"];
 
-export class PlaneAtGroundHeightVertShader extends VertexShader<
-    { main: PipelineLayout },
-    [GPUVertexBufferLayout],
-    BindGroupLayouts> {
-    constructor(
-        pipelineLayout: PipelineLayout<BindGroupLayouts>,
-        buffers: GPUVertexBufferLayout,
-        settings: typeof Terrain.settings) {
-        const entryPoints = {
-            main: pipelineLayout
-        }
-        super({
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            entryPoints,
-            label: 'plane.vert',
-            gpu: pipelineLayout.gpu
-        }, [buffers]);
-
-        this.createWGSL((
-            [/*uniforms*/,],
-            [scene,/*time, clusters_array, meshes, projection*/],
-            [world],
-            [slopes, facet12]) => {
-
-            //////////////////////////////////
-
-            return /* wgsl */ `
-
-      ${getHeightAtCoordinates(settings, slopes, facet12)}
-
-struct Output {
- @location(0) color : vec3<f32>,
- @builtin(position) Position : vec4<f32>
-};
-@vertex
-fn main(@location(0) position : vec4<f32>) -> Output {
-   var output:Output;
-   var worldPos:vec4<f32> = ${world.prop('transformation')} * position;
-   worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 1.0;
-   output.Position = ${scene.prop('modelViewProjection')} * worldPos;
-   output.color = vec3<f32>(1.0,1.0,1.0);
-   return output;
+export function createPlaneAtGroundHeightVertShader(
+    pipelineLayout: PipelineLayout<BindGroupLayouts>,
+    buffers: VertexBufferLayout2,
+    settings: typeof Terrain.settings
+) {
+    return new VertexShader({
+        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+        entryPoints: {
+            main: new VertexShaderFunction(
+                new Struct('Output', {
+                    Position: ['@builtin(position)', 'vec4<f32>'],
+                    color: ['@location(0)', 'vec3<f32>'],
+                }),
+                pipelineLayout,
+                ``,
+                [buffers],
+                ([
+                    [/*uniforms*/,],
+                    [scene,/*time, clusters_array, meshes, projection*/],
+                    [world],
+                    [_slopes, _facet12]
+                ]) => /* wgsl */ `
+                var output:Output;
+                var worldPos:vec4<f32> = ${world.prop('transformation')} * position;
+                worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 1.0;
+                output.Position = ${scene.prop('modelViewProjection')} * worldPos;
+                output.color = vec3<f32>(1.0,1.0,1.0);
+                return output;
+            `
+            )
+        },
+        label: 'PlaneAtGroundHeight.vert',
+        gpu: pipelineLayout.gpu
+    }, ([/*uniforms*/,],
+        [_scene,/*time, clusters_array, meshes, projection*/],
+        [_world],
+        [slopes, facet12]) => `
+        ${getHeightAtCoordinates(settings, slopes, facet12)}
+    `)
 }
-   `;
-
-
-            //////////////////////////////////
-        })
-    }
-}
+export type PlaneAtGroundHeightVertShader = ReturnType<typeof createPlaneAtGroundHeightVertShader>

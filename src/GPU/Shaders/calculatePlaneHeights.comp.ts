@@ -4,6 +4,7 @@ import { ComputeShader } from './ComputeShader.js';
 import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js'
 import type { Terrain } from '../../world/Terrain.js';
+import { ComputeShaderFunction } from './ShaderFunction.js';
 
 
 type BindLayouts = readonly [
@@ -13,7 +14,7 @@ type BindLayouts = readonly [
         BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>
     ]>,
 ];
-export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout }, BindLayouts> {
+export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
     constructor(gpu: GPU, settings: typeof Terrain.settings) {
         const bindLayouts = [
             new BGLayout(gpu, 'verticesBindGroupLayout',
@@ -51,22 +52,17 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
             label: 'calculatePlaneHeightsPipeline',
             bindGroupLayouts: bindLayouts
         });
+        const subdivisions_plus_one = settings.subdivisions[0] + 1;
+        const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
+
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             label: "calculatePlaneHeights.comp",
             entryPoints: {
-                main: pipelineLayout
-            },
-            gpu: pipelineLayout.gpu
-        })
-        const subdivisions_plus_one = settings.subdivisions[0] + 1;
-        const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
-        this.createWGSL(([vertices], [slopes, facet12]) => {
-            return /* wgsl */ `
-      const cd: f32 = -1.0;
-      @compute @workgroup_size(1)
-      fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
-      
+                main: new ComputeShaderFunction(`@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>`,
+                    pipelineLayout,
+                    ([[vertices], [slopes, facet12]]) => /* wgsl */ `
+                
           let next:vec2<u32> = vec2<u32>(GlobalInvocationID.x + u32(1),GlobalInvocationID.y + u32(1));
       
           let idx1:u32 = (next.x + next.y * ${subdivisions_plus_one});
@@ -111,8 +107,13 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout 
           ${facet12.prop('plane')}[${facetSize} + (GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].d = dot(norm2,v2arr) * -1.0;
       
           return;
-        }
-        `;
-        })
+                `)
+            },
+            gpu: pipelineLayout.gpu
+        }, () => `
+            const cd: f32 = -1.0;
+            @compute @workgroup_size(1)
+  
+        `)
     }
 }

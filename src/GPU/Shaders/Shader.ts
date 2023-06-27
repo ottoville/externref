@@ -1,9 +1,9 @@
-import { BGLayout, BufLayout, ShaderStage } from "../BindGroupLayout.js";
-import { PipelineLayout } from "../PipelineLayout.js";
+import { type BGLayout, BufLayout, type ShaderStage, BindGroupLayoutEntry } from "../BindGroupLayout.js";
 import { Struct } from "./structs/Structs.js";
 import type { GPU } from "../../GPU.js"
+import { ComputeShaderFunction, type ShaderFunction } from "./ShaderFunction.js";
 
-export type ShaderParams<E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
+export type ShaderParams<E extends { [index: string]: ShaderFunction } = { [index: string]: ShaderFunction },
     B extends readonly BGLayout[] = readonly BGLayout[]> = {
         bindGroupLayouts: B,
         entryPoints: E,
@@ -11,15 +11,21 @@ export type ShaderParams<E extends { [index: string]: PipelineLayout } = { [inde
         gpu: GPU
     }
 export abstract class Shader<
-    E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
-    B extends readonly BGLayout[] = readonly BGLayout[]
+    E extends { [index: string]: ShaderFunction } = { [index: string]: ShaderFunction },
 > {
-    module!: GPUShaderModule;
+    module: GPUShaderModule;
     wgsl: string;
+    protected getFilteredBindGroups(shaderFlag: typeof GPUShaderStage.VERTEX | typeof GPUShaderStage.FRAGMENT | typeof GPUShaderStage.COMPUTE) {
+        return this.props.bindGroupLayouts.map(bl => {
+            return bl.entries.filter(ee => {
+                return (ee.entry.visibility & shaderFlag) !== 0
+            })
+        });
+    }
     constructor(
-        public props: ShaderParams<E, B>,
-        private shaderFlag: typeof GPUShaderStage.VERTEX | typeof GPUShaderStage.FRAGMENT | typeof GPUShaderStage.COMPUTE,
-    ) {
+        public props: ShaderParams<E>,
+        shaderFlag: typeof GPUShaderStage.VERTEX | typeof GPUShaderStage.FRAGMENT | typeof GPUShaderStage.COMPUTE,
+        constantCode?: ((...b: BindGroupLayoutEntry<ShaderStage>[][]) => string) | undefined) {
         const structs: Set<Struct> = new Set();
         const groups = props.bindGroupLayouts.reduce((groupstring, group, gi) => {
             return group.entries.reduce((acc, binding, bi) => {
@@ -48,7 +54,14 @@ export abstract class Shader<
                 return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${binding.variableName} : ${binding.structName};\n`
             }, groupstring)
         }, '\n');
-        const structString = [...structs].reduce((s, struct) => {
+        const outputs: Struct[] = [];
+        for(const key in props.entryPoints) {
+            const entryPoint = props.entryPoints[key]!;
+            if(!(entryPoint instanceof ComputeShaderFunction)) {
+                outputs.push(entryPoint.output);
+            }
+        }
+        const structString = [...structs, ...outputs].reduce((s, struct) => {
             let properties = '';
             for (const property in struct.properties) {
                 properties += `${struct.properties[property]![0]} ${property}: ${struct.properties[property]![1]},\n`
@@ -57,24 +70,22 @@ export abstract class Shader<
         }, '')
         //
         this.wgsl = groups + structString;
-    }
-    protected createWGSL(cb: (...args: { [K in keyof B]: B[K]["entries"] }) => string) {
 
-        const entries = this.props.bindGroupLayouts.map(bl => bl.entries) as unknown as { [K in keyof B]: B[K]["entries"] };
+        const bindGroups = this.getFilteredBindGroups(shaderFlag)
+        if(constantCode)
+            this.wgsl+=constantCode(...bindGroups)
+        const pipelineLayouts:{[index: string]: GPUShaderModuleCompilationHint} = {}
+        for(const key in props.entryPoints) {
+            const entryPoint = props.entryPoints[key]!;
+            this.wgsl += entryPoint.createCode(bindGroups, key);
+            pipelineLayouts[key] = entryPoint.pipelineLayout
 
-        const filtered = entries.map((e) => {
-            return e.filter(ee => {
-                return (ee.entry.visibility & this.shaderFlag) !== 0
-            })
-        });
-        //@ts-expect-error https://stackoverflow.com/a/57913509
-        this.wgsl += cb(...filtered);
+        }
         this.module = this.props.gpu.device.createShaderModule(
             {
                 code: this.wgsl,
                 label: this.props.label,
-                hints: this.props.entryPoints
+                hints: pipelineLayouts
             });
-
     }
 }

@@ -1,13 +1,13 @@
 ﻿import { BindGroup } from "./BindGroup.js";
 import type { BGLayout, BindGroupLayoutEntry, MapToGPUBindGroupEntry } from "./BindGroupLayout.js";
 import { RenderPipeline, type RenderPipelineProps } from "./RenderPipeline.js";
-import type { VertexBuffers, VertexShader } from "./Shaders/VertexShader.js";
+import type { VertexShader } from "./Shaders/VertexShader.js";
 import type { GPU } from "../GPU.js"
 import type { FragmentShader } from "./Shaders/FragmentShader.js";
 type extractGeneric<Type> = Type extends BGLayout<infer X> ? MapToGPUBindGroupEntry<X> : never
 type Last<T extends BGLayout[]> = T extends [...BGLayout[], infer R] ? R : never
 // eslint-disable-next-line @typescript-eslint/no-shadow
-type Head<T extends BGLayout[]> = T extends [ ...infer Head, BGLayout ] ? Head : never[];
+type Head<T extends readonly BGLayout[]> = T extends readonly [ ...infer Head, BGLayout ] ? Head : never[];
 
 export type PipeLineLayoutProps<B extends readonly BGLayout[]> = {
     label: string;
@@ -36,7 +36,7 @@ export class PipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]>
         );
     }
 }
-export class RenderPipelineLayout<B extends BGLayout[] = BGLayout[]> extends PipelineLayout<B> {
+export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]> extends PipelineLayout<B> {
     renderPipeLines: Set<RenderPipeline> = new Set();
     subBindGroups: RenderPipelineLayout[] = [];
     bindGroupLayout: BGLayout;
@@ -112,7 +112,8 @@ export class SharedPipelineLayout<B extends BGLayout[]> extends RenderPipelineLa
         return RP;
     }
 }
-export class BindablePipelineLayout<B extends BGLayout[] = BGLayout[]> extends RenderPipelineLayout<B> {
+export class BindablePipelineLayout<
+B extends readonly BGLayout[] = readonly BGLayout[]> extends RenderPipelineLayout<B> {
     constructor(
         props: {
             label: string;
@@ -121,20 +122,10 @@ export class BindablePipelineLayout<B extends BGLayout[] = BGLayout[]> extends R
         sharedBindgroup?: BindGroup | undefined) {
         super(props, sharedBindgroup);
     }
-    /**
-     * Add render pipeline to pipelineLayout.
-     * Vertex and fragmen shader must have same bindgrouplayouts than pipelineLayout,
-     * but not every one of then must be defined for shader. Eg. it is allowed to attach shader
-     * with less or no bindgrouplayout, but it is not allowed to attach shader with different or more
-     * bindgrouplayouts than the pipelineLayout has.
-    */
-    addRenderPipeline<V extends
-        VertexShader<
-            { [index: string]: PipelineLayout },
-            VertexBuffers,
-            B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []
-        >, F extends
-            FragmentShader<B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []>>(
+    addRenderPipeline<
+        V extends VertexShader   <B>,
+        F extends FragmentShader <B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []>
+        >(
         props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>,
 
     ): RenderPipeline<V> {

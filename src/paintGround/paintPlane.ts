@@ -6,12 +6,12 @@ import type { Scene } from "../Scene.js";
 import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import type { Engine, rust_pointer } from "../engine.js";
-import { PlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
+import { PlaneAtGroundHeightVertShader, createPlaneAtGroundHeightVertShader } from "../GPU/Shaders/PlaneAtGroundHeight.vert.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
-import { ColorFragShader } from "../GPU/Shaders/Color.frag.js";
 import { new_rust_mesh } from "../MainNode.js";
 import { DataNode } from "../nodes/DataNode.js";
 import { IndexedTrait, NodeIndexed2 } from "../nodes/NodeIndexed2.js";
+import { createColorFragmentShader } from "../GPU/Shaders/Color.frag.js";
 declare const engine: Engine;
 
 class PlaneMesh extends DataNode implements IndexedTrait {
@@ -31,7 +31,7 @@ class PlaneMesh extends DataNode implements IndexedTrait {
             {
                 vertices: {
                     view: [pos_ptr as rust_pointer<"f32">, pos_len!, pos_cap!],
-                    stride: renderPipeline.props.vertexShader.buffers[0].arrayStride
+                    stride: renderPipeline.props.vertexShader.props.entryPoints.main.vertexBufferLayout[0].arrayStride
                 },
                 character_can_collide_to: false
             },
@@ -64,26 +64,26 @@ export class paintPlane extends paintGround {
         });
         const renderPipeline = ground.gpu.createRenderPipeline([
             'paintPlaneRenderpipeline', (_gpu, label, primitive, vertexBufferProps) => {
-                const planeVertShader = new PlaneAtGroundHeightVertShader(
+                const planeVertShader = createPlaneAtGroundHeightVertShader(
                     ground.TerrainHeightsbindGroupTree,
                     {
                         arrayStride: vertexBufferProps.stride * 4,
                         stepMode: "vertex",
-                        attributes: [
-                            {
-                                // position
+                        attributes2: Object.freeze({
+                            position: {
                                 shaderLocation: 0,
                                 offset: 0,
-                                format: "float32x3"
+                                format: "float32x3",
+                                shaderFormat: "vec4<f32>"
                             }
-                        ]
+                        } as const)
                     }, Terrain.settings
                 );
                 return ground.TerrainHeightsbindGroupTree.addRenderPipeline(
                     {
                         label,
                         vertexShader: planeVertShader,
-                        fragmentShader: new ColorFragShader(ground.TerrainHeightsbindGroupTree),
+                        fragmentShader: createColorFragmentShader(ground.TerrainHeightsbindGroupTree),
                         renderPipeline: {
                             primitive,
                         }

@@ -1,49 +1,31 @@
 import { PipelineLayout } from '../../PipelineLayout.js';
-import { VertexShader } from '../VertexShader.js';
+import { type VertexBufferLayout2, VertexShader } from '../VertexShader.js';
 import { GPU } from '../../../GPU.js'
+import { VertexShaderFunction } from '../ShaderFunction.js';
+import { colorOutput } from '../structs/Structs.js';
 type BindLayouts = GPU["positionAndTimeBindGroup"]["bindGroupLayouts"];
 
-export class DebugBoundingBoxVertShader extends VertexShader<
-    { main: PipelineLayout },
-    [GPUVertexBufferLayout],
-    BindLayouts
-> {
-    constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-        super({
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            entryPoints: {
-                main: pipelineLayout
-            },
-            label: 'debug_boundingBox.vert',
-            gpu: pipelineLayout.gpu
-        }, [buffers]);
-        this.createWGSL((
-            [/*uniforms*/,],
-            [scene,/*time, clusters_array, meshes, projection*/],
-            [world,]) => {
-
-            //////////////////////////////////
-
-            return /* wgsl */ `
-  struct Output {
-    @builtin(position) Position : vec4<f32>,
-    @location(0) color : vec3<f32>
-  };
-
-  @vertex
-  fn main(@location(0) position : vec3<f32>) -> Output {
-      var output : Output;
-      var vertexPosition:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(position.xyz, 1.0);
-      output.Position = ${scene.prop('modelViewProjection')} * vertexPosition;
-      output.color = vec3<f32>(0.0,1.0,0.0);
-      return output;
-    }
-   `;
-
-
-            //////////////////////////////////
-
-
-        })
-    }
+export function createDebugBoundingBoxVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2) {
+    return new VertexShader({
+        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+        entryPoints: {
+            main: new VertexShaderFunction(colorOutput,
+                pipelineLayout,
+                ``,
+                [buffers], ([
+                    [/*uniforms*/,],
+                    [scene,/*time, clusters_array, meshes, projection*/],
+                    [world,]
+                ]) => /* wgsl */ `
+                var output : Output;
+                var vertexPosition:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(position.xyz, 1.0);
+                output.position = ${scene.prop('modelViewProjection')} * vertexPosition;
+                output.color = vec3<f32>(0.0,1.0,0.0);
+                return output;
+            `)
+        },
+        label: 'debug_boundingBox.vert',
+        gpu: pipelineLayout.gpu
+    })
 }
+export type DebugBoundingBoxVertShader = ReturnType<typeof createDebugBoundingBoxVertShader>;

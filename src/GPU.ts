@@ -14,16 +14,16 @@ import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { TextureUsageEnums, TextureUsageType } from "./GPU/Texture.js";
 import { BGLayout, BufLayout, SampLayout, TextLayout, ShaderStage } from "./GPU/BindGroupLayout.js";
-import { UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
-import { ClustersComp } from "./GPU/Shaders/Clusters.comp.js";
+import { createUpdateViewShader, UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
+import { createClustersCompShader } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderPipeline } from "./GPU/RenderPipeline.js";
 import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct } from "./GPU/Shaders/structs/Structs.js";
-import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
-import { UIFragShader } from "./GPU/Shaders/UI.frag.js";
+import { createUIVertShader, position_uv_attrs, UIVertShader } from "./GPU/Shaders/UI.vert.js";
+import { createUIFragmentShader } from "./GPU/Shaders/UI.frag.js";
 import { MainNode } from "./MainNode.js";
 import type { VertexShader } from "./GPU/Shaders/VertexShader.js";
-import { SimpleFragShader } from "./GPU/Shaders/Simple.frag.js";
+import { createSimpleFragShader, SimpleFragShader } from "./GPU/Shaders/Simple.frag.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -72,7 +72,7 @@ export class GPU {
     readonly GPUMeshes: CopySrcBuffer & CopyDstBuffer & BindStorageBuffer & BindUniformBuffer
     readonly #GPUPointLights: CopyDstBuffer & BindStorageBuffer & BindUniformBuffer;
     readonly #GPUDirectionalLights: CopyDstBuffer & BindStorageBuffer
-    readonly positionAndTimeBindGroup: BindablePipelineLayout<[
+    readonly positionAndTimeBindGroup: BindablePipelineLayout<readonly [
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
         BGLayout<[
@@ -191,7 +191,7 @@ export class GPU {
         private GPUDataSizeBytes: number) {
         const totalClusters = this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
         this.clusterSizeinBytes = totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
-        this.updateViewShader = new UpdateView(this)
+        this.updateViewShader = createUpdateViewShader(this)
 
         this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size * this.#maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], 'GPUMeshes')
         this.#GPUPointLights = Buffer.create(this, this.#gpu_max_point_lights * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'GPUPointLights')
@@ -288,7 +288,7 @@ export class GPU {
             }
         ]);
         this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot', BindGroupLayoutPosition)
-        this.simpleFragShader = new SimpleFragShader(this.positionAndTimeBindGroup);
+        this.simpleFragShader = createSimpleFragShader(this.positionAndTimeBindGroup);
         this.lightsTextureBindGroup = this.positionAndTimeBindGroup.createAppendedLayout('lightsBindGroupTexture2Layout',
             new BGLayout(this,
                 'lightsBindGroupTexture2',
@@ -472,29 +472,16 @@ export class GPU {
             label: 'canvasRootLayout',
             bindGroupLayouts: [this.BindGroupLayoutCanvas] as [typeof this.BindGroupLayoutCanvas]
         });
-        const uiVertShader = new UIVertShader(this.#canvasRootLayout, {
+        const uiVertShader = createUIVertShader(this.#canvasRootLayout, {
             arrayStride: 4 * 4,
             stepMode: "vertex",
-            attributes: [
-                {
-                    // position
-                    shaderLocation: 0,
-                    offset: 0,
-                    format: "float32x2",
-                },
-                {
-                    // uv
-                    shaderLocation: 1,
-                    offset: 8,
-                    format: "float32x2",
-                }
-            ]
+            attributes2: position_uv_attrs
         })
         this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
             {
                 label: 'UIRenderPipeline',
                 vertexShader: uiVertShader,
-                fragmentShader: new UIFragShader(this.#canvasRootLayout),
+                fragmentShader: createUIFragmentShader(this.#canvasRootLayout),
                 renderPipeline: {
                     primitive: {
                         topology: 'triangle-list',
@@ -556,7 +543,7 @@ export class GPU {
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = Buffer.create(this, timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'timeBuffer');
 
-        const ClustersShader = new ClustersComp(this.sizeBindGroupLayout);
+        const ClustersShader = createClustersCompShader(this.sizeBindGroupLayout);
         const computePipelineClustersP = ClustersShader.createComputePipeline('main');
         const updateViewPipelineP = this.updateViewShader.createComputePipeline('main');
 

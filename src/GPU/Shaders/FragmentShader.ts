@@ -1,21 +1,20 @@
 import { BGLayout, BindGroupLayoutEntry, ShaderStage } from "../BindGroupLayout.js";
-import { PipelineLayout } from "../PipelineLayout.js";
 import { Shader, ShaderParams } from "./Shader.js";
+import { FragmentShaderFunction } from "./ShaderFunction.js";
 
-export abstract class FragmentShader<
-    B extends readonly BGLayout[] = readonly BGLayout[],
-    E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout }
-> extends Shader<E, B> {
+export class FragmentShader<
+    const B extends readonly BGLayout[] = readonly BGLayout[],
+    E extends { [index: string]: FragmentShaderFunction<B> } = { [index: string]: FragmentShaderFunction<B> },
+> extends Shader<E> {
     constructor(
-        params: ShaderParams<E, B>
+        public override props: ShaderParams<E, B>,
+        constantCode?: (...args: { [K in keyof B]: FilterFragment<B[K]["entries"]> }) => string,
     ) {
-        super(params, GPUShaderStage.FRAGMENT)
-    }
-    protected override createWGSL(cb: (...args: { [K in keyof B]: FilterFragment<B[K]["entries"]> }) => string) {
-        return super.createWGSL(cb as unknown as (...args: { [K in keyof B]: B[K]["entries"] }) => string);
+        //@ts-expect-error TODO
+        super(props, GPUShaderStage.FRAGMENT, constantCode);
     }
 }
-type FilterFragment<T extends readonly unknown[]> = T extends [] ? [] :
+export type FilterFragment<T extends readonly unknown[]> = T extends [] ? [] :
     T extends readonly [infer H, ...infer R] ?
     H extends BindGroupLayoutEntry<ShaderStage.FRAGMENT | ShaderStage.COMPUTE_AND_FRAGMENT | ShaderStage.VERTEX_AND_FRAGMENT> ? [H, ...FilterFragment<R>] : FilterFragment<R> : T
 

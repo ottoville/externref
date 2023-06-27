@@ -1,55 +1,53 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { VertexShader } from './VertexShader.js';
+import { VertexShaderFunction } from './ShaderFunction.js';
+import { type VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { GPU } from "GPU.js"
-
+import { Struct } from './structs/Structs.js';
+export const positionAttr = Object.freeze(
+    {
+        position: {
+            shaderLocation: 0,
+            offset: 0,
+            format: "float32x3",
+            shaderFormat: "vec3<f32>"
+        }
+    } as const
+)
 type BindLayouts = GPU["bindGroupTextureWater"]["bindGroupLayouts"]
-
-export class WaterVertShader extends VertexShader<
-    { main: PipelineLayout },
-    [GPUVertexBufferLayout],
-    BindLayouts> {
-    constructor(pipelineLayout: PipelineLayout<BindLayouts>, buffers: GPUVertexBufferLayout) {
-        super({
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            entryPoints: {
-                main: pipelineLayout
-            },
-            label: 'water.vert',
-            gpu: pipelineLayout.gpu
-        }, [buffers]);
-        this.createWGSL((
-            [/*uniforms*/,],
-            [scene,/*time, clusters_array, meshes, projection*/],
-            [/*world*/,],
-            [/*mySampler, diffuseTexture*/,]) => {
-
-            //////////////////////////////////
-
-            return /* wgsl */ `
-
-//[[location(1)]] var<out> ambient : vec3<f32>;
-struct Output {
-  @builtin(position) Position : vec4<f32>,
-  @location(0) v_uv : vec4<f32>,
-  @location(1) position : vec3<f32>,
-  @location(2) @interpolate(flat) id : u32
-};
-
-@vertex
-fn main(@location(0) position : vec3<f32>) -> Output {
-  var output:Output;
-  output.Position = ${scene.variableName}.modelViewProjection * vec4<f32>(position, 1.0);
-  output.v_uv = output.Position;
-  output.position=position;
-  output.id=world.id;
-
-  //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
-  //ambient=lights.ambient;
-  return output;
+export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof positionAttr>) {
+    return new VertexShader({
+        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+        entryPoints: {
+            main: new VertexShaderFunction(
+                new Struct('Output', {
+                    Position: ['@builtin(position)', 'vec4<f32>'],
+                    v_uv: ['@location(0)', 'vec4<f32>'],
+                    position: ['@location(1)', 'vec3<f32>'],
+                    id: ['@location(2) @interpolate(flat)', 'u32'],
+                }),
+                pipelineLayout,
+                ``,
+                [buffers],
+                ([
+                    [/*uniforms*/,],
+                    [scene,/*time, clusters_array, meshes, projection*/],
+                    [/*world*/,],
+                    [/*mySampler, diffuseTexture*/,]
+                ], [{ position }]) => /* wgsl */ `
+                        var output:Output;
+                        output.Position = ${scene.variableName}.modelViewProjection * vec4<f32>(${position}, 1.0);
+                        output.v_uv = output.Position;
+                        output.position=${position};
+                        output.id=world.id;
+                    
+                        //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
+                        //ambient=lights.ambient;
+                        return output;
+                    `
+            )
+        },
+        label: 'water.vert',
+        gpu: pipelineLayout.gpu
+    })
 }
-  `;
-            //////////////
-
-        })
-    }
-}
+export type WaterVertShader = ReturnType<typeof createWaterVertShader>

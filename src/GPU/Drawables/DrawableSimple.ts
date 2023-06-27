@@ -6,7 +6,7 @@ import { RenderPipeline } from "../RenderPipeline.js";
 import { DrawableProps } from "./Drawable.js";
 declare const engine: Engine;
 
-export class DrawableSimple<R extends RenderPipeline> extends DrawableDirect<MainNode> {
+export class DrawableSimple<const R extends RenderPipeline> extends DrawableDirect<MainNode> {
     #firstVertex = 0;
     constructor(
         drawableProps: Omit<DrawableProps<MainNode>, 'label'> & {

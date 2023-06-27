@@ -1,49 +1,31 @@
 import { GPU } from "../../GPU.js";
-import { GrassVertShader } from "../Shaders/Grass.vert.js";
-import { ColorFragShader } from "../Shaders/Color.frag.js";
+import { createGrassVertShader, positionAttr, shapeAttr, vertexPositionAttr } from "../Shaders/Grass.vert.js";
+import { createColorFragmentShader } from "../Shaders/Color.frag.js";
+
 
 export const PlantsRenderPipeline = [
-    'PlantsRenderPipeline', function PlantsRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {stride: number}) {
-        const grassVertShader = new GrassVertShader(gpu.rootCameralayout, [
+    'PlantsRenderPipeline', function PlantsRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: { stride: number }) {
+        const grassVertShader = createGrassVertShader(gpu.rootCameralayout, [
             {
                 arrayStride: vertexBufferProps.stride * 4,
                 stepMode: "instance",
-                attributes: [
-                    { // position
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: "float32x4"
-                    }
-                ]
+                attributes2: positionAttr
             },
             {
                 arrayStride: 4 * 4,
                 stepMode: "instance",
-                attributes: [
-                    {  // shape
-                        shaderLocation: 1,
-                        offset: 0,
-                        format: "float32x4"
-                    }
-                ]
+                attributes2: shapeAttr
             }, {
                 arrayStride: 8,
                 stepMode: 'vertex',
-                attributes: [
-                    {
-                        // vertex position
-                        shaderLocation: 2,
-                        offset: 0,
-                        format: "float32x2"
-                    }
-                ]
+                attributes2: vertexPositionAttr
             }
         ]);
         return gpu.rootCameralayout.addRenderPipeline(
             {
                 label,
                 vertexShader: grassVertShader,
-                fragmentShader: new ColorFragShader(gpu.rootCameralayout),
+                fragmentShader: createColorFragmentShader(gpu.rootCameralayout),
                 renderPipeline: {
                     primitive
                 }

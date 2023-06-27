@@ -1,10 +1,29 @@
 import { BufLayout, ShaderStage } from "../../BindGroupLayout.js";
 
-export class Struct<T extends { [index: string]: [size: string, type: string] } = { [index: string]: [size: string, type: string] }> {
+export class Struct<T extends { [index: string]: [properties: string, type: string] } = { [index: string]: [size: string, type: string] }> {
     constructor(public name: string, public properties: T, public depedencies?: Struct[]) {
 
     }
 }
+
+export const typicalOutput = new Struct('Output', {
+    Position: ['@builtin(position)', 'vec4<f32>'],
+    normal: ['@location(0)', 'vec3<f32>'],
+    id: ['@location(1) @interpolate(flat)', 'u32'],
+    color: ['@location(2)', 'vec3<f32>'],
+    position: ['@location(3)', 'vec3<f32>'],
+    scenes: ['@location(4) @interpolate(flat)', 'u32'],
+});
+
+export const pickOutput = new Struct('PickOutput', {
+    Position: ['@builtin(position)', 'vec4<f32>'],
+    id: ['@location(0) @interpolate(flat)', 'u32'],
+})
+
+export const colorOutput = new Struct('Output', {
+    position: ['@builtin(position)', 'vec4<f32>'],
+    color: ['@location(0)', 'vec3<f32>'],
+})
 
 export const MeshUniforms = new Struct('MeshUniforms', {
     transformation: ['', 'mat4x4<f32>'],
