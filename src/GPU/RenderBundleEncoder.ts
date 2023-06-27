@@ -25,7 +25,7 @@ export class RenderBundleEncoder {
             colorFormats: Object.values(renderPass.colorRenderTargets).map(rt => rt.texture.format),
             label: renderPass.label,
             sampleCount: renderPass.sampleCount,
-            ...renderBundleEncoderDescriptor
+            ...renderBundleEncoderDescriptor,
         };
         this.renderBundleEncoder = this.renderPass.gpu.device.createRenderBundleEncoder(this.GPURenderBundleEncoderDescriptor);
 

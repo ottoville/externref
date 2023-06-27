@@ -59,7 +59,7 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                         },
                         visibility: ShaderStage.COMPUTE,
 
-                    }, 'shapes', FloatArray),
+                    }, 'shapes', FloatArray)
             ),
             new BGLayout(gpu, 'positionsBindGroupLayout',
                 new BufLayout(
@@ -97,7 +97,7 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                 ${shapes.prop('numbers')}[index + u32(2)] = PI *0.2 * rand(vec2<f32>(flatpos.xy)); // z:curve
                 ${shapes.prop('numbers')}[index + u32(3)] = snoise(vec2<f32>(flatpos.xy)); //  w:color
                 return;
-                `)
+                `),
             },
             gpu,
             label: 'GetHeightAtCoordinates.comp',

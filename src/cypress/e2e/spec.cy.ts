@@ -6,10 +6,10 @@ describe('open menu', () => {
         cy.visit('https://localhost:4280/');
         cy.get('button').click();
         cy.get('canvas', {
-            timeout: 10000
+            timeout: 10000,
         });
         cy.get('#progressBarContainer', {
-            timeout: 10000
+            timeout: 10000,
         }).should('not.exist');
         cy.get('body').type('{esc}');
         // eslint-disable-next-line promise/catch-or-return

@@ -26,7 +26,7 @@ export const PlantsRenderPipeline = [
                 fragmentShader: createColorFragmentShader(gpu.rootCameralayout),
                 label,
                 renderPipeline: {
-                    primitive
+                    primitive,
                 },
                 vertexShader: grassVertShader,
             })

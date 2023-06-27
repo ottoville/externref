@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { Indices } from './Indices.js';
 import type { IndexedTrait } from '../../nodes/NodeIndexed2.js';
 
-export function Primitives({ node }: { node: DataNode | IndexedTrait}) {
+export function Primitives({ node, }: { node: DataNode | IndexedTrait}) {
     const indices = useRef<HTMLDetailsElement>(null);
     const [indicesOpen, setIndicesOpen] = useState(false);
     const vertices = useRef<HTMLDetailsElement>(null);

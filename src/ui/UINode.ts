@@ -8,7 +8,7 @@ export abstract class UINode<P extends object = object, S extends object = objec
     static createCtrProps<P extends object, C extends typeof UINode<P>>(ctr: C, props: ConstructorParameters<C>[0]) {
         return {
             ctr,
-            props
+            props,
         }
     }
     #children: (UINode | null)[] = [];
@@ -18,7 +18,7 @@ export abstract class UINode<P extends object = object, S extends object = objec
     protected setState(state: Partial<S>) {
         this.state = {
             ...this.state,
-            ...state
+            ...state,
         };
         this.#requestRender(this.#currentGPU);
     }

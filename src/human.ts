@@ -22,7 +22,7 @@ export class Human extends Box {
     readonly closeDistanceVector: [number, number, number] = [closeDistance / this.#radius[0], closeDistance / this.#radius[1], closeDistance / this.#radius[2]];
 
     constructor(properties: { scenes: Scene[], inputEnabled: boolean }) {
-        super({ ...properties, can_collide: false, color: [0, 0, 1, 0], label: 'human', point_light: 400 });
+        super({ ...properties, can_collide: false, color: [0, 0, 1, 0], label: 'human', point_light: 400, });
         engine.physics.tickables.push(this);
         this.hasGravity = true;
         //this.velocity=[0,-5,0];
@@ -65,7 +65,7 @@ export class Human extends Box {
                 radius[2] = v;
                 collisionsScalingMatrix[10] = 1.0 / v;
                 myCloseDistance[2] = closeDistance / v
-            }
+            },
         }
     }
     override onPhysicTick = () => {

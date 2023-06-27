@@ -108,7 +108,7 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
           ${facet12.prop('plane')}[${facetSize} + (GlobalInvocationID.x * ${settings.subdivisions[0]} +  GlobalInvocationID.y)].d = dot(norm2,v2arr) * -1.0;
       
           return;
-                `)
+                `),
             },
             gpu: pipelineLayout.gpu,
             label: 'calculatePlaneHeights.comp',

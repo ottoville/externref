@@ -25,7 +25,7 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
                     {
                         storageTexture: {
                             access: 'write-only',
-                            format: 'rgba8unorm'
+                            format: 'rgba8unorm',
                         },
                         visibility: ShaderStage.COMPUTE,
                     }, 'ground_texture', 'texture_storage_2d<rgba8unorm,write>'
@@ -55,7 +55,7 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
                  }
                 return;
                
-                `)
+                `),
             },
             gpu: pipelineLayout.gpu,
             label: 'CreateTerrainTexture.comp',

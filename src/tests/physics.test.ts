@@ -14,7 +14,7 @@ describe('Physics Has gravity and collision', function () {
             collider: fs.readFileSync('../wwwroot/collider/colliderSimdO.wasm'),
             rust: fs.readFileSync('../node/wasm32-unknown-unknown/debug/engine.wasm'),
         });
-        const slope = new Box({ can_collide: true, fixed: true, label: 'gravitybixbox2' });
+        const slope = new Box({ can_collide: true, fixed: true, label: 'gravitybixbox2', });
         slope.update_scale(200, 5, 200);
         slope.rotation = [Math.sin(1.4), 0, 0, Math.cos(1.4)];
         slope.translation = [23, 500, 23];
@@ -22,11 +22,11 @@ describe('Physics Has gravity and collision', function () {
     }, 10000);
 
     it('Flat ground', async function () {
-        const b = new Box({ can_collide: true, fixed: true, label: 'gravitybixbox' });
+        const b = new Box({ can_collide: true, fixed: true, label: 'gravitybixbox', });
         b.update_scale(100, 5, 100);
         b.translation = [123, 300, 123];
 
-        const b2 = new Box({ can_collide: true, color: [0, 1, 0, 0], label: 'gravitygreenbox', point_light: 400 });
+        const b2 = new Box({ can_collide: true, color: [0, 1, 0, 0], label: 'gravitygreenbox', point_light: 400, });
         b2.translation = [123, 320, 123];
         b2.hasGravity = true;
         let ticks = 0;

@@ -23,7 +23,7 @@ export class Plane extends VertexShader<BindLayouts> {
                     '',
                     [buffers], ([
                         [/*uniforms*/,],
-                        [scene,/*time, clusters_array, meshes, projection*/],
+                        [scene/*time, clusters_array, meshes, projection*/],
                         [world]
                     ]) =>
                         /* wgsl */ `
@@ -32,7 +32,7 @@ export class Plane extends VertexShader<BindLayouts> {
                 output.Position = ${scene.prop('modelViewProjection')} * worldPos;
                 output.color = vec3<f32>(1.0,1.0,1.0);
                 return output;
-                `)
+                `),
             },
             gpu: pipelineLayout.gpu,
             label: 'plane.vert',

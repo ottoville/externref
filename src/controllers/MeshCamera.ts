@@ -12,7 +12,7 @@ export class MeshCamera extends CameraController {
     angle = Math.PI;
     verticalAngle = Math.PI * 0.5;
     arrowKeysDown = 0;
-    pointerMovement = { x: 0, y: 0 };
+    pointerMovement = { x: 0, y: 0, };
     cursor: UIRectangle | undefined = undefined;
     constructor(public camera: TerraCamera) {
         super();
@@ -45,7 +45,7 @@ export class MeshCamera extends CameraController {
                     label: 'cursor',
                     originalAspectRatio: 1,
                     renderPass: gpu.renderPassCanvas,
-                    scale: { min_width: 0.01, unit: NumericUnit['%'], y: 0.01 },
+                    scale: { min_width: 0.01, unit: NumericUnit['%'], y: 0.01, },
                     translate: {
                         x: {
                             anchor: Anchor.CENTER,
@@ -53,7 +53,7 @@ export class MeshCamera extends CameraController {
                         }, y: {
                             anchor: Anchor.CENTER,
                             value: [0],
-                        }
+                        },
                     },
                 }, {
                     border_height: 0,
@@ -124,11 +124,11 @@ export class MeshCamera extends CameraController {
     }
     #pointerMoveFunction: ListenerObj<'pointermove'> = {
         cb: (e: PointerEvent) => {
-            this.pointerMovement = { x: e.movementX, y: e.movementY }
+            this.pointerMovement = { x: e.movementX, y: e.movementY, }
         },
         object: this,
         options: {
-            force: true
+            force: true,
         },
         type: 'pointermove',
     }

@@ -29,7 +29,7 @@ export class DrawableSimple<const R extends RenderPipeline> extends DrawableDire
         super(
             {
                 ...drawableProps,
-                dynamicBindGroups
+                dynamicBindGroups,
             }, drawableDirectProps);
         this.#firstVertex = firstVertex;
     }

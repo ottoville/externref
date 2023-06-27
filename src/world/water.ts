@@ -43,7 +43,7 @@ export class Sea extends BoundableNodeSimple {
                 stripIndexFormat: 'uint16',
                 topology: 'triangle-strip',
             }, {
-                stride: 3
+                stride: 3,
             });
             this.drawable = new DrawableSimple({
                 node: this,
@@ -55,7 +55,7 @@ export class Sea extends BoundableNodeSimple {
                         50000.0, 3.0, -50000.0,
                         -50000.0, 3.0, 50000.0,
                         50000.0, 3.0, 50000.0
-                    ]),
+                    ])
                 ],
             });
         }

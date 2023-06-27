@@ -60,7 +60,7 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
               
                ${positions.prop('vert')}[GlobalInvocationID.y * (${settings.subdivisions[0] + 1}) + GlobalInvocationID.x].uv = (position.xz + vec2<f32>(${settings.maxXZ})) / vec2<f32>(${settings.size[0]}, ${settings.size[1]});
                return;
-                `)
+                `),
             },
             gpu,
             label: 'CreateGroundFromHeightMap.comp',

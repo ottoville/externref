@@ -14,16 +14,16 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
             main: new VertexShaderFunction<BindLayouts, [VertexBufferLayout2<typeof simpleAttributes>]>(
                 new Struct('Output', {
                     Position: ['@builtin(position)', 'vec4<f32>'],
-                    color: ['@location(0)', 'vec3<f32>']
+                    color: ['@location(0)', 'vec3<f32>'],
                 }),
                 pipelineLayout,
                 '@builtin(vertex_index) gl_VertexIndex : u32,',
                 [buffers],
                 ([
                     [/*uniforms*/,],
-                    [scene,/*time, clusters_array, meshes, projection*/],
+                    [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ], [{ position, normal }]) => /* wgsl */`
+                ], [{ position, normal, }]) => /* wgsl */`
             var output : Output;
             var vertexPosition:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(${position}.xyz, 1.0);
             if(gl_VertexIndex % 2u == 1u) {
@@ -41,7 +41,7 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
             output.Position = ${scene.prop('modelViewProjection')} * vertexPosition;
             output.color=vec3<f32>(0.0,1.0,0.0);
             return output;
-            `)
+            `),
         },
         gpu: pipelineLayout.gpu,
         label: 'debug_normals.vert',

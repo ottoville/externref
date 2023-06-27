@@ -11,7 +11,7 @@ export const simpleAttributesWithColor = Object.freeze({
         offset: 32,
         shaderFormat: 'vec3<f32>',
         shaderLocation: 2,
-    }
+    },
 
 } as const);
 

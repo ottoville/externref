@@ -7,7 +7,7 @@ import { MSAARenderTarget } from './GPU/RenderTargets/MSAARenderTarget.js';
 import type { BindGroup } from './GPU/BindGroup.js';
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer, GPUBufferUsage } from './GPU/Buffer/Buffer.js';
 
-import type { Engine, } from './engine.js';
+import type { Engine } from './engine.js';
 import { Uint16Vector2 } from './Math.js';
 import { DepthRenderTarget } from './GPU/RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './GPU/RenderPasses/DepthRenderPass.js';
@@ -92,7 +92,7 @@ export class GPU {
 
     readonly scale = {
         x: 1,
-        y: 1
+        y: 1,
     }
     readonly renderPassScreen: PickableRenderPass<{
         gRenderTargetDiffuse: MSAARenderTarget<'bgra8unorm', TextureUsageType['RENDER_ATTACHMENT|TEXTURE_BINDING']>;
@@ -154,7 +154,7 @@ export class GPU {
             cullMode: 'back',
             frontFace: 'cw',
             topology: 'triangle-list',
-            ...primitive
+            ...primitive,
         }
         const [label, createRenderPipeline] = desc;
         const hash = label + [...Object.values(primitiveWithDefaults), ...Object.values(vertexBufferProps ?? {})].sort().join();
@@ -287,7 +287,7 @@ export class GPU {
         this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition', bindGroup => [
             {
                 binding: 0,
-                resource: this.GPUMeshes.getUniformBinding(bindGroup, 0, GPU.gpu_memory_index_size)
+                resource: this.GPUMeshes.getUniformBinding(bindGroup, 0, GPU.gpu_memory_index_size),
             }
         ]);
         this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot', BindGroupLayoutPosition)
@@ -330,20 +330,20 @@ export class GPU {
                         format: 'r32uint',
                         gpu: this,
                         label: 'idTexture',
-                        size: { height: 300, width: 300 },
+                        size: { height: 300, width: 300, },
                         usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'],
                     },
                     {
                         context: undefined,
-                        textureViewDescriptor: { arrayLayerCount: 1, baseArrayLayer: 0 },
+                        textureViewDescriptor: { arrayLayerCount: 1, baseArrayLayer: 0, },
                         writeMask: 0xF,
 
                     },
                     {
                         blend: undefined,
                         // eslint-disable-next-line sort-keys
-                        clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-                    })
+                        clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0, },
+                    }),
             },
             entryPoint: 'pick',
             getSizeOnResize: (w, h) => {
@@ -353,7 +353,7 @@ export class GPU {
             label: 'pickRenderPass',
             rootLayout: this.rootCameralayout,
             sampleCount: 1,
-            size: { height: canvas.height, width: canvas.width },
+            size: { height: canvas.height, width: canvas.width, },
 
         }
         );
@@ -366,7 +366,7 @@ export class GPU {
                             format: 'bgra8unorm',
                             gpu: this,
                             label: 'diffuseTexture',
-                            size: { height: 300, width: 300 },
+                            size: { height: 300, width: 300, },
                             usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
                         },
                         {
@@ -376,7 +376,7 @@ export class GPU {
                         {
                             blend: undefined,
                             // eslint-disable-next-line sort-keys
-                            clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 0.0 },
+                            clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 0.0, },
                         }),
                 },
                 entryPoint: 'main',
@@ -387,7 +387,7 @@ export class GPU {
                 label: 'renderPassScreen',
                 rootLayout: this.rootCameralayout,
                 sampleCount: 4,
-                size: { height: canvas.height, width: canvas.width },
+                size: { height: canvas.height, width: canvas.width, },
             },
             new DepthRenderTarget(0,
                 {
@@ -395,7 +395,7 @@ export class GPU {
                     gpu: this,
                     initialSampleCount: 4,
                     label: 'depthTexture_renderPassScreen',
-                    size: { height: 300, width: 300 },
+                    size: { height: 300, width: 300, },
                     usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'],
                 },
                 {
@@ -411,7 +411,7 @@ export class GPU {
                             format: 'bgra8unorm',
                             gpu: this,
                             label: 'diffuseTextureWater',
-                            size: { height: 300, width: 300 },
+                            size: { height: 300, width: 300, },
                             usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
                         },
                         {
@@ -421,7 +421,7 @@ export class GPU {
                         {
                             blend: undefined,
                             // eslint-disable-next-line sort-keys
-                            clearValue: { r: 0.023, g: 0.25, b: 0.45, a: 1.0 },
+                            clearValue: { r: 0.023, g: 0.25, b: 0.45, a: 1.0, },
                         }),
                 },
                 entryPoint: 'main',
@@ -430,14 +430,14 @@ export class GPU {
                 label: 'renderPassWater',
                 rootLayout: this.rootCameralayout,
                 sampleCount: 1,
-                size: { height: canvas.height, width: canvas.width },
+                size: { height: canvas.height, width: canvas.width, },
             },
             new DepthRenderTarget(0, {
                 format: 'depth32float',
                 gpu: this,
                 initialSampleCount: 1,
                 label: 'depthTexture_renderPassWater',
-                size: { height: 300, width: 300 },
+                size: { height: 300, width: 300, },
                 usages: TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'],
             }, {
                 context: undefined,
@@ -457,7 +457,7 @@ export class GPU {
         context.configure({
             device: device,
             format: this.#presentationFormat,
-            usage: GPUTextureUsage.RENDER_ATTACHMENT
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
         });
 
         this.BindGroupLayoutCanvas = new BGLayout(this, 'BindGroupLayoutUI',
@@ -494,7 +494,7 @@ export class GPU {
                     primitive: {
                         frontFace: 'ccw',
                         topology: 'triangle-list',
-                    }
+                    },
                 },
                 vertexShader: uiVertShader,
             });
@@ -506,7 +506,7 @@ export class GPU {
                         format: this.#presentationFormat,
                         gpu: this,
                         label: 'canvasTexture',
-                        size: { height: 300, width: 300 },
+                        size: { height: 300, width: 300, },
                         usages: TextureUsageEnums.RENDER_ATTACHMENT,
 
                     },
@@ -525,11 +525,11 @@ export class GPU {
                                 dstFactor: 'one-minus-src-alpha',
                                 operation: 'add',
                                 srcFactor: 'src-alpha',
-                            }
+                            },
                         },
                         // eslint-disable-next-line sort-keys
-                        clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
-                    })
+                        clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 1.0, },
+                    }),
             },
             entryPoint: 'main',
             getSizeOnResize: (w, h) => {
@@ -539,7 +539,7 @@ export class GPU {
             label: 'renderPassCanvas',
             rootLayout: this.#canvasRootLayout,
             sampleCount: 1,
-            size: { height: canvas.height, width: canvas.width },
+            size: { height: canvas.height, width: canvas.width, },
 
         });
 
@@ -592,10 +592,10 @@ export class GPU {
                     context.configure({
                         device: this.device,
                         format: this.#presentationFormat,
-                        usage: GPUTextureUsage.RENDER_ATTACHMENT
+                        usage: GPUTextureUsage.RENDER_ATTACHMENT,
                     })
-                    const commandEncoder = this.device.createCommandEncoder({ label: 'resizeEncoder' });
-                    const passEncoder = commandEncoder.beginComputePass({ label: 'resizePassEncoder' });
+                    const commandEncoder = this.device.createCommandEncoder({ label: 'resizeEncoder', });
+                    const passEncoder = commandEncoder.beginComputePass({ label: 'resizePassEncoder', });
                     passEncoder.setPipeline(await computePipelineClustersP);
 
                     this.projections.forEach(projection => projection.update(aspectRatio, this));
@@ -627,7 +627,7 @@ export class GPU {
     }
 
     handle_gpu_queue(pointerVec: number, length: number) {
-        this.#GPUQueueCommandEncoder = this.device.createCommandEncoder({ label: 'handle_gpu_queue_encoder' });
+        this.#GPUQueueCommandEncoder = this.device.createCommandEncoder({ label: 'handle_gpu_queue_encoder', });
         let tempOffset = 0;
         Buffer.create(this, this.GPUDataSizeBytes * length, [GPUBufferUsage.COPY_SRC], 'handle_gpu_queue', (tempBuffer, gpu2) => {
             const pointers_to_gpumesh_and_offset = new Uint32Array(engine.memory.buffer, pointerVec, length);
@@ -667,7 +667,7 @@ export class GPU {
     }
     update_directional_lights(pointer: number, length: number) {
         const lights = new Uint32Array(engine.memory.buffer, pointer, length);
-        const commandEncoder = this.device.createCommandEncoder({ label: 'update_directional_lights_encoder' });
+        const commandEncoder = this.device.createCommandEncoder({ label: 'update_directional_lights_encoder', });
         //TODO: Potential buffer overflow
         const byteLength = 4 + lights.byteLength;
         const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'directional_lights_tempBuffer', tempBuffer2 => {
@@ -676,11 +676,11 @@ export class GPU {
             gpu_buffer.set(lights, 1);
         });
         tempBuffer.copyTo(commandEncoder, this.#GPUDirectionalLights, 0, 0, byteLength);
-        this.pendingCommandBuffers.push(commandEncoder.finish({ label: 'update_directional_lights' }));
+        this.pendingCommandBuffers.push(commandEncoder.finish({ label: 'update_directional_lights', }));
     }
     update_point_lights(pointer: number, length: number) {
         const lights = new Uint32Array(engine.memory.buffer, pointer, length);
-        const commandEncoder = this.device.createCommandEncoder({ label: 'update_point_lights_encoder' });
+        const commandEncoder = this.device.createCommandEncoder({ label: 'update_point_lights_encoder', });
         //TODO: Potential buffer overflow
         const byteLength = 4 + lights.byteLength;
         const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'point_lights_tempBuffer', tempBuffer2 => {
@@ -689,7 +689,7 @@ export class GPU {
             gpu_buffer.set(lights, 1);
         });
         tempBuffer.copyTo(commandEncoder, this.#GPUPointLights, 0, 0, byteLength);
-        this.pendingCommandBuffers.push(commandEncoder.finish({ label: 'update_point_lights' }));
+        this.pendingCommandBuffers.push(commandEncoder.finish({ label: 'update_point_lights', }));
     }
     readonly timeAndDeltaBuffer = new ArrayBuffer(8);
     readonly deltaView = new Float32Array(this.timeAndDeltaBuffer, 4, 1);
@@ -721,7 +721,7 @@ export class GPU {
                 engine.inputManager.calculateCameraPositionAndTarget();
         }
 
-        const renderEncoder = this.device.createCommandEncoder({ label: 'renderloop_renderEncoder' });
+        const renderEncoder = this.device.createCommandEncoder({ label: 'renderloop_renderEncoder', });
 
         this.#timeView.set([time]);
         let physicDelta: number | null;
@@ -741,13 +741,13 @@ export class GPU {
             this.#GPUQueueCommandEncoder = null;
             engine.rust.renderloop();
             //@ts-expect-error bug in TS
-            const commandBuff = this.#GPUQueueCommandEncoder?.finish({ label: 'renderloop' }) ?? null;
+            const commandBuff = this.#GPUQueueCommandEncoder?.finish({ label: 'renderloop', }) ?? null;
             if (commandBuff) {
                 // Insert this to begin of the array to get all changes to mesh properties affected first
                 this.pendingCommandBuffers.unshift(commandBuff);
             }
             // Rust render loop end
-            const lightPass = renderEncoder.beginComputePass({ label: 'lightPassEncoder' });
+            const lightPass = renderEncoder.beginComputePass({ label: 'lightPassEncoder', });
             lightPass.setPipeline(updateViewPipeline);
             lightPass.setBindGroup(0, this.#updateViewBindGroup.bindGroup);
             engine.cameras.forEach(camera => {
@@ -771,7 +771,7 @@ export class GPU {
             console.error(e);
         }
 
-        this.pendingCommandBuffers.push(renderEncoder.finish({ label: 'renderencoder' }))
+        this.pendingCommandBuffers.push(renderEncoder.finish({ label: 'renderencoder', }))
         this.device.queue.submit(this.pendingCommandBuffers);
         // Cluster debug
         /*

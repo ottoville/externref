@@ -52,7 +52,7 @@ export abstract class CameraController implements Ellipsoid {
                 collisionRadius[2] = v;
                 collisionsScalingMatrix[10] = 1.0 / v;
                 myCloseDistance[2] = closeDistance / v
-            }
+            },
         }
     }
     abstract readonly name: string;

@@ -31,7 +31,7 @@ TODO
     // 1000 * 1000: 40 - 50ms when no collision
     static readonly #subdivisions = [64, 64] as const;
     static readonly size = [10000, 10000] as const;
-    static readonly #textureSize = { height: 8192, width: 8192 } as const;
+    static readonly #textureSize = { height: 8192, width: 8192, } as const;
 
 
     static readonly settings = {
@@ -40,7 +40,7 @@ TODO
         minmax: [-2, 500] as const,
         size: terrainSize,
         subdivisions: subdivisions,
-        textureSize: { height: 8192, width: 8192 } as const,
+        textureSize: { height: 8192, width: 8192, } as const,
     } as const
     settings = Terrain.settings;
 
@@ -90,7 +90,7 @@ TODO
             )
         });
 
-        const commandEncoder = engine.gpu.device.createCommandEncoder({ label: 'updateSwap2_encoder' });
+        const commandEncoder = engine.gpu.device.createCommandEncoder({ label: 'updateSwap2_encoder', });
         b1.copyTo(commandEncoder, this.terrainPositionAndUvsAndNormalsGPU, 0, offset, byteLength)
         let b2: CopySrcBuffer;
         if (!nofaces) {
@@ -137,22 +137,22 @@ TODO
                 const texture = gpu.device.createTexture({
                     format: 'rgba8unorm',
                     size: [bitmap.width, bitmap.height],
-                    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
+                    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
                 })
-                gpu.device.queue.copyExternalImageToTexture({ source: bitmap }, { texture }, [bitmap.width, bitmap.height]);
+                gpu.device.queue.copyExternalImageToTexture({ source: bitmap, }, { texture, }, [bitmap.width, bitmap.height]);
 
-                const commandEncoder = gpu.device.createCommandEncoder({ label: 'loadFromTexture_encoder' });
-                const passEncoder = commandEncoder.beginComputePass({ label: 'loadFromTexture_encoder_pass_encoder' });
+                const commandEncoder = gpu.device.createCommandEncoder({ label: 'loadFromTexture_encoder', });
+                const passEncoder = commandEncoder.beginComputePass({ label: 'loadFromTexture_encoder_pass_encoder', });
                 var terrainPositionAndUvsAndNormalsGPU = Buffer.create(gpu, verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'terrainPositionAndUvsAndNormalsGPU1')
                 const sourceBindGroup = CreateGroundFromHeightMapShader.props.bindGroupLayouts[0].createBindGroup('sourceBindGroup', (bindGroup) => [
                     {
                         binding: 0,
-                        resource: terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup)
+                        resource: terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
                     },
                     {
                         binding: 1,
-                        resource: texture.createView()
-                    },
+                        resource: texture.createView(),
+                    }
                 ]);
                 passEncoder.setPipeline(await CreateGroundFromHeightMapPipelineP);
                 passEncoder.setBindGroup(0, sourceBindGroup.bindGroup);
@@ -186,7 +186,7 @@ TODO
                 calculateNormals: new CalculateNormals(this.settings, slopesLayout),
                 calculatePlaneIndices: new CalculatePlaneIndices(gpu, this.settings),
                 computePlaneHeights: new CalculatePlaneHeights(gpu, this.settings),
-                createTexture: new CreateTerrainTexture(this.settings, slopesLayout)
+                createTexture: new CreateTerrainTexture(this.settings, slopesLayout),
             }
 
 
@@ -272,16 +272,16 @@ TODO
             gpu,
             label: 'Terrain',
             size: Terrain.#textureSize,
-            usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING']
+            usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'],
         })
         const _heightsBindGroupEntries = (bindGroup: BindGroup) => [
             {
                 binding: 0,
-                resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup)
+                resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
             },
             {
                 binding: 1,
-                resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup)
+                resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
             }
         ] as const
         this.heightsLayout = new BGLayout(gpu, 'terrainBindGroupLayout',
@@ -306,24 +306,24 @@ TODO
             this.heightsLayout.createBindGroup('TerrainHeightsbindGroupTree', bindGroup => [
                 {
                     binding: 0,
-                    resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup)
+                    resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
                 },
                 {
                     binding: 1,
-                    resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup)
+                    resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
                 }
             ]));
 
 
 
-        const commandEncoder = gpu.device.createCommandEncoder({ label: 'terrain_encoder' });
-        const passEncoder = commandEncoder.beginComputePass({ label: 'terrain_pass_encoder' });
+        const commandEncoder = gpu.device.createCommandEncoder({ label: 'terrain_encoder', });
+        const passEncoder = commandEncoder.beginComputePass({ label: 'terrain_pass_encoder', });
 
 
         const terrainPositionAndUvsAndNormalsGPU_bgroup = (bindGroup: BindGroup) => [
             {
                 binding: 0,
-                resource: this.terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup)
+                resource: this.terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
             }
         ] as const;
         //todo: remove unneeded flags
@@ -336,7 +336,7 @@ TODO
                 (bindGroup) => [
                     {
                         binding: 0,
-                        resource: terrainIndicesGPU.getStorageBinding(bindGroup)
+                        resource: terrainIndicesGPU.getStorageBinding(bindGroup),
                     }
                 ]
             ).bindGroup);
@@ -363,7 +363,7 @@ TODO
                 var gpuReadBufferPositions = this.terrainPositionAndUvsAndNormalsGPU.createReadCopy(commandEncoder)
                 var gpuReadBufferIndices = terrainIndicesGPU.createReadCopy(commandEncoder);
                 const bitmap = await createImageBitmap(await cachedtexture.blob());
-                this.texture.copyFromExternalImage({ source: bitmap }, {}, Terrain.#textureSize);
+                this.texture.copyFromExternalImage({ source: bitmap, }, {}, Terrain.#textureSize);
                 gpu.device.queue.submit([commandEncoder.finish()]);
             } else {
                 const bindGroup1 = shaders.createTexture.props.bindGroupLayouts[1].createBindGroup('writableTexture', (bindGroup) => [
@@ -384,7 +384,7 @@ TODO
                 // Get a GPU buffer for reading in an unmapped state.
                 const gpuReadBuffer = new ReadBuffer(gpu, textureSizeBytes, 'terrainReaduBuffer');
                 // Encode commands for copying buffer to buffer.
-                gpuReadBuffer.copyFromTexture(commandEncoder, { texture: this.texture.texture }, { bytesPerRow: 4 * Terrain.#textureSize.width }, Terrain.#textureSize)
+                gpuReadBuffer.copyFromTexture(commandEncoder, { texture: this.texture.texture, }, { bytesPerRow: 4 * Terrain.#textureSize.width, }, Terrain.#textureSize)
 
                 var gpuReadBufferPositions = this.terrainPositionAndUvsAndNormalsGPU.createReadCopy(commandEncoder);
                 var gpuReadBufferIndices = terrainIndicesGPU.createReadCopy(commandEncoder);
@@ -396,12 +396,12 @@ TODO
                     throw (new Error('get 2d context failed'));
                 gpuReadBuffer.readAndDestroy(async arrayBuffer => {
                     ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer), c.width, c.height), 0, 0);
-                    const blob = await c.convertToBlob({ quality: 1, type: 'image/webp' })
+                    const blob = await c.convertToBlob({ quality: 1, type: 'image/webp', })
                     TerrainTool.saveTexture(await blob.arrayBuffer(), [Terrain.#textureSize.width, Terrain.#textureSize.height]);
                 })
             }
 
-            const commandEncoder2 = gpu.device.createCommandEncoder({ label: 'terrain_encoder2' });
+            const commandEncoder2 = gpu.device.createCommandEncoder({ label: 'terrain_encoder2', });
             const readBuffer2 = this.facet12ArrGPUBuffer.createReadCopy(commandEncoder2);
             gpu.device.queue.submit([commandEncoder2.finish()]);
             readBuffer2.readAndDestroy(buff => {

@@ -17,7 +17,7 @@ export const position_uv_attrs = Object.freeze({
         offset: 8,
         shaderFormat: 'vec2<f32>',
         shaderLocation: 1,
-    }
+    },
 } as const)
 
 export function createUIVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof position_uv_attrs>) {
@@ -31,7 +31,7 @@ export function createUIVertShader(pipelineLayout: PipelineLayout<BindLayouts>, 
             pipelineLayout,
             '',
             [buffers],
-            ([[uniforms,/*texture*/]], [{ position, uv }]) => /* wgsl */ `
+            ([[uniforms/*texture*/]], [{ position, uv, }]) => /* wgsl */ `
       var output : Output;   
       output.Position = vec4<f32>(${uniforms.prop('translate')} + ${position}, 1.0, 1.0);
       output.v_uv=${uv};

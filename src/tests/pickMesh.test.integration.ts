@@ -32,13 +32,13 @@ describe('Pick box ', function () {
             const Box: typeof Box2 = (await import('/js/GPU/Meshes/Box.js')).Box;
             //@ts-expect-error
             const engine: Engine = window.engine;
-            const b = new Box({ can_collide: false, label: 'PickGreenbox' });
+            const b = new Box({ can_collide: false, label: 'PickGreenbox', });
             b.translation = [0, 400, 0]
             b.update_scale(500, 500, 500);
             //@ts-expect-error
             const control = engine!.mainCamera.attachControllerForCamera({
                 attachCameraController: () => undefined,
-                deAttachCameraController: () => undefined
+                deAttachCameraController: () => undefined,
             });
             control.updatePosition(position => position.set([5000, 400, 0]))
             control.updateDirection(direction => direction.set([1, 0, 0]))
@@ -56,7 +56,7 @@ describe('Pick box ', function () {
                     res([await engine.gpu!.renderPassScreen.pickPosition(true), await engine.gpu!.renderPassScreen.pickMesh(undefined)]);
                 })
             });
-            return [pickedPosition, { label: pickedMesh?.mesh.label, position: pickedMesh?.position }, b.id] as const;
+            return [pickedPosition, { label: pickedMesh?.mesh.label, position: pickedMesh?.position, }, b.id] as const;
         });
         expect(pickInfo0).not.toBeNull();
         expect(pickInfo.label).not.toBeNull();

@@ -8,14 +8,14 @@ export class UIRectangleTextureView extends UIRectangle {
         return this.textureView;
     }
 
-    override updateBoundingBoxAndVertices({ vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY }: {
+    override updateBoundingBoxAndVertices({ vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, }: {
         vertices: Float32Array;
         content_sizeX: number;
         content_sizeY: number;
         outer_sizeX: number;
         outer_sizeY: number;
     }) {
-        const { borderSize } = this.props
+        const { borderSize, } = this.props
         const textureSize = this.textureView.texture.props.size;
         const uvs = {
             bottom: 0,
@@ -107,7 +107,7 @@ export class UIRectangleTextureView extends UIRectangle {
                     content_sizeX, -outer_sizeY, uvs.left, textureSize!.height,
                     outer_sizeX, -outer_sizeY, textureSize!.width, textureSize!.height,
                     content_sizeX, -content_sizeY, uvs.left, uvs.top,
-                    outer_sizeX, -content_sizeY, textureSize!.width, uvs.top,
+                    outer_sizeX, -content_sizeY, textureSize!.width, uvs.top
                 ], 24)
         }
         return vertices;

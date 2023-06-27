@@ -15,7 +15,7 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
     scene = engine.scenes.get('main');
-    constructor(props: UIRectangleNodeProps & TopMenuButtonProps,
+    constructor(props: UIRectangleNodeProps & TopMenuButtonProps
     ) {
         super(props);
         if (!this.scene) {
@@ -43,13 +43,13 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
                         ...this.props,
                         UIRectangleProps: {
                             label: 'createGrassButton',
-                            scale: { min_width: 180, unit: NumericUnit.px, y: 50 },
+                            scale: { min_width: 180, unit: NumericUnit.px, y: 50, },
                             translate: {
                                 x: {
                                     anchor: Anchor.LEFT,
                                     value: [100, NumericUnit.px],
                                 },
-                                y: this.props.subMenuPosition
+                                y: this.props.subMenuPosition,
                             },
                         },
                         onClick: () => this.activateDraw(),

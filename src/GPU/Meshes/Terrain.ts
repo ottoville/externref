@@ -17,10 +17,10 @@ export class TerrainMesh extends BoundableNodeIndexed {
             return [
                 {
                     binding: 0,
-                    resource: this.sampler!
+                    resource: this.sampler!,
                 }, {
                     binding: 1,
-                    resource: textureview.getTextureBinding(bindGroup)
+                    resource: textureview.getTextureBinding(bindGroup),
                 }
             ]
         });
@@ -66,7 +66,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 magFilter: 'linear',
                 minFilter: 'linear',
             });
-            const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline, {}, { stride: verticesPositionStride });
+            const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline, {}, { stride: verticesPositionStride, });
             this.drawable = new DrawableIndexed({
                 node: this,
                 renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]),
@@ -78,10 +78,10 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 return [
                     {
                         binding: 0,
-                        resource: this.sampler!
+                        resource: this.sampler!,
                     }, {
                         binding: 1,
-                        resource: initialTexture.getTextureBinding(bindGroup)
+                        resource: initialTexture.getTextureBinding(bindGroup),
                     }
                 ]
             });

@@ -29,7 +29,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
         }
         engine.addInputListener(this.#inputListener);
     }
-    menuTree = { level: 0 }
+    menuTree = { level: 0, }
     #inputListener: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
             if (this.state.menuOpenName === undefined) {
@@ -40,7 +40,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         const menu = keyBoardMap[parseInt(num) - 1];
                         if (menu) {
                             this.setState({
-                                menuOpenName: menu
+                                menuOpenName: menu,
                             })
                         }
                     }
@@ -48,7 +48,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                 }
             } else if (e.code === 'Backspace' && this.menuTree.level === 1) {
                 this.setState({
-                    menuOpenName: undefined
+                    menuOpenName: undefined,
                 })
             }
         },
@@ -74,7 +74,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                     ...Button({
                         UIRectangleProps: {
                             label: 'Plants',
-                            scale: { min_width: 0.07,unit: NumericUnit['%'], y: 0.04 },
+                            scale: { min_width: 0.07,unit: NumericUnit['%'], y: 0.04, },
                             translate: {
                                 x: {
                                     anchor: Anchor.CENTER,
@@ -82,8 +82,8 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                                 }, y: {
                                     anchor: Anchor.CENTER,
                                     value: [0.9, NumericUnit['%']],
-                                }
-                            }
+                                },
+                            },
                         },
                         text: 'Plants (1)',
                     }),
@@ -96,7 +96,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...Button({
                             UIRectangleProps: {
                                 label: 'Terrain',
-                                scale: { min_width: 0.07, unit: NumericUnit['%'], y: 0.04 },
+                                scale: { min_width: 0.07, unit: NumericUnit['%'], y: 0.04, },
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,
@@ -104,8 +104,8 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                                     }, y: {
                                         anchor: Anchor.CENTER,
                                         value: [0.9, NumericUnit['%']],
-                                    }
-                                }
+                                    },
+                                },
                             },
                             text: 'Terrain (2)',
                         }),
@@ -119,7 +119,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...Button({
                             UIRectangleProps: {
                                 label: 'Zones',
-                                scale: { min_width: 0.07, unit: NumericUnit['%'], y: 0.04 },
+                                scale: { min_width: 0.07, unit: NumericUnit['%'], y: 0.04, },
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,
@@ -127,8 +127,8 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                                     }, y: {
                                         anchor: Anchor.CENTER,
                                         value: [0.9, NumericUnit['%']],
-                                    }
-                                }
+                                    },
+                                },
                             },
                             text: 'Zones (3)',
                         }),
@@ -136,7 +136,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         menuTree: this.menuTree,
                         open: this.state.menuOpenName === 'Zones',
                     }
-                ),
+                )
             ];
         menus.forEach(menu => {
             keyBoardMap.push(menu.props.UIRectangleProps.label)
@@ -145,7 +145,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
     }
     setActiveMenu = (menuName?: string) => {
         this.setState({
-            menuOpenName: this.state.menuOpenName === menuName ? undefined : menuName
+            menuOpenName: this.state.menuOpenName === menuName ? undefined : menuName,
         })
     }
     override destroy(): void {

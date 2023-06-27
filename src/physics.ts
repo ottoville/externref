@@ -202,7 +202,7 @@ export class Physics {
             tickable.velocity = [
                 velocity[0] + (tickable.last_acceleration[0] + tickable.acceleration2[0]) * dt_half,
                 velocity[1] + (tickable.last_acceleration[1] + tickable.acceleration2[1]) * dt_half,
-                velocity[2] + (tickable.last_acceleration[2] + tickable.acceleration2[2]) * dt_half,
+                velocity[2] + (tickable.last_acceleration[2] + tickable.acceleration2[2]) * dt_half
             ];
             //TODO: Update only if neeeded
             tickable.update_dynamic_buffer();

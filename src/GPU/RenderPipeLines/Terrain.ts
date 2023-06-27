@@ -23,7 +23,7 @@ const attributes = Object.freeze(
             shaderFormat: 'vec2<f32>',
             shaderLocation: 2,
 
-        }
+        },
     } as const
 )
 
@@ -44,7 +44,7 @@ export const TerrainRenderPipeline = [
                 fragmentShader: new GroundFragShader(gpu.lightsTextureBindGroup),
                 label,
                 renderPipeline: {
-                    primitive
+                    primitive,
                 },
                 vertexShader: groundVertShader,
             });

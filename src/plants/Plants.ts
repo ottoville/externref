@@ -26,7 +26,7 @@ const numBlades = 65535;
 export class Plants extends MainNode {
     drawable?: DrawableIndirect | undefined;
     public opts = {
-        radius: 86
+        radius: 86,
     }
     //private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 2 * this.numBlades);
     #worker = new WorkerThread('grass.js');
@@ -45,10 +45,10 @@ export class Plants extends MainNode {
     }
     constructor(
         scene: Scene,
-        terrainP: Promise<Terrain>,
+        terrainP: Promise<Terrain>
     ) {
         super(new_rust_mesh({
-            label: 'Plants'
+            label: 'Plants',
         }));
         const indirectBuffer = Buffer.create(scene.gpu, 4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST], 'indirectBuffer');
         const positionGPU = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], 'positionGPU');
@@ -65,7 +65,7 @@ export class Plants extends MainNode {
                     topology: 'triangle-strip',
                 },
                 {
-                    stride: 4
+                    stride: 4,
                 }
             );
             this.drawable = new DrawableIndirect({
@@ -104,8 +104,8 @@ export class Plants extends MainNode {
             const computePipeline = await getHeightAtCoordinatesShader.createComputePipeline('main');
 
             this.#worker.subscribe('updated', (data: { buffer: SharedArrayBuffer }) => {
-                const commandEncoder = scene.gpu.device.createCommandEncoder({ label: 'plants_encoder' });
-                const passEncoder = commandEncoder.beginComputePass({ label: 'plants_pass_encoder' });
+                const commandEncoder = scene.gpu.device.createCommandEncoder({ label: 'plants_encoder', });
+                const passEncoder = commandEncoder.beginComputePass({ label: 'plants_pass_encoder', });
                 passEncoder.setPipeline(computePipeline);
 
                 const worldCopyGPU = Buffer.create(scene.gpu, numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'worldCopyGPU', (buffer) => {
@@ -115,7 +115,7 @@ export class Plants extends MainNode {
                 const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup2', bg => [
                     {
                         binding: 0,
-                        resource: worldCopyGPU.getStorageBinding(bg)
+                        resource: worldCopyGPU.getStorageBinding(bg),
                     }
                 ]);
 
@@ -138,20 +138,20 @@ export class Plants extends MainNode {
             const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1', bindGroup1 => [
                 {
                     binding: 0,
-                    resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1)
+                    resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1),
                 },
                 {
                     binding: 1,
-                    resource: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1)
+                    resource: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1),
                 },
                 {
                     binding: 2,
-                    resource: positionGPUSwap.getStorageBinding(bindGroup1)
+                    resource: positionGPUSwap.getStorageBinding(bindGroup1),
                 },
                 {
                     binding: 3,
-                    resource: shapeGPUSwap.getStorageBinding(bindGroup1)
-                },
+                    resource: shapeGPUSwap.getStorageBinding(bindGroup1),
+                }
             ]);
         }).catch(err => engine.showError(err, scene.gpu));
     }

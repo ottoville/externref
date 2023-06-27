@@ -31,7 +31,7 @@ export class PipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]>
         this.layout = bindGroupLayouts[0].gpu.device.createPipelineLayout(
             {
                 bindGroupLayouts: bindGroupLayouts.map(b => b.layout),
-                label
+                label,
             }
         );
     }
@@ -49,12 +49,12 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
     }
     renderPipelineListeners: Set<() => void> = new Set();
     protected addRenderPipelineSuper<V extends VertexShader, F extends FragmentShader>(
-        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>,
+        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>
 
     ): RenderPipeline<V> {
         const d = new RenderPipeline({
             ...props,
-            bindgroupdrawable: this
+            bindgroupdrawable: this,
         })
         this.renderPipeLines.add(d);
         this.renderPipelineListeners.forEach(cb => cb());
@@ -126,7 +126,7 @@ B extends readonly BGLayout[] = readonly BGLayout[]> extends RenderPipelineLayou
         V extends VertexShader   <B>,
         F extends FragmentShader <B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []>
         >(
-        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>,
+        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>
 
     ): RenderPipeline<V> {
         return this.addRenderPipelineSuper(props);

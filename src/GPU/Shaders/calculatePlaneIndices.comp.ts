@@ -46,7 +46,7 @@ export class CalculatePlaneIndices extends ComputeShader<BindLayouts> {
                 ${indices.variableName}.numbers[index+u32(4)]=idx1;
                 ${indices.variableName}.numbers[index+u32(5)]=idx3;
         
-                `)
+                `),
             },
             gpu: pipelineLayout.gpu,
             label: 'calculatePlaneIndices.comp',

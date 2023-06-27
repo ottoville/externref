@@ -24,7 +24,7 @@ export class VertexShaderFunction<B extends readonly BGLayout[] = readonly BGLay
         this.buffers = vertexBufferLayout.map(layout => {
             return {
                 ...layout,
-                attributes: Object.values(layout.attributes2)
+                attributes: Object.values(layout.attributes2),
             }
         })
     }

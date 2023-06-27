@@ -23,7 +23,7 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
                     [,],
                     [scene],
                     [world]
-                ], [{ color, position, normal }]) => /* wgsl */ `var output:Output;
+                ], [{ color, position, normal, }]) => /* wgsl */ `var output:Output;
       //output.normal=normal;
       var curPos : mat4x4<f32> = ${world.prop('transformation')};
       curPos[3].w=1.0;
@@ -44,7 +44,7 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
                     [,],
                     [scene],
                     [world]
-                ], [{ position }]) => /* wgsl */ `
+                ], [{ position, }]) => /* wgsl */ `
         var output: PickOutput;
         var curPos : mat4x4<f32> = ${world.prop('transformation')};
         curPos[3] = ${world.prop('transformation')}[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
@@ -55,7 +55,7 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
         //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
         //ambient=lights.ambient;
         return output;`
-            )
+            ),
         },
         gpu: pipelineLayout.gpu,
         label: 'VertexColor.vert',

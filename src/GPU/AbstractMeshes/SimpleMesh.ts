@@ -21,7 +21,7 @@ export class SimpleMesh extends BoundableNodeSimple {
             vertices: {
                 stride: 8,
                 view: dataNodeProps.vertices.view,
-            }
+            },
         },
         mesh_id,
         strip);
@@ -31,7 +31,7 @@ export class SimpleMesh extends BoundableNodeSimple {
                     new Float32Array(b.getMappedRange()).set(dataNodeProps.vertices.view);
                 });
             }
-            const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline, {}, { stride: 8 });
+            const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline, {}, { stride: 8, });
             this.drawable = new DrawableSimple({
                 node: this,
                 renderPasses: undefined,

@@ -42,7 +42,7 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
             buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 }
         },
         variableName: string,
-        public struct: S,
+        public struct: S
     ) {
 
         super(entry, variableName, struct.name)
@@ -73,7 +73,7 @@ export class SampLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
     constructor(
         public override entry: BindGroupLayoutEntryProps<V> & { sampler: NonNullable<GPUBindGroupLayoutEntry['sampler']> },
         variableName: string,
-        structName: 'sampler' | 'sampler_comparison',
+        structName: 'sampler' | 'sampler_comparison'
     ) {
         super(entry, variableName, structName)
     }
@@ -88,10 +88,10 @@ export class BGLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]>
             entries: entries.map((entry, i) => {
                 return {
                     ...entry.entry,
-                    binding: i
+                    binding: i,
                 }
             }),
-            label
+            label,
         });
         this.entries = entries;
         for (const e of entries) {

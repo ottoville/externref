@@ -187,26 +187,26 @@ function Dot(left: readonly [number, number, number] | Float32Array | TerraVecto
 }
 const ObjectStores = {
     maps: <ObjStoreDetails>{
-        parameters: { autoIncrement: true, keyPath: 'id' },
+        parameters: { autoIncrement: true, keyPath: 'id', },
         version: 4,
     },
     plantae: <ObjStoreDetails>{
         indices: [
-            { keyPath: 'family', name: 'family', options: { unique: false }, version: 3 },
-            { keyPath: 'x', name: 'x', options: { unique: false }, version: 6 },
-            { keyPath: 'grid', name: 'grid', options: { unique: false }, version: 6 },
-            { keyPath: ['gridx', 'gridz'], name: 'gridxz', options: { unique: false }, version: 6 },
+            { keyPath: 'family', name: 'family', options: { unique: false, }, version: 3, },
+            { keyPath: 'x', name: 'x', options: { unique: false, }, version: 6, },
+            { keyPath: 'grid', name: 'grid', options: { unique: false, }, version: 6, },
+            { keyPath: ['gridx', 'gridz'], name: 'gridxz', options: { unique: false, }, version: 6, }
         ],
-        parameters: { autoIncrement: true, keyPath: 'id' },
+        parameters: { autoIncrement: true, keyPath: 'id', },
         version: 2,
 
     },
     save: <ObjStoreDetails>{
-        parameters: { autoIncrement: false, keyPath: ['type', 'name'] },
+        parameters: { autoIncrement: false, keyPath: ['type', 'name'], },
         version: 3,
     },
     zones: <ObjStoreDetails>{
-        parameters: { autoIncrement: true, keyPath: 'id' },
+        parameters: { autoIncrement: true, keyPath: 'id', },
         version: 1,
     },
 };
@@ -340,7 +340,7 @@ export class Engine {
                 },
                 warn(ptr: number) {
                     console.warn(stringFromPtr(rust.instance.exports.memory, ptr))
-                }
+                },
             },
             env: {
                 handle_gpu_queue(pointerVec: number, length: number) {
@@ -374,8 +374,8 @@ export class Engine {
                 },
                 update_point_lights(pointer: number, length: number) {
                     engine.gpu?.update_point_lights(pointer, length)
-                }
-            }
+                },
+            },
         }
         let GPUDataSize: number;
         try {
@@ -406,7 +406,7 @@ export class Engine {
                     },
                 },
                 env: {
-                    memory: rust.instance.exports.memory
+                    memory: rust.instance.exports.memory,
                 },
                 rust: rust.instance.exports,
             };
@@ -477,7 +477,7 @@ export class Engine {
             }
             try {
                 console.log('Getting device')
-                device = await adapter.requestDevice({ label: 'device' + (deviceId++) });
+                device = await adapter.requestDevice({ label: 'device' + (deviceId++), });
             } catch (e) {
                 console.error(e);
                 console.log('Failed to get device');
@@ -562,7 +562,7 @@ export class Engine {
         public wasm: ColliderWasm,
         public rust: rustWasm,
         public showErrorError: (e: Error) => void,
-        GPUDataSize: number,
+        GPUDataSize: number
     ) {
         if (nodes) {
             this.canvas = nodes.canvas;
@@ -604,7 +604,7 @@ export class Engine {
                             cancelled = (OtherEvents[i]!.cb(e) ?? false) || cancelled
                         }
                     }
-                }, { passive: false });
+                }, { passive: false, });
             });
             const waterCamera = new TerraCamera('waterCamera', 'renderPassWater', this.mainCamera);
             waterCamera.beforeViewUpdate.add((position, direction) => {

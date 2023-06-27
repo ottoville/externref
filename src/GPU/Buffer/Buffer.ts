@@ -128,7 +128,7 @@ export class Buffer extends Bindable {
             this.buffer = gpu.device.createBuffer(desc);
         } catch (e) {
             engine.showError(e);
-            throw (new Error('Cannot create buffer', { cause: (e instanceof Error ? e : new Error(new String(e).toString())) }));
+            throw (new Error('Cannot create buffer', { cause: (e instanceof Error ? e : new Error(new String(e).toString())), }));
         }
         if (usages.includes(GPUBufferUsage.UNIFORM)) {
             (this as unknown as BindUniformBuffer).getUniformBinding = bufferBinding.bind(this, 'UNIFORM');
@@ -184,7 +184,7 @@ export class Buffer extends Bindable {
                     source,
                     {
                         buffer: this.buffer,
-                        ...dataLayout
+                        ...dataLayout,
                     },
                     copySize
                 );
@@ -215,15 +215,15 @@ class copySrcBuffer extends Buffer {
     }
     resize(size: number) {
         try {
-            const commandEncoder = this.gpu.device.createCommandEncoder({ label: 'bufferResizeEncoder' });
-            const newBuffer = this.gpu.device.createBuffer({ label: this.label, size, usage: this.buffer.usage | GPUBufferUsage.COPY_DST });
+            const commandEncoder = this.gpu.device.createCommandEncoder({ label: 'bufferResizeEncoder', });
+            const newBuffer = this.gpu.device.createBuffer({ label: this.label, size, usage: this.buffer.usage | GPUBufferUsage.COPY_DST, });
             commandEncoder.copyBufferToBuffer(this.buffer, 0, newBuffer, 0, this.buffer.size);
             this.gpu.device.queue.submit([commandEncoder.finish()]);
             this.destroy();
             this.buffer = newBuffer;
         } catch (e) {
             engine.showError(e);
-            throw (new Error('Cannot create resized buffer', { cause: (e instanceof Error ? e : new Error(new String(e).toString())) }));
+            throw (new Error('Cannot create resized buffer', { cause: (e instanceof Error ? e : new Error(new String(e).toString())), }));
         }
     }
 }

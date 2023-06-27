@@ -102,7 +102,7 @@ export class ArcRotateCamera extends CameraController {
             this.#target.set([
                 this.camera.position[0] - this.camera.direction[0] * 100,
                 this.camera.position[1] - this.camera.direction[1] * 100,
-                this.camera.position[2] - this.camera.direction[2] * 100,
+                this.camera.position[2] - this.camera.direction[2] * 100
             ]);
             this.#rebuildAnglesAndRadius();
         }
@@ -184,7 +184,7 @@ export class ArcRotateCamera extends CameraController {
                     this.pointerDown = false;
                 },
                 object: this,
-                options: { once: true },
+                options: { once: true, },
                 type: 'pointerup',
             }
             const onceLeave: ListenerObj<'pointerleave'> = {
@@ -194,7 +194,7 @@ export class ArcRotateCamera extends CameraController {
                     this.pointerDown = false;
                 },
                 object: this,
-                options: { once: true },
+                options: { once: true, },
                 type: 'pointerleave',
             }
             engine.addInputListener(onceLeave);
@@ -221,7 +221,7 @@ export class ArcRotateCamera extends CameraController {
             },
             object: this,
             options: {
-                force: true
+                force: true,
             },
             type: 'pointermove',
         } as ListenerObj<'pointermove'>

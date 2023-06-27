@@ -13,12 +13,12 @@ export class SunVertShader extends VertexShader<BindLayouts> {
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: new VertexShaderFunction(
-                    new Struct('Output', { Position: ['@builtin(position)', 'vec4<f32>'] }),
+                    new Struct('Output', { Position: ['@builtin(position)', 'vec4<f32>'], }),
                     pipelineLayout,
                     '@builtin(vertex_index) VertexIndex : u32,',
                     [], ([
                         [/*uniforms*/,],
-                        [scene,/*time, clusters_array, meshes, projection*/],
+                        [scene/*time, clusters_array, meshes, projection*/],
                         [world]
                     ]) => /* wgsl */ `
                     var output:Output;
@@ -37,7 +37,7 @@ export class SunVertShader extends VertexShader<BindLayouts> {
                     return output;
                 
                   `
-                )
+                ),
             },
             gpu: pipelineLayout.gpu,
             label: 'Sun.vert',

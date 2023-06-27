@@ -64,7 +64,7 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
        ${normals.prop('numbers')}[j + i + 4u]=normalized.x;
        ${normals.prop('numbers')}[j + i + 5u]=normalized.y;
        ${normals.prop('numbers')}[j + i + 6u]=normalized.z;
-                `)
+                `),
             },
             gpu: pipelineLayout.gpu,
             label: 'CalculateNormals.comp',

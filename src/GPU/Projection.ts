@@ -23,13 +23,13 @@ export class Projection {
             f / aspectRatio, 0.0, 0.0, 0.0,
             0.0, f, 0.0, 0.0,
             0.0, 0.0, 0.0, -1.0,
-            0.0, 0.0, this.nearPlane, 0.0,
+            0.0, 0.0, this.nearPlane, 0.0
         ]);
         this.reversedProjectionFarPlane.set([
             f / aspectRatio, 0.0, 0.0, 0.0,
             0.0, f, 0.0, 0.0,
             0.0, 0.0, this.farPlane * nf, -1.0,
-            0.0, 0.0, this.farPlane * this.nearPlane * nf, 0.0,
+            0.0, 0.0, this.farPlane * this.nearPlane * nf, 0.0
         ]);
 
         if (!initial && this.gpuBuffer)

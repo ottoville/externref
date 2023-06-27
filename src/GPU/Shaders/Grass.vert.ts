@@ -10,7 +10,7 @@ export const positionAttr = Object.freeze({
         offset: 0,
         shaderFormat: 'vec4<f32>',
         shaderLocation: 0,
-    }
+    },
 } as const);
 
 export const shapeAttr = Object.freeze({
@@ -19,7 +19,7 @@ export const shapeAttr = Object.freeze({
         offset: 0,
         shaderFormat: 'vec4<f32>',
         shaderLocation: 1,
-    }
+    },
 } as const)
 
 export const vertexPositionAttr = Object.freeze({
@@ -28,7 +28,7 @@ export const vertexPositionAttr = Object.freeze({
         offset: 0,
         shaderFormat: 'vec2<f32>',
         shaderLocation: 2,
-    }
+    },
 } as const)
 
 
@@ -50,8 +50,8 @@ export function createGrassVertShader(
                 buffers,
                 ([
                     [/*uniform*/,],
-                    [scene, time,/*clusters_array, meshes, projection*/]
-                ], [{ position }, { shape }, { vertex_position }]) => /* wgsl */ `
+                    [scene, time/*clusters_array, meshes, projection*/]
+                ], [{ position, }, { shape, }, { vertex_position, }]) => /* wgsl */ `
                 var output:Output;
                 //ambient = lights.ambient;
                  var vertice:vec3<f32> = vec3<f32>(${vertex_position}.xy,0.0);
@@ -105,7 +105,7 @@ export function createGrassVertShader(
                    return output;
                
                 `
-            )
+            ),
         },
         gpu: pipelineLayout.gpu,
         label: 'grass.vert',

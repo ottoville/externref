@@ -1,7 +1,7 @@
 import { IndexedTrait } from '../../nodes/NodeIndexed2.js';
 import { DataNode } from '../../nodes/DataNode.js';
 
-export function Indices({ node }: { node: IndexedTrait }) {
+export function Indices({ node, }: { node: IndexedTrait }) {
     const verticesArray = node instanceof DataNode ? node.verticesArray : [];
     return <table>
         <thead>

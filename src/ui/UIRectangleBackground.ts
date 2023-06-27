@@ -33,7 +33,7 @@ export function createBackground(width: number, height: number, text: string, or
             textSize.height = textSize.width * originalAspectRatio;
         }
     }
-    return { copySource2, ctx, measuredSize, originalTextHeight, textSize }
+    return { copySource2, ctx, measuredSize, originalTextHeight, textSize, }
 }
 function createTexture(
     backgroundAsset: {
@@ -47,7 +47,7 @@ function createTexture(
     let copySource: ImageBitmap | OffscreenCanvas = backgroundAsset.texture
     // Create texture for text
     if (text) {
-        const { originalTextHeight, textSize, measuredSize, copySource2, ctx } = createBackground(backgroundAsset.texture.width, backgroundAsset.texture.height, text, originalAspectRatio)
+        const { originalTextHeight, textSize, measuredSize, copySource2, ctx, } = createBackground(backgroundAsset.texture.width, backgroundAsset.texture.height, text, originalAspectRatio)
         copySource = copySource2;
         const extendedSize = {
             height: backgroundAsset.texture.height + textSize.height,
@@ -109,8 +109,8 @@ export class UIRectangleBackground extends UIRectangleText {
         outer_sizeX: number;
         outer_sizeY: number;
     }) {
-        const { vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY } = args
-        const { borderSize } = this.props
+        const { vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, } = args
+        const { borderSize, } = this.props
         const texture = this.backgroundAsset.texture;
         const container_uvs = {
             bottom: this.backgroundAsset.border_height * texture.height,
@@ -205,7 +205,7 @@ export class UIRectangleBackground extends UIRectangleText {
                     content_sizeX, -outer_sizeY, container_uvs.left, texture.height,
                     outer_sizeX, -outer_sizeY, texture.width, texture.height,
                     content_sizeX, -content_sizeY, container_uvs.left, container_uvs.top,
-                    outer_sizeX, -content_sizeY, texture.width, container_uvs.top,
+                    outer_sizeX, -content_sizeY, texture.width, container_uvs.top
                 ], 24)
         }
         return vertices;

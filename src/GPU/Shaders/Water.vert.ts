@@ -10,7 +10,7 @@ export const positionAttr = Object.freeze(
             offset: 0,
             shaderFormat: 'vec3<f32>',
             shaderLocation: 0,
-        }
+        },
     } as const
 )
 type BindLayouts = GPU['bindGroupTextureWater']['bindGroupLayouts']
@@ -32,10 +32,10 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
                 [buffers],
                 ([
                     [/*uniforms*/,],
-                    [scene,/*time, clusters_array, meshes, projection*/],
+                    [scene/*time, clusters_array, meshes, projection*/],
                     [/*world*/,],
                     [/*mySampler, diffuseTexture*/,]
-                ], [{ position }]) => /* wgsl */ `
+                ], [{ position, }]) => /* wgsl */ `
                         var output:Output;
                         output.Position = ${scene.variableName}.modelViewProjection * vec4<f32>(${position}, 1.0);
                         output.v_uv = output.Position;
@@ -46,7 +46,7 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
                         //ambient=lights.ambient;
                         return output;
                     `
-            )
+            ),
         },
         gpu: pipelineLayout.gpu,
         label: 'water.vert',

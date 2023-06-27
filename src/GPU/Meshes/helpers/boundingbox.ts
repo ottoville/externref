@@ -26,9 +26,9 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
                 vertices: {
                     stride: 4,
                     view: [ptr as rust_pointer<'f32'>, len!, cap!],
-                }
+                },
             },
-            new_rust_mesh({ label: 'BoundingBox_' + targetNode.node.label, rigid_body: false }),
+            new_rust_mesh({ label: 'BoundingBox_' + targetNode.node.label, rigid_body: false, }),
             true);
         this.indexed = new NodeIndexed2(this, allocate_vec(Uint32Array.of(0,1,2,3,4,5,6,7,
             4,6,1,5,2,0,3,7,0,
@@ -40,7 +40,7 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
             {
                 stripIndexFormat: 'uint32',
                 topology: 'line-strip',
-            }, { stride: 4 }
+            }, { stride: 4, }
         );
         this.drawable = new DrawableIndexed({
             node: this,

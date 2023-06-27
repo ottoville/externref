@@ -19,7 +19,7 @@ export class RenderPipeline<V extends VertexShader = VertexShader, F extends Fra
     dynamicBindGroupOffset: number[] = [];
     public createSharedBindGroups?: () => Set<BindGroup>;
     constructor(
-        public props: Readonly<RenderPipelineProps<V, F>>,
+        public props: Readonly<RenderPipelineProps<V, F>>
     ) {
     }
     destroy(): void {

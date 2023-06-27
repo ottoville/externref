@@ -56,7 +56,7 @@ let maxPointFar = lineIntersectionToZPlane(eyePos, maxPoint_vS, tileFar);
 ${clusters.prop('bounds')}[tileIndex].minAABB = vec4<f32>(min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar)),0);
 ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar)),0);
 
-            `)
+            `),
         },
         gpu: pipelineLayout.gpu,
         label: 'Clusters.comp',

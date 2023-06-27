@@ -17,7 +17,7 @@ export class Box extends IndexedSingleColoredMesh {
             can_collide = false,
             label = 'box' + (uid++),
             color = [1, 0, 0, 0],
-            fixed = false }:
+            fixed = false, }:
             {
                 scenes?: Scene[],
                 point_light?: number,

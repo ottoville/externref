@@ -55,7 +55,7 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
             */
             this.destroyInstance();
         }
-        const { onClick, bitmap, text, children } = this.props
+        const { onClick, bitmap, text, children, } = this.props
         const commonProps: UIRectangleProps = {
             canvaspipeline: gpu.UIPipeline,
             renderPass: gpu.renderPassCanvas,
@@ -65,7 +65,7 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
             commonProps.events = {
                 onClick: () => {
                     onClick(this.props.UIRectangleProps.label)
-                }
+                },
             }
         }
         if (!this.#instance) {

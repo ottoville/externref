@@ -5,7 +5,7 @@ export abstract class BoundableNodeSimple extends DataNode implements canCollide
     constructor(
         dataNodeProps: DataNodeProps,
         mesh_id: number,
-        strip = false,
+        strip = false
     ) {
         super(
             dataNodeProps,

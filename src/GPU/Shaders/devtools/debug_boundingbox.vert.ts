@@ -14,15 +14,15 @@ export function createDebugBoundingBoxVertShader(pipelineLayout: PipelineLayout<
                 '',
                 [buffers], ([
                     [/*uniforms*/,],
-                    [scene,/*time, clusters_array, meshes, projection*/],
-                    [world,]
+                    [scene/*time, clusters_array, meshes, projection*/],
+                    [world]
                 ]) => /* wgsl */ `
                 var output : Output;
                 var vertexPosition:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(position.xyz, 1.0);
                 output.position = ${scene.prop('modelViewProjection')} * vertexPosition;
                 output.color = vec3<f32>(0.0,1.0,0.0);
                 return output;
-            `)
+            `),
         },
         gpu: pipelineLayout.gpu,
         label: 'debug_boundingBox.vert',

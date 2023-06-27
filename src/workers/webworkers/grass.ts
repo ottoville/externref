@@ -34,7 +34,7 @@ const methods = {
         const trans = (await DB).transaction(['plantae']);
         trans.objectStore('plantae').getAll().onsuccess = (evt) => {
             bladecount = Math.min((<IDBRequest>evt.target).result.length, grasspositions.length);
-            trans.oncomplete = () => globalThis.postMessage({ count: bladecount, type: 'updated' })
+            trans.oncomplete = () => globalThis.postMessage({ count: bladecount, type: 'updated', })
             for (let i = 0; i < bladecount; i++) {
                 const r = (<IDBRequest>evt.target).result[i];
                 grasspositions.set(r.pos, i * 2);
@@ -48,7 +48,7 @@ const methods = {
         grasspositions = newArray;
     },
     init: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
-        globalThis.postMessage({ id: data.id });
+        globalThis.postMessage({ id: data.id, });
         caches.match(new Request('/grass')).then(response => {
             if (response) {
                 return response.arrayBuffer();
@@ -56,7 +56,7 @@ const methods = {
                 return fetch('/assets/grass').then(response2 => response2.arrayBuffer())
             }
         }).then(arrayBuffer => {
-            globalThis.postMessage({ buffer: arrayBuffer, type: 'updated' });
+            globalThis.postMessage({ buffer: arrayBuffer, type: 'updated', });
         }).catch(e => {
             console.error('Error in web worker', e)
         })
@@ -143,7 +143,7 @@ const methods = {
                grasspositions[i * 2 + 1] = plantaes[i].pos[1]
            }*/
         console.log('update grass, count', grasspositions.length / 2);
-        globalThis.postMessage({ buffer: grasspositions.buffer, count: grasspositions.length / 2, type: 'updated' });
+        globalThis.postMessage({ buffer: grasspositions.buffer, count: grasspositions.length / 2, type: 'updated', });
 
         const response = new Response(grasspositions);
         response.headers.set('content-length', grasspositions.buffer.byteLength.toString());
@@ -152,7 +152,7 @@ const methods = {
         const cache = await cacheP;
         cache.put(new Request('/grass'), response);
 
-    }
+    },
 }
 onmessage = (e: WorkerMessage) => {
     //@ts-expect-error

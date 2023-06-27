@@ -23,7 +23,7 @@ export class createSettingsMenu extends UINode<{}> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'MSAA',
-                    scale: { min_width: 200, unit: NumericUnit.px, y: 50 },
+                    scale: { min_width: 200, unit: NumericUnit.px, y: 50, },
                     translate: {
                         x: {
                             anchor: Anchor.CENTER,
@@ -39,7 +39,7 @@ export class createSettingsMenu extends UINode<{}> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'Close',
-                    scale: { min_width: 200, unit: NumericUnit.px, y: 50 },
+                    scale: { min_width: 200, unit: NumericUnit.px, y: 50, },
                     translate: {
                         x: {
                             anchor: Anchor.CENTER,
@@ -47,7 +47,7 @@ export class createSettingsMenu extends UINode<{}> {
                         }, y: {
                             anchor: Anchor.CENTER,
                             value: [-60, NumericUnit.px],
-                        }
+                        },
                     },
                 },
                 onClick: () => {
@@ -58,7 +58,7 @@ export class createSettingsMenu extends UINode<{}> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'DevTools',
-                    scale: { min_width: 200, unit: NumericUnit.px, y: 50 },
+                    scale: { min_width: 200, unit: NumericUnit.px, y: 50, },
                     translate: {
                         x: {
                             anchor: Anchor.CENTER,
@@ -66,12 +66,12 @@ export class createSettingsMenu extends UINode<{}> {
                         }, y: {
                             anchor: Anchor.CENTER,
                             value: [-120, NumericUnit.px],
-                        }
+                        },
                     },
                 },
                 onClick: () => {
                     import('./DevTools/DevTools.js')
-                        .then(({ DevTools }) => DevTools(engine.devTools!))
+                        .then(({ DevTools, }) => DevTools(engine.devTools!))
                         .catch(err => engine.showError(err));
                     this.destroy();
                 },

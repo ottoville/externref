@@ -5,7 +5,7 @@ import type { ColliderJS } from '../Collider.js';
 import type { Engine, rust_pointer, rust_vec_ptr } from '../engine.js';
 declare const engine: Engine;
 
-const worker = new ObjectWorkerThread('mesh.js', { type: 'module' });
+const worker = new ObjectWorkerThread('mesh.js', { type: 'module', });
 export interface canCollideCharacter {
     rebuildTrianglePlanes(): void
 }
@@ -140,7 +140,7 @@ export abstract class DataNode extends MainNode {
             can_collide = false,
             static_faces = false,
             frontFace = 'cw',
-            character_can_collide_to = true
+            character_can_collide_to = true,
         }: DataNodeProps,
         mesh_id: number,
         strip = false
@@ -254,7 +254,7 @@ export abstract class DataNode extends MainNode {
                 quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
                 quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
                 quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
-                quatro[0].planeCollider[3], quatro[1].planeCollider[3], quatro[2].planeCollider[3], quatro[3].planeCollider[3], //d
+                quatro[0].planeCollider[3], quatro[1].planeCollider[3], quatro[2].planeCollider[3], quatro[3].planeCollider[3] //d
             ]);
         });
     }

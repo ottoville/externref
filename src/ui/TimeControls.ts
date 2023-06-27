@@ -14,11 +14,11 @@ export class createTimeControls extends UINode<{}, MenuState> {
     constructor() {
         super({});
         this.state = {
-            timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString()
+            timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString(),
         }
         setInterval(() => {
             this.setState({
-                timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString()
+                timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString(),
             });
         }, 1000);
     }
@@ -32,7 +32,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'TimeOfDay',
-                    scale: { min_width: 300, unit: NumericUnit.px, y: 30 },
+                    scale: { min_width: 300, unit: NumericUnit.px, y: 30, },
                     translate: {
                         x: {
                             anchor: Anchor.RIGHT,
@@ -41,7 +41,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         y: {
                             anchor: Anchor.BOTTOM,
                             value: [80, NumericUnit.px],
-                        }
+                        },
                     },
                 },
                 text: 'Time of day ' + this.state.timeOfDay,
@@ -49,13 +49,13 @@ export class createTimeControls extends UINode<{}, MenuState> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'pause',
-                    scale: { min_width: 30, unit: NumericUnit.px, y: 30 },
+                    scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
                     translate: {
                         x: {
                             anchor: Anchor.RIGHT,
                             value: [275, NumericUnit.px],
                         },
-                        y: yPos
+                        y: yPos,
                     },
                 },
                 onClick: () => {
@@ -66,13 +66,13 @@ export class createTimeControls extends UINode<{}, MenuState> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'play',
-                    scale: { min_width: 30, unit: NumericUnit.px, y: 30 },
+                    scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
                     translate: {
                         x: {
                             anchor: Anchor.RIGHT,
                             value: [235, NumericUnit.px],
                         },
-                        y: yPos
+                        y: yPos,
                     },
                 },
                 onClick: () => {
@@ -84,13 +84,13 @@ export class createTimeControls extends UINode<{}, MenuState> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'fastforward',
-                    scale: { min_width: 30, unit: NumericUnit.px, y: 30 },
+                    scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
                     translate: {
                         x: {
                             anchor: Anchor.RIGHT,
                             value: [190, NumericUnit.px],
                         },
-                        y: yPos
+                        y: yPos,
                     },
                 },
                 onClick: () => {
@@ -101,13 +101,13 @@ export class createTimeControls extends UINode<{}, MenuState> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'fastforward1',
-                    scale: { min_width: 30, unit: NumericUnit.px, y: 30 },
+                    scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
                     translate: {
                         x: {
                             anchor: Anchor.RIGHT,
                             value: [145, NumericUnit.px],
                         },
-                        y: yPos
+                        y: yPos,
                     },
                 },
                 onClick: () => {
@@ -118,13 +118,13 @@ export class createTimeControls extends UINode<{}, MenuState> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'fastforward2',
-                    scale: { min_width: 30, unit: NumericUnit.px, y: 30 },
+                    scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
                     translate: {
                         x: {
                             anchor: Anchor.RIGHT,
                             value: [105, NumericUnit.px],
                         },
-                        y: yPos
+                        y: yPos,
                     },
                 },
                 onClick: () => {
@@ -135,13 +135,13 @@ export class createTimeControls extends UINode<{}, MenuState> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'fastforward3',
-                    scale: { min_width: 30, unit: NumericUnit.px, y: 30 },
+                    scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
                     translate: {
                         x: {
                             anchor: Anchor.RIGHT,
                             value: [65, NumericUnit.px],
                         },
-                        y: yPos
+                        y: yPos,
                     },
                 },
                 onClick: () => {
@@ -152,13 +152,13 @@ export class createTimeControls extends UINode<{}, MenuState> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'fastforward4',
-                    scale: { min_width: 30, unit: NumericUnit.px, y: 30 },
+                    scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
                     translate: {
                         x: {
                             anchor: Anchor.RIGHT,
                             value: [25, NumericUnit.px],
                         },
-                        y: yPos
+                        y: yPos,
                     },
                 },
                 onClick: () => {

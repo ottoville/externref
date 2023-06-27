@@ -2,7 +2,7 @@ import { MainNode } from '../../MainNode.js';
 import { ReadOnlyTerraVector3 } from '../../Math.js';
 import { useEffect, useRef } from 'react';
 
-export function Rotation({ node }: { node: MainNode }) {
+export function Rotation({ node, }: { node: MainNode }) {
     const rotationX = useRef<HTMLInputElement>(null)
     const rotationY = useRef<HTMLInputElement>(null)
     const rotationZ = useRef<HTMLInputElement>(null);
@@ -42,7 +42,7 @@ export function Rotation({ node }: { node: MainNode }) {
     return <fieldset>
         <legend>Rotation</legend>
         <label> X:
-            <input style={{ verticalAlign: 'middle' }}
+            <input style={{ verticalAlign: 'middle', }}
                 ref={rotationX}
                 onChange={() => {
                     changeRotation();
@@ -50,7 +50,7 @@ export function Rotation({ node }: { node: MainNode }) {
         </label> {rotationX.current && (180 / Math.PI * rotationX.current?.valueAsNumber).toFixed(2)}
         <br />
         <label>Y:
-            <input style={{ verticalAlign: 'middle' }}
+            <input style={{ verticalAlign: 'middle', }}
                 ref={rotationY}
                 onChange={() => {
                     changeRotation();
@@ -59,7 +59,7 @@ export function Rotation({ node }: { node: MainNode }) {
         </label>
         <br />
         <label>Z:
-            <input style={{ verticalAlign: 'middle' }}
+            <input style={{ verticalAlign: 'middle', }}
                 ref={rotationZ}
                 onChange={() => {
                     changeRotation();

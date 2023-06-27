@@ -37,7 +37,7 @@ declare const engine: Engine;
 class Light extends MainNode {
     drawable = undefined;
     constructor(scene: Scene) {
-        super(new_rust_mesh({ directional_light: 1, label: 'Light', point_light: 0, scenes: [scene] }));
+        super(new_rust_mesh({ directional_light: 1, label: 'Light', point_light: 0, scenes: [scene], }));
     }
 }
 const errors: Error[] = []
@@ -87,7 +87,7 @@ export class Canvas {
 
 
         const progressForWasmLoading = 34;
-        Engine.initEngine({ canvas: this.#canvasElem, devTools }, (e) => {
+        Engine.initEngine({ canvas: this.#canvasElem, devTools, }, (e) => {
             errors.push(e);
             this.showError();
         }, {
@@ -120,12 +120,12 @@ export class Canvas {
                                 }
                             } while (!done)
                             controller.close();
-                        }
+                        },
                     });
-                    return new Response(reableStream, { headers: response.headers });
+                    return new Response(reableStream, { headers: response.headers, });
                 }
                 return response;
-            })
+            }),
         }).then(async terraEngine => {
             if (!terraEngine)
                 return;
@@ -146,7 +146,7 @@ export class Canvas {
                 //new testPlane(terrascene);
                 const archRotateController = new ArcRotateCamera(engine.mainCamera, true);
                 engine.mainCamera.attachControllerForCamera(archRotateController);
-                const human = new Human({ inputEnabled: false, scenes: [terrascene] });
+                const human = new Human({ inputEnabled: false, scenes: [terrascene], });
                 // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
                 human.translation = [403.4, 1000, 23];
                 document.addEventListener('keydown', e => {
@@ -159,7 +159,7 @@ export class Canvas {
                     }
                 })
                 const terrainInited = Terrain.loadFromTexture(gpu, [terrascene]);
-                terrainInited.then(terrain => new createTopMenu({ gpu, terrain })).catch(err => {
+                terrainInited.then(terrain => new createTopMenu({ gpu, terrain, })).catch(err => {
                     errors.push(err)
                     this.showError();
                 });
@@ -184,7 +184,7 @@ export class Canvas {
              slope.update_rotation(Math.sin(1.4), 0, 0, Math.cos(1.4));
              slope.translation = [23, 500, 23];
          */
-            const cone = new Cone({ label: 'cone' }, true);
+            const cone = new Cone({ label: 'cone', }, true);
             cone.euler_angles = [90, 0, 0];
             cone.translation = [0, 900, -70];
             cone.update_scale(50, 50, 50)
@@ -213,11 +213,11 @@ export class Canvas {
             capsule3.color = [0, 0, 1, 0];
 
 
-            const roundCuboid = new RoundCuboid({ depth: 80, height: 40, width: 40 }, { borderRadius: 10 }, { fixed: true, label: 'roundCuboid' });
+            const roundCuboid = new RoundCuboid({ depth: 80, height: 40, width: 40, }, { borderRadius: 10, }, { fixed: true, label: 'roundCuboid', });
             roundCuboid.translation = [200, 900, -70];
             roundCuboid.color = [0, 0, 1, 0];
 
-            const sphere4 = new IcoSphere({ can_collide: true, fixed: false, label: 'blueball3', order: 1 });
+            const sphere4 = new IcoSphere({ can_collide: true, fixed: false, label: 'blueball3', order: 1, });
             sphere4.translation = [-100, 900, -70];
             sphere4.update_scale(30);
             sphere4.color = [1, 0, 1, 0];
@@ -255,7 +255,7 @@ export class Canvas {
                 label: 'UICanvas',
                 renderPass: gpu.renderPassCanvas,
 
-                scale: { min_width: 1, unit: NumericUnit['%'], y: 1 },
+                scale: { min_width: 1, unit: NumericUnit['%'], y: 1, },
                 translate: {
                     x: {
                         anchor: Anchor.CENTER,
@@ -264,7 +264,7 @@ export class Canvas {
                     y: {
                         anchor: Anchor.CENTER,
                         value: [0],
-                    }
+                    },
                 },
             }, gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view);
             this.setProgress(45);
@@ -272,7 +272,7 @@ export class Canvas {
             const webSocket = new WebSocket('wss://localhost:8081/echo');
             webSocket.onopen = () => {
                 console.log('websocket onopen');
-                webSocket.send(JSON.stringify({ action: 'init', data: { /* userinfo: state.userInfo, ticks */ } }));
+                webSocket.send(JSON.stringify({ action: 'init', data: { /* userinfo: state.userInfo, ticks */ }, }));
                 webSocket.onmessage = (e) => {
                     console.log('message from WS', e)
                     const msg = JSON.parse(e.data);

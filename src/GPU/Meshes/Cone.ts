@@ -35,7 +35,7 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
     vertices.set(
         [
             0, 0, 1, 1, /* normals: */ 0, 0, 0, 1,
-            x, 0, z, 1, /* normals: */ 0, 0, 0, 1,
+            x, 0, z, 1, /* normals: */ 0, 0, 0, 1
         ]);
     indices.set([0, 1]);
     progress += facelen;
@@ -83,7 +83,7 @@ function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, i
     const window: number[] = [];
     for (let i = 0; i < indicesOrder.length; i++) {
         if (window.push(indicesOrder[i]!) === 2) {
-            coneIndices.push(window[1]!, window[0]!, zeroIndice,);
+            coneIndices.push(window[1]!, window[0]!, zeroIndice);
             window.shift();
         }
     }

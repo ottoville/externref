@@ -68,7 +68,7 @@ export class RenderPass<U extends {
             entryPoint,
             rootLayout,
             label,
-            GPURenderBundleEncoderDescriptor
+            GPURenderBundleEncoderDescriptor,
         }: RenderPassProps<U>
     ) {
         this.gpu = gpu;
@@ -111,7 +111,7 @@ export class RenderPass<U extends {
         this.sizeBindGroup = () => gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup', bindGroup => [
             {
                 binding: 0,
-                resource: this.#sizeBuffer.getUniformBinding(bindGroup, 0, 16)
+                resource: this.#sizeBuffer.getUniformBinding(bindGroup, 0, 16),
             }
         ]);
     }
@@ -138,7 +138,7 @@ export class RenderPass<U extends {
                 ...renderPipeline.props.renderPipeline,
                 layout: renderPipeline.props.bindgroupdrawable.layout,
                 ...this.onDecoratePipeline(renderPipeline),
-                label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label
+                label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label,
             };
             console.debug('Create renderpipeline ', renderPipeline.props.label, params)
             const variantP = this.gpu.device.createRenderPipelineAsync(
@@ -146,18 +146,18 @@ export class RenderPass<U extends {
             ).catch((err: unknown) => {
                 if (err instanceof DOMException) {
                     if (err.message.includes(renderPipeline.props.vertexShader.module.label)) {
-                        console.error('createRenderPipelineAsync failed, vertex', renderPipeline.props.vertexShader.module.label, 'wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err })
+                        console.error('createRenderPipelineAsync failed, vertex', renderPipeline.props.vertexShader.module.label, 'wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err, })
                     }
                     else if (err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
-                        console.error('createRenderPipelineAsync failed, fragment', renderPipeline.props.fragmentShader.module.label, 'wgsl:', renderPipeline.props.fragmentShader.wgsl, { cause: err })
+                        console.error('createRenderPipelineAsync failed, fragment', renderPipeline.props.fragmentShader.module.label, 'wgsl:', renderPipeline.props.fragmentShader.wgsl, { cause: err, })
                     } else {
                         console.error('createRenderPipelineAsync failed, vertex', renderPipeline.props.vertexShader.module.label, ' wgsl:',
                             renderPipeline.props.vertexShader.wgsl,
                             'fragment', renderPipeline.props.fragmentShader.module, ' wgsl:', renderPipeline.props.fragmentShader.wgsl,
-                            { cause: err });
+                            { cause: err, });
                     }
                 }
-                throw (new Error('createRenderPipelineAsync failed', { cause: err }));
+                throw (new Error('createRenderPipelineAsync failed', { cause: err, }));
             }).then((variantPipeline) => {
                 variant = new RenderPipelineVariant(
                     variantPipeline,
@@ -189,7 +189,7 @@ export class RenderPass<U extends {
                         state.blend = rt.blend
                     }
                     return state;
-                })
+                }),
             },
             vertex: {
                 buffers: renderpipeline.props.vertexShader.props.entryPoints[this.#entryPoint]!.buffers,
@@ -198,7 +198,7 @@ export class RenderPass<U extends {
             },
         }
         if (this.sampleCount > 1)
-            renderPipelineDescriptor.multisample = { count: this.sampleCount };
+            renderPipelineDescriptor.multisample = { count: this.sampleCount, };
         return renderPipelineDescriptor;
     }
     resize(width: number, height: number) {

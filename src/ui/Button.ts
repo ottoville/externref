@@ -14,7 +14,7 @@ export function Button(props: ButtonProps) {
             borderSize: {
                 height: 'auto',
                 width: [8, NumericUnit.px],
-            } as const
-        }
+            } as const,
+        },
     }
 }

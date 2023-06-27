@@ -23,7 +23,7 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
                 @builtin(vertex_index) VertexIndex : u32,`,
                 [], ([
                     [/*uniforms*/,],
-                    [scene, time,/*clusters_array, meshes, projection*/],
+                    [scene, time/*clusters_array, meshes, projection*/],
                     [world],
                     [_slopes, _facet12]
                 ]) => /* wgsl */ `
@@ -42,12 +42,12 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
      output.Position = ${scene.prop('modelViewProjection')} * worldPos;
      output.color = vec3<f32>(1.0,1.0,1.0);
      return output;
-                `)
+                `),
             },
             gpu: pipelineLayout.gpu,
             label: 'helper.vert',
         }, ([/*uniforms*/,],
-            [_scene, _time,/*clusters_array, meshes, projection*/],
+            [_scene, _time/*clusters_array, meshes, projection*/],
             [_world],
             [slopes, facet12]) => `
         const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;

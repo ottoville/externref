@@ -45,7 +45,7 @@ export class Sun extends MainNode {
     }
     drawable: DrawableSimple<RenderPipeline<SunVertShader>> | undefined;
     constructor(gpu: GPU, scenes: Scene[]) {
-        super(new_rust_mesh({ directional_light: 1, label: 'sun', scenes }));
+        super(new_rust_mesh({ directional_light: 1, label: 'sun', scenes, }));
         this.positions_count = 14
         const renderPipeline = gpu.createRenderPipeline(SunRenderPipeline, {
             cullMode: 'none',

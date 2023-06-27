@@ -141,11 +141,11 @@ export class Texture<
                 commandEncoder.copyTextureToTexture(
                     {
                         texture: from.texture,
-                        ...sourceDetails
+                        ...sourceDetails,
                     },
                     {
                         texture: this.texture,
-                        ...destinationDetails
+                        ...destinationDetails,
                     },
                     copySize
                 );
@@ -219,7 +219,7 @@ export class RenderTarget<
 {
     bytes_per_fixel: number;
     constructor(
-        textureOptions: TextureParams<F, U, S>,
+        textureOptions: TextureParams<F, U, S>
     ) {
         super(textureOptions);
         switch (textureOptions.format) {
@@ -239,7 +239,7 @@ export class RenderTarget<
     copyFromExternalImage(
         source: GPUImageCopyExternalImage,
         destination: Omit<GPUImageCopyTextureTagged, 'texture'> & { origin?: GPUOrigin3DDict },
-        copySize: GPUExtent3DDict,
+        copySize: GPUExtent3DDict
 
     ) {
         if ((this.props.usages & GPUTextureUsage.COPY_DST) === 0) {
@@ -255,7 +255,7 @@ export class RenderTarget<
             source,
             {
                 ...destination,
-                texture: this.texture
+                texture: this.texture,
             },
             copySize
         )
@@ -276,7 +276,7 @@ export class RenderTarget<
             await new Promise(res => { requestAnimationFrame(res) });
         }
 
-        const encoder = this.props.gpu.device.createCommandEncoder({ label: 'texture_toBitmap_encoder' });
+        const encoder = this.props.gpu.device.createCommandEncoder({ label: 'texture_toBitmap_encoder', });
         let bytesPerRow = this.props.size.width * this.bytes_per_fixel;
         const missAlignment = bytesPerRow % 256;
         if (missAlignment !== 0) {
@@ -294,7 +294,7 @@ export class RenderTarget<
             {
                 buffer: buffer,
                 bytesPerRow: bytesPerRow,
-                rowsPerImage: this.props.size.height
+                rowsPerImage: this.props.size.height,
             },
             this.props.size
         );

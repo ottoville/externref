@@ -75,7 +75,7 @@ export class paintPlane extends paintGround {
                                 offset: 0,
                                 shaderFormat: 'vec4<f32>',
                                 shaderLocation: 0,
-                            }
+                            },
                         } as const),
                         stepMode: 'vertex',
                     }, Terrain.settings
@@ -90,8 +90,8 @@ export class paintPlane extends paintGround {
                         vertexShader: planeVertShader,
                     });
             }
-        ], { cullMode: 'back', frontFace: 'cw', topology: 'triangle-list' },
-        { stride: 12 });
+        ], { cullMode: 'back', frontFace: 'cw', topology: 'triangle-list', },
+        { stride: 12, });
 
         this.#mesh = new PlaneMesh(renderPipeline);
     }

@@ -8,7 +8,7 @@ export const WaterRenderPipeline = [
         const sampler = gpu.device.createSampler({
             magFilter: 'nearest',
             minFilter: 'nearest',
-            mipmapFilter: 'nearest'
+            mipmapFilter: 'nearest',
         });
 
         const waterVertShader = createWaterVertShader(gpu.bindGroupTextureWater, {
@@ -29,11 +29,11 @@ export const WaterRenderPipeline = [
                 [
                     {
                         binding: 0,
-                        resource: sampler
+                        resource: sampler,
                     },
                     {
                         binding: 1,
-                        resource: gpu.renderPassWater.colorRenderTargets.diffuse.view.getTextureBinding(bindGroup)
+                        resource: gpu.renderPassWater.colorRenderTargets.diffuse.view.getTextureBinding(bindGroup),
                     }
                 ]
         )

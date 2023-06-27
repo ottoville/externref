@@ -99,7 +99,7 @@ export abstract class UIRectangle extends DataNode {
     uniformBuffer: CopyDstBuffer & BindUniformBuffer;
     textureView: TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>>;
     createTextureView(
-        copySource: ImageBitmap | OffscreenCanvas,
+        copySource: ImageBitmap | OffscreenCanvas
     ) {
         if (this.drawable && this.texture) {
             if (copySource.width > this.texture.props.size.width ||
@@ -117,20 +117,20 @@ export abstract class UIRectangle extends DataNode {
                     format: 'bgra8unorm',
                     gpu: this.props.renderPass.gpu,
                     label: 'button_' + this.props.label + '_UIRectangle_text',
-                    size: { height: copySource.height, width: copySource.width },
+                    size: { height: copySource.height, width: copySource.width, },
                     usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
                 }
             );
         }
         this.texture.copyFromExternalImage(
-            { source: copySource },
+            { source: copySource, },
             {
                 origin: {
                     x: 0,
-                    y: 0
-                }
+                    y: 0,
+                },
             },
-            { height: copySource.height, width: copySource.width });
+            { height: copySource.height, width: copySource.width, });
         this.textureView = new TextureView(this.texture);
         return this.textureView;
     }
@@ -162,7 +162,7 @@ export abstract class UIRectangle extends DataNode {
 
     }
     #updateBoundingBoxAndVerticesSuper() {
-        const { scale, renderPass, originalAspectRatio, translate } = this.props
+        const { scale, renderPass, originalAspectRatio, translate, } = this.props
         if (this.props.translate.x.value[1] === NumericUnit.px || this.props.translate.y.value[1] === NumericUnit.px) {
             const buff = new ArrayBuffer(8);
             this.updatePosition(buff);
@@ -220,7 +220,7 @@ export abstract class UIRectangle extends DataNode {
             this.boundingBox.right = (movementXPixels + halfWidth) / devicePixelRatio;
         }
 
-        const { borderSize, label } = this.props
+        const { borderSize, label, } = this.props
         let widthBorderPixels: number
         let heightBorderPixels: number
         let widthBorderRelative: number
@@ -260,7 +260,7 @@ export abstract class UIRectangle extends DataNode {
         }
         const positionsCount = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6
         const vertices =  new Float32Array(positionsCount * 4);
-        return this.updateBoundingBoxAndVertices({ content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, vertices })
+        return this.updateBoundingBoxAndVertices({ content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, vertices, })
 
     }
     abstract updateBoundingBoxAndVertices(
@@ -278,7 +278,7 @@ export abstract class UIRectangle extends DataNode {
         texture: TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>> | ImageBitmap | OffscreenCanvas) {
         props.label = props.label + '_UIRectangle';
         const mesh_id = new_rust_mesh({
-            label: props.label
+            label: props.label,
         })
         super(
             {
@@ -300,7 +300,7 @@ export abstract class UIRectangle extends DataNode {
 
         this.uniformBuffer = Buffer.create(renderPass.gpu, 8 /* size of vec2<f32> */, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'UI_transform', (buff) => {
             this.updatePosition(buff.getMappedRange());
-        },
+        }
 
         );
         const onClick = events?.onClick;
@@ -322,7 +322,7 @@ export abstract class UIRectangle extends DataNode {
                     return false;
                 },
                 object: this,
-                options: { ui: true },
+                options: { ui: true, },
                 type: 'pointerup',
 
             } as ListenerObj<'pointerup'>)
@@ -335,7 +335,7 @@ export abstract class UIRectangle extends DataNode {
                     return false;
                 },
                 object: this,
-                options: { ui: true },
+                options: { ui: true, },
                 type: 'pointerdown',
             } as ListenerObj<'pointerdown'>)
         }
@@ -372,11 +372,11 @@ export abstract class UIRectangle extends DataNode {
                 return [
                     {
                         binding: 0,
-                        resource: this.uniformBuffer.getUniformBinding(bindGroup)
+                        resource: this.uniformBuffer.getUniformBinding(bindGroup),
                     },
                     {
                         binding: 1,
-                        resource: this.textureView.getTextureBinding(bindGroup)
+                        resource: this.textureView.getTextureBinding(bindGroup),
                     }
                 ]
             })

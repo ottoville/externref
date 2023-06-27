@@ -20,9 +20,9 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
                 '',
                 [buffers], ([
                     [/*uniforms*/,],
-                    [scene,/*time, clusters_array, meshes, projection*/],
+                    [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ], [{ position, normal }]) => /* wgsl */ `
+                ], [{ position, normal, }]) => /* wgsl */ `
             var output:Output;
             var curPos : mat4x4<f32> = ${world.prop('transformation')};
             curPos[3].w=1.0;
@@ -44,9 +44,9 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
                 [buffers],
                 ([
                     [/*uniforms*/,],
-                    [scene,/*time, clusters_array, meshes, projection*/],
+                    [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ], [{ position }]) => /* wgsl */ `
+                ], [{ position, }]) => /* wgsl */ `
               var output: PickOutput;
               var curPos : mat4x4<f32> = ${world.prop('transformation')};
               curPos[3] = ${world.prop('transformation')}[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;

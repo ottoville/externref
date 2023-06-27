@@ -15,17 +15,17 @@ Texture.create({
     format: 'r8unorm',
     gpu: engine.gpu!,
     label: 'normalsTexture',
-    size: { depthOrArrayLayers: 1, height: 100, width: 100 },
+    size: { depthOrArrayLayers: 1, height: 100, width: 100, },
     //@ts-expect-error format "r8unorm" is not allowed with STORAGE_BINDING
-    usages: TextureUsageEnums['STORAGE_BINDING']
+    usages: TextureUsageEnums['STORAGE_BINDING'],
 });
 Texture.create({
     format: 'r8unorm',
     gpu: engine.gpu!,
     label: 'normalsTexture',
-    size: { depthOrArrayLayers: 1, height: 100, width: 100 },
+    size: { depthOrArrayLayers: 1, height: 100, width: 100, },
     //@ts-expect-error format "r8unorm" is not allowed with STORAGE_BINDING
-    usages: TextureUsageEnums['STORAGE_BINDING|COPY_SRC']
+    usages: TextureUsageEnums['STORAGE_BINDING|COPY_SRC'],
 });
 //This should be fine
 const text1 = Texture.create({
@@ -33,7 +33,7 @@ const text1 = Texture.create({
     gpu: engine.gpu!,
     label: 'normalsTexture',
     size: { depthOrArrayLayers: 1, height: 100, width: 100,  },
-    usages: TextureUsageEnums['STORAGE_BINDING']
+    usages: TextureUsageEnums['STORAGE_BINDING'],
 });
 //@ts-expect-error text1 should not have copy_dst flag.
 console.log(text1.copyFrom);
@@ -44,8 +44,8 @@ const text2 = Texture.create({
     format: 'astc-10x10-unorm',
     gpu: engine.gpu!,
     label: 'test',
-    size: { height: 100, width: 100 },
-    usages: TextureUsageEnums['COPY_DST']
+    size: { height: 100, width: 100, },
+    usages: TextureUsageEnums['COPY_DST'],
 });
 //This should be fine
 console.log(text2.copyFrom)
@@ -53,17 +53,17 @@ Texture.create({
     format: 'astc-10x10-unorm',
     gpu: engine.gpu!,
     label: 'test',
-    size: { width: 100 },
+    size: { width: 100, },
     //@ts-expect-error RenderTarget cannot be one dimensional
-    usages: TextureUsageEnums['RENDER_ATTACHMENT']
+    usages: TextureUsageEnums['RENDER_ATTACHMENT'],
 });
 //This should be fine
 const text3 = Texture.create({
     format: 'astc-10x10-unorm',
     gpu: engine.gpu!,
     label: 'test',
-    size: { height: 100, width: 100 },
-    usages: TextureUsageEnums['COPY_SRC']
+    size: { height: 100, width: 100, },
+    usages: TextureUsageEnums['COPY_SRC'],
 });
 //@ts-expect-error text3 should not have copy_dst flag
 console.log(text3.copyFrom)
@@ -74,12 +74,12 @@ console.log(text3.copyTo)
 
 const primitiveState: GPUPrimitiveState = {
     frontFace: 'cw',
-    topology: 'triangle-strip' };
+    topology: 'triangle-strip', };
 
 //@ts-expect-error Needs stride
 engine.gpu!.createRenderPipeline(SimpleRenderPipeline, primitiveState, undefined );
 //Should be fine
-const renderPipeline = engine.gpu!.createRenderPipeline(SimpleRenderPipeline, primitiveState, { stride: 4 } );
+const renderPipeline = engine.gpu!.createRenderPipeline(SimpleRenderPipeline, primitiveState, { stride: 4, } );
 new DrawableIndexed(
     {
         //@ts-ignore
@@ -96,7 +96,7 @@ engine.gpu!.createRenderPipeline(SunRenderPipeline, {
     cullMode: 'none',
     stripIndexFormat: 'uint16',
     topology: 'triangle-strip',
-}, { stride: 8 });
+}, { stride: 8, });
 
 //Should be fine
 const renderPipeline2 = engine.gpu!.createRenderPipeline(SunRenderPipeline, {

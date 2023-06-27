@@ -434,7 +434,7 @@ export class Triangle {
         return [
             new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
             new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
+            new TerraVector4(engine.memory.buffer, this.vectorsPointers[2])
         ] as const
     }
     constructor(

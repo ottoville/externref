@@ -52,7 +52,7 @@ export function createUpdateViewShader(gpu: GPU) {
     ] as const;
     const pipelineLayout = new PipelineLayout({
         bindGroupLayouts: bindLayouts,
-        label: 'UpdateViewPipeline'
+        label: 'UpdateViewPipeline',
     });
     return new ComputeShader(
         {

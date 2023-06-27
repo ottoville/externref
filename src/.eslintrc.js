@@ -8,14 +8,14 @@ module.exports = {
         ecmaVersion: 2020, // Allows for the parsing of modern ECMAScript features
         sourceType: 'module', // Allows for the use of imports
         ecmaFeatures: {
-            jsx: true // Allows for the parsing of JSX
+            jsx: true, // Allows for the parsing of JSX
         },
         validate: [
             'javascript',
             'javascriptreact',
             'typescript',
-            'typescriptreact',
-        ]
+            'typescriptreact'
+        ],
     },
     plugins: [
         '@typescript-eslint',
@@ -24,7 +24,7 @@ module.exports = {
     ],
     extends: [
         'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
+        'plugin:@typescript-eslint/recommended'
     ],
     rules: {
         '@typescript-eslint/ban-ts-comment': 'off',
@@ -53,20 +53,27 @@ module.exports = {
         'array-bracket-spacing': 2,
         'object-curly-spacing': [2, 'always'],
         'no-trailing-spaces': 2,
-        'key-spacing': ['error', { 'afterColon': true }],
-        'indent': ['error', 4, { 'SwitchCase': 1 }],
-        'sort-keys': ['error', 'asc', { 'caseSensitive': true, 'natural': false, 'minKeys': 2 }],
-        'quotes': ['error', 'single']
+        'key-spacing': ['error', { 'afterColon': true, }],
+        'indent': ['error', 4, { 'SwitchCase': 1, }],
+        'sort-keys': ['error', 'asc', { 'caseSensitive': true, 'natural': false, 'minKeys': 2, }],
+        'quotes': ['error', 'single'],
+        'comma-dangle': [
+            'error', {
+                'arrays': 'never',
+                'objects': 'always',
+                'functions': 'never',
+            }
+        ],
     },
     settings: {
         'import/resolver': {
             typescript: true,
-            node: true
+            node: true,
         },
         'import/extensions': [
             '.js',
             '.jsx',
             '.ts'
-        ]
-    }
+        ],
+    },
 };

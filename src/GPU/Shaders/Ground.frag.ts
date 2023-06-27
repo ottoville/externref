@@ -94,7 +94,7 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
                       return output;
                 
                     `
-                )
+                ),
             },
             gpu: pipelineLayout.gpu,
             label: 'Ground.frag',

@@ -18,7 +18,7 @@ export class paintLine extends paintGround {
     }
     constructor(
         scene: Scene,
-        ground: Terrain,
+        ground: Terrain
     ) {
         super(scene, ground, () => null);
     }

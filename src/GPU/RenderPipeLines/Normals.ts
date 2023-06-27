@@ -17,7 +17,7 @@ export const NormalsPipeline = [
                 fragmentShader: createColorFragmentShader(gpu.positionAndTimeBindGroup),
                 label,
                 renderPipeline: {
-                    primitive
+                    primitive,
                 },
                 vertexShader: debugNormalsVertShader,
             })

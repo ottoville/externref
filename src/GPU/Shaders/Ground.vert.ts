@@ -24,7 +24,7 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
                 '',
                 [buffers], ([
                     [/*uniforms*/,],
-                    [scene,/*time, clusters_array, meshes, projection*/],
+                    [scene/*time, clusters_array, meshes, projection*/],
                     [world]
                 ]) => /* wgsl */ `
             var output : Output;
@@ -45,7 +45,7 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
             ),
             pick: new VertexShaderFunction(pickOutput, pipelineLayout, '', [buffers], ([
                 [/*uniforms*/,],
-                [scene,/*time, clusters_array, meshes, projection*/],
+                [scene/*time, clusters_array, meshes, projection*/],
                 [world]
             ]) => /* wgsl */ `
                 var output : PickOutput;

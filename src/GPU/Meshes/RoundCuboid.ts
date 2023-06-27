@@ -9,7 +9,7 @@ export class RoundCuboid extends OctaSphere {
         {
             width = 0,
             height = 0,
-            depth = 0
+            depth = 0,
         }: OctaSphereProps,
         {
             can_collide = false,
@@ -28,7 +28,7 @@ export class RoundCuboid extends OctaSphere {
 
             }, {
                 label: 'RoundCuboid' + (uid++),
-                ...meshProperties
+                ...meshProperties,
             },
             can_collide)
     }

@@ -7,7 +7,7 @@ export class ComputeShader<
 > extends Shader<E> {
     constructor(
         public override props: ShaderParams<E, B>,
-        constantCode?: (...args: { [K in keyof B]: FilterCompute<B[K]['entries']> }) => string,
+        constantCode?: (...args: { [K in keyof B]: FilterCompute<B[K]['entries']> }) => string
     ) {
         //@ts-expect-error TODO
         super(props, GPUShaderStage.COMPUTE, constantCode);
@@ -26,9 +26,9 @@ export class ComputeShader<
                 module: this.module,
             },
             label: this.module.label + ' ' + (entryPoint as string),
-            layout: this.props.entryPoints[entryPoint]!.pipelineLayout.layout
+            layout: this.props.entryPoints[entryPoint]!.pipelineLayout.layout,
         }).catch((err: unknown) => {
-            throw (new Error('createComputePipelineAsync failed on ' + this.module.label + ' , wgsl:' + this.wgsl, { cause: err }));
+            throw (new Error('createComputePipelineAsync failed on ' + this.module.label + ' , wgsl:' + this.wgsl, { cause: err, }));
         });
     }
 }

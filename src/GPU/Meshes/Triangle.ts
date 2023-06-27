@@ -17,13 +17,13 @@ export class Triangle extends SimpleMesh {
         label = 'triangle' + (uid++),
         color: [number, number, number, number] = [1, 0, 0, 0],
         can_collide = false,
-        scenes?: Scene[],
+        scenes?: Scene[]
     ) {
         super(
             {
                 can_collide,
                 vertices: {
-                    view: allocate_vec(positions)
+                    view: allocate_vec(positions),
                 },
             },
             new_rust_mesh({

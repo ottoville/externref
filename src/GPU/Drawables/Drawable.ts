@@ -35,7 +35,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
             renderPasses = new Set([engine.gpu!.renderPassScreen]),
             dynamicBindGroups = [],
             vertexBuffers = [],
-            node
+            node,
         }: Readonly<DrawableProps<N>>) {
 
         this.node = node;
@@ -103,12 +103,12 @@ export abstract class Drawable<N extends MainNode = MainNode> {
                 buff.set(new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength/Uint8Array.BYTES_PER_ELEMENT));
             })
         }
-        this.#vertexBuffers.set(index, { buffer: Tbuffer, offset: GPUoffset, size });
+        this.#vertexBuffers.set(index, { buffer: Tbuffer, offset: GPUoffset, size, });
         return Tbuffer;
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass): void
     draw(renderPass: RenderPass, renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {
-        this.#dynamicBindGroups.forEach(([{ bindGroup }, offset], i) => {
+        this.#dynamicBindGroups.forEach(([{ bindGroup, }, offset], i) => {
             const di = dynamicIndex[i];
             if (di) {
                 renderEncoder.setBindGroup(di, bindGroup, [offset * GPU.gpu_memory_index_size]);

@@ -7,7 +7,7 @@ const positionAttr = Object.freeze({
         offset: 0,
         shaderFormat: 'vec3<f32>',
         shaderLocation: 0,
-    }
+    },
 } as const)
 export const DebugLinesPipeline = [
     'DebugLinesPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
@@ -23,7 +23,7 @@ export const DebugLinesPipeline = [
                 fragmentShader: createColorFragmentShader(gpu.positionAndTimeBindGroup),
                 label,
                 renderPipeline: {
-                    primitive
+                    primitive,
                 },
                 vertexShader: shader,
             }

@@ -11,7 +11,7 @@ import type { MainNode } from '../../MainNode.js';
 import { Rotation } from './Rotation.js';
 import { Primitives } from './Primitives.js';
 
-export function NodeInfo({ drawable }: { drawable: Drawable }) {
+export function NodeInfo({ drawable, }: { drawable: Drawable }) {
     const [translation, setTranslation] = useState(new ReadOnlyTerraVector3());
     const [scale, setScale] = useState(new ReadOnlyTerraVector3());
     useEffect(() => {

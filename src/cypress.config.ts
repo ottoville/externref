@@ -18,7 +18,7 @@ export default defineConfig({
                 majorVersion: '',
                 path: '',
                 isHeaded: false,
-                isHeadless: false
+                isHeadless: false,
             }, launchOptions) => {
                 // `args` is an array of all the arguments that will
                 // be passed to browsers when it launches

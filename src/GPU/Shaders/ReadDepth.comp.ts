@@ -32,7 +32,7 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                     {
                         texture: {
                             multisampled: true,
-                            sampleType: 'depth'
+                            sampleType: 'depth',
                         },
                         visibility: ShaderStage.COMPUTE,
                     }, 'depth_texture', 'texture_depth_multisampled_2d'),
@@ -40,7 +40,7 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                     {
                         texture: {
                             multisampled: false,
-                            sampleType: 'uint'
+                            sampleType: 'uint',
                         },
                         visibility: ShaderStage.COMPUTE,
                     }, 'mesh_texture', 'texture_2d<u32>'),
@@ -70,7 +70,7 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                     ([[/*depth_and_mesh*/,], [depth_texture, mesh_texture, mouse]]) => `
                     depth_and_mesh.depth=textureLoad(${depth_texture.variableName}, ${mouse.prop('position')}, 1);
                     depth_and_mesh.mesh=textureLoad(${mesh_texture.variableName}, ${mouse.prop('position')}, 0).r;
-                `)
+                `),
             },
             gpu,
             label: 'ReadDepth.comp',

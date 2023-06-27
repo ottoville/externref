@@ -30,8 +30,8 @@ describe('Lights ', function () {
             const Box: typeof Box2 = (await import('/js/GPU/Meshes/Box.js')).Box;
             //@ts-expect-error
             const engine: Engine = window.engine;
-            const b = new Box({ can_collide: false, label: 'redBox' });
-            const b2 = new Box({ can_collide: false, color: [0, 1, 0, 0] , label: 'greenBox' });
+            const b = new Box({ can_collide: false, label: 'redBox', });
+            const b2 = new Box({ can_collide: false, color: [0, 1, 0, 0] , label: 'greenBox', });
             //green on left, red on right
             b.translation = [0, 400, -300]
             b2.translation = [0, 400, 300]
@@ -41,7 +41,7 @@ describe('Lights ', function () {
             const control = engine!.mainCamera.attachControllerForCamera({
                 attachCameraController: () => undefined,
                 deAttachCameraController: () => undefined,
-                serialize: () => undefined
+                serialize: () => undefined,
             });
             control.updatePosition(position => position.set([5000, 400, 0]));
             control.updateDirection((direction) => {
@@ -77,13 +77,13 @@ describe('Lights ', function () {
             0: 0,
             1: 0,
             2: 76,
-            3: 255
+            3: 255,
         });
         expect(greenPixel).toEqual({
             0: 0,
             1: 13,
             2: 0,
-            3: 255
+            3: 255,
         })
     });
 })
