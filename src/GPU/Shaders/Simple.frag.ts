@@ -15,7 +15,8 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new FragmentShaderFunction<typeof pipelineLayout.bindGroupLayouts>(
-                new Struct('Output', { Diffuse: ['@location(0)', 'vec4<f32>'], }),
+                new Struct('Output',
+                    { Diffuse: ['@location(0)', 'vec4<f32>'], }),
                 pipelineLayout,
                 `
                   @builtin(position) fragCoord : vec4<f32>,
@@ -72,7 +73,8 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
                 output.Diffuse= output.Diffuse*max(vec4<f32>(total_shading,1.0),vec4<f32>(shading_rgb,0.0));
               return output;`),
             pick: new FragmentShaderFunction<typeof pipelineLayout.bindGroupLayouts>(
-                new Struct('PickOutput', { ID: ['@location(0)', 'u32'], }),
+                new Struct('PickOutput',
+                    { ID: ['@location(0)', 'u32'], }),
                 pipelineLayout,
                 '@location(0) @interpolate(flat)  id : u32',
                 ([
@@ -85,10 +87,12 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
         },
         gpu: pipelineLayout.gpu,
         label: 'Simple.frag',
-    }, ([uniforms],
+    },
+    ([uniforms],
         [/*scene*/, /*clusters_array*/, /*meshes*/, projection],
         [/*world*/,]) => `
-      ${getClusterIndex(uniforms, projection)}
+      ${getClusterIndex(uniforms,
+        projection)}
     `)
 }
 

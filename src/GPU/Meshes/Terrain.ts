@@ -13,17 +13,18 @@ import { new_rust_mesh } from '../../MainNode.js';
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
     setTextureView = (textureview: TextureView) => {
-        this.drawable!.setStaticBindGroup('terrainTexture', (bindGroup) => {
-            return [
-                {
-                    binding: 0,
-                    resource: this.sampler!,
-                }, {
-                    binding: 1,
-                    resource: textureview.getTextureBinding(bindGroup),
-                }
-            ]
-        });
+        this.drawable!.setStaticBindGroup('terrainTexture',
+            (bindGroup) => {
+                return [
+                    {
+                        binding: 0,
+                        resource: this.sampler!,
+                    }, {
+                        binding: 1,
+                        resource: textureview.getTextureBinding(bindGroup),
+                    }
+                ]
+            });
     }
     drawable: DrawableIndexed<RenderPipeline<GroundVertShader>> | undefined;
     override create_collider(): rust_pointer<'collider'> {
@@ -58,7 +59,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
             indicesView,
             () => {
                 const collider_ptr = this.create_collider();
-                engine.rust.add_collider(this.id, collider_ptr)
+                engine.rust.add_collider(this.id,
+                    collider_ptr)
             }
         );
         if (engine.gpu) {
@@ -66,7 +68,9 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 magFilter: 'linear',
                 minFilter: 'linear',
             });
-            const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline, {}, { stride: verticesPositionStride, });
+            const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline,
+                {},
+                { stride: verticesPositionStride, });
             this.drawable = new DrawableIndexed({
                 node: this,
                 renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]),
@@ -74,18 +78,22 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 vertexBuffers: [this.vBuffer],
             })
 
-            this.drawable.setStaticBindGroup('TerrainInitialTexture', (bindGroup) => {
-                return [
-                    {
-                        binding: 0,
-                        resource: this.sampler!,
-                    }, {
-                        binding: 1,
-                        resource: initialTexture.getTextureBinding(bindGroup),
-                    }
-                ]
-            });
-            this.drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
+            this.drawable.setStaticBindGroup('TerrainInitialTexture',
+                (bindGroup) => {
+                    return [
+                        {
+                            binding: 0,
+                            resource: this.sampler!,
+                        }, {
+                            binding: 1,
+                            resource: initialTexture.getTextureBinding(bindGroup),
+                        }
+                    ]
+                });
+            this.drawable.setIndexBuffer(this.iBuffer,
+                0,
+                true,
+                'uint32');
         }
     }
 }

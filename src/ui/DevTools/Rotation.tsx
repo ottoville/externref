@@ -38,7 +38,8 @@ export function Rotation({ node, }: { node: MainNode }) {
         return () => {
             node.onMeshChange.delete(listener)
         }
-    }, [node]);
+    },
+    [node]);
     return <fieldset>
         <legend>Rotation</legend>
         <label> X:

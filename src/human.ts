@@ -26,7 +26,9 @@ export class Human extends Box {
         engine.physics.tickables.push(this);
         this.hasGravity = true;
         //this.velocity=[0,-5,0];
-        this.update_scale(1, 1, 1);
+        this.update_scale(1,
+            1,
+            1);
         // engine.inputManager?.destroy();
 
         this.inputManager = new MeshCamera(engine.mainCamera);
@@ -103,27 +105,33 @@ export class Human extends Box {
         if (this.colliding_character && this.speedSquared > maxSpeedSquared) {
             const direction = this.inputManager.camera.direction;
             if(this.inputManager.arrowKeysDown) {
-                const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+                const horizontalSpeed = Math.hypot(this.velocity[0],
+                    this.velocity[2]);
                 let diagonal = false;
                 let angle = 0;
                 if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP_RIGHT) === ARROW_KEYS.UP_RIGHT) {
                     diagonal = true;
-                    angle = Math.atan2(-direction[2], -direction[0]) + Math.PI * 0.25;
+                    angle = Math.atan2(-direction[2],
+                        -direction[0]) + Math.PI * 0.25;
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP_LEFT) === ARROW_KEYS.UP_LEFT) {
                     diagonal = true;
-                    angle = Math.atan2(-direction[2], -direction[0]) - Math.PI * 0.25;
+                    angle = Math.atan2(-direction[2],
+                        -direction[0]) - Math.PI * 0.25;
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN_RIGHT) === ARROW_KEYS.DOWN_RIGHT) {
                     diagonal = true;
-                    angle = Math.atan2(-direction[2], -direction[0]) + Math.PI * 0.75;
+                    angle = Math.atan2(-direction[2],
+                        -direction[0]) + Math.PI * 0.75;
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN_LEFT) === ARROW_KEYS.DOWN_LEFT) {
                     diagonal = true;
-                    angle = Math.atan2(-direction[2], -direction[0]) - Math.PI * 0.75;
+                    angle = Math.atan2(-direction[2],
+                        -direction[0]) - Math.PI * 0.75;
                 }
                 if(diagonal) {
-                    const angle2 = Math.atan2(this.last_velocity[2], this.last_velocity[0]);
+                    const angle2 = Math.atan2(this.last_velocity[2],
+                        this.last_velocity[0]);
                     if (Math.abs(angle2 - angle) > 0.1) {
                         this.velocity = [Math.cos(angle) * horizontalSpeed, this.velocity[1], Math.sin(angle) * horizontalSpeed];
                     }
@@ -153,22 +161,26 @@ export class Human extends Box {
             const direction = this.inputManager.camera.direction;
 
             if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP_RIGHT) === ARROW_KEYS.UP_RIGHT) {
-                const angle = Math.atan2(-direction[2], -direction[0]) + Math.PI * 0.25;
+                const angle = Math.atan2(-direction[2],
+                    -direction[0]) + Math.PI * 0.25;
                 impulse[0] = Math.cos(angle) * maxAcceleration
                 impulse[2] = Math.sin(angle) * maxAcceleration
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP_LEFT) === ARROW_KEYS.UP_LEFT) {
-                const angle = Math.atan2(-direction[2], -direction[0]) - Math.PI * 0.25;
+                const angle = Math.atan2(-direction[2],
+                    -direction[0]) - Math.PI * 0.25;
                 impulse[0] = Math.cos(angle) * maxAcceleration
                 impulse[2] = Math.sin(angle) * maxAcceleration
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN_RIGHT) === ARROW_KEYS.DOWN_RIGHT) {
-                const angle = Math.atan2(-direction[2], -direction[0]) + Math.PI * 0.75;
+                const angle = Math.atan2(-direction[2],
+                    -direction[0]) + Math.PI * 0.75;
                 impulse[0] = Math.cos(angle) * maxAcceleration
                 impulse[2] = Math.sin(angle) * maxAcceleration
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN_LEFT) === ARROW_KEYS.DOWN_LEFT) {
-                const angle = Math.atan2(-direction[2], -direction[0]) - Math.PI * 0.75;
+                const angle = Math.atan2(-direction[2],
+                    -direction[0]) - Math.PI * 0.75;
                 impulse[0] = Math.cos(angle) * maxAcceleration
                 impulse[2] = Math.sin(angle) * maxAcceleration
             }
@@ -207,7 +219,9 @@ export class Human extends Box {
         scaledVelocity[2] = velocityPerDelta[2] / this.radius[2];
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
-        engine.collideWithWorld(this, scaledPosition, scaledVelocity);
+        engine.collideWithWorld(this,
+            scaledPosition,
+            scaledVelocity);
         if (!engine.collider.collision_resolved) {
             //console.log('cant solve collision', this.label)
         }

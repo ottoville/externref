@@ -19,7 +19,8 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
         let instance = UIRectangleNode.instances.get(host);
         if (!instance) {
             instance = new UIRectangleNode(props);
-            UIRectangleNode.instances.set(host, instance)
+            UIRectangleNode.instances.set(host,
+                instance)
         }
         return instance;
     }
@@ -42,11 +43,13 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
         this.destroyInstance();
     }
     createBackgroundInstance(commonProps: UIRectangleProps, bitmap: ImageBitmap) {
-        return new UIRectangleBackground(commonProps, {
-            border_height: 0.2,
-            border_width: 0.2,
-            texture: bitmap,
-        }, this.props.text);
+        return new UIRectangleBackground(commonProps,
+            {
+                border_height: 0.2,
+                border_width: 0.2,
+                texture: bitmap,
+            },
+            this.props.text);
     }
     render(gpu: GPU, force: boolean) {
         if(force) {
@@ -71,16 +74,19 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
         if (!this.#instance) {
             if (bitmap) {
                 if (bitmap instanceof ImageBitmap) {
-                    this.#instance = this.createBackgroundInstance(commonProps, bitmap);
+                    this.#instance = this.createBackgroundInstance(commonProps,
+                        bitmap);
                 } else {
                     this.#instance = bitmap.then(bitmap2 => {
                         //Replace promise with resolved value;
-                        this.#instance = this.createBackgroundInstance(commonProps, bitmap2);
+                        this.#instance = this.createBackgroundInstance(commonProps,
+                            bitmap2);
                         return this.#instance;
                     });
                 }
             } else {
-                this.#instance = new UIRectangleTextOnly(commonProps, text);
+                this.#instance = new UIRectangleTextOnly(commonProps,
+                    text);
             }
         } else if (this.#instance instanceof UIRectangleBackground || this.#instance instanceof UIRectangleTextOnly) {
             if (force || text !== this.#instance.text) {

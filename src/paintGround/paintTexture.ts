@@ -28,7 +28,9 @@ export class paintTexture extends paintGround {
         private ratio: number,
         callback: PTResultF
     ) {
-        super(scene, ground, callback);
+        super(scene,
+            ground,
+            callback);
     }
     onAreaDraw(width: number) {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {
@@ -37,7 +39,9 @@ export class paintTexture extends paintGround {
         if (this.ang360.rad < 0) {
             throw (new Error('onAreaDraw negative angle not supported'));
         }
-        this.drawSubImage(width, this.height, this.ang360.rad)
+        this.drawSubImage(width,
+            this.height,
+            this.ang360.rad)
     }
     async drawSubImage(width: number, height: number, rad: number) {
         width /= this.ratio;
@@ -70,13 +74,15 @@ export class paintTexture extends paintGround {
         }
         const missAlignment = (cwidth * 4) % 256;
         const alignment = missAlignment ? 256 - missAlignment : 0
-        const c = new OffscreenCanvas(cwidth + alignment / 4, cheight);
+        const c = new OffscreenCanvas(cwidth + alignment / 4,
+            cheight);
         const buffersize = c.width * c.height * 4
 
         const ctx = c.getContext('2d');
         if (!ctx)
             throw (new Error('cannot get 2D context'));
-        let imageData = ctx.createImageData(c.width, c.height);
+        let imageData = ctx.createImageData(c.width,
+            c.height);
 
         const tempBuffer = this.scene.gpu.device.createBuffer({
             size: buffersize,
@@ -93,10 +99,14 @@ export class paintTexture extends paintGround {
             { texture: tempTexture, },
             [c.width, c.height, 1]);
         if (width && this.subTextureCache.imageData) {
-            const leftX = Math.max(this.subTextureCache.x, minX);
-            const rightX = Math.min(this.subTextureCache.x + this.subTextureCache.width, minX + c.width);
-            const topY = Math.max(this.subTextureCache.z, minZ);
-            const bottomY = Math.min(this.subTextureCache.z + this.subTextureCache.height, minZ + c.height);
+            const leftX = Math.max(this.subTextureCache.x,
+                minX);
+            const rightX = Math.min(this.subTextureCache.x + this.subTextureCache.width,
+                minX + c.width);
+            const topY = Math.max(this.subTextureCache.z,
+                minZ);
+            const bottomY = Math.min(this.subTextureCache.z + this.subTextureCache.height,
+                minZ + c.height);
 
             if (leftX < rightX && topY < bottomY) {
                 const intersectionoffsetSourceX = leftX - this.subTextureCache.x
@@ -112,7 +122,9 @@ export class paintTexture extends paintGround {
                 console.log('Rectangles do not overlap, or overlap has an area of zero (edge/corner overlap)')
             }
         }
-        encoder.copyTextureToBuffer({ texture: tempTexture, }, { buffer: tempBuffer, bytesPerRow: (c.width * 4), }, [c.width, c.height, 1]);
+        encoder.copyTextureToBuffer({ texture: tempTexture, },
+            { buffer: tempBuffer, bytesPerRow: (c.width * 4), },
+            [c.width, c.height, 1]);
 
         this.scene.gpu.device.queue.submit([encoder.finish()]);
         const encoder2 = this.scene.gpu.device.createCommandEncoder({ label: 'drawSubImage2_encoder', });
@@ -135,21 +147,33 @@ export class paintTexture extends paintGround {
         tempBuffer.unmap();
         tempBuffer.destroy();
         ctx.save();
-        ctx.putImageData(imageData, 0, 0);
-        ctx.translate(0, c.height);
+        ctx.putImageData(imageData,
+            0,
+            0);
+        ctx.translate(0,
+            c.height);
 
         ctx.restore();
         ctx.beginPath();
         const absDimensions: { w: number; h: number } = { h: Math.abs(width), w: Math.abs(height), }
-        ctx.translate(cwidth / 2, c.height / 2);
+        ctx.translate(cwidth / 2,
+            c.height / 2);
         ctx.rotate(rad * -1);
-        ctx.translate(cwidth / -2, c.height / -2);
-        ctx.translate(((cwidth - absDimensions.w) / 2), (c.height - absDimensions.h) / 2);
+        ctx.translate(cwidth / -2,
+            c.height / -2);
+        ctx.translate(((cwidth - absDimensions.w) / 2),
+            (c.height - absDimensions.h) / 2);
         ctx.fillStyle = 'red';
-        ctx.rect(0, 0, absDimensions.w, absDimensions.h);
+        ctx.rect(0,
+            0,
+            absDimensions.w,
+            absDimensions.h);
 
         ctx.fill();
-        imageData = ctx.getImageData(0, 0, c.width, c.height);
+        imageData = ctx.getImageData(0,
+            0,
+            c.width,
+            c.height);
         const tempBuffer2 = this.scene.gpu.device.createBuffer({
             mappedAtCreation: true,
             size: buffersize,
@@ -158,13 +182,15 @@ export class paintTexture extends paintGround {
         new Uint8ClampedArray(tempBuffer2.getMappedRange()).set(new Uint8ClampedArray(imageData.data.buffer));
         tempBuffer2.unmap();
 
-        encoder2.copyBufferToTexture({ buffer: tempBuffer2, bytesPerRow: c.width * 4, }, {
-            origin: {
-                x: minX,
-                y: minZ,
+        encoder2.copyBufferToTexture({ buffer: tempBuffer2, bytesPerRow: c.width * 4, },
+            {
+                origin: {
+                    x: minX,
+                    y: minZ,
+                },
+                texture: this.zonedt.texture,
             },
-            texture: this.zonedt.texture,
-        }, { height: c.height, width: c.width, });
+            { height: c.height, width: c.width, });
         this.scene.gpu.device.queue.submit([encoder2.finish()]);
         if (cacheImage)
             cacheImage.destroy();

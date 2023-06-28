@@ -240,8 +240,12 @@ function stringFromPtr(memory: WebAssembly.ExportValue | undefined, ptr: number)
     if (!(memory instanceof WebAssembly.Memory)) {
         throw new Error('Webassembly module does not have memory');
     }
-    const [/*cap*/, s_ptr, len] = new Uint32Array(memory.buffer, ptr, 3);
-    return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
+    const [/*cap*/, s_ptr, len] = new Uint32Array(memory.buffer,
+        ptr,
+        3);
+    return textDecoder.decode(new Uint8Array(memory.buffer,
+        s_ptr,
+        len));
 }
 
 export class Engine {
@@ -294,19 +298,22 @@ export class Engine {
         let DB: Promise<EarthDatabase> | undefined = undefined;
         if (typeof (indexedDB) === 'object') {
             DB = new Promise<EarthDatabase>(function (res) {
-                var IDB = indexedDB.open('City', 6);
+                var IDB = indexedDB.open('City',
+                    6);
                 IDB.onerror = function (e) {
                     showError(createError(e))
                 }
                 IDB.onupgradeneeded = function (e) {
-                    console.log('IDBVersionChangeEvent', e);
+                    console.log('IDBVersionChangeEvent',
+                        e);
                     // Save the IDBDatabase interface
                     var db: EarthDatabase = this.result;
 
                     (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach((objstore) => {
                         let createdStore: IDBObjectStore
                         if (ObjectStores[objstore].version > e.oldVersion) {
-                            createdStore = db.createObjectStore(objstore, ObjectStores[objstore].parameters);
+                            createdStore = db.createObjectStore(objstore,
+                                ObjectStores[objstore].parameters);
                         } else {
                             if (!this.transaction)
                                 throw (new Error('No transaction'));
@@ -316,7 +323,9 @@ export class Engine {
                         if (indices = ObjectStores[objstore].indices) {
                             indices.forEach((index) => {
                                 if (e.oldVersion < index.version) {
-                                    createdStore.createIndex(index.name, index.keyPath, index.options);
+                                    createdStore.createIndex(index.name,
+                                        index.keyPath,
+                                        index.options);
                                 }
                             })
                         }
@@ -324,7 +333,8 @@ export class Engine {
                 };
                 IDB.onsuccess = function () {
                     this.result.onerror = function (e) {
-                        console.log(e, ((<IDBRequest>e.target)!).error!.message);
+                        console.log(e,
+((<IDBRequest>e.target)!).error!.message);
                     }
                     res(this.result);
                 }
@@ -336,21 +346,26 @@ export class Engine {
         const exportObj = {
             console: {
                 log(ptr: number) {
-                    console.log(stringFromPtr(rust.instance.exports.memory, ptr));
+                    console.log(stringFromPtr(rust.instance.exports.memory,
+                        ptr));
                 },
                 warn(ptr: number) {
-                    console.warn(stringFromPtr(rust.instance.exports.memory, ptr))
+                    console.warn(stringFromPtr(rust.instance.exports.memory,
+                        ptr))
                 },
             },
             env: {
                 handle_gpu_queue(pointerVec: number, length: number) {
-                    engine.gpu?.handle_gpu_queue(pointerVec, length);
+                    engine.gpu?.handle_gpu_queue(pointerVec,
+                        length);
                 },
                 jspanic(ptr: number) {
                     if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
                         throw new Error('Webassembly module does not have memory');
                     }
-                    console.error(textDecoder.decode(new Uint8Array(rust.instance.exports.memory.buffer, ptr, 512)).trimEnd())
+                    console.error(textDecoder.decode(new Uint8Array(rust.instance.exports.memory.buffer,
+                        ptr,
+                        512)).trimEnd())
                 },
                 mesh_on_collide(mesh_id: number, started: boolean) {
                     const mesh = DataNode.Meshes.get(mesh_id);
@@ -370,20 +385,24 @@ export class Engine {
                     return performance.now()
                 },
                 update_directional_lights(pointer: number, length: number) {
-                    engine.gpu?.update_directional_lights(pointer, length)
+                    engine.gpu?.update_directional_lights(pointer,
+                        length)
                 },
                 update_point_lights(pointer: number, length: number) {
-                    engine.gpu?.update_point_lights(pointer, length)
+                    engine.gpu?.update_point_lights(pointer,
+                        length)
                 },
             },
         }
         let GPUDataSize: number;
         try {
             if (wasmBinaries.rust instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.rust)) {
-                rust = await WebAssembly.instantiate(wasmBinaries.rust, exportObj);
+                rust = await WebAssembly.instantiate(wasmBinaries.rust,
+                    exportObj);
             }
             else {
-                rust = await WebAssembly.instantiateStreaming(wasmBinaries.rust, exportObj);
+                rust = await WebAssembly.instantiateStreaming(wasmBinaries.rust,
+                    exportObj);
             }
             if (!rust.instance.exports.memory) {
                 return showError(new Error('No memory exported'));
@@ -398,7 +417,8 @@ export class Engine {
             const colliderExportObj = {
                 console: {
                     error: function (line: number) {
-                        console.error('Some error in webassembly on line', line)
+                        console.error('Some error in webassembly on line',
+                            line)
                         throw (new Error('Some error in webassembly on line ' + line));
                     },
                     log: function (arg: string) {
@@ -411,9 +431,11 @@ export class Engine {
                 rust: rust.instance.exports,
             };
             if (wasmBinaries.collider instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.collider)) {
-                colliderWasm = await WebAssembly.instantiate(wasmBinaries.collider, colliderExportObj);
+                colliderWasm = await WebAssembly.instantiate(wasmBinaries.collider,
+                    colliderExportObj);
             } else {
-                colliderWasm = await WebAssembly.instantiateStreaming(wasmBinaries.collider, colliderExportObj);
+                colliderWasm = await WebAssembly.instantiateStreaming(wasmBinaries.collider,
+                    colliderExportObj);
 
             }
             //Init rust wasm
@@ -421,7 +443,12 @@ export class Engine {
             return showError(createError(e));
         }
         const wasm = colliderWasm.instance.exports as unknown as ColliderWasm;
-        return new Engine(DB ? await DB : undefined, nodes, wasm, rustWasm, showError, GPUDataSize);
+        return new Engine(DB ? await DB : undefined,
+            nodes,
+            wasm,
+            rustWasm,
+            showError,
+            GPUDataSize);
     }
     readonly cameras: Set<TerraCamera> = new Set();
 
@@ -434,7 +461,14 @@ export class Engine {
                 (e.cause instanceof Error && e.cause.message === 'Device destroyed before callback')
             ) {
                 //When device is lost new device will be set in GPU.ts
-                console.log('Omit error on lost device, current GPU:', engine.gpu?.device.label, 'destroyed:', engine.gpu?.destroyed, 'error GPU:', gpu?.device.label, 'destroyed:', gpu?.destroyed)
+                console.log('Omit error on lost device, current GPU:',
+                    engine.gpu?.device.label,
+                    'destroyed:',
+                    engine.gpu?.destroyed,
+                    'error GPU:',
+                    gpu?.device.label,
+                    'destroyed:',
+                    gpu?.destroyed)
                 return;
             }
             this.showErrorError(e);
@@ -449,7 +483,10 @@ export class Engine {
         let forceFallbackAdapter = false;
         let forceLowPower = false;
         do {
-            console.log('Getting adapter, low-power:', forceLowPower, 'fallback:', forceFallbackAdapter)
+            console.log('Getting adapter, low-power:',
+                forceLowPower,
+                'fallback:',
+                forceFallbackAdapter)
             adapter = await window.navigator.gpu.requestAdapter(
                 {
                     forceFallbackAdapter,
@@ -490,8 +527,11 @@ export class Engine {
         } while (typeof device === 'undefined')
 
         device.lost.then(reason => {
-            console.error('GPU device lost', reason);
-            const newGPU = this.createGPU(GPUDataSize, cb, adapter);
+            console.error('GPU device lost',
+                reason);
+            const newGPU = this.createGPU(GPUDataSize,
+                cb,
+                adapter);
             this.gpu!.onDeviceLost();
             this.gpu = undefined;
             this.GPUReady = newGPU;
@@ -502,9 +542,12 @@ export class Engine {
                 throw (new Error(ee));
         });
 
-        const gpu = new GPU(this.canvas!, device, GPUDataSize);
+        const gpu = new GPU(this.canvas!,
+            device,
+            GPUDataSize);
         this.gpu = gpu;
-        console.log('new GPU initialized ', device.label);
+        console.log('new GPU initialized ',
+            device.label);
         cb(gpu)
         return gpu;
 
@@ -541,7 +584,11 @@ export class Engine {
         //@ts-expect-error
         const removed = this.#inputMaps[listenerObj.type].delete(listenerObj);
         if (!removed) {
-            console.warn('Removed', listenerObj.type, 'listener on', listenerObj.object, 'that did not exists');
+            console.warn('Removed',
+                listenerObj.type,
+                'listener on',
+                listenerObj.object,
+                'that did not exists');
         }
     }
     clearInputListeners(object: object) {
@@ -571,74 +618,83 @@ export class Engine {
 
         //@ts-ignore
         globalThis.engine = this;
-        this.mainCamera = new TerraCamera('mainCamera', 'renderPassScreen');
+        this.mainCamera = new TerraCamera('mainCamera',
+            'renderPassScreen');
 
         if (nodes?.canvas) {
             (['pointerup', 'pointerdown', 'pointermove', 'wheel', 'pointerleave', 'keydown', 'keyup'] as const).forEach(eventType => {
                 // keyup and keydown wont trigger if listener is canvas
-                nodes.canvas.ownerDocument.addEventListener(eventType, (e) => {
+                nodes.canvas.ownerDocument.addEventListener(eventType,
+                    (e) => {
                     // Do not trigger on devtools
-                    if (!(eventType === 'keydown' || eventType === 'keyup') && e.target !== nodes.canvas) {
-                        return;
-                    }
-                    const UIEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {
-                        return eventObj.options?.ui
-                    });
-                    let cancelled = false;
-                    for (let i = 0; i < UIEvents.length; i++) {
-                        if (!cancelled || UIEvents[i]!.options?.force) {
-                            if (UIEvents[i]!.options?.once) {
-                                this.#inputMaps[eventType].delete(UIEvents[i]!);
-                            }
-                            cancelled = (UIEvents[i]!.cb(e) ?? false) || cancelled;
+                        if (!(eventType === 'keydown' || eventType === 'keyup') && e.target !== nodes.canvas) {
+                            return;
                         }
-                    }
-                    const OtherEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {
-                        return !eventObj.options?.ui
-                    });
-                    for (let i = 0; i < OtherEvents.length; i++) {
-                        if (!cancelled || OtherEvents[i]!.options?.force) {
-                            if (OtherEvents[i]!.options?.once) {
-                                this.#inputMaps[eventType].delete(OtherEvents[i]!);
+                        const UIEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {
+                            return eventObj.options?.ui
+                        });
+                        let cancelled = false;
+                        for (let i = 0; i < UIEvents.length; i++) {
+                            if (!cancelled || UIEvents[i]!.options?.force) {
+                                if (UIEvents[i]!.options?.once) {
+                                    this.#inputMaps[eventType].delete(UIEvents[i]!);
+                                }
+                                cancelled = (UIEvents[i]!.cb(e) ?? false) || cancelled;
                             }
-                            cancelled = (OtherEvents[i]!.cb(e) ?? false) || cancelled
                         }
-                    }
-                }, { passive: false, });
+                        const OtherEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {
+                            return !eventObj.options?.ui
+                        });
+                        for (let i = 0; i < OtherEvents.length; i++) {
+                            if (!cancelled || OtherEvents[i]!.options?.force) {
+                                if (OtherEvents[i]!.options?.once) {
+                                    this.#inputMaps[eventType].delete(OtherEvents[i]!);
+                                }
+                                cancelled = (OtherEvents[i]!.cb(e) ?? false) || cancelled
+                            }
+                        }
+                    },
+                    { passive: false, });
             });
-            const waterCamera = new TerraCamera('waterCamera', 'renderPassWater', this.mainCamera);
+            const waterCamera = new TerraCamera('waterCamera',
+                'renderPassWater',
+                this.mainCamera);
             waterCamera.beforeViewUpdate.add((position, direction) => {
                 position[1] -= (position[1] - 3) * 2;
                 direction[1] = -direction[1];
             });
-            this.GPUReady = this.createGPU(GPUDataSize, gpu => {
-                this.GPUSubscribions.forEach(cb => {
-                    cb(gpu);
-                });
-                this.GPUSubscribionsOnce.forEach(cb => {
-                    cb(gpu);
-                });
-                this.GPUSubscribionsOnce.clear();
+            this.GPUReady = this.createGPU(GPUDataSize,
+                gpu => {
+                    this.GPUSubscribions.forEach(cb => {
+                        cb(gpu);
+                    });
+                    this.GPUSubscribionsOnce.forEach(cb => {
+                        cb(gpu);
+                    });
+                    this.GPUSubscribionsOnce.clear();
 
-                gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
-                //@ts-ignore
-                window.printRenderTarget = () => {
-                    gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap()
-                }
-                //@ts-ignore
-                window.printRenderTarget2 = () => {
-                    gpu.renderPassScreen.depthRenderTarget.print_bitmap()
-                }
-                //@ts-ignore
-                window.printRenderTarget3 = () => {
+                    gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
+                    //@ts-ignore
+                    window.printRenderTarget = () => {
+                        gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap()
+                    }
+                    //@ts-ignore
+                    window.printRenderTarget2 = () => {
+                        gpu.renderPassScreen.depthRenderTarget.print_bitmap()
+                    }
+                    //@ts-ignore
+                    window.printRenderTarget3 = () => {
                     gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.print_bitmap()
-                }
-            }, null);
+                    }
+                },
+                null);
             const saveControllerState = () => {
                 this.inputManager?.serialize();
             };
-            document.addEventListener('visibilitychange', saveControllerState);
-            window.addEventListener('beforeunload', saveControllerState);
+            document.addEventListener('visibilitychange',
+                saveControllerState);
+            window.addEventListener('beforeunload',
+                saveControllerState);
 
         } else {
             this.GPUReady = new Promise(() => { return; });
@@ -650,7 +706,9 @@ export class Engine {
 
 
         //TODO: this does not work after memory grow
-        this.#collidedMesh = new DataView(this.memory.buffer, engine.rust.collided_mesh_pointer(this.collider.collider_ptr), 4);
+        this.#collidedMesh = new DataView(this.memory.buffer,
+            engine.rust.collided_mesh_pointer(this.collider.collider_ptr),
+            4);
         wasm.construct(
             engine.rust.collision_resolved_pointer(this.collider.collider_ptr),
             engine.rust.nearest_distance_squared_pointer(this.collider.collider_ptr),
@@ -665,7 +723,10 @@ export class Engine {
         for (let i = 0; i < 3; i++) {
             //TODO: really, here inside the loop?
             //TODO: Remove this JS initialize
-            this.collider._initialize(scaledPosition, scaledVelocity, closeDistance, sphere);
+            this.collider._initialize(scaledPosition,
+                scaledVelocity,
+                closeDistance,
+                sphere);
 
             //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
             this.wasm._initialize();
@@ -675,12 +736,14 @@ export class Engine {
             if (sphere instanceof DataNode) {
                 DataNode.CharacterCanCollideMeshes.forEach(mesh => {
                     if (sphere !== mesh)
-                        mesh.checkCollision(this.collider, sphere)
+                        mesh.checkCollision(this.collider,
+                            sphere)
                 });
             }
             else {
                 DataNode.CharacterCanCollideMeshes.forEach(mesh => {
-                    mesh.checkCollision(this.collider, sphere)
+                    mesh.checkCollision(this.collider,
+                        sphere)
                 });
             }
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
@@ -726,7 +789,9 @@ export class Engine {
 
                     // this._slidePlaneNormal.normalize();
                     // const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
-                    const length = Math.hypot(this.collider._slidePlaneNormal[0], this.collider._slidePlaneNormal[1], this.collider._slidePlaneNormal[2]);
+                    const length = Math.hypot(this.collider._slidePlaneNormal[0],
+                        this.collider._slidePlaneNormal[1],
+                        this.collider._slidePlaneNormal[2]);
 
                     if (!(length === 0 || length === 1.0)) {
                         const norm = 1 / length;
@@ -755,7 +820,8 @@ export class Engine {
                 intersectionPoint[2] += this.#displacementVector[2];
 
                 const d = -(this.collider._slidePlaneNormal[0] * intersectionPoint[0] + this.collider._slidePlaneNormal[1] * intersectionPoint[1] + this.collider._slidePlaneNormal[2] * intersectionPoint[2]);
-                scale = Dot(this.#destinationPoint, this.collider._slidePlaneNormal) + d;
+                scale = Dot(this.#destinationPoint,
+                    this.collider._slidePlaneNormal) + d;
 
                 this.#destinationPoint[0] -= (this.collider._slidePlaneNormal[0] * scale);
                 this.#destinationPoint[1] -= (this.collider._slidePlaneNormal[1] * scale);
@@ -784,7 +850,9 @@ export class Engine {
         if (sphere instanceof DataNode)
             sphere.colliding_character = false;
         //TODO: Call only when camera position change
-        this.collider.finalPosition.set(this.#getFinalPosition(sphere, scaledPosition, scaledVelocity));
+        this.collider.finalPosition.set(this.#getFinalPosition(sphere,
+            scaledPosition,
+            scaledVelocity));
         this.collider.finalPosition[0] *= sphere.radius[0]
         this.collider.finalPosition[1] *= sphere.radius[1]
         this.collider.finalPosition[2] *= sphere.radius[2]

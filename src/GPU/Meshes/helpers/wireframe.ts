@@ -14,8 +14,10 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
         const stride = 4
         const vertices = new Float32Array(targetNode.node.positions_count * 4);
         targetNode.node.verticesArray.forEach((v, i) => {
-            const slice = v.slice(0, stride);
-            vertices.set(slice, i * stride);
+            const slice = v.slice(0,
+                stride);
+            vertices.set(slice,
+                i * stride);
         });
         const targetIndices = targetNode.node.indexed.indices;
         const indices = new Uint32Array(targetIndices.length * 2)
@@ -42,19 +44,26 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
             },
             mesh_id,
             false);
-        this.indexed = new NodeIndexed2(this, allocate_vec(indices))
+        this.indexed = new NodeIndexed2(this,
+            allocate_vec(indices))
         this.translation = targetNode.node.translation;
-        this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
+        this.update_scale(targetNode.node.scale_x,
+            targetNode.node.scale_y,
+            targetNode.node.scale_z);
         this.rotation = targetNode.node.rotation;
 
         //TODO: Share same transformation matrix instead of updating it from other
         targetNode.node.onMeshChange.add(() => {
             this.translation = targetNode.node.translation;
-            this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
+            this.update_scale(targetNode.node.scale_x,
+                targetNode.node.scale_y,
+                targetNode.node.scale_z);
             this.rotation = targetNode.node.rotation;
         })
 
-        const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline, { topology: 'line-list', }, { stride, });
+        const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline,
+            { topology: 'line-list', },
+            { stride, });
         this.drawable = new DrawableIndexed({
             node: this,
             renderPasses: undefined,

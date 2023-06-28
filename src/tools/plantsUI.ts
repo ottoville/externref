@@ -33,7 +33,8 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
     }
     #wasOpen = false;
     override render(gpu: GPU, force: boolean) {
-        super.render(gpu, force);
+        super.render(gpu,
+            force);
         if (this.props.open) {
             this.#wasOpen = true
             engine.addInputListener(this.#inputListener);
@@ -65,9 +66,11 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
     }
     activateDraw = () => {
         try {
-            this.PT = new paintPlane(this.scene!, this.props.terrain, (response: PTDresult) => {
-                PlantsUI.plantsMesh.fillArea(response);
-            });
+            this.PT = new paintPlane(this.scene!,
+                this.props.terrain,
+                (response: PTDresult) => {
+                    PlantsUI.plantsMesh.fillArea(response);
+                });
         } catch (e) {
             console.error(e);
         }

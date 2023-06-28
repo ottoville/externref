@@ -11,7 +11,9 @@ export class FragmentShader<
         constantCode?: (...args: { [K in keyof B]: FilterFragment<B[K]['entries']> }) => string
     ) {
         //@ts-expect-error TODO
-        super(props, GPUShaderStage.FRAGMENT, constantCode);
+        super(props,
+            GPUShaderStage.FRAGMENT,
+            constantCode);
     }
 }
 export type FilterFragment<T extends readonly unknown[]> = T extends [] ? [] :

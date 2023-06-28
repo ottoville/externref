@@ -77,9 +77,13 @@ const primitiveState: GPUPrimitiveState = {
     topology: 'triangle-strip', };
 
 //@ts-expect-error Needs stride
-engine.gpu!.createRenderPipeline(SimpleRenderPipeline, primitiveState, undefined );
+engine.gpu!.createRenderPipeline(SimpleRenderPipeline,
+    primitiveState,
+    undefined );
 //Should be fine
-const renderPipeline = engine.gpu!.createRenderPipeline(SimpleRenderPipeline, primitiveState, { stride: 4, } );
+const renderPipeline = engine.gpu!.createRenderPipeline(SimpleRenderPipeline,
+    primitiveState,
+    { stride: 4, } );
 new DrawableIndexed(
     {
         //@ts-ignore
@@ -92,18 +96,22 @@ new DrawableIndexed(
 )
 
 //@ts-expect-error Cannot have stride
-engine.gpu!.createRenderPipeline(SunRenderPipeline, {
-    cullMode: 'none',
-    stripIndexFormat: 'uint16',
-    topology: 'triangle-strip',
-}, { stride: 8, });
+engine.gpu!.createRenderPipeline(SunRenderPipeline,
+    {
+        cullMode: 'none',
+        stripIndexFormat: 'uint16',
+        topology: 'triangle-strip',
+    },
+    { stride: 8, });
 
 //Should be fine
-const renderPipeline2 = engine.gpu!.createRenderPipeline(SunRenderPipeline, {
-    cullMode: 'none',
-    stripIndexFormat: 'uint16',
-    topology: 'triangle-strip',
-}, undefined);
+const renderPipeline2 = engine.gpu!.createRenderPipeline(SunRenderPipeline,
+    {
+        cullMode: 'none',
+        stripIndexFormat: 'uint16',
+        topology: 'triangle-strip',
+    },
+    undefined);
 
 new DrawableSimple({
     //@ts-ignore

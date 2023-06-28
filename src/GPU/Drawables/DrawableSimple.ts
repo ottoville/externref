@@ -30,10 +30,14 @@ export class DrawableSimple<const R extends RenderPipeline> extends DrawableDire
             {
                 ...drawableProps,
                 dynamicBindGroups,
-            }, drawableDirectProps);
+            },
+            drawableDirectProps);
         this.#firstVertex = firstVertex;
     }
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
-        renderEncoder.draw(this.node.positions_count, this.instanceCount, this.#firstVertex, this.firstInstance);
+        renderEncoder.draw(this.node.positions_count,
+            this.instanceCount,
+            this.#firstVertex,
+            this.firstInstance);
     }
 }

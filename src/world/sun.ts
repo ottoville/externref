@@ -16,7 +16,9 @@ const meridian = Math.PI*0.5;
 
 export class Sun extends MainNode {
     #clamp = (value: number, min: number, max: number) => {
-        return Math.min(Math.max(value, min), max);
+        return Math.min(Math.max(value,
+            min),
+        max);
     }
 
     override onPhysicTick = (/*delta: number*/) => {
@@ -33,13 +35,19 @@ export class Sun extends MainNode {
         const translation = this.translation;
         this.velocity = [sunPositionX - translation[0], sunPositionY - translation[1], sunPositionZ - translation[2]];
         //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
-        const ambientR = this.#clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
-        const ambientGB = this.#clamp((sunPositionY + 0.1) * 0.4 - 0.1, 0.05, 0.3);
+        const ambientR = this.#clamp((sunPositionY + 0.4) * 0.8,
+            0.05,
+            0.3);
+        const ambientGB = this.#clamp((sunPositionY + 0.1) * 0.4 - 0.1,
+            0.05,
+            0.3);
 
         this.color = [1, 1, 1, 1];
         //earth shadow
         this.ambient = [ambientR, ambientGB, ambientGB];
-        this.shadow = this.#clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
+        this.shadow = this.#clamp(sunPositionY * 8 + 1,
+            0,
+            1); // <<3 == * 8
         this.update_dynamic_buffer();
 
     }
@@ -47,11 +55,13 @@ export class Sun extends MainNode {
     constructor(gpu: GPU, scenes: Scene[]) {
         super(new_rust_mesh({ directional_light: 1, label: 'sun', scenes, }));
         this.positions_count = 14
-        const renderPipeline = gpu.createRenderPipeline(SunRenderPipeline, {
-            cullMode: 'none',
-            stripIndexFormat: 'uint16',
-            topology: 'triangle-strip',
-        }, undefined);
+        const renderPipeline = gpu.createRenderPipeline(SunRenderPipeline,
+            {
+                cullMode: 'none',
+                stripIndexFormat: 'uint16',
+                topology: 'triangle-strip',
+            },
+            undefined);
         this.drawable = new DrawableSimple({
             node: this,
             renderPasses: new Set([gpu.renderPassScreen, gpu.renderPassWater]),

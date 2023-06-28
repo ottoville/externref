@@ -15,11 +15,13 @@ BindLayouts> {
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: new FragmentShaderFunction(
-                    new Struct('Output', {
-                        Diffuse: ['@location(0)', 'vec4<f32>'],
-                    }),
+                    new Struct('Output',
+                        {
+                            Diffuse: ['@location(0)', 'vec4<f32>'],
+                        }),
                     pipelineLayout,
-                    '', ([
+                    '',
+                    ([
                         [/*uniforms*/,],
                         [/*scene, time, clusters_array, meshes, projection*/,],
                         [world]

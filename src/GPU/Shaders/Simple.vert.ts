@@ -18,7 +18,8 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
                 typicalOutput,
                 pipelineLayout,
                 '',
-                [buffers], ([
+                [buffers],
+                ([
                     [/*uniforms*/,],
                     [scene/*time, clusters_array, meshes, projection*/],
                     [world]

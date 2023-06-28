@@ -22,22 +22,28 @@ interface PlantI {
     grid: string,
 }
 function clamp(value: number, min: number, max: number) {
-    return Math.min(Math.max(value, min), max);
+    return Math.min(Math.max(value,
+        min),
+    max);
 }
 const grids2: Map<string, number[]> = new Map()
 const methods = {
     deGrowMemory: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
-        new Float32Array(data.data.positions, 0, grasspositions.length).set(grasspositions);
+        new Float32Array(data.data.positions,
+            0,
+            grasspositions.length).set(grasspositions);
         grasspositions = new Float32Array(data.data.positions);
     },
     get: async () => {
         const trans = (await DB).transaction(['plantae']);
         trans.objectStore('plantae').getAll().onsuccess = (evt) => {
-            bladecount = Math.min((<IDBRequest>evt.target).result.length, grasspositions.length);
+            bladecount = Math.min((<IDBRequest>evt.target).result.length,
+                grasspositions.length);
             trans.oncomplete = () => globalThis.postMessage({ count: bladecount, type: 'updated', })
             for (let i = 0; i < bladecount; i++) {
                 const r = (<IDBRequest>evt.target).result[i];
-                grasspositions.set(r.pos, i * 2);
+                grasspositions.set(r.pos,
+                    i * 2);
             }
         }
     },
@@ -58,7 +64,8 @@ const methods = {
         }).then(arrayBuffer => {
             globalThis.postMessage({ buffer: arrayBuffer, type: 'updated', });
         }).catch(e => {
-            console.error('Error in web worker', e)
+            console.error('Error in web worker',
+                e)
         })
     },
     save: async (data: WMessage<{ angle: number, area: { size: { width: number, height: number }, coord: Float32Array } }>) => {
@@ -94,11 +101,13 @@ const methods = {
             let gridarr = grids2.get(grid);
             if (!gridarr) {
                 gridarr = [];
-                grids2.set(grid, gridarr)
+                grids2.set(grid,
+                    gridarr)
             }
             if (gridarr.length > grassPerSquareMeter * 2)
                 continue;
-            gridarr.push(offsetsX, offsetsY);
+            gridarr.push(offsetsX,
+                offsetsY);
 
         }
 
@@ -109,7 +118,8 @@ const methods = {
         grids2.forEach(grid => {
             if (memoryOffset + grid.length > grasspositions.length)
                 methods.growMemory(memoryOffset + grid.length)
-            grasspositions.set(grid, memoryOffset);
+            grasspositions.set(grid,
+                memoryOffset);
             memoryOffset += grid.length;
         });
         /*
@@ -142,15 +152,19 @@ const methods = {
                grasspositions[i * 2] = plantaes[i].pos[0]
                grasspositions[i * 2 + 1] = plantaes[i].pos[1]
            }*/
-        console.log('update grass, count', grasspositions.length / 2);
+        console.log('update grass, count',
+            grasspositions.length / 2);
         globalThis.postMessage({ buffer: grasspositions.buffer, count: grasspositions.length / 2, type: 'updated', });
 
         const response = new Response(grasspositions);
-        response.headers.set('content-length', grasspositions.buffer.byteLength.toString());
-        response.headers.set('content-type', 'application/octet-stream');
+        response.headers.set('content-length',
+            grasspositions.buffer.byteLength.toString());
+        response.headers.set('content-type',
+            'application/octet-stream');
 
         const cache = await cacheP;
-        cache.put(new Request('/grass'), response);
+        cache.put(new Request('/grass'),
+            response);
 
     },
 }

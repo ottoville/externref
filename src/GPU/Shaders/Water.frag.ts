@@ -9,13 +9,15 @@ export class WaterFragShader extends FragmentShader<BindLayouts> {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
-                main: new FragmentShaderFunction(new Struct('Output', {
-                    Diffuse: ['@location(0)', 'vec4<f32>'],
-                }),
+                main: new FragmentShaderFunction(new Struct('Output',
+                    {
+                        Diffuse: ['@location(0)', 'vec4<f32>'],
+                    }),
                 pipelineLayout,
                 `@location(0) v_uv : vec4<f32>,
                 @location(1) position : vec3<f32>,
-                @location(2) @interpolate(flat) id : u32`, ([
+                @location(2) @interpolate(flat) id : u32`,
+                ([
                     [/*uniforms*/,],
                     [/*scene, time, clusters_array, meshes, projection*/,],
                     [/*world*/,],

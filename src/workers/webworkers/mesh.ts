@@ -50,8 +50,12 @@ class Mesh {
     ) {
         this.#boundingBox = new Float32Array(this.boundingBoxBuffer);
         this.#positionsView = new Float32Array(positions);
-        this.#pickingPoint = new Float32Array(pickingBuffer, 0, 3);
-        this.#pickingDistance = new Float32Array(pickingBuffer, 3 * 4, 1);
+        this.#pickingPoint = new Float32Array(pickingBuffer,
+            0,
+            3);
+        this.#pickingDistance = new Float32Array(pickingBuffer,
+            3 * 4,
+            1);
 
         if (indices)
             this.#indicesView = new Uint32Array(indices);
@@ -297,7 +301,9 @@ class Mesh {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 onmessage = (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>) => {
     if (e.data.action == 'init') {
-        meshes.set(e.data.data.objId!, new Mesh(e.data.data.objId!, ...<[SharedArrayBuffer, SharedArrayBuffer, number, SharedArrayBuffer, SharedArrayBuffer]>e.data.data.args));
+        meshes.set(e.data.data.objId!,
+            new Mesh(e.data.data.objId!,
+                ...<[SharedArrayBuffer, SharedArrayBuffer, number, SharedArrayBuffer, SharedArrayBuffer]>e.data.data.args));
         //meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
     } else if ('objId' in e.data.data) {
         let mesh: Mesh | undefined;

@@ -12,7 +12,11 @@ declare const engine: Engine;
 export class Sea extends BoundableNodeSimple {
     drawable: DrawableSimple<RenderPipeline<WaterVertShader>> | undefined;
     override create_collider() {
-        return engine.rust.create_cuboid_collider(50000, 3, 50000, 0, false);
+        return engine.rust.create_cuboid_collider(50000,
+            3,
+            50000,
+            0,
+            false);
     }
     constructor(scenes: Scene[]) {
         super(
@@ -21,10 +25,18 @@ export class Sea extends BoundableNodeSimple {
                 vertices: {
                     stride: 3,
                     view: allocate_vec(Float32Array.of(
-                        -50000.0, 3.0, -50000.0,
-                        50000.0, 3.0, -50000.0,
-                        -50000.0, 3.0, 50000.0,
-                        50000.0, 3.0, 50000.0
+                        -50000.0,
+                        3.0,
+                        -50000.0,
+                        50000.0,
+                        3.0,
+                        -50000.0,
+                        -50000.0,
+                        3.0,
+                        50000.0,
+                        50000.0,
+                        3.0,
+                        50000.0
                     )),
                 },
             },
@@ -38,13 +50,15 @@ export class Sea extends BoundableNodeSimple {
             true
         ); //48
         if (engine.gpu) {
-            const renderPipeline = engine.gpu.createRenderPipeline(WaterRenderPipeline, {
-                frontFace: 'cw',
-                stripIndexFormat: 'uint16',
-                topology: 'triangle-strip',
-            }, {
-                stride: 3,
-            });
+            const renderPipeline = engine.gpu.createRenderPipeline(WaterRenderPipeline,
+                {
+                    frontFace: 'cw',
+                    stripIndexFormat: 'uint16',
+                    topology: 'triangle-strip',
+                },
+                {
+                    stride: 3,
+                });
             this.drawable = new DrawableSimple({
                 node: this,
                 renderPasses: undefined,

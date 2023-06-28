@@ -7,7 +7,8 @@ import { ComputeShaderFunction } from './ShaderFunction.js';
 
 export function createUpdateViewShader(gpu: GPU) {
     const bindLayouts = [
-        new BGLayout(gpu, 'UpdateViewLayout',
+        new BGLayout(gpu,
+            'UpdateViewLayout',
             new BufLayout(
                 {
                     buffer: {
@@ -16,7 +17,9 @@ export function createUpdateViewShader(gpu: GPU) {
                         type: 'read-only-storage',
                     },
                     visibility: ShaderStage.COMPUTE,
-                }, 'meshes', MeshArray),
+                },
+                'meshes',
+                MeshArray),
             new BufLayout(
                 {
                     buffer: {
@@ -25,7 +28,9 @@ export function createUpdateViewShader(gpu: GPU) {
                         type: 'read-only-storage',
                     },
                     visibility: ShaderStage.COMPUTE,
-                }, 'point_lights', Lights),
+                },
+                'point_lights',
+                Lights),
             new BufLayout(
                 {
                     buffer: {
@@ -35,9 +40,12 @@ export function createUpdateViewShader(gpu: GPU) {
 
                     },
                     visibility: ShaderStage.COMPUTE,
-                }, 'directional_lights', Lights)
+                },
+                'directional_lights',
+                Lights)
         ),
-        new BGLayout(gpu, 'UpdateClustersLayout',
+        new BGLayout(gpu,
+            'UpdateClustersLayout',
             UpdateClustersBufferLayout,
             new BufLayout(
                 {
@@ -47,7 +55,9 @@ export function createUpdateViewShader(gpu: GPU) {
                         type: 'uniform',
                     },
                     visibility: ShaderStage.COMPUTE,
-                }, 'viewUniforms', ViewUniforms)
+                },
+                'viewUniforms',
+                ViewUniforms)
         )
     ] as const;
     const pipelineLayout = new PipelineLayout({

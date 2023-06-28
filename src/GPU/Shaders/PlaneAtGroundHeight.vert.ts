@@ -37,11 +37,14 @@ export function createPlaneAtGroundHeightVertShader(
         },
         gpu: pipelineLayout.gpu,
         label: 'PlaneAtGroundHeight.vert',
-    }, ([/*uniforms*/,],
+    },
+    ([/*uniforms*/,],
         [_scene/*time, clusters_array, meshes, projection*/],
         [_world],
         [slopes, facet12]) => `
-        ${getHeightAtCoordinates(settings, slopes, facet12)}
+        ${getHeightAtCoordinates(settings,
+        slopes,
+        facet12)}
     `)
 }
 export type PlaneAtGroundHeightVertShader = ReturnType<typeof createPlaneAtGroundHeightVertShader>

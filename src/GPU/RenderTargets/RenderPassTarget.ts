@@ -21,7 +21,8 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
         public renderTargetOptions: RenderPassTargetOptions
     ) {
         super(textureOptions);
-        this.view = new TextureView(this, renderTargetOptions.textureViewDescriptor)
+        this.view = new TextureView(this,
+            renderTargetOptions.textureViewDescriptor)
 
     }
 }

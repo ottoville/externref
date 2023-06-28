@@ -46,7 +46,8 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         this.#dynamicBindGroups = dynamicBindGroups;
 
         vertexBuffers?.forEach((vertexBuffer, i) => {
-            this.setVertexBuffer(i, vertexBuffer)
+            this.setVertexBuffer(i,
+                vertexBuffer)
         });
         this.renderPasses.forEach(rp => {
             const variantP = rp.getVariant(this.renderPipeline);
@@ -55,11 +56,13 @@ export abstract class Drawable<N extends MainNode = MainNode> {
                 variantP.then(variant => {
                     if (this.destroyed)
                         return;
-                    this.#renderList.set(rp, variant.addRootDrawable(this));
+                    this.#renderList.set(rp,
+                        variant.addRootDrawable(this));
                     rp.bundles.forEach(b => b.destroy())
                 }).catch(err => engine.showError(err))
             } else {
-                this.#renderList.set(rp, variantP.addRootDrawable(this));
+                this.#renderList.set(rp,
+                    variantP.addRootDrawable(this));
                 rp.bundles.forEach(b => b.destroy())
             }
         });
@@ -98,12 +101,19 @@ export abstract class Drawable<N extends MainNode = MainNode> {
             var Tbuffer = buffer;
         else {
             const gpu = this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
-            var Tbuffer = Buffer.create(gpu, buffer.byteLength, [GPUBufferUsage.VERTEX], 'DrawableVertex_' + this.node.label, b => {
-                const buff = new Uint8Array(b.getMappedRange());
-                buff.set(new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength/Uint8Array.BYTES_PER_ELEMENT));
-            })
+            var Tbuffer = Buffer.create(gpu,
+                buffer.byteLength,
+                [GPUBufferUsage.VERTEX],
+                'DrawableVertex_' + this.node.label,
+                b => {
+                    const buff = new Uint8Array(b.getMappedRange());
+                    buff.set(new Uint8Array(buffer.buffer,
+                        buffer.byteOffset,
+                        buffer.byteLength/Uint8Array.BYTES_PER_ELEMENT));
+                })
         }
-        this.#vertexBuffers.set(index, { buffer: Tbuffer, offset: GPUoffset, size, });
+        this.#vertexBuffers.set(index,
+            { buffer: Tbuffer, offset: GPUoffset, size, });
         return Tbuffer;
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass): void
@@ -111,16 +121,24 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         this.#dynamicBindGroups.forEach(([{ bindGroup, }, offset], i) => {
             const di = dynamicIndex[i];
             if (di) {
-                renderEncoder.setBindGroup(di, bindGroup, [offset * GPU.gpu_memory_index_size]);
+                renderEncoder.setBindGroup(di,
+                    bindGroup,
+                    [offset * GPU.gpu_memory_index_size]);
             }
         });
         if (this.#staticBindGroup) {
-            renderEncoder.setBindGroup(BindGroupsStart++, this.#staticBindGroup.bindGroup)
+            renderEncoder.setBindGroup(BindGroupsStart++,
+                this.#staticBindGroup.bindGroup)
         }
         this.#vertexBuffers.forEach((buffer, index) =>
-            renderEncoder.setVertexBuffer(index, buffer.buffer.getVertexBuffer(renderPass), buffer.offset, buffer.size));
-        console.debug('draw', this.node.label)
-        this.render(renderEncoder, renderPass);
+            renderEncoder.setVertexBuffer(index,
+                buffer.buffer.getVertexBuffer(renderPass),
+                buffer.offset,
+                buffer.size));
+        console.debug('draw',
+            this.node.label)
+        this.render(renderEncoder,
+            renderPass);
     }
 }
 

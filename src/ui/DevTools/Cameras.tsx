@@ -15,7 +15,8 @@ function Camera(props: { camera: TerraCamera }) {
         return () => {
             props.camera.onUpdatePosition.delete(listener)
         }
-    }, [props.camera]);
+    },
+    [props.camera]);
     return <li>
         <>
             {props.camera.label}
@@ -45,7 +46,8 @@ export function Cameras() {
             <button type="button" onClick={() => {
                 setDebugCamera(true)
                 oldController = engine.inputManager
-                const positionCamera = new PositionCamera(engine.mainCamera, true)
+                const positionCamera = new PositionCamera(engine.mainCamera,
+                    true)
                 engine.mainCamera.attachControllerForCamera(positionCamera);
             }}>Switch to debug camera</button>}
 

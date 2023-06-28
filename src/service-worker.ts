@@ -2,9 +2,12 @@
 // offline support. See https://aka.ms/blazor-offline-considerations
 
 ((service: ServiceWorkerGlobalScope): void => {
-    service.addEventListener('install', event => event.waitUntil(onInstall()));
-    service.addEventListener('activate', event => event.waitUntil(onActivate()));
-    service.addEventListener('fetch', event => event.respondWith(onFetch(event)));
+    service.addEventListener('install',
+        event => event.waitUntil(onInstall()));
+    service.addEventListener('activate',
+        event => event.waitUntil(onActivate()));
+    service.addEventListener('fetch',
+        event => event.respondWith(onFetch(event)));
 })(self as unknown as ServiceWorkerGlobalScope);
 
 const cacheNamePrefix = 'offline-cache-';

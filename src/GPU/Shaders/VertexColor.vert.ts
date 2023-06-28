@@ -19,7 +19,8 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
                 typicalOutput,
                 pipelineLayout,
                 '',
-                [buffers], ([
+                [buffers],
+                ([
                     [,],
                     [scene],
                     [world]
@@ -40,7 +41,8 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
             pick: new VertexShaderFunction(pickOutput,
                 pipelineLayout,
                 '',
-                [buffers], ([
+                [buffers],
+                ([
                     [,],
                     [scene],
                     [world]

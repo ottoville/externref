@@ -13,9 +13,13 @@ export class TerraMatrix extends Float32Array {
             super(Arr);
         }
         else {
-            super(Arr, offset, 16);
+            super(Arr,
+                offset,
+                16);
         }
-        this.view64 = new Float64Array(this.buffer, offset, 8);
+        this.view64 = new Float64Array(this.buffer,
+            offset,
+            8);
     }
     declare readonly length: 16;
     declare 0: number
@@ -74,7 +78,8 @@ export class TerraMatrix extends Float32Array {
         )
     }
     clone() {
-        return new TerraMatrix(this.buffer.slice(this.byteOffset, this.byteOffset + 64));
+        return new TerraMatrix(this.buffer.slice(this.byteOffset,
+            this.byteOffset + 64));
     }
     invertToRef(other: TerraMatrix): TerraMatrix {
         // the inverse of a Matrix is the transpose of cofactor matrix divided by the determinant
@@ -155,7 +160,9 @@ export abstract class TerraVector3 extends Float32Array {
     abstract 1: number
     abstract 2: number
     static override of(x: number, y: number, z: number) {
-        return super.of(x, y, z) as TerraVector3;
+        return super.of(x,
+            y,
+            z) as TerraVector3;
     }
     constructor(Arr?: ArrayBufferLike, byteOffset?: number)
     constructor(Arr?: number[])
@@ -167,7 +174,9 @@ export abstract class TerraVector3 extends Float32Array {
             super(Arr);
         }
         else {
-            super(Arr, byteOffset, 3);
+            super(Arr,
+                byteOffset,
+                3);
         }
     }
     override toString() {
@@ -200,10 +209,14 @@ export abstract class TerraVector3 extends Float32Array {
         ref[2] = rz * rw;
     }
     len() {
-        return Math.hypot(this[0], this[1], this[2]);
+        return Math.hypot(this[0],
+            this[1],
+            this[2]);
     }
     normalize() {
-        const len = Math.hypot(this[0], this[1], this[2]);
+        const len = Math.hypot(this[0],
+            this[1],
+            this[2]);
         if (len == 0 || len == 1.0) {
             return this;
         }
@@ -250,20 +263,25 @@ export class ReadOnlyTerraVector3 extends TerraVector3 {
     declare readonly 1: number
     declare readonly 2: number
     static override of(x: number, y: number, z: number) {
-        return super.of(x, y, z) as ReadOnlyTerraVector3;
+        return super.of(x,
+            y,
+            z) as ReadOnlyTerraVector3;
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     override set(_array: ArrayLike<number>, _offset?: number): never | void {
         throw (new Error('Cannot use "set" in ReadOnly vector, use setter instead'));
     }
     clone() {
-        return new ReadOnlyTerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset + 12));
+        return new ReadOnlyTerraVector3(this.buffer.slice(this.byteOffset,
+            this.byteOffset + 12));
     }
 }
 
 export class MutableTerraVector3 extends TerraVector3 {
     static override of(x: number, y: number, z: number) {
-        return super.of(x, y, z) as MutableTerraVector3;
+        return super.of(x,
+            y,
+            z) as MutableTerraVector3;
     }
     //Nominal typing
     readonly mutable = 1;
@@ -271,7 +289,8 @@ export class MutableTerraVector3 extends TerraVector3 {
     declare 1: number
     declare 2: number
     clone() {
-        return new MutableTerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset + 12));
+        return new MutableTerraVector3(this.buffer.slice(this.byteOffset,
+            this.byteOffset + 12));
     }
 }
 export class TerraVector4 extends Float32Array {
@@ -280,7 +299,10 @@ export class TerraVector4 extends Float32Array {
     declare 2: number
     declare 3: number
     static override of(x: number, y: number, z: number, w: number) {
-        return super.of(x, y, z, w) as TerraVector4;
+        return super.of(x,
+            y,
+            z,
+            w) as TerraVector4;
     }
     constructor(Arr?: ArrayBufferLike, offset?: number)
     constructor(Arr?: number[])
@@ -292,14 +314,19 @@ export class TerraVector4 extends Float32Array {
             super(Arr);
         }
         else {
-            super(Arr, offset, 4);
+            super(Arr,
+                offset,
+                4);
         }
     }
 
 }
 export class Quaternion extends TerraVector4 {
     static override of(i: number, j: number, k: number, w: number) {
-        return super.of(i, j, k, w) as Quaternion;
+        return super.of(i,
+            j,
+            k,
+            w) as Quaternion;
     }
     /**
      * Creates a new rotation from the given Euler float angles (y, x, z) and stores it in the target quaternion
@@ -418,7 +445,8 @@ export class Triangle {
     #planeCollider: TerraVector4;
     get planeCollider() {
         if (this.#planeCollider.byteLength === 0) {
-            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.PlanePtrToVector4);
+            this.#planeCollider = new TerraVector4(engine.memory.buffer,
+                this.PlanePtrToVector4);
         }
         return this.#planeCollider;
     }
@@ -432,9 +460,12 @@ export class Triangle {
     }
     #initializeVectors() {
         return [
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[2])
+            new TerraVector4(engine.memory.buffer,
+                this.vectorsPointers[0]),
+            new TerraVector4(engine.memory.buffer,
+                this.vectorsPointers[1]),
+            new TerraVector4(engine.memory.buffer,
+                this.vectorsPointers[2])
         ] as const
     }
     constructor(
@@ -442,7 +473,8 @@ export class Triangle {
         private PlanePtrToVector4: rust_pointer<'Plane'>
     ) {
         this.#vectors = this.#initializeVectors();
-        this.#planeCollider = new TerraVector4(engine.memory.buffer, this.PlanePtrToVector4);
+        this.#planeCollider = new TerraVector4(engine.memory.buffer,
+            this.PlanePtrToVector4);
     }
 
 }

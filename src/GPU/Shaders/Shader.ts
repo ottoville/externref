@@ -52,8 +52,10 @@ export abstract class Shader<
                     structs.add(binding2.struct);
                 }
                 return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${binding.variableName} : ${binding.structName};\n`
-            }, groupstring)
-        }, '\n');
+            },
+            groupstring)
+        },
+        '\n');
         const outputs: Struct[] = [];
         for(const key in props.entryPoints) {
             const entryPoint = props.entryPoints[key]!;
@@ -67,7 +69,8 @@ export abstract class Shader<
                 properties += `${struct.properties[property]![0]} ${property}: ${struct.properties[property]![1]},\n`
             }
             return `${s}struct ${struct.name} {\n${properties}}\n`;
-        }, '')
+        },
+        '')
         //
         this.wgsl = groups + structString;
 
@@ -77,7 +80,8 @@ export abstract class Shader<
         const pipelineLayouts:{[index: string]: GPUShaderModuleCompilationHint} = {}
         for(const key in props.entryPoints) {
             const entryPoint = props.entryPoints[key]!;
-            this.wgsl += entryPoint.createCode(bindGroups, key);
+            this.wgsl += entryPoint.createCode(bindGroups,
+                key);
             pipelineLayouts[key] = entryPoint.pipelineLayout
 
         }

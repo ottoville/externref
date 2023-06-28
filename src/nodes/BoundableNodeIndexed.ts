@@ -15,11 +15,13 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
             dataNodeProps,
             mesh_id,
             strip);
-        this.indexed = new NodeIndexed2(this, indicesView, () => {
-            if(onIndicesChange)
-                onIndicesChange();
-            this.rebuildTrianglePlanes()
-        });
+        this.indexed = new NodeIndexed2(this,
+            indicesView,
+            () => {
+                if(onIndicesChange)
+                    onIndicesChange();
+                this.rebuildTrianglePlanes()
+            });
         this.rebuildTrianglePlanes();
     }
     override set_vertices(vertices:  rust_vec_ptr<'f32'>) {

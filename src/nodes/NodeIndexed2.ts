@@ -6,18 +6,27 @@ declare const engine: Engine;
 export type IndexedTrait = MainNode & {indexed: NodeIndexed2};
 export class NodeIndexed2 {
     set_indices(vec: rust_vec_ptr<'usize'>, initial=false) {
-        engine.rust.set_indices(this.node.id, ...vec);
+        engine.rust.set_indices(this.node.id,
+            ...vec);
         if (this.node.drawable && !(this.node.drawable instanceof DrawableIndexed)) {
             throw (new Error('Node is not indexed'));
         }
-        this.node.drawable?.setIndexBuffer(new Uint32Array(engine.rust.memory.buffer, vec[0], vec[1]));
+        this.node.drawable?.setIndexBuffer(new Uint32Array(engine.rust.memory.buffer,
+            vec[0],
+            vec[1]));
         if(!initial && this.onIndicesChange)
             this.onIndicesChange();
     }
     set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array) {
         const [ptr_ind, len_ind, cap_ind] = allocate_vec(indices);
         const [ptr_vertices, len_vertices, cap_vertices] = allocate_vec(vertices);
-        engine.rust.set_indices_and_vertices(this.node.id, ptr_ind, len_ind, cap_ind, ptr_vertices, len_vertices, cap_vertices);
+        engine.rust.set_indices_and_vertices(this.node.id,
+            ptr_ind,
+            len_ind,
+            cap_ind,
+            ptr_vertices,
+            len_vertices,
+            cap_vertices);
         if (this.node.drawable && !(this.node.drawable instanceof DrawableIndexed)) {
             throw (new Error('Node is not indexed'));
         }
@@ -26,17 +35,24 @@ export class NodeIndexed2 {
             this.onIndicesChange();
     }
     get indices() {
-        const [indices_len, indices_ptr] = new Uint32Array(engine.rust.memory.buffer, engine.rust.indices_field_pointer(this.node.id), 2);
-        return new Uint32Array(engine.rust.memory.buffer, indices_ptr, indices_len);
+        const [indices_len, indices_ptr] = new Uint32Array(engine.rust.memory.buffer,
+            engine.rust.indices_field_pointer(this.node.id),
+            2);
+        return new Uint32Array(engine.rust.memory.buffer,
+            indices_ptr,
+            indices_len);
     }
     get indices_count() {
-        return new Uint32Array(engine.rust.memory.buffer, engine.rust.indices_field_pointer(this.node.id), 1)[0]!;
+        return new Uint32Array(engine.rust.memory.buffer,
+            engine.rust.indices_field_pointer(this.node.id),
+            1)[0]!;
     }
     constructor(
         protected node: MainNode,
         indicesView: rust_vec_ptr<'usize'>,
         private onIndicesChange?: () => void
     ) {
-        this.set_indices(indicesView, true);
+        this.set_indices(indicesView,
+            true);
     }
 }

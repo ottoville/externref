@@ -108,7 +108,8 @@ export class UIRectangleTextureView extends UIRectangle {
                     outer_sizeX, -outer_sizeY, textureSize!.width, textureSize!.height,
                     content_sizeX, -content_sizeY, uvs.left, uvs.top,
                     outer_sizeX, -content_sizeY, textureSize!.width, uvs.top
-                ], 24)
+                ],
+                24)
         }
         return vertices;
     }

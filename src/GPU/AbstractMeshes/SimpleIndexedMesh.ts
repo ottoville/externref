@@ -39,16 +39,30 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         if (engine.gpu) {
             if (!vBufferGPU) {
                 if (!staticVertices) {
-                    vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], 'SimpleIndexedMeshVertex_' + this.label, b => {
-                        new Float32Array(b.getMappedRange()).set(new Float32Array(engine.rust.memory.buffer, dataNodeProps.vertices.view[0], dataNodeProps.vertices.view[1]));
-                    });
+                    vBufferGPU = Buffer.create(engine.gpu,
+                        dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
+                        [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],
+                        'SimpleIndexedMeshVertex_' + this.label,
+                        b => {
+                            new Float32Array(b.getMappedRange()).set(new Float32Array(engine.rust.memory.buffer,
+                                dataNodeProps.vertices.view[0],
+                                dataNodeProps.vertices.view[1]));
+                        });
                 } else {
-                    vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], 'SimpleIndexedMeshVertex_' + this.label, b => {
-                        new Float32Array(b.getMappedRange()).set(new Float32Array(engine.rust.memory.buffer, dataNodeProps.vertices.view[0], dataNodeProps.vertices.view[1]));
-                    });
+                    vBufferGPU = Buffer.create(engine.gpu,
+                        dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
+                        [GPUBufferUsage.VERTEX],
+                        'SimpleIndexedMeshVertex_' + this.label,
+                        b => {
+                            new Float32Array(b.getMappedRange()).set(new Float32Array(engine.rust.memory.buffer,
+                                dataNodeProps.vertices.view[0],
+                                dataNodeProps.vertices.view[1]));
+                        });
                 }
             }
-            const renderPipeline = engine.gpu.createRenderPipeline(createRenderPipeline, primitiveState, { stride: dataNodeProps.vertices.stride, });
+            const renderPipeline = engine.gpu.createRenderPipeline(createRenderPipeline,
+                primitiveState,
+                { stride: dataNodeProps.vertices.stride, });
             this.drawable = new DrawableIndexed(
                 {
                     node: this,

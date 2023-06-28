@@ -14,7 +14,8 @@ function strip2List(indices: Uint32Array) {
             if (i % 2 === 1) {
                 triangle.reverse();
             }
-            list.set(triangle, (i - 2) * 3);
+            list.set(triangle,
+                (i - 2) * 3);
             if (i % 2 === 1) {
                 triangle.reverse();
             }
@@ -43,18 +44,21 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
         indices[i + 2] = i + 2;
         if (i % 2 === 0) {
             vertices.set(
-                [-x, 0, z, 1, /* normals: */ 0, 0, 0, 1], (i + 2) * stride);
+                [-x, 0, z, 1, /* normals: */ 0, 0, 0, 1],
+                (i + 2) * stride);
         } else {
             x = cullMode * Math.sin(progress);
             z = Math.cos(progress);
             vertices.set(
-                [x, 0, z, 1,/* normals: */ 0, 0, 0, 1], (i + 2) * stride);
+                [x, 0, z, 1,/* normals: */ 0, 0, 0, 1],
+                (i + 2) * stride);
             progress += facelen;
         }
     }
     // normalize vertices
     for (let i = 0; i < vertices.length; i += stride) {
-        new MutableTerraVector3(vertices.buffer, i * Float32Array.BYTES_PER_ELEMENT).normalize();
+        new MutableTerraVector3(vertices.buffer,
+            i * Float32Array.BYTES_PER_ELEMENT).normalize();
     }
     return [vertices, indices] as const;
 }
@@ -62,13 +66,22 @@ function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, i
     if (faces % 2 !== 0) {
         throw (new Error('Cone must not have odd number of faces'));
     }
-    const [circleVertices, circleIndices] = createCircle(faces, -1, stride);
+    const [circleVertices, circleIndices] = createCircle(faces,
+        -1,
+        stride);
     const coneVertices = Array.from(circleVertices);
     //Lover the vertices to keep 0,0 coordinate in middle.
     for (let i = 0; i < coneVertices.length; i = i + stride) {
         coneVertices[i + 1] = -1;
     }
-    const zeroIndice = coneVertices.push(0, 1, 0, 1,  /* normals: */0, 0, 0, 1) / stride - 1;
+    const zeroIndice = coneVertices.push(0,
+        1,
+        0,
+        1,  /* normals: */
+        0,
+        0,
+        0,
+        1) / stride - 1;
 
     let indicesOrder = [0];
     const indicesOrder2: number[] = [];
@@ -83,7 +96,9 @@ function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, i
     const window: number[] = [];
     for (let i = 0; i < indicesOrder.length; i++) {
         if (window.push(indicesOrder[i]!) === 2) {
-            coneIndices.push(window[1]!, window[0]!, zeroIndice);
+            coneIndices.push(window[1]!,
+window[0]!,
+zeroIndice);
             window.shift();
         }
     }
@@ -95,7 +110,8 @@ export class Cone extends IndexedSingleColoredMesh {
         can_collide = false,
         color: [number, number, number, number] = [1, 0, 0, 0]
     ) {
-        const [vertices, indices] = createCone(14, 8);
+        const [vertices, indices] = createCone(14,
+            8);
         const mesh_id = new_rust_mesh(mainNodeProps);
         super(
             {
@@ -110,14 +126,19 @@ export class Cone extends IndexedSingleColoredMesh {
         this.color = color;
     }
     override create_collider() {
-        return engine.rust.create_cone_collider(this.scale_y, this.radius);
+        return engine.rust.create_cone_collider(this.scale_y,
+            this.radius);
     }
     get radius() {
         return this.scale_x;
     }
     set radius(radius: number) {
-        this.update_scale(radius, this.scale_y, radius);
-        const collider_ptr = engine.rust.create_cone_collider(this.scale_y, radius);
-        engine.rust.add_collider(this.id, collider_ptr);
+        this.update_scale(radius,
+            this.scale_y,
+            radius);
+        const collider_ptr = engine.rust.create_cone_collider(this.scale_y,
+            radius);
+        engine.rust.add_collider(this.id,
+            collider_ptr);
     }
 }

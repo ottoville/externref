@@ -21,7 +21,8 @@ export function VariantList(props: {
         return () => {
             props.variant.onRootDrawableChanges.delete(listener)
         }
-    }, [props.variant.rootDrawables])
+    },
+    [props.variant.rootDrawables])
 
     return <ul>
         {rootDrawables.map(drawable => {

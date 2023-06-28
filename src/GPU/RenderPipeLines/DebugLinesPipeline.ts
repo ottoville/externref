@@ -13,11 +13,12 @@ export const DebugLinesPipeline = [
     'DebugLinesPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
         stride: number;
     }) {
-        const shader = createDebugBoundingBoxVertShader(gpu.positionAndTimeBindGroup, {
-            arrayStride: vertexBufferProps.stride * 4,
-            attributes2: positionAttr,
-            stepMode: 'vertex',
-        });
+        const shader = createDebugBoundingBoxVertShader(gpu.positionAndTimeBindGroup,
+            {
+                arrayStride: vertexBufferProps.stride * 4,
+                attributes2: positionAttr,
+                stepMode: 'vertex',
+            });
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
                 fragmentShader: createColorFragmentShader(gpu.positionAndTimeBindGroup),

@@ -16,7 +16,8 @@ type BindLayouts = readonly [
 export class ReadDepth extends ComputeShader<BindLayouts> {
     constructor(gpu: GPU) {
         const bindLayouts = [
-            new BGLayout(gpu, 'DepthAndMeshLayout',
+            new BGLayout(gpu,
+                'DepthAndMeshLayout',
                 new BufLayout(
                     {
                         buffer: {
@@ -25,9 +26,12 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                             type: 'storage',
                         },
                         visibility: ShaderStage.COMPUTE,
-                    }, 'depth_and_mesh', Depth_And_Mesh)
+                    },
+                    'depth_and_mesh',
+                    Depth_And_Mesh)
             ),
-            new BGLayout(gpu, 'DepthTextureLayout',
+            new BGLayout(gpu,
+                'DepthTextureLayout',
                 new TextLayout(
                     {
                         texture: {
@@ -35,7 +39,9 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                             sampleType: 'depth',
                         },
                         visibility: ShaderStage.COMPUTE,
-                    }, 'depth_texture', 'texture_depth_multisampled_2d'),
+                    },
+                    'depth_texture',
+                    'texture_depth_multisampled_2d'),
                 new TextLayout(
                     {
                         texture: {
@@ -43,7 +49,9 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                             sampleType: 'uint',
                         },
                         visibility: ShaderStage.COMPUTE,
-                    }, 'mesh_texture', 'texture_2d<u32>'),
+                    },
+                    'mesh_texture',
+                    'texture_2d<u32>'),
                 new BufLayout(
                     {
                         buffer: {
@@ -52,7 +60,9 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                             type: 'uniform',
                         },
                         visibility: ShaderStage.COMPUTE,
-                    }, 'mouse', Mouse)
+                    },
+                    'mouse',
+                    Mouse)
             )
         ] as const;
 
@@ -74,6 +84,7 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
             },
             gpu,
             label: 'ReadDepth.comp',
-        }, () => '@compute @workgroup_size(1, 1, 1)');
+        },
+        () => '@compute @workgroup_size(1, 1, 1)');
     }
 }

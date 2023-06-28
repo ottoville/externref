@@ -8,7 +8,8 @@ import { ComputeShaderFunction } from './ShaderFunction.js';
 export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) {
     const bindLayouts = [
         sizeGroup,
-        new BGLayout(sizeGroup.gpu, 'CreateClustersLayout2',
+        new BGLayout(sizeGroup.gpu,
+            'CreateClustersLayout2',
             UpdateClustersBufferLayout,
             new BufLayout(
                 {
@@ -18,7 +19,9 @@ export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) 
                         type: 'uniform',
                     },
                     visibility: ShaderStage.COMPUTE,
-                }, 'screentoview', ProjectionStruct)
+                },
+                'screentoview',
+                ProjectionStruct)
         )
     ] as const;
     const pipelineLayout = new PipelineLayout({
@@ -60,7 +63,8 @@ ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, 
         },
         gpu: pipelineLayout.gpu,
         label: 'Clusters.comp',
-    }, ([uniforms], [_clusters, screentoview]) => /* wgsl */ `
+    },
+    ([uniforms], [_clusters, screentoview]) => /* wgsl */ `
     fn clipToView(clip : vec4<f32>) -> vec4<f32> {
         //View space transform
          let view = ${screentoview.prop('inversed_projection')} * clip;

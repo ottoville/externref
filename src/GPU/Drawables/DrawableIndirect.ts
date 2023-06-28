@@ -12,6 +12,7 @@ export class DrawableIndirect<R extends RenderPipeline = RenderPipeline> extends
         super(drawableProps);
     }
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
-        renderEncoder.drawIndirect(this.buffer.indirectBuffer, 0);
+        renderEncoder.drawIndirect(this.buffer.indirectBuffer,
+            0);
     }
 }

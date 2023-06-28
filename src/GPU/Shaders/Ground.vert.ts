@@ -10,19 +10,21 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
-                new Struct('Output', {
-                    Position: ['@builtin(position)', 'vec4<f32>'],
-                    v_uv: ['@location(0)', 'vec2<f32>'],
-                    // eslint-disable-next-line sort-keys
-                    normal: ['@location(1)', 'vec3<f32>'],
-                    position: ['@location(2)', 'vec3<f32>'],
-                    // eslint-disable-next-line sort-keys
-                    id: ['@location(3) @interpolate(flat)', 'u32'],
-                    scenes: ['@location(4) @interpolate(flat)', 'u32'],
-                }),
+                new Struct('Output',
+                    {
+                        Position: ['@builtin(position)', 'vec4<f32>'],
+                        v_uv: ['@location(0)', 'vec2<f32>'],
+                        // eslint-disable-next-line sort-keys
+                        normal: ['@location(1)', 'vec3<f32>'],
+                        position: ['@location(2)', 'vec3<f32>'],
+                        // eslint-disable-next-line sort-keys
+                        id: ['@location(3) @interpolate(flat)', 'u32'],
+                        scenes: ['@location(4) @interpolate(flat)', 'u32'],
+                    }),
                 pipelineLayout,
                 '',
-                [buffers], ([
+                [buffers],
+                ([
                     [/*uniforms*/,],
                     [scene/*time, clusters_array, meshes, projection*/],
                     [world]
@@ -43,11 +45,15 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
             return output;
             `
             ),
-            pick: new VertexShaderFunction(pickOutput, pipelineLayout, '', [buffers], ([
-                [/*uniforms*/,],
-                [scene/*time, clusters_array, meshes, projection*/],
-                [world]
-            ]) => /* wgsl */ `
+            pick: new VertexShaderFunction(pickOutput,
+                pipelineLayout,
+                '',
+                [buffers],
+                ([
+                    [/*uniforms*/,],
+                    [scene/*time, clusters_array, meshes, projection*/],
+                    [world]
+                ]) => /* wgsl */ `
                 var output : PickOutput;
                 output.Position = ${scene.prop('modelViewProjection') } * vec4<f32>(position.xyz, 1.0);
                 output.id=${world.prop('id') };

@@ -26,7 +26,8 @@ export class PickableRenderPass<T extends {
     constructor(renderPassProps: RenderPassProps<T>,
         depthRenderTargets: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
     ) {
-        super(renderPassProps, depthRenderTargets);
+        super(renderPassProps,
+            depthRenderTargets);
         if (renderPassProps.sampleCount == 4) {
             const readDepthShader = new ReadDepth(renderPassProps.gpu);
             this.#pickPositionPipeline = readDepthShader.createComputePipeline('main').then(pickPositionPipeline => {
@@ -43,30 +44,35 @@ export class PickableRenderPass<T extends {
                 size: 4 + 4, //depth + meshID (four pixel)
                 usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
             });
-            this.#mousePositionBuffer = Buffer.create(renderPassProps.gpu, 8, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'mousePositionBuffer');
+            this.#mousePositionBuffer = Buffer.create(renderPassProps.gpu,
+                8,
+                [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
+                'mousePositionBuffer');
 
-            this.#pickPositionBindGroup0 = readDepthShader.props.bindGroupLayouts[0].createBindGroup('pickPositionBindGroup0', () => [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: this.#pickBuffer,
+            this.#pickPositionBindGroup0 = readDepthShader.props.bindGroupLayouts[0].createBindGroup('pickPositionBindGroup0',
+                () => [
+                    {
+                        binding: 0,
+                        resource: {
+                            buffer: this.#pickBuffer,
+                        },
+                    }
+                ]);
+            this.#pickPositionBindGroup1 = readDepthShader.props.bindGroupLayouts[1].createBindGroup('pickPositionBindGroup1',
+                (bindGroup) => [
+                    {
+                        binding: 0,
+                        resource: this.depthRenderTarget.view.getTextureBinding(bindGroup),
                     },
-                }
-            ]);
-            this.#pickPositionBindGroup1 = readDepthShader.props.bindGroupLayouts[1].createBindGroup('pickPositionBindGroup1', (bindGroup) => [
-                {
-                    binding: 0,
-                    resource: this.depthRenderTarget.view.getTextureBinding(bindGroup),
-                },
-                {
-                    binding: 1,
-                    resource: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view.getTextureBinding(bindGroup),
-                },
-                {
-                    binding: 2,
-                    resource: this.#mousePositionBuffer!.getUniformBinding(bindGroup),
-                }
-            ]);
+                    {
+                        binding: 1,
+                        resource: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view.getTextureBinding(bindGroup),
+                    },
+                    {
+                        binding: 2,
+                        resource: this.#mousePositionBuffer!.getUniformBinding(bindGroup),
+                    }
+                ]);
 
         } else {
             this.#pickBuffer = this.#createPickBuffer()
@@ -83,14 +89,16 @@ export class PickableRenderPass<T extends {
         });
     }
     override resize(width: number, height: number) {
-        super.resize(width, height);
+        super.resize(width,
+            height);
         if (this.sampleCount === 1) {
             //update picking
             const oldpickBuffer = this.#pickBuffer;
             if (oldpickBuffer) {
                 setTimeout(() => {
                     oldpickBuffer.destroy();
-                }, 1000);
+                },
+                1000);
             }
             this.#rowBytes = this.size.width * 4;
             this.#pickBuffer = this.#createPickBuffer();
@@ -114,27 +122,47 @@ export class PickableRenderPass<T extends {
         const gRenderTargetDiffuse = this.gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse
         if (gRenderTargetDiffuse instanceof MSAARenderTarget) {
             if (!this.#zAndIDPromise) {
-                const mousePositionSwapBuffer = Buffer.create(this.gpu, 8, [GPUBufferUsage.COPY_SRC], 'mousePositionSwapBuffer', b => {
-                    new Uint32Array(b.getMappedRange(0, 8)).set([this.gpu.mousePosition[0], this.gpu.mousePosition[1]]);
-                });
-                mousePositionSwapBuffer.copyTo(encoder, this.#mousePositionBuffer!, 0, 0, 8);
+                const mousePositionSwapBuffer = Buffer.create(this.gpu,
+                    8,
+                    [GPUBufferUsage.COPY_SRC],
+                    'mousePositionSwapBuffer',
+                    b => {
+                        new Uint32Array(b.getMappedRange(0,
+                            8)).set([this.gpu.mousePosition[0], this.gpu.mousePosition[1]]);
+                    });
+                mousePositionSwapBuffer.copyTo(encoder,
+this.#mousePositionBuffer!,
+0,
+0,
+8);
                 const pickPass = encoder.beginComputePass({ label: 'pickPass', });
                 if (this.#pickPositionPipeline instanceof GPUComputePipeline) {
                     pickPass.setPipeline(this.#pickPositionPipeline);
                 } else {
                     pickPass.setPipeline(await this.#pickPositionPipeline!);
                 }
-                pickPass.setBindGroup(0, this.#pickPositionBindGroup0!.bindGroup);
-                pickPass.setBindGroup(1, this.#pickPositionBindGroup1!.bindGroup);
+                pickPass.setBindGroup(0,
+this.#pickPositionBindGroup0!.bindGroup);
+                pickPass.setBindGroup(1,
+this.#pickPositionBindGroup1!.bindGroup);
                 pickPass.dispatchWorkgroups(1);
                 pickPass.end();
-                encoder.copyBufferToBuffer(this.#pickBuffer, 0, this.#pickBufferRead!, 0, 4 + 4);
+                encoder.copyBufferToBuffer(this.#pickBuffer,
+                    0,
+this.#pickBufferRead!,
+0,
+4 + 4);
                 this.gpu.device.queue.submit([encoder.finish()]);
 
-                this.#zAndIDPromise = this.#pickBufferRead!.mapAsync(GPUMapMode.READ, 0, 4 + 4).then(() => {
-                    const b = this.#pickBufferRead!.getMappedRange(0, 4 + 4);
-                    const z = new DataView(b).getFloat32(0, true);
-                    const meshID = new DataView(b).getUint32(4, true);
+                this.#zAndIDPromise = this.#pickBufferRead!.mapAsync(GPUMapMode.READ,
+                    0,
+                    4 + 4).then(() => {
+                    const b = this.#pickBufferRead!.getMappedRange(0,
+                        4 + 4);
+                    const z = new DataView(b).getFloat32(0,
+                        true);
+                    const meshID = new DataView(b).getUint32(4,
+                        true);
                     this.#pickBufferRead!.unmap();
                     this.#zAndIDPromise = null;
                     return [z, meshID];
@@ -179,13 +207,18 @@ export class PickableRenderPass<T extends {
             this.gpu.device.queue.submit([encoder.finish()]);
             const buffer = this.#pickBuffer;
             if (!this.#zAndIDPromise) {
-                this.#zAndIDPromise = this.#pickBuffer.mapAsync(GPUMapMode.READ, newOffset, missOffset + 32 + 16).then(() => {
-                    const b = buffer.getMappedRange(newOffset, missOffset + 32 + 16);
-                    const z = new DataView(b).getFloat32(missOffset, true);
+                this.#zAndIDPromise = this.#pickBuffer.mapAsync(GPUMapMode.READ,
+                    newOffset,
+                    missOffset + 32 + 16).then(() => {
+                    const b = buffer.getMappedRange(newOffset,
+                        missOffset + 32 + 16);
+                    const z = new DataView(b).getFloat32(missOffset,
+                        true);
                     let meshId = 0;
                     if (mesh) {
                         this.pickPromiseMesh = null;
-                        meshId = new DataView(b).getUint32(missOffset + 32, true);
+                        meshId = new DataView(b).getUint32(missOffset + 32,
+                            true);
                     } else
                         this.pickPromise = null;
                     buffer.unmap();
@@ -204,7 +237,8 @@ export class PickableRenderPass<T extends {
             const result = new MutableTerraVector3();
             const x = this.gpu.mousePosition[0] / this.size.width * 2 - 1;
             const y = -(this.gpu.mousePosition[1] / this.size.height * 2 - 1);
-            new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(camera.projectionViewInverted, result);
+            new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(camera.projectionViewInverted,
+                result);
             if (mesh) {
                 this.pickPromiseMesh = null;
                 return { meshId: zAndID[1], position: result, };

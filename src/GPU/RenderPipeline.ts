@@ -41,17 +41,23 @@ export class RenderPipeline<V extends VertexShader = VertexShader, F extends Fra
         }
         var drawables = variant.rootDrawables;
         if (!drawables || drawables.size == 0) {
-            console.warn('No drawables has been set for renderpass', this.props.label, ', wont draw anything')
+            console.warn('No drawables has been set for renderpass',
+                this.props.label,
+                ', wont draw anything')
             return 0;
         }
 
         renderPassEncoder.setPipeline(variant.renderpipeline);
         if (this.createSharedBindGroups) {
             this.createSharedBindGroups().forEach(bindgroup => {
-                renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup.bindGroup)
+                renderPassEncoder.setBindGroup(BindGroupsStart++,
+                    bindgroup.bindGroup)
             });
         }
-        drawables.forEach(drawable => drawable.draw(renderPass, renderPassEncoder, BindGroupsStart, dynamicIndices));
+        drawables.forEach(drawable => drawable.draw(renderPass,
+            renderPassEncoder,
+            BindGroupsStart,
+            dynamicIndices));
         return drawables.size;
     }
 }

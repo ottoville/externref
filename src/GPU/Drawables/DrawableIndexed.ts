@@ -69,31 +69,51 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
             }
         }
         else {
-            this.#indexBuffer = Buffer.create(this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu, buffer.byteLength, [GPUBufferUsage.INDEX], 'index_' + this.node.label, b => {
-                if (buffer.BYTES_PER_ELEMENT == 4) {
-                    new Uint32Array(b.getMappedRange()).set(buffer);
-                    this.#GPUIndexFormat = 'uint32';
-                } else {
-                    new Uint16Array(b.getMappedRange()).set(buffer);
-                    this.#GPUIndexFormat = 'uint16';
-                }
-            });
+            this.#indexBuffer = Buffer.create(this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu,
+                buffer.byteLength,
+                [GPUBufferUsage.INDEX],
+                'index_' + this.node.label,
+                b => {
+                    if (buffer.BYTES_PER_ELEMENT == 4) {
+                        new Uint32Array(b.getMappedRange()).set(buffer);
+                        this.#GPUIndexFormat = 'uint32';
+                    } else {
+                        new Uint16Array(b.getMappedRange()).set(buffer);
+                        this.#GPUIndexFormat = 'uint16';
+                    }
+                });
 
         }
         return this.#indexBuffer;
     }
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass) {
         if (this.#indexBuffer) {
-            renderEncoder.setIndexBuffer(this.#indexBuffer.getIndexBuffer(renderPass), this.#GPUIndexFormat);
+            renderEncoder.setIndexBuffer(this.#indexBuffer.getIndexBuffer(renderPass),
+                this.#GPUIndexFormat);
             const indices_count = this.indices_count ?? this.node.indexed.indices_count;
             if (indices_count === 0) {
-                console.warn('wont draw', this.node.label, ', zero indices')
+                console.warn('wont draw',
+                    this.node.label,
+                    ', zero indices')
             } else {
-                console.debug('drawIndexed', this.node.label, 'indices', indices_count, 'instanceCount', this.instanceCount, 'indexFormat',this.#GPUIndexFormat)
-                renderEncoder.drawIndexed(indices_count, this.instanceCount, this.#firstIndex, this.#baseVertex, this.firstInstance);
+                console.debug('drawIndexed',
+                    this.node.label,
+                    'indices',
+                    indices_count,
+                    'instanceCount',
+                    this.instanceCount,
+                    'indexFormat',
+                    this.#GPUIndexFormat)
+                renderEncoder.drawIndexed(indices_count,
+                    this.instanceCount,
+                    this.#firstIndex,
+                    this.#baseVertex,
+                    this.firstInstance);
             }
         } else {
-            console.warn('wont draw', this.node.label, ', no indexBuffer')
+            console.warn('wont draw',
+                this.node.label,
+                ', no indexBuffer')
         }
     }
 }

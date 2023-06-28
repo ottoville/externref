@@ -5,7 +5,8 @@ import type { ColliderJS } from '../Collider.js';
 import type { Engine, rust_pointer, rust_vec_ptr } from '../engine.js';
 declare const engine: Engine;
 
-const worker = new ObjectWorkerThread('mesh.js', { type: 'module', });
+const worker = new ObjectWorkerThread('mesh.js',
+    { type: 'module', });
 export interface canCollideCharacter {
     rebuildTrianglePlanes(): void
 }
@@ -18,9 +19,12 @@ export interface PickingInfo {
 class pickInfo {
     buffer = new SharedArrayBuffer(6 * 4);
     point = new MutableTerraVector3(this.buffer);
-    #distance = new DataView(this.buffer, 3 * 4, 4)
+    #distance = new DataView(this.buffer,
+        3 * 4,
+        4)
     getDistance() {
-        return this.#distance.getFloat32(0, true);
+        return this.#distance.getFloat32(0,
+            true);
     }
 }
 
@@ -63,14 +67,22 @@ export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_poin
     }
     if(array instanceof Float32Array) {
         const vec_ptr = engine.rust.alloc_vector_f32(array.length);
-        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3)
-        new Float32Array(engine.rust.memory.buffer, ptr, len).set(array);
+        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
+            vec_ptr,
+            3)
+        new Float32Array(engine.rust.memory.buffer,
+            ptr,
+            len).set(array);
         return [ptr as rust_pointer<'f32'>, len!, cap!];
     }
     else {
         const vec_ptr = engine.rust.alloc_vector_usize(array.length);
-        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3)
-        new Uint32Array(engine.rust.memory.buffer, ptr, len).set(array);
+        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
+            vec_ptr,
+            3)
+        new Uint32Array(engine.rust.memory.buffer,
+            ptr,
+            len).set(array);
         return [ptr as rust_pointer<'usize'>, len!, cap!];
     }
 }
@@ -103,7 +115,9 @@ export abstract class DataNode extends MainNode {
     #positionsAndCollider: [pointerToVec3: number, pointerToVec4: number][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
     get vertices() {
-        return new Float32Array(engine.memory.buffer, engine.rust.vertices_pointer(this.id), this.vertices_count * this.vertices_stride);
+        return new Float32Array(engine.memory.buffer,
+            engine.rust.vertices_pointer(this.id),
+            this.vertices_count * this.vertices_stride);
     }
     get vertices_count() {
         return engine.rust.vertices_count(this.id);
@@ -113,16 +127,24 @@ export abstract class DataNode extends MainNode {
     }
     set faces(faces: Float32Array) {
         const vec_ptr = engine.rust.alloc_vector_f32(faces.length);
-        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3)
+        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
+            vec_ptr,
+            3)
 
-        new Float32Array(engine.rust.memory.buffer, ptr, len).set(faces);
-        engine.rust.set_faces(this.id, ptr!, len!, cap!);
+        new Float32Array(engine.rust.memory.buffer,
+            ptr,
+            len).set(faces);
+        engine.rust.set_faces(this.id,
+ptr!,
+len!,
+cap!);
     }
     get vertices_stride(): number {
         return engine.rust.vertices_stride(this.id);
     }
     set_vertices(vec: rust_vec_ptr<'f32'>) {
-        engine.rust.set_vertices(this.id, ...vec);
+        engine.rust.set_vertices(this.id,
+            ...vec);
     }
     get last_collider_world_vertices_pointer() {
         return engine.rust.last_collider_world_vertices_pointer(this.id);
@@ -149,14 +171,20 @@ export abstract class DataNode extends MainNode {
         this.#frontFace = frontFace;
         this.#character_can_collide_to = character_can_collide_to;
 
-        DataNode.Meshes.set(this.id, this);
-        engine.rust.create_geometry(this.id, true, vertices.stride, static_faces, strip);
+        DataNode.Meshes.set(this.id,
+            this);
+        engine.rust.create_geometry(this.id,
+            true,
+            vertices.stride,
+            static_faces,
+            strip);
         this.set_vertices(vertices.view);
         // queueMicrotask here so mesh will have indices initialized
         if (can_collide) {
             queueMicrotask(() => {
                 const collider_ptr = this.create_collider();
-                engine.rust.add_collider(this.id, collider_ptr)
+                engine.rust.add_collider(this.id,
+                    collider_ptr)
             });
         }
         if (character_can_collide_to) {
@@ -202,11 +230,13 @@ export abstract class DataNode extends MainNode {
         let idx = engine.physics.tickables.indexOf(this);
         // TODO: save index to property
         if (idx >= 0) {
-            engine.physics.tickables.splice(idx, 1);
+            engine.physics.tickables.splice(idx,
+                1);
         }
         idx = engine.physics.movables.indexOf(this);
         if (idx) {
-            engine.physics.movables.splice(idx, 1);
+            engine.physics.movables.splice(idx,
+                1);
         }
         DataNode.Meshes.delete(this.id);
         DataNode.CharacterCanCollideMeshes.delete(this);
@@ -235,14 +265,19 @@ export abstract class DataNode extends MainNode {
     }
 
     intersectsRay = (ray: Float32Array): Promise<void> => {
-        return worker.message(this.id, 'intersectsRay', [ray.buffer]);
+        return worker.message(this.id,
+            'intersectsRay',
+            [ray.buffer]);
     }
     #updateColliderPlanes() {
         this.#positionsAndCollider.forEach((posAndCol, i) => {
             if (i > this.positions_count) {
                 throw new Error('Tried to access vertice out of boundary')
             }
-            new MutableTerraVector3(engine.memory.buffer, posAndCol[0]).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer, posAndCol[1]));
+            new MutableTerraVector3(engine.memory.buffer,
+                posAndCol[0]).multiply2Ref(this.#myCollisionsTransformMatrix,
+                new TerraVector4(engine.memory.buffer,
+                    posAndCol[1]));
         });
         const collider_planes_parallel_pointer = engine.rust.collider_planes_parallel_pointer(this.id);
         this.#triangleFaces.forEach(face => {
@@ -250,7 +285,9 @@ export abstract class DataNode extends MainNode {
         })
 
         this.#faceQuatros.forEach((quatro, i) => {
-            new Float32Array(engine.memory.buffer, collider_planes_parallel_pointer + i * 4 * 16, 16).set([
+            new Float32Array(engine.memory.buffer,
+                collider_planes_parallel_pointer + i * 4 * 16,
+                16).set([
                 quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
                 quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
                 quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
@@ -264,16 +301,20 @@ export abstract class DataNode extends MainNode {
         //TODO: When there is support for bounding sphere.
         //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
 
-        var max = Math.max(sphere.radius[0], sphere.radius[1], sphere.radius[2]);
+        var max = Math.max(sphere.radius[0],
+            sphere.radius[1],
+            sphere.radius[2]);
 
         /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
                return false;
            }*/
-        if (!this.intersect_box_aa_sphere(engine.collider, max)) {
+        if (!this.intersect_box_aa_sphere(engine.collider,
+            max)) {
             return;
         }
         // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix
-        this.get_transformation().multiplyToRef(sphere.collisionsScalingMatrix, this.#myCollisionsTransformMatrix);
+        this.get_transformation().multiplyToRef(sphere.collisionsScalingMatrix,
+            this.#myCollisionsTransformMatrix);
         if (!this.#lastColliderTransformMatrix.equals(this.#myCollisionsTransformMatrix)) {
             this.#lastColliderTransformMatrix = this.#myCollisionsTransformMatrix.clone();
             this.#updateColliderPlanes();

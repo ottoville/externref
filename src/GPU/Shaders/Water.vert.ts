@@ -19,14 +19,15 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
-                new Struct('Output', {
-                    Position: ['@builtin(position)', 'vec4<f32>'],
-                    v_uv: ['@location(0)', 'vec4<f32>'],
-                    // eslint-disable-next-line sort-keys
-                    position: ['@location(1)', 'vec3<f32>'],
-                    // eslint-disable-next-line sort-keys
-                    id: ['@location(2) @interpolate(flat)', 'u32'],
-                }),
+                new Struct('Output',
+                    {
+                        Position: ['@builtin(position)', 'vec4<f32>'],
+                        v_uv: ['@location(0)', 'vec4<f32>'],
+                        // eslint-disable-next-line sort-keys
+                        position: ['@location(1)', 'vec3<f32>'],
+                        // eslint-disable-next-line sort-keys
+                        id: ['@location(2) @interpolate(flat)', 'u32'],
+                    }),
                 pipelineLayout,
                 '',
                 [buffers],

@@ -97,13 +97,22 @@ export class Buffer extends Bindable {
     static create(gpu: GPU, size: number, usages: number[], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void) {
         let b: Buffer;
         if (usages.includes(GPUBufferUsage.COPY_SRC)) {
-            b = new copySrcBuffer(gpu, size, usages, typeof mappedAtCreation !== 'undefined', label);
+            b = new copySrcBuffer(gpu,
+                size,
+                usages,
+                typeof mappedAtCreation !== 'undefined',
+                label);
         }
         else {
-            b = new Buffer(gpu, size, usages, typeof mappedAtCreation !== 'undefined', label)
+            b = new Buffer(gpu,
+                size,
+                usages,
+                typeof mappedAtCreation !== 'undefined',
+                label)
         }
         if (mappedAtCreation) {
-            mappedAtCreation(b.buffer, gpu);
+            mappedAtCreation(b.buffer,
+                gpu);
             b.buffer.unmap();
         }
         return b;
@@ -120,7 +129,8 @@ export class Buffer extends Bindable {
         const desc: GPUBufferDescriptor = {
             mappedAtCreation,
             size,
-            usage: usages.reduce((prev, curr) => prev | curr, 0),
+            usage: usages.reduce((prev, curr) => prev | curr,
+                0),
         }
         if (label)
             desc.label = label;
@@ -128,13 +138,16 @@ export class Buffer extends Bindable {
             this.buffer = gpu.device.createBuffer(desc);
         } catch (e) {
             engine.showError(e);
-            throw (new Error('Cannot create buffer', { cause: (e instanceof Error ? e : new Error(new String(e).toString())), }));
+            throw (new Error('Cannot create buffer',
+                { cause: (e instanceof Error ? e : new Error(new String(e).toString())), }));
         }
         if (usages.includes(GPUBufferUsage.UNIFORM)) {
-            (this as unknown as BindUniformBuffer).getUniformBinding = bufferBinding.bind(this, 'UNIFORM');
+            (this as unknown as BindUniformBuffer).getUniformBinding = bufferBinding.bind(this,
+                'UNIFORM');
         }
         if (usages.includes(GPUBufferUsage.STORAGE)) {
-            (this as unknown as BindStorageBuffer).getStorageBinding = bufferBinding.bind(this, 'STORAGE')
+            (this as unknown as BindStorageBuffer).getStorageBinding = bufferBinding.bind(this,
+                'STORAGE')
         }
         if (usages.includes(GPUBufferUsage.VERTEX)) {
             (this as unknown as VertexBuffer).getVertexBuffer = (renderPass: RenderPass) : GPUBuffer => {
@@ -153,7 +166,11 @@ export class Buffer extends Bindable {
         }
         if (usages.includes(GPUBufferUsage.COPY_DST)) {
             (this as unknown as CopyDstBuffer).updateBufferRaw = (commandEncoder, data) => {
-                const tempBuffer = new copySrcBuffer(gpu, data.byteLength, [], true, label + '_swap');
+                const tempBuffer = new copySrcBuffer(gpu,
+                    data.byteLength,
+                    [],
+                    true,
+                    label + '_swap');
                 this.gpu.tempGPUBuffers.push(tempBuffer.buffer);
                 let buffer: ArrayBuffer;
                 let srcOffset = 0;
@@ -163,11 +180,15 @@ export class Buffer extends Bindable {
                     buffer = data.buffer;
                     srcOffset = data.byteOffset
                 }
-                new Int8Array(tempBuffer.buffer.getMappedRange()).set(new Int8Array(buffer, srcOffset, data.byteLength/Int8Array.BYTES_PER_ELEMENT));
+                new Int8Array(tempBuffer.buffer.getMappedRange()).set(new Int8Array(buffer,
+                    srcOffset,
+                    data.byteLength/Int8Array.BYTES_PER_ELEMENT));
                 tempBuffer.buffer.unmap();
                 commandEncoder.copyBufferToBuffer(
-                    tempBuffer.buffer, 0,
-                    this.buffer, 0,
+                    tempBuffer.buffer,
+                    0,
+                    this.buffer,
+                    0,
                     data.byteLength);
             }
             (this as unknown as CopyDstBuffer).copyFrom = (commandEncoder, from, sourceOffset, destinationOffset, copySize) => {
@@ -190,7 +211,11 @@ export class Buffer extends Bindable {
                 );
             }
             (this as unknown as CopyDstBuffer).write = (bufferOffset, data, dataOffset?, writeSize?) => {
-                gpu.device.queue.writeBuffer(this.buffer, bufferOffset, data, dataOffset, writeSize);
+                gpu.device.queue.writeBuffer(this.buffer,
+                    bufferOffset,
+                    data,
+                    dataOffset,
+                    writeSize);
             }
 
         }
@@ -203,34 +228,57 @@ export class Buffer extends Bindable {
 }
 class copySrcBuffer extends Buffer {
     constructor(gpu: GPU, size: number, usages: number[], mappedAtCreation = false, label: string) {
-        super(gpu, size, [GPUBufferUsage.COPY_SRC, ...usages], mappedAtCreation, label)
+        super(gpu,
+            size,
+            [GPUBufferUsage.COPY_SRC, ...usages],
+            mappedAtCreation,
+            label)
     }
     copyTo(commandEncoder: GPUCommandEncoder, buffer: CopyDstBuffer, sourceOffset: GPUSize64, destinationOffset: GPUSize64, copySize: GPUSize64) {
-        buffer.copyFrom(commandEncoder, this.buffer, sourceOffset, destinationOffset, copySize);
+        buffer.copyFrom(commandEncoder,
+            this.buffer,
+            sourceOffset,
+            destinationOffset,
+            copySize);
     }
     createReadCopy(commandEncoder: GPUCommandEncoder) {
-        const gpuReadBuffer = new ReadBuffer(this.gpu, this.buffer.size, this.label + '_readCopy');
-        gpuReadBuffer.copyFrom(commandEncoder, this.buffer, 0, 0, this.buffer.size);
+        const gpuReadBuffer = new ReadBuffer(this.gpu,
+            this.buffer.size,
+            this.label + '_readCopy');
+        gpuReadBuffer.copyFrom(commandEncoder,
+            this.buffer,
+            0,
+            0,
+            this.buffer.size);
         return gpuReadBuffer;
     }
     resize(size: number) {
         try {
             const commandEncoder = this.gpu.device.createCommandEncoder({ label: 'bufferResizeEncoder', });
             const newBuffer = this.gpu.device.createBuffer({ label: this.label, size, usage: this.buffer.usage | GPUBufferUsage.COPY_DST, });
-            commandEncoder.copyBufferToBuffer(this.buffer, 0, newBuffer, 0, this.buffer.size);
+            commandEncoder.copyBufferToBuffer(this.buffer,
+                0,
+                newBuffer,
+                0,
+                this.buffer.size);
             this.gpu.device.queue.submit([commandEncoder.finish()]);
             this.destroy();
             this.buffer = newBuffer;
         } catch (e) {
             engine.showError(e);
-            throw (new Error('Cannot create resized buffer', { cause: (e instanceof Error ? e : new Error(new String(e).toString())), }));
+            throw (new Error('Cannot create resized buffer',
+                { cause: (e instanceof Error ? e : new Error(new String(e).toString())), }));
         }
     }
 }
 //MAP write (Only CopySrc is allowed with MapWrite)
 export class WriteBuffer extends copySrcBuffer {
     constructor(gpu: GPU, size: number, label: string) {
-        super(gpu, size, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC], false, label)
+        super(gpu,
+            size,
+            [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC],
+            false,
+            label)
     }
 }
 //MAP read (Only CopyDtst is allowed with MapRead)
@@ -238,7 +286,11 @@ export class WriteBuffer extends copySrcBuffer {
 export interface ReadBuffer extends CopyDstBuffer { }
 export class ReadBuffer extends Buffer {
     constructor(gpu: GPU, size: number, label: string) {
-        super(gpu, size, [GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST], false, label)
+        super(gpu,
+            size,
+            [GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST],
+            false,
+            label)
     }
     async readAndDestroy(callback: (buff: ArrayBuffer) => Promise<void> | void): Promise<void> {
         let arrbuff: ArrayBuffer;
@@ -247,14 +299,16 @@ export class ReadBuffer extends Buffer {
             arrbuff = this.buffer.getMappedRange();
         } catch (e) {
             if(!this.gpu.destroyed) {
-                engine.showError(e, this.gpu);
+                engine.showError(e,
+                    this.gpu);
             }
             return;
         }
         try {
             await callback(arrbuff);
         } catch(e) {
-            engine.showError(e, this.gpu);
+            engine.showError(e,
+                this.gpu);
         }
         this.destroy();
     }

@@ -70,27 +70,28 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
         keyBoardMap.length = 0;
         const menus =
             [
-                UINode.createCtrProps(PlantsUI, {
-                    ...Button({
-                        UIRectangleProps: {
-                            label: 'Plants',
-                            scale: { min_width: 0.07,unit: NumericUnit['%'], y: 0.04, },
-                            translate: {
-                                x: {
-                                    anchor: Anchor.CENTER,
-                                    value: [-0.9, NumericUnit['%']],
-                                }, y: {
-                                    anchor: Anchor.CENTER,
-                                    value: [0.9, NumericUnit['%']],
+                UINode.createCtrProps(PlantsUI,
+                    {
+                        ...Button({
+                            UIRectangleProps: {
+                                label: 'Plants',
+                                scale: { min_width: 0.07,unit: NumericUnit['%'], y: 0.04, },
+                                translate: {
+                                    x: {
+                                        anchor: Anchor.CENTER,
+                                        value: [-0.9, NumericUnit['%']],
+                                    }, y: {
+                                        anchor: Anchor.CENTER,
+                                        value: [0.9, NumericUnit['%']],
+                                    },
                                 },
                             },
-                        },
-                        text: 'Plants (1)',
+                            text: 'Plants (1)',
+                        }),
+                        ...commonProps,
+                        menuTree: this.menuTree,
+                        open: this.state.menuOpenName === 'Plants',
                     }),
-                    ...commonProps,
-                    menuTree: this.menuTree,
-                    open: this.state.menuOpenName === 'Plants',
-                }),
                 UINode.createCtrProps(TerrainToolButton,
                     {
                         ...Button({

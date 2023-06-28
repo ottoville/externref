@@ -22,7 +22,8 @@ export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> 
         let label = this.descriptor.label ?? '';
         if (debug) {
             label = (this.descriptor.label!) + 'debug' + n;
-            console.log('create textureview', label)
+            console.log('create textureview',
+                label)
             n += 1;
         }
         this.view = this.texture.texture.createView(

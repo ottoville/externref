@@ -17,7 +17,8 @@ type BindLayouts = readonly [
 export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
     constructor(gpu: GPU, settings: typeof Terrain.settings) {
         const bindLayouts = [
-            new BGLayout(gpu, 'verticesBindGroupLayout',
+            new BGLayout(gpu,
+                'verticesBindGroupLayout',
                 new BufLayout(
                     {
                         buffer: {
@@ -27,8 +28,11 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                         },
                         visibility: ShaderStage.COMPUTE,
 
-                    }, 'vertices', Vertices)),
-            new BGLayout(gpu, 'slopesAndFacesBindGroupLayout',
+                    },
+                    'vertices',
+                    Vertices)),
+            new BGLayout(gpu,
+                'slopesAndFacesBindGroupLayout',
                 new BufLayout(
                     {
                         buffer: {
@@ -37,7 +41,9 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                             type: 'storage',
                         },
                         visibility: ShaderStage.COMPUTE,
-                    }, 'slopes', IntArray),
+                    },
+                    'slopes',
+                    IntArray),
                 new BufLayout(
                     {
                         buffer: {
@@ -47,7 +53,9 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                         },
                         visibility: ShaderStage.COMPUTE,
 
-                    }, 'facet12', PlaneArray))
+                    },
+                    'facet12',
+                    PlaneArray))
         ] as const
 
         const pipelineLayout = new PipelineLayout({
@@ -112,7 +120,8 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
             },
             gpu: pipelineLayout.gpu,
             label: 'calculatePlaneHeights.comp',
-        }, () => `
+        },
+        () => `
             const cd: f32 = -1.0;
             @compute @workgroup_size(1)
   

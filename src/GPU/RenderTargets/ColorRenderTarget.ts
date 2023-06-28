@@ -16,7 +16,8 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
         renderTargetOptions: RenderPassTargetOptions,
         options: ColorRenderTargetParams
     ) {
-        super(textureOptions, renderTargetOptions);
+        super(textureOptions,
+            renderTargetOptions);
         this.#clearValue = options.clearValue
         this.blend = options.blend
     }

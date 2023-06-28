@@ -37,16 +37,20 @@ export abstract class DrawableDirect<N extends MainNode> extends Drawable<N> {
         }: DrawableDirectProps = {}
     ) {
         super(drawableProps);
-        engine.rust.set_drawble_direct(this.node.id, instanceCount, firstInstance);
+        engine.rust.set_drawble_direct(this.node.id,
+            instanceCount,
+            firstInstance);
     }
     protected set firstInstance(first_instance: number) {
-        engine.rust.set_first_instance(this.node.id, first_instance);
+        engine.rust.set_first_instance(this.node.id,
+            first_instance);
     }
     protected get firstInstance() {
         return engine.rust.get_first_instance(this.node.id);
     }
     protected set instanceCount(count: number) {
-        engine.rust.set_instance_count(this.node.id, count);
+        engine.rust.set_instance_count(this.node.id,
+            count);
     }
     protected get instanceCount() {
         return engine.rust.get_instance_count(this.node.id);

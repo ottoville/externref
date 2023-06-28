@@ -60,15 +60,17 @@ export class Canvas {
         }
     }
     constructor(container: HTMLElement) {
-        this.#canvasElem.addEventListener('contextmenu', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-        })
+        this.#canvasElem.addEventListener('contextmenu',
+            (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            })
         this.#progressBar.max = 100;
 
-        this.#errorDialog.addEventListener('close', () => {
-            this.showError();
-        });
+        this.#errorDialog.addEventListener('close',
+            () => {
+                this.showError();
+            });
         this.setProgress(2);
         this.setProgress(6);
 
@@ -87,46 +89,49 @@ export class Canvas {
 
 
         const progressForWasmLoading = 34;
-        Engine.initEngine({ canvas: this.#canvasElem, devTools, }, (e) => {
-            errors.push(e);
-            this.showError();
-        }, {
-            collider: fetch('../collider/colliderSimdO.wasm'),
-            rust: fetch('/engine.wasm').then(response => {
-                if (response.body) {
-                    const contentLengthHeader = response.headers.get('Content-Length');
-                    if (!contentLengthHeader) {
-                        return response;
+        Engine.initEngine({ canvas: this.#canvasElem, devTools, },
+            (e) => {
+                errors.push(e);
+                this.showError();
+            },
+            {
+                collider: fetch('../collider/colliderSimdO.wasm'),
+                rust: fetch('/engine.wasm').then(response => {
+                    if (response.body) {
+                        const contentLengthHeader = response.headers.get('Content-Length');
+                        if (!contentLengthHeader) {
+                            return response;
+                        }
+                        const reader = response.body.getReader();
+                        const contentLength = parseInt(contentLengthHeader);
+                        let receivedLength = 0; // received that many bytes at the moment
+                        let done = false
+                        const progressBar = this.#progressBar;
+                        const progressElem = this.#progresElem
+                        const reableStream = new ReadableStream({
+                            async start(controller) {
+                                do {
+                                    const results = await reader.read();
+                                    done = results.done
+                                    if (!done) {
+                                        const value = results.value
+                                        controller.enqueue(value)
+                                        receivedLength += value!.length;
+                                        const percentOfReceived = receivedLength / contentLength;
+                                        const progress = 6 + progressForWasmLoading * percentOfReceived;
+                                        progressBar.value = progress;
+                                        progressElem.textContent = Math.floor(progress).toFixed(0);
+                                    }
+                                } while (!done)
+                                controller.close();
+                            },
+                        });
+                        return new Response(reableStream,
+                            { headers: response.headers, });
                     }
-                    const reader = response.body.getReader();
-                    const contentLength = parseInt(contentLengthHeader);
-                    let receivedLength = 0; // received that many bytes at the moment
-                    let done = false
-                    const progressBar = this.#progressBar;
-                    const progressElem = this.#progresElem
-                    const reableStream = new ReadableStream({
-                        async start(controller) {
-                            do {
-                                const results = await reader.read();
-                                done = results.done
-                                if (!done) {
-                                    const value = results.value
-                                    controller.enqueue(value)
-                                    receivedLength += value!.length;
-                                    const percentOfReceived = receivedLength / contentLength;
-                                    const progress = 6 + progressForWasmLoading * percentOfReceived;
-                                    progressBar.value = progress;
-                                    progressElem.textContent = Math.floor(progress).toFixed(0);
-                                }
-                            } while (!done)
-                            controller.close();
-                        },
-                    });
-                    return new Response(reableStream, { headers: response.headers, });
-                }
-                return response;
-            }),
-        }).then(async terraEngine => {
+                    return response;
+                }),
+            }).then(async terraEngine => {
             if (!terraEngine)
                 return;
             this.setProgress(40);
@@ -138,45 +143,54 @@ export class Canvas {
             createSettingsMenu.addKeydownListener();
             new createTimeControls();
             new CreateFPSMeter();
-            new Scene('main', gpu, (terrascene) => {
-                new Sun(gpu, [terrascene]);
-                // Initial scene objects here
+            new Scene('main',
+                gpu,
+                (terrascene) => {
+                    new Sun(gpu,
+                        [terrascene]);
+                    // Initial scene objects here
 
-                new Sea([terrascene]);
-                //new testPlane(terrascene);
-                const archRotateController = new ArcRotateCamera(engine.mainCamera, true);
-                engine.mainCamera.attachControllerForCamera(archRotateController);
-                const human = new Human({ inputEnabled: false, scenes: [terrascene], });
-                // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
-                human.translation = [403.4, 1000, 23];
-                document.addEventListener('keydown', e => {
-                    if (e.key === 'Tab') {
-                        if (engine.inputManager === human.inputManager) {
-                            engine.mainCamera.attachControllerForCamera(archRotateController);
-                        } else {
-                            engine.mainCamera.attachControllerForCamera(human.inputManager)
-                        }
-                    }
-                })
-                const terrainInited = Terrain.loadFromTexture(gpu, [terrascene]);
-                terrainInited.then(terrain => new createTopMenu({ gpu, terrain, })).catch(err => {
-                    errors.push(err)
-                    this.showError();
+                    new Sea([terrascene]);
+                    //new testPlane(terrascene);
+                    const archRotateController = new ArcRotateCamera(engine.mainCamera,
+                        true);
+                    engine.mainCamera.attachControllerForCamera(archRotateController);
+                    const human = new Human({ inputEnabled: false, scenes: [terrascene], });
+                    // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
+                    human.translation = [403.4, 1000, 23];
+                    document.addEventListener('keydown',
+                        e => {
+                            if (e.key === 'Tab') {
+                                if (engine.inputManager === human.inputManager) {
+                                    engine.mainCamera.attachControllerForCamera(archRotateController);
+                                } else {
+                                    engine.mainCamera.attachControllerForCamera(human.inputManager)
+                                }
+                            }
+                        })
+                    const terrainInited = Terrain.loadFromTexture(gpu,
+                        [terrascene]);
+                    terrainInited.then(terrain => new createTopMenu({ gpu, terrain, })).catch(err => {
+                        errors.push(err)
+                        this.showError();
+                    });
+
+                    PlantsUI.plantsMesh = new Plants(terrascene,
+                        terrainInited);
+
+                    this.setProgress(100);
+                    return terrainInited;
                 });
-
-                PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
-
-                this.setProgress(100);
-                return terrainInited;
-            });
             //Debug scene
-            new Scene('static', terraEngine.gpu!, (scene) => {
-                const sun = new Light(scene);
-                sun.translation = [0, 1, 0]
-                sun.ambient = [0, 0, 0];
-                sun.shadow = 1; // shadow to 1 (no shadow)
-                return undefined
-            });
+            new Scene('static',
+terraEngine.gpu!,
+(scene) => {
+    const sun = new Light(scene);
+    sun.translation = [0, 1, 0]
+    sun.ambient = [0, 0, 0];
+    sun.shadow = 1; // shadow to 1 (no shadow)
+    return undefined
+});
 
             /* const slope = new Box(
                  {can_collide: true, label: 'gravitybixbox2', fixed: true});
@@ -184,36 +198,50 @@ export class Canvas {
              slope.update_rotation(Math.sin(1.4), 0, 0, Math.cos(1.4));
              slope.translation = [23, 500, 23];
          */
-            const cone = new Cone({ label: 'cone', }, true);
+            const cone = new Cone({ label: 'cone', },
+                true);
             cone.euler_angles = [90, 0, 0];
             cone.translation = [0, 900, -70];
-            cone.update_scale(50, 50, 50)
+            cone.update_scale(50,
+                50,
+                50)
             cone.radius = 50;
             cone.color = [1, 0, 0, 0];
 
 
-            const capsule = new Capsule(true, CAPSULE_ORIENTATION.x, 3, {
-                label: 'capsule1',
-            });
+            const capsule = new Capsule(true,
+                CAPSULE_ORIENTATION.x,
+                3,
+                {
+                    label: 'capsule1',
+                });
             capsule.translation = [60, 900, -70];
             capsule.radius = 30;
             capsule.color = [0, 0, 1, 0];
-            const capsule2 = new Capsule(true, CAPSULE_ORIENTATION.y, 3, {
-                label: 'capsule2',
-            });
+            const capsule2 = new Capsule(true,
+                CAPSULE_ORIENTATION.y,
+                3,
+                {
+                    label: 'capsule2',
+                });
             capsule2.translation = [100, 900, -70];
             capsule2.radius = 30;
             capsule2.color = [0, 0, 1, 0];
 
-            const capsule3 = new Capsule(true, CAPSULE_ORIENTATION.z, 3, {
-                label: 'capsule3',
-            });
+            const capsule3 = new Capsule(true,
+                CAPSULE_ORIENTATION.z,
+                3,
+                {
+                    label: 'capsule3',
+                });
             capsule3.translation = [140, 900, -70];
             capsule3.radius = 30;
             capsule3.color = [0, 0, 1, 0];
 
 
-            const roundCuboid = new RoundCuboid({ depth: 80, height: 40, width: 40, }, { borderRadius: 10, }, { fixed: true, label: 'roundCuboid', });
+            const roundCuboid = new RoundCuboid({ depth: 80, height: 40, width: 40, },
+                { borderRadius: 10, },
+                { fixed: true, label: 'roundCuboid', });
             roundCuboid.translation = [200, 900, -70];
             roundCuboid.color = [0, 0, 1, 0];
 
@@ -266,7 +294,8 @@ export class Canvas {
                         value: [0],
                     },
                 },
-            }, gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view);
+            },
+gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view);
             this.setProgress(45);
 
             const webSocket = new WebSocket('wss://localhost:8081/echo');
@@ -274,10 +303,12 @@ export class Canvas {
                 console.log('websocket onopen');
                 webSocket.send(JSON.stringify({ action: 'init', data: { /* userinfo: state.userInfo, ticks */ }, }));
                 webSocket.onmessage = (e) => {
-                    console.log('message from WS', e)
+                    console.log('message from WS',
+                        e)
                     const msg = JSON.parse(e.data);
                     if (msg.action == 'init') {
-                        console.debug('going to init game', msg.currentPlayData)
+                        console.debug('going to init game',
+                            msg.currentPlayData)
                     }
                 }
 

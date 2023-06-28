@@ -25,7 +25,8 @@ export function NodeInfo({ drawable, }: { drawable: Drawable }) {
         return () => {
             drawable.node.onMeshChange.delete(listener)
         }
-    }, [drawable]);
+    },
+    [drawable]);
     return <fieldset>
         <legend>{drawable.node.label}</legend>
         {drawable.renderPipeline.props.label}<br />
@@ -52,17 +53,23 @@ export function NodeInfo({ drawable, }: { drawable: Drawable }) {
             <legend>Scale</legend>
             <label>X:
                 <input onChange={(evt) => {
-                    drawable.node.update_scale(evt.target.valueAsNumber, scale[1], scale[2])
+                    drawable.node.update_scale(evt.target.valueAsNumber,
+                        scale[1],
+                        scale[2])
                 }} title="scale X" type="number" step="0.1" value={scale[0].toFixed(3)} />
             </label><br />
             <label>Y:
                 <input onChange={(evt) => {
-                    drawable.node.update_scale(scale[0], evt.target.valueAsNumber, scale[2])
+                    drawable.node.update_scale(scale[0],
+                        evt.target.valueAsNumber,
+                        scale[2])
                 }} title="scale Y" type="number" step="0.1" value={scale[1].toFixed(3)} />
             </label><br />
             <label>Z:
                 <input onChange={(evt) => {
-                    drawable.node.update_scale(scale[0], scale[1], evt.target.valueAsNumber)
+                    drawable.node.update_scale(scale[0],
+                        scale[1],
+                        evt.target.valueAsNumber)
                 }} title="scale Z" type="number" step="0.1" value={scale[2].toFixed(3)} />
             </label>
         </fieldset>

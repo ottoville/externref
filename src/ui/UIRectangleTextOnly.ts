@@ -12,7 +12,10 @@ function createTextureForTextOnly(
     textUV: [topLeft: [number, number], topRight: [number, number], bottomRight: [number, number], bottomLeft: [number, number]],
     originalAspectRatio?: number) {
 
-    const { originalTextHeight, textSize, measuredSize, ctx, copySource2, } = createBackground(1, 1, text, originalAspectRatio)
+    const { originalTextHeight, textSize, measuredSize, ctx, copySource2, } = createBackground(1,
+        1,
+        text,
+        originalAspectRatio)
 
     copySource2.width = textSize.width;
     copySource2.height = textSize.height;
@@ -36,7 +39,9 @@ function createTextureForTextOnly(
 }
 export class UIRectangleTextOnly extends UIRectangleText {
     createTexture() {
-        const copySource = createTextureForTextOnly(this.text, this.textUV, this.props.originalAspectRatio)
+        const copySource = createTextureForTextOnly(this.text,
+            this.textUV,
+            this.props.originalAspectRatio)
         this.createTextureView(copySource);
         return this.textureView;
     }
@@ -47,7 +52,10 @@ export class UIRectangleTextOnly extends UIRectangleText {
             [0, 0],
             [0, 0]
         ]
-        super(props, createTextureForTextOnly(text, textUV, props.originalAspectRatio))
+        super(props,
+            createTextureForTextOnly(text,
+                textUV,
+                props.originalAspectRatio))
         this.textUV = textUV;
     }
 }

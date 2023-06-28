@@ -14,9 +14,10 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: new FragmentShaderFunction(
-                    new Struct('Output', {
-                        Diffuse: ['@location(0)', 'vec4<f32>'],
-                    }),
+                    new Struct('Output',
+                        {
+                            Diffuse: ['@location(0)', 'vec4<f32>'],
+                        }),
                     pipelineLayout,
                     `  @builtin(position) fragCoord : vec4<f32>,
                 @location(0)  v_uv : vec2<f32>,
@@ -82,9 +83,10 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
                 `
                 ),
                 pick: new FragmentShaderFunction(
-                    new Struct('PickOutput', {
-                        ID: ['@location(0)', 'u32'],
-                    }),
+                    new Struct('PickOutput',
+                        {
+                            ID: ['@location(0)', 'u32'],
+                        }),
                     pipelineLayout,
                     `@builtin(position) fragCoord : vec4<f32>,
                     @location(0) @interpolate(flat)  id : u32`,
@@ -98,11 +100,13 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
             },
             gpu: pipelineLayout.gpu,
             label: 'Ground.frag',
-        }, ([uniforms],
+        },
+        ([uniforms],
             [/*scene*/, _clusters_array, _meshes, projection],
             [/*world*/,],
             [_mySampler, _myTexture]) => /* wgsl */ `
-          ${getClusterIndex(uniforms, projection)}
+          ${getClusterIndex(uniforms,
+        projection)}
 
           var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
             vec3<f32>(1.0, 0.0, 0.0),

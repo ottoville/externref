@@ -8,6 +8,7 @@ export class DepthRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
         textureOptions: TextureParams<F, Exclude<U, TextureUsageType['STORAGE_BINDING']>, Texture2dSize>,
         renderTargetOptions: RenderPassTargetOptions
     ) {
-        super(textureOptions, renderTargetOptions);
+        super(textureOptions,
+            renderTargetOptions);
     }
 }

@@ -7,11 +7,12 @@ export const NormalsPipeline = [
     'NormalsPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
         stride: number;
     }) {
-        const debugNormalsVertShader = createDebugNormalsVertShader(gpu.positionAndTimeBindGroup, {
-            arrayStride: vertexBufferProps.stride * 4,
-            attributes2: simpleAttributes,
-            stepMode: 'vertex',
-        });
+        const debugNormalsVertShader = createDebugNormalsVertShader(gpu.positionAndTimeBindGroup,
+            {
+                arrayStride: vertexBufferProps.stride * 4,
+                attributes2: simpleAttributes,
+                stepMode: 'vertex',
+            });
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
                 fragmentShader: createColorFragmentShader(gpu.positionAndTimeBindGroup),

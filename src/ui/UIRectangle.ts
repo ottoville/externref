@@ -107,7 +107,8 @@ export abstract class UIRectangle extends DataNode {
                 this.texture.destroy()
                 this.texture = undefined;
                 const vertices = this.#updateBoundingBoxAndVerticesSuper();
-                this.drawable.setVertexBuffer(0, vertices);
+                this.drawable.setVertexBuffer(0,
+                    vertices);
                 this.set_vertices(allocate_vec(vertices))
             }
         }
@@ -166,7 +167,8 @@ export abstract class UIRectangle extends DataNode {
         if (this.props.translate.x.value[1] === NumericUnit.px || this.props.translate.y.value[1] === NumericUnit.px) {
             const buff = new ArrayBuffer(8);
             this.updatePosition(buff);
-            this.uniformBuffer.write(0, buff)
+            this.uniformBuffer.write(0,
+                buff)
         }
         let widthPixels: number;
         if (scale.unit === NumericUnit['%']) {
@@ -256,7 +258,9 @@ export abstract class UIRectangle extends DataNode {
         const content_sizeX = outer_sizeX - widthBorderRelative;
         const content_sizeY = outer_sizeY - heightBorderRelative
         if (content_sizeX <= 0 || content_sizeY <= 0) {
-            console.warn('UI', label, 'element content size is 0 or below')
+            console.warn('UI',
+                label,
+                'element content size is 0 or below')
         }
         const positionsCount = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6
         const vertices =  new Float32Array(positionsCount * 4);
@@ -298,9 +302,13 @@ export abstract class UIRectangle extends DataNode {
         } = props;
         this.positions_count = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6;
 
-        this.uniformBuffer = Buffer.create(renderPass.gpu, 8 /* size of vec2<f32> */, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'UI_transform', (buff) => {
-            this.updatePosition(buff.getMappedRange());
-        }
+        this.uniformBuffer = Buffer.create(renderPass.gpu,
+            8 /* size of vec2<f32> */,
+            [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
+            'UI_transform',
+            (buff) => {
+                this.updatePosition(buff.getMappedRange());
+            }
 
         );
         const onClick = events?.onClick;
@@ -354,32 +362,37 @@ export abstract class UIRectangle extends DataNode {
                 renderPasses: new Set([renderPass]),
                 renderPipeline: canvaspipeline,
                 vertexBuffers: [vertices],
-            }, {
+            },
+            {
                 firstInstance: 0,
                 instanceCount: 1,
-            }, {
+            },
+            {
                 firstVertex: 0,
             });
             this.drawable = drawable
-            renderPass.onResize.set(this, () => {
-                const newVertices = this.#updateBoundingBoxAndVerticesSuper();
-                this.set_vertices(allocate_vec(newVertices))
-                drawable.setVertexBuffer(0, newVertices);
-            });
+            renderPass.onResize.set(this,
+                () => {
+                    const newVertices = this.#updateBoundingBoxAndVerticesSuper();
+                    this.set_vertices(allocate_vec(newVertices))
+                    drawable.setVertexBuffer(0,
+                        newVertices);
+                });
 
 
-            this.drawable.setStaticBindGroup('UI_bindgroup_' + label, (bindGroup) => {
-                return [
-                    {
-                        binding: 0,
-                        resource: this.uniformBuffer.getUniformBinding(bindGroup),
-                    },
-                    {
-                        binding: 1,
-                        resource: this.textureView.getTextureBinding(bindGroup),
-                    }
-                ]
-            })
+            this.drawable.setStaticBindGroup('UI_bindgroup_' + label,
+                (bindGroup) => {
+                    return [
+                        {
+                            binding: 0,
+                            resource: this.uniformBuffer.getUniformBinding(bindGroup),
+                        },
+                        {
+                            binding: 1,
+                            resource: this.textureView.getTextureBinding(bindGroup),
+                        }
+                    ]
+                })
         })
 
 

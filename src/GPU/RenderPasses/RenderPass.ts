@@ -81,52 +81,72 @@ export class RenderPass<U extends {
         this.colorRenderTargets = colorRenderTargets;
         const renderTargersArray = Object.values(colorRenderTargets);
         renderTargersArray.forEach(rt => {
-            rt.resize(this.size, this.sampleCount)
+            rt.resize(this.size,
+                this.sampleCount)
         });
-        const renderBundle = new RenderBundleEncoder(this, GPURenderBundleEncoderDescriptor, (renderBundleEncoder) => {
-            Object.values(this.colorRenderTargets).some(rt => {
-                if (rt.texture.sampleCount === 0 && rt.view.bindGroups.size === 0) {
-                    console.warn('Rendertarget ', rt.props.label, ' is not binded as texture, render result will be shown.')
-                }
-            })
-            //@ts-ignore
-            let drawedMeshes = 0;
-            if (this.perspectiveCameras.size === 0) {
+        const renderBundle = new RenderBundleEncoder(this,
+            GPURenderBundleEncoderDescriptor,
+            (renderBundleEncoder) => {
+                Object.values(this.colorRenderTargets).some(rt => {
+                    if (rt.texture.sampleCount === 0 && rt.view.bindGroups.size === 0) {
+                        console.warn('Rendertarget ',
+                            rt.props.label,
+                            ' is not binded as texture, render result will be shown.')
+                    }
+                })
+                //@ts-ignore
+                let drawedMeshes = 0;
+                if (this.perspectiveCameras.size === 0) {
                 // Draw UI
-                drawedMeshes += this.#renderCamera(renderBundleEncoder, this.#rootLayout, 0)
-            } else {
-                renderBundleEncoder.renderBundleEncoder.setBindGroup(0, this.sizeBindGroup().getForRenderBundle(renderBundleEncoder));
-                this.perspectiveCameras.forEach(camera => {
+                    drawedMeshes += this.#renderCamera(renderBundleEncoder,
+                        this.#rootLayout,
+                        0)
+                } else {
+                    renderBundleEncoder.renderBundleEncoder.setBindGroup(0,
+                        this.sizeBindGroup().getForRenderBundle(renderBundleEncoder));
+                    this.perspectiveCameras.forEach(camera => {
                     // TODO: camera.uniformBindGroup holds gpu.GPUMeshes on binding 3 which
                     // is not used in rendering shaders, but it is binded later with dynamic indices.
                     // Concider refactoring it out of this
-                    renderBundleEncoder.renderBundleEncoder.setBindGroup(1, camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    drawedMeshes += this.#renderCamera(renderBundleEncoder, this.#rootLayout, 2)
-                })
-            }
-        })
+                        renderBundleEncoder.renderBundleEncoder.setBindGroup(1,
+camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        drawedMeshes += this.#renderCamera(renderBundleEncoder,
+                            this.#rootLayout,
+                            2)
+                    })
+                }
+            })
         this.bundles.push(renderBundle);
         this.#sizeBuffer = this.#updateSizeBindGroup(true);
-        this.sizeBindGroup = () => gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup', bindGroup => [
-            {
-                binding: 0,
-                resource: this.#sizeBuffer.getUniformBinding(bindGroup, 0, 16),
-            }
-        ]);
+        this.sizeBindGroup = () => gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup',
+            bindGroup => [
+                {
+                    binding: 0,
+                    resource: this.#sizeBuffer.getUniformBinding(bindGroup,
+                        0,
+                        16),
+                }
+            ]);
     }
     #updateSizeBindGroup(initial = false) {
         if (!initial)
             this.#sizeBuffer.destroy();
-        this.#sizeBuffer = Buffer.create(this.gpu, this.gpu.gpu_screen_buffer_size, [GPUBufferUsage.UNIFORM], 'screen_buffer', b => {
-            const uniformbuffer = b.getMappedRange();
-            new Float32Array(uniformbuffer, 0, 4).set([
-                this.size.width,
-                this.size.height,
-                this.size.width / this.gpu.clustersInRow[0],
-                this.size.height / this.gpu.clustersInRow[1]
-            ]);
-        });
+        this.#sizeBuffer = Buffer.create(this.gpu,
+            this.gpu.gpu_screen_buffer_size,
+            [GPUBufferUsage.UNIFORM],
+            'screen_buffer',
+            b => {
+                const uniformbuffer = b.getMappedRange();
+                new Float32Array(uniformbuffer,
+                    0,
+                    4).set([
+                    this.size.width,
+                    this.size.height,
+                    this.size.width / this.gpu.clustersInRow[0],
+                    this.size.height / this.gpu.clustersInRow[1]
+                ]);
+            });
 
         return this.#sizeBuffer;
     }
@@ -140,36 +160,54 @@ export class RenderPass<U extends {
                 ...this.onDecoratePipeline(renderPipeline),
                 label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label,
             };
-            console.debug('Create renderpipeline ', renderPipeline.props.label, params)
+            console.debug('Create renderpipeline ',
+                renderPipeline.props.label,
+                params)
             const variantP = this.gpu.device.createRenderPipelineAsync(
                 params
             ).catch((err: unknown) => {
                 if (err instanceof DOMException) {
                     if (err.message.includes(renderPipeline.props.vertexShader.module.label)) {
-                        console.error('createRenderPipelineAsync failed, vertex', renderPipeline.props.vertexShader.module.label, 'wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err, })
+                        console.error('createRenderPipelineAsync failed, vertex',
+                            renderPipeline.props.vertexShader.module.label,
+                            'wgsl:',
+                            renderPipeline.props.vertexShader.wgsl,
+                            { cause: err, })
                     }
                     else if (err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
-                        console.error('createRenderPipelineAsync failed, fragment', renderPipeline.props.fragmentShader.module.label, 'wgsl:', renderPipeline.props.fragmentShader.wgsl, { cause: err, })
+                        console.error('createRenderPipelineAsync failed, fragment',
+                            renderPipeline.props.fragmentShader.module.label,
+                            'wgsl:',
+                            renderPipeline.props.fragmentShader.wgsl,
+                            { cause: err, })
                     } else {
-                        console.error('createRenderPipelineAsync failed, vertex', renderPipeline.props.vertexShader.module.label, ' wgsl:',
+                        console.error('createRenderPipelineAsync failed, vertex',
+                            renderPipeline.props.vertexShader.module.label,
+                            ' wgsl:',
                             renderPipeline.props.vertexShader.wgsl,
-                            'fragment', renderPipeline.props.fragmentShader.module, ' wgsl:', renderPipeline.props.fragmentShader.wgsl,
+                            'fragment',
+                            renderPipeline.props.fragmentShader.module,
+                            ' wgsl:',
+                            renderPipeline.props.fragmentShader.wgsl,
                             { cause: err, });
                     }
                 }
-                throw (new Error('createRenderPipelineAsync failed', { cause: err, }));
+                throw (new Error('createRenderPipelineAsync failed',
+                    { cause: err, }));
             }).then((variantPipeline) => {
                 variant = new RenderPipelineVariant(
                     variantPipeline,
                     new Set<Drawable>()
                 )
                 // Replace promise with real object
-                this.renderPipelines.set(renderPipeline, variant);
+                this.renderPipelines.set(renderPipeline,
+                    variant);
                 this.onRenderPipelinesChange.forEach(cb => cb());
                 return variant;
             })
             // Save promise
-            this.renderPipelines.set(renderPipeline, variantP)
+            this.renderPipelines.set(renderPipeline,
+                variantP)
             variant = variantP;
         }
         return variant;
@@ -205,10 +243,12 @@ export class RenderPass<U extends {
         if (width === 0) {
             throw new Error('Cannot resize renderpass to zero width');
         }
-        [this.size.width, this.size.height] = this.#getSizeOnResize(width, height);
+        [this.size.width, this.size.height] = this.#getSizeOnResize(width,
+            height);
         this.#updateSizeBindGroup();
         for (const rt of Object.values(this.colorRenderTargets)) {
-            rt.resize(this.size, this.sampleCount)
+            rt.resize(this.size,
+                this.sampleCount)
         }
     }
     //TODO: dont execute this function on every render
@@ -224,7 +264,9 @@ export class RenderPass<U extends {
     #renderCamera(renderBundleEncoder: RenderBundleEncoder, rootLayout: RenderPipelineLayout, bindGroupStartIndex: number) {
         let drawedMeshes = 0;
         rootLayout.renderPipeLines.forEach(renderPipeline => {
-            drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder, this, bindGroupStartIndex);
+            drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder,
+                this,
+                bindGroupStartIndex);
         });
         const dynamicIndices: number[] = [];
         rootLayout.subBindGroups.forEach(subBindGroup => {
@@ -233,14 +275,21 @@ export class RenderPass<U extends {
                 dynamicIndices.push(bindGroupStartIndex);
             }
             subBindGroup.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder, this, bindGroupStartIndex, dynamicIndices);
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder,
+                    this,
+                    bindGroupStartIndex,
+                    dynamicIndices);
             });
             subBindGroup.subBindGroups.forEach(pipelineLayout => {
                 if (pipelineLayout.sharedBindgroup) {
-                    renderBundleEncoder.renderBundleEncoder.setBindGroup(bindGroupStartIndex + 1, pipelineLayout.sharedBindgroup.getForRenderBundle(renderBundleEncoder));
+                    renderBundleEncoder.renderBundleEncoder.setBindGroup(bindGroupStartIndex + 1,
+                        pipelineLayout.sharedBindgroup.getForRenderBundle(renderBundleEncoder));
                 }
                 pipelineLayout.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder, this, bindGroupStartIndex + dynamicIndices.length, dynamicIndices);
+                    drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder,
+                        this,
+                        bindGroupStartIndex + dynamicIndices.length,
+                        dynamicIndices);
                 });
             });
             dynamicIndices.length = 0;

@@ -20,7 +20,8 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
     constructor(settings: typeof Terrain.settings, gpu: GPU) {
         //TODO: set actual minBindingSize values other than 32
         const bindLayouts = [
-            new BGLayout(gpu, 'slopesBindGroupLayout',
+            new BGLayout(gpu,
+                'slopesBindGroupLayout',
                 new BufLayout(
                     {
                         buffer: {
@@ -29,7 +30,9 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                             type: 'read-only-storage',
                         },
                         visibility: ShaderStage.COMPUTE,
-                    }, 'slopes', IntArray),
+                    },
+                    'slopes',
+                    IntArray),
                 new BufLayout(
                     {
                         buffer: {
@@ -39,7 +42,9 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                         },
                         visibility: ShaderStage.COMPUTE,
 
-                    }, 'facet12', PlaneArray),
+                    },
+                    'facet12',
+                    PlaneArray),
                 new BufLayout(
                     {
                         buffer: {
@@ -49,7 +54,9 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                         },
                         visibility: ShaderStage.COMPUTE,
 
-                    }, 'positionAndRotate', PositionAndRotateArray),
+                    },
+                    'positionAndRotate',
+                    PositionAndRotateArray),
                 new BufLayout(
                     {
                         buffer: {
@@ -59,9 +66,12 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                         },
                         visibility: ShaderStage.COMPUTE,
 
-                    }, 'shapes', FloatArray)
+                    },
+                    'shapes',
+                    FloatArray)
             ),
-            new BGLayout(gpu, 'positionsBindGroupLayout',
+            new BGLayout(gpu,
+                'positionsBindGroupLayout',
                 new BufLayout(
                     {
                         buffer: {
@@ -71,7 +81,9 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                         },
                         visibility: ShaderStage.COMPUTE,
 
-                    }, 'positions', Vec2Array))
+                    },
+                    'positions',
+                    Vec2Array))
         ] as const
 
 
@@ -84,7 +96,8 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
             entryPoints: {
                 main: new ComputeShaderFunction(
                     '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-                    pipelineLayout, (
+                    pipelineLayout,
+                    (
                         [[_slopes, _facet12, positionAndRotate, shapes], [positions]]
                     ) => /* wgsl */ `
                 let flatpos:vec2<f32> = ${positions.prop('vectors')}[GlobalInvocationID.x]; 
@@ -101,7 +114,8 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
             },
             gpu,
             label: 'GetHeightAtCoordinates.comp',
-        }, ([slopes, facet12, _positionAndRotate, _shapes], [_positions]) => /* wgsl */ `
+        },
+        ([slopes, facet12, _positionAndRotate, _shapes], [_positions]) => /* wgsl */ `
         const PI:f32 = 3.141592653589793;
         //
         // Description : Array and textureless GLSL 2D simplex noise function.
@@ -183,7 +197,9 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
         fn rand(co:vec2<f32>) -> f32 {
             return fract(sin(dot(co.xy ,vec2<f32>(12.9898,78.233))) * 43758.5453);
         }
-        ${getHeightAtCoordinates(settings, slopes, facet12)}
+        ${getHeightAtCoordinates(settings,
+        slopes,
+        facet12)}
   
         
         

@@ -27,11 +27,17 @@ export class SimpleMesh extends BoundableNodeSimple {
         strip);
         if (engine.gpu) {
             if (!vBufferGPU) {
-                vBufferGPU = Buffer.create(engine.gpu, dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], 'SimpleMeshVertex_' + this.label, b => {
-                    new Float32Array(b.getMappedRange()).set(dataNodeProps.vertices.view);
-                });
+                vBufferGPU = Buffer.create(engine.gpu,
+                    dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
+                    [GPUBufferUsage.VERTEX],
+                    'SimpleMeshVertex_' + this.label,
+                    b => {
+                        new Float32Array(b.getMappedRange()).set(dataNodeProps.vertices.view);
+                    });
             }
-            const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline, {}, { stride: 8, });
+            const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline,
+                {},
+                { stride: 8, });
             this.drawable = new DrawableSimple({
                 node: this,
                 renderPasses: undefined,

@@ -9,7 +9,8 @@ interface WMessage {
     id?: number
 }
 const folderPosition = import.meta.url.lastIndexOf('/');
-const basePath = import.meta.url.substring(0, folderPosition)+'/workers/webworkers/';
+const basePath = import.meta.url.substring(0,
+    folderPosition)+'/workers/webworkers/';
 // Jest
 const Worker2:typeof window.Worker = typeof(Worker) === 'function' ? Worker : class {} as unknown as typeof window.Worker
 abstract class MainWorker extends Worker2 {
@@ -21,7 +22,8 @@ abstract class MainWorker extends Worker2 {
     ] | null)[] = [];
     #subscriptions: { [key: string]: (value?: unknown) => void; } = {};
     constructor(stringUrl: string | URL, options?: WorkerOptions) {
-        super(basePath+stringUrl, options);
+        super(basePath+stringUrl,
+            options);
         this.onmessage = (e) => {
             if (typeof (e.data.id) !== 'undefined') {
                 let operation: [
@@ -55,7 +57,8 @@ export class WorkerThread extends MainWorker {
         const toWorker: WMessage = { action: action, data: data, type: returntype, };
         return new Promise((res, rej) => {
             toWorker.id = this.operations.push([res,rej]) - 1
-            super.postMessage(toWorker, options);
+            super.postMessage(toWorker,
+                options);
         })
     }
 }
@@ -66,7 +69,8 @@ export class ObjectWorkerThread extends MainWorker {
                 args: typeof (args) !== 'undefined' ? args : [],
                 objId: objectID,
             },
-        }, options);
+        },
+        options);
     }
     message<T>(objectID: number, action: string, args?: unknown[], options?: Transferable[]): Promise<T> {
         const toWorker: WMessage = {
@@ -78,7 +82,8 @@ export class ObjectWorkerThread extends MainWorker {
         return new Promise((res, rej) => {
             toWorker.id = this.operations.push([res, rej]) - 1;
             if(options)
-                super.postMessage(toWorker, options)
+                super.postMessage(toWorker,
+                    options)
             else
                 super.postMessage(toWorker);
         })

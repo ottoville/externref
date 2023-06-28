@@ -160,8 +160,12 @@ export class GPU {
         const hash = label + [...Object.values(primitiveWithDefaults), ...Object.values(vertexBufferProps ?? {})].sort().join();
         let renderPipeline = GPU.#renderPipelines.get(hash);
         if (!renderPipeline) {
-            renderPipeline = createRenderPipeline(this, hash, primitiveWithDefaults, vertexBufferProps);
-            GPU.#renderPipelines.set(hash, renderPipeline);
+            renderPipeline = createRenderPipeline(this,
+                hash,
+                primitiveWithDefaults,
+                vertexBufferProps);
+            GPU.#renderPipelines.set(hash,
+                renderPipeline);
         }
         return renderPipeline as ReturnType<D['1']>;
     }
@@ -180,7 +184,8 @@ export class GPU {
      * Called from device.lost callback when device is lost
      */
     onDeviceLost() {
-        console.log('destroy GPU', this.device.label);
+        console.log('destroy GPU',
+            this.device.label);
         this.#ro.disconnect();
         cancelAnimationFrame(this.#renderFrame);
         this.destroyed = true;
@@ -193,26 +198,37 @@ export class GPU {
         this.clusterSizeinBytes = totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
         this.updateViewShader = createUpdateViewShader(this)
 
-        this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size * this.#maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], 'GPUMeshes')
-        this.#GPUPointLights = Buffer.create(this, this.#gpu_max_point_lights * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'GPUPointLights')
-        this.#GPUDirectionalLights = Buffer.create(this, 63 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'GPUDirectionalLights')
+        this.GPUMeshes = Buffer.create(this,
+            GPU.gpu_memory_index_size * this.#maxInstances,
+            [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],
+            'GPUMeshes')
+        this.#GPUPointLights = Buffer.create(this,
+            this.#gpu_max_point_lights * 4,
+            [GPUBufferUsage.UNIFORM, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],
+            'GPUPointLights')
+        this.#GPUDirectionalLights = Buffer.create(this,
+            63 * 4,
+            [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],
+            'GPUDirectionalLights')
 
 
-        this.#updateViewBindGroup = this.updateViewShader.props.bindGroupLayouts[0].createBindGroup('updateViewBindGroup', bindGroup => [
-            {
-                binding: 0,
-                resource: this.GPUMeshes.getStorageBinding(bindGroup),
-            },
-            {
-                binding: 1,
-                resource: this.#GPUPointLights.getStorageBinding(bindGroup),
-            },
-            {
-                binding: 2,
-                resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
-            }
-        ]);
-        this.uniformBindGroupLayoutWithTime = new BGLayout(this, 'uniformBindGroupLayoutWithTime',
+        this.#updateViewBindGroup = this.updateViewShader.props.bindGroupLayouts[0].createBindGroup('updateViewBindGroup',
+            bindGroup => [
+                {
+                    binding: 0,
+                    resource: this.GPUMeshes.getStorageBinding(bindGroup),
+                },
+                {
+                    binding: 1,
+                    resource: this.#GPUPointLights.getStorageBinding(bindGroup),
+                },
+                {
+                    binding: 2,
+                    resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
+                }
+            ]);
+        this.uniformBindGroupLayoutWithTime = new BGLayout(this,
+            'uniformBindGroupLayoutWithTime',
             new BufLayout(
                 {
                     buffer: {
@@ -221,7 +237,9 @@ export class GPU {
                     },
                     visibility: ShaderStage.VERTEX_AND_FRAGMENT,
 
-                }, 'scene', Scene),
+                },
+                'scene',
+                Scene),
             new BufLayout(
                 {
                     buffer: {
@@ -230,7 +248,9 @@ export class GPU {
                     },
                     visibility: ShaderStage.VERTEX,
 
-                }, 'time', Time),
+                },
+                'time',
+                Time),
             new BufLayout(
                 {
                     //clusters
@@ -239,7 +259,9 @@ export class GPU {
                         type: 'read-only-storage',
                     },
                     visibility: ShaderStage.FRAGMENT,
-                }, 'clusters_array', Clusters),
+                },
+                'clusters_array',
+                Clusters),
             new BufLayout(
                 {   // mesh array for lights
                     buffer: {
@@ -247,7 +269,9 @@ export class GPU {
                         type: 'read-only-storage',
                     },
                     visibility: ShaderStage.FRAGMENT,
-                }, 'meshes', MeshArray),
+                },
+                'meshes',
+                MeshArray),
             new BufLayout(
                 {   //projection
                     buffer: {
@@ -256,9 +280,12 @@ export class GPU {
                     },
                     visibility: ShaderStage.FRAGMENT,
 
-                }, 'projection', ProjectionStruct)
+                },
+                'projection',
+                ProjectionStruct)
         );
-        this.sizeBindGroupLayout = new BGLayout(this, 'sizeBindGroupLayout',
+        this.sizeBindGroupLayout = new BGLayout(this,
+            'sizeBindGroupLayout',
             new BufLayout(
                 {
                     buffer: {
@@ -266,7 +293,9 @@ export class GPU {
                         type: 'uniform',
                     },
                     visibility: ShaderStage.FRAGMENT | ShaderStage.COMPUTE,
-                }, 'uniforms', Uniforms)
+                },
+                'uniforms',
+                Uniforms)
         )
         this.rootCameralayout = new BindablePipelineLayout({
             bindGroupLayouts: [this.sizeBindGroupLayout, this.uniformBindGroupLayoutWithTime] as [typeof this.sizeBindGroupLayout, typeof this.uniformBindGroupLayoutWithTime],
@@ -282,15 +311,21 @@ export class GPU {
                         type: 'uniform',
                     },
                     visibility: ShaderStage.VERTEX_AND_FRAGMENT,
-                }, 'world', MeshUniforms)
+                },
+                'world',
+                MeshUniforms)
         );
-        this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition', bindGroup => [
-            {
-                binding: 0,
-                resource: this.GPUMeshes.getUniformBinding(bindGroup, 0, GPU.gpu_memory_index_size),
-            }
-        ]);
-        this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot', BindGroupLayoutPosition)
+        this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition',
+            bindGroup => [
+                {
+                    binding: 0,
+                    resource: this.GPUMeshes.getUniformBinding(bindGroup,
+                        0,
+                        GPU.gpu_memory_index_size),
+                }
+            ]);
+        this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot',
+            BindGroupLayoutPosition)
         this.simpleFragShader = createSimpleFragShader(this.positionAndTimeBindGroup);
         this.lightsTextureBindGroup = this.positionAndTimeBindGroup.createAppendedLayout('lightsBindGroupTexture2Layout',
             new BGLayout(this,
@@ -300,12 +335,16 @@ export class GPU {
                         sampler: {
                         },
                         visibility: ShaderStage.FRAGMENT,
-                    }, 'mySampler', 'sampler'),
+                    },
+                    'mySampler',
+                    'sampler'),
                 new TextLayout(
                     {
                         texture: {},
                         visibility: ShaderStage.FRAGMENT,
-                    }, 'myTexture', 'texture_2d<f32>')
+                    },
+                    'myTexture',
+                    'texture_2d<f32>')
             ));
         this.bindGroupTextureWater = this.positionAndTimeBindGroup.createSharedLayout('lightsBindGroupTexture2PipelineLayout',
             new BGLayout(this,
@@ -315,12 +354,16 @@ export class GPU {
                         sampler: {
                         },
                         visibility: ShaderStage.FRAGMENT,
-                    }, 'mySampler', 'sampler'),
+                    },
+                    'mySampler',
+                    'sampler'),
                 new TextLayout(
                     {
                         texture: {},
                         visibility: ShaderStage.FRAGMENT,
-                    }, 'diffuseTexture', 'texture_2d<f32>')
+                    },
+                    'diffuseTexture',
+                    'texture_2d<f32>')
             ));
 
         this.pickRenderPass = new RenderPass({
@@ -432,17 +475,19 @@ export class GPU {
                 sampleCount: 1,
                 size: { height: canvas.height, width: canvas.width, },
             },
-            new DepthRenderTarget(0, {
-                format: 'depth32float',
-                gpu: this,
-                initialSampleCount: 1,
-                label: 'depthTexture_renderPassWater',
-                size: { height: 300, width: 300, },
-                usages: TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'],
-            }, {
-                context: undefined,
-                writeMask: 0xF,
-            })
+            new DepthRenderTarget(0,
+                {
+                    format: 'depth32float',
+                    gpu: this,
+                    initialSampleCount: 1,
+                    label: 'depthTexture_renderPassWater',
+                    size: { height: 300, width: 300, },
+                    usages: TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'],
+                },
+                {
+                    context: undefined,
+                    writeMask: 0xF,
+                })
         );
 
         //TODO: this does not need to be canvas size
@@ -460,7 +505,8 @@ export class GPU {
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
         });
 
-        this.BindGroupLayoutCanvas = new BGLayout(this, 'BindGroupLayoutUI',
+        this.BindGroupLayoutCanvas = new BGLayout(this,
+            'BindGroupLayoutUI',
             new BufLayout(
                 {
                     buffer: {
@@ -469,23 +515,28 @@ export class GPU {
                     },
                     visibility: ShaderStage.VERTEX,
 
-                }, 'uniforms', UIUniforms),
+                },
+                'uniforms',
+                UIUniforms),
             new TextLayout(
                 {
                     texture: {
                     },
                     visibility: ShaderStage.FRAGMENT,
-                }, 'texture', 'texture_2d<f32>')
+                },
+                'texture',
+                'texture_2d<f32>')
         )
         this.#canvasRootLayout = new BindablePipelineLayout({
             bindGroupLayouts: [this.BindGroupLayoutCanvas] as [typeof this.BindGroupLayoutCanvas],
             label: 'canvasRootLayout',
         });
-        const uiVertShader = createUIVertShader(this.#canvasRootLayout, {
-            arrayStride: 4 * 4,
-            attributes2: position_uv_attrs,
-            stepMode: 'vertex',
-        })
+        const uiVertShader = createUIVertShader(this.#canvasRootLayout,
+            {
+                arrayStride: 4 * 4,
+                attributes2: position_uv_attrs,
+                stepMode: 'vertex',
+            })
         this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
             {
                 fragmentShader: createUIFragmentShader(this.#canvasRootLayout),
@@ -553,7 +604,10 @@ export class GPU {
 
         this.#DynamicBindGroups.add(this.BindGroupPosition);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
-        this.timeBuffer = Buffer.create(this, timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'timeBuffer');
+        this.timeBuffer = Buffer.create(this,
+            timeAndDeltaBuffer.byteLength,
+            [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
+            'timeBuffer');
 
         const ClustersShader = createClustersCompShader(this.sizeBindGroupLayout);
         const computePipelineClustersP = ClustersShader.createComputePipeline('main');
@@ -577,7 +631,8 @@ export class GPU {
             resizeHandler = setTimeout(async () => {
                 try {
                     const aspectRatio = entry.contentRect.width / entry.contentRect.height
-                    canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
+                    canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio,
+                        maxResolution.width);
 
                     canvas.height = canvas.width / aspectRatio
 
@@ -598,12 +653,16 @@ export class GPU {
                     const passEncoder = commandEncoder.beginComputePass({ label: 'resizePassEncoder', });
                     passEncoder.setPipeline(await computePipelineClustersP);
 
-                    this.projections.forEach(projection => projection.update(aspectRatio, this));
+                    this.projections.forEach(projection => projection.update(aspectRatio,
+                        this));
                     this.#renderPasses.forEach(renderPass => {
-                        renderPass.resize(canvas.width, canvas.height);
-                        passEncoder.setBindGroup(0, renderPass.sizeBindGroup().bindGroup);
+                        renderPass.resize(canvas.width,
+                            canvas.height);
+                        passEncoder.setBindGroup(0,
+                            renderPass.sizeBindGroup().bindGroup);
                         renderPass.perspectiveCameras.forEach(camera => {
-                            camera.updateClusters(passEncoder, ClustersShader.props.bindGroupLayouts[1])
+                            camera.updateClusters(passEncoder,
+                                ClustersShader.props.bindGroupLayouts[1])
                         });
                     });
                     // Call onResize after all renderPasses have resizes so callbacks
@@ -614,11 +673,13 @@ export class GPU {
                     passEncoder.end();
                     this.device.queue.submit([commandEncoder.finish()]);
                     const updateViewPipeline = await updateViewPipelineP;
-                    this.#renderFrame = window.requestAnimationFrame((time) => this.#renderLoop(time, updateViewPipeline));
+                    this.#renderFrame = window.requestAnimationFrame((time) => this.#renderLoop(time,
+                        updateViewPipeline));
                 } catch (e) {
                     engine.showError(e);
                 }
-            }, 500)
+            },
+            500)
         });
         if (!canvas.parentElement) {
             throw new Error('Canvas must have parent element');
@@ -629,71 +690,108 @@ export class GPU {
     handle_gpu_queue(pointerVec: number, length: number) {
         this.#GPUQueueCommandEncoder = this.device.createCommandEncoder({ label: 'handle_gpu_queue_encoder', });
         let tempOffset = 0;
-        Buffer.create(this, this.GPUDataSizeBytes * length, [GPUBufferUsage.COPY_SRC], 'handle_gpu_queue', (tempBuffer, gpu2) => {
-            const pointers_to_gpumesh_and_offset = new Uint32Array(engine.memory.buffer, pointerVec, length);
-            const meshes: [mesh: MainNode, gpu_alignment: number][] = [];
-            for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i++) {
-                const meshID = pointers_to_gpumesh_and_offset[i]!;
-                const mesh = MainNode.Meshes.get(meshID);
-                if (!mesh) {
-                    console.warn('Tried to update non exist mesh with id ', meshID);
-                    continue;
+        Buffer.create(this,
+            this.GPUDataSizeBytes * length,
+            [GPUBufferUsage.COPY_SRC],
+            'handle_gpu_queue',
+            (tempBuffer, gpu2) => {
+                const pointers_to_gpumesh_and_offset = new Uint32Array(engine.memory.buffer,
+                    pointerVec,
+                    length);
+                const meshes: [mesh: MainNode, gpu_alignment: number][] = [];
+                for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i++) {
+                    const meshID = pointers_to_gpumesh_and_offset[i]!;
+                    const mesh = MainNode.Meshes.get(meshID);
+                    if (!mesh) {
+                        console.warn('Tried to update non exist mesh with id ',
+                            meshID);
+                        continue;
+                    }
+                    const offset = engine.rust.gpu_alignment(meshID);
+                    meshes.push([mesh, offset]);
+                    if (offset >= this.#maxInstances) {
+                        this.#maxInstances = offset + 10;
+                        this.GPUMeshes.resize(GPU.gpu_memory_index_size * this.#maxInstances)
+                    }
                 }
-                const offset = engine.rust.gpu_alignment(meshID);
-                meshes.push([mesh, offset]);
-                if (offset >= this.#maxInstances) {
-                    this.#maxInstances = offset + 10;
-                    this.GPUMeshes.resize(GPU.gpu_memory_index_size * this.#maxInstances)
+                for (let i = 0; i < meshes.length; i++) {
+                    const [mesh, offset] = meshes[i]!;
+                    const gpumeshPointer = engine.rust.gpu_pointer(mesh.id);
+                    const dataLength = this.GPUDataSizeBytes / 4;
+                    const data = new Float32Array(engine.memory.buffer,
+                        gpumeshPointer,
+                        dataLength);
+                    mesh.onMeshChange.forEach((cb) => cb())
+                    //Point light
+                    if (data[29]! > 0) {
+                        engine.updateLights = true;
+                    }
+                    new Float32Array(tempBuffer.getMappedRange(tempOffset * this.GPUDataSizeBytes,
+                        this.GPUDataSizeBytes)).set(data);
+                    gpu2.GPUMeshes.copyFrom(this.#GPUQueueCommandEncoder!,
+                        tempBuffer,
+                        tempOffset++ * this.GPUDataSizeBytes,
+                        offset * GPU.gpu_memory_index_size,
+                        this.GPUDataSizeBytes)
                 }
-            }
-            for (let i = 0; i < meshes.length; i++) {
-                const [mesh, offset] = meshes[i]!;
-                const gpumeshPointer = engine.rust.gpu_pointer(mesh.id);
-                const dataLength = this.GPUDataSizeBytes / 4;
-                const data = new Float32Array(engine.memory.buffer, gpumeshPointer, dataLength);
-                mesh.onMeshChange.forEach((cb) => cb())
-                //Point light
-                if (data[29]! > 0) {
-                    engine.updateLights = true;
-                }
-                new Float32Array(tempBuffer.getMappedRange(tempOffset * this.GPUDataSizeBytes, this.GPUDataSizeBytes)).set(data);
-                gpu2.GPUMeshes.copyFrom(this.#GPUQueueCommandEncoder!,
-                    tempBuffer,
-                    tempOffset++ * this.GPUDataSizeBytes,
-                    offset * GPU.gpu_memory_index_size, this.GPUDataSizeBytes)
-            }
-            gpu2.tempGPUBuffers.push(tempBuffer);
-        });
+                gpu2.tempGPUBuffers.push(tempBuffer);
+            });
     }
     update_directional_lights(pointer: number, length: number) {
-        const lights = new Uint32Array(engine.memory.buffer, pointer, length);
+        const lights = new Uint32Array(engine.memory.buffer,
+            pointer,
+            length);
         const commandEncoder = this.device.createCommandEncoder({ label: 'update_directional_lights_encoder', });
         //TODO: Potential buffer overflow
         const byteLength = 4 + lights.byteLength;
-        const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'directional_lights_tempBuffer', tempBuffer2 => {
-            const gpu_buffer = new Uint32Array(tempBuffer2.getMappedRange());
-            gpu_buffer[0] = lights.length;
-            gpu_buffer.set(lights, 1);
-        });
-        tempBuffer.copyTo(commandEncoder, this.#GPUDirectionalLights, 0, 0, byteLength);
+        const tempBuffer = Buffer.create(this,
+            byteLength,
+            [GPUBufferUsage.COPY_SRC],
+            'directional_lights_tempBuffer',
+            tempBuffer2 => {
+                const gpu_buffer = new Uint32Array(tempBuffer2.getMappedRange());
+                gpu_buffer[0] = lights.length;
+                gpu_buffer.set(lights,
+                    1);
+            });
+        tempBuffer.copyTo(commandEncoder,
+            this.#GPUDirectionalLights,
+            0,
+            0,
+            byteLength);
         this.pendingCommandBuffers.push(commandEncoder.finish({ label: 'update_directional_lights', }));
     }
     update_point_lights(pointer: number, length: number) {
-        const lights = new Uint32Array(engine.memory.buffer, pointer, length);
+        const lights = new Uint32Array(engine.memory.buffer,
+            pointer,
+            length);
         const commandEncoder = this.device.createCommandEncoder({ label: 'update_point_lights_encoder', });
         //TODO: Potential buffer overflow
         const byteLength = 4 + lights.byteLength;
-        const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'point_lights_tempBuffer', tempBuffer2 => {
-            const gpu_buffer = new Uint32Array(tempBuffer2.getMappedRange());
-            gpu_buffer[0] = lights.length;
-            gpu_buffer.set(lights, 1);
-        });
-        tempBuffer.copyTo(commandEncoder, this.#GPUPointLights, 0, 0, byteLength);
+        const tempBuffer = Buffer.create(this,
+            byteLength,
+            [GPUBufferUsage.COPY_SRC],
+            'point_lights_tempBuffer',
+            tempBuffer2 => {
+                const gpu_buffer = new Uint32Array(tempBuffer2.getMappedRange());
+                gpu_buffer[0] = lights.length;
+                gpu_buffer.set(lights,
+                    1);
+            });
+        tempBuffer.copyTo(commandEncoder,
+            this.#GPUPointLights,
+            0,
+            0,
+            byteLength);
         this.pendingCommandBuffers.push(commandEncoder.finish({ label: 'update_point_lights', }));
     }
     readonly timeAndDeltaBuffer = new ArrayBuffer(8);
-    readonly deltaView = new Float32Array(this.timeAndDeltaBuffer, 4, 1);
-    readonly #timeView = new Uint32Array(this.timeAndDeltaBuffer, 0, 1);
+    readonly deltaView = new Float32Array(this.timeAndDeltaBuffer,
+        4,
+        1);
+    readonly #timeView = new Uint32Array(this.timeAndDeltaBuffer,
+        0,
+        1);
     #renderStarted = false;
     #renderStartedCallbacks: (() => void)[] = []
     afterRenderStart(cb: () => void) {
@@ -731,7 +829,8 @@ export class GPU {
             physicDelta = (engine.physics.physicTime - engine.physics.tickTime) / ((engine.physics.tickIntervalMs))
         if (physicDelta !== null)
             this.deltaView.set([physicDelta]);
-        this.timeBuffer.write(0, this.timeAndDeltaBuffer);
+        this.timeBuffer.write(0,
+            this.timeAndDeltaBuffer);
 
         try {
             engine.cameras.forEach(camera => {
@@ -749,11 +848,13 @@ export class GPU {
             // Rust render loop end
             const lightPass = renderEncoder.beginComputePass({ label: 'lightPassEncoder', });
             lightPass.setPipeline(updateViewPipeline);
-            lightPass.setBindGroup(0, this.#updateViewBindGroup.bindGroup);
+            lightPass.setBindGroup(0,
+                this.#updateViewBindGroup.bindGroup);
             engine.cameras.forEach(camera => {
                 if (camera.viewUpdated || engine.updateLights) {
                     camera.viewUpdated = false;
-                    lightPass.setBindGroup(1, camera.updateViewBindGroup!.bindGroup);
+                    lightPass.setBindGroup(1,
+camera.updateViewBindGroup!.bindGroup);
                     lightPass.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
                 }
             });
@@ -789,6 +890,7 @@ export class GPU {
             this.#renderStartedCallbacks.length = 0;
             this.#renderStarted = true;
         }
-        this.#renderFrame = window.requestAnimationFrame((time2) => this.#renderLoop(time2, updateViewPipeline));
+        this.#renderFrame = window.requestAnimationFrame((time2) => this.#renderLoop(time2,
+            updateViewPipeline));
     }
 }

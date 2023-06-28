@@ -26,7 +26,8 @@ export class ArcRotateCamera extends CameraController {
         if (this.#serializeRequested || !engine.DB)
             return;
         this.#serializeRequested = true;
-        const request = engine.DB.transaction('save', 'readwrite').objectStore('save').put({
+        const request = engine.DB.transaction('save',
+            'readwrite').objectStore('save').put({
             data: {
                 alpha: this.#alpha,
                 beta: this.#beta,
@@ -137,7 +138,9 @@ export class ArcRotateCamera extends CameraController {
     }
     MoveToPlace = () => {
         if (this.#targetMovingfrom && this.#targetMovingTo) {
-            this.#targetMovingfrom.LerpToRef(this.#targetMovingTo, this.#targetLerpPosition, this.#target);
+            this.#targetMovingfrom.LerpToRef(this.#targetMovingTo,
+                this.#targetLerpPosition,
+                this.#target);
             this.#targetLerpPosition += 0.01;
             if (this.#targetLerpPosition > 1) {
                 this.#targetMovingfrom = null;
@@ -155,12 +158,14 @@ export class ArcRotateCamera extends CameraController {
         this.#targetLerpPosition = 0;
         const moveWithTimeout = () => {
             if(!this.MoveToPlace()) {
-                setTimeout(moveWithTimeout, 16)
+                setTimeout(moveWithTimeout,
+                    16)
             }
             this.calculateCameraPositionAndTarget();
         };
 
-        setTimeout(moveWithTimeout, 16)
+        setTimeout(moveWithTimeout,
+            16)
     }
     pointerDown = false;
     #cameraPointerDown: ListenerObj<'pointerdown'> = {
@@ -214,9 +219,14 @@ export class ArcRotateCamera extends CameraController {
             cb: (e) => {
                 if (this.camera.gpu) {
                     const gpu = this.camera.gpu
-                    Atomics.store(gpu.mousePosition, 0, e.clientX * gpu.scale.x)
-                    Atomics.store(gpu.mousePosition, 1, e.clientY * gpu.scale.y)
-                    Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
+                    Atomics.store(gpu.mousePosition,
+                        0,
+                        e.clientX * gpu.scale.x)
+                    Atomics.store(gpu.mousePosition,
+                        1,
+                        e.clientY * gpu.scale.y)
+                    Atomics.notify(new Int32Array(gpu.mousePositionBuffer),
+                        0);
                 }
             },
             object: this,
@@ -267,7 +277,9 @@ export class ArcRotateCamera extends CameraController {
 
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
         //let starttime=performance.now();
-        engine.collideWithWorld(this, scaledPosition, scaledVelocity);
+        engine.collideWithWorld(this,
+            scaledPosition,
+            scaledVelocity);
 
         //run the callback
         // if (!this.engine.collider.collidedMesh) {
@@ -291,7 +303,9 @@ export class ArcRotateCamera extends CameraController {
             direction[1] = this.camera.position[1] - this.#target[1];
             direction[2] = this.camera.position[2] - this.#target[2];
             //Normalize direction
-            const zLength = Math.hypot(direction[0], direction[1], direction[2]);
+            const zLength = Math.hypot(direction[0],
+                direction[1],
+                direction[2]);
             if (!(zLength === 0 || zLength === 1)) {
                 //zAxis.normalizeFromLength(xLength);
                 const scale = 1.0 / zLength;
@@ -403,7 +417,9 @@ export class ArcRotateCamera extends CameraController {
         if (this.#computationVector[0] === 0 && this.#computationVector[2] === 0) {
             this.#alpha = Math.PI / 2; // avoid division by zero when looking along up axis, and set to acos(0)
         } else {
-            this.#alpha = Math.acos(this.#computationVector[0] / Math.sqrt(Math.pow(this.#computationVector[0], 2) + Math.pow(this.#computationVector[2], 2)));
+            this.#alpha = Math.acos(this.#computationVector[0] / Math.sqrt(Math.pow(this.#computationVector[0],
+                2) + Math.pow(this.#computationVector[2],
+                2)));
         }
         if (this.#computationVector[2] < 0) {
             this.#alpha = 2 * Math.PI - this.#alpha;

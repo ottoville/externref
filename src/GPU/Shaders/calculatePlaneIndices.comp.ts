@@ -10,7 +10,8 @@ type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>]>];
 export class CalculatePlaneIndices extends ComputeShader<BindLayouts> {
     constructor(gpu: GPU, settings: typeof Terrain.settings) {
         const bindLayouts = [
-            new BGLayout(gpu, 'calculateIndicesBindGroupLayout',
+            new BGLayout(gpu,
+                'calculateIndicesBindGroupLayout',
                 new BufLayout(
                     {
                         buffer: {
@@ -20,7 +21,9 @@ export class CalculatePlaneIndices extends ComputeShader<BindLayouts> {
                         },
                         visibility: ShaderStage.COMPUTE,
 
-                    }, 'indices', Indices))
+                    },
+                    'indices',
+                    Indices))
         ] as const
 
         const pipelineLayout = new PipelineLayout({
@@ -50,6 +53,7 @@ export class CalculatePlaneIndices extends ComputeShader<BindLayouts> {
             },
             gpu: pipelineLayout.gpu,
             label: 'calculatePlaneIndices.comp',
-        }, () => '@compute @workgroup_size(1)');
+        },
+        () => '@compute @workgroup_size(1)');
     }
 }

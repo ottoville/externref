@@ -153,7 +153,11 @@ export class Texture<
         }
         if (props.usages & TextureUsageEnums['COPY_SRC']) {
             (this as unknown as copySrcTexture).copyTo = (commandEncoder, destination, sourceDetails, destinationDetails, copySize) => {
-                destination.copyFrom(commandEncoder, this as unknown as (Texture<F, COPY_SRC_TEXTURE, S> & copySrcTexture), sourceDetails, destinationDetails, copySize);
+                destination.copyFrom(commandEncoder,
+this as unknown as (Texture<F, COPY_SRC_TEXTURE, S> & copySrcTexture),
+sourceDetails,
+destinationDetails,
+copySize);
             }
         }
     }
@@ -172,7 +176,8 @@ export class Texture<
         let label = this.props.label;
         if(debug) {
             label+='debug'+n;
-            console.log('create texture', label);
+            console.log('create texture',
+                label);
             n=n+1;
         }
         //Texture is undefined on initial call
@@ -271,7 +276,8 @@ export class RenderTarget<
         let add_copy_src = false;
         if ((this.props.usages & TextureUsageEnums.COPY_SRC) === 0) {
             add_copy_src = true;
-            this.createTexture(this.initialSampleCount, true);
+            this.createTexture(this.initialSampleCount,
+                true);
             await new Promise(res => { requestAnimationFrame(res) });
             await new Promise(res => { requestAnimationFrame(res) });
         }
@@ -307,7 +313,9 @@ export class RenderTarget<
             data = new Uint8ClampedArray(this.props.size.width * this.props.size.height * 4);
             for (let i = 0; i < data.length; i += 4) {
                 const index = i;
-                const length = Math.hypot(floatData[index]!, floatData[index + 1]!, floatData[index + 2]!);
+                const length = Math.hypot(floatData[index]!,
+floatData[index + 1]!,
+floatData[index + 2]!);
                 //const length=Math.max(floatData[index]!,floatData[index+1]!,floatData[index+2]!)
                 data[i] = (floatData[index]! / length) * 255;
                 data[i + 1] = (floatData[index + 1]! / length) * 255;
@@ -339,16 +347,21 @@ export class RenderTarget<
         if (!ctx) {
             throw (new Error('Cannot get context'));
         }
-        const imageData = ctx.createImageData(bytesPerRow / this.bytes_per_fixel, c.height);
+        const imageData = ctx.createImageData(bytesPerRow / this.bytes_per_fixel,
+            c.height);
         const data = await this.toBitmap();
         imageData.data.set(data);
-        ctx.putImageData(imageData, 0, 0);
+        ctx.putImageData(imageData,
+            0,
+            0);
         c.toBlob(b => {
             if (!b) {
                 throw new Error('Blob creation failed');
             }
             console.log(URL.createObjectURL(b));
-        }, 'image/jpeg', 0.96);
+        },
+        'image/jpeg',
+        0.96);
 
     }
 }

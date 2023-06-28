@@ -48,7 +48,8 @@ export class VertexShaderFunction<B extends readonly BGLayout[] = readonly BGLay
                 ${this.inputs}
                 ${attributesString}
                 ) -> ${this.output.name} {
-                    ${this.#code(bindGroups, variableNames)}
+                    ${this.#code(bindGroups,
+        variableNames)}
                 }`
         return wgsl;
     }

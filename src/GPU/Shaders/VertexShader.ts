@@ -41,7 +41,9 @@ export class VertexShader<
         constantCode?: (...args: { [K in keyof B]: FilterVertex<B[K]['entries']> }) => string
     ) {
         //@ts-expect-error TODO
-        super(props, GPUShaderStage.VERTEX, constantCode);
+        super(props,
+            GPUShaderStage.VERTEX,
+            constantCode);
     }
 }
 

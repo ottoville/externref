@@ -17,7 +17,8 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
     ) {
         const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
         const bindLayouts = [
-            new BGLayout(slopesLayout.gpu, 'normalsBindGroupLayout',
+            new BGLayout(slopesLayout.gpu,
+                'normalsBindGroupLayout',
                 new BufLayout(
                     {
                         buffer: {
@@ -26,7 +27,9 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
                             type: 'storage',
                         },
                         visibility: ShaderStage.COMPUTE,
-                    }, 'normals', FloatArray)),
+                    },
+                    'normals',
+                    FloatArray)),
             slopesLayout
         ] as const
 
@@ -68,6 +71,7 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
             },
             gpu: pipelineLayout.gpu,
             label: 'CalculateNormals.comp',
-        }, () => '@compute @workgroup_size(1)');
+        },
+        () => '@compute @workgroup_size(1)');
     }
 }

@@ -38,7 +38,8 @@ export abstract class UINode<P extends object = object, S extends object = objec
         });
     }
     #requestRender = (gpu: GPU) => {
-        const output = this.render(gpu, gpu !== this.#currentGPU);
+        const output = this.render(gpu,
+            gpu !== this.#currentGPU);
         this.#currentGPU = gpu;
 
         if (output) {

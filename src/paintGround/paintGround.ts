@@ -44,7 +44,8 @@ export abstract class paintGround {
 
     #drawArea: ListenerObj<'pointermove'> = {
         cb: () => {
-            engine.gpu!.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
+            engine.gpu!.renderPassScreen.pickMesh(undefined,
+                mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
                 if (pickInfo) {
                     this.#end_position[0] = pickInfo.position[0];
                     this.#end_position[1] = pickInfo.position[2];
@@ -87,7 +88,8 @@ export abstract class paintGround {
                 engine.addInputListener(this.#finalClick);
             }
             this.#mouseMoved=true;
-            engine.gpu!.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
+            engine.gpu!.renderPassScreen.pickMesh(undefined,
+                mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
                 if (pickInfo && this.#end_position) {
                     //Distance from first point
                     const p0 = this.#start_position[0] - pickInfo.position[0];
@@ -107,7 +109,8 @@ export abstract class paintGround {
                     }
 
                     const dotang = this.ang360.distance(rad);
-                    this.size.width = Math.sqrt(distanceSquared - distanceSquared * Math.pow(Math.cos(dotang.rad), 2));
+                    this.size.width = Math.sqrt(distanceSquared - distanceSquared * Math.pow(Math.cos(dotang.rad),
+                        2));
 
                     if (p1 * this.drawVector[0] + p0 * this.drawVector[1] < 0)  //Dot product
                         this.size.width *= -1;
@@ -142,7 +145,8 @@ export abstract class paintGround {
             if (this.#end_position[0] == 0)
                 return;
             try {
-                this.onMainPointerUp(this.size.height, this.#end_position);
+                this.onMainPointerUp(this.size.height,
+                    this.#end_position);
             } catch (e) {
                 console.log(e);
             } finally {
@@ -164,7 +168,8 @@ export abstract class paintGround {
             /*  var pickInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => {
                   return mesh === this.ground
               }, false, this.camera);*/
-            engine.gpu!.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
+            engine.gpu!.renderPassScreen.pickMesh(undefined,
+                mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
                 if (pickInfo) {
                     this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
                     this.onMainPointerDown(this.#start_position);

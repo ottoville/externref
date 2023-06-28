@@ -45,7 +45,9 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
         public struct: S
     ) {
 
-        super(entry, variableName, struct.name)
+        super(entry,
+            variableName,
+            struct.name)
     }
     prop(member: keyof S['properties'] & string) {
         return `${this.variableName}.${member}`
@@ -65,7 +67,9 @@ export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
             | 'texture_storage_2d<rgba32float,write>'
             | 'texture_storage_2d<rgba8sint,write>'
     ) {
-        super(entry, variableName, structName)
+        super(entry,
+            variableName,
+            structName)
     }
 }
 
@@ -75,7 +79,9 @@ export class SampLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
         variableName: string,
         structName: 'sampler' | 'sampler_comparison'
     ) {
-        super(entry, variableName, structName)
+        super(entry,
+            variableName,
+            structName)
     }
 }
 
@@ -105,6 +111,9 @@ export class BGLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]>
         label: string,
         entries: (bindGroup: BindGroup) => Readonly<MapToGPUBindGroupEntry<T>>,
         renderPasses?: Set<RenderPass>): BindGroup<BGLayout<T>> {
-        return new BindGroup<typeof this>(this, label, entries, renderPasses)
+        return new BindGroup<typeof this>(this,
+            label,
+            entries,
+            renderPasses)
     }
 }

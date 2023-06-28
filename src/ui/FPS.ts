@@ -19,31 +19,33 @@ export class CreateFPSMeter extends UINode<{}, MenuState> {
             this.setState({
                 fps: engine.gpu?.fps ?? 0,
             });
-        }, 500)
+        },
+        500)
     }
     render() {
         return [
-            UINode.createCtrProps(UIRectangleNode, {
-                UIRectangleProps: {
-                    borderSize: {
-                        height: 'auto',
-                        width: [0, NumericUnit.px],
-                    },
-                    label: 'FPS',
-                    scale: { min_width: 10, unit: NumericUnit.px, y: 30, },
-                    translate: {
-                        x: {
-                            anchor: Anchor.LEFT,
-                            value: [15, NumericUnit.px],
+            UINode.createCtrProps(UIRectangleNode,
+                {
+                    UIRectangleProps: {
+                        borderSize: {
+                            height: 'auto',
+                            width: [0, NumericUnit.px],
                         },
-                        y: {
-                            anchor: Anchor.BOTTOM,
-                            value: [25, NumericUnit.px],
+                        label: 'FPS',
+                        scale: { min_width: 10, unit: NumericUnit.px, y: 30, },
+                        translate: {
+                            x: {
+                                anchor: Anchor.LEFT,
+                                value: [15, NumericUnit.px],
+                            },
+                            y: {
+                                anchor: Anchor.BOTTOM,
+                                value: [25, NumericUnit.px],
+                            },
                         },
                     },
-                },
-                text: this.state.fps.toString(),
-            })
+                    text: this.state.fps.toString(),
+                })
         ];
     }
     override destroy(): void {

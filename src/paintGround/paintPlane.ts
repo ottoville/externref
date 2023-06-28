@@ -20,8 +20,11 @@ class PlaneMesh extends DataNode implements IndexedTrait {
     constructor(
         renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>) {
 
-        const ptrs = engine.rust.create_tiled_mesh_ptr(100, 100);
-        const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer, ptrs, 6)
+        const ptrs = engine.rust.create_tiled_mesh_ptr(100,
+            100);
+        const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer,
+            ptrs,
+            6)
 
         const mesh_id = new_rust_mesh({
             label: 'plane',
@@ -38,7 +41,8 @@ class PlaneMesh extends DataNode implements IndexedTrait {
             },
             mesh_id,
             false);
-        this.indexed = new NodeIndexed2(this, [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!])
+        this.indexed = new NodeIndexed2(this,
+            [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!])
         this.drawable = new DrawableIndexed(
             {
                 node: this,
@@ -59,10 +63,14 @@ export class paintPlane extends paintGround {
         ground: Terrain,
         callback: PTResultF
     ) {
-        super(scene, ground, (p) => {
-            this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
-            callback(p);
-        });
+        super(scene,
+            ground,
+            (p) => {
+                this.#mesh.update_scale(this.#mesh.scale_x,
+                    this.#mesh.scale_y,
+                    0)
+                callback(p);
+            });
         const renderPipeline = ground.gpu.createRenderPipeline([
             'paintPlaneRenderpipeline', (_gpu, label, primitive, vertexBufferProps) => {
                 const planeVertShader = createPlaneAtGroundHeightVertShader(
@@ -78,7 +86,8 @@ export class paintPlane extends paintGround {
                             },
                         } as const),
                         stepMode: 'vertex',
-                    }, Terrain.settings
+                    },
+                    Terrain.settings
                 );
                 return ground.TerrainHeightsbindGroupTree.addRenderPipeline(
                     {
@@ -90,7 +99,8 @@ export class paintPlane extends paintGround {
                         vertexShader: planeVertShader,
                     });
             }
-        ], { cullMode: 'back', frontFace: 'cw', topology: 'triangle-list', },
+        ],
+        { cullMode: 'back', frontFace: 'cw', topology: 'triangle-list', },
         { stride: 12, });
 
         this.#mesh = new PlaneMesh(renderPipeline);
@@ -108,13 +118,21 @@ export class paintPlane extends paintGround {
         const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
         this.#meshPosition = [this.#startingPoint[0] + this.drawVector[0] * -0.5, 5, this.#startingPoint[1] + this.drawVector[1] * 0.5];
         this.#mesh.translation = this.#meshPosition;
-        engine.rust.update_scale_and_rotation(this.#mesh.id, height * 0.5, this.#mesh.scale_y, this.#mesh.scale_z,
-            0, Math.sin(halfYaw), 0, Math.cos(halfYaw));
+        engine.rust.update_scale_and_rotation(this.#mesh.id,
+            height * 0.5,
+            this.#mesh.scale_y,
+            this.#mesh.scale_z,
+            0,
+            Math.sin(halfYaw),
+            0,
+            Math.cos(halfYaw));
     }
 
     onAreaDraw(width: number) {
         const halfWidth = width * 0.5;
-        this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, halfWidth);
+        this.#mesh.update_scale(this.#mesh.scale_x,
+            this.#mesh.scale_y,
+            halfWidth);
         this.#mesh.translation = [
             this.#meshPosition[0] - halfWidth * this.#widthVector[0],
             this.#meshPosition[1],

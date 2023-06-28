@@ -7,7 +7,8 @@ import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
 export const font = '80pt serif';
 
 export function createBackground(width: number, height: number, text: string, originalAspectRatio?: number) {
-    const copySource2 = new OffscreenCanvas(width, height);
+    const copySource2 = new OffscreenCanvas(width,
+        height);
     const ctx = copySource2.getContext('2d')
     if (!ctx) {
         throw new Error('Cant get 2d context for texture text');
@@ -47,15 +48,21 @@ function createTexture(
     let copySource: ImageBitmap | OffscreenCanvas = backgroundAsset.texture
     // Create texture for text
     if (text) {
-        const { originalTextHeight, textSize, measuredSize, copySource2, ctx, } = createBackground(backgroundAsset.texture.width, backgroundAsset.texture.height, text, originalAspectRatio)
+        const { originalTextHeight, textSize, measuredSize, copySource2, ctx, } = createBackground(backgroundAsset.texture.width,
+            backgroundAsset.texture.height,
+            text,
+            originalAspectRatio)
         copySource = copySource2;
         const extendedSize = {
             height: backgroundAsset.texture.height + textSize.height,
-            width: Math.max(backgroundAsset.texture.width, textSize.width),
+            width: Math.max(backgroundAsset.texture.width,
+                textSize.width),
         }
         copySource.width = extendedSize.width;
         copySource.height = extendedSize.height;
-        ctx.drawImage(backgroundAsset.texture, 0, 0);
+        ctx.drawImage(backgroundAsset.texture,
+            0,
+            0);
 
         const borderSizeInPixel = {
             height: backgroundAsset.texture.height * backgroundAsset.border_height,
@@ -71,9 +78,12 @@ function createTexture(
             backgroundAsset.texture,
             borderSizeInPixel.width,
             borderSizeInPixel.height,
-            contentSize.width, contentSize.height,
-            0, backgroundAsset.texture.height,
-            extendedSize.width, textSize.height)
+            contentSize.width,
+            contentSize.height,
+            0,
+            backgroundAsset.texture.height,
+            extendedSize.width,
+            textSize.height)
         ctx.font = font;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
@@ -98,7 +108,10 @@ function createTexture(
 */
 export class UIRectangleBackground extends UIRectangleText {
     createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>> {
-        const copySource = createTexture(this.backgroundAsset, this.textUV, this.props.originalAspectRatio, this.text);
+        const copySource = createTexture(this.backgroundAsset,
+            this.textUV,
+            this.props.originalAspectRatio,
+            this.text);
         return this.createTextureView(copySource);
     }
     override updateBoundingBoxAndVertices(
@@ -206,7 +219,8 @@ export class UIRectangleBackground extends UIRectangleText {
                     outer_sizeX, -outer_sizeY, texture.width, texture.height,
                     content_sizeX, -content_sizeY, container_uvs.left, container_uvs.top,
                     outer_sizeX, -content_sizeY, texture.width, container_uvs.top
-                ], 24)
+                ],
+                24)
         }
         return vertices;
     }
@@ -228,7 +242,11 @@ export class UIRectangleBackground extends UIRectangleText {
             [0, 0],
             [0, 0]
         ]
-        super(props, createTexture(backgroundAsset, textUV, props.originalAspectRatio, text));
+        super(props,
+            createTexture(backgroundAsset,
+                textUV,
+                props.originalAspectRatio,
+                text));
         this.textUV = textUV;
     }
 }

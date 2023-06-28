@@ -210,9 +210,11 @@ export class Physics {
         if (realDeltaInGameTime > MIN_TICK_DELTA) {
             // Withtimeout execution is returned to event loop, allowing inputs before next tick
             // TODO: nested timeout forces 4ms delay
-            setTimeout(this.#tick, 0);
+            setTimeout(this.#tick,
+                0);
         } else {
-            this.#interval = setTimeout(this.#tick, this.tickIntervalMs - (Date.now() - timestamp))
+            this.#interval = setTimeout(this.#tick,
+                this.tickIntervalMs - (Date.now() - timestamp))
         }
     }
 
@@ -220,10 +222,12 @@ export class Physics {
         if (timeToFirstTick != this.tickIntervalMs) {
             setTimeout(() => {
                 this.#tick();
-            }, timeToFirstTick);
+            },
+            timeToFirstTick);
         }
         else
-            this.#interval = setTimeout(this.#tick, timeToFirstTick);
+            this.#interval = setTimeout(this.#tick,
+                timeToFirstTick);
     }
     set gameSpeed(value: number) {
         if (Number.isNaN(value))

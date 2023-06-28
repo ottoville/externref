@@ -13,66 +13,71 @@ const x = {
 // eslint-disable-next-line @typescript-eslint/ban-types
 export class createSettingsMenu extends UINode<{}> {
     static addKeydownListener() {
-        document.addEventListener('keydown', function openSettings(e: KeyboardEvent) {
-            if (e.code === 'Escape') {
-                document.removeEventListener('keydown', openSettings);
-                new createSettingsMenu();
-            }
-        });
+        document.addEventListener('keydown',
+            function openSettings(e: KeyboardEvent) {
+                if (e.code === 'Escape') {
+                    document.removeEventListener('keydown',
+                        openSettings);
+                    new createSettingsMenu();
+                }
+            });
     }
     constructor() {
         super({});
     }
     render() {
         return [
-            UINode.createCtrProps(UIRectangleNode, Button({
-                UIRectangleProps: {
-                    label: 'MSAA',
-                    scale,
-                    translate: {
-                        x, y: {
-                            anchor: Anchor.CENTER,
-                            value: [0],
+            UINode.createCtrProps(UIRectangleNode,
+                Button({
+                    UIRectangleProps: {
+                        label: 'MSAA',
+                        scale,
+                        translate: {
+                            x, y: {
+                                anchor: Anchor.CENTER,
+                                value: [0],
+                            },
                         },
                     },
-                },
-                text: 'Toggle MSAA',
-            })),
-            UINode.createCtrProps(UIRectangleNode, Button({
-                UIRectangleProps: {
-                    label: 'Close',
-                    scale,
-                    translate: {
-                        x, y: {
-                            anchor: Anchor.CENTER,
-                            value: [-60, NumericUnit.px],
+                    text: 'Toggle MSAA',
+                })),
+            UINode.createCtrProps(UIRectangleNode,
+                Button({
+                    UIRectangleProps: {
+                        label: 'Close',
+                        scale,
+                        translate: {
+                            x, y: {
+                                anchor: Anchor.CENTER,
+                                value: [-60, NumericUnit.px],
+                            },
                         },
                     },
-                },
-                onClick: () => {
-                    this.destroy();
-                },
-                text: 'Close',
-            })),
-            UINode.createCtrProps(UIRectangleNode, Button({
-                UIRectangleProps: {
-                    label: 'DevTools',
-                    scale,
-                    translate: {
-                        x, y: {
-                            anchor: Anchor.CENTER,
-                            value: [-120, NumericUnit.px],
+                    onClick: () => {
+                        this.destroy();
+                    },
+                    text: 'Close',
+                })),
+            UINode.createCtrProps(UIRectangleNode,
+                Button({
+                    UIRectangleProps: {
+                        label: 'DevTools',
+                        scale,
+                        translate: {
+                            x, y: {
+                                anchor: Anchor.CENTER,
+                                value: [-120, NumericUnit.px],
+                            },
                         },
                     },
-                },
-                onClick: () => {
-                    import('./DevTools/DevTools.js')
-                        .then(({ DevTools, }) => DevTools(engine.devTools!))
-                        .catch(err => engine.showError(err));
-                    this.destroy();
-                },
-                text: 'DevTools',
-            }))
+                    onClick: () => {
+                        import('./DevTools/DevTools.js')
+                            .then(({ DevTools, }) => DevTools(engine.devTools!))
+                            .catch(err => engine.showError(err));
+                        this.destroy();
+                    },
+                    text: 'DevTools',
+                }))
         ];
     }
     override destroy(): void {

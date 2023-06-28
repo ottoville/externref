@@ -89,7 +89,8 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
         const p = new BindablePipelineLayout({
             bindGroupLayouts: [...this.bindGroupLayouts, sharedBindgroup.layout] as [...B, typeof sharedBindgroup.layout],
             label,
-        }, sharedBindgroup)
+        },
+        sharedBindgroup)
         this.subBindGroups.push(p);
         //@ts-expect-error bug in TS?
         return p;
@@ -107,7 +108,11 @@ export class SharedPipelineLayout<B extends BGLayout[]> extends RenderPipelineLa
     ) {
         const RP = this.addRenderPipelineSuper(props);
         RP.createSharedBindGroups = (): Set<BindGroup> => {
-            return new Set([new BindGroup(this.bindGroupLayout, 'sharedBindGroup_' + props.label, bindGroups)])
+            return new Set([
+                new BindGroup(this.bindGroupLayout,
+                    'sharedBindGroup_' + props.label,
+                    bindGroups)
+            ])
         }
         return RP;
     }
@@ -120,7 +125,8 @@ B extends readonly BGLayout[] = readonly BGLayout[]> extends RenderPipelineLayou
             bindGroupLayouts: B;
         },
         sharedBindgroup?: BindGroup | undefined) {
-        super(props, sharedBindgroup);
+        super(props,
+            sharedBindgroup);
     }
     addRenderPipeline<
         V extends VertexShader   <B>,

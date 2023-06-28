@@ -12,7 +12,8 @@ type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE, typeof Ver
 export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
     constructor(gpu: GPU, settings: typeof Terrain.settings, textureSize: { width: number, height: number }) {
         const bindLayouts = [
-            new BGLayout(gpu, 'indicesBindGroupLayout',
+            new BGLayout(gpu,
+                'indicesBindGroupLayout',
                 new BufLayout(
                     {
                         buffer: {
@@ -22,14 +23,18 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
                         },
                         visibility: ShaderStage.COMPUTE,
 
-                    }, 'positions', Vertices),
+                    },
+                    'positions',
+                    Vertices),
                 new TextLayout(
                     {
                         texture: {
 
                         },
                         visibility: ShaderStage.COMPUTE,
-                    }, 'pixels', 'texture_2d<f32>'))
+                    },
+                    'pixels',
+                    'texture_2d<f32>'))
         ] as const
 
         const pipelineLayout = new PipelineLayout({
@@ -64,7 +69,8 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
             },
             gpu,
             label: 'CreateGroundFromHeightMap.comp',
-        }, () => /* wgsl */ `
+        },
+        () => /* wgsl */ `
             const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0); 
 
             const scaled_texture_size = vec2<f32>(${textureSize.width / settings.size[0]}, ${textureSize.height / settings.size[1]});

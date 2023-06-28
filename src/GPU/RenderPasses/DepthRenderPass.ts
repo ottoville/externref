@@ -20,8 +20,10 @@ export class DepthRenderPass<T extends {
         this.depthRenderTarget = depthRenderTargets;
     }
     override resize(width: number, height: number) {
-        super.resize(width, height);
-        this.depthRenderTarget.resize(this.size, this.sampleCount)
+        super.resize(width,
+            height);
+        this.depthRenderTarget.resize(this.size,
+            this.sampleCount)
     }
     override get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const renderPassDescriptor = super.GPURenderPassDescriptor;

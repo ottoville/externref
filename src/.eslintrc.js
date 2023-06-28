@@ -64,6 +64,7 @@ module.exports = {
                 'functions': 'never',
             }
         ],
+        'function-call-argument-newline': ['error', 'always'],
     },
     settings: {
         'import/resolver': {

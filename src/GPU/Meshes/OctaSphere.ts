@@ -29,15 +29,22 @@ export class OctaSphere extends IndexedColoredMesh {
         meshProperties: MeshProperties,
         can_collide = false
     ) {
-        const ptrs = engine.rust.create_octasphere(2, width, height, depth);
-        const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer, ptrs, 6)
+        const ptrs = engine.rust.create_octasphere(2,
+            width,
+            height,
+            depth);
+        const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer,
+            ptrs,
+            6)
 
         const mesh_id = new_rust_mesh({
             fixed: false,
             label: 'OctaSphere' + (uid++),
             ...meshProperties,
         });
-        const vertices = new Float32Array(engine.rust.memory.buffer, pos_ptr, pos_len!);
+        const vertices = new Float32Array(engine.rust.memory.buffer,
+            pos_ptr,
+pos_len!);
         for (let i = 0; i < vertices.length; i += 12) {
             vertices[i + 8] = Math.random();
             vertices[i + 9] = Math.random();

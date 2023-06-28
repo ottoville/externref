@@ -11,9 +11,12 @@ export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U e
         renderTargetOptions: RenderPassTargetOptions,
         options: ColorRenderTargetParams
     ) {
-        super(textureOptions, renderTargetOptions, options);
+        super(textureOptions,
+            renderTargetOptions,
+            options);
         if (!renderTargetOptions.context) {
-            const resolveTexture = new RenderPassTarget(textureOptions, renderTargetOptions);
+            const resolveTexture = new RenderPassTarget(textureOptions,
+                renderTargetOptions);
             //const resolveTexture = new RenderTarget(this.format, this.usages, textureOptions.label, this.renderPass, { size: options.size }, undefined, undefined, undefined);
             this.resolveTexture = resolveTexture;
             //  this.#resolveView = resolveView;
@@ -28,8 +31,10 @@ export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U e
         }
     }
     override resize(size: {width: number, height: number}, sampleCount: 1 | 4) {
-        super.resize(size, sampleCount);
-        this.resolveTexture?.resize(size, 1)
+        super.resize(size,
+            sampleCount);
+        this.resolveTexture?.resize(size,
+            1)
     }
     override createColorAttachment() {
         const obj = super.createColorAttachment();

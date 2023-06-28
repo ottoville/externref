@@ -11,11 +11,12 @@ export const WaterRenderPipeline = [
             mipmapFilter: 'nearest',
         });
 
-        const waterVertShader = createWaterVertShader(gpu.bindGroupTextureWater, {
-            arrayStride: vertexBufferProps.stride * 4,
-            attributes2: positionAttr,
-            stepMode: 'vertex',
-        });
+        const waterVertShader = createWaterVertShader(gpu.bindGroupTextureWater,
+            {
+                arrayStride: vertexBufferProps.stride * 4,
+                attributes2: positionAttr,
+                stepMode: 'vertex',
+            });
         return gpu.bindGroupTextureWater.addRenderPipeline(
             {
                 fragmentShader: new WaterFragShader(gpu.bindGroupTextureWater),

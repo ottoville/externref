@@ -14,13 +14,21 @@ export class NormalsMesh extends DataNode {
         const stride = 16 // 8*2;
         const newVertices = new Float32Array(targetNode.node.positions_count * stride)
         vertices.forEach((v, i) => {
-            const slice = v.slice(0, 8);
-            newVertices.set(slice, i * stride);
-            newVertices.copyWithin(i * stride + 8, i * stride, i * stride + 8)
+            const slice = v.slice(0,
+                8);
+            newVertices.set(slice,
+                i * stride);
+            newVertices.copyWithin(i * stride + 8,
+                i * stride,
+                i * stride + 8)
         })
-        const vertexBuffer = Buffer.create(gpu, targetNode.node.positions_count * stride * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], 'vertex_debug_render_normals', b => {
-            new Float32Array(b.getMappedRange()).set(newVertices)
-        });
+        const vertexBuffer = Buffer.create(gpu,
+            targetNode.node.positions_count * stride * Float32Array.BYTES_PER_ELEMENT,
+            [GPUBufferUsage.VERTEX],
+            'vertex_debug_render_normals',
+            b => {
+                new Float32Array(b.getMappedRange()).set(newVertices)
+            });
         const mesh_id = new_rust_mesh({
             label: 'NormalsDebug',
             rigid_body: false,
@@ -36,9 +44,13 @@ export class NormalsMesh extends DataNode {
 
 
         this.translation = targetNode.node.translation;
-        this.update_scale(targetNode.node.scale_x, targetNode.node.scale_y, targetNode.node.scale_z);
+        this.update_scale(targetNode.node.scale_x,
+            targetNode.node.scale_y,
+            targetNode.node.scale_z);
         this.rotation = targetNode.node.rotation;
-        const renderPipeline = gpu.createRenderPipeline(NormalsPipeline, { topology: 'line-list', }, { stride: 8, });
+        const renderPipeline = gpu.createRenderPipeline(NormalsPipeline,
+            { topology: 'line-list', },
+            { stride: 8, });
         this.drawable = new DrawableSimple({
             node: this,
             renderPasses: undefined,

@@ -55,7 +55,8 @@ export class MeshCamera extends CameraController {
                             value: [0],
                         },
                     },
-                }, {
+                },
+                {
                     border_height: 0,
                     border_width: 0,
                     texture: bitmap,
@@ -74,9 +75,14 @@ export class MeshCamera extends CameraController {
     updateMouseCoords = () => {
         const gpu = this.camera.gpu
         if (gpu) {
-            Atomics.store(gpu.mousePosition, 0, gpu.renderPassCanvas.size.width * 0.5)
-            Atomics.store(gpu.mousePosition, 1, gpu.renderPassCanvas.size.height * 0.5)
-            Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
+            Atomics.store(gpu.mousePosition,
+                0,
+                gpu.renderPassCanvas.size.width * 0.5)
+            Atomics.store(gpu.mousePosition,
+                1,
+                gpu.renderPassCanvas.size.height * 0.5)
+            Atomics.notify(new Int32Array(gpu.mousePositionBuffer),
+                0);
         }
     }
     #lockPointer = () => {
@@ -86,7 +92,8 @@ export class MeshCamera extends CameraController {
             const gpu = this.camera.gpu
             if (gpu) {
                 this.updateMouseCoords();
-                gpu.renderPassCanvas.onResize.set(this, this.updateMouseCoords)
+                gpu.renderPassCanvas.onResize.set(this,
+                    this.updateMouseCoords)
             }
         }).catch(err => {
             engine.showError(err);

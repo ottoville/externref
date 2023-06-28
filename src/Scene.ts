@@ -10,7 +10,8 @@ export class Scene {
 
     constructor(public name: string, public gpu: GPU, onRenderStart: (scene: Scene) => Promise<Terrain> | undefined) {
         sceneID<<=1;
-        engine.scenes.set(name, this);
+        engine.scenes.set(name,
+            this);
         this.ready = onRenderStart(this);
     }
 }

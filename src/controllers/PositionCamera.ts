@@ -49,12 +49,16 @@ export class PositionCamera extends CameraController {
         }
     }
     attachCameraController() {
-        document?.addEventListener('keydown', this.#keydownfunction);
-        document?.addEventListener('keyup', this.#keyupfunction);
+        document?.addEventListener('keydown',
+            this.#keydownfunction);
+        document?.addEventListener('keyup',
+            this.#keyupfunction);
     }
     deAttachCameraController() {
-        document?.removeEventListener('keydown', this.#keydownfunction);
-        document?.removeEventListener('keyup', this.#keyupfunction);
+        document?.removeEventListener('keydown',
+            this.#keydownfunction);
+        document?.removeEventListener('keyup',
+            this.#keyupfunction);
     }
     #serializeRequested = false;
     #elevation: -1|0|1 = 0
@@ -63,7 +67,8 @@ export class PositionCamera extends CameraController {
         if (this.#serializeRequested || !engine.DB)
             return;
         this.#serializeRequested = true;
-        const request = engine.DB.transaction('save', 'readwrite').objectStore('save').put({
+        const request = engine.DB.transaction('save',
+            'readwrite').objectStore('save').put({
             data: {
                 angle: this.#angle,
                 position: this.#position,

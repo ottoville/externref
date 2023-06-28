@@ -13,12 +13,15 @@ describe(
         let cameraControllers: [typeof ArcRotateCamera, typeof MeshCamera];
 
         beforeAll(async () => {
-            engine = await Engine.initEngine(undefined, (e) => {
-                console.log('error', e.message);
-            }, {
-                collider: fs.readFileSync('../wwwroot/collider/colliderSimdO.wasm'),
-                rust: fs.readFileSync('../node/wasm32-unknown-unknown/debug/engine.wasm'),
-            });
+            engine = await Engine.initEngine(undefined,
+                (e) => {
+                    console.log('error',
+                        e.message);
+                },
+                {
+                    collider: fs.readFileSync('../wwwroot/collider/colliderSimdO.wasm'),
+                    rust: fs.readFileSync('../node/wasm32-unknown-unknown/debug/engine.wasm'),
+                });
             //@ts-expect-error
             const control = engine!.mainCamera.attachControllerForCamera({
                 attachCameraController: () => undefined,
@@ -28,14 +31,17 @@ describe(
             originalPosition = new Float32Array(engine!.mainCamera.position)
             originalDirection = new Float32Array(engine!.mainCamera.direction as [number, number, number])
             cameraControllers = [ArcRotateCamera, MeshCamera];
-        }, 10000);
+        },
+        10000);
 
-        it('should load without error', () => {
-            expect(engine).not.toBeFalsy();
-        });
-        it('position should be same', function () {
-            for (let i = 0; i < cameraControllers!.length; i++) {
-                const controller = new cameraControllers![i]!(engine!.mainCamera);
+        it('should load without error',
+            () => {
+                expect(engine).not.toBeFalsy();
+            });
+        it('position should be same',
+            function () {
+                for (let i = 0; i < cameraControllers!.length; i++) {
+                    const controller = new cameraControllers![i]!(engine!.mainCamera);
                 engine!.mainCamera.attachControllerForCamera(controller);
 
                 controller.calculateCameraPositionAndTarget();
@@ -47,6 +53,6 @@ describe(
                 expect(originalDirection[0]!.toFixed(6)).toBe(newDirection[0]!.toFixed(6));
                 expect(originalDirection[1]!.toFixed(6)).toBe(newDirection[1]!.toFixed(6));
                 expect(originalDirection[2]!.toFixed(6)).toBe(newDirection[2]!.toFixed(6));
-            }
-        })
+                }
+            })
     });

@@ -12,9 +12,10 @@ export function createUIFragmentShader(pipelineLayout: PipelineLayout<BindLayout
         {
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
-                main: new FragmentShaderFunction(new Struct('Output', {
-                    Color: ['@location(0)', 'vec4<f32>'],
-                }),
+                main: new FragmentShaderFunction(new Struct('Output',
+                    {
+                        Color: ['@location(0)', 'vec4<f32>'],
+                    }),
                 pipelineLayout,
                 `@builtin(position) fragCoord : vec4<f32>,
                 @location(0) v_uv : vec2<f32>`,

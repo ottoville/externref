@@ -8,7 +8,11 @@ let uid = 0;
 export class Box extends IndexedSingleColoredMesh {
     override create_collider() {
         //TODO do not automaticly set collision events
-        return engine.rust.create_cuboid_collider(this.scale_x, this.scale_y, this.scale_z, 0, true);
+        return engine.rust.create_cuboid_collider(this.scale_x,
+            this.scale_y,
+            this.scale_z,
+            0,
+            true);
     }
     constructor(
         {
@@ -34,9 +38,13 @@ export class Box extends IndexedSingleColoredMesh {
             scenes,
         })
         const boxVertices = engine.rust.get_box_vertices();
-        const [ptr_vertices, len_vertices, cap_vertices] = new Uint32Array(engine.rust.memory.buffer, boxVertices, 3);
+        const [ptr_vertices, len_vertices, cap_vertices] = new Uint32Array(engine.rust.memory.buffer,
+            boxVertices,
+            3);
         const boxIndices = engine.rust.get_box_indices();
-        const [ptr_ind, len_ind, cap_ind] = new Uint32Array(engine.rust.memory.buffer, boxIndices, 3)
+        const [ptr_ind, len_ind, cap_ind] = new Uint32Array(engine.rust.memory.buffer,
+            boxIndices,
+            3)
 
         super(
             {

@@ -20,7 +20,8 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
         slopesLayout: SlopesLayout) {
         const bindLayouts = [
             slopesLayout,
-            new BGLayout(slopesLayout.gpu, 'TerrainTextureLayout',
+            new BGLayout(slopesLayout.gpu,
+                'TerrainTextureLayout',
                 new TextLayout(
                     {
                         storageTexture: {
@@ -28,7 +29,9 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
                             format: 'rgba8unorm',
                         },
                         visibility: ShaderStage.COMPUTE,
-                    }, 'ground_texture', 'texture_storage_2d<rgba8unorm,write>'
+                    },
+                    'ground_texture',
+                    'texture_storage_2d<rgba8unorm,write>'
                 ))
         ] as const
 
@@ -59,7 +62,8 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
             },
             gpu: pipelineLayout.gpu,
             label: 'CreateTerrainTexture.comp',
-        }, ([slopes, facet12], [_ground_texture]) => /* wgsl */ `
+        },
+        ([slopes, facet12], [_ground_texture]) => /* wgsl */ `
         fn mod289(x:f32) -> f32 {
             return x - floor(x * (1. / 289.)) * 289.;
             }
@@ -156,7 +160,9 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
              return 42.0 * dot( m*m, vec4<f32>( dot(p0,x0), dot(p1,x1),
                                          dot(p2,x2), dot(p3,x3) ) );
             }
-            ${getHeightAtCoordinates(settings, slopes, facet12)}
+            ${getHeightAtCoordinates(settings,
+        slopes,
+        facet12)}
             
             @compute @workgroup_size(1)
         `);

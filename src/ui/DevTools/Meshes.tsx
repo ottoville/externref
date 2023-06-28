@@ -34,7 +34,8 @@ export function Meshes() {
         return () => {
             renderPassScreen?.onRenderPipelinesChange.delete(listener);
         }
-    }, [engine]);
+    },
+    [engine]);
     const [selectedDrawable, setSelectedDrawable] = useState<Drawable>()
     return <>
         <fieldset id="meshes">
