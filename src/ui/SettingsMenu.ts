@@ -5,6 +5,11 @@ import type { Engine } from '../engine.js';
 import { UIRectangleNode } from './UIRectangleNode.js';
 declare const engine: Engine;
 
+const scale = { min_width: 200, unit: NumericUnit.px, y: 50, };
+const x = {
+    anchor: Anchor.CENTER,
+    value: [0],
+} as const;
 // eslint-disable-next-line @typescript-eslint/ban-types
 export class createSettingsMenu extends UINode<{}> {
     static addKeydownListener() {
@@ -23,12 +28,9 @@ export class createSettingsMenu extends UINode<{}> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'MSAA',
-                    scale: { min_width: 200, unit: NumericUnit.px, y: 50, },
+                    scale,
                     translate: {
-                        x: {
-                            anchor: Anchor.CENTER,
-                            value: [0],
-                        }, y: {
+                        x, y: {
                             anchor: Anchor.CENTER,
                             value: [0],
                         },
@@ -39,12 +41,9 @@ export class createSettingsMenu extends UINode<{}> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'Close',
-                    scale: { min_width: 200, unit: NumericUnit.px, y: 50, },
+                    scale,
                     translate: {
-                        x: {
-                            anchor: Anchor.CENTER,
-                            value: [0],
-                        }, y: {
+                        x, y: {
                             anchor: Anchor.CENTER,
                             value: [-60, NumericUnit.px],
                         },
@@ -58,12 +57,9 @@ export class createSettingsMenu extends UINode<{}> {
             UINode.createCtrProps(UIRectangleNode, Button({
                 UIRectangleProps: {
                     label: 'DevTools',
-                    scale: { min_width: 200, unit: NumericUnit.px, y: 50, },
+                    scale,
                     translate: {
-                        x: {
-                            anchor: Anchor.CENTER,
-                            value: [0],
-                        }, y: {
+                        x, y: {
                             anchor: Anchor.CENTER,
                             value: [-120, NumericUnit.px],
                         },

@@ -2,7 +2,7 @@ import { PipelineLayout } from '../../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from '../VertexShader.js';
 import { GPU } from '../../../GPU.js'
 import { VertexShaderFunction } from '../ShaderFunction.js';
-import { Struct } from '../structs/Structs.js';
+import { colorOutput } from '../structs/Structs.js';
 import { simpleAttributes } from '../../RenderPipeLines/SimpleRenderPipeline.js';
 
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
@@ -12,10 +12,7 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction<BindLayouts, [VertexBufferLayout2<typeof simpleAttributes>]>(
-                new Struct('Output', {
-                    Position: ['@builtin(position)', 'vec4<f32>'],
-                    color: ['@location(0)', 'vec3<f32>'],
-                }),
+                colorOutput,
                 pipelineLayout,
                 '@builtin(vertex_index) gl_VertexIndex : u32,',
                 [buffers],
@@ -38,7 +35,7 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
                 var transformed_normal = normalize(matt * ${normal});
                 vertexPosition = vertexPosition + vec4<f32>(transformed_normal*10.0, 0.0);
             }
-            output.Position = ${scene.prop('modelViewProjection')} * vertexPosition;
+            output.position = ${scene.prop('modelViewProjection')} * vertexPosition;
             output.color=vec3<f32>(0.0,1.0,0.0);
             return output;
             `),

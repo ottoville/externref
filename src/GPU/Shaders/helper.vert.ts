@@ -3,7 +3,7 @@ import { VertexShader } from './VertexShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
-import { Struct } from './structs/Structs.js';
+import { colorOutput } from './structs/Structs.js';
 type BindGroupLayouts = Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts'];
 
 export class HelperVertShader extends VertexShader<BindGroupLayouts> {
@@ -14,19 +14,17 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
-                main: new VertexShaderFunction(new Struct('Output', {
-                    Position: ['@builtin(position)', 'vec4<f32>'],
-                    color: ['@location(0)', 'vec3<f32>'],
-                }),
-                pipelineLayout,
-                `@builtin(instance_index) instanceIdx : u32,
+                main: new VertexShaderFunction(
+                    colorOutput,
+                    pipelineLayout,
+                    `@builtin(instance_index) instanceIdx : u32,
                 @builtin(vertex_index) VertexIndex : u32,`,
-                [], ([
-                    [/*uniforms*/,],
-                    [scene, time/*clusters_array, meshes, projection*/],
-                    [world],
-                    [_slopes, _facet12]
-                ]) => /* wgsl */ `
+                    [], ([
+                        [/*uniforms*/,],
+                        [scene, time/*clusters_array, meshes, projection*/],
+                        [world],
+                        [_slopes, _facet12]
+                    ]) => /* wgsl */ `
                 var output:Output;
  
      var angle:f32 = (f32(${time.prop('time')}) * 0.001) + f32(instanceIdx) * angleStep;
@@ -39,7 +37,7 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
 
      var worldPos:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(offset.x, position.y, offset.y, 1.0);
      worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 3.0;
-     output.Position = ${scene.prop('modelViewProjection')} * worldPos;
+     output.position = ${scene.prop('modelViewProjection')} * worldPos;
      output.color = vec3<f32>(1.0,1.0,1.0);
      return output;
                 `),
