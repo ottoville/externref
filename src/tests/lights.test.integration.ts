@@ -25,7 +25,8 @@ describe('Lights ',
                 const elem = await page.waitForSelector('button');
                 await elem?.click();
                 await page.waitForSelector('progress');
-                await page.waitForFunction(() => !document.querySelector('progress'));
+                await page.waitForFunction(() =>
+                    !document.querySelector('progress'));
             })
         it('should render boxes',
             async () => {
@@ -48,21 +49,27 @@ describe('Lights ',
                         200);
                     //@ts-expect-error
                     const control = engine!.mainCamera.attachControllerForCamera({
-                        attachCameraController: () => undefined,
-                        deAttachCameraController: () => undefined,
-                        serialize: () => undefined,
+                        attachCameraController: () =>
+                            undefined,
+                        deAttachCameraController: () =>
+                            undefined,
+                        serialize: () =>
+                            undefined,
                     });
-                    control.updatePosition(position => position.set([5000, 400, 0]));
+                    control.updatePosition(position =>
+                        position.set([5000, 400, 0]));
                     control.updateDirection((direction) => {
                         direction[0] = 1;
                         direction[1] = 0;
                         direction[2] = 0;
                     });
                     await new Promise<void>(res => {
-                        requestAnimationFrame(() => res());
+                        requestAnimationFrame(() =>
+                            res());
                     });
                     await new Promise<void>(res => {
-                        requestAnimationFrame(() => res());
+                        requestAnimationFrame(() =>
+                            res());
                     });
                     await new Promise((res) => {
                         setTimeout(res,

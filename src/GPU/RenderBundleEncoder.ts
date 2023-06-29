@@ -22,7 +22,8 @@ export class RenderBundleEncoder {
         renderBundleEncoderDescriptor: Partial<GPURenderBundleEncoderDescriptor> | undefined,
         private record: (renderBundleEncoder: RenderBundleEncoder) => void) {
         this.GPURenderBundleEncoderDescriptor = {
-            colorFormats: Object.values(renderPass.colorRenderTargets).map(rt => rt.texture.format),
+            colorFormats: Object.values(renderPass.colorRenderTargets).map(rt =>
+                rt.texture.format),
             label: renderPass.label,
             sampleCount: renderPass.sampleCount,
             ...renderBundleEncoderDescriptor,

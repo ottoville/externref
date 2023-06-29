@@ -3,7 +3,8 @@ import { type UIRectangleNodeProps } from './UIRectangleNode.js';
 
 type ButtonProps = Omit<UIRectangleNodeProps, 'bitmap' | 'borderSize' | 'UIRectangleProps'> & { UIRectangleProps: Omit<UIRectangleNodeProps['UIRectangleProps'], 'borderSize'> }
 
-const bitmap = fetch('/assets/button.webp').then(asset => asset.blob()).then(createImageBitmap);
+const bitmap = fetch('/assets/button.webp').then(asset =>
+    asset.blob()).then(createImageBitmap);
 
 export function Button(props: ButtonProps) {
     return {

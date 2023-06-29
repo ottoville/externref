@@ -170,7 +170,8 @@ export class Canvas {
                         })
                     const terrainInited = Terrain.loadFromTexture(gpu,
                         [terrascene]);
-                    terrainInited.then(terrain => new createTopMenu({ gpu, terrain, })).catch(err => {
+                    terrainInited.then(terrain =>
+                        new createTopMenu({ gpu, terrain, })).catch(err => {
                         errors.push(err)
                         this.showError();
                     });

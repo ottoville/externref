@@ -17,7 +17,8 @@ export function createDebugBoundingBoxVertShader(pipelineLayout: PipelineLayout<
                     [/*uniforms*/,],
                     [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ]) => /* wgsl */ `
+                ]) => /* wgsl */
+                    `
                 var output : Output;
                 var vertexPosition:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(position.xyz, 1.0);
                 output.position = ${scene.prop('modelViewProjection')} * vertexPosition;

@@ -30,7 +30,8 @@ export class PipelineLayout<B extends readonly BGLayout[] = readonly BGLayout[]>
         this.bindGroupLayouts = bindGroupLayouts;
         this.layout = bindGroupLayouts[0].gpu.device.createPipelineLayout(
             {
-                bindGroupLayouts: bindGroupLayouts.map(b => b.layout),
+                bindGroupLayouts: bindGroupLayouts.map(b =>
+                    b.layout),
                 label,
             }
         );
@@ -57,7 +58,8 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
             bindgroupdrawable: this,
         })
         this.renderPipeLines.add(d);
-        this.renderPipelineListeners.forEach(cb => cb());
+        this.renderPipelineListeners.forEach(cb =>
+            cb());
 
         return d;
     }

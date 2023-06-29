@@ -39,7 +39,8 @@ const methods = {
         trans.objectStore('plantae').getAll().onsuccess = (evt) => {
             bladecount = Math.min((<IDBRequest>evt.target).result.length,
                 grasspositions.length);
-            trans.oncomplete = () => globalThis.postMessage({ count: bladecount, type: 'updated', })
+            trans.oncomplete = () =>
+                globalThis.postMessage({ count: bladecount, type: 'updated', })
             for (let i = 0; i < bladecount; i++) {
                 const r = (<IDBRequest>evt.target).result[i];
                 grasspositions.set(r.pos,
@@ -59,7 +60,8 @@ const methods = {
             if (response) {
                 return response.arrayBuffer();
             } else {
-                return fetch('/assets/grass').then(response2 => response2.arrayBuffer())
+                return fetch('/assets/grass').then(response2 =>
+                    response2.arrayBuffer())
             }
         }).then(arrayBuffer => {
             globalThis.postMessage({ buffer: arrayBuffer, type: 'updated', });

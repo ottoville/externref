@@ -20,7 +20,8 @@ export class WaterFragShader extends FragmentShader<BindLayouts> {
                         [/*scene, time, clusters_array, meshes, projection*/,],
                         [/*world*/,],
                         [mySampler, diffuseTexture]
-                    ]) => /* wgsl */ `                
+                    ]) => /* wgsl */
+                        `                
                     var output:Output;
                     let uv : vec2<f32> = vec2<f32>(v_uv.x/v_uv.w , (v_uv.y/v_uv.w))*0.5+vec2<f32>(0.5,0.5);
                 

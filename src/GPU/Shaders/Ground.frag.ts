@@ -27,7 +27,8 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
                         [/*scene*/, clusters_array, meshes, _projection],
                         [/*world*/,],
                         [mySampler, myTexture]
-                    ]) => /* wgsl */ `
+                    ]) => /* wgsl */
+                        `
                   var output:Output;
 
                   //  output.Normals=vec4<f32>(normal.xyz, bitcast<f32>(id));
@@ -87,7 +88,8 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
                     pipelineLayout,
                     `@builtin(position) fragCoord : vec4<f32>,
                     @location(0) @interpolate(flat)  id : u32`,
-                    () => `
+                    () =>
+                        `
                       var output:PickOutput;
                       output.ID=id;
                       return output;
@@ -101,7 +103,8 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
         ([uniforms],
             [/*scene*/, _clusters_array, _meshes, projection],
             [/*world*/,],
-            [_mySampler, _myTexture]) => /* wgsl */ `
+            [_mySampler, _myTexture]) => /* wgsl */
+            `
           ${getClusterIndex(uniforms,
         projection)}
 

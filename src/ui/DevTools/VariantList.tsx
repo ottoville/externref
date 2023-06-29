@@ -27,7 +27,8 @@ export function VariantList(props: {
     return <ul>
         {rootDrawables.map(drawable => {
             return <li key={drawable.node.id} className={'variant'}
-                onClick={() => props.setSelectedDrawable(drawable)}>
+                onClick={() =>
+                    props.setSelectedDrawable(drawable)}>
                 <div>
                     {drawable.node.label}
                 </div>

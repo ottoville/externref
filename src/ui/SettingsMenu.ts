@@ -72,8 +72,10 @@ export class createSettingsMenu extends UINode<{}> {
                     },
                     onClick: () => {
                         import('./DevTools/DevTools.js')
-                            .then(({ DevTools, }) => DevTools(engine.devTools!))
-                            .catch(err => engine.showError(err));
+                            .then(({ DevTools, }) =>
+                                DevTools(engine.devTools!))
+                            .catch(err =>
+                                engine.showError(err));
                         this.destroy();
                     },
                     text: 'DevTools',

@@ -150,7 +150,8 @@ export class Human extends Box {
                 }
             }
         }
-        this.inputManager.cameraControl?.updatePosition(position => position.set(this.translation))
+        this.inputManager.cameraControl?.updatePosition(position =>
+            position.set(this.translation))
     }
     directionUpdate = false;
     override onCollideCharacter() {

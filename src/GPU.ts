@@ -110,7 +110,8 @@ export class GPU {
 
 
     readonly #CLUSTER_WORKGROUP_SIZE: [number, number, number] = [4, 2, 4];
-    readonly CLUSTER_DISPATCH_SIZE: [number, number, number] = this.clustersInRow.map((v, i) => Math.ceil(v / this.#CLUSTER_WORKGROUP_SIZE[i]!)) as [number, number, number];
+    readonly CLUSTER_DISPATCH_SIZE: [number, number, number] = this.clustersInRow.map((v, i) =>
+        Math.ceil(v / this.#CLUSTER_WORKGROUP_SIZE[i]!)) as [number, number, number];
 
     readonly uniformBindGroupLayoutWithTime: BGLayout<[
         BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>,
@@ -213,20 +214,21 @@ export class GPU {
 
 
         this.#updateViewBindGroup = this.updateViewShader.props.bindGroupLayouts[0].createBindGroup('updateViewBindGroup',
-            bindGroup => [
-                {
-                    binding: 0,
-                    resource: this.GPUMeshes.getStorageBinding(bindGroup),
-                },
-                {
-                    binding: 1,
-                    resource: this.#GPUPointLights.getStorageBinding(bindGroup),
-                },
-                {
-                    binding: 2,
-                    resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
-                }
-            ]);
+            bindGroup =>
+                [
+                    {
+                        binding: 0,
+                        resource: this.GPUMeshes.getStorageBinding(bindGroup),
+                    },
+                    {
+                        binding: 1,
+                        resource: this.#GPUPointLights.getStorageBinding(bindGroup),
+                    },
+                    {
+                        binding: 2,
+                        resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
+                    }
+                ]);
         this.uniformBindGroupLayoutWithTime = new BGLayout(this,
             'uniformBindGroupLayoutWithTime',
             new BufLayout(
@@ -316,14 +318,15 @@ export class GPU {
                 MeshUniforms)
         );
         this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition',
-            bindGroup => [
-                {
-                    binding: 0,
-                    resource: this.GPUMeshes.getUniformBinding(bindGroup,
-                        0,
-                        GPU.gpu_memory_index_size),
-                }
-            ]);
+            bindGroup =>
+                [
+                    {
+                        binding: 0,
+                        resource: this.GPUMeshes.getUniformBinding(bindGroup,
+                            0,
+                            GPU.gpu_memory_index_size),
+                    }
+                ]);
         this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot',
             BindGroupLayoutPosition)
         this.simpleFragShader = createSimpleFragShader(this.positionAndTimeBindGroup);
@@ -468,7 +471,8 @@ export class GPU {
                         }),
                 },
                 entryPoint: 'main',
-                getSizeOnResize: (w, h) => [w >> 2, h >> 2],
+                getSizeOnResize: (w, h) =>
+                    [w >> 2, h >> 2],
                 gpu: this,
                 label: 'renderPassWater',
                 rootLayout: this.rootCameralayout,
@@ -653,8 +657,9 @@ export class GPU {
                     const passEncoder = commandEncoder.beginComputePass({ label: 'resizePassEncoder', });
                     passEncoder.setPipeline(await computePipelineClustersP);
 
-                    this.projections.forEach(projection => projection.update(aspectRatio,
-                        this));
+                    this.projections.forEach(projection =>
+                        projection.update(aspectRatio,
+                            this));
                     this.#renderPasses.forEach(renderPass => {
                         renderPass.resize(canvas.width,
                             canvas.height);
@@ -668,13 +673,15 @@ export class GPU {
                     // Call onResize after all renderPasses have resizes so callbacks
                     // can refer updated render target of other renderpasses.
                     this.#renderPasses.forEach(renderPass => {
-                        renderPass.onResize.forEach(cb => cb());
+                        renderPass.onResize.forEach(cb =>
+                            cb());
                     });
                     passEncoder.end();
                     this.device.queue.submit([commandEncoder.finish()]);
                     const updateViewPipeline = await updateViewPipelineP;
-                    this.#renderFrame = window.requestAnimationFrame((time) => this.#renderLoop(time,
-                        updateViewPipeline));
+                    this.#renderFrame = window.requestAnimationFrame((time) =>
+                        this.#renderLoop(time,
+                            updateViewPipeline));
                 } catch (e) {
                     engine.showError(e);
                 }
@@ -721,7 +728,8 @@ export class GPU {
                     const data = new Float32Array(engine.memory.buffer,
                         gpumeshPointer,
                         dataLength);
-                    mesh.onMeshChange.forEach((cb) => cb())
+                    mesh.onMeshChange.forEach((cb) =>
+                        cb())
                     //Point light
                     if (data[29]! > 0) {
                         engine.updateLights = true;
@@ -883,14 +891,17 @@ camera.updateViewBindGroup!.bindGroup);
             debugNumber=debugNumber+1;
         }*/
         this.pendingCommandBuffers.length = 0;
-        this.tempGPUBuffers.forEach(buff => buff.destroy());
+        this.tempGPUBuffers.forEach(buff =>
+            buff.destroy());
         this.tempGPUBuffers.length = 0;
         if (!this.#renderStarted) {
-            this.#renderStartedCallbacks.forEach(cb => cb());
+            this.#renderStartedCallbacks.forEach(cb =>
+                cb());
             this.#renderStartedCallbacks.length = 0;
             this.#renderStarted = true;
         }
-        this.#renderFrame = window.requestAnimationFrame((time2) => this.#renderLoop(time2,
-            updateViewPipeline));
+        this.#renderFrame = window.requestAnimationFrame((time2) =>
+            this.#renderLoop(time2,
+                updateViewPipeline));
     }
 }

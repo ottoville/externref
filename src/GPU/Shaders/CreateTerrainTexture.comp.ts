@@ -44,7 +44,8 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
             entryPoints: {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
-                    ([[_slopes, _facet12], [ground_texture]]) => /* wgsl */ `
+                    ([[_slopes, _facet12], [ground_texture]]) => /* wgsl */
+                        `
                 let cx:f32 = f32(GlobalInvocationID.x) * (f32(${settings.size[0]})/f32(${settings.textureSize.width})) - f32(${settings.size[0]}/u32(2));
                 let cz:f32 = f32(GlobalInvocationID.y) * (f32(${settings.size[1]})/f32(${settings.textureSize.height})) - f32(${settings.size[1]}/u32(2));
             
@@ -63,7 +64,8 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
             gpu: pipelineLayout.gpu,
             label: 'CreateTerrainTexture.comp',
         },
-        ([slopes, facet12], [_ground_texture]) => /* wgsl */ `
+        ([slopes, facet12], [_ground_texture]) => /* wgsl */
+            `
         fn mod289(x:f32) -> f32 {
             return x - floor(x * (1. / 289.)) * 289.;
             }

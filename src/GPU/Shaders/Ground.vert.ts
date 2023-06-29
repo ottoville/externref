@@ -28,7 +28,8 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
                     [/*uniforms*/,],
                     [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ]) => /* wgsl */ `
+                ]) => /* wgsl */
+                    `
             var output : Output;
             output.Position = ${scene.prop('modelViewProjection')} * vec4<f32>(position.xyz, 1.0);
             //shading = dot(normal, lights.sunDirection)*lights.shadow;
@@ -53,7 +54,8 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
                     [/*uniforms*/,],
                     [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ]) => /* wgsl */ `
+                ]) => /* wgsl */
+                    `
                 var output : PickOutput;
                 output.Position = ${scene.prop('modelViewProjection') } * vec4<f32>(position.xyz, 1.0);
                 output.id=${world.prop('id') };

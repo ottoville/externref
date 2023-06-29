@@ -22,7 +22,8 @@ export class SunVertShader extends VertexShader<BindLayouts> {
                         [/*uniforms*/,],
                         [scene/*time, clusters_array, meshes, projection*/],
                         [world]
-                    ]) => /* wgsl */ `
+                    ]) => /* wgsl */
+                        `
                     var output:Output;
                     let curPos: vec3<f32> = ${world.variableName}.transformation[3].xyz;
                   
@@ -44,7 +45,8 @@ export class SunVertShader extends VertexShader<BindLayouts> {
             gpu: pipelineLayout.gpu,
             label: 'Sun.vert',
         },
-        () => /* wgsl */ `
+        () => /* wgsl */
+            `
           const sunDistance: f32= 1495000.0;  //divided by 100000 correct one
           const vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
             vec2<f32>( -6824.0,  1557.0),

@@ -43,7 +43,8 @@ export class Plants extends MainNode {
                     area: area,
                 },
                 [])
-        }).catch(err => engine.showError(err))
+        }).catch(err =>
+            engine.showError(err))
     }
     constructor(
         scene: Scene,
@@ -145,12 +146,13 @@ export class Plants extends MainNode {
                             new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
                         });
                     const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup2',
-                        bg => [
-                            {
-                                binding: 0,
-                                resource: worldCopyGPU.getStorageBinding(bg),
-                            }
-                        ]);
+                        bg =>
+                            [
+                                {
+                                    binding: 0,
+                                    resource: worldCopyGPU.getStorageBinding(bg),
+                                }
+                            ]);
 
                     passEncoder.setBindGroup(0,
                         bindGroup.bindGroup);
@@ -183,25 +185,27 @@ export class Plants extends MainNode {
                 []);
 
             const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1',
-                bindGroup1 => [
-                    {
-                        binding: 0,
-                        resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1),
-                    },
-                    {
-                        binding: 1,
-                        resource: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1),
-                    },
-                    {
-                        binding: 2,
-                        resource: positionGPUSwap.getStorageBinding(bindGroup1),
-                    },
-                    {
-                        binding: 3,
-                        resource: shapeGPUSwap.getStorageBinding(bindGroup1),
-                    }
-                ]);
-        }).catch(err => engine.showError(err,
-            scene.gpu));
+                bindGroup1 =>
+                    [
+                        {
+                            binding: 0,
+                            resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1),
+                        },
+                        {
+                            binding: 1,
+                            resource: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1),
+                        },
+                        {
+                            binding: 2,
+                            resource: positionGPUSwap.getStorageBinding(bindGroup1),
+                        },
+                        {
+                            binding: 3,
+                            resource: shapeGPUSwap.getStorageBinding(bindGroup1),
+                        }
+                    ]);
+        }).catch(err =>
+            engine.showError(err,
+                scene.gpu));
     }
 }

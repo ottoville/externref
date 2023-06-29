@@ -20,7 +20,8 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
                     [/*uniforms*/,],
                     [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ], [{ position, normal, }]) => /* wgsl */`
+                ], [{ position, normal, }]) => /* wgsl */
+                    `
             var output : Output;
             var vertexPosition:vec4<f32> = ${world.prop('transformation')} * vec4<f32>(${position}.xyz, 1.0);
             if(gl_VertexIndex % 2u == 1u) {

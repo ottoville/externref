@@ -25,7 +25,8 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
                         [scene, time/*clusters_array, meshes, projection*/],
                         [world],
                         [_slopes, _facet12]
-                    ]) => /* wgsl */ `
+                    ]) => /* wgsl */
+                        `
                 var output:Output;
  
      var angle:f32 = (f32(${time.prop('time')}) * 0.001) + f32(instanceIdx) * angleStep;
@@ -49,7 +50,8 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
         ([/*uniforms*/,],
             [_scene, _time/*clusters_array, meshes, projection*/],
             [_world],
-            [slopes, facet12]) => `
+            [slopes, facet12]) =>
+            `
         const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
         ${getHeightAtCoordinates(settings,
         slopes,

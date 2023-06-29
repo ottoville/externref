@@ -5,7 +5,8 @@ import type { IntArray, PlaneArray } from './structs/Structs.js';
 export const getHeightAtCoordinates = (
     settings: typeof Terrain.settings,
     slopes: BufLayout<ShaderStage, typeof IntArray>,
-    facet12: BufLayout<ShaderStage, typeof PlaneArray>) => /* wgsl */ `
+    facet12: BufLayout<ShaderStage, typeof PlaneArray>) => /* wgsl */
+    `
 fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
     let col:u32 = u32(floor((xz.x + ${settings.maxXZ[0]}) * ${settings.subdivisions[0]} / ${settings.size[0]}));
     let row:u32 = u32(floor(- (xz.y + ${settings.maxXZ[1]}) * ${settings.subdivisions[1]} / ${settings.size[0]} + ${settings.subdivisions[0]}));

@@ -116,7 +116,8 @@ export abstract class paintGround {
                         this.size.width *= -1;
                     this.onAreaDraw(this.size.width);
                 }
-            }).catch(err => engine.showError(err))
+            }).catch(err =>
+                engine.showError(err))
             return true;
         },
         object: this,
@@ -179,7 +180,8 @@ export abstract class paintGround {
                     console.debug('no pickinfo pickedpoint');
                     console.log(pickInfo);
                 }
-            }).catch(err => engine.showError(err));
+            }).catch(err =>
+                engine.showError(err));
             return true;
         },
         object: this,

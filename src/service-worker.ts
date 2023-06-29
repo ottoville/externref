@@ -3,11 +3,14 @@
 
 ((service: ServiceWorkerGlobalScope): void => {
     service.addEventListener('install',
-        event => event.waitUntil(onInstall()));
+        event =>
+            event.waitUntil(onInstall()));
     service.addEventListener('activate',
-        event => event.waitUntil(onActivate()));
+        event =>
+            event.waitUntil(onActivate()));
     service.addEventListener('fetch',
-        event => event.respondWith(onFetch(event)));
+        event =>
+            event.respondWith(onFetch(event)));
 })(self as unknown as ServiceWorkerGlobalScope);
 
 const cacheNamePrefix = 'offline-cache-';
@@ -26,8 +29,10 @@ async function onActivate() {
     // Delete unused caches
     const cacheKeys = await caches.keys();
     await Promise.all(cacheKeys
-        .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
-        .map(key => caches.delete(key)));
+        .filter(key =>
+            key.startsWith(cacheNamePrefix) && key !== cacheName)
+        .map(key =>
+            caches.delete(key)));
 }
 
 async function onFetch(event: FetchEvent) {

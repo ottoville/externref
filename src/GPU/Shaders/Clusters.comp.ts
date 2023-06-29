@@ -34,7 +34,8 @@ export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) 
             main: new ComputeShaderFunction(
                 '@builtin(global_invocation_id) global_id : vec3<u32>',
                 pipelineLayout,
-                ([[uniforms], [clusters, screentoview]]) => /* wgsl */ `
+                ([[uniforms], [clusters, screentoview]]) => /* wgsl */
+                    `
             let tileIndex = global_id.x +
             global_id.y * tileCount.x +
             global_id.z * tileCount.x * tileCount.y;
@@ -64,7 +65,8 @@ ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, 
         gpu: pipelineLayout.gpu,
         label: 'Clusters.comp',
     },
-    ([uniforms], [_clusters, screentoview]) => /* wgsl */ `
+    ([uniforms], [_clusters, screentoview]) => /* wgsl */
+        `
     fn clipToView(clip : vec4<f32>) -> vec4<f32> {
         //View space transform
          let view = ${screentoview.prop('inversed_projection')} * clip;

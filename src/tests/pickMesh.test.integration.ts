@@ -27,7 +27,8 @@ describe('Pick box ',
                 const elem = await page.waitForSelector('button');
                 await elem?.click();
                 await page.waitForSelector('progress');
-                await page.waitForFunction(() => !document.querySelector('progress'));
+                await page.waitForFunction(() =>
+                    !document.querySelector('progress'));
             })
         it('should pick',
             async () => {
@@ -44,11 +45,15 @@ describe('Pick box ',
                         500);
                     //@ts-expect-error
                     const control = engine!.mainCamera.attachControllerForCamera({
-                        attachCameraController: () => undefined,
-                        deAttachCameraController: () => undefined,
+                        attachCameraController: () =>
+                            undefined,
+                        deAttachCameraController: () =>
+                            undefined,
                     });
-                    control.updatePosition(position => position.set([5000, 400, 0]))
-                    control.updateDirection(direction => direction.set([1, 0, 0]))
+                    control.updatePosition(position =>
+                        position.set([5000, 400, 0]))
+                    control.updateDirection(direction =>
+                        direction.set([1, 0, 0]))
 
                     const [pickedPosition, pickedMesh] = await new Promise<[{
                 position: TerraVector3;

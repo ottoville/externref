@@ -179,7 +179,8 @@ export class ArcRotateCamera extends CameraController {
                         this.#targetMovingTo = position.position;
                         this.#targetLerpPosition = 0;
                     }
-                }).catch(err => engine.showError(err))
+                }).catch(err =>
+                    engine.showError(err))
             }
             engine.addInputListener(this.#cameraMove);
             const onceUp: ListenerObj<'pointerup'> = {
@@ -286,13 +287,15 @@ export class ArcRotateCamera extends CameraController {
         if (engine.collider.didCollide) {
             //this._position.copyFrom(position);
             if (this.camera.position[0] != engine.collider.finalPosition[0] || this.camera.position[1] != engine.collider.finalPosition[1] || this.camera.position[2] != engine.collider.finalPosition[2]) {
-                this.cameraControl?.updatePosition(position => position.set(engine.collider.finalPosition))
+                this.cameraControl?.updatePosition(position =>
+                    position.set(engine.collider.finalPosition))
             }
             this.#rebuildAnglesAndRadius();
         }
         this.#collisionTriggered = false;
         // Recompute because of constraints
-        this.cameraControl?.updatePosition(position => position.set(this.#calculatePosition()))
+        this.cameraControl?.updatePosition(position =>
+            position.set(this.#calculatePosition()))
 
         this.#calculateDirection();
 

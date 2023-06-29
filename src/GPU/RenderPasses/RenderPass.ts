@@ -20,7 +20,8 @@ export class RenderPipelineVariant {
     onRootDrawableChanges: Set<() => void> = new Set();
     addRootDrawable(drawable: Drawable) {
         this.rootDrawables.add(drawable)
-        this.onRootDrawableChanges.forEach(cb => cb())
+        this.onRootDrawableChanges.forEach(cb =>
+            cb())
         return this.rootDrawables;
     }
 }
@@ -119,15 +120,17 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
             })
         this.bundles.push(renderBundle);
         this.#sizeBuffer = this.#updateSizeBindGroup(true);
-        this.sizeBindGroup = () => gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup',
-            bindGroup => [
-                {
-                    binding: 0,
-                    resource: this.#sizeBuffer.getUniformBinding(bindGroup,
-                        0,
-                        16),
-                }
-            ]);
+        this.sizeBindGroup = () =>
+            gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup',
+                bindGroup =>
+                    [
+                        {
+                            binding: 0,
+                            resource: this.#sizeBuffer.getUniformBinding(bindGroup,
+                                0,
+                                16),
+                        }
+                    ]);
     }
     #updateSizeBindGroup(initial = false) {
         if (!initial)
@@ -202,7 +205,8 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                 // Replace promise with real object
                 this.renderPipelines.set(renderPipeline,
                     variant);
-                this.onRenderPipelinesChange.forEach(cb => cb());
+                this.onRenderPipelinesChange.forEach(cb =>
+                    cb());
                 return variant;
             })
             // Save promise

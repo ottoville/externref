@@ -33,7 +33,9 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
             if (this.#instance instanceof UIRectangle) {
                 this.#instance.destroy();
             } else {
-                this.#instance.then(instance => instance.destroy()).catch(err => engine.showError(err));
+                this.#instance.then(instance =>
+                    instance.destroy()).catch(err =>
+                    engine.showError(err));
             }
         }
         this.#instance = undefined;

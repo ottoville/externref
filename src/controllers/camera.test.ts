@@ -24,10 +24,13 @@ describe(
                 });
             //@ts-expect-error
             const control = engine!.mainCamera.attachControllerForCamera({
-                attachCameraController: () => undefined,
-                deAttachCameraController: () => undefined,
+                attachCameraController: () =>
+                    undefined,
+                deAttachCameraController: () =>
+                    undefined,
             });
-            control.updatePosition(position => position.set([100, 100, 100]));
+            control.updatePosition(position =>
+                position.set([100, 100, 100]));
             originalPosition = new Float32Array(engine!.mainCamera.position)
             originalDirection = new Float32Array(engine!.mainCamera.direction as [number, number, number])
             cameraControllers = [ArcRotateCamera, MeshCamera];

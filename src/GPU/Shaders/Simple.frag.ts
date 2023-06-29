@@ -30,7 +30,8 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
                         [,],
                         [/*scene*/, clusters_array, meshes],
                         [/*world*/,]
-                    ]) => /* wgsl */ `var output:Output;
+                    ]) => /* wgsl */
+                    `var output:Output;
               output.Diffuse = vec4<f32>(color,1.0);
             
               //output.Diffuse.w=0.0;
@@ -80,7 +81,8 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
                     [,],
                     [/*scene*/,],
                     [/*world*/,]
-                ]) => `  var output:PickOutput;
+                ]) =>
+                    `  var output:PickOutput;
   output.ID = id;
   return output;`),
         },
@@ -89,7 +91,8 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
     },
     ([uniforms],
         [/*scene*/, /*clusters_array*/, /*meshes*/, projection],
-        [/*world*/,]) => `
+        [/*world*/,]) =>
+        `
       ${getClusterIndex(uniforms,
         projection)}
     `)

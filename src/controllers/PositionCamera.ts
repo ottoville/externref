@@ -22,7 +22,8 @@ export class PositionCamera extends CameraController {
     constructor(private camera: TerraCamera, initial = false) {
         super();
         const syncCamera = () => {
-            this.cameraControl?.updatePosition(position => position.set(this.#position));
+            this.cameraControl?.updatePosition(position =>
+                position.set(this.#position));
             this.cameraControl?.updateDirection(direction => {
                 direction[0] = Math.cos(this.#angle);
                 direction[1] = 0;

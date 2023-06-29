@@ -24,7 +24,8 @@ export class RenderPipeline<V extends VertexShader = VertexShader, F extends Fra
     }
     destroy(): void {
         this.props.bindgroupdrawable.renderPipeLines.delete(this);
-        this.props.bindgroupdrawable.renderPipelineListeners.forEach(cb => cb());
+        this.props.bindgroupdrawable.renderPipelineListeners.forEach(cb =>
+            cb());
     }
     draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder,
         renderPass: RenderPass,
@@ -54,10 +55,11 @@ export class RenderPipeline<V extends VertexShader = VertexShader, F extends Fra
                     bindgroup.bindGroup)
             });
         }
-        drawables.forEach(drawable => drawable.draw(renderPass,
-            renderPassEncoder,
-            BindGroupsStart,
-            dynamicIndices));
+        drawables.forEach(drawable =>
+            drawable.draw(renderPass,
+                renderPassEncoder,
+                BindGroupsStart,
+                dynamicIndices));
         return drawables.size;
     }
 }

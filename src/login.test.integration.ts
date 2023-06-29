@@ -37,7 +37,8 @@ describe(
             async () => {
             //  page.screenshot({path:'./sreenshot2.jpg'});
                 const elem2 = await page.waitForSelector('#loginmethods button');
-                const r = await elem2?.evaluate((node) => (node as HTMLButtonElement).textContent)
+                const r = await elem2?.evaluate((node) =>
+                    (node as HTMLButtonElement).textContent)
                 expect(r).toContain('Play');
             });
     });

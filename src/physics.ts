@@ -85,7 +85,8 @@ export class Physics {
 
         */
         this.engine.rust.physic_tick();
-        this.onPhysicTick.forEach(f => f(delta));
+        this.onPhysicTick.forEach(f =>
+            f(delta));
         this.movables.forEach(movable => {
             if (movable.onPhysicTick)
                 movable.onPhysicTick(delta);

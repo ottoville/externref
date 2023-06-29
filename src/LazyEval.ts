@@ -22,16 +22,18 @@ export class LazyEval {
     eval(timeout: number, ...args: (Event)[]) {
         if (this.#timerStart === null) {
             this.#timerStart = Date.now();
-            this.#timeoutID = setTimeout(() => this.run(args),
-                timeout);
+            this.#timeoutID = setTimeout(() =>
+                this.run(args),
+            timeout);
         } else {
             const lazyTimer = timeout - (Date.now() - this.#timerStart);
             clearTimeout(this.#timeoutID);
             if (lazyTimer <= 0)
                 this.run(args);
             else
-                this.#timeoutID = setTimeout(() => this.run(args),
-                    lazyTimer);
+                this.#timeoutID = setTimeout(() =>
+                    this.run(args),
+                lazyTimer);
         }
     }
     run(args: Event[]) {

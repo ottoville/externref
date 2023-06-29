@@ -99,7 +99,8 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                     pipelineLayout,
                     (
                         [[_slopes, _facet12, positionAndRotate, shapes], [positions]]
-                    ) => /* wgsl */ `
+                    ) => /* wgsl */
+                        `
                 let flatpos:vec2<f32> = ${positions.prop('vectors')}[GlobalInvocationID.x]; 
                 let y:f32 = getHeightAtCoordinates(flatpos);
                 ${positionAndRotate.prop('arr')}[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
@@ -115,7 +116,8 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
             gpu,
             label: 'GetHeightAtCoordinates.comp',
         },
-        ([slopes, facet12, _positionAndRotate, _shapes], [_positions]) => /* wgsl */ `
+        ([slopes, facet12, _positionAndRotate, _shapes], [_positions]) => /* wgsl */
+            `
         const PI:f32 = 3.141592653589793;
         //
         // Description : Array and textureless GLSL 2D simplex noise function.

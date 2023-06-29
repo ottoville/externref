@@ -31,7 +31,8 @@ export class VertexShaderFunction<B extends readonly BGLayout[] = readonly BGLay
     createCode(bindGroups: { [K in keyof B]: FilterVertex<B[K]['entries']>; }, name: string) {
         const variableNames = this.vertexBufferLayout.map(buffer => {
             const keys = Object.keys(buffer.attributes2);
-            return Object.fromEntries(keys.map((o, i) => [o, keys[i]!]))
+            return Object.fromEntries(keys.map((o, i) =>
+                [o, keys[i]!]))
         }) as { [K in keyof V]: { [KK in keyof V[K]['attributes2']]: KK; }; };
 
         let attributesString = '';

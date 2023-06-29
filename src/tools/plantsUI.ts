@@ -53,7 +53,8 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
                                 y: this.props.subMenuPosition,
                             },
                         },
-                        onClick: () => this.activateDraw(),
+                        onClick: () =>
+                            this.activateDraw(),
                         text: 'Create grass (1)',
                     }))
             ]

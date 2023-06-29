@@ -263,7 +263,8 @@ export class TerrainTool extends MainNode {
                     this.#pick.position[2] = pickInfo.position[2];
                     this.translation = [pickInfo.position[0], 0, pickInfo.position[2]];
                 }
-            }).catch(err => engine.showError(err));
+            }).catch(err =>
+                engine.showError(err));
         },
         object: this,
         type: 'pointermove',

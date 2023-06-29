@@ -6,7 +6,8 @@ import { Anchor, NumericUnit, UIRectangle } from '../ui/UIRectangle.js';
 import { UIRectangleBackground } from '../ui/UIRectangleBackground.js';
 declare const engine: Engine;
 
-const cursorBitmap: Promise<ImageBitmap> = typeof globalThis.createImageBitmap !== 'undefined' ? fetch('/assets/cursor.webp').then(asset => asset.blob()).then(createImageBitmap) : Promise.resolve<ImageBitmap>({} as ImageBitmap);
+const cursorBitmap: Promise<ImageBitmap> = typeof globalThis.createImageBitmap !== 'undefined' ? fetch('/assets/cursor.webp').then(asset =>
+    asset.blob()).then(createImageBitmap) : Promise.resolve<ImageBitmap>({} as ImageBitmap);
 export class MeshCamera extends CameraController {
     name = 'PositionCamera';
     angle = Math.PI;

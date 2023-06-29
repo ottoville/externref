@@ -25,8 +25,9 @@ export function new_rust_mesh(
         fixed = false,
         rigid_body = true,
     }: MainNodeProps) {
-    const sceneids = scenes ? scenes.reduce((acc, scene) => acc | scene.id,
-        0) : 1;
+    const sceneids = scenes ? scenes.reduce((acc, scene) =>
+        acc | scene.id,
+    0) : 1;
     const vec_ptr = engine.rust.alloc_vector_u8(label.length);
     const [string_ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
         vec_ptr,
@@ -176,8 +177,9 @@ export abstract class MainNode {
     isStatic = false;
     static Meshes: Map<number, MainNode> = new Map();
 
-    get_transformation = () => new TerraMatrix(engine.memory.buffer,
-        engine.rust.gpu_pointer(this.id));
+    get_transformation = () =>
+        new TerraMatrix(engine.memory.buffer,
+            engine.rust.gpu_pointer(this.id));
 
     get translation(): ReadOnlyTerraVector3 {
         return new ReadOnlyTerraVector3(engine.memory.buffer,

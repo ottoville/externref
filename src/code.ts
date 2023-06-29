@@ -17,7 +17,8 @@ appInsights.loadAppInsights();
 //@ts-expect-error
 window.render = async (play = false) => {
     app.innerHTML = ''
-    const creditentials = await fetch('/.auth/me').then(response => response.json());
+    const creditentials = await fetch('/.auth/me').then(response =>
+response.json());
     appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
     if (play) {
         const { Canvas, } = await import('./ui/canvas.js')

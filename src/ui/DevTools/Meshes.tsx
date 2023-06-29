@@ -10,11 +10,12 @@ import { NodeInfo } from './NodeInfo.js';
 import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
-const getPositionBindGroupForScreen = (gpu: GPU) => Array.from(gpu.renderPassScreen.renderPipelines)
-    .filter((map): map is [RenderPipeline, RenderPipelineVariant] => {
-        const [renderPipeline, renderPipelineVariant] = map;
-        return ((renderPipeline.props.bindgroupdrawable === gpu.positionAndTimeBindGroup || gpu.positionAndTimeBindGroup.subBindGroups.includes(renderPipeline.props.bindgroupdrawable)) && !(renderPipelineVariant instanceof Promise));
-    })
+const getPositionBindGroupForScreen = (gpu: GPU) =>
+    Array.from(gpu.renderPassScreen.renderPipelines)
+        .filter((map): map is [RenderPipeline, RenderPipelineVariant] => {
+            const [renderPipeline, renderPipelineVariant] = map;
+            return ((renderPipeline.props.bindgroupdrawable === gpu.positionAndTimeBindGroup || gpu.positionAndTimeBindGroup.subBindGroups.includes(renderPipeline.props.bindgroupdrawable)) && !(renderPipelineVariant instanceof Promise));
+        })
 
 
 export function Meshes() {

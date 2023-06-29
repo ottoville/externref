@@ -170,7 +170,8 @@ copySize);
         if (!this.texture)
             return
         this.texture.destroy();
-        this.views.forEach(view => view.destroy());
+        this.views.forEach(view =>
+            view.destroy());
     }
     protected createTexture(sampleCount: 1 | 4 = 1, debug = false) {
         let label = this.props.label;
@@ -199,7 +200,8 @@ copySize);
             size: this.props.size,
             usage: usages,
         });
-        this.views.forEach(view => view.reCreate(debug));
+        this.views.forEach(view =>
+            view.reCreate(debug));
 
         return this.texture;
     }

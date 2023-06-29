@@ -102,16 +102,17 @@ export class TerraCamera {
                     ],
                 new Set([renderPass]));
             this.updateViewBindGroup = gpu.updateViewShader.props.bindGroupLayouts[1].createBindGroup('updateViewBindGroup2',
-                (bindGroup) => [
-                    {
-                        binding: 0,
-                        resource: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
-                    },
-                    {
-                        binding: 1,
-                        resource: this.#uniformBuffer!.getUniformBinding(bindGroup),
-                    }
-                ]
+                (bindGroup) =>
+                    [
+                        {
+                            binding: 0,
+                            resource: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
+                        },
+                        {
+                            binding: 1,
+                            resource: this.#uniformBuffer!.getUniformBinding(bindGroup),
+                        }
+                    ]
             )
             gpu.projections.add(this.projection);
             gpu.cameras.push(this);
@@ -166,16 +167,17 @@ export class TerraCamera {
     updateClusters(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: BGLayout) {
         //TODO move out from loop
         const bindGroup = computePipelineClustersLayout.createBindGroup('updateProjection',
-            bindGroup2 => [
-                {
-                    binding: 0,
-                    resource: this.#clusterArrayBuffer!.getStorageBinding(bindGroup2),
-                },
-                {
-                    binding: 1,
-                    resource: this.projection!.gpuBuffer.getUniformBinding(bindGroup2),
-                }
-            ])
+            bindGroup2 =>
+                [
+                    {
+                        binding: 0,
+                        resource: this.#clusterArrayBuffer!.getStorageBinding(bindGroup2),
+                    },
+                    {
+                        binding: 1,
+                        resource: this.projection!.gpuBuffer.getUniformBinding(bindGroup2),
+                    }
+                ])
         passEncoder.setBindGroup(1,
             bindGroup.bindGroup);
         passEncoder.dispatchWorkgroups(...this.gpu!.CLUSTER_DISPATCH_SIZE);
@@ -197,7 +199,8 @@ export class TerraCamera {
             );
         }
         if ((this.#doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
-            this.onUpdatePosition.forEach(cb => cb())
+            this.onUpdatePosition.forEach(cb =>
+                cb())
         }
         this.viewUpdated = true;
         this.#childCameras.forEach(childCameraControl => {

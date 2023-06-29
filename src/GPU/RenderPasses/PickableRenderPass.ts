@@ -50,29 +50,31 @@ export class PickableRenderPass<T extends {
                 'mousePositionBuffer');
 
             this.#pickPositionBindGroup0 = readDepthShader.props.bindGroupLayouts[0].createBindGroup('pickPositionBindGroup0',
-                () => [
-                    {
-                        binding: 0,
-                        resource: {
-                            buffer: this.#pickBuffer,
-                        },
-                    }
-                ]);
+                () =>
+                    [
+                        {
+                            binding: 0,
+                            resource: {
+                                buffer: this.#pickBuffer,
+                            },
+                        }
+                    ]);
             this.#pickPositionBindGroup1 = readDepthShader.props.bindGroupLayouts[1].createBindGroup('pickPositionBindGroup1',
-                (bindGroup) => [
-                    {
-                        binding: 0,
-                        resource: this.depthRenderTarget.view.getTextureBinding(bindGroup),
-                    },
-                    {
-                        binding: 1,
-                        resource: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view.getTextureBinding(bindGroup),
-                    },
-                    {
-                        binding: 2,
-                        resource: this.#mousePositionBuffer!.getUniformBinding(bindGroup),
-                    }
-                ]);
+                (bindGroup) =>
+                    [
+                        {
+                            binding: 0,
+                            resource: this.depthRenderTarget.view.getTextureBinding(bindGroup),
+                        },
+                        {
+                            binding: 1,
+                            resource: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view.getTextureBinding(bindGroup),
+                        },
+                        {
+                            binding: 2,
+                            resource: this.#mousePositionBuffer!.getUniformBinding(bindGroup),
+                        }
+                    ]);
 
         } else {
             this.#pickBuffer = this.#createPickBuffer()

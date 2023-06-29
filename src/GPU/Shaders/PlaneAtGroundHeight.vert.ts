@@ -25,7 +25,8 @@ export function createPlaneAtGroundHeightVertShader(
                     [scene/*time, clusters_array, meshes, projection*/],
                     [world],
                     [_slopes, _facet12]
-                ]) => /* wgsl */ `
+                ]) => /* wgsl */
+                    `
                 var output:Output;
                 var worldPos:vec4<f32> = ${world.prop('transformation')} * position;
                 worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 1.0;
@@ -41,7 +42,8 @@ export function createPlaneAtGroundHeightVertShader(
     ([/*uniforms*/,],
         [_scene/*time, clusters_array, meshes, projection*/],
         [_world],
-        [slopes, facet12]) => `
+        [slopes, facet12]) =>
+        `
         ${getHeightAtCoordinates(settings,
         slopes,
         facet12)}

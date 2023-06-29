@@ -62,10 +62,14 @@ export class paintTexture extends paintGround {
             ];
         });
 
-        const minX = Math.min(...translated.map(t => t[0])) | 0;
-        const minZ = Math.min(...translated.map(t => t[1])) | 0;
-        const maxX = Math.max(...translated.map(t => t[0])) | 0;
-        const maxZ = Math.max(...translated.map(t => t[1])) | 0;
+        const minX = Math.min(...translated.map(t =>
+            t[0])) | 0;
+        const minZ = Math.min(...translated.map(t =>
+            t[1])) | 0;
+        const maxX = Math.max(...translated.map(t =>
+            t[0])) | 0;
+        const maxZ = Math.max(...translated.map(t =>
+            t[1])) | 0;
 
         const cwidth = maxX - minX;
         const cheight = maxZ - minZ;

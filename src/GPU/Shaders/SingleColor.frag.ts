@@ -22,7 +22,8 @@ BindLayouts> {
                         [/*uniforms*/,],
                         [/*scene, time, clusters_array, meshes, projection*/,],
                         [world]
-                    ]) => /* wgsl */ `
+                    ]) => /* wgsl */
+                        `
                     var output:Output;
                     output.Diffuse = vec4<f32>(${world.prop('color')}, 1.0);
                     return output;

@@ -65,6 +65,7 @@ module.exports = {
             }
         ],
         'function-call-argument-newline': ['error', 'always'],
+        'implicit-arrow-linebreak': ['error', 'below'],
     },
     settings: {
         'import/resolver': {

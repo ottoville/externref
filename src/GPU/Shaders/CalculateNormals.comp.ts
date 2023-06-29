@@ -43,7 +43,8 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
             entryPoints: {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
-                    ([[normals], [/*slopes*/, facet12]]) => /* wgsl */ `
+                    ([[normals], [/*slopes*/, facet12]]) => /* wgsl */
+                        `
                 let stride : u32 = 12u;
 
        let i:u32 = GlobalInvocationID.y * stride;
@@ -72,6 +73,7 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
             gpu: pipelineLayout.gpu,
             label: 'CalculateNormals.comp',
         },
-        () => '@compute @workgroup_size(1)');
+        () =>
+            '@compute @workgroup_size(1)');
     }
 }

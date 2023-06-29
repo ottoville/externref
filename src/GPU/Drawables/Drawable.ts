@@ -58,12 +58,15 @@ export abstract class Drawable<N extends MainNode = MainNode> {
                         return;
                     this.#renderList.set(rp,
                         variant.addRootDrawable(this));
-                    rp.bundles.forEach(b => b.destroy())
-                }).catch(err => engine.showError(err))
+                    rp.bundles.forEach(b =>
+                        b.destroy())
+                }).catch(err =>
+                    engine.showError(err))
             } else {
                 this.#renderList.set(rp,
                     variantP.addRootDrawable(this));
-                rp.bundles.forEach(b => b.destroy())
+                rp.bundles.forEach(b =>
+                    b.destroy())
             }
         });
     }
@@ -71,7 +74,9 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     #staticBindGroup?: BindGroup;
     setStaticBindGroup(label: string,
         staticBuffers: (bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>) {
-        this.renderPasses.forEach(rp => rp.bundles.forEach(b => b.destroy()));
+        this.renderPasses.forEach(rp =>
+            rp.bundles.forEach(b =>
+                b.destroy()));
         this.#staticBindGroup = new BindGroup(
             this.renderPipeline.props.bindgroupdrawable.bindGroupLayout,
             label,
@@ -80,7 +85,8 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         )
     }
     destroy(preserveVerticeBuffers: number[] = []): void {
-        this.#renderList.forEach(Drawables => Drawables.delete(this));
+        this.#renderList.forEach(Drawables =>
+            Drawables.delete(this));
         this.#vertexBuffers.forEach((b, key) => {
             if (!preserveVerticeBuffers.includes(key))
                 b.buffer.destroy()

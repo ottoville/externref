@@ -22,6 +22,7 @@ export class paintLine extends paintGround {
     ) {
         super(scene,
             ground,
-            () => null);
+            () =>
+                null);
     }
 }

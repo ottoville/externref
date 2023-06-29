@@ -129,8 +129,9 @@ export class Buffer extends Bindable {
         const desc: GPUBufferDescriptor = {
             mappedAtCreation,
             size,
-            usage: usages.reduce((prev, curr) => prev | curr,
-                0),
+            usage: usages.reduce((prev, curr) =>
+                prev | curr,
+            0),
         }
         if (label)
             desc.label = label;
@@ -222,7 +223,9 @@ export class Buffer extends Bindable {
     }
     override destroy() {
         this.buffer.destroy();
-        this.renderPasses.forEach(rp => rp.bundles.forEach(b => b.destroy()));
+        this.renderPasses.forEach(rp =>
+            rp.bundles.forEach(b =>
+                b.destroy()));
         super.destroy();
     }
 }

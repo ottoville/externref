@@ -70,7 +70,8 @@ export function createUpdateViewShader(gpu: GPU) {
             entryPoints: {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) global_id : vec3<u32>',
                     pipelineLayout,
-                    ([[meshes, point_lights, directional_lights], [clusters, viewUniforms]]) => /* wgsl */ `
+                    ([[meshes, point_lights, directional_lights], [clusters, viewUniforms]]) => /* wgsl */
+                        `
                 let tileIndex = global_id.x +
                 global_id.y * tileCount.x +
                 global_id.z * tileCount.x * tileCount.y;
@@ -111,7 +112,8 @@ ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
             gpu,
             label: 'UpdateView.comp',
         },
-        () => /* wgsl */ `
+        () => /* wgsl */
+            `
           fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
             var sqDist = 0.0;
             // const minAABB : vec3<f32> = clusters.bounds[tileIndex].minAABB;

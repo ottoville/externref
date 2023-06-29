@@ -11,7 +11,8 @@ export class BindGroup<L extends BGLayout = BGLayout> {
         return this.bindGroup;
     }
     destroy() {
-        this.#renderBundles.forEach(bundle => bundle.destroy());
+        this.#renderBundles.forEach(bundle =>
+            bundle.destroy());
         this.#dirty = true;
     }
     //TODO: set private
@@ -32,8 +33,9 @@ export class BindGroup<L extends BGLayout = BGLayout> {
         private label: string,
         private entriesf: (bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>,
         readonly renderPasses: Set<RenderPass> = new Set()) {
-        this.renderPasses.forEach(rp => rp.bundles.forEach(bundle => {
-            this.#renderBundles.add(bundle);
-        }))
+        this.renderPasses.forEach(rp =>
+            rp.bundles.forEach(bundle => {
+                this.#renderBundles.add(bundle);
+            }))
     }
 }

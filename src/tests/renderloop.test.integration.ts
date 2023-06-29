@@ -19,7 +19,8 @@ describe('Physic time ',
                 const elem = await page.waitForSelector('button');
                 await elem?.click();
                 await page.waitForSelector('progress');
-                await page.waitForFunction(() => !document.querySelector('progress'));
+                await page.waitForFunction(() =>
+                    !document.querySelector('progress'));
             },
             10000)
         it('Delta has changed',

@@ -43,7 +43,8 @@ export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> 
     }
     override destroy(): void {
         this.#renderPasses.forEach(rp => {
-            rp.bundles.forEach(bundle => bundle.destroy());
+            rp.bundles.forEach(bundle =>
+                bundle.destroy());
         })
         super.destroy();
     }

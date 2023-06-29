@@ -10,7 +10,6 @@ type BindLayouts = Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
 /**
   Shader where each vertex carries a color property
 */
-
 export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof simpleAttributesWithColor>) {
     return new VertexShader({
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
@@ -21,10 +20,11 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
                 '',
                 [buffers],
                 ([
-                    [,],
-                    [scene],
+                    [/*uniforms*/,],
+                    [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ], [{ color, position, normal, }]) => /* wgsl */ `var output:Output;
+                ], [{ color, position, normal, }]) => /* wgsl */
+                    `var output:Output;
       //output.normal=normal;
       var curPos : mat4x4<f32> = ${world.prop('transformation')};
       curPos[3].w=1.0;
@@ -46,7 +46,8 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
                     [,],
                     [scene],
                     [world]
-                ], [{ position, }]) => /* wgsl */ `
+                ], [{ position, }]) =>
+                /* wgsl */ `
         var output: PickOutput;
         var curPos : mat4x4<f32> = ${world.prop('transformation')};
         curPos[3] = ${world.prop('transformation')}[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;

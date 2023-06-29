@@ -4,7 +4,8 @@ import type { ProjectionStruct, Struct } from './structs/Structs.js';
 export const getClusterIndex = (uniforms: BufLayout<number, Struct<{
     screenDimensions: [string, string];
     screendimensions_ratio: [string, string];
-}>>, projection: BufLayout<ShaderStage.FRAGMENT, typeof ProjectionStruct>) => /* wgsl */ `
+}>>, projection: BufLayout<ShaderStage.FRAGMENT, typeof ProjectionStruct>) => /* wgsl */
+    `
     fn linearDepth(depthSample : f32) -> f32 {
         return projection.z_near_multiplied_far / fma(depthSample, ${projection.prop('z_near_substracted_far')}, ${projection.prop('zNear')});
     }

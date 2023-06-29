@@ -77,7 +77,8 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                 main: new ComputeShaderFunction(
                     '@builtin(global_invocation_id) global_id : vec3<u32>',
                     pipelineLayout,
-                    ([[/*depth_and_mesh*/,], [depth_texture, mesh_texture, mouse]]) => `
+                    ([[/*depth_and_mesh*/,], [depth_texture, mesh_texture, mouse]]) =>
+                        `
                     depth_and_mesh.depth=textureLoad(${depth_texture.variableName}, ${mouse.prop('position')}, 1);
                     depth_and_mesh.mesh=textureLoad(${mesh_texture.variableName}, ${mouse.prop('position')}, 0).r;
                 `),
@@ -85,6 +86,7 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
             gpu,
             label: 'ReadDepth.comp',
         },
-        () => '@compute @workgroup_size(1, 1, 1)');
+        () =>
+            '@compute @workgroup_size(1, 1, 1)');
     }
 }
