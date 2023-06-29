@@ -29,6 +29,10 @@ export const colorOutput = new Struct('Output',
     {
         position: ['@builtin(position)', 'vec4<f32>'],
         color: ['@location(0)', 'vec3<f32>'],
+    });
+export const diffuseOutput = new Struct('Output',
+    {
+        Diffuse: ['@location(0)', 'vec4<f32>'],
     })
 
 export const MeshUniforms = new Struct('MeshUniforms',

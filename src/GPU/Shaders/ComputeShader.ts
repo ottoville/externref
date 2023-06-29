@@ -9,9 +9,9 @@ export class ComputeShader<
         public override props: ShaderParams<E, B>,
         constantCode?: (...args: { [K in keyof B]: FilterCompute<B[K]['entries']> }) => string
     ) {
-        //@ts-expect-error TODO
         super(props,
             GPUShaderStage.COMPUTE,
+            //@ts-expect-error TODO
             constantCode);
         const bindGroups = this.getFilteredBindGroups(GPUShaderStage.COMPUTE) as { [K in keyof B]: FilterCompute<B[K]['entries']> };
         if (constantCode)

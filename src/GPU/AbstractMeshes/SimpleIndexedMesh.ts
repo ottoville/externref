@@ -38,27 +38,21 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
             primitiveState.stripIndexFormat = 'uint32';
         if (engine.gpu) {
             if (!vBufferGPU) {
+                let usages: readonly [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] | readonly [GPUBufferUsage.VERTEX];
                 if (!staticVertices) {
-                    vBufferGPU = Buffer.create(engine.gpu,
-                        dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
-                        [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],
-                        'SimpleIndexedMeshVertex_' + this.label,
-                        b => {
-                            new Float32Array(b.getMappedRange()).set(new Float32Array(engine.rust.memory.buffer,
-                                dataNodeProps.vertices.view[0],
-                                dataNodeProps.vertices.view[1]));
-                        });
+                    usages = [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] as const;
                 } else {
-                    vBufferGPU = Buffer.create(engine.gpu,
-                        dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
-                        [GPUBufferUsage.VERTEX],
-                        'SimpleIndexedMeshVertex_' + this.label,
-                        b => {
-                            new Float32Array(b.getMappedRange()).set(new Float32Array(engine.rust.memory.buffer,
-                                dataNodeProps.vertices.view[0],
-                                dataNodeProps.vertices.view[1]));
-                        });
+                    usages = [GPUBufferUsage.VERTEX] as const;
                 }
+                vBufferGPU = Buffer.create(engine.gpu,
+                    dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
+                    usages as [GPUBufferUsage.VERTEX],
+                    'SimpleIndexedMeshVertex_' + this.label,
+                    b => {
+                        new Float32Array(b.getMappedRange()).set(new Float32Array(engine.rust.memory.buffer,
+                            dataNodeProps.vertices.view[0],
+                            dataNodeProps.vertices.view[1]));
+                    });
             }
             const renderPipeline = engine.gpu.createRenderPipeline(createRenderPipeline,
                 primitiveState,

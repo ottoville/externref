@@ -10,9 +10,9 @@ export class FragmentShader<
         public override props: ShaderParams<E, B>,
         constantCode?: (...args: { [K in keyof B]: FilterFragment<B[K]['entries']> }) => string
     ) {
-        //@ts-expect-error TODO
         super(props,
             GPUShaderStage.FRAGMENT,
+            //@ts-expect-error TODO
             constantCode);
     }
 }

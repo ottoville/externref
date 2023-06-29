@@ -3,7 +3,7 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js'
 import { getClusterIndex } from './getClusterIndex.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
-import { Struct } from './structs/Structs.js';
+import { Struct, diffuseOutput } from './structs/Structs.js';
 
 type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts']
 
@@ -14,10 +14,7 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: new FragmentShaderFunction(
-                    new Struct('Output',
-                        {
-                            Diffuse: ['@location(0)', 'vec4<f32>'],
-                        }),
+                    diffuseOutput,
                     pipelineLayout,
                     `  @builtin(position) fragCoord : vec4<f32>,
                 @location(0)  v_uv : vec2<f32>,

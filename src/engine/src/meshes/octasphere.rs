@@ -1,4 +1,6 @@
 
+use std::cell::{RefCell};
+
 use crate::{math2::{Vec3F32, PositionAndNormalAndColor}, MULTIVALUE_USIZE};
 
 struct Patch {
@@ -6,6 +8,17 @@ struct Patch {
     patch_points_b: Vec<usize>,
     patch_points_c: Vec<usize>,
 }
+struct OctasphereHeap {
+    points_left_cell: RefCell<Vec<usize>>,
+    points_right_cell: RefCell<Vec<usize>>,
+}
+thread_local! {
+    static OSTASPHERE_HEAP:OctasphereHeap = OctasphereHeap{
+        points_left_cell: RefCell::new(Vec::new()),
+        points_right_cell: RefCell::new(Vec::new()),
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn create_octasphere(
     num_subdivisions: u32,
@@ -303,124 +316,108 @@ pub unsafe extern "C" fn create_octasphere(
             vertices_and_normals[j].position.z += half_depth;
         }
     }
+    OSTASPHERE_HEAP.with(|oc| {
+        let mut points_left = oc.points_left_cell.borrow_mut();
+        let mut points_right = oc.points_right_cell.borrow_mut();
 
-    let mut points_left: Vec<usize> = Vec::new();
-    let mut points_right: Vec<usize> = Vec::new();
-    if half_width > 0.0 {
-        patches[6].patch_points_a.reverse();
-        patches[5].patch_points_c.reverse();
-        patches[2].patch_points_a.reverse();
-        patches[1].patch_points_b.reverse();
-        let points = [
-            [&patches[6].patch_points_a, &patches[5].patch_points_c],
-            [&patches[7].patch_points_c, &patches[4].patch_points_a],
-            [&patches[3].patch_points_b, &patches[0].patch_points_a],
-            [&patches[2].patch_points_a, &patches[1].patch_points_b],
-        ];
-        let first_points = [points[0][0][0], points[0][1][0]];
-        for i in 0..4 {
-            let point_tuple = points[i];
-
-            points_left.extend(point_tuple[0]);
-            points_right.extend(point_tuple[1]);
-            let dimension = if i % 2 == 1 { half_height } else { half_depth };
-            if i < 3 && dimension == 0.0 {
-                /*
-                    BOTTOM/SIDE1/TOP
-                    Do not draw side when its area size is 0.
-                    Draw what is in buffer and reset it.
-                */
-                indices_count = draw_connection(
-                    &mut points_left,
-                    &mut indices,
-                    indices_count,
-                    &mut points_right,
-                );
-            }
-        }
-        /*
-            SIDE2, Draw last side if area is greater than zero, close the circle
-        */
-        if half_height > 0.0 {
-            points_left.push(first_points[0]);
-            points_right.push(first_points[1]);
-        }
-        indices_count = draw_connection(
-            &mut points_left,
-            &mut indices,
-            indices_count,
-            &mut points_right,
-        );
-    }
-    if half_depth > 0.0 {
-        patches[5].patch_points_a.reverse();
-        patches[4].patch_points_c.reverse();
-        patches[1].patch_points_a.reverse();
-        patches[0].patch_points_b.reverse();
-        let points = [
-            [&patches[5].patch_points_a, &patches[4].patch_points_c],
-            [&patches[6].patch_points_c, &patches[7].patch_points_a],
-            [&patches[2].patch_points_b, &patches[3].patch_points_a],
-            [&patches[1].patch_points_a, &patches[0].patch_points_b],
-        ];
-
-        let first_points = [points[0][0][0], points[0][1][0]];
-        for i in 0..4 {
-            let point_tuple = points[i];
-            points_left.extend(point_tuple[0].iter());
-            points_right.extend(point_tuple[1].iter());
-            if (i == 1 && half_height > 0.0) || i == 3 {
-                /*
-                    SIDE3
-                    Only draw a side when its area size is greater than zero.
-                    Early exit here not to clear the drawing buffer and continue draw a side.
-                    When i === 3 it is last side and handled manually after this loop.
-                */
-                continue;
+        if half_width > 0.0 {
+            patches[6].patch_points_a.reverse();
+            patches[5].patch_points_c.reverse();
+            patches[2].patch_points_a.reverse();
+            patches[1].patch_points_b.reverse();
+            let points = [
+                [&patches[6].patch_points_a, &patches[5].patch_points_c],
+                [&patches[7].patch_points_c, &patches[4].patch_points_a],
+                [&patches[3].patch_points_b, &patches[0].patch_points_a],
+                [&patches[2].patch_points_a, &patches[1].patch_points_b],
+            ];
+            for i in 0..4 {
+                let point_tuple = points[i];
+                points_left.extend_from_slice(point_tuple[0]);
+                points_right.extend_from_slice(point_tuple[1]);
+                let dimension = if i % 2 == 1 { half_height } else { half_depth };
+                if i < 3 && dimension == 0.0 {
+                    /*
+                        BOTTOM/SIDE1/TOP
+                        Do not draw side when its area size is 0.
+                        Draw what is in buffer and reset it.
+                    */
+                    indices_count = draw_connection(
+                        &mut indices,
+                        indices_count,
+                        &mut points_left,
+                        &mut points_right
+                    );
+                }
             }
             /*
-                BOTTOM/TOP has already been draw with width-draw
-                Flush the buffer.
+                SIDE2, Draw last side if area is greater than zero, close the circle
             */
-            indices_count = draw_connection(
-                &mut points_left,
-                &mut indices,
-                indices_count,
-                &mut points_right,
-            );
+            indices_count = close_circle(half_height, indices_count, &mut indices, points, &mut points_left, &mut points_right);
         }
-        if half_height > 0.0 {
+        if half_depth > 0.0 {
+            patches[5].patch_points_a.reverse();
+            patches[4].patch_points_c.reverse();
+            patches[1].patch_points_a.reverse();
+            patches[0].patch_points_b.reverse();
+            let points = [
+                [&patches[5].patch_points_a, &patches[4].patch_points_c],
+                [&patches[6].patch_points_c, &patches[7].patch_points_a],
+                [&patches[2].patch_points_b, &patches[3].patch_points_a],
+                [&patches[1].patch_points_a, &patches[0].patch_points_b],
+            ];
+
+            for i in 0..4 {
+                let point_tuple = points[i];
+                points_left.extend_from_slice(point_tuple[0]);
+                points_right.extend_from_slice(point_tuple[1]);
+
+                if (i == 1 && half_height > 0.0) || i == 3 {
+                    /*
+                        SIDE3
+                        Only draw a side when its area size is greater than zero.
+                        Early exit here not to clear the drawing buffer and continue draw a side.
+                        When i === 3 it is last side and handled manually after this loop.
+                    */
+                    continue;
+                }
+                /*
+                    BOTTOM/TOP has already been draw with width-draw
+                    Flush the buffer.
+                */
+                indices_count = draw_connection(
+                    &mut indices,
+                    indices_count,
+                    &mut points_left,
+                    &mut points_right
+                );
+            }
             /*
                 SIDE4, Draw last side if area is greater than zero, close the circle
             */
-            points_left.push(first_points[0]);
-            points_right.push(first_points[1]);
+            indices_count = close_circle(half_height, indices_count, &mut indices, points, &mut points_left, &mut points_right);
+
         }
-        indices_count = draw_connection(
-            &mut points_left,
-            &mut indices,
-            indices_count,
-            &mut points_right,
-        );
-    }
-    if half_height > 0.0 {
-        let height_tuples = [
-            [&patches[7], &patches[3]],
-            [&patches[6], &patches[2]],
-            [&patches[5], &patches[1]],
-            [&patches[4], &patches[0]],
-        ];
-        for tuple in height_tuples.into_iter() {
-            points_left.extend(tuple[0].patch_points_b.iter());
-            points_right.extend(tuple[1].patch_points_c.iter().rev());
-            indices_count = draw_connection(
-                &mut points_left,
-                &mut indices,
-                indices_count,
-                &mut points_right,
-            );
+        if half_height > 0.0 {
+            let height_tuples = [
+                [&patches[7], &patches[3]],
+                [&patches[6], &patches[2]],
+                [&patches[5], &patches[1]],
+                [&patches[4], &patches[0]],
+            ];
+            for tuple in height_tuples.into_iter() {
+                points_left.extend(tuple[0].patch_points_b.iter());
+                points_right.extend(tuple[1].patch_points_c.iter().rev());
+                indices_count = draw_connection(
+                    &mut indices,
+                    indices_count,
+                    &mut points_left,
+                    &mut points_right    
+                );
+            }
         }
-    }
+    });
+
     // Normalize coordinates
     if half_width > 0.0 || half_height > 0.0 || half_depth > 0.0 {
         let max = 1.0 + half_width.max(half_height.max(half_depth));
@@ -442,30 +439,45 @@ pub unsafe extern "C" fn create_octasphere(
     MULTIVALUE_USIZE[5] = indices_buf.capacity();
     return MULTIVALUE_USIZE.as_ptr();
 }
+
+fn close_circle(half_height: f32, indices_count: usize, indices: &mut Vec<usize>, points: [[&Vec<usize>; 2]; 4], points_left: &mut Vec<usize>,
+    points_right: &mut Vec<usize>,
+) -> usize {
+    if half_height > 0.0 {
+        points_left.push(points[0][0][0]);
+        points_right.push(points[0][1][0]);
+    }
+    return draw_connection(
+        indices,
+        indices_count,
+        points_left,
+        points_right
+    );
+}
+
 fn draw_connection(
-    left: &mut Vec<usize>,
     indices: &mut Vec<usize>,
     mut indices_count: usize,
-    right: &mut Vec<usize>,
+    points_left: &mut Vec<usize>,
+    points_right: &mut Vec<usize>,
 ) -> usize {
-    for index in 0..left.len() - 1 {
-        let point = left[index];
-        indices[indices_count] = point;
+    for index in 0..points_left.len() - 1 {
+        indices[indices_count] = points_left[index];
         indices_count += 1;
-        indices[indices_count] = right[index];
+        indices[indices_count] = points_right[index];
         indices_count += 1;
-        indices[indices_count] = left[index + 1];
+        indices[indices_count] = points_left[index + 1];
         indices_count += 1;
 
-        indices[indices_count] = left[index + 1];
+        indices[indices_count] = points_left[index + 1];
         indices_count += 1;
-        indices[indices_count] = right[index];
+        indices[indices_count] = points_right[index];
         indices_count += 1;
-        indices[indices_count] = right[index + 1];
+        indices[indices_count] = points_right[index + 1];
         indices_count += 1;
     }
-    left.clear();
-    right.clear();
+    points_left.clear();
+    points_right.clear();
     return indices_count;
 }
 #[cfg(test)]
@@ -473,18 +485,22 @@ fn draw_connection(
 fn test_draw_connection() {
     let mut indices = vec![0usize; 42];
     let mut indices_count = 0;
-    let mut left: Vec<usize> = vec![251, 249, 246, 242, 237, 231, 224, 216];
-    let mut right: Vec<usize> = vec![187, 186, 185, 184, 183, 182, 181, 180];
-    indices_count = draw_connection(&mut left, &mut indices, indices_count, &mut right);
-    assert_eq!(left.len(), 0);
-    assert_eq!(right.len(), 0);
-    assert_eq!(indices_count, 42);
-    assert_eq!(
-        indices,
-        vec![
-            251, 187, 249, 249, 187, 186, 249, 186, 246, 246, 186, 185, 246, 185, 242, 242, 185,
-            184, 242, 184, 237, 237, 184, 183, 237, 183, 231, 231, 183, 182, 231, 182, 224, 224,
-            182, 181, 224, 181, 216, 216, 181, 180
-        ]
-    );
+    OSTASPHERE_HEAP.with(|oc| {
+        let mut points_left = oc.points_left_cell.borrow_mut();
+        let mut points_right = oc.points_right_cell.borrow_mut();
+        points_left.append(&mut vec![251, 249, 246, 242, 237, 231, 224, 216]);
+        points_right.append(&mut vec![187, 186, 185, 184, 183, 182, 181, 180]);
+        indices_count = draw_connection(&mut indices, indices_count, &mut points_left, &mut points_right);
+        assert_eq!(points_left.len(), 0);
+        assert_eq!(points_right.len(), 0);
+        assert_eq!(indices_count, 42);
+        assert_eq!(
+            indices,
+            vec![
+                251, 187, 249, 249, 187, 186, 249, 186, 246, 246, 186, 185, 246, 185, 242, 242, 185,
+                184, 242, 184, 237, 237, 184, 183, 237, 183, 231, 231, 183, 182, 231, 182, 224, 224,
+                182, 181, 224, 181, 216, 216, 181, 180
+            ]
+        );
+    });
 }
