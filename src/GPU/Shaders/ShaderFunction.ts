@@ -87,13 +87,15 @@ export class ComputeShaderFunction<B extends readonly BGLayout[]> {
         /* TODO: use const enumns */
         private inputs: string,
         public pipelineLayout: PipelineLayout<B>,
+        private readonly workgroupSize: readonly [x: number, y?:number, z?:number],
         code: (args: Readonly<{ [K in keyof B]: FilterCompute<B[K]['entries']> }>) => string
     ) {
         this.#code = code;
     }
     createCode(bindGroups: { [K in keyof B]: FilterCompute<B[K]['entries']>; }, name: string) {
         const wgsl = /* wgsl */`
-                fn ${name}(
+                @compute @workgroup_size(${this.workgroupSize.join()})
+                fn ${name} (
                     ${this.inputs}
                     ) {
                         ${this.#code(bindGroups)}

@@ -97,6 +97,7 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                 main: new ComputeShaderFunction(
                     '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
+                    [1],
                     (
                         [[_slopes, _facet12, positionAndRotate, shapes], [positions]]
                     ) => /* wgsl */
@@ -202,11 +203,6 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
         ${getHeightAtCoordinates(settings,
         slopes,
         facet12)}
-  
-        
-        
-        
-        @compute @workgroup_size(1)
         `);
     }
 }

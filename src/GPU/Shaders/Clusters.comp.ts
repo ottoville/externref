@@ -34,6 +34,7 @@ export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) 
             main: new ComputeShaderFunction(
                 '@builtin(global_invocation_id) global_id : vec3<u32>',
                 pipelineLayout,
+                [4,2,4],
                 ([[uniforms], [clusters, screentoview]]) => /* wgsl */
                     `
             let tileIndex = global_id.x +
@@ -102,7 +103,6 @@ ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, 
         
         //let tileCount : vec3<u32> = vec3<u32>(1u, 1u, 1u);
         const tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
-        @compute @workgroup_size(4,2,4)
     `)
 }
 export type ClustersComp = ReturnType<typeof createClustersCompShader>

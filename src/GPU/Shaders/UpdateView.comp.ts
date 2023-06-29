@@ -70,6 +70,7 @@ export function createUpdateViewShader(gpu: GPU) {
             entryPoints: {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) global_id : vec3<u32>',
                     pipelineLayout,
+                    [4, 2, 4],
                     ([[meshes, point_lights, directional_lights], [clusters, viewUniforms]]) => /* wgsl */
                         `
                 let tileIndex = global_id.x +
@@ -133,8 +134,6 @@ ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
             return sqDist;
           }
         const tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
-        
-        @compute @workgroup_size(4, 2, 4)
         `
     );
 }

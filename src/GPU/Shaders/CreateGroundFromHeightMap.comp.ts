@@ -46,6 +46,7 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
             entryPoints: {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
+                    [1, 1],
                     ([[positions, pixels]]) => /* wgsl */
                         `
                 let coords=vec2<f32>(
@@ -78,8 +79,6 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
             const scaled_texture_size = vec2<f32>(${textureSize.width / settings.size[0]}, ${textureSize.height / settings.size[1]});
             
             const factor_x=f32(${settings.size[0] / settings.subdivisions[0]});
-            const factor_y=f32(${settings.size[1] / settings.subdivisions[0]});
-        
-            @compute @workgroup_size(1, 1)`)
+            const factor_y=f32(${settings.size[1] / settings.subdivisions[0]});`)
     }
 }
