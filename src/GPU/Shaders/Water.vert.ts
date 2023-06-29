@@ -29,7 +29,6 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
                         id: ['@location(2) @interpolate(flat)', 'u32'],
                     }),
                 pipelineLayout,
-                '',
                 [buffers],
                 ([
                     [/*uniforms*/,],

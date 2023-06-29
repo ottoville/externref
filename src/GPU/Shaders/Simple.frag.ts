@@ -6,10 +6,19 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js'
 import { getClusterIndex } from './getClusterIndex.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
-import { Struct, diffuseOutput } from './structs/Structs.js';
+import { diffuseOutput, pickOutputFragment } from './structs/Structs.js';
 
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
-
+export function createPickOutputFragment<P extends PipelineLayout>(pipelineLayout: P) {
+    return new FragmentShaderFunction<P['bindGroupLayouts']>(
+        pickOutputFragment,
+        pipelineLayout,
+        '@location(0) @interpolate(flat)  id : u32',
+        () =>
+            ` var output:PickOutput;
+          output.ID = id;
+          return output;`)
+}
 export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader({
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
@@ -72,19 +81,7 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
                 let total_shading=vec3<f32>(shading,shading,shading);
                 output.Diffuse= output.Diffuse*max(vec4<f32>(total_shading,1.0),vec4<f32>(shading_rgb,0.0));
               return output;`),
-            pick: new FragmentShaderFunction<typeof pipelineLayout.bindGroupLayouts>(
-                new Struct('PickOutput',
-                    { ID: ['@location(0)', 'u32'], }),
-                pipelineLayout,
-                '@location(0) @interpolate(flat)  id : u32',
-                ([
-                    [,],
-                    [/*scene*/,],
-                    [/*world*/,]
-                ]) =>
-                    `  var output:PickOutput;
-  output.ID = id;
-  return output;`),
+            pick: createPickOutputFragment(pipelineLayout),
         },
         gpu: pipelineLayout.gpu,
         label: 'Simple.frag',

@@ -43,7 +43,6 @@ export function createGrassVertShader(
             main: new VertexShaderFunction(
                 colorOutput,
                 pipelineLayout,
-                '',
                 buffers,
                 ([
                     [/*uniform*/,],

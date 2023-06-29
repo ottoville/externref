@@ -3,7 +3,8 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js'
 import { getClusterIndex } from './getClusterIndex.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
-import { Struct, diffuseOutput } from './structs/Structs.js';
+import { diffuseOutput } from './structs/Structs.js';
+import { createPickOutputFragment } from './Simple.frag.js';
 
 type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts']
 
@@ -80,22 +81,7 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
                     return output;
                 `
                 ),
-                pick: new FragmentShaderFunction(
-                    new Struct('PickOutput',
-                        {
-                            ID: ['@location(0)', 'u32'],
-                        }),
-                    pipelineLayout,
-                    `@builtin(position) fragCoord : vec4<f32>,
-                    @location(0) @interpolate(flat)  id : u32`,
-                    () =>
-                        `
-                      var output:PickOutput;
-                      output.ID=id;
-                      return output;
-                
-                    `
-                ),
+                pick: createPickOutputFragment(pipelineLayout),
             },
             gpu: pipelineLayout.gpu,
             label: 'Ground.frag',

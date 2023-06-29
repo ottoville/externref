@@ -14,10 +14,11 @@ export class VertexShaderFunction<B extends readonly BGLayout[] = readonly BGLay
     constructor(
         public output: Struct,
         public pipelineLayout: PipelineLayout<B>,
-        // TODO: use enums
-        private inputs: string,
         vertexBufferLayout: V,
-        code: (args: Readonly<{ [K in keyof B]: FilterVertex<B[K]['entries']> }>, bufferArgs: Readonly<{ [K in keyof V]: { [KK in keyof V[K]['attributes2']]: KK } }>) => string
+        code: (args: Readonly<{ [K in keyof B]: FilterVertex<B[K]['entries']> }>, bufferArgs: Readonly<{ [K in keyof V]: { [KK in keyof V[K]['attributes2']]: KK } }>) => string,
+        // TODO: use enums
+        private inputs = ''
+
     ) {
         this.#code = code;
         this.vertexBufferLayout = Object.freeze(vertexBufferLayout);

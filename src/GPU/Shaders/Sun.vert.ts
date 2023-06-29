@@ -16,7 +16,6 @@ export class SunVertShader extends VertexShader<BindLayouts> {
                     new Struct('Output',
                         { Position: ['@builtin(position)', 'vec4<f32>'], }),
                     pipelineLayout,
-                    '@builtin(vertex_index) VertexIndex : u32,',
                     [],
                     ([
                         [/*uniforms*/,],
@@ -39,7 +38,8 @@ export class SunVertShader extends VertexShader<BindLayouts> {
                     //ambient=vec4<f32>(1.0,clamp(curPos.y*4.0,0.1,1.0),(max(curPos.y,0.0)),1.0);
                     return output;
                 
-                  `
+                  `,
+                    '@builtin(vertex_index) VertexIndex : u32,'
                 ),
             },
             gpu: pipelineLayout.gpu,

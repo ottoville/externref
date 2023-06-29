@@ -17,8 +17,6 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
                 main: new VertexShaderFunction(
                     colorOutput,
                     pipelineLayout,
-                    `@builtin(instance_index) instanceIdx : u32,
-                @builtin(vertex_index) VertexIndex : u32,`,
                     [],
                     ([
                         [/*uniforms*/,],
@@ -42,7 +40,9 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
      output.position = ${scene.prop('modelViewProjection')} * worldPos;
      output.color = vec3<f32>(1.0,1.0,1.0);
      return output;
-                `),
+                `,
+                    `@builtin(instance_index) instanceIdx : u32,
+                @builtin(vertex_index) VertexIndex : u32,`),
             },
             gpu: pipelineLayout.gpu,
             label: 'helper.vert',

@@ -12,7 +12,7 @@ export const simpleAttributes = Object.freeze(
         position: {
             format: 'float32x3',
             offset: 0,
-            shaderFormat: 'vec3<f32>',
+            shaderFormat: 'vec4<f32>',
             shaderLocation: 0,
         },
     } as const

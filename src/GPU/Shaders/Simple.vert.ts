@@ -5,7 +5,30 @@ import type { simpleAttributes } from '../RenderPipeLines/SimpleRenderPipeline.j
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { pickOutput, typicalOutput } from './structs/Structs.js';
 
-type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
+type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
+
+export function createPickOutput(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof simpleAttributes>) {
+    return new VertexShaderFunction(pickOutput,
+        pipelineLayout,
+        [buffers],
+        ([
+            [/*uniforms*/,],
+            [scene/*time, clusters_array, meshes, projection*/],
+            [world]
+        ], [{ position, }]) =>
+        /* wgsl */ `
+        var output: PickOutput;
+        var worldPos=${world.prop('transformation')} * ${position};
+        output.Position = ${scene.prop('modelViewProjection')} * worldPos;
+        output.id=${world.prop('id')};
+        //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
+        //ambient=lights.ambient;
+        return output;
+    
+    `)
+}
+
+
 
 /**
   Shader where mesh is single colored
@@ -17,18 +40,17 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
             main: new VertexShaderFunction(
                 typicalOutput,
                 pipelineLayout,
-                '',
                 [buffers],
                 ([
                     [/*uniforms*/,],
                     [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ], [{ position, normal, }]) => /* wgsl */
-                    `
+                ], [{ position, normal, }]) =>
+                /* wgsl */ `
             var output:Output;
             var curPos : mat4x4<f32> = ${world.prop('transformation')};
             curPos[3].w=1.0;
-            var worldPos=curPos * vec4<f32>(${position}, 1.0);
+            var worldPos=curPos * ${position};
             output.normal = normalize((curPos * vec4<f32>(${normal}, 0.0)).xyz);
           
             output.Position = ${scene.prop('modelViewProjection') } * worldPos;
@@ -40,29 +62,8 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
             //ambient=lights.ambient;
             return output;
           `),
-            pick: new VertexShaderFunction(pickOutput,
-                pipelineLayout,
-                '',
-                [buffers],
-                ([
-                    [/*uniforms*/,],
-                    [scene/*time, clusters_array, meshes, projection*/],
-                    [world]
-                ], [{ position, }]) => /* wgsl */
-                    `
-              var output: PickOutput;
-              var curPos : mat4x4<f32> = ${world.prop('transformation')};
-              curPos[3] = ${world.prop('transformation')}[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
-              curPos[3].w=1.0;
-              var worldPos=curPos * vec4<f32>(${position}, 1.0);
-            
-              output.Position = ${scene.prop('modelViewProjection')} * worldPos;
-              output.id=${world.prop('id')};
-              //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
-              //ambient=lights.ambient;
-              return output;
-          
-            `),
+            pick: createPickOutput(pipelineLayout,
+                buffers),
         },
         gpu: pipelineLayout.gpu,
         label: 'Simple.vert',

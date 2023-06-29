@@ -14,7 +14,6 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
             main: new VertexShaderFunction<BindLayouts, [VertexBufferLayout2<typeof simpleAttributes>]>(
                 colorOutput,
                 pipelineLayout,
-                '@builtin(vertex_index) gl_VertexIndex : u32,',
                 [buffers],
                 ([
                     [/*uniforms*/,],
@@ -39,7 +38,8 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
             output.position = ${scene.prop('modelViewProjection')} * vertexPosition;
             output.color=vec3<f32>(0.0,1.0,0.0);
             return output;
-            `),
+            `,
+                '@builtin(vertex_index) gl_VertexIndex : u32,'),
         },
         gpu: pipelineLayout.gpu,
         label: 'debug_normals.vert',

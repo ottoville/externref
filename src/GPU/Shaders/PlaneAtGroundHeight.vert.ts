@@ -18,7 +18,6 @@ export function createPlaneAtGroundHeightVertShader(
             main: new VertexShaderFunction(
                 colorOutput,
                 pipelineLayout,
-                '',
                 [buffers],
                 ([
                     [/*uniforms*/,],

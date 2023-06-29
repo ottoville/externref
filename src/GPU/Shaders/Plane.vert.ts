@@ -20,7 +20,6 @@ export class Plane extends VertexShader<BindLayouts> {
                 main: new VertexShaderFunction(
                     colorOutput,
                     pipelineLayout,
-                    '',
                     [buffers],
                     ([
                         [/*uniforms*/,],

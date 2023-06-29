@@ -22,7 +22,6 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
                         scenes: ['@location(4) @interpolate(flat)', 'u32'],
                     }),
                 pipelineLayout,
-                '',
                 [buffers],
                 ([
                     [/*uniforms*/,],
@@ -48,14 +47,13 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
             ),
             pick: new VertexShaderFunction(pickOutput,
                 pipelineLayout,
-                '',
                 [buffers],
                 ([
                     [/*uniforms*/,],
                     [scene/*time, clusters_array, meshes, projection*/],
                     [world]
-                ]) => /* wgsl */
-                    `
+                ]) =>
+                /* wgsl */ `
                 var output : PickOutput;
                 output.Position = ${scene.prop('modelViewProjection') } * vec4<f32>(position.xyz, 1.0);
                 output.id=${world.prop('id') };

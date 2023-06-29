@@ -11,7 +11,6 @@ export function createDebugBoundingBoxVertShader(pipelineLayout: PipelineLayout<
         entryPoints: {
             main: new VertexShaderFunction(colorOutput,
                 pipelineLayout,
-                '',
                 [buffers],
                 ([
                     [/*uniforms*/,],

@@ -30,7 +30,6 @@ export function createUIVertShader(pipelineLayout: PipelineLayout<BindLayouts>, 
                     v_uv: ['@location(0)', 'vec2<f32>'],
                 }),
             pipelineLayout,
-            '',
             [buffers],
             ([[uniforms/*texture*/]], [{ position, uv, }]) => /* wgsl */
                 `
