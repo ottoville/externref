@@ -176,8 +176,9 @@ export class TerrainTool extends MainNode {
         {
             firstVertex: 0,
         })
-        this.#pick = { meshId: 0, position: new MutableTerraVector3(engine.memory.buffer,
-            engine.rust.mouse_position_pointer(this.elevator)), };
+        this.#pick = { meshId: 0,
+            position: new MutableTerraVector3(engine.memory.buffer,
+                engine.rust.mouse_position_pointer(this.elevator)), };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*

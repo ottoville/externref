@@ -33,7 +33,8 @@ export class createSettingsMenu extends UINode<{}> {
                         label: 'MSAA',
                         scale,
                         translate: {
-                            x, y: {
+                            x,
+                            y: {
                                 anchor: Anchor.CENTER,
                                 value: [0],
                             },
@@ -47,7 +48,8 @@ export class createSettingsMenu extends UINode<{}> {
                         label: 'Close',
                         scale,
                         translate: {
-                            x, y: {
+                            x,
+                            y: {
                                 anchor: Anchor.CENTER,
                                 value: [-60, NumericUnit.px],
                             },
@@ -64,7 +66,8 @@ export class createSettingsMenu extends UINode<{}> {
                         label: 'DevTools',
                         scale,
                         translate: {
-                            x, y: {
+                            x,
+                            y: {
                                 anchor: Anchor.CENTER,
                                 value: [-120, NumericUnit.px],
                             },

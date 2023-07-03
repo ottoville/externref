@@ -66,6 +66,7 @@ module.exports = {
         ],
         'function-call-argument-newline': ['error', 'always'],
         'implicit-arrow-linebreak': ['error', 'below'],
+        'object-property-newline': ['error', { 'allowAllPropertiesOnSameLine': true, }],
     },
     settings: {
         'import/resolver': {

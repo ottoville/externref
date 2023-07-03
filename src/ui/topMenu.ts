@@ -80,7 +80,8 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                                     x: {
                                         anchor: Anchor.CENTER,
                                         value: [-0.9, NumericUnit['%']],
-                                    }, y: {
+                                    },
+                                    y: {
                                         anchor: Anchor.CENTER,
                                         value: [0.9, NumericUnit['%']],
                                     },
@@ -102,7 +103,8 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                                     x: {
                                         anchor: Anchor.CENTER,
                                         value: [-0.75, NumericUnit['%']],
-                                    }, y: {
+                                    },
+                                    y: {
                                         anchor: Anchor.CENTER,
                                         value: [0.9, NumericUnit['%']],
                                     },
@@ -125,7 +127,8 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                                     x: {
                                         anchor: Anchor.CENTER,
                                         value: [-0.6, NumericUnit['%']],
-                                    }, y: {
+                                    },
+                                    y: {
                                         anchor: Anchor.CENTER,
                                         value: [0.9, NumericUnit['%']],
                                     },

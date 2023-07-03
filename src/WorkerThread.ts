@@ -65,7 +65,8 @@ export class WorkerThread extends MainWorker {
 export class ObjectWorkerThread extends MainWorker {
     signal(objectID: number, action: string, options: Transferable[], args?: unknown[]): void {
         super.postMessage({
-            action: action, data: {
+            action: action,
+            data: {
                 args: typeof (args) !== 'undefined' ? args : [],
                 objId: objectID,
             },
@@ -74,7 +75,8 @@ export class ObjectWorkerThread extends MainWorker {
     }
     message<T>(objectID: number, action: string, args?: unknown[], options?: Transferable[]): Promise<T> {
         const toWorker: WMessage = {
-            action: action, data: {
+            action: action,
+            data: {
                 args: typeof(args)!=='undefined'?args:[],
                 objId: objectID,
             },

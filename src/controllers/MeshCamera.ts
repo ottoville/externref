@@ -51,7 +51,8 @@ export class MeshCamera extends CameraController {
                         x: {
                             anchor: Anchor.CENTER,
                             value: [0],
-                        }, y: {
+                        },
+                        y: {
                             anchor: Anchor.CENTER,
                             value: [0],
                         },
