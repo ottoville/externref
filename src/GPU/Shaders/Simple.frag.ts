@@ -39,8 +39,8 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
                         /*{ uniforms, }*/,
                         { /*scene,*/ clusters_array, meshes, /*projection,*/ }
                         /*{ world, }*/
-                    ]) => /* wgsl */
-                    `var output:Output;
+                    ]) =>
+                    /* wgsl */ `var output:Output;
               output.Diffuse = vec4<f32>(color,1.0);
             
               //output.Diffuse.w=0.0;

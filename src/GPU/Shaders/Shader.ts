@@ -28,7 +28,8 @@ export abstract class Shader<
                 if ((binding.entry.visibility & shaderFlag) === 0) {
                     return acc;
                 }
-                binding.variableName = variableName;
+                const uniqueName = `g${gi}_${variableName}`
+                binding.variableName = uniqueName;
                 let qualifiers = '';
                 if (binding instanceof BufLayout) {
                     if (binding.entry.buffer.type === 'uniform') {
@@ -47,7 +48,7 @@ export abstract class Shader<
                     }
                     structs.add(binding.struct);
                 }
-                return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${variableName} : ${binding.structName};\n`
+                return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${uniqueName} : ${binding.structName};\n`
             },
             groupstring)
         },

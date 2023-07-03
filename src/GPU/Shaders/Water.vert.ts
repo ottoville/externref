@@ -32,16 +32,16 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
                 [buffers],
                 ([
                     /*{ uniforms, }*/,
-                    { scene,/*time, clusters_array, meshes, projection*/ }
-                    /*{ world, },
-                    {mySampler, diffuseTexture}*/
-                ], [{ position, }]) => /* wgsl */
-                    `
+                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { world, }
+                    /*{mySampler, diffuseTexture}*/
+                ], [{ position, }]) =>
+                /* wgsl */ `
                         var output:Output;
                         output.Position = ${scene.variableName}.modelViewProjection * vec4<f32>(${position}, 1.0);
                         output.v_uv = output.Position;
                         output.position=${position};
-                        output.id=world.id;
+                        output.id=${world.prop('id')};
                     
                         //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
                         //ambient=lights.ambient;

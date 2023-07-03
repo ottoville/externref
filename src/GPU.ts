@@ -137,7 +137,10 @@ export class GPU {
     readonly bindGroupTextureWater: SharedPipelineLayout<[
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
-        BGLayout<{world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>}>,
+        BGLayout<{world:
+            BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>
+        }
+        >,
         BGLayout<{mySampler: SampLayout<ShaderStage.FRAGMENT>, diffuseTexture: TextLayout<ShaderStage.FRAGMENT>}>]>;
 
 
