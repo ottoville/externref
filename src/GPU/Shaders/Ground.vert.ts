@@ -24,9 +24,9 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
                 pipelineLayout,
                 [buffers],
                 ([
-                    [/*uniforms*/,],
-                    [scene/*time, clusters_array, meshes, projection*/],
-                    [world]
+                    /*{uniforms}*/,
+                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { world, }
                 ]) => /* wgsl */
                     `
             var output : Output;
@@ -49,9 +49,9 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
                 pipelineLayout,
                 [buffers],
                 ([
-                    [/*uniforms*/,],
-                    [scene/*time, clusters_array, meshes, projection*/],
-                    [world]
+                    /*{uniforms}*/,
+                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { world, }
                 ]) =>
                 /* wgsl */ `
                 var output : PickOutput;

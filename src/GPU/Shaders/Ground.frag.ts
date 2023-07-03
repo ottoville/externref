@@ -24,10 +24,10 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
                 @location(3) @interpolate(flat)  id : u32,
                 @location(4) @interpolate(flat)  scenes : u32`,
                     ([
-                        [_uniforms],
-                        [/*scene*/, clusters_array, meshes, _projection],
-                        [/*world*/,],
-                        [mySampler, myTexture]
+                        /*{ uniforms, }*/,
+                        { /*scene,*/ clusters_array, meshes/*, projection*/, },
+                        /*{ world, }*/,
+                        { mySampler, myTexture, }
                     ]) => /* wgsl */
                         `
                   var output:Output;
@@ -86,10 +86,13 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
             gpu: pipelineLayout.gpu,
             label: 'Ground.frag',
         },
-        ([uniforms],
-            [/*scene*/, _clusters_array, _meshes, projection],
-            [/*world*/,],
-            [_mySampler, _myTexture]) => /* wgsl */
+        (
+            [
+                { uniforms, },
+                { /*scene, clusters_array, meshes,*/ projection, }
+                /*{ world, }*/
+                /*{ mySampler, myTexture, }*/
+            ]) => /* wgsl */
             `
           ${getClusterIndex(uniforms,
         projection)}

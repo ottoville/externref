@@ -7,10 +7,10 @@ import type { Struct } from './Shaders/structs/Structs.js';
 export interface GPUBindGroupTextureEntry {
     texture: GPUTextureBindingLayout;
 }
-export type MapToGPUBindGroupEntry<T> = {
-    [K in keyof T]: T[K] extends TextLayout ? { binding: GPUIndex32, resource: GPUTextureView | GPUExternalTexture } :
-    T[K] extends BufLayout ? { binding: GPUIndex32, resource: GPUBufferBinding }
-    : GPUBindGroupEntry };
+export type MapToGPUBindGroupEntry<T extends {[index:string]: BindGroupLayoutEntry}> = {
+    [K in keyof T]: T[K] extends TextLayout ? { resource: GPUTextureView | GPUExternalTexture } :
+    T[K] extends BufLayout ? { resource: GPUBufferBinding }
+    : Omit<GPUBindGroupEntry, 'binding'> };
 export type GPUBindGroupLayoutEntryBuffer = Omit<GPUBindGroupLayoutEntry, 'binding'> & {
     buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 }
 }
@@ -27,9 +27,10 @@ interface BindGroupLayoutEntryProps<V extends ShaderStage = ShaderStage> extends
     visibility: V
 }
 export abstract class BindGroupLayoutEntry<V extends ShaderStage = ShaderStage> {
+    // Each shader will set this variableName to right context when creating wgsl
+    variableName = ''
     constructor(
         public entry: BindGroupLayoutEntryProps<V>,
-        public readonly variableName: string,
         public structName: string) {
     }
     toString() {
@@ -41,12 +42,10 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
         public override entry: BindGroupLayoutEntryProps<V> & {
             buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 }
         },
-        variableName: string,
         public struct: S
     ) {
 
         super(entry,
-            variableName,
             struct.name)
     }
     prop(member: keyof S['properties'] & string) {
@@ -56,7 +55,6 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
 export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
     constructor(
         public override entry: BindGroupLayoutEntryProps<V> & ({ texture: NonNullable<GPUBindGroupLayoutEntry['texture']> } | { storageTexture: NonNullable<GPUBindGroupLayoutEntry['storageTexture']> }),
-        variableName: string,
         structName:
             'texture_depth_multisampled_2d'
             | 'texture_2d<u32>'
@@ -68,7 +66,6 @@ export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
             | 'texture_storage_2d<rgba8sint,write>'
     ) {
         super(entry,
-            variableName,
             structName)
     }
 }
@@ -76,22 +73,21 @@ export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
 export class SampLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
     constructor(
         public override entry: BindGroupLayoutEntryProps<V> & { sampler: NonNullable<GPUBindGroupLayoutEntry['sampler']> },
-        variableName: string,
         structName: 'sampler' | 'sampler_comparison'
     ) {
         super(entry,
-            variableName,
             structName)
     }
 }
 
-export class BGLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]> {
+export class BGLayout<T extends {[index:string]: BindGroupLayoutEntry} = {[index:string]: BindGroupLayoutEntry}> {
     layout: GPUBindGroupLayout;
     dynamicIndices = false;
     entries: Readonly<T>;
-    constructor(public gpu: GPU, label: string, ...entries: T) {
+    constructor(public gpu: GPU, label: string, entries: T) {
+        const entriesArr = Object.values(entries);
         this.layout = gpu.device.createBindGroupLayout({
-            entries: entries.map((entry, i) => {
+            entries: entriesArr.map((entry, i) => {
                 return {
                     ...entry.entry,
                     binding: i,
@@ -100,7 +96,7 @@ export class BGLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]>
             label,
         });
         this.entries = entries;
-        for (const e of entries) {
+        for (const e of entriesArr) {
             if (e.entry.buffer && e.entry.buffer.hasDynamicOffset) {
                 this.dynamicIndices = true;
                 break;

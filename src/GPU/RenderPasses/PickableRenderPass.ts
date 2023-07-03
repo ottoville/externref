@@ -51,30 +51,26 @@ export class PickableRenderPass<T extends {
 
             this.#pickPositionBindGroup0 = readDepthShader.props.bindGroupLayouts[0].createBindGroup('pickPositionBindGroup0',
                 () =>
-                    [
-                        {
-                            binding: 0,
+                    ({
+                        depth_and_mesh: {
                             resource: {
                                 buffer: this.#pickBuffer,
                             },
-                        }
-                    ]);
+                        },
+                    }));
             this.#pickPositionBindGroup1 = readDepthShader.props.bindGroupLayouts[1].createBindGroup('pickPositionBindGroup1',
                 (bindGroup) =>
-                    [
-                        {
-                            binding: 0,
+                    ({
+                        depth_texture: {
                             resource: this.depthRenderTarget.view.getTextureBinding(bindGroup),
                         },
-                        {
-                            binding: 1,
+                        mesh_texture: {
                             resource: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view.getTextureBinding(bindGroup),
                         },
-                        {
-                            binding: 2,
+                        mouse: {
                             resource: this.#mousePositionBuffer!.getUniformBinding(bindGroup),
-                        }
-                    ]);
+                        },
+                    }));
 
         } else {
             this.#pickBuffer = this.#createPickBuffer()

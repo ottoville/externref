@@ -31,7 +31,7 @@ export function createUIVertShader(pipelineLayout: PipelineLayout<BindLayouts>, 
                 }),
             pipelineLayout,
             [buffers],
-            ([[uniforms/*texture*/]], [{ position, uv, }]) => /* wgsl */
+            ([{ uniforms,/*texture*/ }], [{ position, uv, }]) => /* wgsl */
                 `
       var output : Output;   
       output.Position = vec4<f32>(${uniforms.prop('translate')} + ${position}, 1.0, 1.0);

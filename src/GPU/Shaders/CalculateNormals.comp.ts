@@ -7,7 +7,9 @@ import { SlopesLayout } from './CreateTerrainTexture.comp.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 
 type BindLayouts = readonly [
-    BGLayout<[BufLayout<ShaderStage.COMPUTE, typeof FloatArray>]>,
+    BGLayout<{
+        vertices: BufLayout<ShaderStage.COMPUTE, typeof FloatArray>
+    }>,
     SlopesLayout,
 ]
 export class CalculateNormals extends ComputeShader<BindLayouts> {
@@ -19,17 +21,19 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
         const bindLayouts = [
             new BGLayout(slopesLayout.gpu,
                 'normalsBindGroupLayout',
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'storage',
+                {
+                    vertices: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 32,
+                                type: 'storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
                         },
-                        visibility: ShaderStage.COMPUTE,
-                    },
-                    'normals',
-                    FloatArray)),
+                        FloatArray),
+                }
+            ),
             slopesLayout
         ] as const
 
@@ -44,7 +48,7 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     [1],
-                    ([[normals], [/*slopes*/, facet12]]) => /* wgsl */
+                    ([{ vertices, }, { /*slopes,*/ facet12, }]) => /* wgsl */
                         `
                 let stride : u32 = 12u;
 
@@ -66,9 +70,9 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
     
        
    
-       ${normals.prop('numbers')}[j + i + 4u]=normalized.x;
-       ${normals.prop('numbers')}[j + i + 5u]=normalized.y;
-       ${normals.prop('numbers')}[j + i + 6u]=normalized.z;
+       ${vertices.prop('numbers')}[j + i + 4u]=normalized.x;
+       ${vertices.prop('numbers')}[j + i + 5u]=normalized.y;
+       ${vertices.prop('numbers')}[j + i + 6u]=normalized.z;
                 `),
             },
             gpu: pipelineLayout.gpu,

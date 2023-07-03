@@ -2,18 +2,18 @@ import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/Terrain.js';
-import { PlaneArray, Slopes } from './structs/Structs.js';
+import { PlaneArray, IntArray } from './structs/Structs.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 
-export type SlopesLayout = BGLayout<[
-    BufLayout<ShaderStage.COMPUTE, typeof Slopes>,
-    BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>
-]>;
+export type SlopesLayout = BGLayout<{
+    slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>,
+    facet12: BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>
+}>;
 
 type BindLayouts = readonly [
     SlopesLayout,
-    BGLayout<[TextLayout<ShaderStage.COMPUTE>]>];
+    BGLayout<{ground_texture: TextLayout<ShaderStage.COMPUTE>}>];
 export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
     constructor(
         settings: typeof Terrain.settings,
@@ -22,17 +22,19 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
             slopesLayout,
             new BGLayout(slopesLayout.gpu,
                 'TerrainTextureLayout',
-                new TextLayout(
-                    {
-                        storageTexture: {
-                            access: 'write-only',
-                            format: 'rgba8unorm',
+                {
+                    ground_texture: new TextLayout(
+                        {
+                            storageTexture: {
+                                access: 'write-only',
+                                format: 'rgba8unorm',
+                            },
+                            visibility: ShaderStage.COMPUTE,
                         },
-                        visibility: ShaderStage.COMPUTE,
-                    },
-                    'ground_texture',
-                    'texture_storage_2d<rgba8unorm,write>'
-                ))
+                        'texture_storage_2d<rgba8unorm,write>'
+                    ),
+                }
+            )
         ] as const
 
         const pipelineLayout = new PipelineLayout({
@@ -45,7 +47,7 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     [1],
-                    ([[_slopes, _facet12], [ground_texture]]) => /* wgsl */
+                    ([/*{ _slopes, _facet12, }*/, { ground_texture, }]) => /* wgsl */
                         `
                 let cx:f32 = f32(GlobalInvocationID.x) * (f32(${settings.size[0]})/f32(${settings.textureSize.width})) - f32(${settings.size[0]}/u32(2));
                 let cz:f32 = f32(GlobalInvocationID.y) * (f32(${settings.size[1]})/f32(${settings.textureSize.height})) - f32(${settings.size[1]}/u32(2));
@@ -65,7 +67,7 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
             gpu: pipelineLayout.gpu,
             label: 'CreateTerrainTexture.comp',
         },
-        ([slopes, facet12], [_ground_texture]) => /* wgsl */
+        ([{ slopes, facet12, }/*{ _ground_texture, }*/]) => /* wgsl */
             `
         fn mod289(x:f32) -> f32 {
             return x - floor(x * (1. / 289.)) * 289.;

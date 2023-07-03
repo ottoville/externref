@@ -8,13 +8,15 @@ import { getHeightAtCoordinates } from '../getHeightAtCoordinates.js';
 import { ComputeShaderFunction } from '../ShaderFunction.js';
 
 type BindLayouts = readonly [
-    BGLayout<[
-        BufLayout<ShaderStage.COMPUTE, typeof IntArray>,
-        BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>,
-        BufLayout<ShaderStage.COMPUTE, typeof PositionAndRotateArray>,
-        BufLayout<ShaderStage.COMPUTE, typeof FloatArray>
-    ]>,
-    BGLayout<[BufLayout<ShaderStage.COMPUTE, typeof Vec2Array>]>,
+    BGLayout<{
+        slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>,
+        facet12: BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>,
+        positionAndRotate: BufLayout<ShaderStage.COMPUTE, typeof PositionAndRotateArray>,
+        shapes: BufLayout<ShaderStage.COMPUTE, typeof FloatArray>
+    }>,
+    BGLayout<{
+        positions: BufLayout<ShaderStage.COMPUTE, typeof Vec2Array>
+    }>,
 ];
 export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
     constructor(settings: typeof Terrain.settings, gpu: GPU) {
@@ -22,68 +24,68 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
         const bindLayouts = [
             new BGLayout(gpu,
                 'slopesBindGroupLayout',
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'read-only-storage',
+                {
+                    facet12: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 32,
+                                type: 'read-only-storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
                         },
-                        visibility: ShaderStage.COMPUTE,
-                    },
-                    'slopes',
-                    IntArray),
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'read-only-storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
+                        PlaneArray),
 
-                    },
-                    'facet12',
-                    PlaneArray),
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
+                    positionAndRotate: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 32,
+                                type: 'storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
 
-                    },
-                    'positionAndRotate',
-                    PositionAndRotateArray),
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'storage',
                         },
-                        visibility: ShaderStage.COMPUTE,
+                        PositionAndRotateArray),
+                    shapes: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 32,
+                                type: 'storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
 
-                    },
-                    'shapes',
-                    FloatArray)
+                        },
+                        FloatArray),
+                    slopes: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 32,
+                                type: 'read-only-storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
+                        },
+                        IntArray),
+                }
             ),
             new BGLayout(gpu,
                 'positionsBindGroupLayout',
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'read-only-storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
+                {
+                    positions: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 32,
+                                type: 'read-only-storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
 
-                    },
-                    'positions',
-                    Vec2Array))
+                        },
+                        Vec2Array),
+                }
+            )
         ] as const
 
 
@@ -99,7 +101,7 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                     pipelineLayout,
                     [1],
                     (
-                        [[_slopes, _facet12, positionAndRotate, shapes], [positions]]
+                        [{ /*slopes, facet12,*/ positionAndRotate, shapes, }, { positions, }]
                     ) => /* wgsl */
                         `
                 let flatpos:vec2<f32> = ${positions.prop('vectors')}[GlobalInvocationID.x]; 
@@ -117,7 +119,7 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
             gpu,
             label: 'GetHeightAtCoordinates.comp',
         },
-        ([slopes, facet12, _positionAndRotate, _shapes], [_positions]) => /* wgsl */
+        ([{ slopes, facet12,/* positionAndRotate, shapes, */ }/*, { positions, }*/]) => /* wgsl */
             `
         const PI:f32 = 3.141592653589793;
         //

@@ -27,16 +27,14 @@ export const WaterRenderPipeline = [
                 vertexShader: waterVertShader,
             },
             (bindGroup) =>
-                [
-                    {
-                        binding: 0,
+                ({
+                    diffuseTexture: {
+                        resource: gpu.renderPassWater.colorRenderTargets.diffuse.view.getTextureBinding(bindGroup),
+                    },
+                    mySampler: {
                         resource: sampler,
                     },
-                    {
-                        binding: 1,
-                        resource: gpu.renderPassWater.colorRenderTargets.diffuse.view.getTextureBinding(bindGroup),
-                    }
-                ]
+                })
         )
     }
 ] as const

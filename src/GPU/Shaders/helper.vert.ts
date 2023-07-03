@@ -19,10 +19,10 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
                     pipelineLayout,
                     [],
                     ([
-                        [/*uniforms*/,],
-                        [scene, time/*clusters_array, meshes, projection*/],
-                        [world],
-                        [_slopes, _facet12]
+                        /*{ uniforms, }*/,
+                        { scene,time, /*clusters_array, meshes, projection*/ },
+                        { world, }
+                        /*{ slopes, facet12, }*/
                     ]) => /* wgsl */
                         `
                 var output:Output;
@@ -47,10 +47,12 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
             gpu: pipelineLayout.gpu,
             label: 'helper.vert',
         },
-        ([/*uniforms*/,],
-            [_scene, _time/*clusters_array, meshes, projection*/],
-            [_world],
-            [slopes, facet12]) =>
+        ([
+            /*{ uniforms, }*/,
+            /*{ scene,time, clusters_array, meshes, projection }*/,
+            /*{ world, }*/,
+            { slopes, facet12, }
+        ]) =>
             `
         const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
         ${getHeightAtCoordinates(settings,

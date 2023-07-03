@@ -10,18 +10,19 @@ export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) 
         sizeGroup,
         new BGLayout(sizeGroup.gpu,
             'CreateClustersLayout2',
-            UpdateClustersBufferLayout,
-            new BufLayout(
-                {
-                    buffer: {
-                        hasDynamicOffset: false,
-                        minBindingSize: PROJECTION_BUFFER_SIZE,
-                        type: 'uniform',
+            {
+                clusters: UpdateClustersBufferLayout,
+                screentoview: new BufLayout(
+                    {
+                        buffer: {
+                            hasDynamicOffset: false,
+                            minBindingSize: PROJECTION_BUFFER_SIZE,
+                            type: 'uniform',
+                        },
+                        visibility: ShaderStage.COMPUTE,
                     },
-                    visibility: ShaderStage.COMPUTE,
-                },
-                'screentoview',
-                ProjectionStruct)
+                    ProjectionStruct),
+            }
         )
     ] as const;
     const pipelineLayout = new PipelineLayout({
@@ -35,7 +36,7 @@ export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) 
                 '@builtin(global_invocation_id) global_id : vec3<u32>',
                 pipelineLayout,
                 [4,2,4],
-                ([[uniforms], [clusters, screentoview]]) => /* wgsl */
+                ([{ uniforms, }, { clusters, screentoview, }]) => /* wgsl */
                     `
             let tileIndex = global_id.x +
             global_id.y * tileCount.x +
@@ -66,7 +67,7 @@ ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, 
         gpu: pipelineLayout.gpu,
         label: 'Clusters.comp',
     },
-    ([uniforms], [_clusters, screentoview]) => /* wgsl */
+    ([{ uniforms, }, { /*clusters,*/ screentoview, }]) => /* wgsl */
         `
     fn clipToView(clip : vec4<f32>) -> vec4<f32> {
         //View space transform

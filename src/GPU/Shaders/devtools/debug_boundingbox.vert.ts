@@ -13,9 +13,9 @@ export function createDebugBoundingBoxVertShader(pipelineLayout: PipelineLayout<
                 pipelineLayout,
                 [buffers],
                 ([
-                    [/*uniforms*/,],
-                    [scene/*time, clusters_array, meshes, projection*/],
-                    [world]
+                    /*{ uniforms, }*/,
+                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { world, }
                 ]) => /* wgsl */
                     `
                 var output : Output;

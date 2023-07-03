@@ -19,9 +19,9 @@ BindLayouts> {
                     pipelineLayout,
                     '',
                     ([
-                        [/*uniforms*/,],
-                        [/*scene, time, clusters_array, meshes, projection*/,],
-                        [world]
+                        /*{ uniforms, }*/,
+                        /*{ scene, clusters_array, meshes, projection, }*/,
+                        { world, }
                     ]) => /* wgsl */
                         `
                     var output:Output;

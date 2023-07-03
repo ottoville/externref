@@ -31,10 +31,10 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
                 pipelineLayout,
                 [buffers],
                 ([
-                    [/*uniforms*/,],
-                    [scene/*time, clusters_array, meshes, projection*/],
-                    [/*world*/,],
-                    [/*mySampler, diffuseTexture*/,]
+                    /*{ uniforms, }*/,
+                    { scene,/*time, clusters_array, meshes, projection*/ }
+                    /*{ world, },
+                    {mySampler, diffuseTexture}*/
                 ], [{ position, }]) => /* wgsl */
                     `
                         var output:Output;

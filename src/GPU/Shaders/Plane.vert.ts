@@ -8,7 +8,8 @@ import { VertexShaderFunction } from './ShaderFunction.js';
 type BindLayouts = [
     GPU['sizeBindGroupLayout'],
     GPU['uniformBindGroupLayoutWithTime'],
-    BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,
+    BGLayout<{
+        world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>}>,
 
 ]
 export class Plane extends VertexShader<BindLayouts> {
@@ -22,9 +23,9 @@ export class Plane extends VertexShader<BindLayouts> {
                     pipelineLayout,
                     [buffers],
                     ([
-                        [/*uniforms*/,],
-                        [scene/*time, clusters_array, meshes, projection*/],
-                        [world]
+                        /*{uniforms,}*/,
+                        { scene,/*time, clusters_array, meshes, projection*/ },
+                        { world, }
                     ]) =>
                         /* wgsl */ `
                 var output:Output;

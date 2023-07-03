@@ -75,15 +75,21 @@ export class GPU {
     readonly positionAndTimeBindGroup: BindablePipelineLayout<readonly [
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
-        BGLayout<[
-            BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>
-        ]>
+         BGLayout<{
+            world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>
+         }>
     ]>;
     readonly lightsTextureBindGroup: BindablePipelineLayout<[
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
-        BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>]>,
-        BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>]>;
+        BGLayout<{
+            world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>
+        }>,
+        BGLayout<{
+            mySampler: SampLayout<ShaderStage.FRAGMENT>,
+            myTexture: TextLayout<ShaderStage.FRAGMENT>
+        }>
+]>;
 
     readonly BindGroupPosition: BindGroup;
     readonly timeBuffer: CopyDstBuffer & BindUniformBuffer
@@ -113,25 +119,26 @@ export class GPU {
     readonly CLUSTER_DISPATCH_SIZE: [number, number, number] = this.clustersInRow.map((v, i) =>
         Math.ceil(v / this.#CLUSTER_WORKGROUP_SIZE[i]!)) as [number, number, number];
 
-    readonly uniformBindGroupLayoutWithTime: BGLayout<[
-        BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>,
-        BufLayout<ShaderStage.VERTEX, typeof Time>,
-        BufLayout<ShaderStage.FRAGMENT, typeof Clusters>,
-        BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>,
-        BufLayout<ShaderStage.FRAGMENT, typeof ProjectionStruct>
-    ]>;
+    readonly uniformBindGroupLayoutWithTime: BGLayout<{
+        scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>,
+        time: BufLayout<ShaderStage.VERTEX, typeof Time>,
+        clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>,
+        meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>,
+        projection: BufLayout<ShaderStage.FRAGMENT, typeof ProjectionStruct>
+        }>;
 
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<'r32uint', TextureUsageType['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']>; }>;
-    readonly sizeBindGroupLayout: BGLayout<[
-        BufLayout<number, typeof Uniforms>]>;
+    readonly sizeBindGroupLayout: BGLayout<{
+        uniforms: BufLayout<number, typeof Uniforms>;
+    }>
 
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     readonly bindGroupTextureWater: SharedPipelineLayout<[
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime,
-        BGLayout<[BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>]>,
-        BGLayout<[SampLayout<ShaderStage.FRAGMENT>, TextLayout<ShaderStage.FRAGMENT>]>]>;
+        BGLayout<{world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT>}>,
+        BGLayout<{mySampler: SampLayout<ShaderStage.FRAGMENT>, diffuseTexture: TextLayout<ShaderStage.FRAGMENT>}>]>;
 
 
     readonly #ro: ResizeObserver;
@@ -141,9 +148,10 @@ export class GPU {
     readonly UIPipeline: RenderPipeline<UIVertShader>
 
     readonly updateViewShader: UpdateView;
-    readonly BindGroupLayoutCanvas: BGLayout<[
-        BufLayout<ShaderStage.VERTEX, typeof UIUniforms>,
-        TextLayout<ShaderStage.FRAGMENT>]>
+    readonly BindGroupLayoutCanvas: BGLayout<{
+        uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>,
+        texture: TextLayout<ShaderStage.FRAGMENT>
+    }>
     destroyed = false;
     fps = 0
     simpleFragShader: SimpleFragShader;
@@ -215,89 +223,84 @@ export class GPU {
 
         this.#updateViewBindGroup = this.updateViewShader.props.bindGroupLayouts[0].createBindGroup('updateViewBindGroup',
             bindGroup =>
-                [
-                    {
-                        binding: 0,
+                ({
+                    directional_lights: {
+                        resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
+                    },
+                    meshes: {
                         resource: this.GPUMeshes.getStorageBinding(bindGroup),
                     },
-                    {
-                        binding: 1,
+                    point_lights: {
                         resource: this.#GPUPointLights.getStorageBinding(bindGroup),
                     },
-                    {
-                        binding: 2,
-                        resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
-                    }
-                ]);
+                }));
         this.uniformBindGroupLayoutWithTime = new BGLayout(this,
             'uniformBindGroupLayoutWithTime',
-            new BufLayout(
-                {
-                    buffer: {
-                        minBindingSize: 144,
-                        type: 'uniform',
-                    },
-                    visibility: ShaderStage.VERTEX_AND_FRAGMENT,
-
-                },
-                'scene',
-                Scene),
-            new BufLayout(
-                {
-                    buffer: {
-                        minBindingSize: 8,
-                        type: 'uniform',
-                    },
-                    visibility: ShaderStage.VERTEX,
-
-                },
-                'time',
-                Time),
-            new BufLayout(
-                {
+            {
+                clusters_array: new BufLayout(
+                    {
                     //clusters
-                    buffer: {
-                        minBindingSize: 7962624, //Must be in sync with Struct Clusters in shader
-                        type: 'read-only-storage',
+                        buffer: {
+                            minBindingSize: 7962624, //Must be in sync with Struct Clusters in shader
+                            type: 'read-only-storage',
+                        },
+                        visibility: ShaderStage.FRAGMENT,
                     },
-                    visibility: ShaderStage.FRAGMENT,
-                },
-                'clusters_array',
-                Clusters),
-            new BufLayout(
-                {   // mesh array for lights
-                    buffer: {
-                        minBindingSize: 512,
-                        type: 'read-only-storage',
+                    Clusters),
+                meshes: new BufLayout(
+                    {   // mesh array for lights
+                        buffer: {
+                            minBindingSize: 512,
+                            type: 'read-only-storage',
+                        },
+                        visibility: ShaderStage.FRAGMENT,
                     },
-                    visibility: ShaderStage.FRAGMENT,
-                },
-                'meshes',
-                MeshArray),
-            new BufLayout(
-                {   //projection
-                    buffer: {
-                        minBindingSize: PROJECTION_BUFFER_SIZE,
-                        type: 'uniform',
-                    },
-                    visibility: ShaderStage.FRAGMENT,
+                    MeshArray),
+                projection: new BufLayout(
+                    {   //projection
+                        buffer: {
+                            minBindingSize: PROJECTION_BUFFER_SIZE,
+                            type: 'uniform',
+                        },
+                        visibility: ShaderStage.FRAGMENT,
 
-                },
-                'projection',
-                ProjectionStruct)
+                    },
+                    ProjectionStruct),
+                scene: new BufLayout(
+                    {
+                        buffer: {
+                            minBindingSize: 144,
+                            type: 'uniform',
+                        },
+                        visibility: ShaderStage.VERTEX_AND_FRAGMENT,
+
+                    },
+                    Scene),
+                time: new BufLayout(
+                    {
+                        buffer: {
+                            minBindingSize: 8,
+                            type: 'uniform',
+                        },
+                        visibility: ShaderStage.VERTEX,
+
+                    },
+                    Time),
+            }
         );
         this.sizeBindGroupLayout = new BGLayout(this,
             'sizeBindGroupLayout',
-            new BufLayout(
-                {
-                    buffer: {
-                        minBindingSize: 16,
-                        type: 'uniform',
+            {
+                uniforms: new BufLayout(
+                    {
+                        buffer: {
+                            minBindingSize: 16,
+                            type: 'uniform',
+                        },
+                        visibility: ShaderStage.FRAGMENT | ShaderStage.COMPUTE,
                     },
-                    visibility: ShaderStage.FRAGMENT | ShaderStage.COMPUTE,
-                },
-                'uniforms',
-                Uniforms)
+                    Uniforms),
+            }
         )
         this.rootCameralayout = new BindablePipelineLayout({
             bindGroupLayouts: [this.sizeBindGroupLayout, this.uniformBindGroupLayoutWithTime] as [typeof this.sizeBindGroupLayout, typeof this.uniformBindGroupLayoutWithTime],
@@ -305,68 +308,70 @@ export class GPU {
         });
         const BindGroupLayoutPosition = new BGLayout(this,
             'BindGroupLayoutPosition',
-            new BufLayout(
-                {
-                    buffer: {
-                        hasDynamicOffset: true,
-                        minBindingSize: GPU.gpu_memory_index_size,
-                        type: 'uniform',
+            {
+                world: new BufLayout(
+                    {
+                        buffer: {
+                            hasDynamicOffset: true,
+                            minBindingSize: GPU.gpu_memory_index_size,
+                            type: 'uniform',
+                        },
+                        visibility: ShaderStage.VERTEX_AND_FRAGMENT,
                     },
-                    visibility: ShaderStage.VERTEX_AND_FRAGMENT,
-                },
-                'world',
-                MeshUniforms)
+                    MeshUniforms),
+            }
         );
         this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition',
             bindGroup =>
-                [
-                    {
-                        binding: 0,
+                ({
+                    world: {
                         resource: this.GPUMeshes.getUniformBinding(bindGroup,
                             0,
                             GPU.gpu_memory_index_size),
-                    }
-                ]);
+                    },
+                })
+        );
         this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot',
             BindGroupLayoutPosition)
         this.simpleFragShader = createSimpleFragShader(this.positionAndTimeBindGroup);
+
         this.lightsTextureBindGroup = this.positionAndTimeBindGroup.createAppendedLayout('lightsBindGroupTexture2Layout',
             new BGLayout(this,
                 'lightsBindGroupTexture2',
-                new SampLayout(
-                    {
-                        sampler: {
+                {
+                    mySampler: new SampLayout(
+                        {
+                            sampler: {
+                            },
+                            visibility: ShaderStage.FRAGMENT,
                         },
-                        visibility: ShaderStage.FRAGMENT,
-                    },
-                    'mySampler',
-                    'sampler'),
-                new TextLayout(
-                    {
-                        texture: {},
-                        visibility: ShaderStage.FRAGMENT,
-                    },
-                    'myTexture',
-                    'texture_2d<f32>')
+                        'sampler'),
+                    myTexture: new TextLayout(
+                        {
+                            texture: {},
+                            visibility: ShaderStage.FRAGMENT,
+                        },
+                        'texture_2d<f32>'),
+                }
             ));
         this.bindGroupTextureWater = this.positionAndTimeBindGroup.createSharedLayout('lightsBindGroupTexture2PipelineLayout',
             new BGLayout(this,
                 'lightsBindGroupTexture2water',
-                new SampLayout(
-                    {
-                        sampler: {
+                {
+                    diffuseTexture: new TextLayout(
+                        {
+                            texture: {},
+                            visibility: ShaderStage.FRAGMENT,
                         },
-                        visibility: ShaderStage.FRAGMENT,
-                    },
-                    'mySampler',
-                    'sampler'),
-                new TextLayout(
-                    {
-                        texture: {},
-                        visibility: ShaderStage.FRAGMENT,
-                    },
-                    'diffuseTexture',
-                    'texture_2d<f32>')
+                        'texture_2d<f32>'),
+                    mySampler: new SampLayout(
+                        {
+                            sampler: {
+                            },
+                            visibility: ShaderStage.FRAGMENT,
+                        },
+                        'sampler'),
+                }
             ));
 
         this.pickRenderPass = new RenderPass({
@@ -511,28 +516,28 @@ export class GPU {
 
         this.BindGroupLayoutCanvas = new BGLayout(this,
             'BindGroupLayoutUI',
-            new BufLayout(
-                {
-                    buffer: {
-                        minBindingSize: 8,
-                        type: 'uniform',
+            {
+                texture: new TextLayout(
+                    {
+                        texture: {
+                        },
+                        visibility: ShaderStage.FRAGMENT,
                     },
-                    visibility: ShaderStage.VERTEX,
+                    'texture_2d<f32>'),
+                uniforms: new BufLayout(
+                    {
+                        buffer: {
+                            minBindingSize: 8,
+                            type: 'uniform',
+                        },
+                        visibility: ShaderStage.VERTEX,
 
-                },
-                'uniforms',
-                UIUniforms),
-            new TextLayout(
-                {
-                    texture: {
                     },
-                    visibility: ShaderStage.FRAGMENT,
-                },
-                'texture',
-                'texture_2d<f32>')
+                    UIUniforms),
+            }
         )
         this.#canvasRootLayout = new BindablePipelineLayout({
-            bindGroupLayouts: [this.BindGroupLayoutCanvas] as [typeof this.BindGroupLayoutCanvas],
+            bindGroupLayouts: [this.BindGroupLayoutCanvas],
             label: 'canvasRootLayout',
         });
         const uiVertShader = createUIVertShader(this.#canvasRootLayout,

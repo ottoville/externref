@@ -1,9 +1,13 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import type { BGLayout } from '../BindGroupLayout.js';
-import type { FilterCompute } from './ComputeShader.js';
-import type { FilterFragment } from './FragmentShader.js';
-import type { FilterVertex, VertexBufferLayout2 } from './VertexShader.js';
+import type { BGLayout, BindGroupLayoutEntry, ShaderStage } from '../BindGroupLayout.js';
+import type { VertexBufferLayout2 } from './VertexShader.js';
 import type { Struct } from './structs/Structs.js'
+
+export type VertexEntry = BindGroupLayoutEntry<ShaderStage.VERTEX | ShaderStage.COMPUTE_AND_VERTEX | ShaderStage.VERTEX_AND_FRAGMENT>;
+export type FragmentEntry = BindGroupLayoutEntry<ShaderStage.FRAGMENT | ShaderStage.COMPUTE_AND_FRAGMENT | ShaderStage.VERTEX_AND_FRAGMENT>;
+export type ComputeEntry = BindGroupLayoutEntry<ShaderStage.COMPUTE | ShaderStage.COMPUTE_AND_VERTEX | ShaderStage.COMPUTE_AND_FRAGMENT>;
+
+export type FilteredBindgroupEntrys<B extends readonly BGLayout[], F extends BindGroupLayoutEntry> = Readonly<{ [K in keyof B]:  {[BE in keyof B[K]['entries']]: B[K]['entries'][BE] extends F ? B[K]['entries'][BE] : never}   }>
 
 export class VertexShaderFunction<B extends readonly BGLayout[] = readonly BGLayout[],
     const V extends readonly VertexBufferLayout2[] | readonly [] = readonly VertexBufferLayout2[] | readonly []> {
@@ -15,7 +19,7 @@ export class VertexShaderFunction<B extends readonly BGLayout[] = readonly BGLay
         public output: Struct,
         public pipelineLayout: PipelineLayout<B>,
         vertexBufferLayout: V,
-        code: (args: Readonly<{ [K in keyof B]: FilterVertex<B[K]['entries']> }>, bufferArgs: Readonly<{ [K in keyof V]: { [KK in keyof V[K]['attributes2']]: KK } }>) => string,
+        code: (args: FilteredBindgroupEntrys<B, VertexEntry>, bufferArgs: Readonly<{ [K in keyof V]: { [KK in keyof V[K]['attributes2']]: KK } }>) => string,
         // TODO: use enums
         private inputs = ''
 
@@ -29,7 +33,7 @@ export class VertexShaderFunction<B extends readonly BGLayout[] = readonly BGLay
             }
         })
     }
-    createCode(bindGroups: { [K in keyof B]: FilterVertex<B[K]['entries']>; }, name: string) {
+    createCode(bindGroups: FilteredBindgroupEntrys<B, VertexEntry>, name: string) {
         const variableNames = this.vertexBufferLayout.map(buffer => {
             const keys = Object.keys(buffer.attributes2);
             return Object.fromEntries(keys.map((o, i) =>
@@ -65,11 +69,11 @@ export class FragmentShaderFunction<B extends readonly BGLayout[]> {
         public pipelineLayout: PipelineLayout<B>,
         /* TODO: use struct array from vertex shader output */
         private inputs: string,
-        code: (args: Readonly<{ [K in keyof B]: FilterFragment<B[K]['entries']> }>) => string
+        code: (args: FilteredBindgroupEntrys<B, FragmentEntry>) => string
     ) {
         this.#code = code;
     }
-    createCode(bindGroups: { [K in keyof B]: FilterFragment<B[K]['entries']>; }, name: string) {
+    createCode(bindGroups: FilteredBindgroupEntrys<B, FragmentEntry>, name: string) {
         const wgsl = /* wgsl */`
                 @fragment
                 fn ${name}(
@@ -88,11 +92,11 @@ export class ComputeShaderFunction<B extends readonly BGLayout[]> {
         private inputs: string,
         public pipelineLayout: PipelineLayout<B>,
         private readonly workgroupSize: readonly [x: number, y?:number, z?:number],
-        code: (args: Readonly<{ [K in keyof B]: FilterCompute<B[K]['entries']> }>) => string
+        code: (args: FilteredBindgroupEntrys<B, ComputeEntry>) => string
     ) {
         this.#code = code;
     }
-    createCode(bindGroups: { [K in keyof B]: FilterCompute<B[K]['entries']>; }, name: string) {
+    createCode(bindGroups: FilteredBindgroupEntrys<B, ComputeEntry>, name: string) {
         const wgsl = /* wgsl */`
                 @compute @workgroup_size(${this.workgroupSize.join()})
                 fn ${name} (

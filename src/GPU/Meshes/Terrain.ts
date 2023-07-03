@@ -15,15 +15,16 @@ export class TerrainMesh extends BoundableNodeIndexed {
     setTextureView = (textureview: TextureView) => {
         this.drawable!.setStaticBindGroup('terrainTexture',
             (bindGroup) => {
-                return [
-                    {
+                return ({
+                    todo1: {
                         binding: 0,
                         resource: this.sampler!,
-                    }, {
+                    },
+                    todo2: {
                         binding: 1,
                         resource: textureview.getTextureBinding(bindGroup),
-                    }
-                ]
+                    },
+                })
             });
     }
     drawable: DrawableIndexed<RenderPipeline<GroundVertShader>> | undefined;
@@ -80,15 +81,16 @@ export class TerrainMesh extends BoundableNodeIndexed {
 
             this.drawable.setStaticBindGroup('TerrainInitialTexture',
                 (bindGroup) => {
-                    return [
-                        {
+                    return ({
+                        todo1: {
                             binding: 0,
                             resource: this.sampler!,
-                        }, {
+                        },
+                        todo2: {
                             binding: 1,
                             resource: initialTexture.getTextureBinding(bindGroup),
-                        }
-                    ]
+                        },
+                    })
                 });
             this.drawable.setIndexBuffer(this.iBuffer,
                 0,

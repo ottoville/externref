@@ -1,5 +1,5 @@
 ﻿import { BindGroup } from './BindGroup.js';
-import type { BGLayout, BindGroupLayoutEntry, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
+import type { BGLayout, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
 import { RenderPipeline, type RenderPipelineProps } from './RenderPipeline.js';
 import type { VertexShader } from './Shaders/VertexShader.js';
 import type { GPU } from '../GPU.js'
@@ -63,7 +63,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
 
         return d;
     }
-    createSharedLayout<T extends BGLayout<BindGroupLayoutEntry[]>>(label: string, layout: T) {
+    createSharedLayout<T extends BGLayout>(label: string, layout: T) {
         const p = new SharedPipelineLayout({
             bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
             label,
@@ -71,7 +71,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
         this.subBindGroups.push(p);
         return p;
     }
-    createAppendedLayout<T extends BGLayout<BindGroupLayoutEntry[]>>(label: string, layout: T) {
+    createAppendedLayout<T extends BGLayout>(label: string, layout: T) {
         const p = new BindablePipelineLayout({
             bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
             label,

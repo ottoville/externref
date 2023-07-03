@@ -147,12 +147,11 @@ export class Plants extends MainNode {
                         });
                     const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup2',
                         bg =>
-                            [
-                                {
-                                    binding: 0,
+                            ({
+                                positions: {
                                     resource: worldCopyGPU.getStorageBinding(bg),
-                                }
-                            ]);
+                                },
+                            }));
 
                     passEncoder.setBindGroup(0,
                         bindGroup.bindGroup);
@@ -186,24 +185,21 @@ export class Plants extends MainNode {
 
             const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1',
                 bindGroup1 =>
-                    [
-                        {
-                            binding: 0,
-                            resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1),
-                        },
-                        {
-                            binding: 1,
+                    ({
+                        facet12: {
                             resource: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1),
                         },
-                        {
-                            binding: 2,
+
+                        positionAndRotate: {
                             resource: positionGPUSwap.getStorageBinding(bindGroup1),
                         },
-                        {
-                            binding: 3,
+                        shapes: {
                             resource: shapeGPUSwap.getStorageBinding(bindGroup1),
-                        }
-                    ]);
+                        },
+                        slopes: {
+                            resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1),
+                        },
+                    }));
         }).catch(err =>
             engine.showError(err,
                 scene.gpu));

@@ -20,10 +20,10 @@ export function createPlaneAtGroundHeightVertShader(
                 pipelineLayout,
                 [buffers],
                 ([
-                    [/*uniforms*/,],
-                    [scene/*time, clusters_array, meshes, projection*/],
-                    [world],
-                    [_slopes, _facet12]
+                    /*{uniforms,}*/,
+                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { world, }
+                    /*{ _slopes, _facet12, }*/
                 ]) => /* wgsl */
                     `
                 var output:Output;
@@ -38,10 +38,12 @@ export function createPlaneAtGroundHeightVertShader(
         gpu: pipelineLayout.gpu,
         label: 'PlaneAtGroundHeight.vert',
     },
-    ([/*uniforms*/,],
-        [_scene/*time, clusters_array, meshes, projection*/],
-        [_world],
-        [slopes, facet12]) =>
+    ([
+        /*{ uniforms, }*/,
+        /*{ scene,time, clusters_array, meshes, projection}*/,
+        /*{ world, }*/,
+        { slopes, facet12, }
+    ]) =>
         `
         ${getHeightAtCoordinates(settings,
         slopes,

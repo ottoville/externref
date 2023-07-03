@@ -6,7 +6,12 @@ import type { GPU } from '../../GPU.js'
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 
-type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE, typeof Vertices>, TextLayout<ShaderStage.COMPUTE>]>];
+type BindLayouts = readonly [
+    BGLayout<{
+        positions: BufLayout<ShaderStage.COMPUTE, typeof Vertices>,
+        pixels: TextLayout<ShaderStage.COMPUTE>
+    }>
+    ];
 
 
 export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
@@ -14,27 +19,27 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
         const bindLayouts = [
             new BGLayout(gpu,
                 'indicesBindGroupLayout',
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 48,
-                            type: 'storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
+                {
+                    pixels: new TextLayout(
+                        {
+                            texture: {
 
-                    },
-                    'positions',
-                    Vertices),
-                new TextLayout(
-                    {
-                        texture: {
+                            },
+                            visibility: ShaderStage.COMPUTE,
+                        },
+                        'texture_2d<f32>'),
+                    positions: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 48,
+                                type: 'storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
 
                         },
-                        visibility: ShaderStage.COMPUTE,
-                    },
-                    'pixels',
-                    'texture_2d<f32>'))
+                        Vertices),
+                })
         ] as const
 
         const pipelineLayout = new PipelineLayout({
@@ -47,7 +52,7 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     [1, 1],
-                    ([[positions, pixels]]) => /* wgsl */
+                    ([{ positions, pixels, }]) => /* wgsl */
                         `
                 let coords=vec2<f32>(
                     f32(GlobalInvocationID.x) * factor_x,

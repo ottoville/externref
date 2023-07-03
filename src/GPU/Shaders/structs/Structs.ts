@@ -114,10 +114,6 @@ export const Vec2Array = new Struct('Vec2Array',
     {
         vectors: ['', 'array<vec2<f32>>'],
     })
-export const Slopes = new Struct('Slopes',
-    {
-        numbers: ['', 'array<i32>'],
-    })
 export const Vertice = new Struct('Vertice',
     {
         position: ['', 'vec3<f32>'],
@@ -162,7 +158,6 @@ export const UpdateClustersBufferLayout = new BufLayout(
             minBindingSize: 7962624,
         },
     },
-    'clusters',
     Clusters);
 export const ViewUniforms = new Struct('ViewUniforms',
     {

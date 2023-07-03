@@ -5,57 +5,58 @@ import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js'
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
+import { SlopesLayout } from './CreateTerrainTexture.comp.js';
 
 
 type BindLayouts = readonly [
-    BGLayout<[BufLayout<ShaderStage.COMPUTE, typeof Vertices>]>,
-    BGLayout<[
-        BufLayout<ShaderStage.COMPUTE, typeof IntArray>,
-        BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>
-    ]>,
+    BGLayout<{
+        vertices: BufLayout<ShaderStage.COMPUTE, typeof Vertices>}>,
+        SlopesLayout,
 ];
 export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
     constructor(gpu: GPU, settings: typeof Terrain.settings) {
         const bindLayouts = [
             new BGLayout(gpu,
                 'verticesBindGroupLayout',
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 48,
-                            type: 'read-only-storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
+                {
+                    vertices: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 48,
+                                type: 'read-only-storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
 
-                    },
-                    'vertices',
-                    Vertices)),
+                        },
+                        Vertices),
+                }),
             new BGLayout(gpu,
                 'slopesAndFacesBindGroupLayout',
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
-                    },
-                    'slopes',
-                    IntArray),
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
+                {
+                    facet12: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 32,
+                                type: 'storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
 
-                    },
-                    'facet12',
-                    PlaneArray))
+                        },
+                        PlaneArray),
+                    slopes: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 32,
+                                type: 'storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
+                        },
+                        IntArray),
+
+                })
         ] as const
 
         const pipelineLayout = new PipelineLayout({
@@ -71,7 +72,7 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     [1],
-                    ([[vertices], [slopes, facet12]]) => /* wgsl */
+                    ([{ vertices, }, { slopes, facet12, }]) => /* wgsl */
                         `
                 
           let next:vec2<u32> = vec2<u32>(GlobalInvocationID.x + u32(1),GlobalInvocationID.y + u32(1));

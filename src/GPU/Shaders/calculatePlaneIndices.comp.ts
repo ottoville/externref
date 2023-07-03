@@ -6,24 +6,25 @@ import type { GPU } from '../../GPU.js'
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 
-type BindLayouts = readonly [BGLayout<[BufLayout<ShaderStage.COMPUTE>]>];
+type BindLayouts = readonly [BGLayout<{indices: BufLayout<ShaderStage.COMPUTE>}>];
 export class CalculatePlaneIndices extends ComputeShader<BindLayouts> {
     constructor(gpu: GPU, settings: typeof Terrain.settings) {
         const bindLayouts = [
             new BGLayout(gpu,
                 'calculateIndicesBindGroupLayout',
-                new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
+                {
+                    indices: new BufLayout(
+                        {
+                            buffer: {
+                                hasDynamicOffset: false,
+                                minBindingSize: 32,
+                                type: 'storage',
+                            },
+                            visibility: ShaderStage.COMPUTE,
 
-                    },
-                    'indices',
-                    Indices))
+                        },
+                        Indices),
+                })
         ] as const
 
         const pipelineLayout = new PipelineLayout({
@@ -36,7 +37,7 @@ export class CalculatePlaneIndices extends ComputeShader<BindLayouts> {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     [1],
-                    ([[indices]]) => /* wgsl */
+                    ([{ indices, }]) => /* wgsl */
                         `
                 let idx1: u32 = (GlobalInvocationID.x + u32(1) + (GlobalInvocationID.y + u32(1)) * (${settings.subdivisions[0]} + u32(1)));
                 let idx2: u32 = (GlobalInvocationID.x + u32(1) + GlobalInvocationID.y * (${settings.subdivisions[1]} + u32(1)));

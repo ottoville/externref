@@ -73,7 +73,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
 
     #staticBindGroup?: BindGroup;
     setStaticBindGroup(label: string,
-        staticBuffers: (bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>) {
+        staticBuffers: (bindGroup: BindGroup) => {[index: string] : GPUBindGroupEntry}) {
         this.renderPasses.forEach(rp =>
             rp.bundles.forEach(b =>
                 b.destroy()));

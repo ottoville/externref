@@ -16,10 +16,10 @@ export class WaterFragShader extends FragmentShader<BindLayouts> {
                 @location(1) position : vec3<f32>,
                 @location(2) @interpolate(flat) id : u32`,
                     ([
-                        [/*uniforms*/,],
-                        [/*scene, time, clusters_array, meshes, projection*/,],
-                        [/*world*/,],
-                        [mySampler, diffuseTexture]
+                        /*{ uniforms, }*/,
+                        /*{ scene, clusters_array, meshes, projection, }*/,
+                        /*{ world, }*/,
+                        { mySampler, diffuseTexture, }
                     ]) => /* wgsl */
                         `                
                     var output:Output;

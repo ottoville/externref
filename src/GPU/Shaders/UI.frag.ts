@@ -19,7 +19,7 @@ export function createUIFragmentShader(pipelineLayout: PipelineLayout<BindLayout
                 pipelineLayout,
                 `@builtin(position) fragCoord : vec4<f32>,
                 @location(0) v_uv : vec2<f32>`,
-                ([[texture]]) => /* wgsl */
+                ([{ texture, }]) => /* wgsl */
                     `
                     let fragCoordI=vec2<i32>(floor(v_uv));
                     let color:vec4<f32> = textureLoad(${texture}, fragCoordI, 0);
