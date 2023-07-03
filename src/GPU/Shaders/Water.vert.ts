@@ -32,7 +32,7 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
                 [buffers],
                 ([
                     /*{ uniforms, }*/,
-                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { scene, /*time, clusters_array, meshes, projection*/ },
                     { world, }
                     /*{mySampler, diffuseTexture}*/
                 ], [{ position, }]) =>

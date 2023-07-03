@@ -119,7 +119,7 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
             gpu,
             label: 'GetHeightAtCoordinates.comp',
         },
-        ([{ slopes, facet12,/* positionAndRotate, shapes, */ }/*, { positions, }*/]) => /* wgsl */
+        ([{ slopes, facet12, /* positionAndRotate, shapes, */ }/*, { positions, }*/]) => /* wgsl */
             `
         const PI:f32 = 3.141592653589793;
         //

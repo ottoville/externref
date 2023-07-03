@@ -21,7 +21,7 @@ export class SunVertShader extends VertexShader<BindLayouts> {
                     [],
                     ([
                         /*{ uniforms, }*/,
-                        { scene,/*time, clusters_array, meshes, projection*/ },
+                        { scene, /*time, clusters_array, meshes, projection*/ },
                         { world, }
                     ]) =>
                     /* wgsl */ `

@@ -35,7 +35,7 @@ export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) 
             main: new ComputeShaderFunction(
                 '@builtin(global_invocation_id) global_id : vec3<u32>',
                 pipelineLayout,
-                [4,2,4],
+                [4, 2, 4],
                 ([{ uniforms, }, { clusters, screentoview, }]) => /* wgsl */
                     `
             let tileIndex = global_id.x +

@@ -21,7 +21,7 @@ export function createPlaneAtGroundHeightVertShader(
                 [buffers],
                 ([
                     /*{uniforms,}*/,
-                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { scene, /*time, clusters_array, meshes, projection*/ },
                     { world, }
                     /*{ _slopes, _facet12, }*/
                 ]) => /* wgsl */

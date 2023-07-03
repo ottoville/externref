@@ -24,7 +24,7 @@ export class Plane extends VertexShader<BindLayouts> {
                     [buffers],
                     ([
                         /*{uniforms,}*/,
-                        { scene,/*time, clusters_array, meshes, projection*/ },
+                        { scene, /*time, clusters_array, meshes, projection*/ },
                         { world, }
                     ]) =>
                         /* wgsl */ `

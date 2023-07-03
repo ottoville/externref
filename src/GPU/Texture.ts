@@ -106,26 +106,26 @@ export class Texture<
     U extends TextureUsageValue,
     S extends TextureSize = TextureSize,
 > {
-    static create<F extends GPUTextureFormat, U extends Exclude<COPY_DST_TEXTURE & COPY_SRC_TEXTURE, RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F,U,S>): Texture<F, U, S> & copySrcTexture & copyDstTexture
+    static create<F extends GPUTextureFormat, U extends Exclude<COPY_DST_TEXTURE & COPY_SRC_TEXTURE, RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F, U, S>): Texture<F, U, S> & copySrcTexture & copyDstTexture
     static create<F extends STORAGE_FORMATS, U extends typeof TextureUsageEnums['STORAGE_BINDING'], S extends TextureSize = TextureSize>(props : TextureParamsStorage<F, U, S>): Texture<F, U, S>
 
-    static create<F extends GPUTextureFormat, U extends RENDER_TARGET_TEXTURE & COPY_DST_TEXTURE & COPY_SRC_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F,U,S>): RenderTarget<F, U, S> & copyDstTexture & copySrcTexture
-    static create<F extends GPUTextureFormat, U extends RENDER_TARGET_TEXTURE & COPY_DST_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F,U,S>): RenderTarget<F, U, S> & copyDstTexture
-    static create<F extends GPUTextureFormat, U extends RENDER_TARGET_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F,U,S>): RenderTarget<F, U, S>
+    static create<F extends GPUTextureFormat, U extends RENDER_TARGET_TEXTURE & COPY_DST_TEXTURE & COPY_SRC_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F, U, S>): RenderTarget<F, U, S> & copyDstTexture & copySrcTexture
+    static create<F extends GPUTextureFormat, U extends RENDER_TARGET_TEXTURE & COPY_DST_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F, U, S>): RenderTarget<F, U, S> & copyDstTexture
+    static create<F extends GPUTextureFormat, U extends RENDER_TARGET_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F, U, S>): RenderTarget<F, U, S>
 
     //STORAGE
     static create<F extends STORAGE_FORMATS, U extends STORAGE_BINDING_TEXTURE & COPY_SRC_TEXTURE, S extends TextureSize = TextureSize>(props : TextureParamsStorage<F, U, S>): Texture<F, U, S> & copySrcTexture
 
 
-    static create<F extends GPUTextureFormat, U extends Exclude<COPY_DST_TEXTURE, RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F,U,S>): Texture<F, U, S> & copyDstTexture
-    static create<F extends GPUTextureFormat, U extends Exclude<COPY_SRC_TEXTURE, STORAGE_BINDING_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F,U,S>): Texture<F,U,S> & copySrcTexture
-    static create<F extends GPUTextureFormat, U extends Exclude<TextureUsageValue, STORAGE_BINDING_TEXTURE | RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F,U,S>): Texture<F, U ,S>
-    static create<F extends GPUTextureFormat, U extends TextureUsageValue, S extends TextureSize = TextureSize>(props : TextureParams<F,Exclude<U, TextureUsageType['STORAGE_BINDING']>,S>) {
+    static create<F extends GPUTextureFormat, U extends Exclude<COPY_DST_TEXTURE, RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F, U, S>): Texture<F, U, S> & copyDstTexture
+    static create<F extends GPUTextureFormat, U extends Exclude<COPY_SRC_TEXTURE, STORAGE_BINDING_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F, U, S>): Texture<F, U, S> & copySrcTexture
+    static create<F extends GPUTextureFormat, U extends Exclude<TextureUsageValue, STORAGE_BINDING_TEXTURE | RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F, U, S>): Texture<F, U, S>
+    static create<F extends GPUTextureFormat, U extends TextureUsageValue, S extends TextureSize = TextureSize>(props : TextureParams<F, Exclude<U, TextureUsageType['STORAGE_BINDING']>, S>) {
         if (props.usages & TextureUsageEnums['RENDER_ATTACHMENT']) {
             //@ts-expect-error
             return new RenderTarget<F, RENDER_TARGET_TEXTURE, RenderTargetSize>(props);
         }
-        return new Texture<F, U ,S>(props);
+        return new Texture<F, U, S>(props);
     }
 
     texture: GPUTexture;
@@ -133,7 +133,7 @@ export class Texture<
     protected initialSampleCount: 1 | 4 = 1;
     constructor(
         //@ts-expect-error Texture is always created with static "create" method, giving correct generics
-        public props : TextureParams<F,Exclude<U, TextureUsageType['STORAGE_BINDING']>,S> | TextureParamsStorage<F, U, S>
+        public props : TextureParams<F, Exclude<U, TextureUsageType['STORAGE_BINDING']>, S> | TextureParamsStorage<F, U, S>
     ) {
         this.texture = this.createTexture(props.initialSampleCount);
         if (props.usages & TextureUsageEnums['COPY_DST']) {

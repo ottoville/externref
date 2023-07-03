@@ -21,7 +21,7 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
                 [buffers],
                 ([
                     /*{ uniforms, }*/,
-                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { scene, /*time, clusters_array, meshes, projection*/ },
                     { world, }
                 ], [{ color, position, normal, }]) =>
                     /* wgsl */ `var output:Output;

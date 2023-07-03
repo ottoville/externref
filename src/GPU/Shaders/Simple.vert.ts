@@ -13,7 +13,7 @@ export function createPickOutput(pipelineLayout: BindablePipelineLayout<BindLayo
         [buffers],
         ([
             /*{ uniforms, }*/,
-            { scene,/*time, clusters_array, meshes, projection*/ },
+            { scene, /*time, clusters_array, meshes, projection*/ },
             { world, }
         ], [{ position, }]) =>
         /* wgsl */ `
@@ -43,7 +43,7 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
                 [buffers],
                 ([
                     /*{ uniforms, }*/,
-                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { scene, /*time, clusters_array, meshes, projection*/ },
                     { world, }
                 ], [{ position, normal, }]) =>
                 /* wgsl */ `

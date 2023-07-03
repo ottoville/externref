@@ -325,7 +325,9 @@ gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.vie
             webSocket.onopen = () => {
                 console.log('websocket onopen');
                 webSocket.send(JSON.stringify({
-                    action: 'init', data: { /* userinfo: state.userInfo, ticks */ },
+                    action: 'init',
+                    data: {
+                        /* userinfo: state.userInfo, ticks */ },
                 }));
                 webSocket.onmessage = (e) => {
                     console.log('message from WS',

@@ -59,7 +59,7 @@ export class WorkerThread extends MainWorker {
             action: action, data: data, type: returntype,
         };
         return new Promise((res, rej) => {
-            toWorker.id = this.operations.push([res,rej]) - 1
+            toWorker.id = this.operations.push([res, rej]) - 1
             super.postMessage(toWorker,
                 options);
         })

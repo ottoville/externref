@@ -78,7 +78,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                             UIRectangleProps: {
                                 label: 'Plants',
                                 scale: {
-                                    min_width: 0.07,unit: NumericUnit['%'], y: 0.04,
+                                    min_width: 0.07, unit: NumericUnit['%'], y: 0.04,
                                 },
                                 translate: {
                                     x: {

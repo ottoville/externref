@@ -53,9 +53,21 @@ module.exports = {
         'array-bracket-spacing': 2,
         'object-curly-spacing': [2, 'always'],
         'no-trailing-spaces': 2,
-        'key-spacing': ['error', { 'afterColon': true, }],
-        'indent': ['error', 4, { 'SwitchCase': 1, }],
-        'sort-keys': ['error', 'asc', { 'caseSensitive': true, 'natural': false, 'minKeys': 2, }],
+        'key-spacing': [
+            'error', {
+                'afterColon': true,
+            }
+        ],
+        'indent': [
+            'error', 4, {
+                'SwitchCase': 1,
+            }
+        ],
+        'sort-keys': [
+            'error', 'asc', {
+                'caseSensitive': true, 'natural': false, 'minKeys': 2,
+            }
+        ],
         'quotes': ['error', 'single'],
         'comma-dangle': [
             'error', {
@@ -66,13 +78,19 @@ module.exports = {
         ],
         'function-call-argument-newline': ['error', 'always'],
         'implicit-arrow-linebreak': ['error', 'below'],
-        'object-property-newline': ['error', { 'allowAllPropertiesOnSameLine': true, }],
+        'object-property-newline': [
+            'error', {
+                'allowAllPropertiesOnSameLine': true,
+            }
+        ],
         'object-curly-newline': [
             'error', {
                 'ObjectExpression': 'always',
                 'ImportDeclaration': 'never',
             }
         ],
+        'block-spacing': ['error'],
+        'comma-spacing': ['error'],
     },
     settings: {
         'import/resolver': {

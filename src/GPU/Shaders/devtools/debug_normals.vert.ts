@@ -17,7 +17,7 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
                 [buffers],
                 ([
                     /*{ uniforms, }*/,
-                    { scene,/*time, clusters_array, meshes, projection*/ },
+                    { scene, /*time, clusters_array, meshes, projection*/ },
                     { world, }
                 ], [{ position, normal, }]) => /* wgsl */
                     `

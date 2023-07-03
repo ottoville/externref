@@ -20,7 +20,7 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
                     [],
                     ([
                         /*{ uniforms, }*/,
-                        { scene,time, /*clusters_array, meshes, projection*/ },
+                        { scene, time, /*clusters_array, meshes, projection*/ },
                         { world, }
                         /*{ slopes, facet12, }*/
                     ]) => /* wgsl */

@@ -50,7 +50,7 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
             x = cullMode * Math.sin(progress);
             z = Math.cos(progress);
             vertices.set(
-                [x, 0, z, 1,/* normals: */ 0, 0, 0, 1],
+                [x, 0, z, 1, /* normals: */ 0, 0, 0, 1],
                 (i + 2) * stride);
             progress += facelen;
         }
