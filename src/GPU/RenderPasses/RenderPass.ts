@@ -50,7 +50,8 @@ export class RenderPass<U extends {
     readonly renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant | Promise<RenderPipelineVariant>> = new Map();
     readonly sizeBindGroup: () => BindGroup;
     #sizeBuffer: BindUniformBuffer;
-    readonly colorRenderTargets = {} as U
+    readonly colorRenderTargets = {
+    } as U
     onResize: Map<object, () => void> = new Map();
     public gpu: GPU
     public sampleCount: 1 | 4;
@@ -174,14 +175,18 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                             renderPipeline.props.vertexShader.module.label,
                             'wgsl:',
                             renderPipeline.props.vertexShader.wgsl,
-                            { cause: err, })
+                            {
+                                cause: err,
+                            })
                     }
                     else if (err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
                         console.error('createRenderPipelineAsync failed, fragment',
                             renderPipeline.props.fragmentShader.module.label,
                             'wgsl:',
                             renderPipeline.props.fragmentShader.wgsl,
-                            { cause: err, })
+                            {
+                                cause: err,
+                            })
                     } else {
                         console.error('createRenderPipelineAsync failed, vertex',
                             renderPipeline.props.vertexShader.module.label,
@@ -191,11 +196,15 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                             renderPipeline.props.fragmentShader.module,
                             ' wgsl:',
                             renderPipeline.props.fragmentShader.wgsl,
-                            { cause: err, });
+                            {
+                                cause: err,
+                            });
                     }
                 }
                 throw (new Error('createRenderPipelineAsync failed',
-                    { cause: err, }));
+                    {
+                        cause: err,
+                    }));
             }).then((variantPipeline) => {
                 variant = new RenderPipelineVariant(
                     variantPipeline,
@@ -239,7 +248,9 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
             },
         }
         if (this.sampleCount > 1)
-            renderPipelineDescriptor.multisample = { count: this.sampleCount, };
+            renderPipelineDescriptor.multisample = {
+                count: this.sampleCount,
+            };
         return renderPipelineDescriptor;
     }
     resize(width: number, height: number) {

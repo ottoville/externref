@@ -31,7 +31,8 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
                 baseVertex?: number;
                 firstIndex?: number;
                 GPUIndexFormat?: GPUIndexFormat;
-            } = {}
+            } = {
+        }
     ) {
         super(
             {

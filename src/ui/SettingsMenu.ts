@@ -5,7 +5,9 @@ import type { Engine } from '../engine.js';
 import { UIRectangleNode } from './UIRectangleNode.js';
 declare const engine: Engine;
 
-const scale = { min_width: 200, unit: NumericUnit.px, y: 50, };
+const scale = {
+    min_width: 200, unit: NumericUnit.px, y: 50,
+};
 const x = {
     anchor: Anchor.CENTER,
     value: [0],
@@ -23,7 +25,8 @@ export class createSettingsMenu extends UINode<{}> {
             });
     }
     constructor() {
-        super({});
+        super({
+        });
     }
     render() {
         return [

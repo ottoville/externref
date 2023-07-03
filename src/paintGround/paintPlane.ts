@@ -100,8 +100,12 @@ export class paintPlane extends paintGround {
                     });
             }
         ],
-        { cullMode: 'back', frontFace: 'cw', topology: 'triangle-list', },
-        { stride: 12, });
+        {
+            cullMode: 'back', frontFace: 'cw', topology: 'triangle-list',
+        },
+        {
+            stride: 12,
+        });
 
         this.#mesh = new PlaneMesh(renderPipeline);
     }

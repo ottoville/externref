@@ -13,7 +13,8 @@ export abstract class UINode<P extends object = object, S extends object = objec
     }
     #children: (UINode | null)[] = [];
     //@ts-expect-error
-    state: Readonly<S> = {};
+    state: Readonly<S> = {
+    };
     #currentGPU!: GPU
     protected setState(state: Partial<S>) {
         this.state = {

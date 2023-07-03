@@ -34,7 +34,8 @@ export abstract class DrawableDirect<N extends MainNode> extends Drawable<N> {
         {
             instanceCount = 1,
             firstInstance = 0,
-        }: DrawableDirectProps = {}
+        }: DrawableDirectProps = {
+        }
     ) {
         super(drawableProps);
         engine.rust.set_drawble_direct(this.node.id,

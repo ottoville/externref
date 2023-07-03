@@ -15,8 +15,7 @@ export class Box extends IndexedSingleColoredMesh {
             true);
     }
     constructor(
-        {
-            scenes,
+        { scenes,
             point_light = 0,
             can_collide = false,
             label = 'box' + (uid++),

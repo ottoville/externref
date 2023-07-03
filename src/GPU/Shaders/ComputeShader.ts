@@ -24,7 +24,9 @@ export class ComputeShader<
             layout: this.props.entryPoints[entryPoint]!.pipelineLayout.layout,
         }).catch((err: unknown) => {
             throw (new Error('createComputePipelineAsync failed on ' + this.module.label + ' , wgsl:' + this.wgsl,
-                { cause: err, }));
+                {
+                    cause: err,
+                }));
         });
     }
 }

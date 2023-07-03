@@ -20,7 +20,8 @@ abstract class MainWorker extends Worker2 {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (value?: any | PromiseLike<unknown> | undefined) => void,
     ] | null)[] = [];
-    #subscriptions: { [key: string]: (value?: unknown) => void; } = {};
+    #subscriptions: { [key: string]: (value?: unknown) => void; } = {
+    };
     constructor(stringUrl: string | URL, options?: WorkerOptions) {
         super(basePath+stringUrl,
             options);
@@ -54,7 +55,9 @@ abstract class MainWorker extends Worker2 {
 }
 export class WorkerThread extends MainWorker {
     message<T>(returntype: WorkerReturn, action: string, data: object, options: Transferable[]): Promise<T> {
-        const toWorker: WMessage = { action: action, data: data, type: returntype, };
+        const toWorker: WMessage = {
+            action: action, data: data, type: returntype,
+        };
         return new Promise((res, rej) => {
             toWorker.id = this.operations.push([res,rej]) - 1
             super.postMessage(toWorker,

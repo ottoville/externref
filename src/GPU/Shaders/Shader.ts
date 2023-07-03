@@ -76,7 +76,8 @@ export abstract class Shader<
         )
         if(constantCode)
             this.wgsl+=constantCode(entries)
-        const pipelineLayouts:{[index: string]: GPUShaderModuleCompilationHint} = {}
+        const pipelineLayouts:{[index: string]: GPUShaderModuleCompilationHint} = {
+        }
         for(const key in props.entryPoints) {
             const entryPoint = props.entryPoints[key]!;
             //@ts-expect-error

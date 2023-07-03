@@ -34,7 +34,9 @@ export function createBackground(width: number, height: number, text: string, or
             textSize.height = textSize.width * originalAspectRatio;
         }
     }
-    return { copySource2, ctx, measuredSize, originalTextHeight, textSize, }
+    return {
+        copySource2, ctx, measuredSize, originalTextHeight, textSize,
+    }
 }
 function createTexture(
     backgroundAsset: {

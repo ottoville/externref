@@ -7,7 +7,9 @@ export const SunRenderPipeline = [
         const sunVertShader = new SunVertShader(gpu.positionAndTimeBindGroup)
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
-                depthBuffer: { depthCompare: 'always', depthWriteEnabled: false, },
+                depthBuffer: {
+                    depthCompare: 'always', depthWriteEnabled: false,
+                },
                 fragmentShader: new SingleColorFragShader(gpu.positionAndTimeBindGroup),
                 label,
                 renderPipeline: {

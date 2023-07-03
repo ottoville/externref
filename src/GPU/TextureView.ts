@@ -10,7 +10,8 @@ export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> 
     //TODO: set private
     view: GPUTextureView;
     readonly descriptor: Readonly<GPUTextureViewDescriptor>;
-    constructor(public texture: T, descriptor: GPUTextureViewDescriptor = {}) {
+    constructor(public texture: T, descriptor: GPUTextureViewDescriptor = {
+    }) {
         super();
         descriptor.label = texture.props.label + 'View';
         this.descriptor = Object.freeze(descriptor);

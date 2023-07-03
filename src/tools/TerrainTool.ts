@@ -75,7 +75,9 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                         ...this.props,
                         UIRectangleProps: {
                             label: 'Lower',
-                            scale: { min_width: 0.10, unit: NumericUnit['%'], y: 0.07, },
+                            scale: {
+                                min_width: 0.10, unit: NumericUnit['%'], y: 0.07,
+                            },
                             translate: {
                                 x:
                             {
@@ -96,7 +98,9 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                         ...this.props,
                         UIRectangleProps: {
                             label: 'Raise',
-                            scale: { min_width: 0.10, unit: NumericUnit['%'], y: 0.07, },
+                            scale: {
+                                min_width: 0.10, unit: NumericUnit['%'], y: 0.07,
+                            },
                             translate: {
                                 x: {
                                     anchor: Anchor.CENTER,
@@ -131,7 +135,9 @@ export class TerrainTool extends MainNode {
     constructor(
         public terrain: Terrain
     ) {
-        super(new_rust_mesh({ label: 'TerrainTool', }));
+        super(new_rust_mesh({
+            label: 'TerrainTool',
+        }));
         this.positions_count = 4;
         const getRenderPipeline = [
             'TerrainToolRenderpipeline', function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState
@@ -176,9 +182,11 @@ export class TerrainTool extends MainNode {
         {
             firstVertex: 0,
         })
-        this.#pick = { meshId: 0,
+        this.#pick = {
+            meshId: 0,
             position: new MutableTerraVector3(engine.memory.buffer,
-                engine.rust.mouse_position_pointer(this.elevator)), };
+                engine.rust.mouse_position_pointer(this.elevator)),
+        };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*
@@ -206,7 +214,9 @@ export class TerrainTool extends MainNode {
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number, number]) {
         terrainWorker.message<ArrayBuffer>(WorkerReturn.Promise,
             'saveTexture',
-            { buffer: arrayBuffer, size: size, },
+            {
+                buffer: arrayBuffer, size: size,
+            },
             [arrayBuffer]);
     }
     private direction: 1 | 0 | -1 = 0;
@@ -242,7 +252,9 @@ export class TerrainTool extends MainNode {
             clearInterval(this.mouseinterval);
         },
         object: this,
-        options: { once: true, },
+        options: {
+            once: true,
+        },
         type: 'pointerup',
     }
     override destroy = (): void => {

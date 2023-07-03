@@ -67,6 +67,12 @@ module.exports = {
         'function-call-argument-newline': ['error', 'always'],
         'implicit-arrow-linebreak': ['error', 'below'],
         'object-property-newline': ['error', { 'allowAllPropertiesOnSameLine': true, }],
+        'object-curly-newline': [
+            'error', {
+                'ObjectExpression': 'always',
+                'ImportDeclaration': 'never',
+            }
+        ],
     },
     settings: {
         'import/resolver': {

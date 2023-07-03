@@ -25,7 +25,9 @@ export const pickOutput = new Struct('PickOutput',
         id: ['@location(0) @interpolate(flat)', 'u32'],
     })
 export const pickOutputFragment = new Struct('PickOutput',
-    { ID: ['@location(0)', 'u32'], })
+    {
+        ID: ['@location(0)', 'u32'],
+    })
 export const colorOutput = new Struct('Output',
     {
         position: ['@builtin(position)', 'vec4<f32>'],

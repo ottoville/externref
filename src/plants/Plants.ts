@@ -133,8 +133,12 @@ export class Plants extends MainNode {
 
             this.#worker.subscribe('updated',
                 (data: { buffer: SharedArrayBuffer }) => {
-                    const commandEncoder = scene.gpu.device.createCommandEncoder({ label: 'plants_encoder', });
-                    const passEncoder = commandEncoder.beginComputePass({ label: 'plants_pass_encoder', });
+                    const commandEncoder = scene.gpu.device.createCommandEncoder({
+                        label: 'plants_encoder',
+                    });
+                    const passEncoder = commandEncoder.beginComputePass({
+                        label: 'plants_pass_encoder',
+                    });
                     passEncoder.setPipeline(computePipeline);
 
                     const worldCopyGPU = Buffer.create(scene.gpu,

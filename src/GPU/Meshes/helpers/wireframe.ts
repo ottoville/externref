@@ -62,8 +62,12 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
         })
 
         const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline,
-            { topology: 'line-list', },
-            { stride, });
+            {
+                topology: 'line-list',
+            },
+            {
+                stride,
+            });
         this.drawable = new DrawableIndexed({
             node: this,
             renderPasses: undefined,

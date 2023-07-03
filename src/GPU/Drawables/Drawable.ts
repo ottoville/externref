@@ -119,7 +119,9 @@ export abstract class Drawable<N extends MainNode = MainNode> {
                 })
         }
         this.#vertexBuffers.set(index,
-            { buffer: Tbuffer, offset: GPUoffset, size, });
+            {
+                buffer: Tbuffer, offset: GPUoffset, size,
+            });
         return Tbuffer;
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass): void

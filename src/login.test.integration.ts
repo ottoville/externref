@@ -26,7 +26,9 @@ describe(
             });
         it('should fill the form',
             async () => {
-                await page.waitForNavigation({ waitUntil: 'domcontentloaded', });
+                await page.waitForNavigation({
+                    waitUntil: 'domcontentloaded',
+                });
                 const username = await page.waitForSelector('input[name="userDetails"]');
                 await username?.evaluate((node) => { (node as HTMLInputElement).value = 'puppeteer' })
                 //  page.screenshot({path:'./sreenshot1.jpg'});

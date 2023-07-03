@@ -38,7 +38,9 @@ describe('Pick box ',
                     const Box: typeof Box2 = (await import('/js/GPU/Meshes/Box.js')).Box;
                     //@ts-expect-error
                     const engine: Engine = window.engine;
-                    const b = new Box({ can_collide: false, label: 'PickGreenbox', });
+                    const b = new Box({
+                        can_collide: false, label: 'PickGreenbox',
+                    });
                     b.translation = [0, 400, 0]
                     b.update_scale(500,
                         500,
@@ -68,7 +70,11 @@ describe('Pick box ',
                     res([await engine.gpu!.renderPassScreen.pickPosition(true), await engine.gpu!.renderPassScreen.pickMesh(undefined)]);
                 })
             });
-                    return [pickedPosition, { label: pickedMesh?.mesh.label, position: pickedMesh?.position, }, b.id] as const;
+                    return [
+                        pickedPosition, {
+                            label: pickedMesh?.mesh.label, position: pickedMesh?.position,
+                        }, b.id
+                    ] as const;
                 });
                 expect(pickInfo0).not.toBeNull();
                 expect(pickInfo.label).not.toBeNull();

@@ -44,7 +44,9 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
                         ...this.props,
                         UIRectangleProps: {
                             label: 'createGrassButton',
-                            scale: { min_width: 180, unit: NumericUnit.px, y: 50, },
+                            scale: {
+                                min_width: 180, unit: NumericUnit.px, y: 50,
+                            },
                             translate: {
                                 x: {
                                     anchor: Anchor.LEFT,

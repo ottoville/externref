@@ -284,7 +284,9 @@ export class RenderTarget<
             await new Promise(res => { requestAnimationFrame(res) });
         }
 
-        const encoder = this.props.gpu.device.createCommandEncoder({ label: 'texture_toBitmap_encoder', });
+        const encoder = this.props.gpu.device.createCommandEncoder({
+            label: 'texture_toBitmap_encoder',
+        });
         let bytesPerRow = this.props.size.width * this.bytes_per_fixel;
         const missAlignment = bytesPerRow % 256;
         if (missAlignment !== 0) {

@@ -36,8 +36,11 @@ export class SimpleMesh extends BoundableNodeSimple {
                     });
             }
             const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline,
-                {},
-                { stride: 8, });
+                {
+                },
+                {
+                    stride: 8,
+                });
             this.drawable = new DrawableSimple({
                 node: this,
                 renderPasses: undefined,

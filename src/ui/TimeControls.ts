@@ -12,7 +12,8 @@ type MenuState = {
 // eslint-disable-next-line @typescript-eslint/ban-types
 export class createTimeControls extends UINode<{}, MenuState> {
     constructor() {
-        super({});
+        super({
+        });
         this.state = {
             timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString(),
         }
@@ -34,7 +35,9 @@ export class createTimeControls extends UINode<{}, MenuState> {
                 Button({
                     UIRectangleProps: {
                         label: 'TimeOfDay',
-                        scale: { min_width: 300, unit: NumericUnit.px, y: 30, },
+                        scale: {
+                            min_width: 300, unit: NumericUnit.px, y: 30,
+                        },
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
@@ -52,7 +55,9 @@ export class createTimeControls extends UINode<{}, MenuState> {
                 Button({
                     UIRectangleProps: {
                         label: 'pause',
-                        scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
+                        scale: {
+                            min_width: 30, unit: NumericUnit.px, y: 30,
+                        },
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
@@ -70,7 +75,9 @@ export class createTimeControls extends UINode<{}, MenuState> {
                 Button({
                     UIRectangleProps: {
                         label: 'play',
-                        scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
+                        scale: {
+                            min_width: 30, unit: NumericUnit.px, y: 30,
+                        },
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
@@ -89,7 +96,9 @@ export class createTimeControls extends UINode<{}, MenuState> {
                 Button({
                     UIRectangleProps: {
                         label: 'fastforward',
-                        scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
+                        scale: {
+                            min_width: 30, unit: NumericUnit.px, y: 30,
+                        },
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
@@ -107,7 +116,9 @@ export class createTimeControls extends UINode<{}, MenuState> {
                 Button({
                     UIRectangleProps: {
                         label: 'fastforward1',
-                        scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
+                        scale: {
+                            min_width: 30, unit: NumericUnit.px, y: 30,
+                        },
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
@@ -125,7 +136,9 @@ export class createTimeControls extends UINode<{}, MenuState> {
                 Button({
                     UIRectangleProps: {
                         label: 'fastforward2',
-                        scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
+                        scale: {
+                            min_width: 30, unit: NumericUnit.px, y: 30,
+                        },
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
@@ -143,7 +156,9 @@ export class createTimeControls extends UINode<{}, MenuState> {
                 Button({
                     UIRectangleProps: {
                         label: 'fastforward3',
-                        scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
+                        scale: {
+                            min_width: 30, unit: NumericUnit.px, y: 30,
+                        },
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
@@ -161,7 +176,9 @@ export class createTimeControls extends UINode<{}, MenuState> {
                 Button({
                     UIRectangleProps: {
                         label: 'fastforward4',
-                        scale: { min_width: 30, unit: NumericUnit.px, y: 30, },
+                        scale: {
+                            min_width: 30, unit: NumericUnit.px, y: 30,
+                        },
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,

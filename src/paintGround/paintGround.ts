@@ -121,7 +121,9 @@ export abstract class paintGround {
             return true;
         },
         object: this,
-        options: { priority: true, },
+        options: {
+            priority: true,
+        },
         type: 'pointermove',
 
     }
@@ -132,10 +134,14 @@ export abstract class paintGround {
             // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
             //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
             engine.addInputListener(this.#mainPointerDown);
-            this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: this.size, });
+            this.resolve({
+                coord: this.#start_position, rad: this.ang360.rad, size: this.size,
+            });
         },
         object: this,
-        options: { once: true, },
+        options: {
+            once: true,
+        },
         type: 'pointerup',
 
     }
@@ -155,7 +161,9 @@ export abstract class paintGround {
             }
         },
         object: this,
-        options: { once: true, },
+        options: {
+            once: true,
+        },
         type: 'pointerup',
 
     }

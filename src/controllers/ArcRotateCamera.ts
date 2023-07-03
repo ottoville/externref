@@ -190,7 +190,9 @@ export class ArcRotateCamera extends CameraController {
                     this.pointerDown = false;
                 },
                 object: this,
-                options: { once: true, },
+                options: {
+                    once: true,
+                },
                 type: 'pointerup',
             }
             const onceLeave: ListenerObj<'pointerleave'> = {
@@ -200,7 +202,9 @@ export class ArcRotateCamera extends CameraController {
                     this.pointerDown = false;
                 },
                 object: this,
-                options: { once: true, },
+                options: {
+                    once: true,
+                },
                 type: 'pointerleave',
             }
             engine.addInputListener(onceLeave);

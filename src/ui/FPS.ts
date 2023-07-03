@@ -11,7 +11,8 @@ type MenuState = {
 // eslint-disable-next-line @typescript-eslint/ban-types
 export class CreateFPSMeter extends UINode<{}, MenuState> {
     constructor() {
-        super({});
+        super({
+        });
         this.state = {
             fps: 0,
         }
@@ -32,7 +33,9 @@ export class CreateFPSMeter extends UINode<{}, MenuState> {
                             width: [0, NumericUnit.px],
                         },
                         label: 'FPS',
-                        scale: { min_width: 10, unit: NumericUnit.px, y: 30, },
+                        scale: {
+                            min_width: 10, unit: NumericUnit.px, y: 30,
+                        },
                         translate: {
                             x: {
                                 anchor: Anchor.LEFT,

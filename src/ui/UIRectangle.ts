@@ -118,20 +118,26 @@ export abstract class UIRectangle extends DataNode {
                     format: 'bgra8unorm',
                     gpu: this.props.renderPass.gpu,
                     label: 'button_' + this.props.label + '_UIRectangle_text',
-                    size: { height: copySource.height, width: copySource.width, },
+                    size: {
+                        height: copySource.height, width: copySource.width,
+                    },
                     usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
                 }
             );
         }
         this.texture.copyFromExternalImage(
-            { source: copySource, },
+            {
+                source: copySource,
+            },
             {
                 origin: {
                     x: 0,
                     y: 0,
                 },
             },
-            { height: copySource.height, width: copySource.width, });
+            {
+                height: copySource.height, width: copySource.width,
+            });
         this.textureView = new TextureView(this.texture);
         return this.textureView;
     }
@@ -264,7 +270,9 @@ export abstract class UIRectangle extends DataNode {
         }
         const positionsCount = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6
         const vertices =  new Float32Array(positionsCount * 4);
-        return this.updateBoundingBoxAndVertices({ content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, vertices, })
+        return this.updateBoundingBoxAndVertices({
+            content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, vertices,
+        })
 
     }
     abstract updateBoundingBoxAndVertices(
@@ -330,7 +338,9 @@ export abstract class UIRectangle extends DataNode {
                     return false;
                 },
                 object: this,
-                options: { ui: true, },
+                options: {
+                    ui: true,
+                },
                 type: 'pointerup',
 
             } as ListenerObj<'pointerup'>)
@@ -343,7 +353,9 @@ export abstract class UIRectangle extends DataNode {
                     return false;
                 },
                 object: this,
-                options: { ui: true, },
+                options: {
+                    ui: true,
+                },
                 type: 'pointerdown',
             } as ListenerObj<'pointerdown'>)
         }

@@ -311,13 +311,17 @@ onmessage = (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>) => {
             //@ts-ignore
             const r = mesh[e.data.action](...e.data.data.args);
             if (typeof (e.data.id) !== 'undefined') {
-                self.postMessage({ data: r, id: e.data.id, });
+                self.postMessage({
+                    data: r, id: e.data.id,
+                });
             }
         }
     } else {
         //@ts-ignore
         const r = Mesh[e.data.action](...e.data.data.args);
         if (typeof (e.data.id) !== 'undefined')
-            self.postMessage({ data: r, id: e.data.id, });
+            self.postMessage({
+                data: r, id: e.data.id,
+            });
     }
 }

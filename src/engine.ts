@@ -187,26 +187,62 @@ function Dot(left: readonly [number, number, number] | Float32Array | TerraVecto
 }
 const ObjectStores = {
     maps: <ObjStoreDetails>{
-        parameters: { autoIncrement: true, keyPath: 'id', },
+        parameters: {
+            autoIncrement: true, keyPath: 'id',
+        },
         version: 4,
     },
     plantae: <ObjStoreDetails>{
         indices: [
-            { keyPath: 'family', name: 'family', options: { unique: false, }, version: 3, },
-            { keyPath: 'x', name: 'x', options: { unique: false, }, version: 6, },
-            { keyPath: 'grid', name: 'grid', options: { unique: false, }, version: 6, },
-            { keyPath: ['gridx', 'gridz'], name: 'gridxz', options: { unique: false, }, version: 6, }
+            {
+                keyPath: 'family',
+                name: 'family',
+                options: {
+                    unique: false,
+                },
+                version: 3,
+            },
+            {
+                keyPath: 'x',
+                name: 'x',
+                options: {
+                    unique: false,
+                },
+                version: 6,
+            },
+            {
+                keyPath: 'grid',
+                name: 'grid',
+                options: {
+                    unique: false,
+                },
+                version: 6,
+            },
+            {
+                keyPath: ['gridx', 'gridz'],
+                name: 'gridxz',
+                options: {
+                    unique: false,
+                },
+                version: 6,
+            }
         ],
-        parameters: { autoIncrement: true, keyPath: 'id', },
+        parameters: {
+            autoIncrement: true, keyPath: 'id',
+        },
         version: 2,
 
     },
     save: <ObjStoreDetails>{
-        parameters: { autoIncrement: false, keyPath: ['type', 'name'], },
+        parameters: {
+            autoIncrement: false, keyPath: ['type', 'name'],
+        },
         version: 3,
     },
     zones: <ObjStoreDetails>{
-        parameters: { autoIncrement: true, keyPath: 'id', },
+        parameters: {
+            autoIncrement: true, keyPath: 'id',
+        },
         version: 1,
     },
 };
@@ -514,7 +550,9 @@ export class Engine {
             }
             try {
                 console.log('Getting device')
-                device = await adapter.requestDevice({ label: 'device' + (deviceId++), });
+                device = await adapter.requestDevice({
+                    label: 'device' + (deviceId++),
+                });
             } catch (e) {
                 console.error(e);
                 console.log('Failed to get device');
@@ -654,7 +692,9 @@ export class Engine {
                             }
                         }
                     },
-                    { passive: false, });
+                    {
+                        passive: false,
+                    });
             });
             const waterCamera = new TerraCamera('waterCamera',
                 'renderPassWater',

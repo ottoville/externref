@@ -40,7 +40,9 @@ const methods = {
             bladecount = Math.min((<IDBRequest>evt.target).result.length,
                 grasspositions.length);
             trans.oncomplete = () =>
-                globalThis.postMessage({ count: bladecount, type: 'updated', })
+                globalThis.postMessage({
+                    count: bladecount, type: 'updated',
+                })
             for (let i = 0; i < bladecount; i++) {
                 const r = (<IDBRequest>evt.target).result[i];
                 grasspositions.set(r.pos,
@@ -55,7 +57,9 @@ const methods = {
         grasspositions = newArray;
     },
     init: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
-        globalThis.postMessage({ id: data.id, });
+        globalThis.postMessage({
+            id: data.id,
+        });
         caches.match(new Request('/grass')).then(response => {
             if (response) {
                 return response.arrayBuffer();
@@ -64,7 +68,9 @@ const methods = {
                     response2.arrayBuffer())
             }
         }).then(arrayBuffer => {
-            globalThis.postMessage({ buffer: arrayBuffer, type: 'updated', });
+            globalThis.postMessage({
+                buffer: arrayBuffer, type: 'updated',
+            });
         }).catch(e => {
             console.error('Error in web worker',
                 e)
@@ -156,7 +162,9 @@ const methods = {
            }*/
         console.log('update grass, count',
             grasspositions.length / 2);
-        globalThis.postMessage({ buffer: grasspositions.buffer, count: grasspositions.length / 2, type: 'updated', });
+        globalThis.postMessage({
+            buffer: grasspositions.buffer, count: grasspositions.length / 2, type: 'updated',
+        });
 
         const response = new Response(grasspositions);
         response.headers.set('content-length',

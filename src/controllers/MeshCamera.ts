@@ -7,13 +7,16 @@ import { UIRectangleBackground } from '../ui/UIRectangleBackground.js';
 declare const engine: Engine;
 
 const cursorBitmap: Promise<ImageBitmap> = typeof globalThis.createImageBitmap !== 'undefined' ? fetch('/assets/cursor.webp').then(asset =>
-    asset.blob()).then(createImageBitmap) : Promise.resolve<ImageBitmap>({} as ImageBitmap);
+    asset.blob()).then(createImageBitmap) : Promise.resolve<ImageBitmap>({
+    } as ImageBitmap);
 export class MeshCamera extends CameraController {
     name = 'PositionCamera';
     angle = Math.PI;
     verticalAngle = Math.PI * 0.5;
     arrowKeysDown = 0;
-    pointerMovement = { x: 0, y: 0, };
+    pointerMovement = {
+        x: 0, y: 0,
+    };
     cursor: UIRectangle | undefined = undefined;
     constructor(public camera: TerraCamera) {
         super();
@@ -46,7 +49,9 @@ export class MeshCamera extends CameraController {
                     label: 'cursor',
                     originalAspectRatio: 1,
                     renderPass: gpu.renderPassCanvas,
-                    scale: { min_width: 0.01, unit: NumericUnit['%'], y: 0.01, },
+                    scale: {
+                        min_width: 0.01, unit: NumericUnit['%'], y: 0.01,
+                    },
                     translate: {
                         x: {
                             anchor: Anchor.CENTER,
@@ -133,7 +138,9 @@ export class MeshCamera extends CameraController {
     }
     #pointerMoveFunction: ListenerObj<'pointermove'> = {
         cb: (e: PointerEvent) => {
-            this.pointerMovement = { x: e.movementX, y: e.movementY, }
+            this.pointerMovement = {
+                x: e.movementX, y: e.movementY,
+            }
         },
         object: this,
         options: {

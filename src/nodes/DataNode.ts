@@ -6,7 +6,9 @@ import type { Engine, rust_pointer, rust_vec_ptr } from '../engine.js';
 declare const engine: Engine;
 
 const worker = new ObjectWorkerThread('mesh.js',
-    { type: 'module', });
+    {
+        type: 'module',
+    });
 export interface canCollideCharacter {
     rebuildTrianglePlanes(): void
 }

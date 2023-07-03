@@ -140,7 +140,9 @@ export class Buffer extends Bindable {
         } catch (e) {
             engine.showError(e);
             throw (new Error('Cannot create buffer',
-                { cause: (e instanceof Error ? e : new Error(new String(e).toString())), }));
+                {
+                    cause: (e instanceof Error ? e : new Error(new String(e).toString())),
+                }));
         }
         if (usages.includes(GPUBufferUsage.UNIFORM)) {
             (this as unknown as BindUniformBuffer).getUniformBinding = bufferBinding.bind(this,
@@ -257,8 +259,12 @@ class copySrcBuffer extends Buffer {
     }
     resize(size: number) {
         try {
-            const commandEncoder = this.gpu.device.createCommandEncoder({ label: 'bufferResizeEncoder', });
-            const newBuffer = this.gpu.device.createBuffer({ label: this.label, size, usage: this.buffer.usage | GPUBufferUsage.COPY_DST, });
+            const commandEncoder = this.gpu.device.createCommandEncoder({
+                label: 'bufferResizeEncoder',
+            });
+            const newBuffer = this.gpu.device.createBuffer({
+                label: this.label, size, usage: this.buffer.usage | GPUBufferUsage.COPY_DST,
+            });
             commandEncoder.copyBufferToBuffer(this.buffer,
                 0,
                 newBuffer,
@@ -270,7 +276,9 @@ class copySrcBuffer extends Buffer {
         } catch (e) {
             engine.showError(e);
             throw (new Error('Cannot create resized buffer',
-                { cause: (e instanceof Error ? e : new Error(new String(e).toString())), }));
+                {
+                    cause: (e instanceof Error ? e : new Error(new String(e).toString())),
+                }));
         }
     }
 }

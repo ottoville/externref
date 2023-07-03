@@ -15,7 +15,9 @@ Texture.create({
     format: 'r8unorm',
     gpu: engine.gpu!,
     label: 'normalsTexture',
-    size: { depthOrArrayLayers: 1, height: 100, width: 100, },
+    size: {
+        depthOrArrayLayers: 1, height: 100, width: 100,
+    },
     //@ts-expect-error format "r8unorm" is not allowed with STORAGE_BINDING
     usages: TextureUsageEnums['STORAGE_BINDING'],
 });
@@ -23,7 +25,9 @@ Texture.create({
     format: 'r8unorm',
     gpu: engine.gpu!,
     label: 'normalsTexture',
-    size: { depthOrArrayLayers: 1, height: 100, width: 100, },
+    size: {
+        depthOrArrayLayers: 1, height: 100, width: 100,
+    },
     //@ts-expect-error format "r8unorm" is not allowed with STORAGE_BINDING
     usages: TextureUsageEnums['STORAGE_BINDING|COPY_SRC'],
 });
@@ -32,7 +36,9 @@ const text1 = Texture.create({
     format: 'rgba8unorm',
     gpu: engine.gpu!,
     label: 'normalsTexture',
-    size: { depthOrArrayLayers: 1, height: 100, width: 100,  },
+    size: {
+        depthOrArrayLayers: 1, height: 100, width: 100,
+    },
     usages: TextureUsageEnums['STORAGE_BINDING'],
 });
 //@ts-expect-error text1 should not have copy_dst flag.
@@ -44,7 +50,9 @@ const text2 = Texture.create({
     format: 'astc-10x10-unorm',
     gpu: engine.gpu!,
     label: 'test',
-    size: { height: 100, width: 100, },
+    size: {
+        height: 100, width: 100,
+    },
     usages: TextureUsageEnums['COPY_DST'],
 });
 //This should be fine
@@ -53,7 +61,9 @@ Texture.create({
     format: 'astc-10x10-unorm',
     gpu: engine.gpu!,
     label: 'test',
-    size: { width: 100, },
+    size: {
+        width: 100,
+    },
     //@ts-expect-error RenderTarget cannot be one dimensional
     usages: TextureUsageEnums['RENDER_ATTACHMENT'],
 });
@@ -62,7 +72,9 @@ const text3 = Texture.create({
     format: 'astc-10x10-unorm',
     gpu: engine.gpu!,
     label: 'test',
-    size: { height: 100, width: 100, },
+    size: {
+        height: 100, width: 100,
+    },
     usages: TextureUsageEnums['COPY_SRC'],
 });
 //@ts-expect-error text3 should not have copy_dst flag
@@ -74,7 +86,8 @@ console.log(text3.copyTo)
 
 const primitiveState: GPUPrimitiveState = {
     frontFace: 'cw',
-    topology: 'triangle-strip', };
+    topology: 'triangle-strip',
+};
 
 //@ts-expect-error Needs stride
 engine.gpu!.createRenderPipeline(SimpleRenderPipeline,
@@ -83,11 +96,14 @@ engine.gpu!.createRenderPipeline(SimpleRenderPipeline,
 //Should be fine
 const renderPipeline = engine.gpu!.createRenderPipeline(SimpleRenderPipeline,
     primitiveState,
-    { stride: 4, } );
+    {
+        stride: 4,
+    } );
 new DrawableIndexed(
     {
         //@ts-ignore
-        node: {},
+        node: {
+        },
         renderPasses: new Set([]),
         renderPipeline,
         //@ts-expect-error The renderPipeline needs vertexBuffer
@@ -102,7 +118,9 @@ engine.gpu!.createRenderPipeline(SunRenderPipeline,
         stripIndexFormat: 'uint16',
         topology: 'triangle-strip',
     },
-    { stride: 8, });
+    {
+        stride: 8,
+    });
 
 //Should be fine
 const renderPipeline2 = engine.gpu!.createRenderPipeline(SunRenderPipeline,
@@ -115,7 +133,8 @@ const renderPipeline2 = engine.gpu!.createRenderPipeline(SunRenderPipeline,
 
 new DrawableSimple({
     //@ts-ignore
-    node: {},
+    node: {
+    },
     renderPasses: new Set([]),
     renderPipeline: renderPipeline2,
     //@ts-expect-error The renderpipeline does not need vertexBuffer

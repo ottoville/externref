@@ -29,7 +29,9 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
         }
         engine.addInputListener(this.#inputListener);
     }
-    menuTree = { level: 0, }
+    menuTree = {
+        level: 0,
+    }
     #inputListener: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
             if (this.state.menuOpenName === undefined) {
@@ -75,7 +77,9 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...Button({
                             UIRectangleProps: {
                                 label: 'Plants',
-                                scale: { min_width: 0.07,unit: NumericUnit['%'], y: 0.04, },
+                                scale: {
+                                    min_width: 0.07,unit: NumericUnit['%'], y: 0.04,
+                                },
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,
@@ -98,7 +102,9 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...Button({
                             UIRectangleProps: {
                                 label: 'Terrain',
-                                scale: { min_width: 0.07, unit: NumericUnit['%'], y: 0.04, },
+                                scale: {
+                                    min_width: 0.07, unit: NumericUnit['%'], y: 0.04,
+                                },
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,
@@ -122,7 +128,9 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         ...Button({
                             UIRectangleProps: {
                                 label: 'Zones',
-                                scale: { min_width: 0.07, unit: NumericUnit['%'], y: 0.04, },
+                                scale: {
+                                    min_width: 0.07, unit: NumericUnit['%'], y: 0.04,
+                                },
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,

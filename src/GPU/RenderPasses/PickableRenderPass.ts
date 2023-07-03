@@ -116,7 +116,9 @@ export class PickableRenderPass<T extends {
             return this.pickPromise
         }
         const camera = [...this.perspectiveCameras][0]!;
-        const encoder = this.gpu.device.createCommandEncoder({ label: 'pickPosition_encoder', });
+        const encoder = this.gpu.device.createCommandEncoder({
+            label: 'pickPosition_encoder',
+        });
         const gRenderTargetDiffuse = this.gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse
         if (gRenderTargetDiffuse instanceof MSAARenderTarget) {
             if (!this.#zAndIDPromise) {
@@ -133,7 +135,9 @@ this.#mousePositionBuffer!,
 0,
 0,
 8);
-                const pickPass = encoder.beginComputePass({ label: 'pickPass', });
+                const pickPass = encoder.beginComputePass({
+                    label: 'pickPass',
+                });
                 if (this.#pickPositionPipeline instanceof GPUComputePipeline) {
                     pickPass.setPipeline(this.#pickPositionPipeline);
                 } else {
@@ -178,7 +182,9 @@ this.#pickBufferRead!,
             encoder.copyTextureToBuffer(
                 {
                     aspect: 'depth-only',
-                    origin: { x: 0, y: 0, z: 0, },
+                    origin: {
+                        x: 0, y: 0, z: 0,
+                    },
                     texture: this.depthRenderTarget.texture,
                 },
                 {
@@ -191,7 +197,9 @@ this.#pickBufferRead!,
             if (mesh) {
                 encoder.copyTextureToBuffer(
                     {
-                        origin: { x: this.gpu.mousePosition[0], y: this.gpu.mousePosition[1], z: 0, },
+                        origin: {
+                            x: this.gpu.mousePosition[0], y: this.gpu.mousePosition[1], z: 0,
+                        },
                         texture: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.texture,
                     },
                     {
@@ -239,10 +247,14 @@ this.#pickBufferRead!,
                 result);
             if (mesh) {
                 this.pickPromiseMesh = null;
-                return { meshId: zAndID[1], position: result, };
+                return {
+                    meshId: zAndID[1], position: result,
+                };
             } else
                 this.pickPromise = null;
-            return { position: result, };
+            return {
+                position: result,
+            };
         });
         //Calculate inverted matrix while buffer is mapping
         if (camera.projectionViewInvertedIsDirty) {
@@ -274,7 +286,9 @@ this.#pickBufferRead!,
             if (predicate && !predicate(mesh)) {
                 return null;
             } else {
-                return { mesh, position: pickInfo.position, };
+                return {
+                    mesh, position: pickInfo.position,
+                };
             }
         }
     }

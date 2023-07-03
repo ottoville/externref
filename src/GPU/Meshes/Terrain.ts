@@ -70,8 +70,11 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 minFilter: 'linear',
             });
             const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline,
-                {},
-                { stride: verticesPositionStride, });
+                {
+                },
+                {
+                    stride: verticesPositionStride,
+                });
             this.drawable = new DrawableIndexed({
                 node: this,
                 renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]),

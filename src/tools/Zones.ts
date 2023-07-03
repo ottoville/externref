@@ -64,7 +64,9 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                 format: 'rgba8unorm',
                 gpu: engine.gpu!,
                 label: 'ZoneTexture',
-                size: { height: 5120, width: 5120, },
+                size: {
+                    height: 5120, width: 5120,
+                },
                 usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'],
 
             });
@@ -104,9 +106,14 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                             -(z.size.width / this.#ratio));
                     });
                     ctx.stroke();
-                    this.#zoneTexture?.copyFromExternalImage({ source: texture, },
-                        {},
-                        { height: 5120, width: 5120, });
+                    this.#zoneTexture?.copyFromExternalImage({
+                        source: texture,
+                    },
+                    {
+                    },
+                    {
+                        height: 5120, width: 5120,
+                    });
                 }
             }
             const staticScene = engine.scenes.get('static');
@@ -121,7 +128,9 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                         ...this.props,
                         UIRectangleProps: {
                             label: 'residentalButton',
-                            scale: { min_width: 0.15, unit: NumericUnit['%'], y: 0.07, },
+                            scale: {
+                                min_width: 0.15, unit: NumericUnit['%'], y: 0.07,
+                            },
                             translate: {
                                 x: {
                                     anchor: Anchor.CENTER,
