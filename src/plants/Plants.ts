@@ -55,25 +55,40 @@ export class Plants extends MainNode {
         }));
         const indirectBuffer = Buffer.create(scene.gpu,
             4 * 4,
-            [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST],
+            [
+                GPUBufferUsage.INDIRECT,
+                GPUBufferUsage.COPY_DST
+            ],
             'indirectBuffer');
         const positionGPU = Buffer.create(scene.gpu,
             numBlades * 4 * 4,
-            [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],
+            [
+                GPUBufferUsage.VERTEX,
+                GPUBufferUsage.COPY_DST
+            ],
             'positionGPU');
         const shapeGPU = Buffer.create(scene.gpu,
             numBlades * 4 * 4,
-            [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],
+            [
+                GPUBufferUsage.VERTEX,
+                GPUBufferUsage.COPY_DST
+            ],
             'shapeGPU');
 
 
         const positionGPUSwap = Buffer.create(scene.gpu,
             numBlades * 4 * 4,
-            [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE],
+            [
+                GPUBufferUsage.COPY_SRC,
+                GPUBufferUsage.STORAGE
+            ],
             'positionGPUSwap');
         const shapeGPUSwap = Buffer.create(scene.gpu,
             numBlades * 4 * 4,
-            [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE],
+            [
+                GPUBufferUsage.COPY_SRC,
+                GPUBufferUsage.STORAGE
+            ],
             'shapeGPUSwap');
         if (engine.gpu) {
             const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline,
@@ -90,7 +105,9 @@ export class Plants extends MainNode {
                 node: this,
                 renderPipeline,
                 vertexBuffers: [
-                    positionGPU, shapeGPU, Float32Array.of(
+                    positionGPU,
+                    shapeGPU,
+                    Float32Array.of(
                         0.02,
                         0.0,
                         -0.02,
@@ -143,7 +160,10 @@ export class Plants extends MainNode {
 
                     const worldCopyGPU = Buffer.create(scene.gpu,
                         numBlades * 2 * 4,
-                        [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],
+                        [
+                            GPUBufferUsage.STORAGE,
+                            GPUBufferUsage.COPY_DST
+                        ],
                         'worldCopyGPU',
                         (buffer) => {
                             const worldSetArr = buffer.getMappedRange();
@@ -176,7 +196,10 @@ export class Plants extends MainNode {
                         0,
                         numBlades * 4 * 4);
                     indirectBuffer.updateBufferRaw(commandEncoder,
-                        new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer);
+                        new Uint32Array([
+                            7,
+                            (data.buffer.byteLength / 4) * 2
+                        ]).buffer);
                     scene.gpu.pendingCommandBuffers.push(commandEncoder.finish());
                 });
             await this.#worker.message(WorkerReturn.Promise,

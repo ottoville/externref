@@ -14,7 +14,11 @@ export class PositionCamera extends CameraController {
     name = 'PositionCamera';
     #angle = Math.PI;
     #vAngle = Math.PI*0.5;
-    #position = new MutableTerraVector3([-3000, 300, 0]);
+    #position = new MutableTerraVector3([
+        -3000,
+        300,
+        0
+    ]);
     #velocity = 0.5 as const;
     #arrowKeysDown = 0;
 
@@ -31,7 +35,10 @@ export class PositionCamera extends CameraController {
             });
         };
         if (initial && engine.DB) {
-            engine.DB.transaction('save').objectStore('save').get(['camera', 'PositionCamera']).onsuccess = evt => {
+            engine.DB.transaction('save').objectStore('save').get([
+                'camera',
+                'PositionCamera'
+            ]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = ((evt.target as IDBRequest).result as {
                         data: {

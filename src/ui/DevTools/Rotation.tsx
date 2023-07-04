@@ -15,7 +15,11 @@ export function Rotation({ node, }: { node: MainNode }) {
     const changeRotation = () => {
         if (rotationX.current && rotationY.current && rotationZ.current) {
             rotatedManually.current = true;
-            node.euler_angles = [rotationX.current.valueAsNumber, rotationY.current.valueAsNumber, rotationZ.current.valueAsNumber];
+            node.euler_angles = [
+                rotationX.current.valueAsNumber,
+                rotationY.current.valueAsNumber,
+                rotationZ.current.valueAsNumber
+            ];
         }
     };
 

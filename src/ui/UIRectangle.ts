@@ -312,7 +312,10 @@ export abstract class UIRectangle extends DataNode {
 
         this.uniformBuffer = Buffer.create(renderPass.gpu,
             8 /* size of vec2<f32> */,
-            [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
+            [
+                GPUBufferUsage.UNIFORM,
+                GPUBufferUsage.COPY_DST
+            ],
             'UI_transform',
             (buff) => {
                 this.updatePosition(buff.getMappedRange());

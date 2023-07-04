@@ -6,9 +6,15 @@ import type { IndexedTrait } from '../../nodes/NodeIndexed2.js';
 
 export function Primitives({ node, }: { node: DataNode | IndexedTrait}) {
     const indices = useRef<HTMLDetailsElement>(null);
-    const [indicesOpen, setIndicesOpen] = useState(false);
+    const [
+        indicesOpen,
+        setIndicesOpen
+    ] = useState(false);
     const vertices = useRef<HTMLDetailsElement>(null);
-    const [verticesOpen, setVerticesOpen] = useState(false);
+    const [
+        verticesOpen,
+        setVerticesOpen
+    ] = useState(false);
 
     return <fieldset>
         <legend>Primitives</legend>

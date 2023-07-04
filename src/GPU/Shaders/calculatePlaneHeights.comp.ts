@@ -72,7 +72,10 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     [1],
-                    ([{ vertices, }, { slopes, facet12, }]) => /* wgsl */
+                    ([
+                        { vertices, },
+                        { slopes, facet12, }
+                    ]) => /* wgsl */
                         `
                 
           let next:vec2<u32> = vec2<u32>(GlobalInvocationID.x + u32(1),GlobalInvocationID.y + u32(1));

@@ -138,10 +138,22 @@ export class TerraMatrix extends Float32Array {
         const cofact_32 = -(m00 * det_11_23 - m01 * det_10_23 + m03 * det_10_21);
         const cofact_33 = +(m00 * det_11_22 - m01 * det_10_22 + m02 * det_10_21);
         other.set([
-            cofact_00 * detInv, cofact_10 * detInv, cofact_20 * detInv, cofact_30 * detInv,
-            cofact_01 * detInv, cofact_11 * detInv, cofact_21 * detInv, cofact_31 * detInv,
-            cofact_02 * detInv, cofact_12 * detInv, cofact_22 * detInv, cofact_32 * detInv,
-            cofact_03 * detInv, cofact_13 * detInv, cofact_23 * detInv, cofact_33 * detInv
+            cofact_00 * detInv,
+            cofact_10 * detInv,
+            cofact_20 * detInv,
+            cofact_30 * detInv,
+            cofact_01 * detInv,
+            cofact_11 * detInv,
+            cofact_21 * detInv,
+            cofact_31 * detInv,
+            cofact_02 * detInv,
+            cofact_12 * detInv,
+            cofact_22 * detInv,
+            cofact_32 * detInv,
+            cofact_03 * detInv,
+            cofact_13 * detInv,
+            cofact_23 * detInv,
+            cofact_33 * detInv
         ]);
         return this;
     }

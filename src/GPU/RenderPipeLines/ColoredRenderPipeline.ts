@@ -16,7 +16,8 @@ export const simpleAttributesWithColor = Object.freeze({
 } as const);
 
 export const ColoredRenderPipeline = [
-    'ColoredRenderPipeline', function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: { stride: number }) {
+    'ColoredRenderPipeline',
+    function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: { stride: number }) {
         const buffers = {
             arrayStride: vertexBufferProps.stride * 4,
             attributes2: simpleAttributesWithColor,

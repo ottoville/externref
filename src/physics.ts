@@ -8,7 +8,11 @@ const GRAVITY = 9.80665;
 
 const gameSecondsPerMs = 60/1000;
 
-const tmp_vector: [number, number, number] = [0, 0, 0];
+const tmp_vector: [number, number, number] = [
+    0,
+    0,
+    0
+];
 export class Physics {
     #lastTickTimeMsInGameTime: number = Date.now();
     #lastTickTimeMs: number = Date.now();
@@ -124,7 +128,11 @@ export class Physics {
             wantedVelocityPerDelta[0] = velocity[0] * dt + tickable.acceleration2[0] * dt_half_sqrt;
             wantedVelocityPerDelta[1] = velocity[1] * dt + tickable.acceleration2[1] * dt_half_sqrt;
             wantedVelocityPerDelta[2] = velocity[2] * dt + tickable.acceleration2[2] * dt_half_sqrt;
-            const motionFrictionAcceleration: [number, number, number] = [0, 0, 0];
+            const motionFrictionAcceleration: [number, number, number] = [
+                0,
+                0,
+                0
+            ];
             const translation = tickable.translation;
             if (wantedVelocityPerDelta[0] !== 0 || wantedVelocityPerDelta[1] !== 0 || wantedVelocityPerDelta[2] !== 0) {
                 const finalPosition = tickable.checkCollide([

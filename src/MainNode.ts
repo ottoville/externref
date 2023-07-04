@@ -29,7 +29,11 @@ export function new_rust_mesh(
         acc | scene.id,
     0) : 1;
     const vec_ptr = engine.rust.alloc_vector_u8(label.length);
-    const [string_ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
+    const [
+        string_ptr,
+        len,
+        cap
+    ] = new Uint32Array(engine.rust.memory.buffer,
         vec_ptr,
         3);
     textEncoder.encodeInto(label,
@@ -48,14 +52,29 @@ cap!);
 }
 export abstract class MainNode {
     abstract drawable?: Drawable | undefined
-    acceleration2: [number, number, number] = [0, 0, 0];
+    acceleration2: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
     //Actual velocity that occured last tick
-    last_velocity: [number, number, number] = [0, 0, 0];
-    last_acceleration: [number, number, number] = [0, 0, 0];
+    last_velocity: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
+    last_acceleration: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
     id: number;
     get label(): string {
         const label_field_pointer = engine.rust.label_field_pointer(this.id);
-        const [label_len, label_ptr] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            label_len,
+            label_ptr
+        ] = new Uint32Array(engine.rust.memory.buffer,
             label_field_pointer,
             2);
         return textDecoder.decode(new Uint8Array(engine.rust.memory.buffer,
@@ -70,7 +89,11 @@ export abstract class MainNode {
     }
     //coefficient of friction
     grip = 1;
-    impulse: [number, number, number] = [0, 0, 0];
+    impulse: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
 
     set color(data: [number, number, number, number]) {
         engine.rust.set_color(this.id,

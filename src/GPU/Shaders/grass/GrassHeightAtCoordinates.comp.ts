@@ -101,7 +101,10 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                     pipelineLayout,
                     [1],
                     (
-                        [{ /*slopes, facet12,*/ positionAndRotate, shapes, }, { positions, }]
+                        [
+                            { /*slopes, facet12,*/ positionAndRotate, shapes, },
+                            { positions, }
+                        ]
                     ) => /* wgsl */
                         `
                 let flatpos:vec2<f32> = ${positions.prop('vectors')}[GlobalInvocationID.x]; 

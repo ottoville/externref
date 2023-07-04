@@ -51,7 +51,10 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
             entryPoints: {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
-                    [1, 1],
+                    [
+                        1,
+                        1
+                    ],
                     ([{ positions, pixels, }]) => /* wgsl */
                         `
                 let coords=vec2<f32>(

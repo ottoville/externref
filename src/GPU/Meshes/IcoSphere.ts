@@ -172,7 +172,10 @@ const icosphere = (order = 0) => {
         new MutableTerraVector3(vertices.buffer,
             i * Float32Array.BYTES_PER_ELEMENT).normalize();
     }
-    return [vertices, triangles] as [vertices: Float32Array, indices: Uint32Array];
+    return [
+        vertices,
+        triangles
+    ] as [vertices: Float32Array, indices: Uint32Array];
 };
 
 let uid = 0;
@@ -202,7 +205,10 @@ export class IcoSphere extends IndexedSingleColoredMesh {
         scenes?: Scene[]
     }
     ) {
-        const [vertices, indices] = icosphere(order);
+        const [
+            vertices,
+            indices
+        ] = icosphere(order);
         const verticesAndNormals = new Float32Array(vertices.length * 2);
         for (let i = 0; i < vertices.length / 4; i++) {
             verticesAndNormals[i * 8] = vertices[i * 4]!;

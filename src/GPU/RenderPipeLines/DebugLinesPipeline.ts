@@ -10,7 +10,8 @@ const positionAttr = Object.freeze({
     },
 } as const);
 export const DebugLinesPipeline = [
-    'DebugLinesPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
+    'DebugLinesPipeline',
+    function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
         stride: number;
     }) {
         const shader = createDebugBoundingBoxVertShader(gpu.positionAndTimeBindGroup,

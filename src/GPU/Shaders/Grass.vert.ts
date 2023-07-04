@@ -45,7 +45,11 @@ export function createGrassVertShader(
                 pipelineLayout,
                 buffers,
                 ([, { scene, time, }],
-                    [{ position, }, { shape, }, { vertex_position, }]) => /* wgsl */
+                    [
+                        { position, },
+                        { shape, },
+                        { vertex_position, }
+                    ]) => /* wgsl */
                     `
                 var output:Output;
                 //ambient = lights.ambient;

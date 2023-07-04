@@ -46,7 +46,10 @@ export class PickableRenderPass<T extends {
             });
             this.#mousePositionBuffer = Buffer.create(renderPassProps.gpu,
                 8,
-                [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
+                [
+                    GPUBufferUsage.UNIFORM,
+                    GPUBufferUsage.COPY_DST
+                ],
                 'mousePositionBuffer');
 
             this.#pickPositionBindGroup0 = readDepthShader.props.bindGroupLayouts[0].createBindGroup('pickPositionBindGroup0',
@@ -128,7 +131,10 @@ export class PickableRenderPass<T extends {
                     'mousePositionSwapBuffer',
                     b => {
                         new Uint32Array(b.getMappedRange(0,
-                            8)).set([this.gpu.mousePosition[0], this.gpu.mousePosition[1]]);
+                            8)).set([
+                            this.gpu.mousePosition[0],
+                            this.gpu.mousePosition[1]
+                        ]);
                     });
                 mousePositionSwapBuffer.copyTo(encoder,
 this.#mousePositionBuffer!,
@@ -167,7 +173,10 @@ this.#pickBufferRead!,
                         true);
                     this.#pickBufferRead!.unmap();
                     this.#zAndIDPromise = null;
-                    return [z, meshID];
+                    return [
+                        z,
+                        meshID
+                    ];
                 });
             }
         }
@@ -192,7 +201,10 @@ this.#pickBufferRead!,
                     bytesPerRow: this.#rowBytes,
                     offset: 0,
                 },
-                [this.size.width, this.size.height]
+                [
+                    this.size.width,
+                    this.size.height
+                ]
             );
             if (mesh) {
                 encoder.copyTextureToBuffer(
@@ -207,7 +219,11 @@ this.#pickBufferRead!,
                         bytesPerRow: 256,
                         offset: newOffset + missOffset + 32,
                     },
-                    [1, 1, 1]
+                    [
+                        1,
+                        1,
+                        1
+                    ]
                 );
             }
             this.gpu.device.queue.submit([encoder.finish()]);
@@ -229,7 +245,10 @@ this.#pickBufferRead!,
                         this.pickPromise = null;
                     buffer.unmap();
                     this.#zAndIDPromise = null;
-                    return [z, meshId];
+                    return [
+                        z,
+                        meshId
+                    ];
                 });
             }
         }
@@ -243,7 +262,11 @@ this.#pickBufferRead!,
             const result = new MutableTerraVector3();
             const x = this.gpu.mousePosition[0] / this.size.width * 2 - 1;
             const y = -(this.gpu.mousePosition[1] / this.size.height * 2 - 1);
-            new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(camera.projectionViewInverted,
+            new MutableTerraVector3([
+                x,
+                y,
+                zAndID[0]
+            ]).multiply2Ref(camera.projectionViewInverted,
                 result);
             if (mesh) {
                 this.pickPromiseMesh = null;

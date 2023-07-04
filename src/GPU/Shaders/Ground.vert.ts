@@ -12,14 +12,32 @@ export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayout
             main: new VertexShaderFunction(
                 new Struct('Output',
                     {
-                        Position: ['@builtin(position)', 'vec4<f32>'],
-                        v_uv: ['@location(0)', 'vec2<f32>'],
+                        Position: [
+                            '@builtin(position)',
+                            'vec4<f32>'
+                        ],
+                        v_uv: [
+                            '@location(0)',
+                            'vec2<f32>'
+                        ],
                         // eslint-disable-next-line sort-keys
-                        normal: ['@location(1)', 'vec3<f32>'],
-                        position: ['@location(2)', 'vec3<f32>'],
+                        normal: [
+                            '@location(1)',
+                            'vec3<f32>'
+                        ],
+                        position: [
+                            '@location(2)',
+                            'vec3<f32>'
+                        ],
                         // eslint-disable-next-line sort-keys
-                        id: ['@location(3) @interpolate(flat)', 'u32'],
-                        scenes: ['@location(4) @interpolate(flat)', 'u32'],
+                        id: [
+                            '@location(3) @interpolate(flat)',
+                            'u32'
+                        ],
+                        scenes: [
+                            '@location(4) @interpolate(flat)',
+                            'u32'
+                        ],
                     }),
                 pipelineLayout,
                 [buffers],

@@ -30,7 +30,10 @@ export class CreateFPSMeter extends UINode<{}, MenuState> {
                     UIRectangleProps: {
                         borderSize: {
                             height: 'auto',
-                            width: [0, NumericUnit.px],
+                            width: [
+                                0,
+                                NumericUnit.px
+                            ],
                         },
                         label: 'FPS',
                         scale: {
@@ -39,11 +42,17 @@ export class CreateFPSMeter extends UINode<{}, MenuState> {
                         translate: {
                             x: {
                                 anchor: Anchor.LEFT,
-                                value: [15, NumericUnit.px],
+                                value: [
+                                    15,
+                                    NumericUnit.px
+                                ],
                             },
                             y: {
                                 anchor: Anchor.BOTTOM,
-                                value: [25, NumericUnit.px],
+                                value: [
+                                    25,
+                                    NumericUnit.px
+                                ],
                             },
                         },
                     },

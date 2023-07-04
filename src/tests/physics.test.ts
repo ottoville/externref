@@ -24,8 +24,17 @@ describe('Physics Has gravity and collision',
             slope.update_scale(200,
                 5,
                 200);
-            slope.rotation = [Math.sin(1.4), 0, 0, Math.cos(1.4)];
-            slope.translation = [23, 500, 23];
+            slope.rotation = [
+                Math.sin(1.4),
+                0,
+                0,
+                Math.cos(1.4)
+            ];
+            slope.translation = [
+                23,
+                500,
+                23
+            ];
 
         },
         10000);
@@ -38,12 +47,28 @@ describe('Physics Has gravity and collision',
                 b.update_scale(100,
                     5,
                     100);
-                b.translation = [123, 300, 123];
+                b.translation = [
+                    123,
+                    300,
+                    123
+                ];
 
                 const b2 = new Box({
-                    can_collide: true, color: [0, 1, 0, 0], label: 'gravitygreenbox', point_light: 400,
+                    can_collide: true,
+                    color: [
+                        0,
+                        1,
+                        0,
+                        0
+                    ],
+                    label: 'gravitygreenbox',
+                    point_light: 400,
                 });
-                b2.translation = [123, 320, 123];
+                b2.translation = [
+                    123,
+                    320,
+                    123
+                ];
                 b2.hasGravity = true;
                 let ticks = 0;
                 const translation = b2.translation;
@@ -55,7 +80,11 @@ describe('Physics Has gravity and collision',
                     console.log('creating physictick');
 
             engine!.physics.onPhysicTick.add(() => {
-                b2.apply_impulse([0, 0, -1]);
+                b2.apply_impulse([
+                    0,
+                    0,
+                    -1
+                ]);
                 //b2.force = [0, 0, -1];
                 if (ticks < 3) {
                     //@ts-expect-error

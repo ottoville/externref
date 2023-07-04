@@ -33,7 +33,11 @@ export class Sun extends MainNode {
         const sunPositionY = sin * yAngle;
 
         const translation = this.translation;
-        this.velocity = [sunPositionX - translation[0], sunPositionY - translation[1], sunPositionZ - translation[2]];
+        this.velocity = [
+            sunPositionX - translation[0],
+            sunPositionY - translation[1],
+            sunPositionZ - translation[2]
+        ];
         //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
         const ambientR = this.#clamp((sunPositionY + 0.4) * 0.8,
             0.05,
@@ -42,9 +46,18 @@ export class Sun extends MainNode {
             0.05,
             0.3);
 
-        this.color = [1, 1, 1, 1];
+        this.color = [
+            1,
+            1,
+            1,
+            1
+        ];
         //earth shadow
-        this.ambient = [ambientR, ambientGB, ambientGB];
+        this.ambient = [
+            ambientR,
+            ambientGB,
+            ambientGB
+        ];
         this.shadow = this.#clamp(sunPositionY * 8 + 1,
             0,
             1); // <<3 == * 8
@@ -66,7 +79,10 @@ export class Sun extends MainNode {
             undefined);
         this.drawable = new DrawableSimple({
             node: this,
-            renderPasses: new Set([gpu.renderPassScreen, gpu.renderPassWater]),
+            renderPasses: new Set([
+                gpu.renderPassScreen,
+                gpu.renderPassWater
+            ]),
             renderPipeline,
             vertexBuffers: [] as [],
         });

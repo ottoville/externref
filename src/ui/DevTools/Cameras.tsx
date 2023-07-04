@@ -5,7 +5,14 @@ import { PositionCamera } from '../../controllers/PositionCamera.js';
 import type { CameraController } from '../../controllers/CameraController.js';
 declare const engine: Engine;
 function Camera(props: { camera: TerraCamera }) {
-    const [cameraPosition, setCameraPosition] = useState<readonly [number, number, number]>([0, 0, 0]);
+    const [
+        cameraPosition,
+        setCameraPosition
+    ] = useState<readonly [number, number, number]>([
+        0,
+        0,
+        0
+    ]);
     useEffect(() => {
         const listener = () => {
             setCameraPosition([...props.camera.position] as unknown as readonly [number, number, number]);
@@ -27,7 +34,10 @@ function Camera(props: { camera: TerraCamera }) {
 }
 let oldController: CameraController | null = null;
 export function Cameras() {
-    const [debugCamera, setDebugCamera] = useState(false);
+    const [
+        debugCamera,
+        setDebugCamera
+    ] = useState(false);
     return <fieldset>
         <legend>Cameras</legend>
         <ul>

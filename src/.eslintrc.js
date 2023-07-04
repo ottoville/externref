@@ -51,15 +51,21 @@ module.exports = {
         // Style rules
         'array-bracket-newline': 2,
         'array-bracket-spacing': 2,
-        'object-curly-spacing': [2, 'always'],
+        'object-curly-spacing': [
+            2,
+            'always'
+        ],
         'no-trailing-spaces': 2,
         'key-spacing': [
-            'error', {
+            'error',
+            {
                 'afterColon': true,
             }
         ],
         'indent': [
-            'error', 4, {
+            'error',
+            4,
+            {
                 'SwitchCase': 1,
                 'CallExpression': {
                     'arguments': 1,
@@ -67,34 +73,55 @@ module.exports = {
             }
         ],
         'sort-keys': [
-            'error', 'asc', {
+            'error',
+            'asc',
+            {
                 'caseSensitive': true, 'natural': false, 'minKeys': 2,
             }
         ],
-        'quotes': ['error', 'single'],
+        'quotes': [
+            'error',
+            'single'
+        ],
         'comma-dangle': [
-            'error', {
+            'error',
+            {
                 'arrays': 'never',
                 'objects': 'always',
                 'functions': 'never',
             }
         ],
-        'function-call-argument-newline': ['error', 'always'],
-        'implicit-arrow-linebreak': ['error', 'below'],
+        'function-call-argument-newline': [
+            'error',
+            'always'
+        ],
+        'implicit-arrow-linebreak': [
+            'error',
+            'below'
+        ],
         'object-property-newline': [
-            'error', {
+            'error',
+            {
                 'allowAllPropertiesOnSameLine': true,
             }
         ],
         'object-curly-newline': [
-            'error', {
+            'error',
+            {
                 'ObjectExpression': 'always',
                 'ImportDeclaration': 'never',
             }
         ],
         'block-spacing': ['error'],
         'comma-spacing': ['error'],
-        'semi': ['error', 'always'],
+        'semi': [
+            'error',
+            'always'
+        ],
+        'array-element-newline': [
+            'error',
+            'always'
+        ],
     },
     settings: {
         'import/resolver': {

@@ -33,7 +33,14 @@ export class OctaSphere extends IndexedColoredMesh {
             width,
             height,
             depth);
-        const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            pos_ptr,
+            pos_len,
+            pos_cap,
+            ind_ptr,
+            ind_len,
+            ind_cap
+        ] = new Uint32Array(engine.rust.memory.buffer,
             ptrs,
             6);
 
@@ -56,11 +63,19 @@ pos_len!);
                 frontFace: 'ccw',
                 vertices: {
                     stride: 12,
-                    view: [pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!], // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
+                    view: [
+pos_ptr as rust_pointer<'f32'>,
+pos_len!,
+pos_cap!
+                    ], // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
                 },
             },
             mesh_id,
-            [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!]);
+            [
+ind_ptr as rust_pointer<'usize'>,
+ind_len!,
+ind_cap!
+            ]);
 
         this.width = width;
         this.height = height;

@@ -82,7 +82,10 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                                 x:
                             {
                                 anchor: Anchor.CENTER,
-                                value: [-0.85, NumericUnit['%']],
+                                value: [
+                                    -0.85,
+                                    NumericUnit['%']
+                                ],
                             },
                                 y: this.props.subMenuPosition,
                             },
@@ -93,7 +96,8 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                             });
                         },
                         text: 'Lower (1)',
-                    })), UINode.createCtrProps(UIRectangleNode,
+                    })),
+                UINode.createCtrProps(UIRectangleNode,
                     Button({
                         ...this.props,
                         UIRectangleProps: {
@@ -104,7 +108,10 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                             translate: {
                                 x: {
                                     anchor: Anchor.CENTER,
-                                    value: [-0.6, NumericUnit['%']],
+                                    value: [
+                                        -0.6,
+                                        NumericUnit['%']
+                                    ],
                                 },
                                 y: this.props.subMenuPosition,
                             },
@@ -140,7 +147,8 @@ export class TerrainTool extends MainNode {
         }));
         this.positions_count = 4;
         const getRenderPipeline = [
-            'TerrainToolRenderpipeline', function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState
+            'TerrainToolRenderpipeline',
+            function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState
             ) {
                 const helperVertShader = new HelperVertShader(terrain.settings,
                     terrain.TerrainHeightsbindGroupTree);
@@ -274,7 +282,11 @@ export class TerrainTool extends MainNode {
                     this.#pick.position[0] = pickInfo.position[0];
                     this.#pick.position[1] = pickInfo.position[1];
                     this.#pick.position[2] = pickInfo.position[2];
-                    this.translation = [pickInfo.position[0], 0, pickInfo.position[2]];
+                    this.translation = [
+                        pickInfo.position[0],
+                        0,
+                        pickInfo.position[2]
+                    ];
                 }
             }).catch(err =>
                 engine.showError(err));

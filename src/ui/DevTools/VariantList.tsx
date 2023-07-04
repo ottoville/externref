@@ -11,7 +11,10 @@ export function VariantList(props: {
     setSelectedDrawable: React.Dispatch<React.SetStateAction<Drawable | undefined>>
 
 }) {
-    const [rootDrawables, setRootDrawables] = useState<Drawable[]>([]);
+    const [
+        rootDrawables,
+        setRootDrawables
+    ] = useState<Drawable[]>([]);
     useEffect(() => {
         const listener = () => {
             setRootDrawables([...props.variant.rootDrawables]);

@@ -37,7 +37,12 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
         super(
             {
                 ...drawableProps,
-                dynamicBindGroups: [[drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, engine.rust.gpu_alignment(drawableProps.node.id)]],
+                dynamicBindGroups: [
+                    [
+                        drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition,
+                        engine.rust.gpu_alignment(drawableProps.node.id)
+                    ]
+                ],
             },
             drawableDirectProps
         );

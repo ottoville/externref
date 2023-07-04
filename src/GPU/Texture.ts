@@ -298,7 +298,11 @@ export class RenderTarget<
         });
         encoder.copyTextureToBuffer(
             {
-                origin: [0, 0, depth],
+                origin: [
+                    0,
+                    0,
+                    depth
+                ],
                 texture: this.texture,
             },
             {

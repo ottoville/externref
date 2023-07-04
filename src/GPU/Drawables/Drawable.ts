@@ -126,7 +126,10 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass): void
     draw(renderPass: RenderPass, renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {
-        this.#dynamicBindGroups.forEach(([{ bindGroup, }, offset], i) => {
+        this.#dynamicBindGroups.forEach(([
+            { bindGroup, },
+            offset
+        ], i) => {
             const di = dynamicIndex[i];
             if (di) {
                 renderEncoder.setBindGroup(di,

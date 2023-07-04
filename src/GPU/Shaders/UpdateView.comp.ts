@@ -71,8 +71,15 @@ export function createUpdateViewShader(gpu: GPU) {
             entryPoints: {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) global_id : vec3<u32>',
                     pipelineLayout,
-                    [4, 2, 4],
-                    ([{ meshes, point_lights, directional_lights, }, { clusters, viewUniforms, }]) => /* wgsl */
+                    [
+                        4,
+                        2,
+                        4
+                    ],
+                    ([
+                        { meshes, point_lights, directional_lights, },
+                        { clusters, viewUniforms, }
+                    ]) => /* wgsl */
                         `
                 let tileIndex = global_id.x +
                 global_id.y * tileCount.x +

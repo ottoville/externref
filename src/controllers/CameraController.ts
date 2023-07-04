@@ -15,14 +15,34 @@ export const enum ARROW_KEYS {
 }
 export abstract class CameraController implements Ellipsoid {
     radius: { 0: number; 1: number; 2: number; };
-    private readonly collisionRadius: [number, number, number] = [2, 2, 2];
+    private readonly collisionRadius: [number, number, number] = [
+        2,
+        2,
+        2
+    ];
     readonly collisionsScalingMatrix = new TerraMatrix([
-        1.0 / this.collisionRadius[0], 0.0, 0.0, 0.0,
-        0.0, 1.0 / this.collisionRadius[1], 0.0, 0.0,
-        0.0, 0.0, 1.0 / this.collisionRadius[2], 0.0,
-        0.0, 0.0, 0.0, 1.0
+        1.0 / this.collisionRadius[0],
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0 / this.collisionRadius[1],
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0 / this.collisionRadius[2],
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
     ]);
-    readonly closeDistanceVector: [number, number, number] = [closeDistance / this.collisionRadius[0], closeDistance / this.collisionRadius[1], closeDistance / this.collisionRadius[2]];
+    readonly closeDistanceVector: [number, number, number] = [
+        closeDistance / this.collisionRadius[0],
+        closeDistance / this.collisionRadius[1],
+        closeDistance / this.collisionRadius[2]
+    ];
     cameraControl?: CameraControl;
     constructor() {
         const collisionRadius = this.collisionRadius;

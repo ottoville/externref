@@ -50,7 +50,10 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
                             translate: {
                                 x: {
                                     anchor: Anchor.LEFT,
-                                    value: [100, NumericUnit.px],
+                                    value: [
+                                        100,
+                                        NumericUnit.px
+                                    ],
                                 },
                                 y: this.props.subMenuPosition,
                             },

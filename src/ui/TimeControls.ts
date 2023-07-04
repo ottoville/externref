@@ -27,7 +27,10 @@ export class createTimeControls extends UINode<{}, MenuState> {
     render() {
         const yPos = {
             anchor: Anchor.BOTTOM,
-            value: [40, NumericUnit.px],
+            value: [
+                40,
+                NumericUnit.px
+            ],
         } as const;
 
         return [
@@ -41,11 +44,17 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
-                                value: [150, NumericUnit.px],
+                                value: [
+                                    150,
+                                    NumericUnit.px
+                                ],
                             },
                             y: {
                                 anchor: Anchor.BOTTOM,
-                                value: [80, NumericUnit.px],
+                                value: [
+                                    80,
+                                    NumericUnit.px
+                                ],
                             },
                         },
                     },
@@ -61,7 +70,10 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
-                                value: [275, NumericUnit.px],
+                                value: [
+                                    275,
+                                    NumericUnit.px
+                                ],
                             },
                             y: yPos,
                         },
@@ -81,7 +93,10 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
-                                value: [235, NumericUnit.px],
+                                value: [
+                                    235,
+                                    NumericUnit.px
+                                ],
                             },
                             y: yPos,
                         },
@@ -102,7 +117,10 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
-                                value: [190, NumericUnit.px],
+                                value: [
+                                    190,
+                                    NumericUnit.px
+                                ],
                             },
                             y: yPos,
                         },
@@ -122,7 +140,10 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
-                                value: [145, NumericUnit.px],
+                                value: [
+                                    145,
+                                    NumericUnit.px
+                                ],
                             },
                             y: yPos,
                         },
@@ -142,7 +163,10 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
-                                value: [105, NumericUnit.px],
+                                value: [
+                                    105,
+                                    NumericUnit.px
+                                ],
                             },
                             y: yPos,
                         },
@@ -162,7 +186,10 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
-                                value: [65, NumericUnit.px],
+                                value: [
+                                    65,
+                                    NumericUnit.px
+                                ],
                             },
                             y: yPos,
                         },
@@ -182,7 +209,10 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         translate: {
                             x: {
                                 anchor: Anchor.RIGHT,
-                                value: [25, NumericUnit.px],
+                                value: [
+                                    25,
+                                    NumericUnit.px
+                                ],
                             },
                             y: yPos,
                         },

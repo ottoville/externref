@@ -4,7 +4,8 @@ import { createColorFragmentShader } from '../Shaders/Color.frag.js';
 import { simpleAttributes } from './SimpleRenderPipeline.js';
 
 export const NormalsPipeline = [
-    'NormalsPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
+    'NormalsPipeline',
+    function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
         stride: number;
     }) {
         const debugNormalsVertShader = createDebugNormalsVertShader(gpu.positionAndTimeBindGroup,

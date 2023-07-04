@@ -24,7 +24,10 @@ export abstract class Shader<
             }>[]) => string) | undefined) {
         const structs: Set<Struct> = new Set();
         const groups = props.bindGroupLayouts.reduce((groupstring, group, gi) => {
-            return Object.entries(group.entries).reduce((acc, [variableName, binding], bi) => {
+            return Object.entries(group.entries).reduce((acc, [
+                variableName,
+                binding
+            ], bi) => {
                 if ((binding.entry.visibility & shaderFlag) === 0) {
                     return acc;
                 }
@@ -60,7 +63,10 @@ export abstract class Shader<
                 outputs.push(entryPoint.output);
             }
         }
-        const structString = [...structs, ...outputs].reduce((s, struct) => {
+        const structString = [
+            ...structs,
+            ...outputs
+        ].reduce((s, struct) => {
             let properties = '';
             for (const property in struct.properties) {
                 properties += `${struct.properties[property]![0]} ${property}: ${struct.properties[property]![1]},\n`;

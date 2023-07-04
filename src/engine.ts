@@ -219,7 +219,10 @@ const ObjectStores = {
                 version: 6,
             },
             {
-                keyPath: ['gridx', 'gridz'],
+                keyPath: [
+                    'gridx',
+                    'gridz'
+                ],
                 name: 'gridxz',
                 options: {
                     unique: false,
@@ -235,7 +238,11 @@ const ObjectStores = {
     },
     save: <ObjStoreDetails>{
         parameters: {
-            autoIncrement: false, keyPath: ['type', 'name'],
+            autoIncrement: false,
+            keyPath: [
+                'type',
+                'name'
+            ],
         },
         version: 3,
     },
@@ -276,7 +283,10 @@ function stringFromPtr(memory: WebAssembly.ExportValue | undefined, ptr: number)
     if (!(memory instanceof WebAssembly.Memory)) {
         throw new Error('Webassembly module does not have memory');
     }
-    const [/*cap*/, s_ptr, len] = new Uint32Array(memory.buffer,
+    const [
+        /*cap*/, s_ptr,
+        len
+    ] = new Uint32Array(memory.buffer,
         ptr,
         3);
     return textDecoder.decode(new Uint8Array(memory.buffer,
@@ -303,8 +313,16 @@ export class Engine {
     readonly collider: ColliderJS;
 
 
-    readonly #destinationPoint: [number, number, number] = [0, 0, 0];
-    readonly #displacementVector: [number, number, number] = [0, 0, 0];
+    readonly #destinationPoint: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
+    readonly #displacementVector: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
 
     updateLights = false;
     inputManager: CameraController | null = null;
@@ -610,7 +628,10 @@ export class Engine {
         queueMicrotask(() => {
             if (obj.options?.priority && this.#inputMaps[obj.type]!.size > 0) {
                 //@ts-expect-error
-                this.#inputMaps[obj.type] = new Set([obj, ...this.#inputMaps[obj.type]!]);
+                this.#inputMaps[obj.type] = new Set([
+                    obj,
+                    ...this.#inputMaps[obj.type]!
+                ]);
             } else {
                 //@ts-expect-error
                 this.#inputMaps[obj.type].add(obj);
@@ -660,7 +681,15 @@ export class Engine {
             'renderPassScreen');
 
         if (nodes?.canvas) {
-            (['pointerup', 'pointerdown', 'pointermove', 'wheel', 'pointerleave', 'keydown', 'keyup'] as const).forEach(eventType => {
+            ([
+                'pointerup',
+                'pointerdown',
+                'pointermove',
+                'wheel',
+                'pointerleave',
+                'keydown',
+                'keyup'
+            ] as const).forEach(eventType => {
                 // keyup and keydown wont trigger if listener is canvas
                 nodes.canvas.ownerDocument.addEventListener(eventType,
                     (e) => {

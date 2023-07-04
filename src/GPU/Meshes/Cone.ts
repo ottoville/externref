@@ -35,22 +35,57 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
     let z = Math.cos(progress);
     vertices.set(
         [
-            0, 0, 1, 1, /* normals: */ 0, 0, 0, 1,
-            x, 0, z, 1, /* normals: */ 0, 0, 0, 1
+            0,
+            0,
+            1,
+            1, /* normals: */
+            0,
+            0,
+            0,
+            1,
+            x,
+            0,
+            z,
+            1, /* normals: */
+            0,
+            0,
+            0,
+            1
         ]);
-    indices.set([0, 1]);
+    indices.set([
+        0,
+        1
+    ]);
     progress += facelen;
     for (let i = 0; i < faces; i++) {
         indices[i + 2] = i + 2;
         if (i % 2 === 0) {
             vertices.set(
-                [-x, 0, z, 1, /* normals: */ 0, 0, 0, 1],
+                [
+                    -x,
+                    0,
+                    z,
+                    1, /* normals: */
+                    0,
+                    0,
+                    0,
+                    1
+                ],
                 (i + 2) * stride);
         } else {
             x = cullMode * Math.sin(progress);
             z = Math.cos(progress);
             vertices.set(
-                [x, 0, z, 1, /* normals: */ 0, 0, 0, 1],
+                [
+                    x,
+                    0,
+                    z,
+                    1, /* normals: */
+                    0,
+                    0,
+                    0,
+                    1
+                ],
                 (i + 2) * stride);
             progress += facelen;
         }
@@ -60,13 +95,19 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride = 6) {
         new MutableTerraVector3(vertices.buffer,
             i * Float32Array.BYTES_PER_ELEMENT).normalize();
     }
-    return [vertices, indices] as const;
+    return [
+        vertices,
+        indices
+    ] as const;
 }
 function createCone(faces = 14, stride = 6): readonly [vertices: Float32Array, indices: Uint32Array] {
     if (faces % 2 !== 0) {
         throw (new Error('Cone must not have odd number of faces'));
     }
-    const [circleVertices, circleIndices] = createCircle(faces,
+    const [
+        circleVertices,
+        circleIndices
+    ] = createCircle(faces,
         -1,
         stride);
     const coneVertices = Array.from(circleVertices);
@@ -102,15 +143,26 @@ zeroIndice);
             window.shift();
         }
     }
-    return [Float32Array.from(coneVertices), Uint32Array.from(coneIndices)] as const;
+    return [
+        Float32Array.from(coneVertices),
+        Uint32Array.from(coneIndices)
+    ] as const;
 }
 export class Cone extends IndexedSingleColoredMesh {
     constructor(
         mainNodeProps: Omit<MainNodeProps, 'strip'>,
         can_collide = false,
-        color: [number, number, number, number] = [1, 0, 0, 0]
+        color: [number, number, number, number] = [
+            1,
+            0,
+            0,
+            0
+        ]
     ) {
-        const [vertices, indices] = createCone(14,
+        const [
+            vertices,
+            indices
+        ] = createCone(14,
             8);
         const mesh_id = new_rust_mesh(mainNodeProps);
         super(

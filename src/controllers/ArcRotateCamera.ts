@@ -77,14 +77,21 @@ export class ArcRotateCamera extends CameraController {
     */
     #inertialBetaOffset = 0;
     #collisionTriggered = false;
-    #target = new MutableTerraVector3([100, 0, 1000]);
+    #target = new MutableTerraVector3([
+        100,
+        0,
+        1000
+    ]);
     #alpha = 0;
     #beta = 0;
     #radius = 10;
     constructor(private camera: TerraCamera, initial = false) {
         super();
         if (initial && engine.DB) {
-            engine.DB.transaction('save').objectStore('save').get(['camera', 'ArchRotateCamera']).onsuccess = evt => {
+            engine.DB.transaction('save').objectStore('save').get([
+                'camera',
+                'ArchRotateCamera'
+            ]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = (evt.target as IDBRequest).result.data as serialized | undefined;
                     if (restored) {
@@ -152,7 +159,11 @@ export class ArcRotateCamera extends CameraController {
         return false;
     };
     moveto(destination: ReadOnlyTerraVector3) {
-        this.#targetMovingfrom = new ReadOnlyTerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
+        this.#targetMovingfrom = new ReadOnlyTerraVector3([
+            this.#target[0],
+            this.#target[1],
+            this.#target[2]
+        ]);
         // Clone destination to survive Wasm memory grow.
         this.#targetMovingTo = destination.clone();
         this.#targetLerpPosition = 0;
@@ -175,7 +186,11 @@ export class ArcRotateCamera extends CameraController {
             if (pointerDownButton !== 2) {
                 engine.gpu?.renderPassScreen.pickPosition().then(position => {
                     if (position) {
-                        this.#targetMovingfrom = new MutableTerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
+                        this.#targetMovingfrom = new MutableTerraVector3([
+                            this.#target[0],
+                            this.#target[1],
+                            this.#target[2]
+                        ]);
                         this.#targetMovingTo = position.position;
                         this.#targetLerpPosition = 0;
                     }
@@ -367,7 +382,11 @@ export class ArcRotateCamera extends CameraController {
 
 
             this.camera.viewArr.invertToRef(this.#cameraTransformMatrix);
-            this.#transformedDirection.set([this.#cameraTransformMatrix[0], this.#cameraTransformMatrix[1], this.#cameraTransformMatrix[2]]);
+            this.#transformedDirection.set([
+                this.#cameraTransformMatrix[0],
+                this.#cameraTransformMatrix[1],
+                this.#cameraTransformMatrix[2]
+            ]);
 
             const scaleX = this.#inertialPanning[0];
             const scaleZ = this.#inertialPanning[2];

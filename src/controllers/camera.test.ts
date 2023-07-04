@@ -30,10 +30,17 @@ describe(
                     undefined,
             });
             control.updatePosition(position =>
-                position.set([100, 100, 100]));
+                position.set([
+                    100,
+                    100,
+                    100
+                ]));
             originalPosition = new Float32Array(engine!.mainCamera.position);
             originalDirection = new Float32Array(engine!.mainCamera.direction as [number, number, number]);
-            cameraControllers = [ArcRotateCamera, MeshCamera];
+            cameraControllers = [
+                ArcRotateCamera,
+                MeshCamera
+            ];
         },
         10000);
 

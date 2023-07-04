@@ -31,10 +31,22 @@ function createTextureForTextOnly(
     // eslint-disable-next-line promise/catch-or-return
     // copySource.convertToBlob().then(b => { console.log(URL.createObjectURL(b!)) })
 
-    textUV[0] = [0, 0];
-    textUV[1] = [textSize.width, 0];
-    textUV[2] = [textSize.width, textSize.height];
-    textUV[3] = [0, textSize.height];
+    textUV[0] = [
+        0,
+        0
+    ];
+    textUV[1] = [
+        textSize.width,
+        0
+    ];
+    textUV[2] = [
+        textSize.width,
+        textSize.height
+    ];
+    textUV[3] = [
+        0,
+        textSize.height
+    ];
     return copySource2;
 }
 export class UIRectangleTextOnly extends UIRectangleText {
@@ -47,10 +59,22 @@ export class UIRectangleTextOnly extends UIRectangleText {
     }
     constructor(public override props: UIRectangleProps, public text: string) {
         const textUV: TextUV = [
-            [0, 0],
-            [0, 0],
-            [0, 0],
-            [0, 0]
+            [
+                0,
+                0
+            ],
+            [
+                0,
+                0
+            ],
+            [
+                0,
+                0
+            ],
+            [
+                0,
+                0
+            ]
         ];
         super(props,
             createTextureForTextOnly(text,

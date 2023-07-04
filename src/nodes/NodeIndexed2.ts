@@ -18,8 +18,16 @@ export class NodeIndexed2 {
             this.onIndicesChange();
     }
     set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array) {
-        const [ptr_ind, len_ind, cap_ind] = allocate_vec(indices);
-        const [ptr_vertices, len_vertices, cap_vertices] = allocate_vec(vertices);
+        const [
+            ptr_ind,
+            len_ind,
+            cap_ind
+        ] = allocate_vec(indices);
+        const [
+            ptr_vertices,
+            len_vertices,
+            cap_vertices
+        ] = allocate_vec(vertices);
         engine.rust.set_indices_and_vertices(this.node.id,
             ptr_ind,
             len_ind,
@@ -35,7 +43,10 @@ export class NodeIndexed2 {
             this.onIndicesChange();
     }
     get indices() {
-        const [indices_len, indices_ptr] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            indices_len,
+            indices_ptr
+        ] = new Uint32Array(engine.rust.memory.buffer,
             engine.rust.indices_field_pointer(this.node.id),
             2);
         return new Uint32Array(engine.rust.memory.buffer,

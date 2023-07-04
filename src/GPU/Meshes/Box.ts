@@ -19,7 +19,12 @@ export class Box extends IndexedSingleColoredMesh {
             point_light = 0,
             can_collide = false,
             label = 'box' + (uid++),
-            color = [1, 0, 0, 0],
+            color = [
+                1,
+                0,
+                0,
+                0
+            ],
             fixed = false, }:
             {
                 scenes?: Scene[],
@@ -37,11 +42,19 @@ export class Box extends IndexedSingleColoredMesh {
             scenes,
         });
         const boxVertices = engine.rust.get_box_vertices();
-        const [ptr_vertices, len_vertices, cap_vertices] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            ptr_vertices,
+            len_vertices,
+            cap_vertices
+        ] = new Uint32Array(engine.rust.memory.buffer,
             boxVertices,
             3);
         const boxIndices = engine.rust.get_box_indices();
-        const [ptr_ind, len_ind, cap_ind] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            ptr_ind,
+            len_ind,
+            cap_ind
+        ] = new Uint32Array(engine.rust.memory.buffer,
             boxIndices,
             3);
 
@@ -50,11 +63,19 @@ export class Box extends IndexedSingleColoredMesh {
                 can_collide,
                 vertices: {
                     stride: 8,
-                    view: [ptr_vertices as rust_pointer<'f32'>, len_vertices!, cap_vertices!],
+                    view: [
+ptr_vertices as rust_pointer<'f32'>,
+len_vertices!,
+cap_vertices!
+                    ],
                 },
             },
             mesh_id,
-            [ptr_ind as rust_pointer<'usize'>, len_ind!, cap_ind!]);
+            [
+ptr_ind as rust_pointer<'usize'>,
+len_ind!,
+cap_ind!
+            ]);
         this.color = color;
     }
 }

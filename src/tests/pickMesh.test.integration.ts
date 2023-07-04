@@ -32,7 +32,11 @@ describe('Pick box ',
             });
         it('should pick',
             async () => {
-                const [pickInfo0, pickInfo, boxId] = await page.evaluate(async function () {
+                const [
+                    pickInfo0,
+                    pickInfo,
+                    boxId
+                ] = await page.evaluate(async function () {
                     //@ts-expect-error
                     // eslint-disable-next-line import/extensions
                     const Box: typeof Box2 = (await import('/js/GPU/Meshes/Box.js')).Box;
@@ -41,7 +45,11 @@ describe('Pick box ',
                     const b = new Box({
                         can_collide: false, label: 'PickGreenbox',
                     });
-                    b.translation = [0, 400, 0];
+                    b.translation = [
+                        0,
+                        400,
+                        0
+                    ];
                     b.update_scale(500,
                         500,
                         500);
@@ -53,11 +61,22 @@ describe('Pick box ',
                             undefined,
                     });
                     control.updatePosition(position =>
-                        position.set([5000, 400, 0]));
+                        position.set([
+                            5000,
+                            400,
+                            0
+                        ]));
                     control.updateDirection(direction =>
-                        direction.set([1, 0, 0]));
+                        direction.set([
+                            1,
+                            0,
+                            0
+                        ]));
 
-                    const [pickedPosition, pickedMesh] = await new Promise<[{
+                    const [
+                        pickedPosition,
+                        pickedMesh
+                    ] = await new Promise<[{
                 position: TerraVector3;
                 meshId: number;
             } | null, {
@@ -67,13 +86,18 @@ describe('Pick box ',
                 engine.gpu!.afterRenderStart(async () => {
                     engine.gpu!.mousePosition[0] = (engine.canvas!.width / 2) | 0;
                     engine.gpu!.mousePosition[1] = (engine.canvas!.height / 2) | 0;
-                    res([await engine.gpu!.renderPassScreen.pickPosition(true), await engine.gpu!.renderPassScreen.pickMesh(undefined)]);
+                    res([
+                        await engine.gpu!.renderPassScreen.pickPosition(true),
+                        await engine.gpu!.renderPassScreen.pickMesh(undefined)
+                    ]);
                 });
             });
                     return [
-                        pickedPosition, {
+                        pickedPosition,
+                        {
                             label: pickedMesh?.mesh.label, position: pickedMesh?.position,
-                        }, b.id
+                        },
+                        b.id
                     ] as const;
                 });
                 expect(pickInfo0).not.toBeNull();

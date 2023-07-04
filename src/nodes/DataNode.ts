@@ -69,23 +69,39 @@ export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_poin
     }
     if(array instanceof Float32Array) {
         const vec_ptr = engine.rust.alloc_vector_f32(array.length);
-        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            ptr,
+            len,
+            cap
+        ] = new Uint32Array(engine.rust.memory.buffer,
             vec_ptr,
             3);
         new Float32Array(engine.rust.memory.buffer,
             ptr,
             len).set(array);
-        return [ptr as rust_pointer<'f32'>, len!, cap!];
+        return [
+ptr as rust_pointer<'f32'>,
+len!,
+cap!
+        ];
     }
     else {
         const vec_ptr = engine.rust.alloc_vector_usize(array.length);
-        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            ptr,
+            len,
+            cap
+        ] = new Uint32Array(engine.rust.memory.buffer,
             vec_ptr,
             3);
         new Uint32Array(engine.rust.memory.buffer,
             ptr,
             len).set(array);
-        return [ptr as rust_pointer<'usize'>, len!, cap!];
+        return [
+ptr as rust_pointer<'usize'>,
+len!,
+cap!
+        ];
     }
 }
 
@@ -129,7 +145,11 @@ export abstract class DataNode extends MainNode {
     }
     set faces(faces: Float32Array) {
         const vec_ptr = engine.rust.alloc_vector_f32(faces.length);
-        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            ptr,
+            len,
+            cap
+        ] = new Uint32Array(engine.rust.memory.buffer,
             vec_ptr,
             3);
 
@@ -212,7 +232,10 @@ cap!);
                 3).set(this.#vectorsVec4); //4 is from plane
 
             if (this.strip) {
-                this.#vectorsVec4 = [(this.#vectorsVec4 as [number, number, number])[1], (this.#vectorsVec4 as [number, number, number])[2]];
+                this.#vectorsVec4 = [
+                    (this.#vectorsVec4 as [number, number, number])[1],
+                    (this.#vectorsVec4 as [number, number, number])[2]
+                ];
             } else {
                 this.#vectorsVec4 = [];
             }
@@ -260,7 +283,10 @@ cap!);
             const pos = vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
             const colPos = this.last_collider_world_vertices_pointer + i * 4 * Float32Array.BYTES_PER_ELEMENT;
             this.colliderVerticesV4.push(colPos);
-            this.#positionsAndCollider.push([pos, colPos]);
+            this.#positionsAndCollider.push([
+                pos,
+                colPos
+            ]);
         }
         //return this.facesBufferColliderPointer.byteOffset;
         return true;
@@ -290,10 +316,22 @@ cap!);
             new Float32Array(engine.memory.buffer,
                 collider_planes_parallel_pointer + i * 4 * 16,
                 16).set([
-                quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
-                quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
-                quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
-                quatro[0].planeCollider[3], quatro[1].planeCollider[3], quatro[2].planeCollider[3], quatro[3].planeCollider[3] //d
+                quatro[0].planeCollider[0],
+                quatro[1].planeCollider[0],
+                quatro[2].planeCollider[0],
+                quatro[3].planeCollider[0], //x
+                quatro[0].planeCollider[1],
+                quatro[1].planeCollider[1],
+                quatro[2].planeCollider[1],
+                quatro[3].planeCollider[1], //y
+                quatro[0].planeCollider[2],
+                quatro[1].planeCollider[2],
+                quatro[2].planeCollider[2],
+                quatro[3].planeCollider[2], //z
+                quatro[0].planeCollider[3],
+                quatro[1].planeCollider[3],
+                quatro[2].planeCollider[3],
+                quatro[3].planeCollider[3] //d
             ]);
         });
     }

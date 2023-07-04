@@ -60,18 +60,62 @@ export class ColliderJS {
      */
     public collidedMesh: string | undefined;
 
-    #collisionPoint: [x: number, y: number, z: number] = [0, 0, 0];
-    #planeIntersectionPoint: [x: number, y: number, z: number] = [0, 0, 0];
+    #collisionPoint: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
+    #planeIntersectionPoint: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
 
-    #tempVector: [x: number, y: number, z: number] = [0, 0, 0];
-    #tempVector2: [x: number, y: number, z: number] = [0, 0, 0];
-    #tempVector3: [x: number, y: number, z: number] = [0, 0, 0];
-    #tempVector4: [x: number, y: number, z: number] = [0, 0, 0];
-    private _edge: [x: number, y: number, z: number] = [0, 0, 0];
-    private _baseToVertex: [x: number, y: number, z: number] = [0, 0, 0];
-    _destinationPoint: [x: number, y: number, z: number] = [0, 0, 0];
-    _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
-    _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
+    #tempVector: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
+    #tempVector2: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
+    #tempVector3: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
+    #tempVector4: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
+    private _edge: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
+    private _baseToVertex: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
+    _destinationPoint: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
+    _slidePlaneNormal: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
+    _displacementVector: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
 
     get scaledPosition() {
         return new Float32Array(engine.memory.buffer,
@@ -140,7 +184,11 @@ export class ColliderJS {
     /** @hidden */
     /** @hidden */
     #velocityWorld = new MutableTerraVector3();
-    #normalizedVelocity: [x: number, y: number, z: number] = [0, 0, 0];
+    #normalizedVelocity: [x: number, y: number, z: number] = [
+        0,
+        0,
+        0
+    ];
     /** @hidden */
     // public _initialVelocity: [x: number, y: number, z: number] = [0, 0, 0];
     /** @hidden */

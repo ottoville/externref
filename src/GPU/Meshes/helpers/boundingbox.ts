@@ -14,7 +14,11 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
     drawable: DrawableIndexed<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
     indexed: NodeIndexed2;
     constructor(targetNode: DrawableIndexed) {
-        const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            ptr,
+            len,
+            cap
+        ] = new Uint32Array(engine.rust.memory.buffer,
             engine.rust.bounding_vectors_pointer_simd(targetNode.node.id),
             3);
         const positions_amount = 26;
@@ -33,7 +37,11 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
             {
                 vertices: {
                     stride: 4,
-                    view: [ptr as rust_pointer<'f32'>, len!, cap!],
+                    view: [
+ptr as rust_pointer<'f32'>,
+len!,
+cap!
+                    ],
                 },
             },
             new_rust_mesh({

@@ -257,7 +257,10 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
         if (width === 0) {
             throw new Error('Cannot resize renderpass to zero width');
         }
-        [this.size.width, this.size.height] = this.#getSizeOnResize(width,
+        [
+            this.size.width,
+            this.size.height
+        ] = this.#getSizeOnResize(width,
             height);
         this.#updateSizeBindGroup();
         for (const rt of Object.values(this.colorRenderTargets)) {

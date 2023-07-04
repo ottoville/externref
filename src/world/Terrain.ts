@@ -19,8 +19,14 @@ import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 
 
-const terrainSize = [10000, 10000] as const;
-const subdivisions = [64, 64] as const;
+const terrainSize = [
+    10000,
+    10000
+] as const;
+const subdivisions = [
+    64,
+    64
+] as const;
 export class Terrain {
     /*
 TODO
@@ -29,8 +35,14 @@ TODO
      * */
 
     // 1000 * 1000: 40 - 50ms when no collision
-    static readonly #subdivisions = [64, 64] as const;
-    static readonly size = [10000, 10000] as const;
+    static readonly #subdivisions = [
+        64,
+        64
+    ] as const;
+    static readonly size = [
+        10000,
+        10000
+    ] as const;
     static readonly #textureSize = {
         height: 8192, width: 8192,
     } as const;
@@ -38,8 +50,14 @@ TODO
 
     static readonly settings = {
         facetSize: subdivisions[0] * subdivisions[1],
-        maxXZ: [terrainSize[0] / 2.0, terrainSize[1] / 2.0] as const,
-        minmax: [-2, 500] as const,
+        maxXZ: [
+            terrainSize[0] / 2.0,
+            terrainSize[1] / 2.0
+        ] as const,
+        minmax: [
+            -2,
+            500
+        ] as const,
         size: terrainSize,
         subdivisions: subdivisions,
         textureSize: {
@@ -152,7 +170,12 @@ TODO
                 const cachedBuffer = await Terrain.fromSave(cachedvertices);
                 var terrainPositionAndUvsAndNormalsGPU = Buffer.create(gpu,
                     verticesBufferSize,
-                    [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC],
+                    [
+                        GPUBufferUsage.STORAGE,
+                        GPUBufferUsage.VERTEX,
+                        GPUBufferUsage.COPY_DST,
+                        GPUBufferUsage.COPY_SRC
+                    ],
                     'terrainPositionAndUvsAndNormalsGPU0',
                     b => {
                         new Uint8Array(b.getMappedRange()).set(new Uint8Array(cachedBuffer));
@@ -170,7 +193,10 @@ TODO
 
                 const texture = gpu.device.createTexture({
                     format: 'rgba8unorm',
-                    size: [bitmap.width, bitmap.height],
+                    size: [
+                        bitmap.width,
+                        bitmap.height
+                    ],
                     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
                 });
                 gpu.device.queue.copyExternalImageToTexture({
@@ -179,7 +205,10 @@ TODO
                 {
                     texture,
                 },
-                [bitmap.width, bitmap.height]);
+                [
+                    bitmap.width,
+                    bitmap.height
+                ]);
 
                 const commandEncoder = gpu.device.createCommandEncoder({
                     label: 'loadFromTexture_encoder',
@@ -189,7 +218,12 @@ TODO
                 });
                 var terrainPositionAndUvsAndNormalsGPU = Buffer.create(gpu,
                     verticesBufferSize,
-                    [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC],
+                    [
+                        GPUBufferUsage.STORAGE,
+                        GPUBufferUsage.VERTEX,
+                        GPUBufferUsage.COPY_DST,
+                        GPUBufferUsage.COPY_SRC
+                    ],
                     'terrainPositionAndUvsAndNormalsGPU1');
                 const sourceBindGroup = CreateGroundFromHeightMapShader.props.bindGroupLayouts[0].createBindGroup('sourceBindGroup',
                     (bindGroup) =>
@@ -326,7 +360,12 @@ TODO
             createTexture: CreateTerrainTexture;
         },
         private terrainPositionAndUvsAndNormalsGPU: CopySrcBuffer & CopyDstBuffer & BindStorageBuffer & VertexBuffer,
-        [computePipelineIndices, computePlaneHeights, computePipelineNormals, createTexturePipeline]: [Indices: GPUComputePipeline, Heights: GPUComputePipeline, Normals: GPUComputePipeline, Texture: GPUComputePipeline],
+        [
+            computePipelineIndices,
+            computePlaneHeights,
+            computePipelineNormals,
+            createTexturePipeline]: [Indices: GPUComputePipeline, Heights: GPUComputePipeline, Normals: GPUComputePipeline, Texture: GPUComputePipeline
+],
         positionsCount: number
     ) {
         this.slopeArrGPUBuffer = Buffer.create(gpu,
@@ -335,7 +374,11 @@ TODO
             'slopeArrGPUBuffer');
         this.facet12ArrGPUBuffer = Buffer.create(gpu,
             Float32Array.BYTES_PER_ELEMENT * Terrain.#subdivisions[0] * Terrain.#subdivisions[1] * 4 * 2,
-            [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC],
+            [
+                GPUBufferUsage.STORAGE,
+                GPUBufferUsage.COPY_DST,
+                GPUBufferUsage.COPY_SRC
+            ],
             'facet12ArrGPUBuffer');
         this.facet12ArrGPUBufferSwap = new WriteBuffer(gpu,
             Float32Array.BYTES_PER_ELEMENT * Terrain.#subdivisions[0] * Terrain.#subdivisions[1] * 4 * 2,
@@ -410,7 +453,11 @@ TODO
         //todo: remove unneeded flags
         const terrainIndicesGPU = Buffer.create(gpu,
             this.#terrainIndicesLength,
-            [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],
+            [
+                GPUBufferUsage.INDEX,
+                GPUBufferUsage.STORAGE,
+                GPUBufferUsage.COPY_SRC
+            ],
             'terrainIndicesGPUBuffer');
 
         passEncoder.setPipeline(computePipelineIndices);
@@ -523,7 +570,10 @@ TODO
                         quality: 1, type: 'image/webp',
                     });
                     TerrainTool.saveTexture(await blob.arrayBuffer(),
-                        [Terrain.#textureSize.width, Terrain.#textureSize.height]);
+                        [
+                            Terrain.#textureSize.width,
+                            Terrain.#textureSize.height
+                        ]);
                 });
             }
 

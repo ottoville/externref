@@ -12,18 +12,47 @@ const maxSpeedSquared = 1.4 * 1.4;
 export class Human extends Box {
     inputManager: MeshCamera;
     radius: { 0: number; 1: number; 2: number; };
-    readonly #radius: [x: number, y: number, z: number] = [0.5, 1.8, 0.3];
+    readonly #radius: [x: number, y: number, z: number] = [
+        0.5,
+        1.8,
+        0.3
+    ];
     readonly collisionsScalingMatrix: TerraMatrix = new TerraMatrix([
-        1.0 / this.#radius[0], 0.0, 0.0, 0.0,
-        0.0, 1.0 / this.#radius[1], 0.0, 0.0,
-        0.0, 0.0, 1.0 / this.#radius[2], 0.0,
-        0.0, 0.0, 0.0, 1.0
+        1.0 / this.#radius[0],
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0 / this.#radius[1],
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0 / this.#radius[2],
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
     ]);
-    readonly closeDistanceVector: [number, number, number] = [closeDistance / this.#radius[0], closeDistance / this.#radius[1], closeDistance / this.#radius[2]];
+    readonly closeDistanceVector: [number, number, number] = [
+        closeDistance / this.#radius[0],
+        closeDistance / this.#radius[1],
+        closeDistance / this.#radius[2]
+    ];
 
     constructor(properties: { scenes: Scene[], inputEnabled: boolean }) {
         super({
-            ...properties, can_collide: false, color: [0, 0, 1, 0], label: 'human', point_light: 400,
+            ...properties,
+            can_collide: false,
+            color: [
+                0,
+                0,
+                1,
+                0
+            ],
+            label: 'human',
+            point_light: 400,
         });
         engine.physics.tickables.push(this);
         this.hasGravity = true;
@@ -135,20 +164,40 @@ export class Human extends Box {
                     const angle2 = Math.atan2(this.last_velocity[2],
                         this.last_velocity[0]);
                     if (Math.abs(angle2 - angle) > 0.1) {
-                        this.velocity = [Math.cos(angle) * horizontalSpeed, this.velocity[1], Math.sin(angle) * horizontalSpeed];
+                        this.velocity = [
+                            Math.cos(angle) * horizontalSpeed,
+                            this.velocity[1],
+                            Math.sin(angle) * horizontalSpeed
+                        ];
                     }
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
-                    this.velocity = [-direction[0] * horizontalSpeed, this.velocity[1], -direction[2] * horizontalSpeed];
+                    this.velocity = [
+                        -direction[0] * horizontalSpeed,
+                        this.velocity[1],
+                        -direction[2] * horizontalSpeed
+                    ];
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
-                    this.velocity = [direction[0] * horizontalSpeed, this.velocity[1], direction[2] * horizontalSpeed];
+                    this.velocity = [
+                        direction[0] * horizontalSpeed,
+                        this.velocity[1],
+                        direction[2] * horizontalSpeed
+                    ];
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.LEFT) === ARROW_KEYS.LEFT) {
-                    this.velocity = [-direction[2] * horizontalSpeed, this.velocity[1], direction[0] * horizontalSpeed];
+                    this.velocity = [
+                        -direction[2] * horizontalSpeed,
+                        this.velocity[1],
+                        direction[0] * horizontalSpeed
+                    ];
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
-                    this.velocity = [direction[2] * horizontalSpeed, this.velocity[1], -direction[0] * horizontalSpeed];
+                    this.velocity = [
+                        direction[2] * horizontalSpeed,
+                        this.velocity[1],
+                        -direction[0] * horizontalSpeed
+                    ];
                 }
             }
         }
@@ -160,7 +209,11 @@ export class Human extends Box {
         const speedSquared = this.speedSquared;
         if (speedSquared < maxSpeedSquared) {
 
-            const impulse = [0, 0, 0] as [number, number, number];
+            const impulse = [
+                0,
+                0,
+                0
+            ] as [number, number, number];
             const direction = this.inputManager.camera.direction;
 
             if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP_RIGHT) === ARROW_KEYS.UP_RIGHT) {

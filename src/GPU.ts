@@ -110,12 +110,20 @@ export class GPU {
     readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, TextureUsageType['RENDER_ATTACHMENT']>; }>;
 
     readonly #updateViewBindGroup: BindGroup;
-    readonly clustersInRow: [number, number, number] = [32, 18, 48];
+    readonly clustersInRow: [number, number, number] = [
+        32,
+        18,
+        48
+    ];
 
     readonly clusterSizeinBytes: number;
 
 
-    readonly #CLUSTER_WORKGROUP_SIZE: [number, number, number] = [4, 2, 4];
+    readonly #CLUSTER_WORKGROUP_SIZE: [number, number, number] = [
+        4,
+        2,
+        4
+    ];
     readonly CLUSTER_DISPATCH_SIZE: [number, number, number] = this.clustersInRow.map((v, i) =>
         Math.ceil(v / this.#CLUSTER_WORKGROUP_SIZE[i]!)) as [number, number, number];
 
@@ -169,9 +177,13 @@ export class GPU {
             topology: 'triangle-list',
             ...primitive,
         };
-        const [label, createRenderPipeline] = desc;
+        const [
+            label,
+            createRenderPipeline
+        ] = desc;
         const hash = label + [
-            ...Object.values(primitiveWithDefaults), ...Object.values(vertexBufferProps ?? {
+            ...Object.values(primitiveWithDefaults),
+            ...Object.values(vertexBufferProps ?? {
             })
         ].sort().join();
         let renderPipeline = GPU.#renderPipelines.get(hash);
@@ -216,15 +228,27 @@ export class GPU {
 
         this.GPUMeshes = Buffer.create(this,
             GPU.gpu_memory_index_size * this.#maxInstances,
-            [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],
+            [
+                GPUBufferUsage.UNIFORM,
+                GPUBufferUsage.COPY_DST,
+                GPUBufferUsage.STORAGE,
+                GPUBufferUsage.COPY_SRC
+            ],
             'GPUMeshes');
         this.#GPUPointLights = Buffer.create(this,
             this.#gpu_max_point_lights * 4,
-            [GPUBufferUsage.UNIFORM, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],
+            [
+                GPUBufferUsage.UNIFORM,
+                GPUBufferUsage.STORAGE,
+                GPUBufferUsage.COPY_DST
+            ],
             'GPUPointLights');
         this.#GPUDirectionalLights = Buffer.create(this,
             63 * 4,
-            [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],
+            [
+                GPUBufferUsage.STORAGE,
+                GPUBufferUsage.COPY_DST
+            ],
             'GPUDirectionalLights');
 
 
@@ -310,7 +334,10 @@ export class GPU {
             }
         );
         this.rootCameralayout = new BindablePipelineLayout({
-            bindGroupLayouts: [this.sizeBindGroupLayout, this.uniformBindGroupLayoutWithTime] as [typeof this.sizeBindGroupLayout, typeof this.uniformBindGroupLayoutWithTime],
+            bindGroupLayouts: [
+                this.sizeBindGroupLayout,
+                this.uniformBindGroupLayoutWithTime
+            ] as [typeof this.sizeBindGroupLayout, typeof this.uniformBindGroupLayoutWithTime],
             label: 'rootCamera',
         });
         const BindGroupLayoutPosition = new BGLayout(this,
@@ -413,7 +440,10 @@ export class GPU {
             },
             entryPoint: 'pick',
             getSizeOnResize: (w, h) => {
-                return [w, h];
+                return [
+                    w,
+                    h
+                ];
             },
             gpu: this,
             label: 'pickRenderPass',
@@ -453,7 +483,10 @@ export class GPU {
                 },
                 entryPoint: 'main',
                 getSizeOnResize: (w, h) => {
-                    return [w, h];
+                    return [
+                        w,
+                        h
+                    ];
                 },
                 gpu: this,
                 label: 'renderPassScreen',
@@ -506,7 +539,10 @@ export class GPU {
                 },
                 entryPoint: 'main',
                 getSizeOnResize: (w, h) =>
-                    [w >> 2, h >> 2],
+                    [
+                        w >> 2,
+                        h >> 2
+                    ],
                 gpu: this,
                 label: 'renderPassWater',
                 rootLayout: this.rootCameralayout,
@@ -630,7 +666,10 @@ export class GPU {
             },
             entryPoint: 'main',
             getSizeOnResize: (w, h) => {
-                return [w, h];
+                return [
+                    w,
+                    h
+                ];
             },
             gpu: this,
             label: 'renderPassCanvas',
@@ -647,14 +686,22 @@ export class GPU {
 
         //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
 
-        this.#renderPasses = [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater, this.pickRenderPass];
+        this.#renderPasses = [
+            this.renderPassCanvas,
+            this.renderPassScreen,
+            this.renderPassWater,
+            this.pickRenderPass
+        ];
 
 
         this.#DynamicBindGroups.add(this.BindGroupPosition);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = Buffer.create(this,
             timeAndDeltaBuffer.byteLength,
-            [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
+            [
+                GPUBufferUsage.UNIFORM,
+                GPUBufferUsage.COPY_DST
+            ],
             'timeBuffer');
 
         const ClustersShader = createClustersCompShader(this.sizeBindGroupLayout);
@@ -765,14 +812,20 @@ export class GPU {
                         continue;
                     }
                     const offset = engine.rust.gpu_alignment(meshID);
-                    meshes.push([mesh, offset]);
+                    meshes.push([
+                        mesh,
+                        offset
+                    ]);
                     if (offset >= this.#maxInstances) {
                         this.#maxInstances = offset + 10;
                         this.GPUMeshes.resize(GPU.gpu_memory_index_size * this.#maxInstances);
                     }
                 }
                 for (let i = 0; i < meshes.length; i++) {
-                    const [mesh, offset] = meshes[i]!;
+                    const [
+                        mesh,
+                        offset
+                    ] = meshes[i]!;
                     const gpumeshPointer = engine.rust.gpu_pointer(mesh.id);
                     const dataLength = this.GPUDataSizeBytes / 4;
                     const data = new Float32Array(engine.memory.buffer,

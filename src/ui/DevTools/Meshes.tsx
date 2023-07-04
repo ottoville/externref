@@ -13,13 +13,19 @@ declare const engine: Engine;
 const getPositionBindGroupForScreen = (gpu: GPU) =>
     Array.from(gpu.renderPassScreen.renderPipelines)
         .filter((map): map is [RenderPipeline, RenderPipelineVariant] => {
-            const [renderPipeline, renderPipelineVariant] = map;
+            const [
+                renderPipeline,
+                renderPipelineVariant
+            ] = map;
             return ((renderPipeline.props.bindgroupdrawable === gpu.positionAndTimeBindGroup || gpu.positionAndTimeBindGroup.subBindGroups.includes(renderPipeline.props.bindgroupdrawable)) && !(renderPipelineVariant instanceof Promise));
         });
 
 
 export function Meshes() {
-    const [renderPipelines, setRenderPipelines] = useState<ReturnType<typeof getPositionBindGroupForScreen>>([]);
+    const [
+        renderPipelines,
+        setRenderPipelines
+    ] = useState<ReturnType<typeof getPositionBindGroupForScreen>>([]);
     useEffect(() => {
         let renderPassScreen: GPU['renderPassScreen'] | undefined = undefined;
         let listener: () => void;
@@ -37,12 +43,18 @@ export function Meshes() {
         };
     },
     [engine]);
-    const [selectedDrawable, setSelectedDrawable] = useState<Drawable>();
+    const [
+        selectedDrawable,
+        setSelectedDrawable
+    ] = useState<Drawable>();
     return <>
         <fieldset id="meshes">
             <legend>Rendered meshes</legend>
             <ul>
-                {renderPipelines.map(([rp, variant]) => {
+                {renderPipelines.map(([
+                    rp,
+                    variant
+                ]) => {
                     return <li key={rp.props.label}>
                         Renderpipeline<br />
                         <small>{rp.props.label}</small>

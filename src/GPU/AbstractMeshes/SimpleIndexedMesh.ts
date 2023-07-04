@@ -42,7 +42,10 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
             if (!vBufferGPU) {
                 let usages: readonly [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] | readonly [GPUBufferUsage.VERTEX];
                 if (!staticVertices) {
-                    usages = [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] as const;
+                    usages = [
+                        GPUBufferUsage.VERTEX,
+                        GPUBufferUsage.COPY_DST
+                    ] as const;
                 } else {
                     usages = [GPUBufferUsage.VERTEX] as const;
                 }
@@ -64,7 +67,11 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
             this.drawable = new DrawableIndexed(
                 {
                     node: this,
-                    renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]),
+                    renderPasses: new Set([
+                        engine.gpu.renderPassScreen,
+                        engine.gpu.pickRenderPass,
+                        engine.gpu.renderPassWater
+                    ]),
                     renderPipeline,
                     vertexBuffers: [vBufferGPU],
                 }

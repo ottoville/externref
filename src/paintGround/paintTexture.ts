@@ -124,7 +124,11 @@ export class paintTexture extends paintGround {
             {
                 texture: tempTexture,
             },
-            [c.width, c.height, 1]);
+            [
+                c.width,
+                c.height,
+                1
+            ]);
         if (width && this.subTextureCache.imageData) {
             const leftX = Math.max(this.subTextureCache.x,
                 minX);
@@ -154,7 +158,11 @@ export class paintTexture extends paintGround {
                         },
                         texture: tempTexture,
                     },
-                    [rightX - leftX, bottomY - topY, 1]);
+                    [
+                        rightX - leftX,
+                        bottomY - topY,
+                        1
+                    ]);
             } else {
                 console.log('Rectangles do not overlap, or overlap has an area of zero (edge/corner overlap)');
             }
@@ -165,7 +173,11 @@ export class paintTexture extends paintGround {
         {
             buffer: tempBuffer, bytesPerRow: (c.width * 4),
         },
-        [c.width, c.height, 1]);
+        [
+            c.width,
+            c.height,
+            1
+        ]);
 
         this.scene.gpu.device.queue.submit([encoder.finish()]);
         const encoder2 = this.scene.gpu.device.createCommandEncoder({
@@ -183,7 +195,11 @@ export class paintTexture extends paintGround {
                     },
                     texture: this.zonedt.texture,
                 },
-                [this.subTextureCache.width, this.subTextureCache.height, 1]);
+                [
+                    this.subTextureCache.width,
+                    this.subTextureCache.height,
+                    1
+                ]);
         }
         if (typeof (this.subTextureCache) !== 'undefined') {
             this.subTextureCache.x = minX;

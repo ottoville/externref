@@ -15,7 +15,10 @@ export class SunVertShader extends VertexShader<BindLayouts> {
                 main: new VertexShaderFunction(
                     new Struct('Output',
                         {
-                            Position: ['@builtin(position)', 'vec4<f32>'],
+                            Position: [
+                                '@builtin(position)',
+                                'vec4<f32>'
+                            ],
                         }),
                     pipelineLayout,
                     [],

@@ -180,7 +180,10 @@ export abstract class paintGround {
             engine.gpu!.renderPassScreen.pickMesh(undefined,
                 mesh => { return mesh === this.ground.mesh; }).then(pickInfo => {
                 if (pickInfo) {
-                    this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
+                    this.#start_position = new TerraVector2([
+                        pickInfo.position[0],
+                        pickInfo.position[2]
+                    ]);
                     this.onMainPointerDown(this.#start_position);
                     engine.addInputListener(this.#drawArea);
                     engine.addInputListener(this.#pointerUp);

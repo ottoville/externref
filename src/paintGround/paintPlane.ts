@@ -22,7 +22,14 @@ class PlaneMesh extends DataNode implements IndexedTrait {
 
         const ptrs = engine.rust.create_tiled_mesh_ptr(100,
             100);
-        const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer,
+        const [
+            pos_ptr,
+            pos_len,
+            pos_cap,
+            ind_ptr,
+            ind_len,
+            ind_cap
+        ] = new Uint32Array(engine.rust.memory.buffer,
             ptrs,
             6);
 
@@ -35,14 +42,22 @@ class PlaneMesh extends DataNode implements IndexedTrait {
                 character_can_collide_to: false,
                 vertices: {
                     stride: renderPipeline.props.vertexShader.props.entryPoints.main.vertexBufferLayout[0].arrayStride,
-                    view: [pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!],
+                    view: [
+pos_ptr as rust_pointer<'f32'>,
+pos_len!,
+pos_cap!
+                    ],
 
                 },
             },
             mesh_id,
             false);
         this.indexed = new NodeIndexed2(this,
-            [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!]);
+            [
+ind_ptr as rust_pointer<'usize'>,
+ind_len!,
+ind_cap!
+            ]);
         this.drawable = new DrawableIndexed(
             {
                 node: this,
@@ -54,9 +69,16 @@ class PlaneMesh extends DataNode implements IndexedTrait {
 
 export class paintPlane extends paintGround {
     #mesh: PlaneMesh;
-    #widthVector: [number, number] = [0, 0];
+    #widthVector: [number, number] = [
+        0,
+        0
+    ];
     #startingPoint = new TerraVector2(2);
-    #meshPosition: [number, number, number] = [0, 0, 0];
+    #meshPosition: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
 
     constructor(
         scene: Scene,
@@ -72,7 +94,8 @@ export class paintPlane extends paintGround {
                 callback(p);
             });
         const renderPipeline = ground.gpu.createRenderPipeline([
-            'paintPlaneRenderpipeline', (_gpu, label, primitive, vertexBufferProps) => {
+            'paintPlaneRenderpipeline',
+            (_gpu, label, primitive, vertexBufferProps) => {
                 const planeVertShader = createPlaneAtGroundHeightVertShader(
                     ground.TerrainHeightsbindGroupTree,
                     {
@@ -118,9 +141,16 @@ export class paintPlane extends paintGround {
         this.#startingPoint = startingPoint;
     }
     onMainPointerUp(height: number): void {
-        this.#widthVector = [this.drawVector[1] / this.size.height, this.drawVector[0] / this.size.height];
+        this.#widthVector = [
+            this.drawVector[1] / this.size.height,
+            this.drawVector[0] / this.size.height
+        ];
         const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
-        this.#meshPosition = [this.#startingPoint[0] + this.drawVector[0] * -0.5, 5, this.#startingPoint[1] + this.drawVector[1] * 0.5];
+        this.#meshPosition = [
+            this.#startingPoint[0] + this.drawVector[0] * -0.5,
+            5,
+            this.#startingPoint[1] + this.drawVector[1] * 0.5
+        ];
         this.#mesh.translation = this.#meshPosition;
         engine.rust.update_scale_and_rotation(this.#mesh.id,
             height * 0.5,

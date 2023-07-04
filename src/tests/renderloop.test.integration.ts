@@ -25,7 +25,10 @@ describe('Physic time ',
             10000);
         it('Delta has changed',
             async function () {
-                const [value0, value1] = await page.evaluate(async function () {
+                const [
+                    value0,
+                    value1
+                ] = await page.evaluate(async function () {
                     //@ts-expect-error
                     const engine: Engine = window.engine;
 
@@ -36,7 +39,10 @@ describe('Physic time ',
                     await new Promise(res => { setTimeout(res,
                         1234); });
                     const value1_ = deltaView[0];
-                    return [value0_, value1_];
+                    return [
+                        value0_,
+                        value1_
+                    ];
                 });
                 expect(Number.isFinite(value1)).toBe(true);
                 expect(value0).not.toBe(value1);

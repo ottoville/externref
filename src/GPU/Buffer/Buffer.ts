@@ -235,7 +235,10 @@ class copySrcBuffer extends Buffer {
     constructor(gpu: GPU, size: number, usages: readonly number[], mappedAtCreation = false, label: string) {
         super(gpu,
             size,
-            [GPUBufferUsage.COPY_SRC, ...usages],
+            [
+                GPUBufferUsage.COPY_SRC,
+                ...usages
+            ],
             mappedAtCreation,
             label);
     }
@@ -287,7 +290,10 @@ export class WriteBuffer extends copySrcBuffer {
     constructor(gpu: GPU, size: number, label: string) {
         super(gpu,
             size,
-            [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC],
+            [
+                GPUBufferUsage.MAP_WRITE,
+                GPUBufferUsage.COPY_SRC
+            ],
             false,
             label);
     }
@@ -299,7 +305,10 @@ export class ReadBuffer extends Buffer {
     constructor(gpu: GPU, size: number, label: string) {
         super(gpu,
             size,
-            [GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST],
+            [
+                GPUBufferUsage.MAP_READ,
+                GPUBufferUsage.COPY_DST
+            ],
             false,
             label);
     }

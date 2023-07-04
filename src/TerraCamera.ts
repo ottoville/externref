@@ -21,7 +21,11 @@ export class TerraCamera {
 
 
     readonly #uniformBufferSize = /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ + 4 * 4;
-    readonly #direction = new MutableTerraVector3([1, 0, 0]);
+    readonly #direction = new MutableTerraVector3([
+        1,
+        0,
+        0
+    ]);
 
     readonly #viewProjectionPositionBuffer = new ArrayBuffer(this.#uniformBufferSize);
 
@@ -74,7 +78,10 @@ export class TerraCamera {
                 'clusterArrayBuffer');
             this.#uniformBuffer = Buffer.create(gpu,
                 this.#uniformBufferSize,
-                [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
+                [
+                    GPUBufferUsage.UNIFORM,
+                    GPUBufferUsage.COPY_DST
+                ],
                 'uniformBuffer'); //Todo: set to private
             this.uniformBindGroup = gpu.uniformBindGroupLayoutWithTime.createBindGroup('uniformBindGroup',
                 (bindGroup) =>

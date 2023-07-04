@@ -26,8 +26,14 @@ export function createUIVertShader(pipelineLayout: PipelineLayout<BindLayouts>, 
         entryPoints: {
             main: new VertexShaderFunction(new Struct('Output',
                 {
-                    Position: ['@builtin(position)', 'vec4<f32>'],
-                    v_uv: ['@location(0)', 'vec2<f32>'],
+                    Position: [
+                        '@builtin(position)',
+                        'vec4<f32>'
+                    ],
+                    v_uv: [
+                        '@location(0)',
+                        'vec2<f32>'
+                    ],
                 }),
             pipelineLayout,
             [buffers],

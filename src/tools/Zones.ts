@@ -134,7 +134,10 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                             translate: {
                                 x: {
                                     anchor: Anchor.CENTER,
-                                    value: [-0.8, NumericUnit['%']],
+                                    value: [
+                                        -0.8,
+                                        NumericUnit['%']
+                                    ],
                                 },
                                 y: this.props.subMenuPosition,
                             },

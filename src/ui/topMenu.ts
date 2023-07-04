@@ -65,7 +65,10 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
             onClick: this.setActiveMenu,
             subMenuPosition: {
                 anchor: Anchor.TOP,
-                value: [70, NumericUnit.px],
+                value: [
+                    70,
+                    NumericUnit.px
+                ],
             } as const,
             terrain: props.terrain,
         };
@@ -83,11 +86,17 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,
-                                        value: [-0.9, NumericUnit['%']],
+                                        value: [
+                                            -0.9,
+                                            NumericUnit['%']
+                                        ],
                                     },
                                     y: {
                                         anchor: Anchor.CENTER,
-                                        value: [0.9, NumericUnit['%']],
+                                        value: [
+                                            0.9,
+                                            NumericUnit['%']
+                                        ],
                                     },
                                 },
                             },
@@ -108,11 +117,17 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,
-                                        value: [-0.75, NumericUnit['%']],
+                                        value: [
+                                            -0.75,
+                                            NumericUnit['%']
+                                        ],
                                     },
                                     y: {
                                         anchor: Anchor.CENTER,
-                                        value: [0.9, NumericUnit['%']],
+                                        value: [
+                                            0.9,
+                                            NumericUnit['%']
+                                        ],
                                     },
                                 },
                             },
@@ -134,11 +149,17 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                                 translate: {
                                     x: {
                                         anchor: Anchor.CENTER,
-                                        value: [-0.6, NumericUnit['%']],
+                                        value: [
+                                            -0.6,
+                                            NumericUnit['%']
+                                        ],
                                     },
                                     y: {
                                         anchor: Anchor.CENTER,
-                                        value: [0.9, NumericUnit['%']],
+                                        value: [
+                                            0.9,
+                                            NumericUnit['%']
+                                        ],
                                     },
                                 },
                             },

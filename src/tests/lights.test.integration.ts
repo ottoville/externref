@@ -30,7 +30,10 @@ describe('Lights ',
             });
         it('should render boxes',
             async () => {
-                const [greenPixel, redPixel] = await page.evaluate(async function () {
+                const [
+                    greenPixel,
+                    redPixel
+                ] = await page.evaluate(async function () {
                     //@ts-expect-error
                     // eslint-disable-next-line import/extensions
                     const Box: typeof Box2 = (await import('/js/GPU/Meshes/Box.js')).Box;
@@ -40,11 +43,26 @@ describe('Lights ',
                         can_collide: false, label: 'redBox',
                     });
                     const b2 = new Box({
-                        can_collide: false, color: [0, 1, 0, 0], label: 'greenBox',
+                        can_collide: false,
+                        color: [
+                            0,
+                            1,
+                            0,
+                            0
+                        ],
+                        label: 'greenBox',
                     });
                     //green on left, red on right
-                    b.translation = [0, 400, -300];
-                    b2.translation = [0, 400, 300];
+                    b.translation = [
+                        0,
+                        400,
+                        -300
+                    ];
+                    b2.translation = [
+                        0,
+                        400,
+                        300
+                    ];
                     b.update_scale(200,
                         200,
                         200);
@@ -61,7 +79,11 @@ describe('Lights ',
                             undefined,
                     });
                     control.updatePosition(position =>
-                        position.set([5000, 400, 0]));
+                        position.set([
+                            5000,
+                            400,
+                            0
+                        ]));
                     control.updateDirection((direction) => {
                         direction[0] = 1;
                         direction[1] = 0;

@@ -12,8 +12,14 @@ import { Rotation } from './Rotation.js';
 import { Primitives } from './Primitives.js';
 
 export function NodeInfo({ drawable, }: { drawable: Drawable }) {
-    const [translation, setTranslation] = useState(new ReadOnlyTerraVector3());
-    const [scale, setScale] = useState(new ReadOnlyTerraVector3());
+    const [
+        translation,
+        setTranslation
+    ] = useState(new ReadOnlyTerraVector3());
+    const [
+        scale,
+        setScale
+    ] = useState(new ReadOnlyTerraVector3());
     useEffect(() => {
         setTranslation(drawable.node.translation);
         const listener = () => {
@@ -34,17 +40,29 @@ export function NodeInfo({ drawable, }: { drawable: Drawable }) {
             <legend>Translation</legend>
             <label>X:
                 <input onChange={(evt) => {
-                    drawable.node.translation = [evt.target.valueAsNumber, drawable.node.translation[1], drawable.node.translation[2]];
+                    drawable.node.translation = [
+                        evt.target.valueAsNumber,
+                        drawable.node.translation[1],
+                        drawable.node.translation[2]
+                    ];
                 }} title="translation X" type="number" step="1" value={translation[0].toFixed(3)} />
             </label><br />
             <label>Y:
                 <input onChange={(evt) => {
-                    drawable.node.translation = [drawable.node.translation[0], evt.target.valueAsNumber, drawable.node.translation[2]];
+                    drawable.node.translation = [
+                        drawable.node.translation[0],
+                        evt.target.valueAsNumber,
+                        drawable.node.translation[2]
+                    ];
                 }} title="translation Y" type="number" step="1" value={translation[1].toFixed(3)} />
             </label><br />
             <label>Z:
                 <input onChange={(evt) => {
-                    drawable.node.translation = [drawable.node.translation[0], drawable.node.translation[1], evt.target.valueAsNumber];
+                    drawable.node.translation = [
+                        drawable.node.translation[0],
+                        drawable.node.translation[1],
+                        evt.target.valueAsNumber
+                    ];
                 }} title="translation Z" type="number" step="1" value={translation[2].toFixed(3)} />
             </label>
         </fieldset>

@@ -6,10 +6,22 @@ export abstract class UIRectangleText extends UIRectangle {
         topRight: [number, number],
         bottomRight: [number, number],
         bottomLeft: [number, number]] = [
-            [0, 0],
-            [0, 0],
-            [0, 0],
-            [0, 0]
+            [
+                0,
+                0
+            ],
+            [
+                0,
+                0
+            ],
+            [
+                0,
+                0
+            ],
+            [
+                0,
+                0
+            ]
         ];
 
     updateBoundingBoxAndVertices({ vertices, content_sizeX, content_sizeY, }: {
@@ -21,18 +33,30 @@ export abstract class UIRectangleText extends UIRectangle {
     }) {
         vertices.set([
             //bottom left
-            -content_sizeX, -content_sizeY, ...this.textUV[3],
+            -content_sizeX,
+            -content_sizeY,
+            ...this.textUV[3],
             //bottom right
-            content_sizeX, -content_sizeY, ...this.textUV[2],
+            content_sizeX,
+            -content_sizeY,
+            ...this.textUV[2],
             //top left
-            -content_sizeX, content_sizeY, ...this.textUV[0],
+            -content_sizeX,
+            content_sizeY,
+            ...this.textUV[0],
 
             //top left
-            -content_sizeX, content_sizeY, ...this.textUV[0],
+            -content_sizeX,
+            content_sizeY,
+            ...this.textUV[0],
             //bottom right
-            content_sizeX, -content_sizeY, ...this.textUV[2],
+            content_sizeX,
+            -content_sizeY,
+            ...this.textUV[2],
             //top right
-            content_sizeX, content_sizeY, ...this.textUV[1]
+            content_sizeX,
+            content_sizeY,
+            ...this.textUV[1]
         ]);
         return vertices;
     }

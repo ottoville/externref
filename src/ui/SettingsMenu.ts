@@ -54,7 +54,10 @@ export class createSettingsMenu extends UINode<{}> {
                             x,
                             y: {
                                 anchor: Anchor.CENTER,
-                                value: [-60, NumericUnit.px],
+                                value: [
+                                    -60,
+                                    NumericUnit.px
+                                ],
                             },
                         },
                     },
@@ -72,7 +75,10 @@ export class createSettingsMenu extends UINode<{}> {
                             x,
                             y: {
                                 anchor: Anchor.CENTER,
-                                value: [-120, NumericUnit.px],
+                                value: [
+                                    -120,
+                                    NumericUnit.px
+                                ],
                             },
                         },
                     },
