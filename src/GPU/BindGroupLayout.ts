@@ -28,13 +28,13 @@ interface BindGroupLayoutEntryProps<V extends ShaderStage = ShaderStage> extends
 }
 export abstract class BindGroupLayoutEntry<V extends ShaderStage = ShaderStage> {
     // Each shader will set this variableName to right context when creating wgsl
-    variableName = ''
+    variableName = '';
     constructor(
         public entry: BindGroupLayoutEntryProps<V>,
         public structName: string) {
     }
     toString() {
-        return this.variableName
+        return this.variableName;
     }
 }
 export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = Struct> extends BindGroupLayoutEntry<V> {
@@ -46,27 +46,40 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
     ) {
 
         super(entry,
-            struct.name)
+            struct.name);
     }
     prop(member: keyof S['properties'] & string) {
-        return `${this.variableName}.${member}`
+        return `${this.variableName}.${member}`;
     }
 }
+
+type format = 'f32' | 'i32' | 'u32';
+type storageFormat = 'rgba8unorm' | 'rgba8snorm' | 'rgba8uint' | 'rgba8sint' | 'rgba16uint' | 'rgba16sint' | 'rgba16float' | 'r32uint' | 'r32sint' | 'r32float' | 'rg32uint' | 'rg32sint' | 'rg32float' | 'rgba32uint' | 'rgba32sint' | 'rgba32float' | 'bgra8unorm';
+
 export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
     constructor(
         public override entry: BindGroupLayoutEntryProps<V> & ({ texture: NonNullable<GPUBindGroupLayoutEntry['texture']> } | { storageTexture: NonNullable<GPUBindGroupLayoutEntry['storageTexture']> }),
         structName:
-            'texture_depth_multisampled_2d'
-            | 'texture_2d<u32>'
-            | 'texture_2d<f32>'
-            | 'texture_2d_array<f32>'
-            | 'texture_storage_2d<rgba8unorm,write>'
-            | 'texture_storage_2d_array<rgba8unorm,write>'
-            | 'texture_storage_2d<rgba32float,write>'
-            | 'texture_storage_2d<rgba8sint,write>'
+        //sampled texture types https://www.w3.org/TR/WGSL/#sampled-texture-type
+        | `texture_2d<${format}>`
+        | `texture_2d_array<${format}>`
+        | `texture_3d<${format}>`
+        | `texture_cube<${format}>`
+        | `texture_cube_array<${format}>`
+        //multisampled texture types https://www.w3.org/TR/WGSL/#multisampled-texture-type
+           | `texture_multisampled_2d<${format}>`
+           | 'texture_depth_multisampled_2d'
+        //External Sampled Texture Types https://www.w3.org/TR/WGSL/#external-texture-type
+        | 'texture_external'
+        // Storage Texture Types https://www.w3.org/TR/WGSL/#texture-storage
+        // TODO: allow read-write https://github.com/gpuweb/gpuweb/issues/1772
+            | `texture_storage_1d<${storageFormat},write>`
+            | `texture_storage_2d<${storageFormat},write>`
+            | `texture_storage_2d_array<${storageFormat},write>`
+            | `texture_storage_3d<${storageFormat},write>`
     ) {
         super(entry,
-            structName)
+            structName);
     }
 }
 
@@ -76,7 +89,7 @@ export class SampLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
         structName: 'sampler' | 'sampler_comparison'
     ) {
         super(entry,
-            structName)
+            structName);
     }
 }
 
@@ -91,7 +104,7 @@ export class BGLayout<T extends {[index:string]: BindGroupLayoutEntry} = {[index
                 return {
                     ...entry.entry,
                     binding: i,
-                }
+                };
             }),
             label,
         });
@@ -110,6 +123,6 @@ export class BGLayout<T extends {[index:string]: BindGroupLayoutEntry} = {[index
         return new BindGroup<typeof this>(this,
             label,
             entries,
-            renderPasses)
+            renderPasses);
     }
 }
