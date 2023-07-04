@@ -41,10 +41,6 @@ const text1 = Texture.create({
     },
     usages: TextureUsageEnums['STORAGE_BINDING'],
 });
-//@ts-expect-error text1 should not have copy_dst flag.
-console.log(text1.copyFrom);
-//@ts-expect-error text1 should not have copy_src flag.
-console.log(text1.copyTo);
 //This should be fine
 const text2 = Texture.create({
     format: 'astc-10x10-unorm',
@@ -55,8 +51,42 @@ const text2 = Texture.create({
     },
     usages: TextureUsageEnums['COPY_DST'],
 });
-//This should be fine
-console.log(text2.copyFrom);
+
+
+declare const commandEncoder: GPUCommandEncoder;
+//@ts-expect-error text1 should not have copy_dst flag.
+text1.copyFrom(commandEncoder,
+    text2,
+    {
+    },
+    {
+    },
+    [
+        2,
+        2
+    ]);
+//@ts-expect-error text1 should not have copy_src flag.
+text1.copyTo(commandEncoder,
+    text2,
+    {
+    },
+    {
+    },
+    [
+        2,
+        2
+    ]);
+text2.copyFrom(commandEncoder,
+    //@ts-expect-error text2 dont have copy_src flag.
+    text2,
+    {
+    },
+    {
+    },
+    [
+        2,
+        2
+    ]);
 Texture.create({
     format: 'astc-10x10-unorm',
     gpu: engine.gpu!,
@@ -78,10 +108,28 @@ const text3 = Texture.create({
     usages: TextureUsageEnums['COPY_SRC'],
 });
 //@ts-expect-error text3 should not have copy_dst flag
-console.log(text3.copyFrom);
-//Should be fine
-console.log(text3.copyTo);
+text3.copyFrom(commandEncoder,
+    text2,
+    {
+    },
+    {
+    },
+    [
+        2,
+        2
+    ]);
 
+text3.copyTo(commandEncoder,
+    //@ts-expect-error text1 dont have copyDst flag
+    text1,
+    {
+    },
+    {
+    },
+    [
+        2,
+        2
+    ]);
 
 
 const primitiveState: GPUPrimitiveState = {

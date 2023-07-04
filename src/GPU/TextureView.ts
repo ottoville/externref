@@ -1,4 +1,4 @@
-import type { Texture, TextureUsageValue } from './Texture.js';
+import type { TEXTURE_BINDING_SRC_TEXTURE, Texture, TextureUsageValue } from './Texture.js';
 import type { BindGroup } from './BindGroup.js';
 import { Bindable } from './Bindable.js';
 import type { RenderPass } from './RenderPasses/RenderPass.js';
@@ -34,7 +34,7 @@ export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> 
             });
         return this.view;
     }
-    getTextureBinding(bindGroup: BindGroup): GPUTextureView {
+    getTextureBinding(this: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_SRC_TEXTURE>>, bindGroup: BindGroup): GPUTextureView {
         this.bindGroups.add(bindGroup);
         return this.view;
     }

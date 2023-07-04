@@ -13,13 +13,13 @@ export class DepthRenderPass<T extends {
     depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
     constructor(
         renderPassProps: RenderPassProps<T>,
-        depthRenderTargets: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
+        depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
     ) {
         renderPassProps.GPURenderBundleEncoderDescriptor = {
-            depthStencilFormat: depthRenderTargets.props.format,
+            depthStencilFormat: depthRenderTarget.props.format,
         };
         super(renderPassProps);
-        this.depthRenderTarget = depthRenderTargets;
+        this.depthRenderTarget = depthRenderTarget;
     }
     override resize(width: number, height: number) {
         super.resize(width,

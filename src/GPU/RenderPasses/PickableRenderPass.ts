@@ -7,7 +7,7 @@ import { RenderPassProps } from './RenderPass.js';
 import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
-import type { RenderTargetTextureUsageValue } from '../Texture.js';
+import type { RENDER_TARGET_TEXTURE, RenderTargetTextureUsageValue, TEXTURE_BINDING_SRC_TEXTURE } from '../Texture.js';
 import { ReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
 
 export class PickableRenderPass<T extends {
@@ -24,10 +24,10 @@ export class PickableRenderPass<T extends {
     #rowBytes = this.size.width * 4;
 
     constructor(renderPassProps: RenderPassProps<T>,
-        depthRenderTargets: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
+        depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE & TEXTURE_BINDING_SRC_TEXTURE>
     ) {
         super(renderPassProps,
-            depthRenderTargets);
+            depthRenderTarget);
         if (renderPassProps.sampleCount == 4) {
             const readDepthShader = new ReadDepth(renderPassProps.gpu);
             this.#pickPositionPipeline = readDepthShader.createComputePipeline('main').then(pickPositionPipeline => {
@@ -65,7 +65,7 @@ export class PickableRenderPass<T extends {
                 (bindGroup) =>
                     ({
                         depth_texture: {
-                            resource: this.depthRenderTarget.view.getTextureBinding(bindGroup),
+                            resource: depthRenderTarget.view.getTextureBinding(bindGroup),
                         },
                         mesh_texture: {
                             resource: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view.getTextureBinding(bindGroup),

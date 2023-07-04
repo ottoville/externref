@@ -3,7 +3,7 @@ import { Buffer, type CopyDstBuffer, GPUBufferUsage, BindUniformBuffer } from '.
 import { TextureView } from '../GPU/TextureView.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import { type Texture, TextureUsageEnums, type TextureUsageValue, RenderTarget } from '../GPU/Texture.js';
+import { type Texture, TextureUsageEnums, type TextureUsageValue, RenderTarget, TEXTURE_BINDING_SRC_TEXTURE } from '../GPU/Texture.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
 import { DataNode, allocate_vec } from '../nodes/DataNode.js';
@@ -97,7 +97,7 @@ export abstract class UIRectangle extends DataNode {
     };
     texture?: RenderTarget<'bgra8unorm', (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST']> | undefined;
     uniformBuffer: CopyDstBuffer & BindUniformBuffer;
-    textureView: TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>>;
+    textureView: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_SRC_TEXTURE, Texture2dSize>>;
     createTextureView(
         copySource: ImageBitmap | OffscreenCanvas
     ) {
@@ -287,7 +287,7 @@ export abstract class UIRectangle extends DataNode {
 
     constructor(
         public props: UIRectangleProps,
-        texture: TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>> | ImageBitmap | OffscreenCanvas) {
+        texture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_SRC_TEXTURE, Texture2dSize>> | ImageBitmap | OffscreenCanvas) {
         props.label = props.label + '_UIRectangle';
         const mesh_id = new_rust_mesh({
             label: props.label,

@@ -89,16 +89,21 @@ type COPY_DST_TEXTURE = typeof TextureUsageEnums['COPY_DST'] |
                         typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'] |
                         typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'];
 type STORAGE_BINDING_TEXTURE = typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'] |
-                                typeof TextureUsageEnums['STORAGE_BINDING'] |
-                                typeof TextureUsageEnums['STORAGE_BINDING|COPY_SRC'];
-type RENDER_TARGET_TEXTURE = typeof TextureUsageEnums['RENDER_ATTACHMENT'] |
-                                typeof TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'] |
-                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'] |
-                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'] |
-                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'] |
-                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'] |
-                                typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'];
-
+                        typeof TextureUsageEnums['STORAGE_BINDING'] |
+                        typeof TextureUsageEnums['STORAGE_BINDING|COPY_SRC'];
+export type RENDER_TARGET_TEXTURE = typeof TextureUsageEnums['RENDER_ATTACHMENT'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'];
+export type TEXTURE_BINDING_SRC_TEXTURE = typeof TextureUsageEnums['TEXTURE_BINDING'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'] |
+                        typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']
 
 
 export class Texture<
@@ -136,30 +141,26 @@ export class Texture<
         public props : TextureParams<F, Exclude<U, TextureUsageType['STORAGE_BINDING']>, S> | TextureParamsStorage<F, U, S>
     ) {
         this.texture = this.createTexture(props.initialSampleCount);
-        if (props.usages & TextureUsageEnums['COPY_DST']) {
-            (this as unknown as copyDstTexture).copyFrom = (commandEncoder, from, sourceDetails, destinationDetails, copySize) => {
-                commandEncoder.copyTextureToTexture(
-                    {
-                        texture: from.texture,
-                        ...sourceDetails,
-                    },
-                    {
-                        texture: this.texture,
-                        ...destinationDetails,
-                    },
-                    copySize
-                );
-            };
-        }
-        if (props.usages & TextureUsageEnums['COPY_SRC']) {
-            (this as unknown as copySrcTexture).copyTo = (commandEncoder, destination, sourceDetails, destinationDetails, copySize) => {
-                destination.copyFrom(commandEncoder,
-this as unknown as (Texture<F, COPY_SRC_TEXTURE, S> & copySrcTexture),
-sourceDetails,
-destinationDetails,
-copySize);
-            };
-        }
+    }
+    copyTo(this: copySrcTexture, commandEncoder: GPUCommandEncoder, destination: copyDstTexture, sourceDetails: Omit<GPUImageCopyTexture, 'texture'>, destinationDetails: Omit<GPUImageCopyTexture, 'texture'>, copySize: GPUExtent3DStrict) {
+        destination.copyFrom(commandEncoder,
+            this,
+            sourceDetails,
+            destinationDetails,
+            copySize);
+    }
+    copyFrom(this: copyDstTexture, commandEncoder: GPUCommandEncoder, from: Texture<GPUTextureFormat, COPY_SRC_TEXTURE, TextureSize>  & copySrcTexture, sourceDetails: Omit<GPUImageCopyTexture, 'texture'>, destinationDetails: Omit<GPUImageCopyTexture, 'texture'>, copySize: GPUExtent3DStrict) {
+        commandEncoder.copyTextureToTexture(
+            {
+                texture: from.texture,
+                ...sourceDetails,
+            },
+            {
+                texture: this.texture,
+                ...destinationDetails,
+            },
+            copySize
+        );
     }
     resize(size: S, sampleCount: 1 | 4) {
         this.props.size = size;
@@ -206,11 +207,11 @@ copySize);
         return this.texture;
     }
 }
-export interface copyDstTexture {
-    copyFrom(commandEncoder: GPUCommandEncoder, source: Texture<GPUTextureFormat, COPY_SRC_TEXTURE, TextureSize>  & copySrcTexture, sourceDetails: Omit<GPUImageCopyTexture, 'texture'>, destinationDetails: Omit<GPUImageCopyTexture, 'texture'>, copySize: GPUExtent3DStrict): void
+export interface copyDstTexture extends Texture<GPUTextureFormat, COPY_DST_TEXTURE> {
+    __copyDstTexture: 'copyDstTexture'
 }
-export interface copySrcTexture {
-    copyTo(commandEncoder: GPUCommandEncoder, destination: copyDstTexture, sourceDetails: Omit<GPUImageCopyTexture, 'texture'>, destinationDetails: Omit<GPUImageCopyTexture, 'texture'>, copySize: GPUExtent3DStrict): void
+export interface copySrcTexture extends Texture<GPUTextureFormat, COPY_SRC_TEXTURE> {
+    __copySrcTexture: 'copySrcTexture'
 }
 
 export type RenderTargetSize = {
