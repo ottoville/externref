@@ -4,7 +4,7 @@ import type { RenderTargetTextureUsageValue, TextureParams, TextureUsageType } f
 
 export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     extends ColorRenderTarget<F, U> {
-    readonly resolveTexture?: RenderPassTarget<F, U>
+    readonly resolveTexture?: RenderPassTarget<F, U>;
     readonly #resolveView: () => GPUTextureView;
     constructor(
         textureOptions: TextureParams<F, Exclude<U, TextureUsageType['STORAGE_BINDING']>, Texture2dSize>,
@@ -23,24 +23,24 @@ export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U e
             this.#resolveView = () => {
                 //TODO: do not call this on every render?
                 return resolveTexture.view.view;
-            }
+            };
         } else {
             this.#resolveView = () => {
                 return renderTargetOptions.context!.getCurrentTexture().createView();
-            }
+            };
         }
     }
     override resize(size: {width: number, height: number}, sampleCount: 1 | 4) {
         super.resize(size,
             sampleCount);
         this.resolveTexture?.resize(size,
-            1)
+            1);
     }
     override createColorAttachment() {
         const obj = super.createColorAttachment();
         obj.view = this.view.view;
         obj.resolveTarget = this.#resolveView();
-        obj.storeOp = 'discard'
+        obj.storeOp = 'discard';
         return obj;
     }
 }

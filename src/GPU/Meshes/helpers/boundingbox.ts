@@ -1,5 +1,5 @@
 import { new_rust_mesh } from '../../../MainNode.js';
-import { Buffer, GPUBufferUsage } from '../../Buffer/Buffer.js'
+import { Buffer, GPUBufferUsage } from '../../Buffer/Buffer.js';
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import type { Engine, rust_pointer } from '../../../engine.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';

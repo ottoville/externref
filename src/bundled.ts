@@ -1,1 +1,1 @@
-export { ApplicationInsights } from '@microsoft/applicationinsights-web'
+export { ApplicationInsights } from '@microsoft/applicationinsights-web';

@@ -1,7 +1,7 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { type VertexBufferLayout2, VertexShader } from './VertexShader.js';
-import type { GPU } from 'GPU.js'
+import type { GPU } from 'GPU.js';
 import { Struct } from './structs/Structs.js';
 export const positionAttr = Object.freeze(
     {
@@ -12,7 +12,7 @@ export const positionAttr = Object.freeze(
             shaderLocation: 0,
         },
     } as const
-)
+);
 type BindLayouts = GPU['bindGroupTextureWater']['bindGroupLayouts']
 export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof positionAttr>) {
     return new VertexShader({
@@ -51,6 +51,6 @@ export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts
         },
         gpu: pipelineLayout.gpu,
         label: 'water.vert',
-    })
+    });
 }
 export type WaterVertShader = ReturnType<typeof createWaterVertShader>

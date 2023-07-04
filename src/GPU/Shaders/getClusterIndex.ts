@@ -28,4 +28,4 @@ export const getClusterIndex = (uniforms: BufLayout<number, Struct<{
                tile.y * tileCount.x +
                tile.z * tileCount.x * tileCount.y;
       }
-`
+`;

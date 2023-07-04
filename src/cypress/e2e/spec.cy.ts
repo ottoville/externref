@@ -23,20 +23,20 @@ describe('open menu',
                     const engine = w.engine as Engine;
                     return new Promise<Engine>((resolver) => {
                 engine.gpu!.afterRenderStart(() => {
-                    resolver(engine)
+                    resolver(engine);
                 });
-                    })
+                    });
                 }).then((engine) => {
             engine.gpu!.destroy();
             return new Promise<void>((resolver) => {
                 engine.getGPU(gpu => {
                     gpu.afterRenderStart(() => {
-                        resolver()
+                        resolver();
                     });
                 },
                 true);
-            })
-                })
+            });
+                });
                 // eslint-disable-next-line promise/catch-or-return
                 cy.wait(4000).then(() => {
                     cy.get('canvas').matchImage();

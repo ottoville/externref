@@ -14,13 +14,13 @@ export type UIRectangleNodeProps = {
     children?: (ReturnType<typeof UINode['createCtrProps']> | null)[] | null | undefined
 }
 export class UIRectangleNode<S extends object = object, P extends UIRectangleNodeProps = UIRectangleNodeProps> extends UINode<P, S> {
-    static instances: Map<UINode, UIRectangleNode> = new Map()
+    static instances: Map<UINode, UIRectangleNode> = new Map();
     static getInstance<P extends UIRectangleNodeProps>(host: UINode, props: P): UIRectangleNode {
         let instance = UIRectangleNode.instances.get(host);
         if (!instance) {
             instance = new UIRectangleNode(props);
             UIRectangleNode.instances.set(host,
-                instance)
+                instance);
         }
         return instance;
     }
@@ -60,18 +60,18 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
             */
             this.destroyInstance();
         }
-        const { onClick, bitmap, text, children, } = this.props
+        const { onClick, bitmap, text, children, } = this.props;
         const commonProps: UIRectangleProps = {
             canvaspipeline: gpu.UIPipeline,
             renderPass: gpu.renderPassCanvas,
             ...this.props.UIRectangleProps,
-        }
+        };
         if (onClick) {
             commonProps.events = {
                 onClick: () => {
-                    onClick(this.props.UIRectangleProps.label)
+                    onClick(this.props.UIRectangleProps.label);
                 },
-            }
+            };
         }
         if (!this.#instance) {
             if (bitmap) {
@@ -93,12 +93,12 @@ export class UIRectangleNode<S extends object = object, P extends UIRectangleNod
         } else if (this.#instance instanceof UIRectangleBackground || this.#instance instanceof UIRectangleTextOnly) {
             if (force || text !== this.#instance.text) {
                 this.#instance.text = text;
-                this.#instance.createTexture()
+                this.#instance.createTexture();
             }
         }
         if (children) {
             return children;
         }
-        return null
+        return null;
     }
 }

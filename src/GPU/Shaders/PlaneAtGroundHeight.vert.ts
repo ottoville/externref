@@ -48,6 +48,6 @@ export function createPlaneAtGroundHeightVertShader(
         ${getHeightAtCoordinates(settings,
         slopes,
         facet12)}
-    `)
+    `);
 }
 export type PlaneAtGroundHeightVertShader = ReturnType<typeof createPlaneAtGroundHeightVertShader>

@@ -27,7 +27,7 @@ export class Plants extends MainNode {
     drawable?: DrawableIndirect | undefined;
     public opts = {
         radius: 86,
-    }
+    };
     //private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 2 * this.numBlades);
     #worker = new WorkerThread('grass.js');
     #ready: Promise<void>;
@@ -42,9 +42,9 @@ export class Plants extends MainNode {
                     angle: area.rad,
                     area: area,
                 },
-                [])
+                []);
         }).catch(err =>
-            engine.showError(err))
+            engine.showError(err));
     }
     constructor(
         scene: Scene,
@@ -121,9 +121,9 @@ export class Plants extends MainNode {
                         URL.createObjectURL(await cachedgrass.blob()));
                 }
             }).catch((e) => {
-                console.error(e)
+                console.error(e);
             });
-        }
+        };
 
         this.#ready = terrainP.then(async terrain => {
             const getHeightAtCoordinatesShader = new GrassHeightAtCoordinates(Terrain.settings,
@@ -176,7 +176,7 @@ export class Plants extends MainNode {
                         0,
                         numBlades * 4 * 4);
                     indirectBuffer.updateBufferRaw(commandEncoder,
-                        new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
+                        new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer);
                     scene.gpu.pendingCommandBuffers.push(commandEncoder.finish());
                 });
             await this.#worker.message(WorkerReturn.Promise,

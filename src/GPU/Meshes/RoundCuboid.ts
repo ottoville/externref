@@ -31,7 +31,7 @@ export class RoundCuboid extends OctaSphere {
                 label: 'RoundCuboid' + (uid++),
                 ...meshProperties,
             },
-            can_collide)
+            can_collide);
     }
     override create_collider() {
         const max = Math.max(this.width,

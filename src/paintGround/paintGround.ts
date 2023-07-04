@@ -1,6 +1,6 @@
 //let tempplane: BABYLON.Mesh | null
 //let end_position: Vector2
-const fullRad = Math.PI * 2
+const fullRad = Math.PI * 2;
 import { TerraVector2, Angle } from '../Math.js';
 
 import type { Terrain } from '../world/Terrain.js';
@@ -23,7 +23,7 @@ export abstract class paintGround {
     protected size = {
         height: 0,
         width: 0,
-    }
+    };
     constructor(
         protected scene: Scene,
         protected ground: Terrain,
@@ -45,17 +45,17 @@ export abstract class paintGround {
     #drawArea: ListenerObj<'pointermove'> = {
         cb: () => {
             engine.gpu!.renderPassScreen.pickMesh(undefined,
-                mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
+                mesh => { return mesh === this.ground.mesh; }).then(pickInfo => {
                 if (pickInfo) {
                     this.#end_position[0] = pickInfo.position[0];
                     this.#end_position[1] = pickInfo.position[2];
                     this.drawVector[0] = this.#start_position[0] - this.#end_position[0];
-                    this.drawVector[1] = (this.#start_position[1] - this.#end_position[1]) * -1
+                    this.drawVector[1] = (this.#start_position[1] - this.#end_position[1]) * -1;
 
                     if (this.drawVector[0] === 0) {
                         return;
                     }
-                    this.size.height = Math.sqrt(this.drawVector[0] * this.drawVector[0] + this.drawVector[1] * this.drawVector[1])
+                    this.size.height = Math.sqrt(this.drawVector[0] * this.drawVector[0] + this.drawVector[1] * this.drawVector[1]);
 
                     const rad = Math.atan(Math.abs(this.drawVector[1]) / Math.abs(this.drawVector[0]));
                     if (this.drawVector[1] < 0) {
@@ -73,11 +73,11 @@ export abstract class paintGround {
                 }
             }).catch(err => {
                 engine.showError(err);
-            })
+            });
         },
         object: this,
         type: 'pointermove',
-    }
+    };
     abstract onMainPointerDown(startingPoint: Float32Array): void;
     abstract onMainPointerUp(height: number, end_position: Float32Array): void;
     abstract onAreaDraw(width: number): void;
@@ -89,7 +89,7 @@ export abstract class paintGround {
             }
             this.#mouseMoved=true;
             engine.gpu!.renderPassScreen.pickMesh(undefined,
-                mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
+                mesh => { return mesh === this.ground.mesh; }).then(pickInfo => {
                 if (pickInfo && this.#end_position) {
                     //Distance from first point
                     const p0 = this.#start_position[0] - pickInfo.position[0];
@@ -117,7 +117,7 @@ export abstract class paintGround {
                     this.onAreaDraw(this.size.width);
                 }
             }).catch(err =>
-                engine.showError(err))
+                engine.showError(err));
             return true;
         },
         object: this,
@@ -126,7 +126,7 @@ export abstract class paintGround {
         },
         type: 'pointermove',
 
-    }
+    };
     #finalClick: ListenerObj<'pointerup'> = {
         cb: () => {
             engine.removeInputListener(this.#mousemove);
@@ -144,10 +144,10 @@ export abstract class paintGround {
         },
         type: 'pointerup',
 
-    }
+    };
     #pointerUp: ListenerObj<'pointerup'> = {
         cb: () => {
-            engine.removeInputListener(this.#drawArea)
+            engine.removeInputListener(this.#drawArea);
             //fix race condition
             if (this.#end_position[0] == 0)
                 return;
@@ -166,7 +166,7 @@ export abstract class paintGround {
         },
         type: 'pointerup',
 
-    }
+    };
     #mainPointerDown: ListenerObj<'pointerdown'> = {
         cb: (evt) => {
             if (evt.button !== 0) {
@@ -178,12 +178,12 @@ export abstract class paintGround {
                   return mesh === this.ground
               }, false, this.camera);*/
             engine.gpu!.renderPassScreen.pickMesh(undefined,
-                mesh => { return mesh === this.ground.mesh }).then(pickInfo => {
+                mesh => { return mesh === this.ground.mesh; }).then(pickInfo => {
                 if (pickInfo) {
                     this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
                     this.onMainPointerDown(this.#start_position);
                     engine.addInputListener(this.#drawArea);
-                    engine.addInputListener(this.#pointerUp)
+                    engine.addInputListener(this.#pointerUp);
                 } else {
                     console.debug('no pickinfo pickedpoint');
                     console.log(pickInfo);

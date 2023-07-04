@@ -12,7 +12,7 @@ const folderPosition = import.meta.url.lastIndexOf('/');
 const basePath = import.meta.url.substring(0,
     folderPosition)+'/workers/webworkers/';
 // Jest
-const Worker2:typeof window.Worker = typeof(Worker) === 'function' ? Worker : class {} as unknown as typeof window.Worker
+const Worker2:typeof window.Worker = typeof(Worker) === 'function' ? Worker : class {} as unknown as typeof window.Worker;
 abstract class MainWorker extends Worker2 {
     protected operations: ([
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,7 +47,7 @@ abstract class MainWorker extends Worker2 {
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     subscribe(type: string, callback: (value?: any) => void) {
-        this.#subscriptions[type] = callback
+        this.#subscriptions[type] = callback;
     }
     unsubscribe(type: string) {
         delete this.#subscriptions[type];
@@ -59,10 +59,10 @@ export class WorkerThread extends MainWorker {
             action: action, data: data, type: returntype,
         };
         return new Promise((res, rej) => {
-            toWorker.id = this.operations.push([res, rej]) - 1
+            toWorker.id = this.operations.push([res, rej]) - 1;
             super.postMessage(toWorker,
                 options);
-        })
+        });
     }
 }
 export class ObjectWorkerThread extends MainWorker {
@@ -88,9 +88,9 @@ export class ObjectWorkerThread extends MainWorker {
             toWorker.id = this.operations.push([res, rej]) - 1;
             if(options)
                 super.postMessage(toWorker,
-                    options)
+                    options);
             else
                 super.postMessage(toWorker);
-        })
+        });
     }
 }

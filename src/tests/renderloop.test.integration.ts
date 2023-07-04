@@ -1,7 +1,7 @@
 import type { Engine } from '../engine.js';
 import type { Page, Browser } from 'puppeteer-core';
 
-import { describe, beforeAll, it, expect } from '@jest/globals'
+import { describe, beforeAll, it, expect } from '@jest/globals';
 
 //@ts-ignore
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
@@ -22,7 +22,7 @@ describe('Physic time ',
                 await page.waitForFunction(() =>
                     !document.querySelector('progress'));
             },
-            10000)
+            10000);
         it('Delta has changed',
             async function () {
                 const [value0, value1] = await page.evaluate(async function () {
@@ -34,12 +34,12 @@ describe('Physic time ',
                         1);
                     const value0_ = deltaView[0];
                     await new Promise(res => { setTimeout(res,
-                        1234) });
+                        1234); });
                     const value1_ = deltaView[0];
                     return [value0_, value1_];
                 });
-                expect(Number.isFinite(value1)).toBe(true)
-                expect(value0).not.toBe(value1)
+                expect(Number.isFinite(value1)).toBe(true);
+                expect(value0).not.toBe(value1);
             });
 
-    })
+    });

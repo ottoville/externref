@@ -1,7 +1,7 @@
 import { BindablePipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
-import type { GPU } from '../../GPU.js'
-import type { simpleAttributes } from '../RenderPipeLines/SimpleRenderPipeline.js'
+import type { GPU } from '../../GPU.js';
+import type { simpleAttributes } from '../RenderPipeLines/SimpleRenderPipeline.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { pickOutput, typicalOutput } from './structs/Structs.js';
 
@@ -25,7 +25,7 @@ export function createPickOutput(pipelineLayout: BindablePipelineLayout<BindLayo
         //ambient=lights.ambient;
         return output;
     
-    `)
+    `);
 }
 
 
@@ -67,6 +67,6 @@ export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<Bi
         },
         gpu: pipelineLayout.gpu,
         label: 'Simple.vert',
-    })
+    });
 }
 export type SimpleVertShader = ReturnType<typeof createSimpleVertShader>

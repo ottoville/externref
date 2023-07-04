@@ -73,13 +73,13 @@ export class PickableRenderPass<T extends {
                     }));
 
         } else {
-            this.#pickBuffer = this.#createPickBuffer()
+            this.#pickBuffer = this.#createPickBuffer();
         }
     }
     #createPickBuffer() {
         const offset = this.#rowBytes % 256;
         if (offset !== 0)
-            this.#rowBytes = this.#rowBytes - offset + 256
+            this.#rowBytes = this.#rowBytes - offset + 256;
         return this.gpu.device.createBuffer({
             label: 'pickBuffer',
             size: this.#rowBytes * this.size.height,
@@ -110,16 +110,16 @@ export class PickableRenderPass<T extends {
     async pickPosition(mesh: true): Promise<{ position: TerraVector3, meshId: number } | null>
     async pickPosition(mesh = false): Promise<{ position: TerraVector3; } | { position: TerraVector3; meshId: number; } | null> {
         if (mesh && this.pickPromiseMesh) {
-            return this.pickPromiseMesh
+            return this.pickPromiseMesh;
         }
         else if (!mesh && this.pickPromise) {
-            return this.pickPromise
+            return this.pickPromise;
         }
         const camera = [...this.perspectiveCameras][0]!;
         const encoder = this.gpu.device.createCommandEncoder({
             label: 'pickPosition_encoder',
         });
-        const gRenderTargetDiffuse = this.gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse
+        const gRenderTargetDiffuse = this.gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse;
         if (gRenderTargetDiffuse instanceof MSAARenderTarget) {
             if (!this.#zAndIDPromise) {
                 const mousePositionSwapBuffer = Buffer.create(this.gpu,
@@ -176,7 +176,7 @@ this.#pickBufferRead!,
             //For MapAsync
             const missOffset = newOffset % 8;
             if (missOffset !== 0) {
-                newOffset = newOffset - missOffset
+                newOffset = newOffset - missOffset;
             }
             //The entire subresource must be copied when the format (TextureFormat::Depth32Float) is a depth/stencil format or the sample count (1) is > 1.
             encoder.copyTextureToBuffer(

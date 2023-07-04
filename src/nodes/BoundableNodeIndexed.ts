@@ -20,7 +20,7 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
             () => {
                 if(onIndicesChange)
                     onIndicesChange();
-                this.rebuildTrianglePlanes()
+                this.rebuildTrianglePlanes();
             });
         this.rebuildTrianglePlanes();
     }
@@ -32,11 +32,11 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
         if (!this.initCollider() || !this.indexed /* This function is called from super constructor when indices are not initialized yet */)
             return;
         this.indexed.indices.forEach((indice: number) => {
-            const position = this.colliderVerticesV4[indice]
+            const position = this.colliderVerticesV4[indice];
             if (typeof (position) === 'undefined') {
                 throw (new Error('position ' + indice + ' not found'));
             }
-            this.pushVertice(position)
+            this.pushVertice(position);
         });
         this.buildFaces();
     }

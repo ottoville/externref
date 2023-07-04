@@ -31,9 +31,9 @@ export class Physics {
         if (this.#gameSpeed >= 0) {
             const timestamp = Date.now();
             if (this.#lastStateChangeTime > this.#lastTickTimeMsInGameTime) {
-                var delta = (timestamp - this.#lastStateChangeTime * this.#gameSpeed) + this.#tickDeltaWhenStateChange
+                var delta = (timestamp - this.#lastStateChangeTime * this.#gameSpeed) + this.#tickDeltaWhenStateChange;
             } else {
-                var delta = (timestamp - this.#lastTickTimeMsInGameTime) * this.#gameSpeed // get the delta time since last tick
+                var delta = (timestamp - this.#lastTickTimeMsInGameTime) * this.#gameSpeed; // get the delta time since last tick
             }
         }
         else
@@ -50,14 +50,14 @@ export class Physics {
     #tick = () => {
         const timestamp = Date.now();
         if (this.#lastStateChangeTime > this.#lastTickTimeMsInGameTime) {
-            var realDeltaInGameTime = ((timestamp - this.#lastStateChangeTime) * this.#gameSpeed) + this.#tickDeltaWhenStateChange
+            var realDeltaInGameTime = ((timestamp - this.#lastStateChangeTime) * this.#gameSpeed) + this.#tickDeltaWhenStateChange;
             if (realDeltaInGameTime < 0) {
-                throw new Error('Delta cannot be negative')
+                throw new Error('Delta cannot be negative');
             }
         } else {
             var realDeltaInGameTime = (timestamp - this.#lastTickTimeMs) * this.#gameSpeed; // get the delta time since last tick
             if (realDeltaInGameTime < 0) {
-                throw new Error('Delta cannot be negative')
+                throw new Error('Delta cannot be negative');
             }
         }
         if (realDeltaInGameTime > MIN_TICK_DELTA) {
@@ -121,10 +121,10 @@ export class Physics {
                  ]
              }*/
             const wantedVelocityPerDelta = tmp_vector;
-            wantedVelocityPerDelta[0] = velocity[0] * dt + tickable.acceleration2[0] * dt_half_sqrt
-            wantedVelocityPerDelta[1] = velocity[1] * dt + tickable.acceleration2[1] * dt_half_sqrt
+            wantedVelocityPerDelta[0] = velocity[0] * dt + tickable.acceleration2[0] * dt_half_sqrt;
+            wantedVelocityPerDelta[1] = velocity[1] * dt + tickable.acceleration2[1] * dt_half_sqrt;
             wantedVelocityPerDelta[2] = velocity[2] * dt + tickable.acceleration2[2] * dt_half_sqrt;
-            const motionFrictionAcceleration: [number, number, number] = [0, 0, 0]
+            const motionFrictionAcceleration: [number, number, number] = [0, 0, 0];
             const translation = tickable.translation;
             if (wantedVelocityPerDelta[0] !== 0 || wantedVelocityPerDelta[1] !== 0 || wantedVelocityPerDelta[2] !== 0) {
                 const finalPosition = tickable.checkCollide([
@@ -133,12 +133,12 @@ export class Physics {
                     wantedVelocityPerDelta[2]
                 ]);
                 if (tickable.colliding_character) {
-                    tickable.onCollideCharacter(false)
+                    tickable.onCollideCharacter(false);
                     const newVelocityDelta: [number, number, number] = [
                         (finalPosition[0] - translation[0]),
                         (finalPosition[1] - translation[1]),
                         (finalPosition[2] - translation[2])
-                    ]
+                    ];
                     if (newVelocityDelta[0] !== 0 || newVelocityDelta[1] !== 0 || newVelocityDelta[2] !== 0) {
                         if (tickable.last_velocity[0] === 0 || tickable.last_velocity[1] === 0 || tickable.last_velocity[2] === 0) {
                             // Apply friction when object is not moving
@@ -215,9 +215,9 @@ export class Physics {
                 0);
         } else {
             this.#interval = setTimeout(this.#tick,
-                this.tickIntervalMs - (Date.now() - timestamp))
+                this.tickIntervalMs - (Date.now() - timestamp));
         }
-    }
+    };
 
     private createLoop(timeToFirstTick = this.tickIntervalMs) {
         if (timeToFirstTick != this.tickIntervalMs) {
@@ -240,7 +240,7 @@ export class Physics {
         }
         this.#timeUntillTick = this.tickIntervalMs - this.#tickDeltaWhenStateChange;
         if (this.#gameSpeed >= 0) {
-            this.#tickDeltaWhenStateChange = (Date.now() - this.#lastTickTimeMs) * this.#gameSpeed
+            this.#tickDeltaWhenStateChange = (Date.now() - this.#lastTickTimeMs) * this.#gameSpeed;
         }
         this.#gameSpeed = value;
         if (value >= 0)

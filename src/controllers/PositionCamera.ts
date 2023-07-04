@@ -29,7 +29,7 @@ export class PositionCamera extends CameraController {
                 direction[1] = 0;
                 direction[2] = Math.sin(this.#angle);
             });
-        }
+        };
         if (initial && engine.DB) {
             engine.DB.transaction('save').objectStore('save').get(['camera', 'PositionCamera']).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
@@ -43,7 +43,7 @@ export class PositionCamera extends CameraController {
                     this.#angle = restored.data.angle;
                     syncCamera();
                 }
-            }
+            };
         } else {
             this.#position.set(this.camera.position as TerraVector3);
             this.#angle = Math.acos(this.camera.direction[0]);
@@ -62,7 +62,7 @@ export class PositionCamera extends CameraController {
             this.#keyupfunction);
     }
     #serializeRequested = false;
-    #elevation: -1|0|1 = 0
+    #elevation: -1|0|1 = 0;
     #ctrl = false;
     serialize = () => {
         if (this.#serializeRequested || !engine.DB)
@@ -84,7 +84,7 @@ export class PositionCamera extends CameraController {
             this.#serializeRequested = false;
             console.error(e);
         };
-    }
+    };
     #keydownfunction = (e: KeyboardEvent) => {
         this.#ctrl = e.ctrlKey;
         if (e.key === 'ArrowUp') {
@@ -102,9 +102,9 @@ export class PositionCamera extends CameraController {
         if(e.key === 'PageUp') {
             this.#elevation = 1;
         } else if(e.key === 'PageDown') {
-            this.#elevation = -1
+            this.#elevation = -1;
         }
-    }
+    };
     #keyupfunction = (e: KeyboardEvent) => {
         this.#ctrl = e.ctrlKey;
         if (e.key === 'ArrowUp') {
@@ -122,29 +122,29 @@ export class PositionCamera extends CameraController {
         if(e.key === 'PageUp' || e.key === 'PageDown') {
             this.#elevation = 0;
         }
-    }
+    };
     checkInputs() {
         if (this.#arrowKeysDown === 0 && this.#elevation === 0)
             return false;
         if(this.#elevation !== 0) {
             this.cameraControl?.updatePosition(position => {
-                position[1] += this.#elevation * this.#velocity
-            })
+                position[1] += this.#elevation * this.#velocity;
+            });
         }
         if ((this.#arrowKeysDown & (ARROW_KEYS.UP_OR_DOWN)) > 0) {
             this.cameraControl?.updatePosition(position => {
                 if ((this.#arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
                     const direction = this.camera.direction;
-                    position[0] -= (direction[0] * this.#velocity)
-                    position[2] -= (direction[2] * this.#velocity)
+                    position[0] -= (direction[0] * this.#velocity);
+                    position[2] -= (direction[2] * this.#velocity);
                 }
                 else {
                     const direction = this.camera.direction;
-                    position[0] += (direction[0] * this.#velocity)
-                    position[2] += (direction[2] * this.#velocity)
+                    position[0] += (direction[0] * this.#velocity);
+                    position[2] += (direction[2] * this.#velocity);
                 }
                 this.#position = position.clone();
-            })
+            });
         }
 
         if (this.#arrowKeysDown) {
@@ -152,12 +152,12 @@ export class PositionCamera extends CameraController {
                 if ((this.#arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
                     this.#angle += 0.03;
                     if (this.#angle > Math.PI)
-                        this.#angle = -Math.PI - (this.#angle % Math.PI)
+                        this.#angle = -Math.PI - (this.#angle % Math.PI);
                 }
                 if ((this.#arrowKeysDown & ARROW_KEYS.LEFT) === ARROW_KEYS.LEFT) {
                     this.#angle -= 0.03;
                     if (this.#angle < -Math.PI)
-                        this.#angle = Math.PI - (this.#angle % Math.PI)
+                        this.#angle = Math.PI - (this.#angle % Math.PI);
                 }
                 if ((this.#arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
                     this.#vAngle += 0.02;
@@ -165,7 +165,7 @@ export class PositionCamera extends CameraController {
                 if ((this.#arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
                     this.#vAngle -= 0.02;
                 }
-                this.#vAngle = this.#vAngle % (Math.PI * 2)
+                this.#vAngle = this.#vAngle % (Math.PI * 2);
 
                 this.cameraControl?.updateDirection(direction => {
                     direction[0] = Math.cos(this.#angle) * Math.sin(this.#vAngle);
@@ -176,11 +176,11 @@ export class PositionCamera extends CameraController {
                 this.cameraControl?.updatePosition(position => {
                     const direction = this.camera.direction;
                     if ((this.#arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
-                        position[0] += (direction[2] * this.#velocity)
-                        position[2] -= (direction[0] * this.#velocity)
+                        position[0] += (direction[2] * this.#velocity);
+                        position[2] -= (direction[0] * this.#velocity);
                     } else {
-                        position[0] -= (direction[2] * this.#velocity)
-                        position[2] += (direction[0] * this.#velocity)
+                        position[0] -= (direction[2] * this.#velocity);
+                        position[2] += (direction[0] * this.#velocity);
                     }
                 });
             }

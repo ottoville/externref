@@ -24,7 +24,7 @@ class PlaneMesh extends DataNode implements IndexedTrait {
             100);
         const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer,
             ptrs,
-            6)
+            6);
 
         const mesh_id = new_rust_mesh({
             label: 'plane',
@@ -42,7 +42,7 @@ class PlaneMesh extends DataNode implements IndexedTrait {
             mesh_id,
             false);
         this.indexed = new NodeIndexed2(this,
-            [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!])
+            [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!]);
         this.drawable = new DrawableIndexed(
             {
                 node: this,
@@ -53,10 +53,10 @@ class PlaneMesh extends DataNode implements IndexedTrait {
 }
 
 export class paintPlane extends paintGround {
-    #mesh: PlaneMesh
+    #mesh: PlaneMesh;
     #widthVector: [number, number] = [0, 0];
     #startingPoint = new TerraVector2(2);
-    #meshPosition: [number, number, number] = [0, 0, 0]
+    #meshPosition: [number, number, number] = [0, 0, 0];
 
     constructor(
         scene: Scene,
@@ -68,7 +68,7 @@ export class paintPlane extends paintGround {
             (p) => {
                 this.#mesh.update_scale(this.#mesh.scale_x,
                     this.#mesh.scale_y,
-                    0)
+                    0);
                 callback(p);
             });
         const renderPipeline = ground.gpu.createRenderPipeline([
@@ -118,7 +118,7 @@ export class paintPlane extends paintGround {
         this.#startingPoint = startingPoint;
     }
     onMainPointerUp(height: number): void {
-        this.#widthVector = [this.drawVector[1] / this.size.height, this.drawVector[0] / this.size.height]
+        this.#widthVector = [this.drawVector[1] / this.size.height, this.drawVector[0] / this.size.height];
         const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
         this.#meshPosition = [this.#startingPoint[0] + this.drawVector[0] * -0.5, 5, this.#startingPoint[1] + this.drawVector[1] * 0.5];
         this.#mesh.translation = this.#meshPosition;
@@ -141,6 +141,6 @@ export class paintPlane extends paintGround {
             this.#meshPosition[0] - halfWidth * this.#widthVector[0],
             this.#meshPosition[1],
             this.#meshPosition[2] - halfWidth * this.#widthVector[1]
-        ]
+        ];
     }
 }

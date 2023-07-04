@@ -1,4 +1,4 @@
-import { describe, beforeAll, it, expect } from '@jest/globals'
+import { describe, beforeAll, it, expect } from '@jest/globals';
 import { ArcRotateCamera } from './ArcRotateCamera.js';
 import { MeshCamera } from './MeshCamera.js';
 import { Engine } from '../engine.js';
@@ -31,8 +31,8 @@ describe(
             });
             control.updatePosition(position =>
                 position.set([100, 100, 100]));
-            originalPosition = new Float32Array(engine!.mainCamera.position)
-            originalDirection = new Float32Array(engine!.mainCamera.direction as [number, number, number])
+            originalPosition = new Float32Array(engine!.mainCamera.position);
+            originalDirection = new Float32Array(engine!.mainCamera.direction as [number, number, number]);
             cameraControllers = [ArcRotateCamera, MeshCamera];
         },
         10000);
@@ -48,8 +48,8 @@ describe(
                 engine!.mainCamera.attachControllerForCamera(controller);
 
                 controller.calculateCameraPositionAndTarget();
-                const newPosition = new Float32Array(engine!.mainCamera.position)
-                const newDirection = new Float32Array(engine!.mainCamera.direction as [number, number, number])
+                const newPosition = new Float32Array(engine!.mainCamera.position);
+                const newDirection = new Float32Array(engine!.mainCamera.direction as [number, number, number]);
                 expect(originalPosition[0]!.toFixed(6)).toBe(newPosition[0]!.toFixed(6));
                 expect(originalPosition[1]!.toFixed(6)).toBe(newPosition[1]!.toFixed(6));
                 expect(originalPosition[2]!.toFixed(6)).toBe(newPosition[2]!.toFixed(6));
@@ -57,5 +57,5 @@ describe(
                 expect(originalDirection[1]!.toFixed(6)).toBe(newDirection[1]!.toFixed(6));
                 expect(originalDirection[2]!.toFixed(6)).toBe(newDirection[2]!.toFixed(6));
                 }
-            })
+            });
     });

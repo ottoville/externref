@@ -1,4 +1,4 @@
-import { describe, beforeAll, it, jest, expect } from '@jest/globals'
+import { describe, beforeAll, it, jest, expect } from '@jest/globals';
 import { Page, Browser } from 'puppeteer-core';
 
 import { Box as Box2 } from '../GPU/Meshes/Box.js';
@@ -9,12 +9,12 @@ const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 
 describe('Lights ',
     function () {
-        jest.setTimeout(30000)
+        jest.setTimeout(30000);
         let page: Page;
         beforeAll(async () => {
             await new Promise((res) => {
                 setTimeout(res,
-                    2000)
+                    2000);
             });
             page = await browser.newPage();
             await page.goto('https://localhost:4280');
@@ -27,7 +27,7 @@ describe('Lights ',
                 await page.waitForSelector('progress');
                 await page.waitForFunction(() =>
                     !document.querySelector('progress'));
-            })
+            });
         it('should render boxes',
             async () => {
                 const [greenPixel, redPixel] = await page.evaluate(async function () {
@@ -43,8 +43,8 @@ describe('Lights ',
                         can_collide: false, color: [0, 1, 0, 0], label: 'greenBox',
                     });
                     //green on left, red on right
-                    b.translation = [0, 400, -300]
-                    b2.translation = [0, 400, 300]
+                    b.translation = [0, 400, -300];
+                    b2.translation = [0, 400, 300];
                     b.update_scale(200,
                         200,
                         200);
@@ -77,7 +77,7 @@ describe('Lights ',
                     });
                     await new Promise((res) => {
                         setTimeout(res,
-                            500)
+                            500);
                     });
                     const renderTarget = engine.gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!;
 
@@ -109,6 +109,6 @@ describe('Lights ',
                     1: 13,
                     2: 0,
                     3: 255,
-                })
+                });
             });
-    })
+    });

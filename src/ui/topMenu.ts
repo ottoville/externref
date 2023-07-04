@@ -1,4 +1,4 @@
-import type { GPU } from '../GPU.js'
+import type { GPU } from '../GPU.js';
 import type { Terrain } from '../world/Terrain.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { UINode } from './UINode.js';
@@ -6,13 +6,13 @@ import { TerrainToolButton } from '../tools/TerrainTool.js';
 import { PlantsUI } from '../tools/plantsUI.js';
 import { Anchor, NumericUnit, VerticalPosition } from './UIRectangle.js';
 import { Zones } from '../tools/Zones.js';
-import { Button } from './Button.js'
+import { Button } from './Button.js';
 declare const engine: Engine;
 
 type MenuState = {
     menuOpenName: string | undefined,
 };
-const keyBoardMap: string[] = []
+const keyBoardMap: string[] = [];
 
 export type TopMenuButtonProps = {
     terrain: Terrain,
@@ -26,12 +26,12 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
         super(props);
         this.state = {
             menuOpenName: undefined,
-        }
+        };
         engine.addInputListener(this.#inputListener);
     }
     menuTree = {
         level: 0,
-    }
+    };
     #inputListener: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
             if (this.state.menuOpenName === undefined) {
@@ -43,7 +43,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                         if (menu) {
                             this.setState({
                                 menuOpenName: menu,
-                            })
+                            });
                         }
                     }
 
@@ -51,12 +51,12 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
             } else if (e.code === 'Backspace' && this.menuTree.level === 1) {
                 this.setState({
                     menuOpenName: undefined,
-                })
+                });
             }
         },
         object: this,
         type: 'keydown',
-    }
+    };
     render() {
         const props = this.props;
         const commonProps =
@@ -68,7 +68,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                 value: [70, NumericUnit.px],
             } as const,
             terrain: props.terrain,
-        }
+        };
         keyBoardMap.length = 0;
         const menus =
             [
@@ -151,17 +151,17 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                 )
             ];
         menus.forEach(menu => {
-            keyBoardMap.push(menu.props.UIRectangleProps.label)
-        })
+            keyBoardMap.push(menu.props.UIRectangleProps.label);
+        });
         return menus;
     }
     setActiveMenu = (menuName?: string) => {
         this.setState({
             menuOpenName: this.state.menuOpenName === menuName ? undefined : menuName,
-        })
-    }
+        });
+    };
     override destroy(): void {
         super.destroy();
-        engine.removeInputListener(this.#inputListener)
+        engine.removeInputListener(this.#inputListener);
     }
 }

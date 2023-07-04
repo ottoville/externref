@@ -1,6 +1,6 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
-import { GPU } from '../../GPU.js'
+import { GPU } from '../../GPU.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 import {  colorOutput } from './structs/Structs.js';
 
@@ -20,7 +20,7 @@ export const shapeAttr = Object.freeze({
         shaderFormat: 'vec4<f32>',
         shaderLocation: 1,
     },
-} as const)
+} as const);
 
 export const vertexPositionAttr = Object.freeze({
     vertex_position: {
@@ -29,7 +29,7 @@ export const vertexPositionAttr = Object.freeze({
         shaderFormat: 'vec2<f32>',
         shaderLocation: 2,
     },
-} as const)
+} as const);
 
 
 type BindLayouts = GPU['rootCameralayout']['bindGroupLayouts']
@@ -145,7 +145,7 @@ vec2<f32>(0.007, 0.57),
 vec2<f32>(-0.007, 0.57),
 vec2<f32>(0.0, 1.0)
 );
-    `)
+    `);
 }
 
 export type GrassVertShader = ReturnType<typeof createGrassVertShader>

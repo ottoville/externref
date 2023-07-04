@@ -90,6 +90,6 @@ export class createSettingsMenu extends UINode<{}> {
     }
     override destroy(): void {
         super.destroy();
-        createSettingsMenu.addKeydownListener()
+        createSettingsMenu.addKeydownListener();
     }
 }

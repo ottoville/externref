@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type returnNode<T extends UINode> = { ctr: new (props: any) => T, props: object }
-import type { GPU } from '../GPU.js'
+import type { GPU } from '../GPU.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
@@ -9,13 +9,13 @@ export abstract class UINode<P extends object = object, S extends object = objec
         return {
             ctr,
             props,
-        }
+        };
     }
     #children: (UINode | null)[] = [];
     //@ts-expect-error
     state: Readonly<S> = {
     };
-    #currentGPU!: GPU
+    #currentGPU!: GPU;
     protected setState(state: Partial<S>) {
         this.state = {
             ...this.state,
@@ -29,11 +29,11 @@ export abstract class UINode<P extends object = object, S extends object = objec
         // Render after child constructor has been executed, to avoid error
         // "Cannot read private member #instance from an object whose class did not declare it"
         queueMicrotask(() => {
-            engine.getGPU(this.#requestRender)
-        })
+            engine.getGPU(this.#requestRender);
+        });
     }
     destroy() {
-        engine.GPUSubscribions.delete(this.#requestRender)
+        engine.GPUSubscribions.delete(this.#requestRender);
         this.#children.forEach(c => {
             c?.destroy();
         });
@@ -65,14 +65,14 @@ export abstract class UINode<P extends object = object, S extends object = objec
                     instance.destroy();
                 }
                 return null;
-            })
+            });
         } else {
             this.#children.forEach(c => {
                 c?.destroy();
             });
             this.#children.length = 0;
         }
-    }
+    };
 }
 
 

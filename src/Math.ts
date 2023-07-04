@@ -22,22 +22,22 @@ export class TerraMatrix extends Float32Array {
             8);
     }
     declare readonly length: 16;
-    declare 0: number
-    declare 1: number
-    declare 2: number
-    declare 3: number
-    declare 4: number
-    declare 5: number
-    declare 6: number
-    declare 7: number
-    declare 8: number
-    declare 9: number
-    declare 10: number
-    declare 11: number
-    declare 12: number
-    declare 13: number
-    declare 14: number
-    declare 15: number
+    declare 0: number;
+    declare 1: number;
+    declare 2: number;
+    declare 3: number;
+    declare 4: number;
+    declare 5: number;
+    declare 6: number;
+    declare 7: number;
+    declare 8: number;
+    declare 9: number;
+    declare 10: number;
+    declare 11: number;
+    declare 12: number;
+    declare 13: number;
+    declare 14: number;
+    declare 15: number;
     multiplyToRef(otherM: TerraMatrix, result: TerraMatrix): TerraMatrix {
         var tm0 = this[0], tm1 = this[1], tm2 = this[2], tm3 = this[3];
         var tm4 = this[4], tm5 = this[5], tm6 = this[6], tm7 = this[7];
@@ -75,7 +75,7 @@ export class TerraMatrix extends Float32Array {
             this.view64[2] == om.view64[2] && this.view64[3] == om.view64[3] &&
             this.view64[4] == om.view64[4] && this.view64[5] == om.view64[5] &&
             this.view64[6] == om.view64[6] && this.view64[7] == om.view64[7]
-        )
+        );
     }
     clone() {
         return new TerraMatrix(this.buffer.slice(this.byteOffset,
@@ -147,12 +147,12 @@ export class TerraMatrix extends Float32Array {
     }
 }
 export class Uint16Vector2 extends Uint16Array {
-    declare 0: number
-    declare 1: number
+    declare 0: number;
+    declare 1: number;
 }
 export class TerraVector2 extends Float32Array {
-    declare 0: number
-    declare 1: number
+    declare 0: number;
+    declare 1: number;
 }
 
 export abstract class TerraVector3 extends Float32Array {
@@ -180,18 +180,18 @@ export abstract class TerraVector3 extends Float32Array {
         }
     }
     override toString() {
-        return `x: ${this[0]}, y: ${this[1]}, z: ${this[2]}`
+        return `x: ${this[0]}, y: ${this[1]}, z: ${this[2]}`;
     }
     toQuaternionToRef(angle: number, result: Quaternion) {
         // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
         // assumes axis is normalized
 
-        const halfAngle = angle * 0.5
+        const halfAngle = angle * 0.5;
         const s = Math.sin(halfAngle);
         result[0] = this[0] * s;
         result[1] = this[1] * s;
         result[2] = this[2] * s;
-        result[3] = Math.cos(halfAngle)
+        result[3] = Math.cos(halfAngle);
         return result;
     }
     LerpToRef(end: TerraVector3, amount: number, result: MutableTerraVector3): void {
@@ -243,7 +243,7 @@ export abstract class TerraVector3 extends Float32Array {
 
     applyRotationQuaternionToRef<T extends TerraVector3>(q: Quaternion, result: T): T {
         const q0 = q[0], q1 = q[1], q2 = q[2], q3 = q[3];
-        const t0 = this[0], t1 = this[1], t2 = this[2]
+        const t0 = this[0], t1 = this[1], t2 = this[2];
         const ix = q3 * t0 + q1 * t2 - q2 * t1;
         const iy = q3 * t1 + q2 * t0 - q0 * t2;
         const iz = q3 * t2 + q0 * t1 - q1 * t0;
@@ -259,9 +259,9 @@ export abstract class TerraVector3 extends Float32Array {
 export class ReadOnlyTerraVector3 extends TerraVector3 {
     //Nominal typing
     readonly mutable:number = 2;
-    declare readonly 0: number
-    declare readonly 1: number
-    declare readonly 2: number
+    declare readonly 0: number;
+    declare readonly 1: number;
+    declare readonly 2: number;
     static override of(x: number, y: number, z: number) {
         return super.of(x,
             y,
@@ -285,19 +285,19 @@ export class MutableTerraVector3 extends TerraVector3 {
     }
     //Nominal typing
     readonly mutable = 1;
-    declare 0: number
-    declare 1: number
-    declare 2: number
+    declare 0: number;
+    declare 1: number;
+    declare 2: number;
     clone() {
         return new MutableTerraVector3(this.buffer.slice(this.byteOffset,
             this.byteOffset + 12));
     }
 }
 export class TerraVector4 extends Float32Array {
-    declare 0: number
-    declare 1: number
-    declare 2: number
-    declare 3: number
+    declare 0: number;
+    declare 1: number;
+    declare 2: number;
+    declare 3: number;
     static override of(x: number, y: number, z: number, w: number) {
         return super.of(x,
             y,
@@ -358,11 +358,11 @@ export class Quaternion extends TerraVector4 {
 /**
  Math.PI * 2
  */
-const fullRad = Math.PI * 2
+const fullRad = Math.PI * 2;
 export class Angle {
     constructor(private _rad: number = 0, private _deg?: number) {
         if (Number.isNaN(_rad)) {
-            throw new Error('Radian is NaN')
+            throw new Error('Radian is NaN');
         }
     }
     get deg(): number {
@@ -391,7 +391,7 @@ export class Angle {
         return new Angle(this.rad);
     }
     sum(ang: Angle): Angle {
-        return new Angle(this.rad % ang.rad % fullRad)
+        return new Angle(this.rad % ang.rad % fullRad);
     }
     add(rad: number) {
         this._rad = (this._rad + rad) % fullRad;
@@ -400,7 +400,7 @@ export class Angle {
         if (rad < fullRad && rad > this.rad)
             return fullRad + (this.rad - rad);
         else
-            return this.rad - rad % fullRad
+            return this.rad - rad % fullRad;
     }
     distance(rad: number): Angle {
         const phi = (rad - this.rad) % fullRad;       // This is either the distance or 360 - distance
@@ -431,8 +431,8 @@ export class Triangle {
         else {
             var invPyth = 0.0;
         }
-        const normal_x = yz * invPyth
-        const normal_y = xz * invPyth
+        const normal_x = yz * invPyth;
+        const normal_y = xz * invPyth;
         const normal_z = xy * invPyth;
         //Plane struct in rust
         this.planeCollider.set([
@@ -456,7 +456,7 @@ export class Triangle {
         if (this.#vectors[0].byteLength === 0) {
             this.#vectors = this.#initializeVectors();
         }
-        return this.#vectors
+        return this.#vectors;
     }
     #initializeVectors() {
         return [
@@ -466,7 +466,7 @@ export class Triangle {
                 this.vectorsPointers[1]),
             new TerraVector4(engine.memory.buffer,
                 this.vectorsPointers[2])
-        ] as const
+        ] as const;
     }
     constructor(
         private vectorsPointers: [pointerToVec4: number, pointerToVec4: number, pointerToVec4: number],

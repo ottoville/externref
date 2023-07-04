@@ -31,7 +31,7 @@ export function new_rust_mesh(
     const vec_ptr = engine.rust.alloc_vector_u8(label.length);
     const [string_ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
         vec_ptr,
-        3)
+        3);
     textEncoder.encodeInto(label,
         new Uint8Array(engine.rust.memory.buffer,
             string_ptr,
@@ -63,7 +63,7 @@ export abstract class MainNode {
             label_len));
     }
     get speed() {
-        return Math.sqrt(this.velocity[0] * this.velocity[0] + this.velocity[1] * this.velocity[1] + this.velocity[2] * this.velocity[2])
+        return Math.sqrt(this.velocity[0] * this.velocity[0] + this.velocity[1] * this.velocity[1] + this.velocity[2] * this.velocity[2]);
     }
     get speedSquared() {
         return this.velocity[0] * this.velocity[0] + this.velocity[1] * this.velocity[1] + this.velocity[2] * this.velocity[2];
@@ -77,17 +77,17 @@ export abstract class MainNode {
             data[0],
             data[1],
             data[2],
-            data[3])
+            data[3]);
     }
     set ambient(data: [r: number, b: number, g: number]) {
         engine.rust.set_ambient(this.id,
             data[0],
             data[1],
-            data[2])
+            data[2]);
     }
     set shadow(shadow: number) {
         engine.rust.set_shadow(this.id,
-            shadow)
+            shadow);
     }
     get ptr() {
         return engine.rust.get_mesh_by_id(this.id);
@@ -108,7 +108,7 @@ export abstract class MainNode {
         engine.rust.update_scale(this.id,
             x,
             y ?? x,
-            z ?? x)
+            z ?? x);
     }
     /**
      * Get rotation quaternion
@@ -139,7 +139,7 @@ export abstract class MainNode {
      * Get rotation using euler angler
      */
     get euler_angles() : ReadOnlyTerraVector3 {
-        const ptr = engine.rust.rotation_pointer_euler(this.id)
+        const ptr = engine.rust.rotation_pointer_euler(this.id);
         return new ReadOnlyTerraVector3(engine.rust.memory.buffer,
             ptr);
     }
@@ -151,13 +151,13 @@ export abstract class MainNode {
         engine.rust.update_dynamic_buffer(this.id);
     }
     get scale_x(): number {
-        return engine.rust.scale_x(this.id)
+        return engine.rust.scale_x(this.id);
     }
     get scale_y(): number {
-        return engine.rust.scale_y(this.id)
+        return engine.rust.scale_y(this.id);
     }
     get scale_z(): number {
-        return engine.rust.scale_z(this.id)
+        return engine.rust.scale_z(this.id);
     }
 
     get positions_count() {
@@ -204,7 +204,7 @@ export abstract class MainNode {
     }
     get velocity(): ReadOnlyTerraVector3 {
         return new ReadOnlyTerraVector3(engine.memory.buffer,
-            engine.rust.velocity_pointer(this.id))
+            engine.rust.velocity_pointer(this.id));
     }
     set velocity(value: [number, number, number] | TerraVector3) {
         new MutableTerraVector3(engine.memory.buffer,
@@ -214,7 +214,7 @@ export abstract class MainNode {
     intersect_box_aa_sphere(collider: ColliderJS, radius: number) {
         return engine.rust.intersect_box_aa_sphere(this.id,
             collider.collider_ptr,
-            radius)
+            radius);
     }
     get have_rigid_body() {
         return engine.rust.have_rigid_body(this.id);

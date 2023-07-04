@@ -21,9 +21,9 @@ export const ColoredRenderPipeline = [
             arrayStride: vertexBufferProps.stride * 4,
             attributes2: simpleAttributesWithColor,
             stepMode: 'vertex',
-        } as VertexBufferLayout2<typeof simpleAttributesWithColor>
+        } as VertexBufferLayout2<typeof simpleAttributesWithColor>;
         const vertexShader = createVertexColorShader(gpu.positionAndTimeBindGroup,
-            buffers)
+            buffers);
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
                 fragmentShader: gpu.simpleFragShader,
@@ -34,4 +34,4 @@ export const ColoredRenderPipeline = [
                 vertexShader,
             });
     }
-] as const
+] as const;

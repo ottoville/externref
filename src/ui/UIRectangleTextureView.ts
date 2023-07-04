@@ -15,14 +15,14 @@ export class UIRectangleTextureView extends UIRectangle {
         outer_sizeX: number;
         outer_sizeY: number;
     }) {
-        const { borderSize, } = this.props
+        const { borderSize, } = this.props;
         const textureSize = this.textureView.texture.props.size;
         const uvs = {
             bottom: 0,
             left: textureSize.width,
             right: 0,
             top: textureSize.height,
-        }
+        };
         vertices.set(
             [
                 -content_sizeX, -content_sizeY, uvs.right, uvs.top,
@@ -109,7 +109,7 @@ export class UIRectangleTextureView extends UIRectangle {
                     content_sizeX, -content_sizeY, uvs.left, uvs.top,
                     outer_sizeX, -content_sizeY, textureSize!.width, uvs.top
                 ],
-                24)
+                24);
         }
         return vertices;
     }

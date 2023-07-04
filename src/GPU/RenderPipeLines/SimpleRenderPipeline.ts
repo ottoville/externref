@@ -36,4 +36,4 @@ export const SimpleRenderPipeline = [
                 vertexShader: simpleVertShader,
             });
     }
-] as const
+] as const;

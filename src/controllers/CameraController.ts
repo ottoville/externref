@@ -14,7 +14,7 @@ export const enum ARROW_KEYS {
     UP_OR_DOWN = ARROW_KEYS.UP | ARROW_KEYS.DOWN
 }
 export abstract class CameraController implements Ellipsoid {
-    radius: { 0: number; 1: number; 2: number; }
+    radius: { 0: number; 1: number; 2: number; };
     private readonly collisionRadius: [number, number, number] = [2, 2, 2];
     readonly collisionsScalingMatrix = new TerraMatrix([
         1.0 / this.collisionRadius[0], 0.0, 0.0, 0.0,
@@ -30,30 +30,30 @@ export abstract class CameraController implements Ellipsoid {
         const myCloseDistance = this.closeDistanceVector;
         this.radius = {
             get 0() {
-                return collisionRadius[0]
+                return collisionRadius[0];
             },
             set 0(v: number) {
                 collisionRadius[0] = v;
                 collisionsScalingMatrix[0] = 1.0 / v;
-                myCloseDistance[0] = closeDistance / v
+                myCloseDistance[0] = closeDistance / v;
             },
             get 1() {
-                return collisionRadius[1]
+                return collisionRadius[1];
             },
             set 1(v: number) {
                 collisionRadius[1] = v;
                 collisionsScalingMatrix[5] = 1.0 / v;
-                myCloseDistance[1] = closeDistance / v
+                myCloseDistance[1] = closeDistance / v;
             },
             get 2() {
-                return collisionRadius[2]
+                return collisionRadius[2];
             },
             set 2(v: number) {
                 collisionRadius[2] = v;
                 collisionsScalingMatrix[10] = 1.0 / v;
-                myCloseDistance[2] = closeDistance / v
+                myCloseDistance[2] = closeDistance / v;
             },
-        }
+        };
     }
     abstract readonly name: string;
     abstract serialize(): void;

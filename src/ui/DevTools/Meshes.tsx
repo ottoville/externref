@@ -15,29 +15,29 @@ const getPositionBindGroupForScreen = (gpu: GPU) =>
         .filter((map): map is [RenderPipeline, RenderPipelineVariant] => {
             const [renderPipeline, renderPipelineVariant] = map;
             return ((renderPipeline.props.bindgroupdrawable === gpu.positionAndTimeBindGroup || gpu.positionAndTimeBindGroup.subBindGroups.includes(renderPipeline.props.bindgroupdrawable)) && !(renderPipelineVariant instanceof Promise));
-        })
+        });
 
 
 export function Meshes() {
-    const [renderPipelines, setRenderPipelines] = useState<ReturnType<typeof getPositionBindGroupForScreen>>([])
+    const [renderPipelines, setRenderPipelines] = useState<ReturnType<typeof getPositionBindGroupForScreen>>([]);
     useEffect(() => {
         let renderPassScreen: GPU['renderPassScreen'] | undefined = undefined;
-        let listener: () => void
+        let listener: () => void;
         engine.getGPU(gpu => {
             listener = () => {
-                setRenderPipelines(getPositionBindGroupForScreen(gpu))
+                setRenderPipelines(getPositionBindGroupForScreen(gpu));
             };
             gpu.renderPassScreen.onRenderPipelinesChange.add(listener);
             renderPassScreen = gpu.renderPassScreen;
             listener();
 
-        })
+        });
         return () => {
             renderPassScreen?.onRenderPipelinesChange.delete(listener);
-        }
+        };
     },
     [engine]);
-    const [selectedDrawable, setSelectedDrawable] = useState<Drawable>()
+    const [selectedDrawable, setSelectedDrawable] = useState<Drawable>();
     return <>
         <fieldset id="meshes">
             <legend>Rendered meshes</legend>
@@ -47,13 +47,13 @@ export function Meshes() {
                         Renderpipeline<br />
                         <small>{rp.props.label}</small>
                         <VariantList variant={variant} setSelectedDrawable={setSelectedDrawable}></VariantList>
-                    </li>
+                    </li>;
                 })}
             </ul>
         </fieldset>
         {selectedDrawable ?
             <NodeInfo key={selectedDrawable.node.id} drawable={selectedDrawable}></NodeInfo>
             : null}
-    </>
+    </>;
 
 }

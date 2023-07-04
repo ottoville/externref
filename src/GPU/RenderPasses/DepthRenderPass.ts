@@ -10,14 +10,14 @@ export class DepthRenderPass<T extends {
     [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
 }
 > extends RenderPass<T> {
-    depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
+    depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
     constructor(
         renderPassProps: RenderPassProps<T>,
         depthRenderTargets: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
     ) {
         renderPassProps.GPURenderBundleEncoderDescriptor = {
             depthStencilFormat: depthRenderTargets.props.format,
-        }
+        };
         super(renderPassProps);
         this.depthRenderTarget = depthRenderTargets;
     }
@@ -25,7 +25,7 @@ export class DepthRenderPass<T extends {
         super.resize(width,
             height);
         this.depthRenderTarget.resize(this.size,
-            this.sampleCount)
+            this.sampleCount);
     }
     override get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const renderPassDescriptor = super.GPURenderPassDescriptor;
@@ -35,7 +35,7 @@ export class DepthRenderPass<T extends {
             depthLoadOp: 'clear',
             depthStoreOp: 'store',
             view: this.depthRenderTarget.view.getAsRenderTarget(this),
-        }
+        };
         return renderPassDescriptor;
     }
     override onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>) {
@@ -46,6 +46,6 @@ export class DepthRenderPass<T extends {
                 depthWriteEnabled: renderpipeline.props.depthBuffer?.depthWriteEnabled ?? true,
                 format: this.depthRenderTarget.props.format,
             },
-        }
+        };
     }
 }

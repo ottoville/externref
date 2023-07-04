@@ -15,13 +15,13 @@ export class CreateFPSMeter extends UINode<{}, MenuState> {
         });
         this.state = {
             fps: 0,
-        }
+        };
         window.setInterval(() => {
             this.setState({
                 fps: engine.gpu?.fps ?? 0,
             });
         },
-        500)
+        500);
     }
     render() {
         return [

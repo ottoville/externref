@@ -19,9 +19,9 @@ export class RenderPipelineVariant {
     }
     onRootDrawableChanges: Set<() => void> = new Set();
     addRootDrawable(drawable: Drawable) {
-        this.rootDrawables.add(drawable)
+        this.rootDrawables.add(drawable);
         this.onRootDrawableChanges.forEach(cb =>
-            cb())
+            cb());
         return this.rootDrawables;
     }
 }
@@ -51,15 +51,15 @@ export class RenderPass<U extends {
     readonly sizeBindGroup: () => BindGroup;
     #sizeBuffer: BindUniformBuffer;
     readonly colorRenderTargets = {
-    } as U
+    } as U;
     onResize: Map<object, () => void> = new Map();
-    public gpu: GPU
+    public gpu: GPU;
     public sampleCount: 1 | 4;
     public size: { width: number, height: number };
-    #entryPoint: string
+    #entryPoint: string;
     #getSizeOnResize: (width: number, height: number) => [number, number];
-    #rootLayout: RenderPipelineLayout
-    public label: string
+    #rootLayout: RenderPipelineLayout;
+    public label: string;
     constructor(
         {
             gpu,
@@ -84,7 +84,7 @@ export class RenderPass<U extends {
         const renderTargersArray = Object.values(colorRenderTargets);
         renderTargersArray.forEach(rt => {
             rt.resize(this.size,
-                this.sampleCount)
+                this.sampleCount);
         });
         const renderBundle = new RenderBundleEncoder(this,
             GPURenderBundleEncoderDescriptor,
@@ -93,16 +93,16 @@ export class RenderPass<U extends {
                     if (rt.texture.sampleCount === 0 && rt.view.bindGroups.size === 0) {
                         console.warn('Rendertarget ',
                             rt.props.label,
-                            ' is not binded as texture, render result will be shown.')
+                            ' is not binded as texture, render result will be shown.');
                     }
-                })
+                });
                 //@ts-ignore
                 let drawedMeshes = 0;
                 if (this.perspectiveCameras.size === 0) {
                 // Draw UI
                     drawedMeshes += this.#renderCamera(renderBundleEncoder,
                         this.#rootLayout,
-                        0)
+                        0);
                 } else {
                     renderBundleEncoder.renderBundleEncoder.setBindGroup(0,
                         this.sizeBindGroup().getForRenderBundle(renderBundleEncoder));
@@ -115,10 +115,10 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         drawedMeshes += this.#renderCamera(renderBundleEncoder,
                             this.#rootLayout,
-                            2)
-                    })
+                            2);
+                    });
                 }
-            })
+            });
         this.bundles.push(renderBundle);
         this.#sizeBuffer = this.#updateSizeBindGroup(true);
         this.sizeBindGroup = () =>
@@ -153,7 +153,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
 
         return this.#sizeBuffer;
     }
-    onRenderPipelinesChange: Set<() => void> = new Set()
+    onRenderPipelinesChange: Set<() => void> = new Set();
     getVariant(renderPipeline: Readonly<RenderPipeline>) {
         let variant = this.renderPipelines.get(renderPipeline);
         if (!variant) {
@@ -165,7 +165,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
             };
             console.debug('Create renderpipeline ',
                 renderPipeline.props.label,
-                params)
+                params);
             const variantP = this.gpu.device.createRenderPipelineAsync(
                 params
             ).catch((err: unknown) => {
@@ -177,7 +177,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                             renderPipeline.props.vertexShader.wgsl,
                             {
                                 cause: err,
-                            })
+                            });
                     }
                     else if (err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
                         console.error('createRenderPipelineAsync failed, fragment',
@@ -186,7 +186,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                             renderPipeline.props.fragmentShader.wgsl,
                             {
                                 cause: err,
-                            })
+                            });
                     } else {
                         console.error('createRenderPipelineAsync failed, vertex',
                             renderPipeline.props.vertexShader.module.label,
@@ -209,17 +209,17 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                 variant = new RenderPipelineVariant(
                     variantPipeline,
                     new Set<Drawable>()
-                )
+                );
                 // Replace promise with real object
                 this.renderPipelines.set(renderPipeline,
                     variant);
                 this.onRenderPipelinesChange.forEach(cb =>
                     cb());
                 return variant;
-            })
+            });
             // Save promise
             this.renderPipelines.set(renderPipeline,
-                variantP)
+                variantP);
             variant = variantP;
         }
         return variant;
@@ -234,9 +234,9 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                     const state: GPUColorTargetState = {
                         format: rt.texture.format,
                         writeMask: rt.renderTargetOptions.writeMask,
-                    }
+                    };
                     if (rt.blend) {
-                        state.blend = rt.blend
+                        state.blend = rt.blend;
                     }
                     return state;
                 }),
@@ -246,7 +246,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                 entryPoint: this.#entryPoint,
                 module: renderpipeline.props.vertexShader.module,
             },
-        }
+        };
         if (this.sampleCount > 1)
             renderPipelineDescriptor.multisample = {
                 count: this.sampleCount,
@@ -262,7 +262,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
         this.#updateSizeBindGroup();
         for (const rt of Object.values(this.colorRenderTargets)) {
             rt.resize(this.size,
-                this.sampleCount)
+                this.sampleCount);
         }
     }
     //TODO: dont execute this function on every render
@@ -314,7 +314,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
     render(renderEncoder: GPUCommandEncoder) {
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
         passEncoder.executeBundles(this.bundles.map(b => {
-            return b.renderBundle()
+            return b.renderBundle();
         }));
         passEncoder.end();
     }

@@ -1,7 +1,7 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 
-import { GPU } from '../../GPU.js'
+import { GPU } from '../../GPU.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']

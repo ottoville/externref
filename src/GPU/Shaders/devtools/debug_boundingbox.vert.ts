@@ -1,6 +1,6 @@
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { type VertexBufferLayout2, VertexShader } from '../VertexShader.js';
-import { GPU } from '../../../GPU.js'
+import { GPU } from '../../../GPU.js';
 import { VertexShaderFunction } from '../ShaderFunction.js';
 import { colorOutput } from '../structs/Structs.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
@@ -27,6 +27,6 @@ export function createDebugBoundingBoxVertShader(pipelineLayout: PipelineLayout<
         },
         gpu: pipelineLayout.gpu,
         label: 'debug_boundingBox.vert',
-    })
+    });
 }
 export type DebugBoundingBoxVertShader = ReturnType<typeof createDebugBoundingBoxVertShader>;

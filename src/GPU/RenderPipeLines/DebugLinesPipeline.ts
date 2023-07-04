@@ -8,7 +8,7 @@ const positionAttr = Object.freeze({
         shaderFormat: 'vec3<f32>',
         shaderLocation: 0,
     },
-} as const)
+} as const);
 export const DebugLinesPipeline = [
     'DebugLinesPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
         stride: number;
@@ -28,6 +28,6 @@ export const DebugLinesPipeline = [
                 },
                 vertexShader: shader,
             }
-        )
+        );
     }
-] as const
+] as const;

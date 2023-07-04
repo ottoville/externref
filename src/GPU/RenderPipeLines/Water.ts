@@ -35,6 +35,6 @@ export const WaterRenderPipeline = [
                         resource: sampler,
                     },
                 })
-        )
+        );
     }
-] as const
+] as const;

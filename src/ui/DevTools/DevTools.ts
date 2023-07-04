@@ -4,4 +4,4 @@ import sheet from '/css/DevTools.css' assert { type: 'css' };
 import { DevToolsApp } from './DevToolsApp.js';
 document.adoptedStyleSheets = [sheet];
 
-export const DevTools = DevToolsApp
+export const DevTools = DevToolsApp;

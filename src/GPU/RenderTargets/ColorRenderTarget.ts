@@ -10,7 +10,7 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
     extends RenderPassTarget<F, U>
 {
     #clearValue: GPUColor;
-    public blend: GPUBlendState | undefined
+    public blend: GPUBlendState | undefined;
     constructor(
         textureOptions: TextureParams<F, Exclude<U, TextureUsageType['STORAGE_BINDING']>, Texture2dSize>,
         renderTargetOptions: RenderPassTargetOptions,
@@ -18,8 +18,8 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
     ) {
         super(textureOptions,
             renderTargetOptions);
-        this.#clearValue = options.clearValue
-        this.blend = options.blend
+        this.#clearValue = options.clearValue;
+        this.blend = options.blend;
     }
 
     //TODO: Do not re-create on every render?
@@ -29,7 +29,7 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
             loadOp: 'clear',
             storeOp: 'store',
             view: this.renderTargetOptions.context ? this.renderTargetOptions.context.getCurrentTexture().createView() : this.view.view,
-        }
+        };
         return obj;
     }
 }

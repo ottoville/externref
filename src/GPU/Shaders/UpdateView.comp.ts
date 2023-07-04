@@ -1,7 +1,7 @@
-import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
-import type { GPU } from '../../GPU.js'
+import type { GPU } from '../../GPU.js';
 import { Lights, MeshArray, UpdateClustersBufferLayout, ViewUniforms } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 

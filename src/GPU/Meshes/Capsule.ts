@@ -27,7 +27,7 @@ export class Capsule extends OctaSphere {
                 label: 'Capsule' + (uid++),
                 ...meshProperties,
             },
-            can_collide)
+            can_collide);
     }
     override create_collider() {
         if (this.height > 0 && this.width === 0 && this.depth === 0) {

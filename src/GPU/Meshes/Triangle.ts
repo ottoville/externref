@@ -9,7 +9,7 @@ const positions = new Float32Array([
     -1.0, 1.0, -1.0, 1.0, 0.0, 1.0, 0.0, 1, 0
     -1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1, 0
     -1.0, -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1, 0
-])
+]);
 
 let uid = 0;
 export class Triangle extends SimpleMesh {
@@ -31,7 +31,7 @@ export class Triangle extends SimpleMesh {
                 label,
                 scenes,
             })
-        )
+        );
         this.color = color;
     }
 }

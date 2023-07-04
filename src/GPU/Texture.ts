@@ -149,7 +149,7 @@ export class Texture<
                     },
                     copySize
                 );
-            }
+            };
         }
         if (props.usages & TextureUsageEnums['COPY_SRC']) {
             (this as unknown as copySrcTexture).copyTo = (commandEncoder, destination, sourceDetails, destinationDetails, copySize) => {
@@ -158,7 +158,7 @@ this as unknown as (Texture<F, COPY_SRC_TEXTURE, S> & copySrcTexture),
 sourceDetails,
 destinationDetails,
 copySize);
-            }
+            };
         }
     }
     resize(size: S, sampleCount: 1 | 4) {
@@ -168,7 +168,7 @@ copySize);
     destroy() {
         //Texture is undefined on initial call from constructor
         if (!this.texture)
-            return
+            return;
         this.texture.destroy();
         this.views.forEach(view =>
             view.destroy());
@@ -189,9 +189,9 @@ copySize);
             usages |= GPUTextureUsage['COPY_SRC'];
         }
         if(this.props.size.width === 0) {
-            throw new Error('Texture must have width')
+            throw new Error('Texture must have width');
         } else if('height' in this.props.size && this.props.size.height === 0) {
-            throw new Error('Texture must have height')
+            throw new Error('Texture must have height');
         }
         this.texture = this.props.gpu.device.createTexture({
             format: this.props.format,
@@ -250,13 +250,13 @@ export class RenderTarget<
 
     ) {
         if ((this.props.usages & GPUTextureUsage.COPY_DST) === 0) {
-            throw new Error('copyFromExternalImage: texture must include COPY_DST.')
+            throw new Error('copyFromExternalImage: texture must include COPY_DST.');
         }
         if ((destination.origin?.y ?? 0) + (copySize.height ?? 0) > this.props.size.height) {
-            throw new Error('copyFromExternalImage height touches outside of texture ')
+            throw new Error('copyFromExternalImage height touches outside of texture ');
         }
         if ((destination.origin?.x ?? 0) + (copySize.width ?? 0) > this.props.size.width) {
-            throw new Error('copyFromExternalImage width touches outside of texture ')
+            throw new Error('copyFromExternalImage width touches outside of texture ');
         }
         this.props.gpu.device.queue.copyExternalImageToTexture(
             source,
@@ -265,7 +265,7 @@ export class RenderTarget<
                 texture: this.texture,
             },
             copySize
-        )
+        );
     }
     async toBitmap(depth = 0) {
 
@@ -280,8 +280,8 @@ export class RenderTarget<
             add_copy_src = true;
             this.createTexture(this.initialSampleCount,
                 true);
-            await new Promise(res => { requestAnimationFrame(res) });
-            await new Promise(res => { requestAnimationFrame(res) });
+            await new Promise(res => { requestAnimationFrame(res); });
+            await new Promise(res => { requestAnimationFrame(res); });
         }
 
         const encoder = this.props.gpu.device.createCommandEncoder({

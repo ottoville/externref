@@ -61,6 +61,9 @@ module.exports = {
         'indent': [
             'error', 4, {
                 'SwitchCase': 1,
+                'CallExpression': {
+                    'arguments': 1,
+                },
             }
         ],
         'sort-keys': [
@@ -91,6 +94,7 @@ module.exports = {
         ],
         'block-spacing': ['error'],
         'comma-spacing': ['error'],
+        'semi': ['error', 'always'],
     },
     settings: {
         'import/resolver': {

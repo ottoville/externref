@@ -17,5 +17,5 @@ export function Button(props: ButtonProps) {
                 width: [8, NumericUnit.px],
             } as const,
         },
-    }
+    };
 }

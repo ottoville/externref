@@ -11,18 +11,18 @@ export function VariantList(props: {
     setSelectedDrawable: React.Dispatch<React.SetStateAction<Drawable | undefined>>
 
 }) {
-    const [rootDrawables, setRootDrawables] = useState<Drawable[]>([])
+    const [rootDrawables, setRootDrawables] = useState<Drawable[]>([]);
     useEffect(() => {
         const listener = () => {
-            setRootDrawables([...props.variant.rootDrawables])
+            setRootDrawables([...props.variant.rootDrawables]);
         };
         setRootDrawables([...props.variant.rootDrawables]);
         props.variant.onRootDrawableChanges.add(listener);
         return () => {
-            props.variant.onRootDrawableChanges.delete(listener)
-        }
+            props.variant.onRootDrawableChanges.delete(listener);
+        };
     },
-    [props.variant.rootDrawables])
+    [props.variant.rootDrawables]);
 
     return <ul>
         {rootDrawables.map(drawable => {
@@ -37,11 +37,11 @@ export function VariantList(props: {
                         if (engine.inputManager instanceof ArcRotateCamera) {
                             if (drawable instanceof DrawableDirect) {
                                 const node = drawable.node;
-                                engine.inputManager.moveto(node.translation)
+                                engine.inputManager.moveto(node.translation);
                             }
                         }
                     }}>🎥</button>
-            </li>
+            </li>;
         })}
-    </ul>
+    </ul>;
 }

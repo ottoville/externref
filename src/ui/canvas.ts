@@ -42,12 +42,12 @@ class Light extends MainNode {
         }));
     }
 }
-const errors: Error[] = []
+const errors: Error[] = [];
 export class Canvas {
     #progressBar: HTMLProgressElement = document.createElement('progress');
     #progresElem = document.createElement('span');
-    #errorDialog = document.createElement('dialog')
-    #canvasElem = document.createElement('canvas')
+    #errorDialog = document.createElement('dialog');
+    #canvasElem = document.createElement('canvas');
     currentGameTime = 0;
     showError() {
         if (!this.#errorDialog.open) {
@@ -66,7 +66,7 @@ export class Canvas {
             (e) => {
                 e.stopPropagation();
                 e.preventDefault();
-            })
+            });
         this.#progressBar.max = 100;
 
         this.#errorDialog.addEventListener('close',
@@ -78,7 +78,7 @@ export class Canvas {
 
         const mainContainer = container.appendChild(document.createElement('div'));
         mainContainer.id = 'mainContainer';
-        mainContainer.appendChild(this.#errorDialog)
+        mainContainer.appendChild(this.#errorDialog);
         mainContainer.appendChild(this.#canvasElem);
         const devTools = container.appendChild(document.createElement('aside'));
         devTools.style.display = 'none';
@@ -109,24 +109,24 @@ export class Canvas {
                     const reader = response.body.getReader();
                     const contentLength = parseInt(contentLengthHeader);
                     let receivedLength = 0; // received that many bytes at the moment
-                    let done = false
+                    let done = false;
                     const progressBar = this.#progressBar;
-                    const progressElem = this.#progresElem
+                    const progressElem = this.#progresElem;
                     const reableStream = new ReadableStream({
                         async start(controller) {
                             do {
                                 const results = await reader.read();
-                                done = results.done
+                                done = results.done;
                                 if (!done) {
-                                    const value = results.value
-                                    controller.enqueue(value)
+                                    const value = results.value;
+                                    controller.enqueue(value);
                                     receivedLength += value!.length;
                                     const percentOfReceived = receivedLength / contentLength;
                                     const progress = 6 + progressForWasmLoading * percentOfReceived;
                                     progressBar.value = progress;
                                     progressElem.textContent = Math.floor(progress).toFixed(0);
                                 }
-                            } while (!done)
+                            } while (!done);
                             controller.close();
                         },
                     });
@@ -172,17 +172,17 @@ export class Canvas {
                                 if (engine.inputManager === human.inputManager) {
                                     engine.mainCamera.attachControllerForCamera(archRotateController);
                                 } else {
-                                    engine.mainCamera.attachControllerForCamera(human.inputManager)
+                                    engine.mainCamera.attachControllerForCamera(human.inputManager);
                                 }
                             }
-                        })
+                        });
                     const terrainInited = Terrain.loadFromTexture(gpu,
                         [terrascene]);
                     terrainInited.then(terrain =>
                         new createTopMenu({
                             gpu, terrain,
                         })).catch(err => {
-                        errors.push(err)
+                        errors.push(err);
                         this.showError();
                     });
 
@@ -197,10 +197,10 @@ export class Canvas {
 terraEngine.gpu!,
 (scene) => {
     const sun = new Light(scene);
-    sun.translation = [0, 1, 0]
+    sun.translation = [0, 1, 0];
     sun.ambient = [0, 0, 0];
     sun.shadow = 1; // shadow to 1 (no shadow)
-    return undefined
+    return undefined;
 });
 
             /* const slope = new Box(
@@ -217,7 +217,7 @@ terraEngine.gpu!,
             cone.translation = [0, 900, -70];
             cone.update_scale(50,
                 50,
-                50)
+                50);
             cone.radius = 50;
             cone.color = [1, 0, 0, 0];
 
@@ -331,20 +331,20 @@ gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.vie
                 }));
                 webSocket.onmessage = (e) => {
                     console.log('message from WS',
-                        e)
+                        e);
                     const msg = JSON.parse(e.data);
                     if (msg.action == 'init') {
                         console.debug('going to init game',
-                            msg.currentPlayData)
+                            msg.currentPlayData);
                     }
-                }
+                };
 
-            }
+            };
             webSocket.onerror = () => {
                 console.error('websocket onerror');
-            }
+            };
         }).catch(e => {
-            errors.push(e)
+            errors.push(e);
             this.showError();
         });
     }

@@ -25,7 +25,7 @@ const attributes = Object.freeze(
 
         },
     } as const
-)
+);
 
 export const TerrainRenderPipeline = [
     'TerrainRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
@@ -49,4 +49,4 @@ export const TerrainRenderPipeline = [
                 vertexShader: groundVertShader,
             });
     }
-] as const
+] as const;

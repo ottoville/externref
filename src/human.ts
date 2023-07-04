@@ -7,12 +7,12 @@ import type { Scene } from './Scene.js';
 import { ARROW_KEYS } from './controllers/CameraController.js';
 declare const engine: Engine;
 const maxAcceleration = 10;
-export const closeDistance = 0.0022
-const maxSpeedSquared = 1.4 * 1.4
+export const closeDistance = 0.0022;
+const maxSpeedSquared = 1.4 * 1.4;
 export class Human extends Box {
     inputManager: MeshCamera;
     radius: { 0: number; 1: number; 2: number; };
-    readonly #radius: [x: number, y: number, z: number] = [0.5, 1.8, 0.3]
+    readonly #radius: [x: number, y: number, z: number] = [0.5, 1.8, 0.3];
     readonly collisionsScalingMatrix: TerraMatrix = new TerraMatrix([
         1.0 / this.#radius[0], 0.0, 0.0, 0.0,
         0.0, 1.0 / this.#radius[1], 0.0, 0.0,
@@ -35,52 +35,52 @@ export class Human extends Box {
 
         this.inputManager = new MeshCamera(engine.mainCamera);
         if (properties.inputEnabled) {
-            engine.mainCamera.attachControllerForCamera(this.inputManager)
+            engine.mainCamera.attachControllerForCamera(this.inputManager);
         }
         engine.physics.onPhysicTick.add(() => {
             //  console.log('human translation', this.translation)
-        })
+        });
 
-        const radius = this.#radius
+        const radius = this.#radius;
         const collisionsScalingMatrix = this.collisionsScalingMatrix;
         const myCloseDistance = this.closeDistanceVector;
         this.radius = {
             get 0() {
-                return radius[0]
+                return radius[0];
             },
             set 0(v: number) {
                 radius[0] = v;
                 collisionsScalingMatrix[0] = 1.0 / v;
-                myCloseDistance[0] = closeDistance / v
+                myCloseDistance[0] = closeDistance / v;
 
             },
             get 1() {
-                return radius[1]
+                return radius[1];
             },
             set 1(v: number) {
                 radius[1] = v;
                 collisionsScalingMatrix[5] = 1.0 / v;
-                myCloseDistance[1] = closeDistance / v
+                myCloseDistance[1] = closeDistance / v;
             },
             get 2() {
-                return radius[2]
+                return radius[2];
             },
             set 2(v: number) {
                 radius[2] = v;
                 collisionsScalingMatrix[10] = 1.0 / v;
-                myCloseDistance[2] = closeDistance / v
+                myCloseDistance[2] = closeDistance / v;
             },
-        }
+        };
     }
     override onPhysicTick = () => {
         let updateCameraDirection = false;
         if (this.inputManager.pointerMovement.x || this.inputManager.pointerMovement.y) {
             if (this.inputManager.pointerMovement.x) {
-                this.inputManager.angle += Math.PI * this.inputManager.pointerMovement.x / engine.canvas!.width
+                this.inputManager.angle += Math.PI * this.inputManager.pointerMovement.x / engine.canvas!.width;
                 this.inputManager.pointerMovement.x = 0;
             }
             if (this.inputManager.pointerMovement.y) {
-                this.inputManager.verticalAngle -= Math.PI * this.inputManager.pointerMovement.y / engine.canvas!.width
+                this.inputManager.verticalAngle -= Math.PI * this.inputManager.pointerMovement.y / engine.canvas!.width;
                 this.inputManager.pointerMovement.y = 0;
             }
             updateCameraDirection = true;
@@ -88,7 +88,7 @@ export class Human extends Box {
         }
         if (updateCameraDirection) {
             if (this.inputManager.angle < 0) {
-                this.inputManager.angle = Math.PI * 2 + this.inputManager.angle
+                this.inputManager.angle = Math.PI * 2 + this.inputManager.angle;
             }
             if (this.inputManager.angle < 0) {
                 throw new Error('negative angle');
@@ -99,9 +99,9 @@ export class Human extends Box {
             const vang = this.inputManager.verticalAngle;
 
             this.inputManager.cameraControl?.updateDirection(direction => {
-                direction[0] = Math.cos(ang) * Math.sin(vang)
-                direction[1] = Math.cos(vang)
-                direction[2] = Math.sin(ang) * Math.sin(vang)
+                direction[0] = Math.cos(ang) * Math.sin(vang);
+                direction[1] = Math.cos(vang);
+                direction[2] = Math.sin(ang) * Math.sin(vang);
             });
         }
         if (this.colliding_character && this.speedSquared > maxSpeedSquared) {
@@ -139,22 +139,22 @@ export class Human extends Box {
                     }
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
-                    this.velocity = [-direction[0] * horizontalSpeed, this.velocity[1], -direction[2] * horizontalSpeed]
+                    this.velocity = [-direction[0] * horizontalSpeed, this.velocity[1], -direction[2] * horizontalSpeed];
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
-                    this.velocity = [direction[0] * horizontalSpeed, this.velocity[1], direction[2] * horizontalSpeed]
+                    this.velocity = [direction[0] * horizontalSpeed, this.velocity[1], direction[2] * horizontalSpeed];
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.LEFT) === ARROW_KEYS.LEFT) {
-                    this.velocity = [-direction[2] * horizontalSpeed, this.velocity[1], direction[0] * horizontalSpeed]
+                    this.velocity = [-direction[2] * horizontalSpeed, this.velocity[1], direction[0] * horizontalSpeed];
                 }
                 else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
-                    this.velocity = [direction[2] * horizontalSpeed, this.velocity[1], -direction[0] * horizontalSpeed]
+                    this.velocity = [direction[2] * horizontalSpeed, this.velocity[1], -direction[0] * horizontalSpeed];
                 }
             }
         }
         this.inputManager.cameraControl?.updatePosition(position =>
-            position.set(this.translation))
-    }
+            position.set(this.translation));
+    };
     directionUpdate = false;
     override onCollideCharacter() {
         const speedSquared = this.speedSquared;
@@ -166,42 +166,42 @@ export class Human extends Box {
             if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP_RIGHT) === ARROW_KEYS.UP_RIGHT) {
                 const angle = Math.atan2(-direction[2],
                     -direction[0]) + Math.PI * 0.25;
-                impulse[0] = Math.cos(angle) * maxAcceleration
-                impulse[2] = Math.sin(angle) * maxAcceleration
+                impulse[0] = Math.cos(angle) * maxAcceleration;
+                impulse[2] = Math.sin(angle) * maxAcceleration;
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP_LEFT) === ARROW_KEYS.UP_LEFT) {
                 const angle = Math.atan2(-direction[2],
                     -direction[0]) - Math.PI * 0.25;
-                impulse[0] = Math.cos(angle) * maxAcceleration
-                impulse[2] = Math.sin(angle) * maxAcceleration
+                impulse[0] = Math.cos(angle) * maxAcceleration;
+                impulse[2] = Math.sin(angle) * maxAcceleration;
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN_RIGHT) === ARROW_KEYS.DOWN_RIGHT) {
                 const angle = Math.atan2(-direction[2],
                     -direction[0]) + Math.PI * 0.75;
-                impulse[0] = Math.cos(angle) * maxAcceleration
-                impulse[2] = Math.sin(angle) * maxAcceleration
+                impulse[0] = Math.cos(angle) * maxAcceleration;
+                impulse[2] = Math.sin(angle) * maxAcceleration;
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN_LEFT) === ARROW_KEYS.DOWN_LEFT) {
                 const angle = Math.atan2(-direction[2],
                     -direction[0]) - Math.PI * 0.75;
-                impulse[0] = Math.cos(angle) * maxAcceleration
-                impulse[2] = Math.sin(angle) * maxAcceleration
+                impulse[0] = Math.cos(angle) * maxAcceleration;
+                impulse[2] = Math.sin(angle) * maxAcceleration;
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
-                impulse[0] = (-direction[0] * maxAcceleration)
-                impulse[2] = (-direction[2] * maxAcceleration)
+                impulse[0] = (-direction[0] * maxAcceleration);
+                impulse[2] = (-direction[2] * maxAcceleration);
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
-                impulse[0] = (direction[0] * maxAcceleration)
-                impulse[2] = (direction[2] * maxAcceleration)
+                impulse[0] = (direction[0] * maxAcceleration);
+                impulse[2] = (direction[2] * maxAcceleration);
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.LEFT) === ARROW_KEYS.LEFT) {
-                impulse[0] -= (direction[2] * maxAcceleration)
-                impulse[2] -= (direction[0] * -1 * maxAcceleration)
+                impulse[0] -= (direction[2] * maxAcceleration);
+                impulse[2] -= (direction[0] * -1 * maxAcceleration);
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
-                impulse[0] -= (direction[2] * -1 * maxAcceleration)
-                impulse[2] -= (direction[0] * maxAcceleration)
+                impulse[0] -= (direction[2] * -1 * maxAcceleration);
+                impulse[2] -= (direction[0] * maxAcceleration);
             }
             this.impulse[0] = impulse[0];
             this.impulse[1] = impulse[1];

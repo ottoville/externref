@@ -1,4 +1,4 @@
-import { describe, beforeAll, it, jest, expect } from '@jest/globals'
+import { describe, beforeAll, it, jest, expect } from '@jest/globals';
 import type { Page, Browser } from 'puppeteer-core';
 
 import { Box as Box2 } from '../GPU/Meshes/Box.js';
@@ -11,12 +11,12 @@ const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 
 describe('Pick box ',
     function () {
-        jest.setTimeout(30000)
+        jest.setTimeout(30000);
         let page: Page;
         beforeAll(async () => {
             await new Promise((res) => {
                 setTimeout(res,
-                    2000)
+                    2000);
             });
             page = await browser.newPage();
             await page.goto('https://localhost:4280');
@@ -29,7 +29,7 @@ describe('Pick box ',
                 await page.waitForSelector('progress');
                 await page.waitForFunction(() =>
                     !document.querySelector('progress'));
-            })
+            });
         it('should pick',
             async () => {
                 const [pickInfo0, pickInfo, boxId] = await page.evaluate(async function () {
@@ -41,7 +41,7 @@ describe('Pick box ',
                     const b = new Box({
                         can_collide: false, label: 'PickGreenbox',
                     });
-                    b.translation = [0, 400, 0]
+                    b.translation = [0, 400, 0];
                     b.update_scale(500,
                         500,
                         500);
@@ -53,9 +53,9 @@ describe('Pick box ',
                             undefined,
                     });
                     control.updatePosition(position =>
-                        position.set([5000, 400, 0]))
+                        position.set([5000, 400, 0]));
                     control.updateDirection(direction =>
-                        direction.set([1, 0, 0]))
+                        direction.set([1, 0, 0]));
 
                     const [pickedPosition, pickedMesh] = await new Promise<[{
                 position: TerraVector3;
@@ -68,7 +68,7 @@ describe('Pick box ',
                     engine.gpu!.mousePosition[0] = (engine.canvas!.width / 2) | 0;
                     engine.gpu!.mousePosition[1] = (engine.canvas!.height / 2) | 0;
                     res([await engine.gpu!.renderPassScreen.pickPosition(true), await engine.gpu!.renderPassScreen.pickMesh(undefined)]);
-                })
+                });
             });
                     return [
                         pickedPosition, {
@@ -81,9 +81,9 @@ describe('Pick box ',
                 //window.printRenderTarget2()
                 //window.printRenderTarget3()
                 expect(pickInfo0!.meshId).toStrictEqual(boxId);
-                expect(Math.round(pickInfo0!.position[0]!)).toStrictEqual(500)
-                expect(Math.round(pickInfo0!.position[1]!)).toStrictEqual(400)
-                expect(Math.floor(pickInfo0!.position[2]!)).toStrictEqual(0)
+                expect(Math.round(pickInfo0!.position[0]!)).toStrictEqual(500);
+                expect(Math.round(pickInfo0!.position[1]!)).toStrictEqual(400);
+                expect(Math.floor(pickInfo0!.position[2]!)).toStrictEqual(0);
                 expect(pickInfo!.label).toStrictEqual('PickGreenbox');
             });
-    })
+    });

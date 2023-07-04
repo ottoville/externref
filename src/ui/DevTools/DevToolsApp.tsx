@@ -16,5 +16,5 @@ export const DevToolsApp = (container: HTMLElement) => {
 
             <Meshes></Meshes>
             <Cameras></Cameras>
-        </div>)
-}
+        </div>);
+};

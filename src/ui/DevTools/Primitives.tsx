@@ -1,6 +1,6 @@
-import { DataNode } from '../../nodes/DataNode.js'
-import { Vertex } from './Vertex.js'
-import { useRef, useState } from 'react'
+import { DataNode } from '../../nodes/DataNode.js';
+import { Vertex } from './Vertex.js';
+import { useRef, useState } from 'react';
 import { Indices } from './Indices.js';
 import type { IndexedTrait } from '../../nodes/NodeIndexed2.js';
 
@@ -13,13 +13,13 @@ export function Primitives({ node, }: { node: DataNode | IndexedTrait}) {
     return <fieldset>
         <legend>Primitives</legend>
         <details ref={vertices} onToggle={() => {
-            setVerticesOpen(vertices.current?.open ?? false)
+            setVerticesOpen(vertices.current?.open ?? false);
         }}>
             <summary>Vertices</summary>
             {node instanceof DataNode && verticesOpen ?
                 <ol>
                     {node.verticesArray.map((vertex, i) => {
-                        return <li key={i}><Vertex vertex={vertex}></Vertex></li>
+                        return <li key={i}><Vertex vertex={vertex}></Vertex></li>;
                     })}
                 </ol> : null }
         </details>
@@ -31,6 +31,6 @@ export function Primitives({ node, }: { node: DataNode | IndexedTrait}) {
                 {indicesOpen ? <Indices node={node}></Indices> : null}
             </details>
             : null}
-    </fieldset>
+    </fieldset>;
 
 }

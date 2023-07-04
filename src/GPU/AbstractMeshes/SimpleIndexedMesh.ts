@@ -68,7 +68,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
                     renderPipeline,
                     vertexBuffers: [vBufferGPU],
                 }
-            )
+            );
         }
     }
 }

@@ -1,11 +1,11 @@
 import type { RenderPass } from './RenderPasses/RenderPass.js';
 export class RenderBundleEncoder {
-    #renderBundle: GPURenderBundle | undefined
+    #renderBundle: GPURenderBundle | undefined;
     GPURenderBundleEncoderDescriptor: GPURenderBundleEncoderDescriptor;
     renderBundleEncoder: GPURenderBundleEncoder;
     renderBundle() {
         if (!this.#renderBundle) {
-            this.record(this)
+            this.record(this);
             this.#renderBundle = this.renderBundleEncoder.finish();
             // Create bundeEncoder ready for next time it is called
             // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.

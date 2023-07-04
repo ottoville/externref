@@ -35,7 +35,7 @@ export class OctaSphere extends IndexedColoredMesh {
             depth);
         const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] = new Uint32Array(engine.rust.memory.buffer,
             ptrs,
-            6)
+            6);
 
         const mesh_id = new_rust_mesh({
             fixed: false,
@@ -60,7 +60,7 @@ pos_len!);
                 },
             },
             mesh_id,
-            [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!])
+            [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!]);
 
         this.width = width;
         this.height = height;

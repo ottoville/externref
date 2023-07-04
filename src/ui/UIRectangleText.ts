@@ -10,7 +10,7 @@ export abstract class UIRectangleText extends UIRectangle {
             [0, 0],
             [0, 0],
             [0, 0]
-        ]
+        ];
 
     updateBoundingBoxAndVertices({ vertices, content_sizeX, content_sizeY, }: {
         vertices: Float32Array;

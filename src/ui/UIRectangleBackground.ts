@@ -9,7 +9,7 @@ export const font = '80pt serif';
 export function createBackground(width: number, height: number, text: string, originalAspectRatio?: number) {
     const copySource2 = new OffscreenCanvas(width,
         height);
-    const ctx = copySource2.getContext('2d')
+    const ctx = copySource2.getContext('2d');
     if (!ctx) {
         throw new Error('Cant get 2d context for texture text');
     }
@@ -21,14 +21,14 @@ export function createBackground(width: number, height: number, text: string, or
     const textSize = {
         height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent,
         width: measuredSize.width,
-    }
+    };
     const originalTextHeight = textSize.height;
     if (originalAspectRatio) {
         //Keep text aspect ratio normal
         const textAspectRatio = textSize.height / textSize.width;
         if (textAspectRatio > originalAspectRatio) {
             //need to add borders to left and right
-            textSize.width = textSize.height / originalAspectRatio
+            textSize.width = textSize.height / originalAspectRatio;
         } else if (textAspectRatio < originalAspectRatio) {
             //need to add borders to top and bottom
             textSize.height = textSize.width * originalAspectRatio;
@@ -36,7 +36,7 @@ export function createBackground(width: number, height: number, text: string, or
     }
     return {
         copySource2, ctx, measuredSize, originalTextHeight, textSize,
-    }
+    };
 }
 function createTexture(
     backgroundAsset: {
@@ -47,19 +47,19 @@ function createTexture(
     textUV: [topLeft: [number, number], topRight: [number, number], bottomRight: [number, number], bottomLeft: [number, number]],
     originalAspectRatio?: number,
     text?: string): ImageBitmap | OffscreenCanvas {
-    let copySource: ImageBitmap | OffscreenCanvas = backgroundAsset.texture
+    let copySource: ImageBitmap | OffscreenCanvas = backgroundAsset.texture;
     // Create texture for text
     if (text) {
         const { originalTextHeight, textSize, measuredSize, copySource2, ctx, } = createBackground(backgroundAsset.texture.width,
             backgroundAsset.texture.height,
             text,
-            originalAspectRatio)
+            originalAspectRatio);
         copySource = copySource2;
         const extendedSize = {
             height: backgroundAsset.texture.height + textSize.height,
             width: Math.max(backgroundAsset.texture.width,
                 textSize.width),
-        }
+        };
         copySource.width = extendedSize.width;
         copySource.height = extendedSize.height;
         ctx.drawImage(backgroundAsset.texture,
@@ -69,12 +69,12 @@ function createTexture(
         const borderSizeInPixel = {
             height: backgroundAsset.texture.height * backgroundAsset.border_height,
             width: backgroundAsset.texture.width * backgroundAsset.border_width,
-        }
+        };
 
         const contentSize = {
             height: backgroundAsset.texture.height - borderSizeInPixel.height * 2,
             width: backgroundAsset.texture.width - borderSizeInPixel.width * 2,
-        }
+        };
 
         ctx.drawImage(
             backgroundAsset.texture,
@@ -85,7 +85,7 @@ function createTexture(
             0,
             backgroundAsset.texture.height,
             extendedSize.width,
-            textSize.height)
+            textSize.height);
         ctx.font = font;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
@@ -103,7 +103,7 @@ function createTexture(
         textUV[2] = [extendedSize.width, extendedSize.height];
         textUV[3] = [0, extendedSize.height];
     }
-    return copySource
+    return copySource;
 }
 /*
     Draws rectangle.
@@ -124,17 +124,17 @@ export class UIRectangleBackground extends UIRectangleText {
         outer_sizeX: number;
         outer_sizeY: number;
     }) {
-        const { vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, } = args
-        const { borderSize, } = this.props
+        const { vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, } = args;
+        const { borderSize, } = this.props;
         const texture = this.backgroundAsset.texture;
         const container_uvs = {
             bottom: this.backgroundAsset.border_height * texture.height,
             left: (1 - this.backgroundAsset.border_width) * texture.width,
             right: this.backgroundAsset.border_width * texture.width,
             top: (1 - this.backgroundAsset.border_height) * texture.height,
-        }
+        };
         if (this.text) {
-            super.updateBoundingBoxAndVertices(args)
+            super.updateBoundingBoxAndVertices(args);
         } else {
             vertices.set(
                 [
@@ -222,7 +222,7 @@ export class UIRectangleBackground extends UIRectangleText {
                     content_sizeX, -content_sizeY, container_uvs.left, container_uvs.top,
                     outer_sizeX, -content_sizeY, texture.width, container_uvs.top
                 ],
-                24)
+                24);
         }
         return vertices;
     }
@@ -243,7 +243,7 @@ export class UIRectangleBackground extends UIRectangleText {
             [0, 0],
             [0, 0],
             [0, 0]
-        ]
+        ];
         super(props,
             createTexture(backgroundAsset,
                 textUV,

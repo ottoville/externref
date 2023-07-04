@@ -21,6 +21,6 @@ export const NormalsPipeline = [
                     primitive,
                 },
                 vertexShader: debugNormalsVertShader,
-            })
+            });
     }
-] as const
+] as const;

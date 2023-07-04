@@ -47,7 +47,7 @@ function bufferBinding(this: Buffer, label: string, bindGroup: BindGroup, offset
         buffer: this.buffer,
         label: label + '_Binding_for_buffer_' + this.label,
         offset,
-    }
+    };
     if (bindingSize) {
         obj.size = bindingSize;
     }
@@ -56,7 +56,7 @@ function bufferBinding(this: Buffer, label: string, bindGroup: BindGroup, offset
 }
 export class Buffer extends Bindable {
     renderPasses: Set<RenderPass> = new Set();
-    readonly QUERY_RESOLVE?: boolean
+    readonly QUERY_RESOLVE?: boolean;
     //uniform
     static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.UNIFORM], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): BindUniformBuffer
     static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE, GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): BindUniformBuffer & BindStorageBuffer
@@ -108,7 +108,7 @@ export class Buffer extends Bindable {
                 size,
                 usages,
                 typeof mappedAtCreation !== 'undefined',
-                label)
+                label);
         }
         if (mappedAtCreation) {
             mappedAtCreation(b.buffer,
@@ -122,7 +122,7 @@ export class Buffer extends Bindable {
         if (size === 0)
             throw (new Error('Cannot create zero sized buffer'));
         if(size > 268435456) {
-            throw new Error('Tried to create buffer '+label+' but its too large with size '+size)
+            throw new Error('Tried to create buffer '+label+' but its too large with size '+size);
         }
         super();
 
@@ -132,7 +132,7 @@ export class Buffer extends Bindable {
             usage: usages.reduce((prev, curr) =>
                 prev | curr,
             0),
-        }
+        };
         if (label)
             desc.label = label;
         try {
@@ -150,22 +150,22 @@ export class Buffer extends Bindable {
         }
         if (usages.includes(GPUBufferUsage.STORAGE)) {
             (this as unknown as BindStorageBuffer).getStorageBinding = bufferBinding.bind(this,
-                'STORAGE')
+                'STORAGE');
         }
         if (usages.includes(GPUBufferUsage.VERTEX)) {
             (this as unknown as VertexBuffer).getVertexBuffer = (renderPass: RenderPass) : GPUBuffer => {
                 this.renderPasses.add(renderPass);
                 return this.buffer;
-            }
+            };
         }
         if (usages.includes(GPUBufferUsage.INDEX)) {
             (this as unknown as IndexBuffer).getIndexBuffer = (renderPass: RenderPass) : GPUBuffer => {
                 this.renderPasses.add(renderPass);
                 return this.buffer;
-            }
+            };
         }
         if (usages.includes(GPUBufferUsage.INDIRECT)) {
-            (this as unknown as IndirectBuffer).indirectBuffer = this.buffer
+            (this as unknown as IndirectBuffer).indirectBuffer = this.buffer;
         }
         if (usages.includes(GPUBufferUsage.COPY_DST)) {
             (this as unknown as CopyDstBuffer).updateBufferRaw = (commandEncoder, data) => {
@@ -181,7 +181,7 @@ export class Buffer extends Bindable {
                     buffer = data;
                 } else {
                     buffer = data.buffer;
-                    srcOffset = data.byteOffset
+                    srcOffset = data.byteOffset;
                 }
                 new Int8Array(tempBuffer.buffer.getMappedRange()).set(new Int8Array(buffer,
                     srcOffset,
@@ -193,7 +193,7 @@ export class Buffer extends Bindable {
                     this.buffer,
                     0,
                     data.byteLength);
-            }
+            };
             (this as unknown as CopyDstBuffer).copyFrom = (commandEncoder, from, sourceOffset, destinationOffset, copySize) => {
                 commandEncoder.copyBufferToBuffer(
                     from, // source buffer
@@ -202,7 +202,7 @@ export class Buffer extends Bindable {
                     destinationOffset,
                     copySize
                 );
-            }
+            };
             (this as unknown as CopyDstBuffer).copyFromTexture = (commandEncoder: GPUCommandEncoder, source: GPUImageCopyTexture, dataLayout: GPUImageDataLayout, copySize: GPUExtent3DStrict) => {
                 commandEncoder.copyTextureToBuffer(
                     source,
@@ -212,14 +212,14 @@ export class Buffer extends Bindable {
                     },
                     copySize
                 );
-            }
+            };
             (this as unknown as CopyDstBuffer).write = (bufferOffset, data, dataOffset?, writeSize?) => {
                 gpu.device.queue.writeBuffer(this.buffer,
                     bufferOffset,
                     data,
                     dataOffset,
                     writeSize);
-            }
+            };
 
         }
     }
@@ -237,7 +237,7 @@ class copySrcBuffer extends Buffer {
             size,
             [GPUBufferUsage.COPY_SRC, ...usages],
             mappedAtCreation,
-            label)
+            label);
     }
     copyTo(commandEncoder: GPUCommandEncoder, buffer: CopyDstBuffer, sourceOffset: GPUSize64, destinationOffset: GPUSize64, copySize: GPUSize64) {
         buffer.copyFrom(commandEncoder,
@@ -289,7 +289,7 @@ export class WriteBuffer extends copySrcBuffer {
             size,
             [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC],
             false,
-            label)
+            label);
     }
 }
 //MAP read (Only CopyDtst is allowed with MapRead)
@@ -301,7 +301,7 @@ export class ReadBuffer extends Buffer {
             size,
             [GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST],
             false,
-            label)
+            label);
     }
     async readAndDestroy(callback: (buff: ArrayBuffer) => Promise<void> | void): Promise<void> {
         let arrbuff: ArrayBuffer;

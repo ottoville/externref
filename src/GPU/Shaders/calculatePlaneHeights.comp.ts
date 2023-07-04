@@ -2,7 +2,7 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
-import type { GPU } from '../../GPU.js'
+import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 import { SlopesLayout } from './CreateTerrainTexture.comp.js';
@@ -57,14 +57,14 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
                         IntArray),
 
                 })
-        ] as const
+        ] as const;
 
         const pipelineLayout = new PipelineLayout({
             bindGroupLayouts: bindLayouts,
             label: 'calculatePlaneHeightsPipeline',
         });
         const subdivisions_plus_one = settings.subdivisions[0] + 1;
-        const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
+        const facetSize = settings.subdivisions[0] * settings.subdivisions[1];
 
         super({
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
@@ -127,6 +127,6 @@ export class CalculatePlaneHeights extends ComputeShader<BindLayouts> {
         () =>
             `
             const cd: f32 = -1.0;  
-        `)
+        `);
     }
 }

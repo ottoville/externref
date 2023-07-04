@@ -1,6 +1,6 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
-import type { GPU } from 'GPU.js'
+import type { GPU } from 'GPU.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { diffuseOutput } from './structs/Structs.js';
 type BindLayouts = GPU['bindGroupTextureWater']['bindGroupLayouts']

@@ -299,7 +299,7 @@ export class Engine {
     readonly scenes: Map<string, Scene> = new Map();
     // readonly collisionNotFound:DataView
     //@ts-ignore
-    readonly #collidedMesh: DataView
+    readonly #collidedMesh: DataView;
     readonly collider: ColliderJS;
 
 
@@ -307,7 +307,7 @@ export class Engine {
     readonly #displacementVector: [number, number, number] = [0, 0, 0];
 
     updateLights = false;
-    inputManager: CameraController | null = null
+    inputManager: CameraController | null = null;
 
     mainCamera: TerraCamera;
     memory: WebAssembly.Memory;
@@ -322,7 +322,7 @@ export class Engine {
         else
             this.GPUSubscribions.add(cb);
         if (this.gpu)
-            cb(this.gpu)
+            cb(this.gpu);
     }
     static async initEngine(
         nodes: {
@@ -337,8 +337,8 @@ export class Engine {
                 var IDB = indexedDB.open('City',
                     6);
                 IDB.onerror = function (e) {
-                    showError(createError(e))
-                }
+                    showError(createError(e));
+                };
                 IDB.onupgradeneeded = function (e) {
                     console.log('IDBVersionChangeEvent',
                         e);
@@ -346,7 +346,7 @@ export class Engine {
                     var db: EarthDatabase = this.result;
 
                     (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach((objstore) => {
-                        let createdStore: IDBObjectStore
+                        let createdStore: IDBObjectStore;
                         if (ObjectStores[objstore].version > e.oldVersion) {
                             createdStore = db.createObjectStore(objstore,
                                 ObjectStores[objstore].parameters);
@@ -363,18 +363,18 @@ export class Engine {
                                         index.keyPath,
                                         index.options);
                                 }
-                            })
+                            });
                         }
-                    })
+                    });
                 };
                 IDB.onsuccess = function () {
                     this.result.onerror = function (e) {
                         console.log(e,
 ((<IDBRequest>e.target)!).error!.message);
-                    }
+                    };
                     res(this.result);
-                }
-            })
+                };
+            });
         }
 
         let rust: WebAssembly.WebAssemblyInstantiatedSource;
@@ -387,7 +387,7 @@ export class Engine {
                 },
                 warn(ptr: number) {
                     console.warn(stringFromPtr(rust.instance.exports.memory,
-                        ptr))
+                        ptr));
                 },
             },
             env: {
@@ -401,7 +401,7 @@ export class Engine {
                     }
                     console.error(textDecoder.decode(new Uint8Array(rust.instance.exports.memory.buffer,
                         ptr,
-                        512)).trimEnd())
+                        512)).trimEnd());
                 },
                 mesh_on_collide(mesh_id: number, started: boolean) {
                     const mesh = DataNode.Meshes.get(mesh_id);
@@ -411,25 +411,25 @@ export class Engine {
                     }
                 },
                 mesh_on_physic_tick(mesh_id: number) {
-                    const cb = DataNode.Meshes.get(mesh_id)?.onPhysicTick
+                    const cb = DataNode.Meshes.get(mesh_id)?.onPhysicTick;
                     if (cb) {
                         //TODO: fix delta
-                        cb(0)
+                        cb(0);
                     }
                 },
                 now() {
-                    return performance.now()
+                    return performance.now();
                 },
                 update_directional_lights(pointer: number, length: number) {
                     engine.gpu?.update_directional_lights(pointer,
-                        length)
+                        length);
                 },
                 update_point_lights(pointer: number, length: number) {
                     engine.gpu?.update_point_lights(pointer,
-                        length)
+                        length);
                 },
             },
-        }
+        };
         let GPUDataSize: number;
         try {
             if (wasmBinaries.rust instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.rust)) {
@@ -454,7 +454,7 @@ export class Engine {
                 console: {
                     error: function (line: number) {
                         console.error('Some error in webassembly on line',
-                            line)
+                            line);
                         throw (new Error('Some error in webassembly on line ' + line));
                     },
                     log: function (arg: string) {
@@ -504,7 +504,7 @@ export class Engine {
                     'error GPU:',
                     gpu?.device.label,
                     'destroyed:',
-                    gpu?.destroyed)
+                    gpu?.destroyed);
                 return;
             }
             this.showErrorError(e);
@@ -513,7 +513,7 @@ export class Engine {
         const error = createError(e);
         this.showErrorError(error);
     }
-    gpu: GPU | undefined
+    gpu: GPU | undefined;
     async createGPU(GPUDataSize: number, cb: (gpu: GPU) => void, adapter: GPUAdapter | null) {
         let device: GPUDevice | undefined;
         let forceFallbackAdapter = false;
@@ -522,12 +522,12 @@ export class Engine {
             console.log('Getting adapter, low-power:',
                 forceLowPower,
                 'fallback:',
-                forceFallbackAdapter)
+                forceFallbackAdapter);
             adapter = await window.navigator.gpu.requestAdapter(
                 {
                     forceFallbackAdapter,
                     powerPreference: forceLowPower ? 'low-power' : 'high-performance',
-                })
+                });
             if (!adapter) {
                 if (forceFallbackAdapter && forceLowPower) {
                     throw new Error('Could not get adapter');
@@ -539,8 +539,8 @@ export class Engine {
                 }
                 // Did not succeed with fallback adapter, try with low power
                 else if (!forceLowPower && forceFallbackAdapter) {
-                    forceFallbackAdapter = false
-                    forceLowPower = true
+                    forceFallbackAdapter = false;
+                    forceLowPower = true;
                 }
                 // Did not owrk with low power, try low power with fallback adapter
                 else if (forceLowPower && !forceFallbackAdapter) {
@@ -549,7 +549,7 @@ export class Engine {
                 continue;
             }
             try {
-                console.log('Getting device')
+                console.log('Getting device');
                 device = await adapter.requestDevice({
                     label: 'device' + (deviceId++),
                 });
@@ -562,7 +562,7 @@ export class Engine {
                 forceFallbackAdapter = true;
                 continue;
             }
-        } while (typeof device === 'undefined')
+        } while (typeof device === 'undefined');
 
         device.lost.then(reason => {
             console.error('GPU device lost',
@@ -575,7 +575,7 @@ export class Engine {
             this.GPUReady = newGPU;
         }).catch((ee) => {
             if (ee instanceof Error)
-                throw (ee)
+                throw (ee);
             else
                 throw (new Error(ee));
         });
@@ -586,7 +586,7 @@ export class Engine {
         this.gpu = gpu;
         console.log('new GPU initialized ',
             device.label);
-        cb(gpu)
+        cb(gpu);
         return gpu;
 
     }
@@ -610,12 +610,12 @@ export class Engine {
         queueMicrotask(() => {
             if (obj.options?.priority && this.#inputMaps[obj.type]!.size > 0) {
                 //@ts-expect-error
-                this.#inputMaps[obj.type] = new Set([obj, ...this.#inputMaps[obj.type]!])
+                this.#inputMaps[obj.type] = new Set([obj, ...this.#inputMaps[obj.type]!]);
             } else {
                 //@ts-expect-error
                 this.#inputMaps[obj.type].add(obj);
             }
-        })
+        });
 
     }
     removeInputListener<K extends (Events & keyof HTMLElementEventMap) = (Events & keyof HTMLElementEventMap)>(listenerObj: ListenerObj<K>) {
@@ -635,7 +635,7 @@ export class Engine {
                 if (eventObj.object === object) {
                     set.delete(eventObj);
                 }
-            })
+            });
         });
     }
     constructor(
@@ -669,7 +669,7 @@ export class Engine {
                             return;
                         }
                         const UIEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {
-                            return eventObj.options?.ui
+                            return eventObj.options?.ui;
                         });
                         let cancelled = false;
                         for (let i = 0; i < UIEvents.length; i++) {
@@ -681,14 +681,14 @@ export class Engine {
                             }
                         }
                         const OtherEvents = Array.from(this.#inputMaps[eventType]).filter(eventObj => {
-                            return !eventObj.options?.ui
+                            return !eventObj.options?.ui;
                         });
                         for (let i = 0; i < OtherEvents.length; i++) {
                             if (!cancelled || OtherEvents[i]!.options?.force) {
                                 if (OtherEvents[i]!.options?.once) {
                                     this.#inputMaps[eventType].delete(OtherEvents[i]!);
                                 }
-                                cancelled = (OtherEvents[i]!.cb(e) ?? false) || cancelled
+                                cancelled = (OtherEvents[i]!.cb(e) ?? false) || cancelled;
                             }
                         }
                     },
@@ -716,16 +716,16 @@ export class Engine {
                     gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
                     //@ts-ignore
                     window.printRenderTarget = () => {
-                        gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap()
-                    }
+                        gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap();
+                    };
                     //@ts-ignore
                     window.printRenderTarget2 = () => {
-                        gpu.renderPassScreen.depthRenderTarget.print_bitmap()
-                    }
+                        gpu.renderPassScreen.depthRenderTarget.print_bitmap();
+                    };
                     //@ts-ignore
                     window.printRenderTarget3 = () => {
-                    gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.print_bitmap()
-                    }
+                    gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.print_bitmap();
+                    };
                 },
                 null);
             const saveControllerState = () => {
@@ -756,7 +756,7 @@ export class Engine {
             engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),
             engine.rust.scaled_position_pointer(this.collider.collider_ptr),
             engine.rust.collided_point_in_triangle_pointer(this.collider.collider_ptr),
-            this.collider.collider_ptr)
+            this.collider.collider_ptr);
     }
     #getFinalPosition(sphere: Ellipsoid, scaledPosition: TerraVector3, scaledVelocity: TerraVector3): [number, number, number] | TerraVector3 {
         this.collider.didCollide = false;
@@ -777,13 +777,13 @@ export class Engine {
                 DataNode.CharacterCanCollideMeshes.forEach(mesh => {
                     if (sphere !== mesh)
                         mesh.checkCollision(this.collider,
-                            sphere)
+                            sphere);
                 });
             }
             else {
                 DataNode.CharacterCanCollideMeshes.forEach(mesh => {
                     mesh.checkCollision(this.collider,
-                        sphere)
+                        sphere);
                 });
             }
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
@@ -893,8 +893,8 @@ export class Engine {
         this.collider.finalPosition.set(this.#getFinalPosition(sphere,
             scaledPosition,
             scaledVelocity));
-        this.collider.finalPosition[0] *= sphere.radius[0]
-        this.collider.finalPosition[1] *= sphere.radius[1]
-        this.collider.finalPosition[2] *= sphere.radius[2]
+        this.collider.finalPosition[0] *= sphere.radius[0];
+        this.collider.finalPosition[1] *= sphere.radius[1];
+        this.collider.finalPosition[2] *= sphere.radius[2];
     }
 }

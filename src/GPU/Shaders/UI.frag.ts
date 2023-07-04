@@ -1,6 +1,6 @@
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
-import type { GPU } from '../../GPU.js'
+import type { GPU } from '../../GPU.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
 
@@ -35,6 +35,6 @@ export function createUIFragmentShader(pipelineLayout: PipelineLayout<BindLayout
             gpu: pipelineLayout.gpu,
             label: 'UI.frag',
         }
-    )
+    );
 }
 export type UIFragShader = ReturnType<typeof createUIFragmentShader>

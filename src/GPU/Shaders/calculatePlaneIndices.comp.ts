@@ -2,7 +2,7 @@ import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Indices } from './structs/Structs.js';
-import type { GPU } from '../../GPU.js'
+import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 
@@ -25,7 +25,7 @@ export class CalculatePlaneIndices extends ComputeShader<BindLayouts> {
                         },
                         Indices),
                 })
-        ] as const
+        ] as const;
 
         const pipelineLayout = new PipelineLayout({
             bindGroupLayouts: bindLayouts,

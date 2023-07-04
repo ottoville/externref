@@ -35,7 +35,7 @@ export class Box extends IndexedSingleColoredMesh {
             label,
             point_light,
             scenes,
-        })
+        });
         const boxVertices = engine.rust.get_box_vertices();
         const [ptr_vertices, len_vertices, cap_vertices] = new Uint32Array(engine.rust.memory.buffer,
             boxVertices,
@@ -43,7 +43,7 @@ export class Box extends IndexedSingleColoredMesh {
         const boxIndices = engine.rust.get_box_indices();
         const [ptr_ind, len_ind, cap_ind] = new Uint32Array(engine.rust.memory.buffer,
             boxIndices,
-            3)
+            3);
 
         super(
             {

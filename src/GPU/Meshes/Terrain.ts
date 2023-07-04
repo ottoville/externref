@@ -24,9 +24,9 @@ export class TerrainMesh extends BoundableNodeIndexed {
                         binding: 1,
                         resource: textureview.getTextureBinding(bindGroup),
                     },
-                })
+                });
             });
-    }
+    };
     drawable: DrawableIndexed<RenderPipeline<GroundVertShader>> | undefined;
     override create_collider(): rust_pointer<'collider'> {
         return engine.rust.create_trimesh_collider(this.id);
@@ -61,7 +61,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
             () => {
                 const collider_ptr = this.create_collider();
                 engine.rust.add_collider(this.id,
-                    collider_ptr)
+                    collider_ptr);
             }
         );
         if (engine.gpu) {
@@ -80,7 +80,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]),
                 renderPipeline,
                 vertexBuffers: [this.vBuffer],
-            })
+            });
 
             this.drawable.setStaticBindGroup('TerrainInitialTexture',
                 (bindGroup) => {
@@ -93,7 +93,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
                             binding: 1,
                             resource: initialTexture.getTextureBinding(bindGroup),
                         },
-                    })
+                    });
                 });
             this.drawable.setIndexBuffer(this.iBuffer,
                 0,

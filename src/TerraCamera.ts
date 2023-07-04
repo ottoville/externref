@@ -17,13 +17,13 @@ const enum VIEW_UPDATED {
 export class TerraCamera {
     readonly #childCameras: Set<CameraControl> = new Set();
 
-    #clusterArrayBuffer?: BindStorageBuffer/* & CopySrcBuffer*/
+    #clusterArrayBuffer?: BindStorageBuffer;/* & CopySrcBuffer*/
 
 
     readonly #uniformBufferSize = /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ + 4 * 4;
-    readonly #direction = new MutableTerraVector3([1, 0, 0])
+    readonly #direction = new MutableTerraVector3([1, 0, 0]);
 
-    readonly #viewProjectionPositionBuffer = new ArrayBuffer(this.#uniformBufferSize)
+    readonly #viewProjectionPositionBuffer = new ArrayBuffer(this.#uniformBufferSize);
 
     readonly projectionViewArr = new TerraMatrix(this.#viewProjectionPositionBuffer,
         0);
@@ -42,7 +42,7 @@ export class TerraCamera {
     readonly #positionMutable = new MutableTerraVector3(this.#viewProjectionPositionBuffer,
         128);
 
-    #uniformBuffer?: BindUniformBuffer & CopyDstBuffer
+    #uniformBuffer?: BindUniformBuffer & CopyDstBuffer;
     updateViewBindGroup?: BindGroup;
     uniformBindGroup?: BindGroup;
     readonly #controls: CameraControl;
@@ -51,10 +51,10 @@ export class TerraCamera {
     readonly beforeViewUpdate: Set<
         (position: MutableTerraVector3, direction: MutableTerraVector3, commandEncoder: GPUCommandEncoder) => void
     > = new Set();
-    #cameraController?: TerraCamera
-    #inputController?: CameraController
-    projection?: Projection
-    public gpu?: GPU
+    #cameraController?: TerraCamera;
+    #inputController?: CameraController;
+    projection?: Projection;
+    public gpu?: GPU;
 
     onUpdatePosition: Set<() => void> = new Set();
     constructor(public label: string, renderPassName: 'renderPassScreen' | 'renderPassWater', parent?: TerraCamera) {
@@ -107,10 +107,10 @@ export class TerraCamera {
                             resource: this.#uniformBuffer!.getUniformBinding(bindGroup),
                         },
                     })
-            )
+            );
             gpu.projections.add(this.projection);
             gpu.cameras.push(this);
-        })
+        });
 
         this.viewArr[15] = 1;
 
@@ -128,7 +128,7 @@ export class TerraCamera {
                 cb(me.#positionMutable);
                 me.#doUpdateView |= VIEW_UPDATED.POSITION;
             },
-        }
+        };
         if (parent) {
             parent.#childCameras.add(this.getControlForCamera(parent));
         }
@@ -138,7 +138,7 @@ export class TerraCamera {
             throw new Error('Camera is already controlled');
         else {
             this.#cameraController = owner;
-            return this.#controls
+            return this.#controls;
         }
     }
     attachControllerForCamera(controller: CameraController) {
@@ -146,9 +146,9 @@ export class TerraCamera {
             if (this.#inputController !== controller) {
                 if (typeof document !== 'undefined')
                     this.#inputController.deAttachCameraController();
-                delete this.#inputController.cameraControl
+                delete this.#inputController.cameraControl;
             } else {
-                return this.#controls
+                return this.#controls;
             }
         }
         this.#inputController = controller;
@@ -156,7 +156,7 @@ export class TerraCamera {
         if (typeof document !== 'undefined')
             controller.attachCameraController();
         controller.cameraControl = this.#controls;
-        return this.#controls
+        return this.#controls;
     }
     updateClusters(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: ClustersComp['props']['bindGroupLayouts']['1']) {
         //TODO move out from loop
@@ -169,21 +169,21 @@ export class TerraCamera {
                     screentoview: {
                         resource: this.projection!.gpuBuffer.getUniformBinding(bindGroup2),
                     },
-                }))
+                }));
         passEncoder.setBindGroup(1,
             bindGroup.bindGroup);
         passEncoder.dispatchWorkgroups(...this.gpu!.CLUSTER_DISPATCH_SIZE);
     }
 
     get direction(): Readonly<{ [0]: number, [1]: number, [2]: number }> {
-        return this.#direction
+        return this.#direction;
     }
 
     updateView(commandEncoder: GPUCommandEncoder) {
         if (!this.#doUpdateView)
             return;
         if (this.beforeViewUpdate.size > 0) {
-            this.#doUpdateView |= (VIEW_UPDATED.POSITION & VIEW_UPDATED.DIRECTION)
+            this.#doUpdateView |= (VIEW_UPDATED.POSITION & VIEW_UPDATED.DIRECTION);
             this.beforeViewUpdate.forEach(cb =>
                 cb(this.#positionMutable,
                     this.#direction,
@@ -192,22 +192,22 @@ export class TerraCamera {
         }
         if ((this.#doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
             this.onUpdatePosition.forEach(cb =>
-                cb())
+                cb());
         }
         this.viewUpdated = true;
         this.#childCameras.forEach(childCameraControl => {
             if ((this.#doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
                 childCameraControl.updatePosition(position => {
-                    position[0] = this.position[0]
-                    position[1] = this.position[1]
-                    position[2] = this.position[2]
-                })
+                    position[0] = this.position[0];
+                    position[1] = this.position[1];
+                    position[2] = this.position[2];
+                });
             }
             if ((this.#doUpdateView & VIEW_UPDATED.DIRECTION) === VIEW_UPDATED.DIRECTION) {
                 //TODO: share same buffer;
                 childCameraControl.updateDirection(direction => {
-                    direction.set(this.#direction)
-                })
+                    direction.set(this.#direction);
+                });
             }
         });
         this.#doUpdateView = VIEW_UPDATED.NONE;
@@ -239,14 +239,14 @@ export class TerraCamera {
         // Eye angles, dot products
 
         //x
-        this.viewArr[12] = -(this.viewArr[0] * this.position[0] + this.viewArr[8] * this.position[2])
+        this.viewArr[12] = -(this.viewArr[0] * this.position[0] + this.viewArr[8] * this.position[2]);
         //y
-        this.viewArr[13] = -(this.viewArr[1] * this.position[0] + this.viewArr[5] * this.position[1] + this.viewArr[9] * this.position[2])
+        this.viewArr[13] = -(this.viewArr[1] * this.position[0] + this.viewArr[5] * this.position[1] + this.viewArr[9] * this.position[2]);
         //z
         this.viewArr[14] = -(this.viewArr[2] * this.position[0] + this.viewArr[6] * this.position[1] + this.viewArr[10] * this.position[2]);
         if (this.projection) {
             this.viewArr.multiplyToRef(this.projection.projectionReversedZ,
-                this.projectionViewArr)
+                this.projectionViewArr);
         }
         this.projectionViewInvertedIsDirty = true;
         if (this.gpu) {
@@ -262,7 +262,7 @@ export class TerraCamera {
 this.#uniformBuffer!,
 0,
 0,
-this.#viewAndProjection.byteLength)
+this.#viewAndProjection.byteLength);
         }
     }
 }

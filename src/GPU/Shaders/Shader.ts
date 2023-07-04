@@ -1,6 +1,6 @@
 import { type BGLayout, BufLayout, BindGroupLayoutEntry } from '../BindGroupLayout.js';
 import type { Struct } from './structs/Structs.js';
-import type { GPU } from '../../GPU.js'
+import type { GPU } from '../../GPU.js';
 import { ComputeShaderFunction, type ShaderFunction } from './ShaderFunction.js';
 
 export type ShaderParams<E extends { [index: string]: ShaderFunction } = { [index: string]: ShaderFunction },
@@ -28,7 +28,7 @@ export abstract class Shader<
                 if ((binding.entry.visibility & shaderFlag) === 0) {
                     return acc;
                 }
-                const uniqueName = `g${gi}_${variableName}`
+                const uniqueName = `g${gi}_${variableName}`;
                 binding.variableName = uniqueName;
                 let qualifiers = '';
                 if (binding instanceof BufLayout) {
@@ -44,13 +44,13 @@ export abstract class Shader<
                         //@ts-expect-error https://github.com/microsoft/TypeScript/issues/28560
                         (binding.struct as Struct).depedencies.forEach(depedency => {
                             structs.add(depedency);
-                        })
+                        });
                     }
                     structs.add(binding.struct);
                 }
-                return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${uniqueName} : ${binding.structName};\n`
+                return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${uniqueName} : ${binding.structName};\n`;
             },
-            groupstring)
+            groupstring);
         },
         '\n');
         const outputs: Struct[] = [];
@@ -63,28 +63,28 @@ export abstract class Shader<
         const structString = [...structs, ...outputs].reduce((s, struct) => {
             let properties = '';
             for (const property in struct.properties) {
-                properties += `${struct.properties[property]![0]} ${property}: ${struct.properties[property]![1]},\n`
+                properties += `${struct.properties[property]![0]} ${property}: ${struct.properties[property]![1]},\n`;
             }
             return `${s}struct ${struct.name} {\n${properties}}\n`;
         },
-        '')
+        '');
         //
         this.wgsl = groups + structString;
 
 
         const entries = this.props.bindGroupLayouts.map(bl =>
             bl.entries
-        )
+        );
         if(constantCode)
-            this.wgsl+=constantCode(entries)
+            this.wgsl+=constantCode(entries);
         const pipelineLayouts:{[index: string]: GPUShaderModuleCompilationHint} = {
-        }
+        };
         for(const key in props.entryPoints) {
             const entryPoint = props.entryPoints[key]!;
             //@ts-expect-error
             this.wgsl += entryPoint.createCode(entries,
                 key);
-            pipelineLayouts[key] = entryPoint.pipelineLayout
+            pipelineLayouts[key] = entryPoint.pipelineLayout;
 
         }
         this.module = this.props.gpu.device.createShaderModule(

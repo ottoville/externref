@@ -20,5 +20,5 @@ export class CameraTAB {
                 1.0);
             // this.scene.removeCamera(this.scene.camera2);
         }
-    }
+    };
 }

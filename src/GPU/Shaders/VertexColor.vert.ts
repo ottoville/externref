@@ -1,6 +1,6 @@
 import { BindablePipelineLayout } from '../PipelineLayout.js';
 import { type VertexBufferLayout2, VertexShader } from './VertexShader.js';
-import { GPU } from '../../GPU.js'
+import { GPU } from '../../GPU.js';
 import type { simpleAttributesWithColor } from '../RenderPipeLines/ColoredRenderPipeline.js';
 import { typicalOutput } from './structs/Structs.js';
 import { VertexShaderFunction } from './ShaderFunction.js';

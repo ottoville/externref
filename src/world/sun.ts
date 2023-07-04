@@ -4,7 +4,7 @@ import { Angle } from '../Math.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import type { Engine } from '../engine.js';
 import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
-import type { GPU } from '../GPU.js'
+import type { GPU } from '../GPU.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import type { SunVertShader } from '../GPU/Shaders/Sun.vert.js';
 declare const engine: Engine;
@@ -19,7 +19,7 @@ export class Sun extends MainNode {
         return Math.min(Math.max(value,
             min),
         max);
-    }
+    };
 
     override onPhysicTick = (/*delta: number*/) => {
         const secondsOfDay = engine.physics.tickTime % 86400;
@@ -50,13 +50,13 @@ export class Sun extends MainNode {
             1); // <<3 == * 8
         this.update_dynamic_buffer();
 
-    }
+    };
     drawable: DrawableSimple<RenderPipeline<SunVertShader>> | undefined;
     constructor(gpu: GPU, scenes: Scene[]) {
         super(new_rust_mesh({
             directional_light: 1, label: 'sun', scenes,
         }));
-        this.positions_count = 14
+        this.positions_count = 14;
         const renderPipeline = gpu.createRenderPipeline(SunRenderPipeline,
             {
                 cullMode: 'none',
@@ -69,7 +69,7 @@ export class Sun extends MainNode {
             renderPasses: new Set([gpu.renderPassScreen, gpu.renderPassWater]),
             renderPipeline,
             vertexBuffers: [] as [],
-        })
+        });
 
         engine.physics.movables.push(this);
     }

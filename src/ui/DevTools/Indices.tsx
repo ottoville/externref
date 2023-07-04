@@ -22,8 +22,8 @@ export function Indices({ node, }: { node: IndexedTrait }) {
                         <td>{verticesArray[index]![2]!.toFixed(3)}</td>
 
                     </> : null}
-                </tr>
+                </tr>;
             })}
         </tbody>
-    </table>
+    </table>;
 }

@@ -33,7 +33,7 @@ export class MeshCamera extends CameraController {
         document.exitPointerLock();
         engine.clearInputListeners(this);
         this.cursor?.destroy();
-        this.camera.gpu?.renderPassCanvas.onResize.delete(this)
+        this.camera.gpu?.renderPassCanvas.onResize.delete(this);
 
     }
     attachCameraController() {
@@ -68,7 +68,7 @@ export class MeshCamera extends CameraController {
                     border_width: 0,
                     texture: bitmap,
 
-                })
+                });
             }).catch(err => {
                 engine.showError(err);
             });
@@ -80,43 +80,43 @@ export class MeshCamera extends CameraController {
         engine.addInputListener(this.#pointerMoveFunction);
     }
     updateMouseCoords = () => {
-        const gpu = this.camera.gpu
+        const gpu = this.camera.gpu;
         if (gpu) {
             Atomics.store(gpu.mousePosition,
                 0,
-                gpu.renderPassCanvas.size.width * 0.5)
+                gpu.renderPassCanvas.size.width * 0.5);
             Atomics.store(gpu.mousePosition,
                 1,
-                gpu.renderPassCanvas.size.height * 0.5)
+                gpu.renderPassCanvas.size.height * 0.5);
             Atomics.notify(new Int32Array(gpu.mousePositionBuffer),
                 0);
         }
-    }
+    };
     #lockPointer = () => {
         if (document.pointerLockElement)
             return;
         (engine.canvas!.requestPointerLock() as unknown as Promise<void>).then(() => {
-            const gpu = this.camera.gpu
+            const gpu = this.camera.gpu;
             if (gpu) {
                 this.updateMouseCoords();
                 gpu.renderPassCanvas.onResize.set(this,
-                    this.updateMouseCoords)
+                    this.updateMouseCoords);
             }
         }).catch(err => {
             engine.showError(err);
         });
-    }
+    };
     #lockPointerListener: ListenerObj<'pointerdown'> = {
         cb: () => {
-            this.#lockPointer()
+            this.#lockPointer();
         },
         object: this,
         type: 'pointerdown',
-    }
+    };
 
     serialize = () => {
         return;
-    }
+    };
     #keydownfunction: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
             if (e.key === 'ArrowUp') {
@@ -135,19 +135,19 @@ export class MeshCamera extends CameraController {
         object: this,
         type: 'keydown',
 
-    }
+    };
     #pointerMoveFunction: ListenerObj<'pointermove'> = {
         cb: (e: PointerEvent) => {
             this.pointerMovement = {
                 x: e.movementX, y: e.movementY,
-            }
+            };
         },
         object: this,
         options: {
             force: true,
         },
         type: 'pointermove',
-    }
+    };
     #keyupfunction: ListenerObj<'keyup'> = {
         cb: (e: KeyboardEvent) => {
             if (e.key === 'ArrowUp') {
@@ -166,6 +166,6 @@ export class MeshCamera extends CameraController {
         },
         object: this,
         type: 'keyup',
-    }
+    };
     lastTranslation = new MutableTerraVector3();
 }

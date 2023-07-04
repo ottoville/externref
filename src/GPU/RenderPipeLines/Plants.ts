@@ -30,6 +30,6 @@ export const PlantsRenderPipeline = [
                     primitive,
                 },
                 vertexShader: grassVertShader,
-            })
+            });
     }
-] as const
+] as const;

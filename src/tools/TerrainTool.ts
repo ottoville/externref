@@ -2,7 +2,7 @@
 import { WorkerReturn, WorkerThread } from '../WorkerThread.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { MainNode, new_rust_mesh } from '../MainNode.js';
-import type { GPU } from '../GPU.js'
+import type { GPU } from '../GPU.js';
 import { MutableTerraVector3, TerraVector3 } from '../Math.js';
 import type { Engine, ListenerObj, rust_pointer } from '../engine.js';
 import type { Scene } from '../Scene.js';
@@ -28,30 +28,30 @@ UIRectangleNodeProps & TopMenuButtonProps> {
         super(props);
         this.state = {
             subMenu: undefined,
-        }
+        };
     }
     #inputListener: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
             if (e.code === 'Digit1') {
                 this.setState({
                     subMenu: 'lower',
-                })
+                });
             } else if (e.code === 'Digit2') {
                 this.setState({
                     subMenu: 'raise',
-                })
+                });
             }
             else if (e.code === 'Backspace') {
                 this.props.menuTree.level = 1;
                 this.setState({
                     subMenu: undefined,
-                })
+                });
             }
         },
         object: this,
         type: 'keydown',
-    }
-    #tool?: TerrainTool
+    };
+    #tool?: TerrainTool;
     override render(gpu: GPU, force: boolean) {
         super.render(gpu,
             force);
@@ -60,7 +60,7 @@ UIRectangleNodeProps & TopMenuButtonProps> {
             this.props.menuTree.level = 2;
 
         } else if (this.state.subMenu === 'raise') {
-            this.#tool?.raise()
+            this.#tool?.raise();
             this.props.menuTree.level = 2;
         }
         if (this.props.open) {
@@ -90,7 +90,7 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                         onClick: () => {
                             this.setState({
                                 subMenu: 'lower',
-                            })
+                            });
                         },
                         text: 'Lower (1)',
                     })), UINode.createCtrProps(UIRectangleNode,
@@ -112,22 +112,22 @@ UIRectangleNodeProps & TopMenuButtonProps> {
                         onClick: () => {
                             this.setState({
                                 subMenu: 'raise',
-                            })
+                            });
                         },
                         text: 'Raise (2)',
                     }))
-            ]
+            ];
         } else if (!this.props.open && this.#wasOpen) {
             this.#wasOpen = false;
             this.#tool?.destroy();
-            console.log('remove inputlistener')
-            engine.removeInputListener(this.#inputListener)
+            console.log('remove inputlistener');
+            engine.removeInputListener(this.#inputListener);
         }
-        return null
+        return null;
     }
 }
 export class TerrainTool extends MainNode {
-    elevator: rust_pointer<'elevator'>
+    elevator: rust_pointer<'elevator'>;
     drawable: DrawableSimple<RenderPipeline<HelperVertShader>>;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
     scene: Scene;
@@ -153,17 +153,17 @@ export class TerrainTool extends MainNode {
                         },
                         vertexShader: helperVertShader,
                     }
-                )
-                return renderPipeline
+                );
+                return renderPipeline;
             }
-        ] as const
+        ] as const;
 
         const renderPipeline = terrain.gpu.createRenderPipeline(getRenderPipeline,
             {
                 cullMode: 'none',
                 topology: 'triangle-list',
             },
-            undefined)
+            undefined);
         const scene = engine.scenes.get('main');
         if (!scene)
             throw (new Error('no scene'));
@@ -181,7 +181,7 @@ export class TerrainTool extends MainNode {
         },
         {
             firstVertex: 0,
-        })
+        });
         this.#pick = {
             meshId: 0,
             position: new MutableTerraVector3(engine.memory.buffer,
@@ -208,7 +208,7 @@ export class TerrainTool extends MainNode {
 
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
-        engine.addInputListener(this.#mouseListener)
+        engine.addInputListener(this.#mouseListener);
 
     }
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number, number]) {
@@ -227,7 +227,7 @@ export class TerrainTool extends MainNode {
             if (evt.button !== 0) {
                 return;
             }
-            engine.addInputListener(this.#pointerupf)
+            engine.addInputListener(this.#pointerupf);
             engine.inputManager?.deAttachCameraController();
 
             this.mouseinterval = setInterval(() => {
@@ -238,14 +238,14 @@ export class TerrainTool extends MainNode {
                 const elevator_length = engine.rust.get_length(this.elevator);
                 if (elevator_length > 0) {
                     this.terrain.updateSwap2(engine.rust.get_offset(this.elevator) * Float32Array.BYTES_PER_ELEMENT,
-                        elevator_length * Float32Array.BYTES_PER_ELEMENT)
+                        elevator_length * Float32Array.BYTES_PER_ELEMENT);
                 }
             },
             17);
         },
         object: this,
         type: 'pointerdown',
-    }
+    };
     #pointerupf: ListenerObj<'pointerup'> = {
         cb: (): void => {
             engine.inputManager?.attachCameraController();
@@ -256,7 +256,7 @@ export class TerrainTool extends MainNode {
             once: true,
         },
         type: 'pointerup',
-    }
+    };
     override destroy = (): void => {
         this.drawable.destroy();
         engine.clearInputListeners(this);
@@ -281,14 +281,14 @@ export class TerrainTool extends MainNode {
         },
         object: this,
         type: 'pointermove',
-    }
+    };
     raise = (): void => {
         this.direction = 1;
-        engine.addInputListener(this.#pointerdownf)
+        engine.addInputListener(this.#pointerdownf);
 
-    }
+    };
     lower = (): void => {
         this.direction = -1;
-        engine.addInputListener(this.#pointerdownf)
-    }
+        engine.addInputListener(this.#pointerdownf);
+    };
 }

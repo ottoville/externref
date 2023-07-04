@@ -23,4 +23,4 @@ fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
     }
     return -(norm.x * f32(xz.x) + norm.z * f32(xz.y) + d) / norm.y;
  };
-`
+`;

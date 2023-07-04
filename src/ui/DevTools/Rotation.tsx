@@ -3,13 +3,13 @@ import { ReadOnlyTerraVector3 } from '../../Math.js';
 import { useEffect, useRef } from 'react';
 
 export function Rotation({ node, }: { node: MainNode }) {
-    const rotationX = useRef<HTMLInputElement>(null)
-    const rotationY = useRef<HTMLInputElement>(null)
+    const rotationX = useRef<HTMLInputElement>(null);
+    const rotationY = useRef<HTMLInputElement>(null);
     const rotationZ = useRef<HTMLInputElement>(null);
     /**
      * Rotation that is not set manually in devtools
      */
-    const rotation = useRef(new ReadOnlyTerraVector3())
+    const rotation = useRef(new ReadOnlyTerraVector3());
     const rotatedManually = useRef(false);
 
     const changeRotation = () => {
@@ -17,12 +17,12 @@ export function Rotation({ node, }: { node: MainNode }) {
             rotatedManually.current = true;
             node.euler_angles = [rotationX.current.valueAsNumber, rotationY.current.valueAsNumber, rotationZ.current.valueAsNumber];
         }
-    }
+    };
 
     useEffect(() => {
         const listener = () => {
             if (!rotatedManually.current) {
-                rotation.current = node.euler_angles
+                rotation.current = node.euler_angles;
                 if (rotationX.current)
                     rotationX.current.value = rotation.current[0].toString();
                 if (rotationY.current)
@@ -36,8 +36,8 @@ export function Rotation({ node, }: { node: MainNode }) {
         node.onMeshChange.add(listener);
         listener();
         return () => {
-            node.onMeshChange.delete(listener)
-        }
+            node.onMeshChange.delete(listener);
+        };
     },
     [node]);
     return <fieldset>
@@ -73,5 +73,5 @@ export function Rotation({ node, }: { node: MainNode }) {
             }} title="rotation Z" type="range" min="-3.14" max="3.14" step="0.01" />
             {rotationZ.current && (180 / Math.PI * rotationZ.current.valueAsNumber).toFixed(2)}
         </label>
-    </fieldset>
+    </fieldset>;
 }

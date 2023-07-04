@@ -1,4 +1,4 @@
-import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/Terrain.js';
@@ -35,7 +35,7 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
                     ),
                 }
             )
-        ] as const
+        ] as const;
 
         const pipelineLayout = new PipelineLayout({
             bindGroupLayouts: bindLayouts,

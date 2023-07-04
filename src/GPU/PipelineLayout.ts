@@ -2,7 +2,7 @@
 import type { BGLayout, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
 import { RenderPipeline, type RenderPipelineProps } from './RenderPipeline.js';
 import type { VertexShader } from './Shaders/VertexShader.js';
-import type { GPU } from '../GPU.js'
+import type { GPU } from '../GPU.js';
 import type { FragmentShader } from './Shaders/FragmentShader.js';
 type extractGeneric<Type> = Type extends BGLayout<infer X> ? MapToGPUBindGroupEntry<X> : never
 type Last<T extends BGLayout[]> = T extends [...BGLayout[], infer R] ? R : never
@@ -56,7 +56,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
         const d = new RenderPipeline({
             ...props,
             bindgroupdrawable: this,
-        })
+        });
         this.renderPipeLines.add(d);
         this.renderPipelineListeners.forEach(cb =>
             cb());
@@ -67,7 +67,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
         const p = new SharedPipelineLayout({
             bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
             label,
-        })
+        });
         this.subBindGroups.push(p);
         return p;
     }
@@ -75,7 +75,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
         const p = new BindablePipelineLayout({
             bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
             label,
-        })
+        });
         this.subBindGroups.push(p);
         return p;
     }
@@ -92,7 +92,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
             bindGroupLayouts: [...this.bindGroupLayouts, sharedBindgroup.layout] as [...B, typeof sharedBindgroup.layout],
             label,
         },
-        sharedBindgroup)
+        sharedBindgroup);
         this.subBindGroups.push(p);
         //@ts-expect-error bug in TS?
         return p;
@@ -114,8 +114,8 @@ export class SharedPipelineLayout<B extends BGLayout[]> extends RenderPipelineLa
                 new BindGroup(this.bindGroupLayout,
                     'sharedBindGroup_' + props.label,
                     bindGroups)
-            ])
-        }
+            ]);
+        };
         return RP;
     }
 }

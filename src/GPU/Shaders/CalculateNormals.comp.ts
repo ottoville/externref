@@ -17,7 +17,7 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
         settings: typeof Terrain.settings,
         slopesLayout: SlopesLayout
     ) {
-        const facetSize = settings.subdivisions[0] * settings.subdivisions[1]
+        const facetSize = settings.subdivisions[0] * settings.subdivisions[1];
         const bindLayouts = [
             new BGLayout(slopesLayout.gpu,
                 'normalsBindGroupLayout',
@@ -35,7 +35,7 @@ export class CalculateNormals extends ComputeShader<BindLayouts> {
                 }
             ),
             slopesLayout
-        ] as const
+        ] as const;
 
         const pipelineLayout = new PipelineLayout({
             bindGroupLayouts: bindLayouts,

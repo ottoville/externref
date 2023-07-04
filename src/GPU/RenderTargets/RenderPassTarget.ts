@@ -22,7 +22,7 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     ) {
         super(textureOptions);
         this.view = new TextureView(this,
-            renderTargetOptions.textureViewDescriptor)
+            renderTargetOptions.textureViewDescriptor);
 
     }
 }

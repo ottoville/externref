@@ -15,7 +15,7 @@ export class paintTexture extends paintGround {
         this.height = height;
         this.subTextureCache = {
             height: 0, imageData: null, width: 0, x: 0, z: 0,
-        }
+        };
     }
     #offsetX = 0;
     #offsetY = 0;
@@ -45,7 +45,7 @@ export class paintTexture extends paintGround {
         }
         this.drawSubImage(width,
             this.height,
-            this.ang360.rad)
+            this.ang360.rad);
     }
     async drawSubImage(width: number, height: number, rad: number) {
         width /= this.ratio;
@@ -63,7 +63,7 @@ export class paintTexture extends paintGround {
             {
                 x: -height, y: -width,
             }
-        ]
+        ];
         const cos = Math.cos(rad);
         const sin = Math.sin(rad);
 
@@ -89,10 +89,10 @@ export class paintTexture extends paintGround {
             return;
         }
         const missAlignment = (cwidth * 4) % 256;
-        const alignment = missAlignment ? 256 - missAlignment : 0
+        const alignment = missAlignment ? 256 - missAlignment : 0;
         const c = new OffscreenCanvas(cwidth + alignment / 4,
             cheight);
-        const buffersize = c.width * c.height * 4
+        const buffersize = c.width * c.height * 4;
 
         const ctx = c.getContext('2d');
         if (!ctx)
@@ -136,10 +136,10 @@ export class paintTexture extends paintGround {
                 minZ + c.height);
 
             if (leftX < rightX && topY < bottomY) {
-                const intersectionoffsetSourceX = leftX - this.subTextureCache.x
+                const intersectionoffsetSourceX = leftX - this.subTextureCache.x;
                 const intersectionoffsetSourceY = topY - this.subTextureCache.z;
 
-                const intersectionoffsetDestinationX = leftX - minX
+                const intersectionoffsetDestinationX = leftX - minX;
                 const intersectionoffsetDestinationY = topY - minZ;
                 encoder.copyTextureToTexture(
                     {
@@ -156,7 +156,7 @@ export class paintTexture extends paintGround {
                     },
                     [rightX - leftX, bottomY - topY, 1]);
             } else {
-                console.log('Rectangles do not overlap, or overlap has an area of zero (edge/corner overlap)')
+                console.log('Rectangles do not overlap, or overlap has an area of zero (edge/corner overlap)');
             }
         }
         encoder.copyTextureToBuffer({
@@ -207,7 +207,7 @@ export class paintTexture extends paintGround {
         ctx.beginPath();
         const absDimensions: { w: number; h: number } = {
             h: Math.abs(width), w: Math.abs(height),
-        }
+        };
         ctx.translate(cwidth / 2,
             c.height / 2);
         ctx.rotate(rad * -1);

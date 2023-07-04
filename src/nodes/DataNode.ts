@@ -23,7 +23,7 @@ class pickInfo {
     point = new MutableTerraVector3(this.buffer);
     #distance = new DataView(this.buffer,
         3 * 4,
-        4)
+        4);
     getDistance() {
         return this.#distance.getFloat32(0,
             true);
@@ -71,7 +71,7 @@ export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_poin
         const vec_ptr = engine.rust.alloc_vector_f32(array.length);
         const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
             vec_ptr,
-            3)
+            3);
         new Float32Array(engine.rust.memory.buffer,
             ptr,
             len).set(array);
@@ -81,7 +81,7 @@ export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_poin
         const vec_ptr = engine.rust.alloc_vector_usize(array.length);
         const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
             vec_ptr,
-            3)
+            3);
         new Uint32Array(engine.rust.memory.buffer,
             ptr,
             len).set(array);
@@ -89,8 +89,8 @@ export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_poin
     }
 }
 
-export const closeDistance = 0.0022
-export const closeDistanceSquared = closeDistance * closeDistance
+export const closeDistance = 0.0022;
+export const closeDistanceSquared = closeDistance * closeDistance;
 export abstract class DataNode extends MainNode {
     // TODO: collide or uncollide with ANY mesh will change this value, so its lot of broken and does not indicate if mesh is really colliding now.
     colliding_physics = false;
@@ -131,7 +131,7 @@ export abstract class DataNode extends MainNode {
         const vec_ptr = engine.rust.alloc_vector_f32(faces.length);
         const [ptr, len, cap] = new Uint32Array(engine.rust.memory.buffer,
             vec_ptr,
-            3)
+            3);
 
         new Float32Array(engine.rust.memory.buffer,
             ptr,
@@ -186,7 +186,7 @@ cap!);
             queueMicrotask(() => {
                 const collider_ptr = this.create_collider();
                 engine.rust.add_collider(this.id,
-                    collider_ptr)
+                    collider_ptr);
             });
         }
         if (character_can_collide_to) {
@@ -196,9 +196,9 @@ cap!);
     protected pushVertice = (position: number) => {
         let newLen = 0;
         if (this.#frontFace === 'ccw') {
-            newLen = this.#vectorsVec4.unshift(position)
+            newLen = this.#vectorsVec4.unshift(position);
         } else {
-            newLen = this.#vectorsVec4.push(position)
+            newLen = this.#vectorsVec4.push(position);
         }
         if (newLen === 3) {
             const collider_faces_pointer = engine.rust.collider_faces_pointer(this.id);
@@ -217,14 +217,14 @@ cap!);
                 this.#vectorsVec4 = [];
             }
         }
-    }
+    };
     get verticesArray() {
         const arr: Float32Array[] = [];
         const vertices_pointer = engine.rust.vertices_pointer(this.id);
         for (let i = 0; i < this.vertices_count; i++) {
             arr.push(new Float32Array(engine.memory.buffer,
                 vertices_pointer + i * Float32Array.BYTES_PER_ELEMENT * this.vertices_stride,
-                this.vertices_stride))
+                this.vertices_stride));
         }
         return arr;
     }
@@ -242,7 +242,7 @@ cap!);
         }
         DataNode.Meshes.delete(this.id);
         DataNode.CharacterCanCollideMeshes.delete(this);
-        super.destroy()
+        super.destroy();
     }
     initCollider() {
         if (!this.#character_can_collide_to)
@@ -251,7 +251,7 @@ cap!);
         if (this.faces_count === 0 || this.vertices_count === 0)
             return false;
         this.#triangleFaces.length = 0;
-        this.#vectorsVec4 = []
+        this.#vectorsVec4 = [];
         this.#positionsAndCollider.length = 0;
         this.colliderVerticesV4.length = 0;
         //this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
@@ -260,7 +260,7 @@ cap!);
             const pos = vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
             const colPos = this.last_collider_world_vertices_pointer + i * 4 * Float32Array.BYTES_PER_ELEMENT;
             this.colliderVerticesV4.push(colPos);
-            this.#positionsAndCollider.push([pos, colPos])
+            this.#positionsAndCollider.push([pos, colPos]);
         }
         //return this.facesBufferColliderPointer.byteOffset;
         return true;
@@ -270,11 +270,11 @@ cap!);
         return worker.message(this.id,
             'intersectsRay',
             [ray.buffer]);
-    }
+    };
     #updateColliderPlanes() {
         this.#positionsAndCollider.forEach((posAndCol, i) => {
             if (i > this.positions_count) {
-                throw new Error('Tried to access vertice out of boundary')
+                throw new Error('Tried to access vertice out of boundary');
             }
             new MutableTerraVector3(engine.memory.buffer,
                 posAndCol[0]).multiply2Ref(this.#myCollisionsTransformMatrix,
@@ -284,7 +284,7 @@ cap!);
         const collider_planes_parallel_pointer = engine.rust.collider_planes_parallel_pointer(this.id);
         this.#triangleFaces.forEach(face => {
             face.updatePlane();
-        })
+        });
 
         this.#faceQuatros.forEach((quatro, i) => {
             new Float32Array(engine.memory.buffer,
@@ -361,7 +361,7 @@ cap!);
             let faceQuatro: Triangle[] = [];
             this.#triangleFaces.forEach(face => {
                 if (faceQuatro.push(face) === 4) {
-                    this.#faceQuatros.push(faceQuatro as [Triangle, Triangle, Triangle, Triangle])
+                    this.#faceQuatros.push(faceQuatro as [Triangle, Triangle, Triangle, Triangle]);
                     faceQuatro = [];
                 }
             });

@@ -40,6 +40,6 @@ export class BindGroup<L extends BGLayout = BGLayout> {
         this.renderPasses.forEach(rp =>
             rp.bundles.forEach(bundle => {
                 this.#renderBundles.add(bundle);
-            }))
+            }));
     }
 }

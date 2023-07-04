@@ -15,7 +15,7 @@ declare const engine: Engine;
 export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMenuButtonProps> {
     #PT?: paintTexture;
     #size = 5120;
-    readonly #ratio: number //texture coordinates
+    readonly #ratio: number; //texture coordinates
     #zoneTexture?: RenderTarget<'rgba8unorm', 23>;
     scene: Scene;
     #wasOpen = false;
@@ -25,11 +25,11 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
         super(props);
         const initialScene = props.terrain.scenes[0];
         if (!initialScene) {
-            throw (new Error('scene not found'))
+            throw (new Error('scene not found'));
         }
         this.scene = initialScene;
 
-        this.#ratio = Terrain.size[0] / this.#size //texture coordinates
+        this.#ratio = Terrain.size[0] / this.#size; //texture coordinates
     }
     #inputListener: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
@@ -40,7 +40,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
         object: this,
         type: 'keydown',
 
-    }
+    };
     paintZone() {
         if (this.#zoneTexture) {
             this.#PT = new paintTexture(this.scene,
@@ -52,7 +52,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                 (response) => {
                     engine.DB?.transaction('zones',
                         'readwrite').objectStore('zones').put(response);
-                })
+                });
         }
     }
     override render(gpu: GPU, force: boolean) {
@@ -73,7 +73,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
             engine.addInputListener(this.#inputListener);
             if (engine.DB) {
                 const texture = new OffscreenCanvas(5120,
-                    5120)
+                    5120);
                 const ctx = texture.getContext('2d');
                 if (!ctx)
                     throw (new Error('getting 2d context failed'));
@@ -114,7 +114,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                     {
                         height: 5120, width: 5120,
                     });
-                }
+                };
             }
             const staticScene = engine.scenes.get('static');
             if (!staticScene) {
@@ -140,14 +140,14 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
                             },
                         },
                         onClick: () => {
-                            this.paintZone()
+                            this.paintZone();
                         },
                         text: 'Residental (1)',
                     })
                 )
-            ]
+            ];
         } else if (!this.props.open && this.#wasOpen) {
-            this.props.terrain.mesh.set_scenes(this.scene.id)
+            this.props.terrain.mesh.set_scenes(this.scene.id);
             this.props.terrain.mesh.setTextureView(new TextureView(this.props.terrain.texture));
             this.#zoneTexture?.destroy();
             this.#PT?.destroy();

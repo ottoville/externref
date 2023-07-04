@@ -11,7 +11,7 @@ const methods2: { [index: string]: (e: WMessage) => void } = {
             response);
 
     },
-}
+};
 onmessage = (e: WorkerMessage) => {
     methods2[e.data.action](e.data);
-}
+};

@@ -4,7 +4,7 @@ import { SingleColorFragShader } from '../Shaders/SingleColor.frag.js';
 
 export const SunRenderPipeline = [
     'SunRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-        const sunVertShader = new SunVertShader(gpu.positionAndTimeBindGroup)
+        const sunVertShader = new SunVertShader(gpu.positionAndTimeBindGroup);
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
                 depthBuffer: {
@@ -20,4 +20,4 @@ export const SunRenderPipeline = [
             }
         );
     }
-] as const
+] as const;

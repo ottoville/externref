@@ -1,8 +1,8 @@
-import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Vertices } from './structs/Structs.js';
-import type { GPU } from '../../GPU.js'
+import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 
@@ -40,7 +40,7 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
                         },
                         Vertices),
                 })
-        ] as const
+        ] as const;
 
         const pipelineLayout = new PipelineLayout({
             bindGroupLayouts: bindLayouts,
@@ -84,6 +84,6 @@ export class CreateGroundFromHeightMap extends ComputeShader<BindLayouts> {
             const scaled_texture_size = vec2<f32>(${textureSize.width / settings.size[0]}, ${textureSize.height / settings.size[1]});
             
             const factor_x=f32(${settings.size[0] / settings.subdivisions[0]});
-            const factor_y=f32(${settings.size[1] / settings.subdivisions[0]});`)
+            const factor_y=f32(${settings.size[1] / settings.subdivisions[0]});`);
     }
 }

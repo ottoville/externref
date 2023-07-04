@@ -3,7 +3,7 @@
 
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
-import type { GPU } from 'GPU.js'
+import type { GPU } from 'GPU.js';
 import { getClusterIndex } from './getClusterIndex.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { diffuseOutput, pickOutputFragment } from './structs/Structs.js';
@@ -17,7 +17,7 @@ export function createPickOutputFragment<P extends PipelineLayout>(pipelineLayou
         () =>
             ` var output:PickOutput;
           output.ID = id;
-          return output;`)
+          return output;`);
 }
 export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader({
@@ -94,7 +94,7 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
         `
       ${getClusterIndex(uniforms,
         projection)}
-    `)
+    `);
 }
 
 export type SimpleFragShader = ReturnType<typeof createSimpleFragShader>

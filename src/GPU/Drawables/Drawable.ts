@@ -1,5 +1,5 @@
 ﻿import type { RenderPass } from '../RenderPasses/RenderPass.js';
-import { GPU } from '../../GPU.js'
+import { GPU } from '../../GPU.js';
 import { Buffer, type VertexBuffer, GPUBufferUsage } from '../Buffer/Buffer.js';
 
 import type { Engine } from '../../engine.js';
@@ -17,7 +17,7 @@ export type DrawableProps<N extends MainNode> = {
 
 }
 export abstract class Drawable<N extends MainNode = MainNode> {
-    node: N
+    node: N;
     #vertexBuffers: Map<number,
         {
             buffer: VertexBuffer,
@@ -27,7 +27,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     #renderList: Map<RenderPass, Set<Drawable<MainNode>>> = new Map();
     public renderPipeline: Readonly<RenderPipeline>;
     protected renderPasses: Set<RenderPass>;
-    #dynamicBindGroups: [BindGroup, number][]
+    #dynamicBindGroups: [BindGroup, number][];
     destroyed = false;
     constructor(
         {
@@ -47,7 +47,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
 
         vertexBuffers?.forEach((vertexBuffer, i) => {
             this.setVertexBuffer(i,
-                vertexBuffer)
+                vertexBuffer);
         });
         this.renderPasses.forEach(rp => {
             const variantP = rp.getVariant(this.renderPipeline);
@@ -59,14 +59,14 @@ export abstract class Drawable<N extends MainNode = MainNode> {
                     this.#renderList.set(rp,
                         variant.addRootDrawable(this));
                     rp.bundles.forEach(b =>
-                        b.destroy())
+                        b.destroy());
                 }).catch(err =>
-                    engine.showError(err))
+                    engine.showError(err));
             } else {
                 this.#renderList.set(rp,
                     variantP.addRootDrawable(this));
                 rp.bundles.forEach(b =>
-                    b.destroy())
+                    b.destroy());
             }
         });
     }
@@ -82,14 +82,14 @@ export abstract class Drawable<N extends MainNode = MainNode> {
             label,
             staticBuffers,
             this.renderPasses
-        )
+        );
     }
     destroy(preserveVerticeBuffers: number[] = []): void {
         this.#renderList.forEach(Drawables =>
             Drawables.delete(this));
         this.#vertexBuffers.forEach((b, key) => {
             if (!preserveVerticeBuffers.includes(key))
-                b.buffer.destroy()
+                b.buffer.destroy();
         });
         this.destroyed = true;
     }
@@ -116,7 +116,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
                     buff.set(new Uint8Array(buffer.buffer,
                         buffer.byteOffset,
                         buffer.byteLength/Uint8Array.BYTES_PER_ELEMENT));
-                })
+                });
         }
         this.#vertexBuffers.set(index,
             {
@@ -136,7 +136,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         });
         if (this.#staticBindGroup) {
             renderEncoder.setBindGroup(BindGroupsStart++,
-                this.#staticBindGroup.bindGroup)
+                this.#staticBindGroup.bindGroup);
         }
         this.#vertexBuffers.forEach((buffer, index) =>
             renderEncoder.setVertexBuffer(index,
@@ -144,7 +144,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
                 buffer.offset,
                 buffer.size));
         console.debug('draw',
-            this.node.label)
+            this.node.label);
         this.render(renderEncoder,
             renderPass);
     }

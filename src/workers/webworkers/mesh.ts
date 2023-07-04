@@ -324,4 +324,4 @@ onmessage = (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>) => {
                 data: r, id: e.data.id,
             });
     }
-}
+};

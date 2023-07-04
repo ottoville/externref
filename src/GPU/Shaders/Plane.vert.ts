@@ -1,7 +1,7 @@
 import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
-import { GPU } from '../../GPU.js'
+import { GPU } from '../../GPU.js';
 import { MeshUniforms, colorOutput } from './structs/Structs.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 

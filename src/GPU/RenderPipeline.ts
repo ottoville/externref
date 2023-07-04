@@ -44,7 +44,7 @@ export class RenderPipeline<V extends VertexShader = VertexShader, F extends Fra
         if (!drawables || drawables.size == 0) {
             console.warn('No drawables has been set for renderpass',
                 this.props.label,
-                ', wont draw anything')
+                ', wont draw anything');
             return 0;
         }
 
@@ -52,7 +52,7 @@ export class RenderPipeline<V extends VertexShader = VertexShader, F extends Fra
         if (this.createSharedBindGroups) {
             this.createSharedBindGroups().forEach(bindgroup => {
                 renderPassEncoder.setBindGroup(BindGroupsStart++,
-                    bindgroup.bindGroup)
+                    bindgroup.bindGroup);
             });
         }
         drawables.forEach(drawable =>

@@ -24,7 +24,7 @@ function addMidPoint(vertices: Float32Array, a: number, b: number) {
 }
 const icosphere = (order = 0) => {
     // set up a 20-triangle icosahedron
-    const f = 1.618033988749895 // (1 + 5 ** 0.5) / 2;
+    const f = 1.618033988749895; // (1 + 5 ** 0.5) / 2;
     const T = 4 ** order;
 
     const vertices = new Float32Array((10 * T + 2) * 4);
@@ -173,7 +173,7 @@ const icosphere = (order = 0) => {
             i * Float32Array.BYTES_PER_ELEMENT).normalize();
     }
     return [vertices, triangles] as [vertices: Float32Array, indices: Uint32Array];
-}
+};
 
 let uid = 0;
 export class IcoSphere extends IndexedSingleColoredMesh {
@@ -212,7 +212,7 @@ export class IcoSphere extends IndexedSingleColoredMesh {
             // Copy positions to normals, on sphere those are same
             verticesAndNormals.copyWithin(i * 8 + 4,
                 i * 8,
-                i * 8 + 4)
+                i * 8 + 4);
         }
         const mesh_id = new_rust_mesh({
             fixed,
@@ -229,6 +229,6 @@ export class IcoSphere extends IndexedSingleColoredMesh {
                 },
             },
             mesh_id,
-            allocate_vec(indices))
+            allocate_vec(indices));
     }
 }

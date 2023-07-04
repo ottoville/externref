@@ -8,7 +8,7 @@ import type { IndexedTrait } from '../../nodes/NodeIndexed2.js';
 declare const engine: Engine;
 
 export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extends IndexedTrait = IndexedTrait> extends DrawableDirect<N> {
-    #indexBuffer: IndexBuffer | undefined
+    #indexBuffer: IndexBuffer | undefined;
     #baseVertex: number;
     #firstIndex: number;
     #GPUIndexFormat: GPUIndexFormat;
@@ -46,7 +46,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
             this.setIndexBuffer(indices);
         this.#baseVertex = baseVertex;
         this.#firstIndex = firstIndex;
-        this.#GPUIndexFormat = GPUIndexFormat
+        this.#GPUIndexFormat = GPUIndexFormat;
     }
 
     override destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {
@@ -66,7 +66,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
         if (buffer instanceof Buffer) {
             this.#indexBuffer = buffer;
             if (GPUIndexFormat) {
-                this.#GPUIndexFormat = GPUIndexFormat
+                this.#GPUIndexFormat = GPUIndexFormat;
             }
         }
         else {
@@ -95,7 +95,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
             if (indices_count === 0) {
                 console.warn('wont draw',
                     this.node.label,
-                    ', zero indices')
+                    ', zero indices');
             } else {
                 console.debug('drawIndexed',
                     this.node.label,
@@ -104,7 +104,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
                     'instanceCount',
                     this.instanceCount,
                     'indexFormat',
-                    this.#GPUIndexFormat)
+                    this.#GPUIndexFormat);
                 renderEncoder.drawIndexed(indices_count,
                     this.instanceCount,
                     this.#firstIndex,
@@ -114,7 +114,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
         } else {
             console.warn('wont draw',
                 this.node.label,
-                ', no indexBuffer')
+                ', no indexBuffer');
         }
     }
 }

@@ -1,9 +1,9 @@
 import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
-import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { ProjectionStruct, UpdateClustersBufferLayout } from './structs/Structs.js';
-import type { GPU } from '../../GPU.js'
+import type { GPU } from '../../GPU.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) {
     const bindLayouts = [
@@ -104,6 +104,6 @@ ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, 
         
         //let tileCount : vec3<u32> = vec3<u32>(1u, 1u, 1u);
         const tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
-    `)
+    `);
 }
 export type ClustersComp = ReturnType<typeof createClustersCompShader>

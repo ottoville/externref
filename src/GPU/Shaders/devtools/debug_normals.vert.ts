@@ -1,6 +1,6 @@
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from '../VertexShader.js';
-import { GPU } from '../../../GPU.js'
+import { GPU } from '../../../GPU.js';
 import { VertexShaderFunction } from '../ShaderFunction.js';
 import { colorOutput } from '../structs/Structs.js';
 import { simpleAttributes } from '../../RenderPipeLines/SimpleRenderPipeline.js';
@@ -43,6 +43,6 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
         },
         gpu: pipelineLayout.gpu,
         label: 'debug_normals.vert',
-    })
+    });
 }
 export type DebugNormalsVertShader = ReturnType<typeof createDebugNormalsVertShader>

@@ -11,7 +11,7 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
     indexed: NodeIndexed2;
     constructor(targetNode: DrawableDirect<IndexedTrait & DataNode>) {
         const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
-        const stride = 4
+        const stride = 4;
         const vertices = new Float32Array(targetNode.node.positions_count * 4);
         targetNode.node.verticesArray.forEach((v, i) => {
             const slice = v.slice(0,
@@ -20,14 +20,14 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
                 i * stride);
         });
         const targetIndices = targetNode.node.indexed.indices;
-        const indices = new Uint32Array(targetIndices.length * 2)
+        const indices = new Uint32Array(targetIndices.length * 2);
         for (let i = 0; i < targetIndices.length / 3; i++) {
-            indices[i * 6] = targetIndices[i * 3]!
-            indices[i * 6 + 1] = targetIndices[i * 3 + 1]!
-            indices[i * 6 + 2] = targetIndices[i * 3 + 1]!
-            indices[i * 6 + 3] = targetIndices[i * 3 + 2]!
-            indices[i * 6 + 4] = targetIndices[i * 3 + 2]!
-            indices[i * 6 + 5] = targetIndices[i * 3]!
+            indices[i * 6] = targetIndices[i * 3]!;
+            indices[i * 6 + 1] = targetIndices[i * 3 + 1]!;
+            indices[i * 6 + 2] = targetIndices[i * 3 + 1]!;
+            indices[i * 6 + 3] = targetIndices[i * 3 + 2]!;
+            indices[i * 6 + 4] = targetIndices[i * 3 + 2]!;
+            indices[i * 6 + 5] = targetIndices[i * 3]!;
         }
         const mesh_id = new_rust_mesh({
             label: 'Wireframe_'+targetNode.node.label,
@@ -45,7 +45,7 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
             mesh_id,
             false);
         this.indexed = new NodeIndexed2(this,
-            allocate_vec(indices))
+            allocate_vec(indices));
         this.translation = targetNode.node.translation;
         this.update_scale(targetNode.node.scale_x,
             targetNode.node.scale_y,
@@ -59,7 +59,7 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
                 targetNode.node.scale_y,
                 targetNode.node.scale_z);
             this.rotation = targetNode.node.rotation;
-        })
+        });
 
         const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline,
             {

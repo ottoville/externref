@@ -1,4 +1,4 @@
-import { BGLayout, BufLayout, ShaderStage } from '../../BindGroupLayout.js'
+import { BGLayout, BufLayout, ShaderStage } from '../../BindGroupLayout.js';
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
 import { FloatArray, IntArray, PlaneArray, PositionAndRotateArray, Vec2Array } from '../structs/Structs.js';
@@ -86,7 +86,7 @@ export class GrassHeightAtCoordinates extends ComputeShader<BindLayouts> {
                         Vec2Array),
                 }
             )
-        ] as const
+        ] as const;
 
 
         const pipelineLayout = new PipelineLayout({

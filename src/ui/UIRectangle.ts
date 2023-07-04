@@ -94,7 +94,7 @@ export abstract class UIRectangle extends DataNode {
         left: 0,
         right: 0,
         top: 0,
-    }
+    };
     texture?: RenderTarget<'bgra8unorm', (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST']> | undefined;
     uniformBuffer: CopyDstBuffer & BindUniformBuffer;
     textureView: TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>>;
@@ -104,12 +104,12 @@ export abstract class UIRectangle extends DataNode {
         if (this.drawable && this.texture) {
             if (copySource.width > this.texture.props.size.width ||
                 copySource.height > this.texture.props.size.height) {
-                this.texture.destroy()
+                this.texture.destroy();
                 this.texture = undefined;
                 const vertices = this.#updateBoundingBoxAndVerticesSuper();
                 this.drawable.setVertexBuffer(0,
                     vertices);
-                this.set_vertices(allocate_vec(vertices))
+                this.set_vertices(allocate_vec(vertices));
             }
         }
         if (!this.texture) {
@@ -143,44 +143,44 @@ export abstract class UIRectangle extends DataNode {
     }
     abstract createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>>
     protected updatePosition(buffer: ArrayBuffer) {
-        const b = new Float32Array(buffer)
+        const b = new Float32Array(buffer);
         if (this.props.translate.x.value[1] === NumericUnit['%']) {
-            var XPosition = this.props.translate.x.value[0]
+            var XPosition = this.props.translate.x.value[0];
         } else { //pixels
             var XPosition = (this.props.translate.x.value[0] / this.props.renderPass.size.width) * 2;
         }
         if (this.props.translate.x.anchor === Anchor.RIGHT) {
-            XPosition = -XPosition + 1
+            XPosition = -XPosition + 1;
         } else if (this.props.translate.x.anchor === Anchor.LEFT) {
-            XPosition = XPosition - 1
+            XPosition = XPosition - 1;
         }
-        b[0] = XPosition
+        b[0] = XPosition;
         if (this.props.translate.y.value[1] === NumericUnit['%']) {
             var YPosition = this.props.translate.y.value[0];
         } else { //pixels
-            var YPosition = (this.props.translate.y.value[0] / this.props.renderPass.size.height) * 2
+            var YPosition = (this.props.translate.y.value[0] / this.props.renderPass.size.height) * 2;
         }
         if (this.props.translate.y.anchor === Anchor.TOP) {
             YPosition = -YPosition + 1;
         } else if (this.props.translate.y.anchor === Anchor.BOTTOM) {
-            YPosition = YPosition - 1
+            YPosition = YPosition - 1;
         }
-        b[1] = YPosition
+        b[1] = YPosition;
 
     }
     #updateBoundingBoxAndVerticesSuper() {
-        const { scale, renderPass, originalAspectRatio, translate, } = this.props
+        const { scale, renderPass, originalAspectRatio, translate, } = this.props;
         if (this.props.translate.x.value[1] === NumericUnit.px || this.props.translate.y.value[1] === NumericUnit.px) {
             const buff = new ArrayBuffer(8);
             this.updatePosition(buff);
             this.uniformBuffer.write(0,
-                buff)
+                buff);
         }
         let widthPixels: number;
         if (scale.unit === NumericUnit['%']) {
-            widthPixels = renderPass.size.width * scale.min_width
+            widthPixels = renderPass.size.width * scale.min_width;
         } else {
-            widthPixels = scale.min_width
+            widthPixels = scale.min_width;
         }
         if (originalAspectRatio) {
             const heightPixels = widthPixels * originalAspectRatio;
@@ -191,35 +191,35 @@ export abstract class UIRectangle extends DataNode {
             }
         }
         if (this.props.events) {
-            const halfWidth = widthPixels * 0.5
+            const halfWidth = widthPixels * 0.5;
             let halfHeight: number;
             if (originalAspectRatio)
                 halfHeight = halfWidth * originalAspectRatio;
             else {
                 if (scale.unit === NumericUnit['%'])
-                    halfHeight = renderPass.size.height * scale.y * 0.5
+                    halfHeight = renderPass.size.height * scale.y * 0.5;
                 else
-                    halfHeight = scale.y * 0.5
+                    halfHeight = scale.y * 0.5;
             }
             let movementXPixels = translate.x.value[0];
             if (translate.x.value[1] === NumericUnit['%']) {
-                movementXPixels = translate.x.value[0] * renderPass.size.width * 0.5
+                movementXPixels = translate.x.value[0] * renderPass.size.width * 0.5;
             }
             if (translate.x.anchor === Anchor.RIGHT) {
                 movementXPixels = renderPass.size.width - movementXPixels;
             }
             else if (translate.x.anchor === Anchor.CENTER) {
-                movementXPixels = movementXPixels + renderPass.size.width * 0.5
+                movementXPixels = movementXPixels + renderPass.size.width * 0.5;
             }
             let movementYPixels = translate.y.value[0];
             if (translate.y.value[1] === NumericUnit['%']) {
-                movementYPixels = translate.y.value[0] * renderPass.size.height * 0.5
+                movementYPixels = translate.y.value[0] * renderPass.size.height * 0.5;
             }
             if (translate.y.anchor === Anchor.BOTTOM) {
                 movementYPixels = renderPass.size.height - movementYPixels;
             }
             else if (translate.y.anchor === Anchor.CENTER) {
-                movementYPixels = renderPass.size.height * 0.5 - movementYPixels
+                movementYPixels = renderPass.size.height * 0.5 - movementYPixels;
             }
 
             this.boundingBox.top = (movementYPixels - halfHeight) / devicePixelRatio;
@@ -228,25 +228,25 @@ export abstract class UIRectangle extends DataNode {
             this.boundingBox.right = (movementXPixels + halfWidth) / devicePixelRatio;
         }
 
-        const { borderSize, label, } = this.props
-        let widthBorderPixels: number
-        let heightBorderPixels: number
-        let widthBorderRelative: number
-        let heightBorderRelative: number
+        const { borderSize, label, } = this.props;
+        let widthBorderPixels: number;
+        let heightBorderPixels: number;
+        let widthBorderRelative: number;
+        let heightBorderRelative: number;
         if (borderSize.width[1] === NumericUnit['%']) {
             widthBorderPixels = renderPass.size.width * borderSize.width[0];
-            widthBorderRelative = borderSize.width[0]
+            widthBorderRelative = borderSize.width[0];
         } else {
-            widthBorderPixels = borderSize.width[0]
-            widthBorderRelative = widthBorderPixels / renderPass.size.width
+            widthBorderPixels = borderSize.width[0];
+            widthBorderRelative = widthBorderPixels / renderPass.size.width;
         }
         if (borderSize.height !== 'auto') {
             if (borderSize.height[1] === NumericUnit['%']) {
                 heightBorderPixels = renderPass.size.height * borderSize.height[0];
-                heightBorderRelative = borderSize.height[0]
+                heightBorderRelative = borderSize.height[0];
             } else {
-                heightBorderPixels = borderSize.height[0]
-                heightBorderRelative = heightBorderPixels / renderPass.size.height
+                heightBorderPixels = borderSize.height[0];
+                heightBorderRelative = heightBorderPixels / renderPass.size.height;
             }
         } else {
             heightBorderRelative = widthBorderPixels / renderPass.size.height;
@@ -254,25 +254,25 @@ export abstract class UIRectangle extends DataNode {
         let outer_sizeX: number;
         let outer_sizeY: number;
         if (scale.unit === NumericUnit['%']) {
-            outer_sizeX = scale.min_width
-            outer_sizeY = scale.y
+            outer_sizeX = scale.min_width;
+            outer_sizeY = scale.y;
         } else {
-            outer_sizeX = scale.min_width / renderPass.size.width
-            outer_sizeY = scale.y / renderPass.size.height
+            outer_sizeX = scale.min_width / renderPass.size.width;
+            outer_sizeY = scale.y / renderPass.size.height;
         }
 
         const content_sizeX = outer_sizeX - widthBorderRelative;
-        const content_sizeY = outer_sizeY - heightBorderRelative
+        const content_sizeY = outer_sizeY - heightBorderRelative;
         if (content_sizeX <= 0 || content_sizeY <= 0) {
             console.warn('UI',
                 label,
-                'element content size is 0 or below')
+                'element content size is 0 or below');
         }
-        const positionsCount = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6
+        const positionsCount = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6;
         const vertices =  new Float32Array(positionsCount * 4);
         return this.updateBoundingBoxAndVertices({
             content_sizeX, content_sizeY, outer_sizeX, outer_sizeY, vertices,
-        })
+        });
 
     }
     abstract updateBoundingBoxAndVertices(
@@ -291,7 +291,7 @@ export abstract class UIRectangle extends DataNode {
         props.label = props.label + '_UIRectangle';
         const mesh_id = new_rust_mesh({
             label: props.label,
-        })
+        });
         super(
             {
                 character_can_collide_to: false,
@@ -326,8 +326,8 @@ export abstract class UIRectangle extends DataNode {
                     (e.offsetX > this.boundingBox.left && e.offsetX < this.boundingBox.right)
                     &&
                     (e.offsetY > this.boundingBox.top && e.offsetY < this.boundingBox.bottom)
-                )
-            }
+                );
+            };
             let pointerDown = false;
             engine.addInputListener({
                 cb: (e) => {
@@ -343,7 +343,7 @@ export abstract class UIRectangle extends DataNode {
                 },
                 type: 'pointerup',
 
-            } as ListenerObj<'pointerup'>)
+            } as ListenerObj<'pointerup'>);
             engine.addInputListener({
                 cb: (e) => {
                     if (checkClickArea(e)) {
@@ -357,11 +357,11 @@ export abstract class UIRectangle extends DataNode {
                     ui: true,
                 },
                 type: 'pointerdown',
-            } as ListenerObj<'pointerdown'>)
+            } as ListenerObj<'pointerdown'>);
         }
 
         if (!(texture instanceof TextureView)) {
-            this.textureView = this.createTextureView(texture)
+            this.textureView = this.createTextureView(texture);
         } else {
             this.textureView = texture;
         }
@@ -382,11 +382,11 @@ export abstract class UIRectangle extends DataNode {
             {
                 firstVertex: 0,
             });
-            this.drawable = drawable
+            this.drawable = drawable;
             renderPass.onResize.set(this,
                 () => {
                     const newVertices = this.#updateBoundingBoxAndVerticesSuper();
-                    this.set_vertices(allocate_vec(newVertices))
+                    this.set_vertices(allocate_vec(newVertices));
                     drawable.setVertexBuffer(0,
                         newVertices);
                 });
@@ -403,14 +403,14 @@ export abstract class UIRectangle extends DataNode {
                             binding: 1,
                             resource: this.uniformBuffer.getUniformBinding(bindGroup),
                         },
-                    })
-                })
-        })
+                    });
+                });
+        });
 
 
     }
     override destroy() {
-        super.destroy()
+        super.destroy();
         this.props.renderPass.onResize.delete(this);
         engine.clearInputListeners(this);
         this.drawable?.destroy();

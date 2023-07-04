@@ -24,16 +24,16 @@ export default defineConfig({
                 }, launchOptions) => {
                 // `args` is an array of all the arguments that will
                 // be passed to browsers when it launches
-                    console.log(launchOptions.args) // print all current args
+                    console.log(launchOptions.args); // print all current args
 
                     if (browser.family === 'chromium' && browser.name !== 'electron') {
                     // Enable shared array buffer
-                        launchOptions.args.push('--enable-features=SharedArrayBuffer')
+                        launchOptions.args.push('--enable-features=SharedArrayBuffer');
                     }
 
                     // whatever you return here becomes the launchOptions
-                    return launchOptions
-                })
+                    return launchOptions;
+                });
         },
     },
 });

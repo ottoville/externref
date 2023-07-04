@@ -1,9 +1,9 @@
-import { describe, beforeAll, it, expect, jest } from '@jest/globals'
+import { describe, beforeAll, it, expect, jest } from '@jest/globals';
 
 import { Box } from '../GPU/Meshes/Box.js';
 import { Engine } from '../engine.js';
 import fs from 'fs';
-jest.setTimeout(16000)
+jest.setTimeout(16000);
 
 describe('Physics Has gravity and collision',
     function () {
@@ -48,11 +48,11 @@ describe('Physics Has gravity and collision',
                 let ticks = 0;
                 const translation = b2.translation;
                 //@ts-expect-error
-                let oldTranslation: [number, number, number] = [...translation]
+                let oldTranslation: [number, number, number] = [...translation];
                 let collided = false;
                 let falling = false;
                 await new Promise<void>((res) => {
-                    console.log('creating physictick')
+                    console.log('creating physictick');
 
             engine!.physics.onPhysicTick.add(() => {
                 b2.apply_impulse([0, 0, -1]);
@@ -89,7 +89,7 @@ describe('Physics Has gravity and collision',
                     res();
                     engine!.physics.onPhysicTick.clear();
                 }
-            })
+            });
                 });
                 expect(collided).not.toBeFalsy();
             },
@@ -171,4 +171,4 @@ describe('Physics Has gravity and collision',
       else
         done();
     }, 5000)*/
-    })
+    });

@@ -16,7 +16,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
         });
         this.state = {
             timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString(),
-        }
+        };
         setInterval(() => {
             this.setState({
                 timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString(),
@@ -67,7 +67,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         },
                     },
                     onClick: () => {
-                        engine.physics.gameSpeed = -1
+                        engine.physics.gameSpeed = -1;
                     },
                     text: '⏸️',
                 })),
@@ -87,7 +87,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         },
                     },
                     onClick: () => {
-                        engine.physics.gameSpeed = 1
+                        engine.physics.gameSpeed = 1;
                     },
                     text: '▶️',
 
@@ -108,7 +108,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         },
                     },
                     onClick: () => {
-                        engine.physics.gameSpeed = 2
+                        engine.physics.gameSpeed = 2;
                     },
                     text: '⏩',
                 })),
@@ -128,7 +128,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         },
                     },
                     onClick: () => {
-                        engine.physics.gameSpeed = 4
+                        engine.physics.gameSpeed = 4;
                     },
                     text: '4⏩',
                 })),
@@ -148,7 +148,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         },
                     },
                     onClick: () => {
-                        engine.physics.gameSpeed = 8
+                        engine.physics.gameSpeed = 8;
                     },
                     text: '8⏩',
                 })),
@@ -168,7 +168,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         },
                     },
                     onClick: () => {
-                        engine.physics.gameSpeed = 16
+                        engine.physics.gameSpeed = 16;
                     },
                     text: '16⏩',
                 })),
@@ -188,7 +188,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
                         },
                     },
                     onClick: () => {
-                        engine.physics.gameSpeed = 32
+                        engine.physics.gameSpeed = 32;
                     },
                     text: '32⏩',
                 }))

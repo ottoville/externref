@@ -25,18 +25,18 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
     #inputListener: ListenerObj<'keydown'> = {
         cb: (e: KeyboardEvent) => {
             if (e.code === 'Digit1') {
-                this.activateDraw()
+                this.activateDraw();
             }
         },
         object: this,
         type: 'keydown',
-    }
+    };
     #wasOpen = false;
     override render(gpu: GPU, force: boolean) {
         super.render(gpu,
             force);
         if (this.props.open) {
-            this.#wasOpen = true
+            this.#wasOpen = true;
             engine.addInputListener(this.#inputListener);
             return [
                 UINode.createCtrProps(UIRectangleNode,
@@ -59,7 +59,7 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
                             this.activateDraw(),
                         text: 'Create grass (1)',
                     }))
-            ]
+            ];
         } else if (this.#wasOpen) {
             this.#wasOpen = false;
             this.PT?.destroy();
@@ -77,7 +77,7 @@ export class PlantsUI extends UIRectangleNode<object, UIRectangleNodeProps & Top
         } catch (e) {
             console.error(e);
         }
-    }
+    };
     override destroy(): void {
         super.destroy();
         this.PT?.destroy();

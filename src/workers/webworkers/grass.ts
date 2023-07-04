@@ -5,8 +5,8 @@ declare var DB: Promise<IDBDatabase>;
 importScripts('/js/DB.js');
 const numBlades = 70000;
 const BLADE_WIDTH = 0.0025;
-const BLADE_HEIGHT_MIN = 0.3
-const BLADE_HEIGHT_MAX = 0.8
+const BLADE_HEIGHT_MIN = 0.3;
+const BLADE_HEIGHT_MAX = 0.8;
 const buffer = new SharedArrayBuffer(2 * 4);
 let grasspositions = new Float32Array(buffer);
 let noises: Float32Array;
@@ -26,7 +26,7 @@ function clamp(value: number, min: number, max: number) {
         min),
     max);
 }
-const grids2: Map<string, number[]> = new Map()
+const grids2: Map<string, number[]> = new Map();
 const methods = {
     deGrowMemory: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
         new Float32Array(data.data.positions,
@@ -42,13 +42,13 @@ const methods = {
             trans.oncomplete = () =>
                 globalThis.postMessage({
                     count: bladecount, type: 'updated',
-                })
+                });
             for (let i = 0; i < bladecount; i++) {
                 const r = (<IDBRequest>evt.target).result[i];
                 grasspositions.set(r.pos,
                     i * 2);
             }
-        }
+        };
     },
     growMemory: (size: number) => {
         //console.log('grow memory to ', size)
@@ -65,7 +65,7 @@ const methods = {
                 return response.arrayBuffer();
             } else {
                 return fetch('/assets/grass').then(response2 =>
-                    response2.arrayBuffer())
+                    response2.arrayBuffer());
             }
         }).then(arrayBuffer => {
             globalThis.postMessage({
@@ -73,12 +73,12 @@ const methods = {
             });
         }).catch(e => {
             console.error('Error in web worker',
-                e)
-        })
+                e);
+        });
     },
     save: async (data: WMessage<{ angle: number, area: { size: { width: number, height: number }, coord: Float32Array } }>) => {
-        const grassPerSquareMeter = 8
-        const amount = Math.abs(data.data.area.size.height * data.data.area.size.width) * grassPerSquareMeter
+        const grassPerSquareMeter = 8;
+        const amount = Math.abs(data.data.area.size.height * data.data.area.size.width) * grassPerSquareMeter;
         if (amount === 0)
             return;
         // var d = new Date().getTime();
@@ -101,8 +101,8 @@ const methods = {
         for (let i = 0; i < amount; ++i) {
             const posX = (Math.random() * data.data.area.size.height * -1);
             const posZ = (Math.random() * data.data.area.size.width * -1);
-            const offsetsX = data.data.area.coord[0] + posX * cos + posZ * sin
-            const offsetsY = data.data.area.coord[1] + posX * -sin + posZ * cos
+            const offsetsX = data.data.area.coord[0] + posX * cos + posZ * sin;
+            const offsetsY = data.data.area.coord[1] + posX * -sin + posZ * cos;
             offsets[i * 2 + 0] = offsetsX;
             offsets[i * 2 + 1] = offsetsY;
             const grid = (offsetsX | 0) + ',' + (offsetsY | 0);
@@ -110,7 +110,7 @@ const methods = {
             if (!gridarr) {
                 gridarr = [];
                 grids2.set(grid,
-                    gridarr)
+                    gridarr);
             }
             if (gridarr.length > grassPerSquareMeter * 2)
                 continue;
@@ -125,7 +125,7 @@ const methods = {
         let memoryOffset = 0;
         grids2.forEach(grid => {
             if (memoryOffset + grid.length > grasspositions.length)
-                methods.growMemory(memoryOffset + grid.length)
+                methods.growMemory(memoryOffset + grid.length);
             grasspositions.set(grid,
                 memoryOffset);
             memoryOffset += grid.length;
@@ -177,10 +177,10 @@ const methods = {
             response);
 
     },
-}
+};
 onmessage = (e: WorkerMessage) => {
     //@ts-expect-error
     methods[e.data.action](e.data);
-}
+};
 
 

@@ -24,7 +24,7 @@ export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> 
         if (debug) {
             label = (this.descriptor.label!) + 'debug' + n;
             console.log('create textureview',
-                label)
+                label);
             n += 1;
         }
         this.view = this.texture.texture.createView(
@@ -46,7 +46,7 @@ export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> 
         this.#renderPasses.forEach(rp => {
             rp.bundles.forEach(bundle =>
                 bundle.destroy());
-        })
+        });
         super.destroy();
     }
 }
