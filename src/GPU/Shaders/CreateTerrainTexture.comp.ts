@@ -1,4 +1,4 @@
-import { BGLayout, BufLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, ShaderStage, StorageTextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/Terrain.js';
@@ -13,7 +13,7 @@ export type SlopesLayout = BGLayout<{
 
 type BindLayouts = readonly [
     SlopesLayout,
-    BGLayout<{ground_texture: TextLayout<ShaderStage.COMPUTE>}>];
+    BGLayout<{ground_texture: StorageTextLayout<ShaderStage.COMPUTE>}>];
 export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
     constructor(
         settings: typeof Terrain.settings,
@@ -23,7 +23,7 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
             new BGLayout(slopesLayout.gpu,
                 'TerrainTextureLayout',
                 {
-                    ground_texture: new TextLayout(
+                    ground_texture: new StorageTextLayout(
                         {
                             storageTexture: {
                                 access: 'write-only',
@@ -47,8 +47,8 @@ export class CreateTerrainTexture extends ComputeShader<BindLayouts> {
                 main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
                     pipelineLayout,
                     [1],
-                    ([/*{ _slopes, _facet12, }*/, { ground_texture, }]) => /* wgsl */
-                        `
+                    ([/*{ _slopes, _facet12, }*/, { ground_texture, }]) =>
+                    /* wgsl */ `
                 let cx:f32 = f32(GlobalInvocationID.x) * (f32(${settings.size[0]})/f32(${settings.textureSize.width})) - f32(${settings.size[0]}/u32(2));
                 let cz:f32 = f32(GlobalInvocationID.y) * (f32(${settings.size[1]})/f32(${settings.textureSize.height})) - f32(${settings.size[1]}/u32(2));
             

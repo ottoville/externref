@@ -56,9 +56,29 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
 type format = 'f32' | 'i32' | 'u32';
 type storageFormat = 'rgba8unorm' | 'rgba8snorm' | 'rgba8uint' | 'rgba8sint' | 'rgba16uint' | 'rgba16sint' | 'rgba16float' | 'r32uint' | 'r32sint' | 'r32float' | 'rg32uint' | 'rg32sint' | 'rg32float' | 'rgba32uint' | 'rgba32sint' | 'rgba32float' | 'bgra8unorm';
 
+export class StorageTextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
+    constructor(
+        public override entry:
+            BindGroupLayoutEntryProps<V> &
+            { storageTexture: NonNullable<GPUBindGroupLayoutEntry['storageTexture']> },
+        structName:
+        // Storage Texture Types https://www.w3.org/TR/WGSL/#texture-storage
+        // TODO: allow read-write https://github.com/gpuweb/gpuweb/issues/1772
+            | `texture_storage_1d<${storageFormat},write>`
+            | `texture_storage_2d<${storageFormat},write>`
+            | `texture_storage_2d_array<${storageFormat},write>`
+            | `texture_storage_3d<${storageFormat},write>`
+    ) {
+        super(entry,
+            structName);
+    }
+}
+
 export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
     constructor(
-        public override entry: BindGroupLayoutEntryProps<V> & ({ texture: NonNullable<GPUBindGroupLayoutEntry['texture']> } | { storageTexture: NonNullable<GPUBindGroupLayoutEntry['storageTexture']> }),
+        public override entry:
+            BindGroupLayoutEntryProps<V> &
+                { texture: NonNullable<GPUBindGroupLayoutEntry['texture']> },
         structName:
         //sampled texture types https://www.w3.org/TR/WGSL/#sampled-texture-type
         | `texture_2d<${format}>`
@@ -71,12 +91,6 @@ export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
            | 'texture_depth_multisampled_2d'
         //External Sampled Texture Types https://www.w3.org/TR/WGSL/#external-texture-type
         | 'texture_external'
-        // Storage Texture Types https://www.w3.org/TR/WGSL/#texture-storage
-        // TODO: allow read-write https://github.com/gpuweb/gpuweb/issues/1772
-            | `texture_storage_1d<${storageFormat},write>`
-            | `texture_storage_2d<${storageFormat},write>`
-            | `texture_storage_2d_array<${storageFormat},write>`
-            | `texture_storage_3d<${storageFormat},write>`
     ) {
         super(entry,
             structName);
