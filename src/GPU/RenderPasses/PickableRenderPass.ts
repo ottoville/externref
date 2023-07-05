@@ -7,7 +7,7 @@ import { RenderPassProps } from './RenderPass.js';
 import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
-import type { RENDER_TARGET_TEXTURE, TEXTURE_BINDING_SRC_TEXTURE } from '../Texture.js';
+import type { RENDER_TARGET_TEXTURE, TEXTURE_BINDING_TEXTURE } from '../Texture.js';
 import { ReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
 
 export class PickableRenderPass<T extends {
@@ -24,7 +24,7 @@ export class PickableRenderPass<T extends {
     #rowBytes = this.size.width * 4;
 
     constructor(renderPassProps: RenderPassProps<T>,
-        depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE & TEXTURE_BINDING_SRC_TEXTURE>
+        depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE & TEXTURE_BINDING_TEXTURE>
     ) {
         super(renderPassProps,
             depthRenderTarget);

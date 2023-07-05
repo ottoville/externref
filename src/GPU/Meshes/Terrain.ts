@@ -9,11 +9,11 @@ import type { TextureView } from '../TextureView.js';
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 import { new_rust_mesh } from '../../MainNode.js';
-import type { TEXTURE_BINDING_SRC_TEXTURE, Texture } from '../../GPU/Texture.js';
+import type { TEXTURE_BINDING_TEXTURE, Texture } from '../../GPU/Texture.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
-    setTextureView = (textureview: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_SRC_TEXTURE>>) => {
+    setTextureView = (textureview: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>>) => {
         this.drawable!.setStaticBindGroup('terrainTexture',
             (bindGroup) => {
                 return ({
@@ -34,7 +34,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
     }
     constructor(
         scenes: Scene[],
-        public initialTexture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_SRC_TEXTURE>>,
+        public initialTexture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>>,
         public vBuffer: VertexBuffer,
         public iBuffer: IndexBuffer,
         vertices: rust_vec_ptr<'f32'>,
