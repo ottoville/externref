@@ -1,19 +1,19 @@
 import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { RenderPass, RenderPassProps } from './RenderPass.js';
 import type { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
-import type { RenderTargetTextureUsageValue } from '../Texture.js';
+import type { RENDER_TARGET_TEXTURE } from '../Texture.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 
 export class DepthRenderPass<T extends {
-    [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+    [index: string]: ColorRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE>;
 } = {
-    [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+    [index: string]: ColorRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE>;
 }
 > extends RenderPass<T> {
-    depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+    depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE>;
     constructor(
         renderPassProps: RenderPassProps<T>,
-        depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
+        depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE>
     ) {
         renderPassProps.GPURenderBundleEncoderDescriptor = {
             depthStencilFormat: depthRenderTarget.props.format,

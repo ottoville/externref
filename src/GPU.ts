@@ -12,7 +12,7 @@ import { Uint16Vector2 } from './Math.js';
 import { DepthRenderTarget } from './GPU/RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './GPU/RenderPasses/DepthRenderPass.js';
 import { TerraCamera } from './TerraCamera.js';
-import { TextureUsageEnums, TextureUsageType } from './GPU/Texture.js';
+import { TextureUsageEnums } from './GPU/Texture.js';
 import { BGLayout, BufLayout, SampLayout, TextLayout, ShaderStage } from './GPU/BindGroupLayout.js';
 import { createUpdateViewShader, UpdateView } from './GPU/Shaders/UpdateView.comp.js';
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
@@ -101,13 +101,13 @@ export class GPU {
         y: 1,
     };
     readonly renderPassScreen: PickableRenderPass<{
-        gRenderTargetDiffuse: MSAARenderTarget<'bgra8unorm', TextureUsageType['RENDER_ATTACHMENT|TEXTURE_BINDING']>;
+        gRenderTargetDiffuse: MSAARenderTarget<'bgra8unorm', typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING']>;
     }>;
 
     readonly renderPassWater: DepthRenderPass<{
-        diffuse: ColorRenderTarget<'bgra8unorm', TextureUsageType['RENDER_ATTACHMENT|TEXTURE_BINDING']>;
+        diffuse: ColorRenderTarget<'bgra8unorm', typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING']>;
     }>;
-    readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, TextureUsageType['RENDER_ATTACHMENT']>; }>;
+    readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, typeof TextureUsageEnums['RENDER_ATTACHMENT']>; }>;
 
     readonly #updateViewBindGroup: BindGroup;
     readonly clustersInRow: [number, number, number] = [
@@ -136,7 +136,7 @@ export class GPU {
         }>;
 
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-    readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<'r32uint', TextureUsageType['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']>; }>;
+    readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<'r32uint', typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']>; }>;
     readonly sizeBindGroupLayout: BGLayout<{
         uniforms: BufLayout<number, typeof Uniforms>;
     }>;

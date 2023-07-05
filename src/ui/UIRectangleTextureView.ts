@@ -1,10 +1,10 @@
 import type { TextureView } from '../GPU/TextureView.js';
 import { UIRectangle } from './UIRectangle.js';
-import type { Texture, TextureUsageValue } from '../GPU/Texture.js';
+import type { Texture, TextureUsageEnums } from '../GPU/Texture.js';
 import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
 
 export class UIRectangleTextureView extends UIRectangle {
-    createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>> {
+    createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageEnums, Texture2dSize>> {
         return this.textureView;
     }
 

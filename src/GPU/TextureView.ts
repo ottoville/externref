@@ -1,9 +1,9 @@
-import type { TEXTURE_BINDING_SRC_TEXTURE, Texture, TextureUsageValue } from './Texture.js';
+import type { STORAGE_BINDING_TEXTURE, TEXTURE_BINDING_SRC_TEXTURE, Texture, TextureUsageEnums } from './Texture.js';
 import type { BindGroup } from './BindGroup.js';
 import { Bindable } from './Bindable.js';
 import type { RenderPass } from './RenderPasses/RenderPass.js';
 let n = 0;
-export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> = Texture<GPUTextureFormat, TextureUsageValue>> extends Bindable {
+export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageEnums> = Texture<GPUTextureFormat, TextureUsageEnums>> extends Bindable {
     //To track when texture is assigned as render target
     readonly #renderPasses: Set<RenderPass> = new Set();
 
@@ -35,6 +35,10 @@ export class TextureView<T extends Texture<GPUTextureFormat, TextureUsageValue> 
         return this.view;
     }
     getTextureBinding(this: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_SRC_TEXTURE>>, bindGroup: BindGroup): GPUTextureView {
+        this.bindGroups.add(bindGroup);
+        return this.view;
+    }
+    getStorageBinding(this: TextureView<Texture<GPUTextureFormat, STORAGE_BINDING_TEXTURE>>, bindGroup: BindGroup): GPUTextureView {
         this.bindGroups.add(bindGroup);
         return this.view;
     }

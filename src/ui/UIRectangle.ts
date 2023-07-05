@@ -3,7 +3,7 @@ import { Buffer, type CopyDstBuffer, GPUBufferUsage, BindUniformBuffer } from '.
 import { TextureView } from '../GPU/TextureView.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import { type Texture, TextureUsageEnums, type TextureUsageValue, RenderTarget, TEXTURE_BINDING_SRC_TEXTURE } from '../GPU/Texture.js';
+import { type Texture, TextureUsageEnums, RenderTarget, type TEXTURE_BINDING_SRC_TEXTURE } from '../GPU/Texture.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
 import { DataNode, allocate_vec } from '../nodes/DataNode.js';
@@ -141,7 +141,7 @@ export abstract class UIRectangle extends DataNode {
         this.textureView = new TextureView(this.texture);
         return this.textureView;
     }
-    abstract createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>>
+    abstract createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageEnums, Texture2dSize>>
     protected updatePosition(buffer: ArrayBuffer) {
         const b = new Float32Array(buffer);
         if (this.props.translate.x.value[1] === NumericUnit['%']) {

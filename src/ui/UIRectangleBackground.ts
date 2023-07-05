@@ -2,7 +2,7 @@ import { TextureView } from '../GPU/TextureView.js';
 import type { UIRectangleProps } from './UIRectangle.js';
 import type { TextUV } from './UIRectangleTextOnly.js';
 import { UIRectangleText } from './UIRectangleText.js';
-import type { Texture, TextureUsageValue } from '../GPU/Texture.js';
+import type { Texture, TextureUsageEnums } from '../GPU/Texture.js';
 import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
 export const font = '80pt serif';
 
@@ -121,7 +121,7 @@ function createTexture(
     Draws rectangle.
 */
 export class UIRectangleBackground extends UIRectangleText {
-    createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageValue, Texture2dSize>> {
+    createTexture(): TextureView<Texture<GPUTextureFormat, TextureUsageEnums, Texture2dSize>> {
         const copySource = createTexture(this.backgroundAsset,
             this.textUV,
             this.props.originalAspectRatio,

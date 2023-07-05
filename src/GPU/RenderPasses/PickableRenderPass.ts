@@ -7,13 +7,13 @@ import { RenderPassProps } from './RenderPass.js';
 import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
-import type { RENDER_TARGET_TEXTURE, RenderTargetTextureUsageValue, TEXTURE_BINDING_SRC_TEXTURE } from '../Texture.js';
+import type { RENDER_TARGET_TEXTURE, TEXTURE_BINDING_SRC_TEXTURE } from '../Texture.js';
 import { ReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
 
 export class PickableRenderPass<T extends {
-    [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+    [index: string]: ColorRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE>;
 } = {
-    [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+    [index: string]: ColorRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE>;
 }> extends DepthRenderPass<T> {
     #pickBuffer: GPUBuffer;
     readonly #pickBufferRead?: GPUBuffer;

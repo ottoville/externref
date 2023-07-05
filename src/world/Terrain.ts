@@ -4,7 +4,7 @@ import { TerrainMesh } from '../GPU/Meshes/Terrain.js';
 import type { Engine } from '../engine.js';
 import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindStorageBuffer, VertexBuffer } from '../GPU/Buffer/Buffer.js';
 import type { BindGroup } from '../GPU/BindGroup.js';
-import { RenderTarget, Texture, TextureUsageEnums, copyDstTexture, copySrcTexture } from '../GPU/Texture.js';
+import { RenderTarget, Texture, TextureUsageEnums } from '../GPU/Texture.js';
 import { TextureView } from '../GPU/TextureView.js';
 import { CalculatePlaneIndices } from '../GPU/Shaders/calculatePlaneIndices.comp.js';
 import { CalculatePlaneHeights } from '../GPU/Shaders/calculatePlaneHeights.comp.js';
@@ -346,9 +346,7 @@ TODO
         RenderTarget<
         'rgba8unorm',
             (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'],
-            { readonly width: 8192; readonly height: 8192; }> &
-        copyDstTexture & copySrcTexture;
-
+            { readonly width: 8192; readonly height: 8192; }>;
     constructor(
         public gpu: GPU,
         public scenes: Scene[],
