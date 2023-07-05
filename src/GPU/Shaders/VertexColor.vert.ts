@@ -29,7 +29,7 @@ export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<B
       var curPos : mat4x4<f32> = ${world.prop('transformation')};
       var worldPos=curPos * ${position};
       output.normal = normalize((curPos * vec4<f32>(${normal}, 0.0)).xyz);
-      output.Position = ${scene.prop('modelViewProjection')} * worldPos;
+      output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
       output.id=${world.prop('id')};
       output.color = ${color};
       output.position=vec3<f32>(worldPos.xyz);

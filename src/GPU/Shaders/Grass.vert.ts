@@ -2,7 +2,7 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
-import {  colorOutput } from './structs/Structs.js';
+import {  colorPositionOutput } from './structs/Structs.js';
 
 export const positionAttr = Object.freeze({
     position: {
@@ -41,7 +41,7 @@ export function createGrassVertShader(
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
-                colorOutput,
+                colorPositionOutput,
                 pipelineLayout,
                 buffers,
                 ([, { scene, time, }],

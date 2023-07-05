@@ -67,11 +67,7 @@ export abstract class Shader<
             ...structs,
             ...outputs
         ].reduce((s, struct) => {
-            let properties = '';
-            for (const property in struct.properties) {
-                properties += `${struct.properties[property]![0]} ${property}: ${struct.properties[property]![1]},\n`;
-            }
-            return `${s}struct ${struct.name} {\n${properties}}\n`;
+            return `${s}struct ${struct.name} {\n${struct.getPropertiesAsString()}}\n`;
         },
         '');
         //

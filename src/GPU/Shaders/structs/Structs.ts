@@ -5,11 +5,18 @@ export class Struct<T extends { [index: string]: [properties: string, type: stri
     constructor(public name: string, public properties: T, public depedencies?: Struct[]) {
 
     }
+    getPropertiesAsString() {
+        let properties = '';
+        for (const property in this.properties) {
+            properties += `${this.properties[property]![0]} ${property}: ${this.properties[property]![1]},\n`;
+        }
+        return properties;
+    }
 }
 
 export const typicalOutput = new Struct('Output',
     {
-        Position: [
+        fragCoord: [
             '@builtin(position)',
             'vec4<f32>'
         ],
@@ -55,7 +62,7 @@ export const pickOutputFragment = new Struct('PickOutput',
             'u32'
         ],
     });
-export const colorOutput = new Struct('Output',
+export const colorPositionOutput = new Struct('Output',
     {
         position: [
             '@builtin(position)',
@@ -278,6 +285,63 @@ export const Vertice = new Struct('Vertice',
             'vec2<f32>'
         ],
     });
+export const UI_Input = new Struct('Output',
+    {
+        Position: [
+            '@builtin(position)',
+            'vec4<f32>'
+        ],
+        v_uv: [
+            '@location(0)',
+            'vec2<f32>'
+        ],
+    });
+export const WaterInput = new Struct('Output',
+    {
+        Position: [
+            '@builtin(position)',
+            'vec4<f32>'
+        ],
+        v_uv: [
+            '@location(0)',
+            'vec4<f32>'
+        ],
+        position: [
+            '@location(1)',
+            'vec3<f32>'
+        ],
+        id: [
+            '@location(2) @interpolate(flat)',
+            'u32'
+        ],
+    });
+export const GroundInput = new Struct('Output',
+    {
+        fragCoord: [
+            '@builtin(position)',
+            'vec4<f32>'
+        ],
+        v_uv: [
+            '@location(0)',
+            'vec2<f32>'
+        ],
+        normal: [
+            '@location(1)',
+            'vec3<f32>'
+        ],
+        position: [
+            '@location(2)',
+            'vec3<f32>'
+        ],
+        id: [
+            '@location(3) @interpolate(flat)',
+            'u32'
+        ],
+        scenes: [
+            '@location(4) @interpolate(flat)',
+            'u32'
+        ],
+    }) ;
 export const Vertices = new Struct('Vertices',
     {
         vert: [

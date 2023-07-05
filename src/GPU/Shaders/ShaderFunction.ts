@@ -9,7 +9,8 @@ export type ComputeEntry = BindGroupLayoutEntry<ShaderStage.COMPUTE | ShaderStag
 
 export type FilteredBindgroupEntrys<B extends readonly BGLayout[], F extends BindGroupLayoutEntry> = Readonly<{ [K in keyof B]:  {[BE in keyof B[K]['entries']]: B[K]['entries'][BE] extends F ? B[K]['entries'][BE] : never}   }>
 
-export class VertexShaderFunction<B extends readonly BGLayout[] = readonly BGLayout[],
+export class VertexShaderFunction<
+    B extends readonly BGLayout[] = readonly BGLayout[],
     const V extends readonly VertexBufferLayout2[] | readonly [] = readonly VertexBufferLayout2[] | readonly []> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     #code: (args: any, bufferArgs: any) => string;
@@ -71,7 +72,7 @@ export class FragmentShaderFunction<B extends readonly BGLayout[]> {
         public output: Struct,
         public pipelineLayout: PipelineLayout<B>,
         /* TODO: use struct array from vertex shader output */
-        private inputs: string,
+        private inputs: Struct | undefined,
         code: (args: FilteredBindgroupEntrys<B, FragmentEntry>) => string
     ) {
         this.#code = code;
@@ -80,7 +81,7 @@ export class FragmentShaderFunction<B extends readonly BGLayout[]> {
         const wgsl = /* wgsl */`
                 @fragment
                 fn ${name}(
-                    ${this.inputs}
+                    ${this.inputs?.getPropertiesAsString() ?? ''}
                     ) -> ${this.output.name} {
                         ${this.#code(bindGroups)}
                     }`;

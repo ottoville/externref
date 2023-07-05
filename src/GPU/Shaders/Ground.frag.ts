@@ -3,7 +3,7 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js';
 import { getClusterIndex } from './getClusterIndex.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
-import { diffuseOutput } from './structs/Structs.js';
+import { GroundInput, diffuseOutput } from './structs/Structs.js';
 import { createPickOutputFragment } from './Simple.frag.js';
 
 type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts']
@@ -17,12 +17,7 @@ export class GroundFragShader extends FragmentShader<BindLayouts> {
                 main: new FragmentShaderFunction(
                     diffuseOutput,
                     pipelineLayout,
-                    `  @builtin(position) fragCoord : vec4<f32>,
-                @location(0)  v_uv : vec2<f32>,
-                @location(1) normal : vec3<f32>,
-                @location(2)  position : vec3<f32>,
-                @location(3) @interpolate(flat)  id : u32,
-                @location(4) @interpolate(flat)  scenes : u32`,
+                    GroundInput,
                     ([
                         /*{ uniforms, }*/,
                         { /*scene,*/ clusters_array, meshes/*, projection*/, },

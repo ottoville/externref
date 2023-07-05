@@ -17,7 +17,7 @@ BindLayouts> {
                 main: new FragmentShaderFunction(
                     diffuseOutput,
                     pipelineLayout,
-                    '',
+                    undefined,
                     ([
                         /*{ uniforms, }*/,
                         /*{ scene, clusters_array, meshes, projection, }*/,

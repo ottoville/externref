@@ -6,7 +6,7 @@ import { BGLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
-import { diffuseOutput } from './structs/Structs.js';
+import { colorPositionOutput, diffuseOutput } from './structs/Structs.js';
 
 export function createColorFragmentShader<B extends readonly BGLayout[]>(pipelineLayout: PipelineLayout<B>) {
     return new FragmentShader<B>({
@@ -15,7 +15,7 @@ export function createColorFragmentShader<B extends readonly BGLayout[]>(pipelin
             main: new FragmentShaderFunction(
                 diffuseOutput,
                 pipelineLayout,
-                '@location(0) color:vec3<f32>',
+                colorPositionOutput,
                 () => /* wgsl */
                     `
         var output:Output;

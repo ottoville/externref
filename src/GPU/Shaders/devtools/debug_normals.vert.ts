@@ -2,7 +2,7 @@ import { PipelineLayout } from '../../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from '../VertexShader.js';
 import { GPU } from '../../../GPU.js';
 import { VertexShaderFunction } from '../ShaderFunction.js';
-import { colorOutput } from '../structs/Structs.js';
+import { colorPositionOutput } from '../structs/Structs.js';
 import { simpleAttributes } from '../../RenderPipeLines/SimpleRenderPipeline.js';
 
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
@@ -12,7 +12,7 @@ export function createDebugNormalsVertShader(pipelineLayout: PipelineLayout<Bind
         bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction<BindLayouts, [VertexBufferLayout2<typeof simpleAttributes>]>(
-                colorOutput,
+                colorPositionOutput,
                 pipelineLayout,
                 [buffers],
                 ([

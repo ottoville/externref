@@ -6,14 +6,14 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js';
 import { getClusterIndex } from './getClusterIndex.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
-import { diffuseOutput, pickOutputFragment } from './structs/Structs.js';
+import { diffuseOutput, pickOutput, pickOutputFragment, typicalOutput } from './structs/Structs.js';
 
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
 export function createPickOutputFragment<P extends PipelineLayout>(pipelineLayout: P) {
     return new FragmentShaderFunction<P['bindGroupLayouts']>(
         pickOutputFragment,
         pipelineLayout,
-        '@location(0) @interpolate(flat)  id : u32',
+        pickOutput,
         () =>
             ` var output:PickOutput;
           output.ID = id;
@@ -26,14 +26,7 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
             main: new FragmentShaderFunction<typeof pipelineLayout.bindGroupLayouts>(
                 diffuseOutput,
                 pipelineLayout,
-                `
-                  @builtin(position) fragCoord : vec4<f32>,
-                  @location(0)  normal : vec3<f32>,
-                  @location(1) @interpolate(flat)  id : u32,
-                  @location(2) color:vec3<f32>,
-                  @location(3) position:vec3<f32>,
-                  @location(4) @interpolate(flat)  scenes : u32
-                `,
+                typicalOutput,
                 (
                     [
                         /*{ uniforms, }*/,
