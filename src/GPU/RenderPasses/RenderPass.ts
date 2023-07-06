@@ -226,10 +226,14 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
     }
 
     protected onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>): Omit<GPURenderPipelineDescriptor, 'layout'> {
+        const fragmentEntry = renderpipeline.props.connections[this.#entryPoint];
+        if(!fragmentEntry) {
+            throw new Error('Fragmentshader has no corresponding entry for output ' + this.#entryPoint);
+        }
         const renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'layout'> = {
             fragment: {
                 ...renderpipeline.props.fragmentShader,
-                entryPoint: this.#entryPoint,
+                entryPoint: fragmentEntry,
                 targets: Object.values(this.colorRenderTargets).map(rt => {
                     const state: GPUColorTargetState = {
                         format: rt.texture.format,

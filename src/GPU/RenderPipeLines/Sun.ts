@@ -1,17 +1,21 @@
 import { GPU } from '../../GPU.js';
-import { SunVertShader } from '../Shaders/Sun.vert.js';
-import { SingleColorFragShader } from '../Shaders/SingleColor.frag.js';
+import {  createSunVertShader } from '../Shaders/Sun.vert.js';
+import { createSingleColorFragShader } from '../Shaders/SingleColor.frag.js';
 
 export const SunRenderPipeline = [
     'SunRenderPipeline',
     function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-        const sunVertShader = new SunVertShader(gpu.positionAndTimeBindGroup);
+        const sunVertShader = createSunVertShader(gpu.positionAndTimeBindGroup);
+
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
+                connections: {
+                    'main': 'main',
+                },
                 depthBuffer: {
                     depthCompare: 'always', depthWriteEnabled: false,
                 },
-                fragmentShader: new SingleColorFragShader(gpu.positionAndTimeBindGroup),
+                fragmentShader: createSingleColorFragShader(gpu.positionAndTimeBindGroup),
                 label,
                 renderPipeline: {
                     primitive,

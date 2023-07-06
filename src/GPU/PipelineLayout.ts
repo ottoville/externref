@@ -50,8 +50,7 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
     }
     renderPipelineListeners: Set<() => void> = new Set();
     protected addRenderPipelineSuper<V extends VertexShader, F extends FragmentShader>(
-        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>
-
+        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>  & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>}
     ): RenderPipeline<V> {
         const d = new RenderPipeline({
             ...props,
@@ -60,7 +59,6 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
         this.renderPipeLines.add(d);
         this.renderPipelineListeners.forEach(cb =>
             cb());
-
         return d;
     }
     createSharedLayout<T extends BGLayout>(label: string, layout: T) {
@@ -114,7 +112,7 @@ export class SharedPipelineLayout<B extends BGLayout[]> extends RenderPipelineLa
         super(props);
     }
     addRenderPipeline<V extends VertexShader, F extends FragmentShader>(
-        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>,
+        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>  & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>},
         bindGroups: (bindGroup: BindGroup) => extractGeneric<Last<B>>
     ) {
         const RP = this.addRenderPipelineSuper(props);
@@ -143,8 +141,7 @@ B extends readonly BGLayout[] = readonly BGLayout[]> extends RenderPipelineLayou
         V extends VertexShader   <B>,
         F extends FragmentShader <B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []>
         >(
-        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>
-
+        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'> & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>}
     ): RenderPipeline<V> {
         return this.addRenderPipelineSuper(props);
     }

@@ -26,6 +26,9 @@ export const PlantsRenderPipeline = [
             ]);
         return gpu.rootCameralayout.addRenderPipeline(
             {
+                connections: {
+                    'main': 'main',
+                },
                 fragmentShader: createColorFragmentShader(gpu.rootCameralayout),
                 label,
                 renderPipeline: {

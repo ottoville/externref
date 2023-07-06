@@ -16,6 +16,9 @@ export const NormalsPipeline = [
             });
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
+                connections: {
+                    'main': 'main',
+                },
                 fragmentShader: createColorFragmentShader(gpu.positionAndTimeBindGroup),
                 label,
                 renderPipeline: {

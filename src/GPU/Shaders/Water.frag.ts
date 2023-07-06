@@ -4,9 +4,10 @@ import type { GPU } from 'GPU.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { WaterInput, diffuseOutput } from './structs/Structs.js';
 type BindLayouts = GPU['bindGroupTextureWater']['bindGroupLayouts']
-export class WaterFragShader extends FragmentShader<BindLayouts> {
-    constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
-        super({
+
+export function createWaterFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
+    return new FragmentShader(
+        {
             bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: new FragmentShaderFunction(
@@ -31,6 +32,7 @@ export class WaterFragShader extends FragmentShader<BindLayouts> {
             },
             gpu: pipelineLayout.gpu,
             label: 'Water.frag',
-        });
-    }
+        }
+    );
 }
+export type WaterFragShader = ReturnType<typeof createWaterFragShader>;

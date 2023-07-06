@@ -1,6 +1,6 @@
 import type { GPU } from '../../GPU.js';
 import { createWaterVertShader, positionAttr } from '../../GPU/Shaders/Water.vert.js';
-import { WaterFragShader } from '../Shaders/Water.frag.js';
+import { createWaterFragShader } from '../Shaders/Water.frag.js';
 
 export const WaterRenderPipeline = [
     'WaterRenderPipeline',
@@ -20,7 +20,10 @@ export const WaterRenderPipeline = [
             });
         return gpu.bindGroupTextureWater.addRenderPipeline(
             {
-                fragmentShader: new WaterFragShader(gpu.bindGroupTextureWater),
+                connections: {
+                    'main': 'main',
+                },
+                fragmentShader: createWaterFragShader(gpu.bindGroupTextureWater),
                 label,
                 renderPipeline: {
                     primitive,

@@ -29,6 +29,10 @@ export const SimpleRenderPipeline = [
             });
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
+                connections: {
+                    'main': 'main',
+                    'pick': 'pick',
+                },
                 fragmentShader: gpu.simpleFragShader,
                 label,
                 renderPipeline: {

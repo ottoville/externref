@@ -8,29 +8,27 @@ import { FragmentShaderFunction } from './ShaderFunction.js';
 import { diffuseOutput } from './structs/Structs.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
 
-export class SingleColorFragShader extends FragmentShader<
-BindLayouts> {
-    constructor(pipelineLayout: PipelineLayout<BindLayouts>) {
-        super({
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            entryPoints: {
-                main: new FragmentShaderFunction(
-                    diffuseOutput,
-                    pipelineLayout,
-                    undefined,
-                    ([
-                        /*{ uniforms, }*/,
-                        /*{ scene, clusters_array, meshes, projection, }*/,
-                        { world, }
-                    ]) => /* wgsl */
-                        `
-                    var output:Output;
-                    output.Diffuse = vec4<f32>(${world.prop('color')}, 1.0);
-                    return output;
-              `),
-            },
-            gpu: pipelineLayout.gpu,
-            label: 'SingleColor.frag',
-        });
-    }
+export function createSingleColorFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
+    return new FragmentShader({
+        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+        entryPoints: {
+            main: new FragmentShaderFunction(
+                diffuseOutput,
+                pipelineLayout,
+                undefined,
+                ([
+                    /*{ uniforms, }*/,
+                    /*{ scene, clusters_array, meshes, projection, }*/,
+                    { world, }
+                ]) => /* wgsl */
+                    `
+                var output:Output;
+                output.Diffuse = vec4<f32>(${world.prop('color')}, 1.0);
+                return output;
+          `),
+        },
+        gpu: pipelineLayout.gpu,
+        label: 'SingleColor.frag',
+    });
 }
+export type SingleColorFragShader = ReturnType<typeof createSingleColorFragShader>;

@@ -6,25 +6,22 @@ import { VertexShaderFunction } from './ShaderFunction.js';
 import { colorPositionOutput } from './structs/Structs.js';
 type BindGroupLayouts = Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts'];
 
-export class HelperVertShader extends VertexShader<BindGroupLayouts> {
-    constructor(
-        settings: typeof Terrain.settings,
-        pipelineLayout: PipelineLayout<BindGroupLayouts>) {
-
-        super({
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
-            entryPoints: {
-                main: new VertexShaderFunction(
-                    colorPositionOutput,
-                    pipelineLayout,
-                    [],
-                    ([
-                        /*{ uniforms, }*/,
-                        { scene, time, /*clusters_array, meshes, projection*/ },
-                        { world, }
-                        /*{ slopes, facet12, }*/
-                    ]) => /* wgsl */
-                        `
+export function createHelperVertShader(settings: typeof Terrain.settings,
+    pipelineLayout: PipelineLayout<BindGroupLayouts>) {
+    return new VertexShader({
+        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+        entryPoints: {
+            main: new VertexShaderFunction(
+                colorPositionOutput,
+                pipelineLayout,
+                [],
+                ([
+                    /*{ uniforms, }*/,
+                    { scene, time, /*clusters_array, meshes, projection*/ },
+                    { world, }
+                    /*{ slopes, facet12, }*/
+                ]) => /* wgsl */
+                    `
                 var output:Output;
  
      var angle:f32 = (f32(${time.prop('time')}) * 0.001) + f32(instanceIdx) * angleStep;
@@ -41,19 +38,19 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
      output.color = vec3<f32>(1.0,1.0,1.0);
      return output;
                 `,
-                    `@builtin(instance_index) instanceIdx : u32,
+                `@builtin(instance_index) instanceIdx : u32,
                 @builtin(vertex_index) VertexIndex : u32,`),
-            },
-            gpu: pipelineLayout.gpu,
-            label: 'helper.vert',
         },
-        ([
-            /*{ uniforms, }*/,
-            /*{ scene,time, clusters_array, meshes, projection }*/,
-            /*{ world, }*/,
-            { slopes, facet12, }
-        ]) =>
-            `
+        gpu: pipelineLayout.gpu,
+        label: 'helper.vert',
+    },
+    ([
+        /*{ uniforms, }*/,
+        /*{ scene,time, clusters_array, meshes, projection }*/,
+        /*{ world, }*/,
+        { slopes, facet12, }
+    ]) =>
+        `
         const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
         ${getHeightAtCoordinates(settings,
         slopes,
@@ -65,5 +62,6 @@ export class HelperVertShader extends VertexShader<BindGroupLayouts> {
           vec2<f32>( 0.5,  3.0),
           vec2<f32>( 0.5, -3.0)
         );`);
-    }
 }
+
+export type HelperVertShader = ReturnType<typeof createHelperVertShader>

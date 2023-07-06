@@ -12,7 +12,8 @@ export type RenderPipelineProps<V extends VertexShader, F extends FragmentShader
     depthBuffer?: {
         depthWriteEnabled: boolean, depthCompare: GPUCompareFunction
     },
-    bindgroupdrawable: RenderPipelineLayout
+    bindgroupdrawable: RenderPipelineLayout,
+    connections: Record<string, string>
 }
 export class RenderPipeline<V extends VertexShader = VertexShader, F extends FragmentShader = FragmentShader> {
 

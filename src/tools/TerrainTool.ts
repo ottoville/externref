@@ -6,7 +6,7 @@ import type { GPU } from '../GPU.js';
 import { MutableTerraVector3, TerraVector3 } from '../Math.js';
 import type { Engine, ListenerObj, rust_pointer } from '../engine.js';
 import type { Scene } from '../Scene.js';
-import { HelperVertShader } from '../GPU/Shaders/helper.vert.js';
+import { HelperVertShader, createHelperVertShader } from '../GPU/Shaders/helper.vert.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
@@ -150,10 +150,13 @@ export class TerrainTool extends MainNode {
             'TerrainToolRenderpipeline',
             function getRenderPipelinef(_gpu: GPU, label: string, primitive: GPUPrimitiveState
             ) {
-                const helperVertShader = new HelperVertShader(terrain.settings,
+                const helperVertShader = createHelperVertShader(terrain.settings,
                     terrain.TerrainHeightsbindGroupTree);
                 const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
                     {
+                        connections: {
+                            'main': 'main',
+                        },
                         fragmentShader: createColorFragmentShader(terrain.TerrainHeightsbindGroupTree),
                         label,
                         renderPipeline: {

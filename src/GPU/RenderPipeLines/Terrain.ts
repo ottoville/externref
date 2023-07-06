@@ -1,6 +1,6 @@
 import type { GPU } from '../../GPU';
 import { createGroundVertShader } from '../Shaders/Ground.vert.js';
-import { GroundFragShader } from '../Shaders/Ground.frag.js';
+import { createGroundFragShader } from '../Shaders/Ground.frag.js';
 
 const attributes = Object.freeze(
     {
@@ -40,14 +40,20 @@ export const TerrainRenderPipeline = [
             }
 
         );
+
         return gpu.lightsTextureBindGroup.addRenderPipeline(
             {
-                fragmentShader: new GroundFragShader(gpu.lightsTextureBindGroup),
+                connections: {
+                    'main': 'main',
+                    'pick': 'pick',
+                },
+                fragmentShader: createGroundFragShader(gpu.lightsTextureBindGroup),
                 label,
                 renderPipeline: {
                     primitive,
                 },
                 vertexShader: groundVertShader,
+
             });
     }
 ] as const;

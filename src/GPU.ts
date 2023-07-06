@@ -617,6 +617,9 @@ export class GPU {
             });
         this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
             {
+                connections: {
+                    'main': 'main',
+                },
                 fragmentShader: createUIFragmentShader(this.#canvasRootLayout),
                 label: 'UIRenderPipeline',
                 renderPipeline: {

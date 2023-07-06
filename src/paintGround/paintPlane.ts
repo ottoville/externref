@@ -114,6 +114,9 @@ export class paintPlane extends paintGround {
                 );
                 return ground.TerrainHeightsbindGroupTree.addRenderPipeline(
                     {
+                        connections: {
+                            'main': 'main',
+                        },
                         fragmentShader: createColorFragmentShader(ground.TerrainHeightsbindGroupTree),
                         label,
                         renderPipeline: {

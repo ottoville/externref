@@ -22,6 +22,9 @@ export const DebugLinesPipeline = [
             });
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
+                connections: {
+                    'main': 'main',
+                },
                 fragmentShader: createColorFragmentShader(gpu.positionAndTimeBindGroup),
                 label,
                 renderPipeline: {
