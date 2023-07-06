@@ -5,8 +5,8 @@ import { createSingleColorFragShader } from '../Shaders/SingleColor.frag.js';
 export const SunRenderPipeline = [
     'SunRenderPipeline',
     function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-        const sunVertShader = createSunVertShader(gpu.positionAndTimeBindGroup);
-
+        const vertexShader = createSunVertShader(gpu.positionAndTimeBindGroup);
+        const fragmentShader = createSingleColorFragShader(gpu.positionAndTimeBindGroup);
         return gpu.positionAndTimeBindGroup.addRenderPipeline(
             {
                 connections: {
@@ -15,13 +15,12 @@ export const SunRenderPipeline = [
                 depthBuffer: {
                     depthCompare: 'always', depthWriteEnabled: false,
                 },
-                fragmentShader: createSingleColorFragShader(gpu.positionAndTimeBindGroup),
+                fragmentShader,
                 label,
                 renderPipeline: {
                     primitive,
                 },
-
-                vertexShader: sunVertShader,
+                vertexShader,
             }
         );
     }

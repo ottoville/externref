@@ -32,7 +32,7 @@ export const TerrainRenderPipeline = [
     function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
         stride: number;
     }) {
-        const groundVertShader = createGroundVertShader(gpu.lightsTextureBindGroup,
+        const vertexShader = createGroundVertShader(gpu.lightsTextureBindGroup,
             {
                 arrayStride: vertexBufferProps.stride * 4,
                 attributes2: attributes,
@@ -40,19 +40,19 @@ export const TerrainRenderPipeline = [
             }
 
         );
-
+        const fragmentShader = createGroundFragShader(gpu.lightsTextureBindGroup);
         return gpu.lightsTextureBindGroup.addRenderPipeline(
             {
                 connections: {
                     'main': 'main',
                     'pick': 'pick',
                 },
-                fragmentShader: createGroundFragShader(gpu.lightsTextureBindGroup),
+                fragmentShader,
                 label,
                 renderPipeline: {
                     primitive,
                 },
-                vertexShader: groundVertShader,
+                vertexShader,
 
             });
     }

@@ -1,6 +1,5 @@
 import { GPU } from '../../GPU.js';
 import { createDebugBoundingBoxVertShader } from '../Shaders/devtools/debug_boundingbox.vert.js';
-import { createColorFragmentShader } from '../Shaders/Color.frag.js';
 const positionAttr = Object.freeze({
     position: {
         format: 'float32x3',
@@ -9,12 +8,12 @@ const positionAttr = Object.freeze({
         shaderLocation: 0,
     },
 } as const);
-export const DebugLinesPipeline = [
+export const DebugLinesPipeline = Object.freeze([
     'DebugLinesPipeline',
     function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
         stride: number;
     }) {
-        const shader = createDebugBoundingBoxVertShader(gpu.positionAndTimeBindGroup,
+        const vertexShader = createDebugBoundingBoxVertShader(gpu.positionAndTimeBindGroup,
             {
                 arrayStride: vertexBufferProps.stride * 4,
                 attributes2: positionAttr,
@@ -25,13 +24,13 @@ export const DebugLinesPipeline = [
                 connections: {
                     'main': 'main',
                 },
-                fragmentShader: createColorFragmentShader(gpu.positionAndTimeBindGroup),
+                fragmentShader: gpu.colorFragShader,
                 label,
                 renderPipeline: {
                     primitive,
                 },
-                vertexShader: shader,
+                vertexShader,
             }
         );
     }
-] as const;
+] as const);

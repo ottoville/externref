@@ -21,7 +21,7 @@ export const simpleAttributes = Object.freeze(
 export const SimpleRenderPipeline = [
     'SimpleRenderPipeline',
     function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: { stride: number }) {
-        const simpleVertShader = createSimpleVertShader(gpu.positionAndTimeBindGroup,
+        const vertexShader = createSimpleVertShader(gpu.positionAndTimeBindGroup,
             {
                 arrayStride: vertexBufferProps.stride * 4,
                 attributes2: simpleAttributes,
@@ -38,7 +38,7 @@ export const SimpleRenderPipeline = [
                 renderPipeline: {
                     primitive,
                 },
-                vertexShader: simpleVertShader,
+                vertexShader,
             });
     }
 ] as const;

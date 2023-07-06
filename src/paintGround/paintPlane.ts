@@ -96,7 +96,7 @@ export class paintPlane extends paintGround {
         const renderPipeline = ground.gpu.createRenderPipeline([
             'paintPlaneRenderpipeline',
             (_gpu, label, primitive, vertexBufferProps) => {
-                const planeVertShader = createPlaneAtGroundHeightVertShader(
+                const vertexShader = createPlaneAtGroundHeightVertShader(
                     ground.TerrainHeightsbindGroupTree,
                     {
                         arrayStride: vertexBufferProps.stride * 4,
@@ -112,17 +112,18 @@ export class paintPlane extends paintGround {
                     },
                     Terrain.settings
                 );
+                const fragmentShader = createColorFragmentShader(ground.TerrainHeightsbindGroupTree);
                 return ground.TerrainHeightsbindGroupTree.addRenderPipeline(
                     {
                         connections: {
                             'main': 'main',
                         },
-                        fragmentShader: createColorFragmentShader(ground.TerrainHeightsbindGroupTree),
+                        fragmentShader,
                         label,
                         renderPipeline: {
                             primitive,
                         },
-                        vertexShader: planeVertShader,
+                        vertexShader,
                     });
             }
         ],

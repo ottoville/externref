@@ -1,14 +1,13 @@
 import { GPU } from '../../GPU.js';
 import { createDebugNormalsVertShader } from '../Shaders/devtools/debug_normals.vert.js';
-import { createColorFragmentShader } from '../Shaders/Color.frag.js';
 import { simpleAttributes } from './SimpleRenderPipeline.js';
 
-export const NormalsPipeline = [
+export const NormalsPipeline = Object.freeze([
     'NormalsPipeline',
     function create(gpu: GPU, label: string, primitive: GPUPrimitiveState, vertexBufferProps: {
         stride: number;
     }) {
-        const debugNormalsVertShader = createDebugNormalsVertShader(gpu.positionAndTimeBindGroup,
+        const vertexShader = createDebugNormalsVertShader(gpu.positionAndTimeBindGroup,
             {
                 arrayStride: vertexBufferProps.stride * 4,
                 attributes2: simpleAttributes,
@@ -19,12 +18,12 @@ export const NormalsPipeline = [
                 connections: {
                     'main': 'main',
                 },
-                fragmentShader: createColorFragmentShader(gpu.positionAndTimeBindGroup),
+                fragmentShader: gpu.colorFragShader,
                 label,
                 renderPipeline: {
                     primitive,
                 },
-                vertexShader: debugNormalsVertShader,
+                vertexShader,
             });
     }
-] as const;
+] as const);

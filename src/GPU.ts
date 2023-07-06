@@ -18,12 +18,14 @@ import { createUpdateViewShader, UpdateView } from './GPU/Shaders/UpdateView.com
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
 import { SharedPipelineLayout, BindablePipelineLayout } from './GPU/PipelineLayout.js';
 import { RenderPipeline } from './GPU/RenderPipeline.js';
-import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct } from './GPU/Shaders/structs/Structs.js';
+import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct, diffuseOutput, colorPositionOutput } from './GPU/Shaders/structs/Structs.js';
 import { createUIVertShader, position_uv_attrs, UIVertShader } from './GPU/Shaders/UI.vert.js';
 import { createUIFragmentShader } from './GPU/Shaders/UI.frag.js';
 import { MainNode } from './MainNode.js';
 import type { VertexShader } from './GPU/Shaders/VertexShader.js';
 import { createSimpleFragShader, SimpleFragShader } from './GPU/Shaders/Simple.frag.js';
+import { FragmentShader } from './GPU/Shaders/FragmentShader.js';
+import { FragmentShaderFunction } from './GPU/Shaders/ShaderFunction.js';
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -60,7 +62,7 @@ export class GPU {
     readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
     readonly tempGPUBuffers: GPUBuffer[] = [];
 
-    readonly rootCameralayout: BindablePipelineLayout<[
+    readonly rootCameralayout: BindablePipelineLayout<readonly [
         typeof this.sizeBindGroupLayout,
         typeof this.uniformBindGroupLayoutWithTime
     ]>;
@@ -163,6 +165,12 @@ export class GPU {
         uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>,
         texture: TextLayout<ShaderStage.FRAGMENT>
     }>;
+    colorFragShader: FragmentShader<
+        typeof this.positionAndTimeBindGroup.bindGroupLayouts,
+        {
+            main: FragmentShaderFunction<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
+        }
+    >;
     destroyed = false;
     fps = 0;
     simpleFragShader: SimpleFragShader;
@@ -609,18 +617,19 @@ export class GPU {
             bindGroupLayouts: [this.BindGroupLayoutCanvas],
             label: 'canvasRootLayout',
         });
-        const uiVertShader = createUIVertShader(this.#canvasRootLayout,
+        const vertexShader = createUIVertShader(this.#canvasRootLayout,
             {
                 arrayStride: 4 * 4,
                 attributes2: position_uv_attrs,
                 stepMode: 'vertex',
             });
+        const fragmentShader = createUIFragmentShader(this.#canvasRootLayout);
         this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
             {
                 connections: {
                     'main': 'main',
                 },
-                fragmentShader: createUIFragmentShader(this.#canvasRootLayout),
+                fragmentShader,
                 label: 'UIRenderPipeline',
                 renderPipeline: {
                     primitive: {
@@ -628,8 +637,24 @@ export class GPU {
                         topology: 'triangle-list',
                     },
                 },
-                vertexShader: uiVertShader,
+                vertexShader,
             });
+        this.colorFragShader = new FragmentShader({
+            bindGroupLayouts: this.positionAndTimeBindGroup.bindGroupLayouts,
+            entryPoints: {
+                main: new FragmentShaderFunction(
+                    diffuseOutput,
+                    this.positionAndTimeBindGroup,
+                    colorPositionOutput,
+                    () =>
+                    /* wgsl */ `
+            var output:Output;
+            output.Diffuse = vec4<f32>(color,1.0);
+            return output;`),
+            },
+            gpu: this,
+            label: 'color.frag',
+        });
 
         this.renderPassCanvas = new RenderPass({
             colorRenderTargets: {

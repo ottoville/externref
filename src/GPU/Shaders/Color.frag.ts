@@ -16,8 +16,8 @@ export function createColorFragmentShader<B extends readonly BGLayout[]>(pipelin
                 diffuseOutput,
                 pipelineLayout,
                 colorPositionOutput,
-                () => /* wgsl */
-                    `
+                () =>
+                /* wgsl */ `
         var output:Output;
         output.Diffuse = vec4<f32>(color,1.0);
         return output;`),
