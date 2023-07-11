@@ -57,7 +57,7 @@ export const enum TextureUsageEnums {
 }
 
 
-type COPY_SRC_TEXTURE = typeof TextureUsageEnums['COPY_SRC'] |
+export type COPY_SRC_TEXTURE = typeof TextureUsageEnums['COPY_SRC'] |
                         typeof TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'] |
                         typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'] |
                         typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'] |
@@ -126,7 +126,12 @@ export class Texture<
             destinationDetails,
             copySize);
     }
-    copyFrom(this: Texture<GPUTextureFormat, COPY_DST_TEXTURE>, commandEncoder: GPUCommandEncoder, from: Texture<GPUTextureFormat, COPY_SRC_TEXTURE, TextureSize>  & Texture<GPUTextureFormat, COPY_SRC_TEXTURE>, sourceDetails: Omit<GPUImageCopyTexture, 'texture'>, destinationDetails: Omit<GPUImageCopyTexture, 'texture'>, copySize: GPUExtent3DStrict) {
+    copyFrom(this: Texture<GPUTextureFormat, COPY_DST_TEXTURE>,
+        commandEncoder: GPUCommandEncoder,
+        from: Texture<GPUTextureFormat, COPY_SRC_TEXTURE>,
+        sourceDetails: Omit<GPUImageCopyTexture, 'texture'>,
+        destinationDetails: Omit<GPUImageCopyTexture, 'texture'>,
+        copySize: GPUExtent3DStrict) {
         commandEncoder.copyTextureToTexture(
             {
                 texture: from.texture,

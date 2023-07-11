@@ -56,7 +56,40 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
 type format = 'f32' | 'i32' | 'u32';
 type storageFormat = 'rgba8unorm' | 'rgba8snorm' | 'rgba8uint' | 'rgba8sint' | 'rgba16uint' | 'rgba16sint' | 'rgba16float' | 'r32uint' | 'r32sint' | 'r32float' | 'rg32uint' | 'rg32sint' | 'rg32float' | 'rgba32uint' | 'rgba32sint' | 'rgba32float' | 'bgra8unorm';
 
-export class StorageTextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
+abstract class AbstractTextureLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
+    constructor(
+        entry:
+            BindGroupLayoutEntryProps<V> &
+            ({ texture: Omit<NonNullable<GPUBindGroupLayoutEntry['texture']>, 'viewDimension'> } |
+            { storageTexture: Omit<NonNullable<GPUBindGroupLayoutEntry['storageTexture']>, 'viewDimension'> }),
+        structName: string
+    ) {
+        const wsglType = structName.split('<')[0]!;
+        const types = [
+            '1d',
+            '2d',
+            '2d_array',
+            'cube',
+            'cube_array',
+            '3d'
+        ] as const;
+        const layoutType = types.find(type =>
+            wsglType.endsWith(type)
+        )!;
+        if(entry.texture) {
+            entry.texture.viewDimension = layoutType!.replace('_',
+                '-') as GPUTextureViewDimension;
+        } else if(entry.storageTexture) {
+            entry.storageTexture.viewDimension = layoutType!.replace('_',
+                '-') as GPUTextureViewDimension;
+        }
+        super(
+            entry,
+            structName);
+    }
+}
+
+export class StorageTextLayout<V extends ShaderStage = ShaderStage> extends AbstractTextureLayout<V> {
     constructor(
         public override entry:
             BindGroupLayoutEntryProps<V> &
@@ -74,11 +107,11 @@ export class StorageTextLayout<V extends ShaderStage = ShaderStage> extends Bind
     }
 }
 
-export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
+export class TextLayout<V extends ShaderStage = ShaderStage> extends AbstractTextureLayout<V> {
     constructor(
         public override entry:
-            BindGroupLayoutEntryProps<V> &
-                { texture: NonNullable<GPUBindGroupLayoutEntry['texture']> },
+            Omit<BindGroupLayoutEntryProps<V>, 'texture'> &
+                { texture: Omit<NonNullable<GPUBindGroupLayoutEntry['texture']>, 'viewDimension'> },
         structName:
         //sampled texture types https://www.w3.org/TR/WGSL/#sampled-texture-type
         | `texture_2d<${format}>`
@@ -92,7 +125,8 @@ export class TextLayout<V extends ShaderStage = ShaderStage> extends BindGroupLa
         //External Sampled Texture Types https://www.w3.org/TR/WGSL/#external-texture-type
         | 'texture_external'
     ) {
-        super(entry,
+        super(
+            entry,
             structName);
     }
 }

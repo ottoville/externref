@@ -35,14 +35,15 @@ export abstract class Shader<
                 binding.variableName = uniqueName;
                 let qualifiers = '';
                 if (binding instanceof BufLayout) {
-                    if (binding.entry.buffer.type === 'uniform') {
+                    if (binding.entry.buffer.type === 'read-only-storage') {
+                        qualifiers = '<storage, read>';
+                    } else if(binding.entry.buffer.type === 'storage') {
+                        qualifiers = '<storage, read_write>';
+                    } else {
+                        // If type is omnitted, default type is uniform https://gpuweb.github.io/gpuweb/#dictdef-gpubufferbindinglayout
                         qualifiers = '<uniform>';
                     }
-                    else if (binding.entry.buffer.type === 'read-only-storage') {
-                        qualifiers = '<storage, read>';
-                    } else {
-                        qualifiers = '<storage, read_write>';
-                    }
+
                     if (binding.struct.depedencies) {
                         //@ts-expect-error https://github.com/microsoft/TypeScript/issues/28560
                         (binding.struct as Struct).depedencies.forEach(depedency => {

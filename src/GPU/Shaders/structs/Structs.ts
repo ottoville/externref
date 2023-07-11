@@ -1,7 +1,7 @@
 /* eslint-disable sort-keys */
 import { BufLayout, ShaderStage } from '../../BindGroupLayout.js';
 
-export class Struct<T extends { [index: string]: [properties: string, type: string] } = { [index: string]: [size: string, type: string] }> {
+export class Struct<const T extends { [index: string]: readonly [properties: string, type: string] } = { [index: string]: readonly [size: string, type: string] }> {
     constructor(public name: string, public properties: T, public depedencies?: Struct[]) {
 
     }

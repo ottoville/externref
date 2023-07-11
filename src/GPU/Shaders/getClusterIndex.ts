@@ -2,8 +2,8 @@ import type { BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import type { ProjectionStruct, Struct } from './structs/Structs.js';
 
 export const getClusterIndex = (uniforms: BufLayout<number, Struct<{
-    screenDimensions: [string, string];
-    screendimensions_ratio: [string, string];
+    screenDimensions: readonly [string, string];
+    screendimensions_ratio: readonly [string, string];
 }>>, projection: BufLayout<ShaderStage.FRAGMENT, typeof ProjectionStruct>) =>
 /* wgsl */ `
     fn linearDepth(depthSample : f32) -> f32 {
