@@ -398,14 +398,8 @@ export abstract class UIRectangle extends DataNode {
             this.drawable.setStaticBindGroup('UI_bindgroup_' + label,
                 (bindGroup) => {
                     return ({
-                        todo1: {
-                            binding: 0,
-                            resource: this.textureView.getTextureBinding(bindGroup),
-                        },
-                        todo2: {
-                            binding: 1,
-                            resource: this.uniformBuffer.getUniformBinding(bindGroup),
-                        },
+                        todo1: this.textureView.getTextureBinding(bindGroup),
+                        todo2: this.uniformBuffer.getUniformBinding(bindGroup),
                     });
                 });
         });

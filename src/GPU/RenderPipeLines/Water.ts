@@ -32,12 +32,8 @@ export const WaterRenderPipeline = [
             },
             (bindGroup) =>
                 ({
-                    diffuseTexture: {
-                        resource: gpu.renderPassWater.colorRenderTargets.diffuse.view.getTextureBinding(bindGroup),
-                    },
-                    mySampler: {
-                        resource: sampler,
-                    },
+                    diffuseTexture: gpu.renderPassWater.colorRenderTargets.diffuse.view.getTextureBinding(bindGroup),
+                    mySampler: sampler,
                 })
         );
     }

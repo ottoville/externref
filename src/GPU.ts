@@ -263,15 +263,9 @@ export class GPU {
         this.#updateViewBindGroup = this.updateViewShader.props.bindGroupLayouts[0].createBindGroup('updateViewBindGroup',
             bindGroup =>
                 ({
-                    directional_lights: {
-                        resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
-                    },
-                    meshes: {
-                        resource: this.GPUMeshes.getStorageBinding(bindGroup),
-                    },
-                    point_lights: {
-                        resource: this.#GPUPointLights.getStorageBinding(bindGroup),
-                    },
+                    directional_lights: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
+                    meshes: this.GPUMeshes.getStorageBinding(bindGroup),
+                    point_lights: this.#GPUPointLights.getStorageBinding(bindGroup),
                 }));
         this.uniformBindGroupLayoutWithTime = new BGLayout(this,
             'uniformBindGroupLayoutWithTime',
@@ -366,11 +360,9 @@ export class GPU {
         this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition',
             bindGroup =>
                 ({
-                    world: {
-                        resource: this.GPUMeshes.getUniformBinding(bindGroup,
-                            0,
-                            GPU.gpu_memory_index_size),
-                    },
+                    world: this.GPUMeshes.getUniformBinding(bindGroup,
+                        0,
+                        GPU.gpu_memory_index_size),
                 })
         );
         this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot',

@@ -228,12 +228,8 @@ TODO
                 const sourceBindGroup = CreateGroundFromHeightMapShader.props.bindGroupLayouts[0].createBindGroup('sourceBindGroup',
                     (bindGroup) =>
                         ({
-                            pixels: {
-                                resource: texture.createView(),
-                            },
-                            positions: {
-                                resource: terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
-                            },
+                            pixels: texture.createView(),
+                            positions: terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
                         }));
                 passEncoder.setPipeline(await CreateGroundFromHeightMapPipelineP);
                 passEncoder.setBindGroup(0,
@@ -390,12 +386,8 @@ TODO
         });
         const _heightsBindGroupEntries = (bindGroup: BindGroup) =>
             ({
-                facet12: {
-                    resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
-                },
-                slopes: {
-                    resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
-                },
+                facet12: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
+                slopes: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
             });
         this.heightsLayout = new BGLayout(gpu,
             'terrainBindGroupLayout',
@@ -424,12 +416,8 @@ TODO
             this.heightsLayout.createBindGroup('TerrainHeightsbindGroupTree',
                 bindGroup =>
                     ({
-                        facet12: {
-                            resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
-                        },
-                        slopes: {
-                            resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
-                        },
+                        facet12: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
+                        slopes: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
                     })));
 
 
@@ -444,9 +432,7 @@ TODO
 
         const terrainPositionAndUvsAndNormalsGPU_bgroup = (bindGroup: BindGroup) =>
 ({
-    vertices: {
-        resource: this.terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
-    },
+    vertices: this.terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
 }) as const;
         //todo: remove unneeded flags
         const terrainIndicesGPU = Buffer.create(gpu,
@@ -464,9 +450,7 @@ TODO
             shaders.calculatePlaneIndices.props.bindGroupLayouts[0].createBindGroup('terrainIndicesGPUBindgroup',
                 (bindGroup) =>
                     ({
-                        indices: {
-                            resource: terrainIndicesGPU.getStorageBinding(bindGroup),
-                        },
+                        indices: terrainIndicesGPU.getStorageBinding(bindGroup),
                     })
             ).bindGroup);
         passEncoder.dispatchWorkgroups(...Terrain.#subdivisions);
@@ -518,9 +502,7 @@ TODO
                 const bindGroup1 = shaders.createTexture.props.bindGroupLayouts[1].createBindGroup('writableTexture',
                     (bindGroup) =>
                         ({
-                            ground_texture: {
-                                resource: textureView.getTextureBinding(bindGroup),
-                            },
+                            ground_texture: textureView.getTextureBinding(bindGroup),
                         }));
                 passEncoder.setPipeline(createTexturePipeline);
                 const bindGroupHeightsRead = slopesLayout.createBindGroup('bindGroupHeightsRead',

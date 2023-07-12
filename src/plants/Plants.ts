@@ -172,9 +172,7 @@ export class Plants extends MainNode {
                     const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup2',
                         bg =>
                             ({
-                                positions: {
-                                    resource: worldCopyGPU.getStorageBinding(bg),
-                                },
+                                positions: worldCopyGPU.getStorageBinding(bg),
                             }));
 
                     passEncoder.setBindGroup(0,
@@ -213,19 +211,10 @@ export class Plants extends MainNode {
             const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1',
                 bindGroup1 =>
                     ({
-                        facet12: {
-                            resource: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1),
-                        },
-
-                        positionAndRotate: {
-                            resource: positionGPUSwap.getStorageBinding(bindGroup1),
-                        },
-                        shapes: {
-                            resource: shapeGPUSwap.getStorageBinding(bindGroup1),
-                        },
-                        slopes: {
-                            resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1),
-                        },
+                        facet12: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1),
+                        positionAndRotate: positionGPUSwap.getStorageBinding(bindGroup1),
+                        shapes: shapeGPUSwap.getStorageBinding(bindGroup1),
+                        slopes: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1),
                     }));
         }).catch(err =>
             engine.showError(err,

@@ -8,9 +8,9 @@ export interface GPUBindGroupTextureEntry {
     texture: GPUTextureBindingLayout;
 }
 export type MapToGPUBindGroupEntry<T extends {[index:string]: BindGroupLayoutEntry}> = {
-    [K in keyof T]: T[K] extends TextLayout ? { resource: GPUTextureView | GPUExternalTexture } :
-    T[K] extends BufLayout ? { resource: GPUBufferBinding }
-    : Omit<GPUBindGroupEntry, 'binding'> };
+    [K in keyof T]: T[K] extends TextLayout ? GPUTextureView | GPUExternalTexture :
+    T[K] extends BufLayout ? GPUBufferBinding
+    : GPUBindingResource };
 export type GPUBindGroupLayoutEntryBuffer = Omit<GPUBindGroupLayoutEntry, 'binding'> & {
     buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 }
 }
@@ -54,6 +54,9 @@ export class BufLayout<V extends ShaderStage = ShaderStage, S extends Struct = S
 }
 
 type format = 'f32' | 'i32' | 'u32';
+/**
+ * https://www.w3.org/TR/WGSL/#storage-texel-formats
+ */
 type storageFormat = 'rgba8unorm' | 'rgba8snorm' | 'rgba8uint' | 'rgba8sint' | 'rgba16uint' | 'rgba16sint' | 'rgba16float' | 'r32uint' | 'r32sint' | 'r32float' | 'rg32uint' | 'rg32sint' | 'rg32float' | 'rgba32uint' | 'rgba32sint' | 'rgba32float' | 'bgra8unorm';
 
 abstract class AbstractTextureLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {

@@ -22,8 +22,8 @@ export class BindGroup<L extends BGLayout = BGLayout> {
             this.#bindGroup = this.layout.gpu.device.createBindGroup({
                 entries: Object.values(entries).map((entry, i) =>
                     ({
-                        ...entry,
                         binding: i,
+                        resource: entry,
                     })),
                 label: this.label,
                 layout: this.layout.layout,
@@ -35,7 +35,7 @@ export class BindGroup<L extends BGLayout = BGLayout> {
     constructor(
         public layout: L,
         private label: string,
-        private entriesf: (bindGroup: BindGroup) => {[index: string] : Omit<GPUBindGroupEntry, 'binding'>},
+        private entriesf: (bindGroup: BindGroup) => {[index: string] : GPUBindingResource},
         readonly renderPasses: Set<RenderPass> = new Set()) {
         this.renderPasses.forEach(rp =>
             rp.bundles.forEach(bundle => {

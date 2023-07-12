@@ -125,11 +125,9 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
             gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup',
                 bindGroup =>
                     ({
-                        uniforms: {
-                            resource: this.#sizeBuffer.getUniformBinding(bindGroup,
-                                0,
-                                16),
-                        },
+                        uniforms: this.#sizeBuffer.getUniformBinding(bindGroup,
+                            0,
+                            16),
                     }));
     }
     #updateSizeBindGroup(initial = false) {

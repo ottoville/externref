@@ -86,33 +86,20 @@ export class TerraCamera {
             this.uniformBindGroup = gpu.uniformBindGroupLayoutWithTime.createBindGroup('uniformBindGroup',
                 (bindGroup) =>
                     ({
-                        clusters_array: {
-                            resource: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
-                        },
-                        meshes: {
-                            resource: gpu.GPUMeshes.getStorageBinding(bindGroup),
-                        },
-                        projection: { //TODO: Set to own group because shared by many cameras
-                            resource: projection.gpuBuffer.getUniformBinding(bindGroup),
-                        },
-                        scene: {
-                            resource: this.#uniformBuffer!.getUniformBinding(bindGroup),
-                        },
-                        time: {
-                            resource: gpu.timeBuffer.getUniformBinding(bindGroup),
-                        },
+                        clusters_array: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
+                        meshes: gpu.GPUMeshes.getStorageBinding(bindGroup),
+                        //TODO: Set to own group because shared by many cameras
+                        projection: projection.gpuBuffer.getUniformBinding(bindGroup),
+                        scene: this.#uniformBuffer!.getUniformBinding(bindGroup),
+                        time: gpu.timeBuffer.getUniformBinding(bindGroup),
                     })
                 ,
                 new Set([renderPass]));
             this.updateViewBindGroup = gpu.updateViewShader.props.bindGroupLayouts[1].createBindGroup('updateViewBindGroup2',
                 (bindGroup) =>
                     ({
-                        clusters: {
-                            resource: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
-                        },
-                        viewUniforms: {
-                            resource: this.#uniformBuffer!.getUniformBinding(bindGroup),
-                        },
+                        clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
+                        viewUniforms: this.#uniformBuffer!.getUniformBinding(bindGroup),
                     })
             );
             gpu.projections.add(this.projection);
@@ -170,12 +157,8 @@ export class TerraCamera {
         const bindGroup = computePipelineClustersLayout.createBindGroup('updateProjection',
             bindGroup2 =>
                 ({
-                    clusters: {
-                        resource: this.#clusterArrayBuffer!.getStorageBinding(bindGroup2),
-                    },
-                    screentoview: {
-                        resource: this.projection!.gpuBuffer.getUniformBinding(bindGroup2),
-                    },
+                    clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup2),
+                    screentoview: this.projection!.gpuBuffer.getUniformBinding(bindGroup2),
                 }));
         passEncoder.setBindGroup(1,
             bindGroup.bindGroup);

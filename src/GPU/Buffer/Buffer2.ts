@@ -20,12 +20,13 @@ export const enum BufferUsageEnums {
 }
 type MAP_READ_BUFFER =  typeof BufferUsageEnums['MAP_READ'] |
                         typeof BufferUsageEnums['MAP_READ|COPY_DST'];
-type COPY_SRC_BUFFER = typeof BufferUsageEnums['COPY_SRC'] |
-typeof BufferUsageEnums['STORAGE|COPY_SRC']
+type COPY_SRC_BUFFER =  typeof BufferUsageEnums['COPY_SRC'] |
+                        typeof BufferUsageEnums['STORAGE|COPY_SRC']
 type COPY_DST_BUFFER =  typeof BufferUsageEnums['COPY_DST'] |
                         typeof BufferUsageEnums['MAP_READ|COPY_DST'];
-type STORAGE_BUFFER = typeof BufferUsageEnums['STORAGE'] |
-typeof BufferUsageEnums['STORAGE|COPY_SRC']
+type STORAGE_BUFFER =   typeof BufferUsageEnums['STORAGE'] |
+                        typeof BufferUsageEnums['STORAGE|COPY_SRC']
+type UNIFORM_BUFFER =   typeof BufferUsageEnums['UNIFORM']
 
 type BufferProps<U extends BufferUsageEnums> = {
     gpu: GPU,
@@ -134,7 +135,7 @@ export class Buffer2<U extends BufferUsageEnums> extends Bindable {
             destinationOffset,
             copySize);
     }
-    getStorageBinding(this: Buffer2<STORAGE_BUFFER>, label: string, bindGroup: BindGroup, offset = 0, bindingSize?: GPUSize64) {
+    #bufferBinding(label: string, bindGroup: BindGroup, offset = 0, bindingSize?: GPUSize64) {
         const obj: GPUBufferBinding & GPUObjectBase = {
             buffer: this.#buffer,
             label: label + '_Binding_for_buffer_' + this.props.label,
@@ -145,6 +146,18 @@ export class Buffer2<U extends BufferUsageEnums> extends Bindable {
         }
         this.bindGroups.add(bindGroup);
         return obj;
+    }
+    getStorageBinding(this: Buffer2<STORAGE_BUFFER>, bindGroup: BindGroup, offset = 0, bindingSize?: GPUSize64) {
+        return this.#bufferBinding('STORAGE',
+            bindGroup,
+            offset,
+            bindingSize);
+    }
+    getUniformBinding(this: Buffer2<UNIFORM_BUFFER>, bindGroup: BindGroup, offset?: GPUSize64, bindingSize?: GPUSize64) {
+        return this.#bufferBinding('UNIFORM',
+            bindGroup,
+            offset,
+            bindingSize);
     }
     override destroy() {
         this.#buffer.destroy();
