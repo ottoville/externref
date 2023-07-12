@@ -12,7 +12,7 @@ import { Uint16Vector2 } from './Math.js';
 import { DepthRenderTarget } from './GPU/RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './GPU/RenderPasses/DepthRenderPass.js';
 import { TerraCamera } from './TerraCamera.js';
-import { TextureUsageEnums } from './GPU/Texture.js';
+import { RENDER_TARGET_FORMAT, TextureUsageEnums } from './GPU/Texture.js';
 import { BGLayout, BufLayout, SampLayout, TextLayout, ShaderStage } from './GPU/BindGroupLayout.js';
 import { createUpdateViewShader, UpdateView } from './GPU/Shaders/UpdateView.comp.js';
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
@@ -109,7 +109,7 @@ export class GPU {
     readonly renderPassWater: DepthRenderPass<{
         diffuse: ColorRenderTarget<'bgra8unorm', typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING']>;
     }>;
-    readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, typeof TextureUsageEnums['RENDER_ATTACHMENT']>; }>;
+    readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<RENDER_TARGET_FORMAT, typeof TextureUsageEnums['RENDER_ATTACHMENT']>; }>;
 
     readonly #updateViewBindGroup: BindGroup;
     readonly clustersInRow: [number, number, number] = [
@@ -137,7 +137,7 @@ export class GPU {
         projection: BufLayout<ShaderStage.FRAGMENT, typeof ProjectionStruct>
         }>;
 
-    readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+    readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat() as 'rgba8unorm' | 'bgra8unorm';
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<'r32uint', typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']>; }>;
     readonly sizeBindGroupLayout: BGLayout<{
         uniforms: BufLayout<number, typeof Uniforms>;

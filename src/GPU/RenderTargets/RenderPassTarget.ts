@@ -3,7 +3,7 @@ export type Texture2dSize = {
     readonly width: GPUIntegerCoordinate;
     readonly height: GPUIntegerCoordinate;
 }
-import { RENDER_TARGET_TEXTURE, RenderTarget, STORAGE_BINDING_TEXTURE, Texture, TextureParams } from '../Texture.js';
+import { RENDER_TARGET_FORMAT, RENDER_TARGET_TEXTURE, RenderTarget, STORAGE_BINDING_TEXTURE, Texture, TextureParams } from '../Texture.js';
 
 export type RenderPassTargetOptions = {
     textureViewDescriptor?: GPUTextureViewDescriptor | undefined,
@@ -11,7 +11,7 @@ export type RenderPassTargetOptions = {
     context: GPUCanvasContext | undefined;
 }
 export class RenderPassTarget<
-F extends GPUTextureFormat = GPUTextureFormat,
+F extends RENDER_TARGET_FORMAT = RENDER_TARGET_FORMAT,
 U extends RENDER_TARGET_TEXTURE = RENDER_TARGET_TEXTURE>
     extends RenderTarget<F, U>
 {

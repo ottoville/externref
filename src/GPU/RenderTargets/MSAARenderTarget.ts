@@ -1,8 +1,8 @@
 import { ColorRenderTarget, ColorRenderTargetParams } from './ColorRenderTarget.js';
 import { RenderPassTarget, type RenderPassTargetOptions, type Texture2dSize } from './RenderPassTarget.js';
-import type { RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE, TextureParams } from '../Texture.js';
+import type { RENDER_TARGET_FORMAT, RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE, TextureParams } from '../Texture.js';
 
-export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RENDER_TARGET_TEXTURE = RENDER_TARGET_TEXTURE>
+export class MSAARenderTarget<F extends RENDER_TARGET_FORMAT = RENDER_TARGET_FORMAT, U extends RENDER_TARGET_TEXTURE = RENDER_TARGET_TEXTURE>
     extends ColorRenderTarget<F, U> {
     readonly resolveTexture?: RenderPassTarget<F, U>;
     readonly #resolveView: () => GPUTextureView;

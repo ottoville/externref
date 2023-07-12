@@ -5,7 +5,7 @@ import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { type BindUniformBuffer, Buffer, GPUBufferUsage } from '../Buffer/Buffer.js';
 import type { BindGroup } from '../BindGroup.js';
 import { RenderBundleEncoder } from '../RenderBundleEncoder.js';
-import type { RENDER_TARGET_TEXTURE } from '../Texture.js';
+import type { RENDER_TARGET_FORMAT, RENDER_TARGET_TEXTURE } from '../Texture.js';
 import { RenderPipelineLayout } from '../PipelineLayout.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 
@@ -39,9 +39,9 @@ export type RenderPassProps<U> = {
 }
 
 export class RenderPass<U extends {
-    [index: string]: ColorRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE>
+    [index: string]: ColorRenderTarget<RENDER_TARGET_FORMAT, RENDER_TARGET_TEXTURE>
 }
-    = { [index: string]: ColorRenderTarget<GPUTextureFormat, RENDER_TARGET_TEXTURE> },
+    = { [index: string]: ColorRenderTarget<RENDER_TARGET_FORMAT, RENDER_TARGET_TEXTURE> },
 > {
 
     readonly perspectiveCameras: Set<TerraCamera> = new Set();

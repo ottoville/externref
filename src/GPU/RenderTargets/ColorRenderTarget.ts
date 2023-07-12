@@ -1,4 +1,4 @@
-import type { RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE, TextureParams } from '../Texture.js';
+import type { RENDER_TARGET_FORMAT, RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE, TextureParams } from '../Texture.js';
 import { RenderPassTarget, type RenderPassTargetOptions, type Texture2dSize } from './RenderPassTarget.js';
 
 export type ColorRenderTargetParams = {
@@ -6,7 +6,7 @@ export type ColorRenderTargetParams = {
     blend: GPUBlendState | undefined,
 }
 
-export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RENDER_TARGET_TEXTURE = RENDER_TARGET_TEXTURE>
+export class ColorRenderTarget<F extends RENDER_TARGET_FORMAT = RENDER_TARGET_FORMAT, U extends RENDER_TARGET_TEXTURE = RENDER_TARGET_TEXTURE>
     extends RenderPassTarget<F, U>
 {
     #clearValue: GPUColor;

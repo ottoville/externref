@@ -25,6 +25,46 @@ export type TextureParams<F extends GPUTextureFormat, U extends Exclude<TextureU
      */
 type STORAGE_FORMATS = 'rgba8unorm' | 'rgba8snorm' | 'rgba8uint' | 'rgba8sint' | /* when bgra8unorm-storage is enanabled "bgra8unorm" |*/ 'rgba16uint' | 'rgba16sint' | 'rgba16float' |
 'r32uint' | 'r32sint' | 'r32float' | 'rg32uint' | 'rg32sint' | 'rg32float' | 'rgba32uint' | 'rgba32sint' | 'rgba32float';
+/**
+ * Alloved formats for RENDER_ATTACHMENT see https://gpuweb.github.io/gpuweb/#plain-color-formats
+ */
+export type RENDER_TARGET_FORMAT =  DEPTH_FORMATS | (
+    'r8unorm' |
+    'r8uint' |
+    'r8sint' |
+    'rg8unorm' |
+    'rg8uint' |
+    'rg8sint' |
+    'rgba8unorm' |
+    'rgba8unorm-srgb' |
+    'rgba8uint' |
+    'rgba8sint' |
+    'bgra8unorm' |
+    'bgra8unorm-srgb' |
+    'r16uint' |
+    'r16sint' |
+    'r16float' |
+    'rg16uint' |
+    'rg16sint' |
+    'rg16float' |
+    'rgba16sint' |
+    'rgba16float' |
+    'r32uint' |
+    'r32sint' |
+    'r32float'|
+    'rg32uint' |
+    'rg32sint' |
+    'rg32float'|
+    'rgba32uint' |
+    'rgba32sint' |
+    'rgba32float' |
+    'rgb10a2unorm'|
+    /** If "rg11b10ufloat-renderable" is enabled */
+    'rg11b10ufloat')
+/**
+ * Depth formats, see https://gpuweb.github.io/gpuweb/#depth-formats
+ */
+export type DEPTH_FORMATS = 'stencil8' | 'depth16unorm' | 'depth24plus' | 'depth24plus-stencil8' | 'depth32float' | 'depth32float-stencil8'
 
 export type TextureParamsStorage<
 F extends STORAGE_FORMATS,
@@ -96,9 +136,9 @@ export class Texture<
 > {
 
     //RenderTarget & Storage
-    static create<F extends STORAGE_FORMATS, U extends RENDER_TARGET_TEXTURE & STORAGE_BINDING_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParamsStorage<F, U, S>): RenderTarget<F, U, S>
+    static create<F extends STORAGE_FORMATS & RENDER_TARGET_FORMAT, U extends RENDER_TARGET_TEXTURE & STORAGE_BINDING_TEXTURE, S extends RenderTargetSize = RenderTargetSize>(props : TextureParamsStorage<F, U, S>): RenderTarget<F, U, S>
     //RenderTarget
-    static create<F extends GPUTextureFormat, U extends Exclude<RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE>, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F, U, S>): RenderTarget<F, U, S>
+    static create<F extends RENDER_TARGET_FORMAT, U extends Exclude<RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE>, S extends RenderTargetSize = RenderTargetSize>(props : TextureParams<F, U, S>): RenderTarget<F, U, S>
     //STORAGE
     static create<F extends STORAGE_FORMATS, U extends STORAGE_BINDING_TEXTURE, S extends TextureSize = TextureSize>(props : TextureParamsStorage<F, U, S>): Texture<F, U, S>
     static create<F extends GPUTextureFormat, U extends Exclude<TextureUsageEnums, STORAGE_BINDING_TEXTURE | RENDER_TARGET_TEXTURE>, S extends TextureSize = TextureSize>(props : TextureParams<F, U, S>): Texture<F, U, S>
@@ -195,7 +235,7 @@ export type RenderTargetSize = {
     readonly depthOrArrayLayers?: GPUIntegerCoordinate;
 }
 export class RenderTarget<
-    F extends GPUTextureFormat = GPUTextureFormat,
+    F extends RENDER_TARGET_FORMAT = RENDER_TARGET_FORMAT,
     U extends RENDER_TARGET_TEXTURE = RENDER_TARGET_TEXTURE,
     S extends RenderTargetSize = RenderTargetSize>
     extends Texture<F, U, S>
@@ -217,7 +257,7 @@ export class RenderTarget<
                 this.bytes_per_fixel = 16;
                 break;
             default:
-                throw new Error('unknown image format ' + textureOptions.format);
+                throw new Error('unknown renderTarget format ' + textureOptions.format);
         }
     }
     copyFromExternalImage(
