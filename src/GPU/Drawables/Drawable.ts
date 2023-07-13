@@ -6,13 +6,14 @@ import type { Engine } from '../../engine.js';
 import { BindGroup } from '../BindGroup.js';
 import { RenderPipeline } from '../RenderPipeline.js';
 import { MainNode } from '../../MainNode.js';
+import { Buffer2, type VERTEX_BUFFER } from '../Buffer/Buffer2.js';
 declare const engine: Engine;
 
 export type DrawableProps<N extends MainNode> = {
     renderPipeline: Readonly<RenderPipeline>;
     renderPasses?: Set<RenderPass> | undefined;
     dynamicBindGroups?: [BindGroup, number][];
-    vertexBuffers: readonly (ArrayBufferView | VertexBuffer)[] | undefined;
+    vertexBuffers: readonly (ArrayBufferView | VertexBuffer | Buffer2<VERTEX_BUFFER>)[] | undefined;
     node: N
 
 }
@@ -20,7 +21,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     node: N;
     #vertexBuffers: Map<number,
         {
-            buffer: VertexBuffer,
+            buffer: VertexBuffer | Buffer2<VERTEX_BUFFER>,
             offset: number | undefined,
             size: number | undefined
         }> = new Map();
@@ -94,19 +95,20 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         this.destroyed = true;
     }
     setVertexBuffer(index: number, buffer: ArrayBufferView, destroyOld?: boolean): VertexBuffer
-    setVertexBuffer<T extends VertexBuffer>(index: number, buffer: T, destroyOld?: boolean, GPUoffset?: number, size?: number): T
-    setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer, destroyOld?: boolean, GPUoffset?: number, size?: number): VertexBuffer
-    setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer, destroyOld = true, GPUoffset?: number, size?: number): VertexBuffer {
+    setVertexBuffer<T extends VertexBuffer | Buffer2<VERTEX_BUFFER>>(index: number, buffer: T, destroyOld?: boolean, GPUoffset?: number, size?: number): T
+    setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer | Buffer2<VERTEX_BUFFER>, destroyOld?: boolean, GPUoffset?: number, size?: number): VertexBuffer | Buffer2<VERTEX_BUFFER>
+    setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer | Buffer2<VERTEX_BUFFER>, destroyOld = true, GPUoffset?: number, size?: number): VertexBuffer | Buffer2<VERTEX_BUFFER> {
         if (destroyOld) {
             const Tbuffer = this.#vertexBuffers.get(index);
             if (Tbuffer) {
                 Tbuffer.buffer.destroy();
             }
         }
-        if (buffer instanceof Buffer)
+        if (buffer instanceof Buffer || buffer instanceof Buffer2)
             var Tbuffer = buffer;
         else {
             const gpu = this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
+            //@ts-expect-error remove when Buffer is removed for Buffer2
             var Tbuffer = Buffer.create(gpu,
                 buffer.byteLength,
                 [GPUBufferUsage.VERTEX],
@@ -143,7 +145,8 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         }
         this.#vertexBuffers.forEach((buffer, index) =>
             renderEncoder.setVertexBuffer(index,
-                buffer.buffer.getVertexBuffer(renderPass),
+                //@ts-expect-error Remove when Buffer is removed for Buffer2
+                buffer.buffer.getVertexBinding(renderPass),
                 buffer.offset,
                 buffer.size));
         console.debug('draw',

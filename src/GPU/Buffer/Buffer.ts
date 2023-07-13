@@ -33,7 +33,7 @@ export interface BindStorageBuffer extends Buffer {
     getStorageBinding: (bindGroup: BindGroup, offset?: GPUSize64, size?: GPUSize64) => GPUBufferBinding;
 }
 export interface VertexBuffer extends Buffer {
-    getVertexBuffer(renderPass: RenderPass) : GPUBuffer
+    getVertexBinding(renderPass: RenderPass) : GPUBuffer
 
 }
 export interface IndexBuffer extends Buffer {
@@ -153,7 +153,7 @@ export class Buffer extends Bindable {
                 'STORAGE');
         }
         if (usages.includes(GPUBufferUsage.VERTEX)) {
-            (this as unknown as VertexBuffer).getVertexBuffer = (renderPass: RenderPass) : GPUBuffer => {
+            (this as unknown as VertexBuffer).getVertexBinding = (renderPass: RenderPass) : GPUBuffer => {
                 this.renderPasses.add(renderPass);
                 return this.buffer;
             };

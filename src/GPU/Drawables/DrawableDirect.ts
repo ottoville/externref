@@ -6,6 +6,7 @@ import type { MainNode } from '../../MainNode.js';
 import type { Engine } from '../../engine.js';
 import { VertexShaderFunction } from '../Shaders/ShaderFunction.js';
 import { BGLayout } from '../BindGroupLayout.js';
+import { Buffer2, VERTEX_BUFFER } from '../Buffer/Buffer2.js';
 declare const engine: Engine;
 
 export type MappedVertexBuffers<R extends RenderPipeline, B extends readonly BGLayout[] = readonly BGLayout[]> = R extends RenderPipeline<infer VERTEX_SHADER> ? (
@@ -13,7 +14,7 @@ export type MappedVertexBuffers<R extends RenderPipeline, B extends readonly BGL
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     VERTEX_SHADER extends VertexShader<B, { main:  VertexShaderFunction<B, infer V> }> ? (
         Readonly<{
-            [Property in keyof V]: ArrayBufferView | VertexBuffer;
+            [Property in keyof V]: ArrayBufferView | VertexBuffer | Buffer2<VERTEX_BUFFER>;
         }>
     ) : []
 ) : never

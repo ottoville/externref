@@ -17,6 +17,7 @@ export const enum BufferUsageEnums {
     STORAGE = 128,
     'MAP_READ|COPY_DST' = BufferUsageEnums.MAP_READ | BufferUsageEnums.COPY_DST,
     'STORAGE|COPY_SRC' = BufferUsageEnums.STORAGE | BufferUsageEnums.COPY_SRC,
+    'VERTEX|STORAGE' = BufferUsageEnums.VERTEX | BufferUsageEnums.STORAGE
 }
 type MAP_READ_BUFFER =  typeof BufferUsageEnums['MAP_READ'] |
                         typeof BufferUsageEnums['MAP_READ|COPY_DST'];
@@ -25,8 +26,12 @@ type COPY_SRC_BUFFER =  typeof BufferUsageEnums['COPY_SRC'] |
 type COPY_DST_BUFFER =  typeof BufferUsageEnums['COPY_DST'] |
                         typeof BufferUsageEnums['MAP_READ|COPY_DST'];
 type STORAGE_BUFFER =   typeof BufferUsageEnums['STORAGE'] |
-                        typeof BufferUsageEnums['STORAGE|COPY_SRC']
+                        typeof BufferUsageEnums['STORAGE|COPY_SRC'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE']
 type UNIFORM_BUFFER =   typeof BufferUsageEnums['UNIFORM']
+export type VERTEX_BUFFER =    typeof BufferUsageEnums['VERTEX'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE']
+
 
 type BufferProps<U extends BufferUsageEnums> = {
     gpu: GPU,
@@ -158,6 +163,10 @@ export class Buffer2<U extends BufferUsageEnums> extends Bindable {
             bindGroup,
             offset,
             bindingSize);
+    }
+    getVertexBinding(this: Buffer2<VERTEX_BUFFER>, renderPass: RenderPass) {
+        this.renderPasses.add(renderPass);
+        return this.#buffer;
     }
     override destroy() {
         this.#buffer.destroy();
