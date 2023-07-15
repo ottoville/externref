@@ -17,20 +17,24 @@ export const enum BufferUsageEnums {
     STORAGE = 128,
     'MAP_READ|COPY_DST' = BufferUsageEnums.MAP_READ | BufferUsageEnums.COPY_DST,
     'STORAGE|COPY_SRC' = BufferUsageEnums.STORAGE | BufferUsageEnums.COPY_SRC,
-    'VERTEX|STORAGE' = BufferUsageEnums.VERTEX | BufferUsageEnums.STORAGE
+    'VERTEX|STORAGE' = BufferUsageEnums.VERTEX | BufferUsageEnums.STORAGE,
+    'VERTEX|STORAGE|COPY_SRC' = BufferUsageEnums.VERTEX | BufferUsageEnums.STORAGE | BufferUsageEnums.COPY_SRC
 }
 type MAP_READ_BUFFER =  typeof BufferUsageEnums['MAP_READ'] |
                         typeof BufferUsageEnums['MAP_READ|COPY_DST'];
 type COPY_SRC_BUFFER =  typeof BufferUsageEnums['COPY_SRC'] |
-                        typeof BufferUsageEnums['STORAGE|COPY_SRC']
+                        typeof BufferUsageEnums['STORAGE|COPY_SRC'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC']
 type COPY_DST_BUFFER =  typeof BufferUsageEnums['COPY_DST'] |
                         typeof BufferUsageEnums['MAP_READ|COPY_DST'];
 type STORAGE_BUFFER =   typeof BufferUsageEnums['STORAGE'] |
                         typeof BufferUsageEnums['STORAGE|COPY_SRC'] |
-                        typeof BufferUsageEnums['VERTEX|STORAGE']
+                        typeof BufferUsageEnums['VERTEX|STORAGE'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC']
 type UNIFORM_BUFFER =   typeof BufferUsageEnums['UNIFORM']
 export type VERTEX_BUFFER =    typeof BufferUsageEnums['VERTEX'] |
-                        typeof BufferUsageEnums['VERTEX|STORAGE']
+                        typeof BufferUsageEnums['VERTEX|STORAGE'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC']
 
 
 type BufferProps<U extends BufferUsageEnums> = {
@@ -95,6 +99,14 @@ export class Buffer2<U extends BufferUsageEnums> extends Bindable {
             copySize
         );
     }
+    async read(
+        this: Buffer2<MAP_READ_BUFFER>,
+        callback: (buff: ArrayBuffer) => Promise<void> | void) {
+        await this.#buffer.mapAsync(GPUMapMode.READ);
+        const arrbuff = this.#buffer.getMappedRange();
+        await callback(arrbuff);
+        this.#buffer.unmap();
+    }
     async readAndDestroy(
         this: Buffer2<MAP_READ_BUFFER>,
         callback: (buff: ArrayBuffer) => Promise<void> | void): Promise<void> {
@@ -117,13 +129,13 @@ export class Buffer2<U extends BufferUsageEnums> extends Bindable {
         }
         this.destroy();
     }
-    copyFrom(this: Buffer2<COPY_DST_BUFFER>, commandEncoder: GPUCommandEncoder, from: GPUBuffer, sourceOffset: GPUSize64, destinationOffset: GPUSize64, copySize: GPUSize64) {
+    copyFrom(this: Buffer2<COPY_DST_BUFFER>, commandEncoder: GPUCommandEncoder, from: GPUBuffer, sourceOffset: GPUSize64, destinationOffset: GPUSize64, copySize?: GPUSize64) {
         commandEncoder.copyBufferToBuffer(
             from, // source buffer
             sourceOffset,
             this.#buffer, //destination buffer
             destinationOffset,
-            copySize
+            copySize ?? this.#buffer.size
         );
     }
 
@@ -132,7 +144,7 @@ export class Buffer2<U extends BufferUsageEnums> extends Bindable {
         buffer: Buffer2<COPY_DST_BUFFER>,
         sourceOffset: GPUSize64,
         destinationOffset: GPUSize64,
-        copySize: GPUSize64) {
+        copySize?: GPUSize64) {
 
         buffer.copyFrom(commandEncoder,
             this.#buffer,

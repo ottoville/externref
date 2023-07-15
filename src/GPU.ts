@@ -932,12 +932,12 @@ export class GPU {
         0,
         1);
     #renderStarted = false;
-    #renderStartedCallbacks: (() => void)[] = [];
+    onceAfterRender: (() => void)[] = [];
     afterRenderStart(cb: () => void) {
         if (this.#renderStarted) {
             cb();
         } else {
-            this.#renderStartedCallbacks.push(cb);
+            this.onceAfterRender.push(cb);
         }
     }
     readonly #renderLoop = (time: DOMHighResTimeStamp, updateViewPipeline: GPUComputePipeline) => {
@@ -1033,12 +1033,12 @@ camera.updateViewBindGroup!.bindGroup);
         this.tempGPUBuffers.forEach(buff =>
             buff.destroy());
         this.tempGPUBuffers.length = 0;
-        if (!this.#renderStarted) {
-            this.#renderStartedCallbacks.forEach(cb =>
-                cb());
-            this.#renderStartedCallbacks.length = 0;
+        this.onceAfterRender.forEach(cb =>
+            cb());
+        this.onceAfterRender.length = 0;
+
+        if(!this.#renderStarted)
             this.#renderStarted = true;
-        }
         this.#renderFrame = window.requestAnimationFrame((time2) =>
             this.#renderLoop(time2,
                 updateViewPipeline));
