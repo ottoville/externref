@@ -1,6 +1,6 @@
 import { ObjectWorkerThread } from '../WorkerThread.js';
 import { MainNode } from '../MainNode.js';
-import { MutableTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from '../Math.js';
+import { MutableTerraVector3, ReadOnlyFloat32Array, TerraMatrix, TerraVector3, TerraVector4, Triangle } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
 import type { Engine, rust_pointer, rust_vec_ptr } from '../engine.js';
 declare const engine: Engine;
@@ -60,19 +60,9 @@ export type DataNodeProps = {
 
 export function allocate_vec_f32(length: number) {
     const vec_ptr = engine.rust.alloc_vector_f32(length);
-    const [
-        ptr,
-        len,
-        cap
-    ] = new Uint32Array(engine.rust.memory.buffer,
+    return Array.from(new Uint32Array(engine.rust.memory.buffer,
         vec_ptr,
-        3);
-    return {
-        arrayView: new Float32Array(engine.rust.memory.buffer,
-            ptr,
-            len) as Omit<Float32Array, 'byteOffset'> & { byteOffset: rust_pointer<'f32'> },
-        cap: cap!,
-    };
+        3)) as unknown as  rust_vec_ptr<'f32'>;
 }
 
 export function allocate_vec(array: Uint32Array) : rust_vec_ptr<'usize'>
@@ -85,13 +75,11 @@ export function allocate_vec(array: Uint32Array | Float32Array): readonly [ptr: 
         throw new Error('Source buffer is already in rust');
     }
     if(array instanceof Float32Array) {
-        const { arrayView, cap, } = allocate_vec_f32(array.length);
-        arrayView.set(array);
-        return [
-            arrayView.byteOffset,
-            arrayView.length,
-            cap
-        ];
+        const ptr = allocate_vec_f32(array.length);
+        new Float32Array(engine.rust.memory.buffer,
+            ptr[0],
+            ptr[1]).set(array);
+        return ptr;
     }
     else {
         const vec_ptr = engine.rust.alloc_vector_usize(array.length);
@@ -116,6 +104,13 @@ cap!
 export const closeDistance = 0.0022;
 export const closeDistanceSquared = closeDistance * closeDistance;
 export abstract class DataNode extends MainNode {
+    onVerticesChangeListeners: (() => void)[] = [];
+    onVerticesChange() {
+        this.onVerticesChangeListeners.forEach(cb => {
+            cb();
+        });
+    }
+
     // TODO: collide or uncollide with ANY mesh will change this value, so its lot of broken and does not indicate if mesh is really colliding now.
     colliding_physics = false;
     //Used for character
@@ -140,17 +135,7 @@ export abstract class DataNode extends MainNode {
     //facesBufferColliderPointerParallel?: DataView;
     #positionsAndCollider: [pointerToVec3: number, pointerToVec4: number][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
-    /**
-     * Get raw vertices data
-     */
-    get vertices() {
-        return new Float32Array(engine.memory.buffer,
-            engine.rust.vertices_pointer(this.id),
-            this.vertices_count * this.vertices_stride);
-    }
-    get vertices_count() {
-        return engine.rust.vertices_count(this.id);
-    }
+
     get faces_count() {
         return engine.rust.faces_count(this.id);
     }
@@ -172,6 +157,17 @@ ptr!,
 len!,
 cap!);
     }
+    /**
+     * Get raw vertices data
+     */
+    get vertices() {
+        return new ReadOnlyFloat32Array(engine.memory.buffer,
+            engine.rust.vertices_pointer(this.id),
+            this.vertices_count * this.vertices_stride);
+    }
+    get vertices_count() {
+        return engine.rust.vertices_count(this.id);
+    }
     get vertices_stride(): number {
         return engine.rust.vertices_stride(this.id);
     }
@@ -182,6 +178,18 @@ cap!);
     set_vertices(vec: rust_vec_ptr<'f32'>) {
         engine.rust.set_vertices(this.id,
             ...vec);
+        this.onVerticesChange();
+    }
+    /**
+     * Update existing vertices
+     * @param cb Callback which gets the vertices array as argument
+     */
+    update_vertices(cb: (view: Float32Array) => void) {
+        const view = new Float32Array(engine.memory.buffer,
+            engine.rust.vertices_pointer(this.id),
+            this.vertices_count * this.vertices_stride);
+        cb(view);
+        this.onVerticesChange();
     }
     get last_collider_world_vertices_pointer() {
         return engine.rust.last_collider_world_vertices_pointer(this.id);

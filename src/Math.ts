@@ -268,6 +268,11 @@ export abstract class TerraVector3 extends Float32Array {
         return result;
     }
 }
+export class ReadOnlyFloat32Array extends Float32Array {
+    override set(this: never) {
+        return;
+    }
+}
 export class ReadOnlyTerraVector3 extends TerraVector3 {
     //Nominal typing
     readonly mutable:number = 2;

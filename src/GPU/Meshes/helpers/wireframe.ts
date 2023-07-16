@@ -5,6 +5,8 @@ import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js'
 import { new_rust_mesh } from '../../../MainNode.js';
 import { DataNode, allocate_vec, allocate_vec_f32 } from '../../../nodes/DataNode.js';
 import { IndexedTrait, NodeIndexed2 } from '../../../nodes/NodeIndexed2.js';
+import type { Engine } from '../../../engine.js';
+declare const engine: Engine;
 
 export class WireFrameMesh extends DataNode implements IndexedTrait {
     drawable: DrawableIndexed<RenderPipeline>;
@@ -13,8 +15,10 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
         const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
         const stride = 4;
 
-        const { arrayView: newVertices, cap, } = allocate_vec_f32(targetNode.node.positions_count * 4);
-
+        const vertices_ptr = allocate_vec_f32(targetNode.node.positions_count * 4);
+        const newVertices = new Float32Array(engine.rust.memory.buffer,
+            vertices_ptr[0],
+            vertices_ptr[1]);
         targetNode.node.verticesArray.forEach((v, i) => {
             const slice = v.slice(0,
                 stride);
@@ -31,11 +35,6 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
             indices[i * 6 + 4] = targetIndices[i * 3 + 2]!;
             indices[i * 6 + 5] = targetIndices[i * 3]!;
         }
-        const vertices_ptr = [
-            newVertices.byteOffset,
-            newVertices.length,
-            cap
-        ] as const;
         const mesh_id = new_rust_mesh({
             label: 'Wireframe_'+targetNode.node.label,
             rigid_body: false,
