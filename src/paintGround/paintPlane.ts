@@ -62,7 +62,13 @@ ind_cap!
             {
                 node: this,
                 renderPipeline,
-                vertexBuffers: [this.vertices],
+                vertexBuffers: [
+                    [
+pos_ptr as rust_pointer<'f32'>,
+pos_len!,
+pos_cap!
+                    ]
+                ],
             });
     }
 }

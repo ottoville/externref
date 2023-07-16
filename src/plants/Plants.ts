@@ -12,6 +12,7 @@ import type { Engine } from '../engine.js';
 import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
 import { GrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
 import { MainNode, new_rust_mesh } from '../MainNode.js';
+import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 
 /**
@@ -107,22 +108,23 @@ export class Plants extends MainNode {
                 vertexBuffers: [
                     positionGPU,
                     shapeGPU,
-                    Float32Array.of(
-                        0.02,
-                        0.0,
-                        -0.02,
-                        0.0,
-                        0.014,
-                        0.29,
-                        -0.014,
-                        0.29,
-                        0.007,
-                        0.57,
-                        -0.007,
-                        0.57,
-                        0.0,
-                        1.0
-                    )
+                    allocate_vec(
+                        Float32Array.of(
+                            0.02,
+                            0.0,
+                            -0.02,
+                            0.0,
+                            0.014,
+                            0.29,
+                            -0.014,
+                            0.29,
+                            0.007,
+                            0.57,
+                            -0.007,
+                            0.57,
+                            0.0,
+                            1.0
+                        ))
                 ],
             },
             indirectBuffer);

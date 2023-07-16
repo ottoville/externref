@@ -3,7 +3,7 @@ import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import { new_rust_mesh } from '../../../MainNode.js';
-import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
+import { DataNode, allocate_vec, allocate_vec_f32 } from '../../../nodes/DataNode.js';
 import { IndexedTrait, NodeIndexed2 } from '../../../nodes/NodeIndexed2.js';
 
 export class WireFrameMesh extends DataNode implements IndexedTrait {
@@ -12,11 +12,13 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
     constructor(targetNode: DrawableDirect<IndexedTrait & DataNode>) {
         const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
         const stride = 4;
-        const vertices = new Float32Array(targetNode.node.positions_count * 4);
+
+        const { arrayView: newVertices, cap, } = allocate_vec_f32(targetNode.node.positions_count * 4);
+
         targetNode.node.verticesArray.forEach((v, i) => {
             const slice = v.slice(0,
                 stride);
-            vertices.set(slice,
+            newVertices.set(slice,
                 i * stride);
         });
         const targetIndices = targetNode.node.indexed.indices;
@@ -29,6 +31,11 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
             indices[i * 6 + 4] = targetIndices[i * 3 + 2]!;
             indices[i * 6 + 5] = targetIndices[i * 3]!;
         }
+        const vertices_ptr = [
+            newVertices.byteOffset,
+            newVertices.length,
+            cap
+        ] as const;
         const mesh_id = new_rust_mesh({
             label: 'Wireframe_'+targetNode.node.label,
             rigid_body: false,
@@ -39,7 +46,7 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
                 character_can_collide_to: false,
                 vertices: {
                     stride,
-                    view: allocate_vec(vertices),
+                    view: vertices_ptr,
                 },
             },
             mesh_id,
@@ -72,7 +79,7 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
             node: this,
             renderPasses: undefined,
             renderPipeline,
-            vertexBuffers: [vertices],
+            vertexBuffers: [vertices_ptr],
         });
     }
 }

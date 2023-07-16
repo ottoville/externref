@@ -58,9 +58,26 @@ export type DataNodeProps = {
     so it is always small enought for gravity to hit on next tick.
 */
 
+export function allocate_vec_f32(length: number) {
+    const vec_ptr = engine.rust.alloc_vector_f32(length);
+    const [
+        ptr,
+        len,
+        cap
+    ] = new Uint32Array(engine.rust.memory.buffer,
+        vec_ptr,
+        3);
+    return {
+        arrayView: new Float32Array(engine.rust.memory.buffer,
+            ptr,
+            len) as Omit<Float32Array, 'byteOffset'> & { byteOffset: rust_pointer<'f32'> },
+        cap: cap!,
+    };
+}
+
 export function allocate_vec(array: Uint32Array) : rust_vec_ptr<'usize'>
 export function allocate_vec(array: Float32Array) : rust_vec_ptr<'f32'>
-export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_pointer<'usize'> | rust_pointer<'f32'>, len: number, cap: number] {
+export function allocate_vec(array: Uint32Array | Float32Array): readonly [ptr: rust_pointer<'usize'> | rust_pointer<'f32'>, len: number, cap: number] {
     if(array.buffer.byteLength === 0) {
         throw new Error('Cannot allocate deattached or empty buffer');
     }
@@ -68,21 +85,12 @@ export function allocate_vec(array: Uint32Array | Float32Array): [ptr: rust_poin
         throw new Error('Source buffer is already in rust');
     }
     if(array instanceof Float32Array) {
-        const vec_ptr = engine.rust.alloc_vector_f32(array.length);
-        const [
-            ptr,
-            len,
-            cap
-        ] = new Uint32Array(engine.rust.memory.buffer,
-            vec_ptr,
-            3);
-        new Float32Array(engine.rust.memory.buffer,
-            ptr,
-            len).set(array);
+        const { arrayView, cap, } = allocate_vec_f32(array.length);
+        arrayView.set(array);
         return [
-ptr as rust_pointer<'f32'>,
-len!,
-cap!
+            arrayView.byteOffset,
+            arrayView.length,
+            cap
         ];
     }
     else {
@@ -132,6 +140,9 @@ export abstract class DataNode extends MainNode {
     //facesBufferColliderPointerParallel?: DataView;
     #positionsAndCollider: [pointerToVec3: number, pointerToVec4: number][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
+    /**
+     * Get raw vertices data
+     */
     get vertices() {
         return new Float32Array(engine.memory.buffer,
             engine.rust.vertices_pointer(this.id),
@@ -164,6 +175,10 @@ cap!);
     get vertices_stride(): number {
         return engine.rust.vertices_stride(this.id);
     }
+    /**
+     *  Set new vertices raw array for the mesh
+     * @param vec
+     */
     set_vertices(vec: rust_vec_ptr<'f32'>) {
         engine.rust.set_vertices(this.id,
             ...vec);

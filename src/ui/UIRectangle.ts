@@ -107,9 +107,10 @@ export abstract class UIRectangle extends DataNode {
                 this.texture.destroy();
                 this.texture = undefined;
                 const vertices = this.#updateBoundingBoxAndVerticesSuper();
+                const vertices_ptr = allocate_vec(vertices);
                 this.drawable.setVertexBuffer(0,
-                    vertices);
-                this.set_vertices(allocate_vec(vertices));
+                    vertices_ptr);
+                this.set_vertices(vertices_ptr);
             }
         }
         if (!this.texture) {
@@ -370,13 +371,14 @@ export abstract class UIRectangle extends DataNode {
         }
         queueMicrotask(() => {
             const vertices = this.#updateBoundingBoxAndVerticesSuper();
-            this.set_vertices(allocate_vec(vertices));
+            const vertices_ptr = allocate_vec(vertices);
+            this.set_vertices(vertices_ptr);
 
             const drawable = new DrawableSimple({
                 node: this,
                 renderPasses: new Set([renderPass]),
                 renderPipeline: canvaspipeline,
-                vertexBuffers: [vertices],
+                vertexBuffers: [vertices_ptr],
             },
             {
                 firstInstance: 0,
@@ -389,9 +391,10 @@ export abstract class UIRectangle extends DataNode {
             renderPass.onResize.set(this,
                 () => {
                     const newVertices = this.#updateBoundingBoxAndVerticesSuper();
-                    this.set_vertices(allocate_vec(newVertices));
+                    const new_vertices_ptr = allocate_vec(newVertices);
+                    this.set_vertices(new_vertices_ptr);
                     drawable.setVertexBuffer(0,
-                        newVertices);
+                        new_vertices_ptr);
                 });
 
 

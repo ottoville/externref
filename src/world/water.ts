@@ -64,7 +64,7 @@ export class Sea extends BoundableNodeSimple {
                 renderPasses: undefined,
                 renderPipeline,
                 vertexBuffers: [
-                    new Float32Array([
+                    allocate_vec(Float32Array.of(
                         -50000.0,
                         3.0,
                         -50000.0,
@@ -80,7 +80,7 @@ export class Sea extends BoundableNodeSimple {
                         50000.0,
                         3.0,
                         50000.0
-                    ])
+                    ))
                 ],
             });
         }

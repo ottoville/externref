@@ -3,7 +3,7 @@ import type { RenderPipeline } from '../RenderPipeline.js';
 import type { VertexShader } from '../Shaders/VertexShader.js';
 import { Drawable, type DrawableProps } from './Drawable.js';
 import type { MainNode } from '../../MainNode.js';
-import type { Engine } from '../../engine.js';
+import type { Engine, rust_vec_ptr } from '../../engine.js';
 import { VertexShaderFunction } from '../Shaders/ShaderFunction.js';
 import { BGLayout } from '../BindGroupLayout.js';
 import { Buffer2, VERTEX_BUFFER } from '../Buffer/Buffer2.js';
@@ -14,7 +14,7 @@ export type MappedVertexBuffers<R extends RenderPipeline, B extends readonly BGL
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     VERTEX_SHADER extends VertexShader<B, { main:  VertexShaderFunction<B, infer V> }> ? (
         Readonly<{
-            [Property in keyof V]: ArrayBufferView | VertexBuffer | Buffer2<VERTEX_BUFFER>;
+            [Property in keyof V]: rust_vec_ptr<'f32'> | VertexBuffer | Buffer2<VERTEX_BUFFER>;
         }>
     ) : []
 ) : never
