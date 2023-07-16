@@ -540,7 +540,7 @@ impl Mesh {
             engine2.meshes[id].rigid_body_handle = Some(rigid_body_handle);
             engine2
                 .rigid_bodies
-                .insert(rigid_body_handle, &mut engine2.meshes[id]);
+                .insert(rigid_body_handle, id);
         }
         return id;
     }
