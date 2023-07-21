@@ -19,26 +19,34 @@ export class Sea extends BoundableNodeSimple {
             false);
     }
     constructor(scenes: Scene[]) {
+        const vertexBuffer = {
+            stride: 4,
+            view: allocate_vec(Float32Array.of(
+                -50000.0,
+                3.0,
+                -50000.0,
+                0,
+
+                50000.0,
+                3.0,
+                -50000.0,
+                0,
+
+                -50000.0,
+                3.0,
+                50000.0,
+                0,
+
+                50000.0,
+                3.0,
+                50000.0,
+                0
+            )),
+        };
         super(
             {
                 can_collide: false,
-                vertices: {
-                    stride: 3,
-                    view: allocate_vec(Float32Array.of(
-                        -50000.0,
-                        3.0,
-                        -50000.0,
-                        50000.0,
-                        3.0,
-                        -50000.0,
-                        -50000.0,
-                        3.0,
-                        50000.0,
-                        50000.0,
-                        3.0,
-                        50000.0
-                    )),
-                },
+                vertices: vertexBuffer,
             },
             new_rust_mesh({
                 fixed: true,
@@ -57,31 +65,13 @@ export class Sea extends BoundableNodeSimple {
                     topology: 'triangle-strip',
                 },
                 {
-                    stride: 3,
+                    stride: 4,
                 });
             this.drawable = new DrawableSimple({
                 node: this,
                 renderPasses: undefined,
                 renderPipeline,
-                vertexBuffers: [
-                    allocate_vec(Float32Array.of(
-                        -50000.0,
-                        3.0,
-                        -50000.0,
-
-                        50000.0,
-                        3.0,
-                        -50000.0,
-
-                        -50000.0,
-                        3.0,
-                        50000.0,
-
-                        50000.0,
-                        3.0,
-                        50000.0
-                    ))
-                ],
+                vertexBuffers: [vertexBuffer],
             });
         }
     }

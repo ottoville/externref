@@ -18,30 +18,39 @@ export const enum BufferUsageEnums {
     'MAP_READ|COPY_DST' = BufferUsageEnums.MAP_READ | BufferUsageEnums.COPY_DST,
     'STORAGE|COPY_SRC' = BufferUsageEnums.STORAGE | BufferUsageEnums.COPY_SRC,
     'VERTEX|STORAGE' = BufferUsageEnums.VERTEX | BufferUsageEnums.STORAGE,
-    'VERTEX|STORAGE|COPY_SRC' = BufferUsageEnums.VERTEX | BufferUsageEnums.STORAGE | BufferUsageEnums.COPY_SRC
+    'VERTEX|COPY_DST' = BufferUsageEnums.VERTEX | BufferUsageEnums.COPY_DST,
+    'VERTEX|STORAGE|COPY_SRC' = BufferUsageEnums.VERTEX | BufferUsageEnums.STORAGE | BufferUsageEnums.COPY_SRC,
+    'VERTEX|STORAGE|COPY_SRC|COPY_DST' = BufferUsageEnums.VERTEX | BufferUsageEnums.STORAGE | BufferUsageEnums.COPY_SRC | BufferUsageEnums.COPY_DST
 }
 type MAP_READ_BUFFER =  typeof BufferUsageEnums['MAP_READ'] |
                         typeof BufferUsageEnums['MAP_READ|COPY_DST'];
 type COPY_SRC_BUFFER =  typeof BufferUsageEnums['COPY_SRC'] |
                         typeof BufferUsageEnums['STORAGE|COPY_SRC'] |
-                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC']
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST']
 type COPY_DST_BUFFER =  typeof BufferUsageEnums['COPY_DST'] |
-                        typeof BufferUsageEnums['MAP_READ|COPY_DST'];
+                        typeof BufferUsageEnums['MAP_READ|COPY_DST'] |
+                        typeof BufferUsageEnums['VERTEX|COPY_DST'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST']
 type STORAGE_BUFFER =   typeof BufferUsageEnums['STORAGE'] |
                         typeof BufferUsageEnums['STORAGE|COPY_SRC'] |
                         typeof BufferUsageEnums['VERTEX|STORAGE'] |
-                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC']
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST']
 type UNIFORM_BUFFER =   typeof BufferUsageEnums['UNIFORM']
 export type VERTEX_BUFFER =    typeof BufferUsageEnums['VERTEX'] |
                         typeof BufferUsageEnums['VERTEX|STORAGE'] |
-                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC']
+                        typeof BufferUsageEnums['VERTEX|COPY_DST'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC'] |
+                        typeof BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'];
 
 
-type BufferProps<U extends BufferUsageEnums> = {
+
+export type BufferProps<U extends BufferUsageEnums> = {
     gpu: GPU,
     size: number,
     usages: U,
-    label: string
+    label: string,
 }
 
 export class Buffer2<U extends BufferUsageEnums> extends Bindable {

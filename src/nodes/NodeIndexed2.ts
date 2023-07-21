@@ -1,9 +1,15 @@
 import type { Engine, rust_vec_ptr } from '../engine.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
-import type { MainNode } from 'MainNode.js';
-import { allocate_vec } from './DataNode.js';
+import { MainNode } from '../MainNode.js';
+import { DataNode, DataNodeProps, allocate_vec } from './DataNode.js';
+import { Drawable } from '../GPU/Drawables/Drawable.js';
 declare const engine: Engine;
 export type IndexedTrait = MainNode & {indexed: NodeIndexed2};
+
+export function isIndexed(node: MainNode): node is IndexedTrait {
+    return 'indexed' in node && node.indexed instanceof NodeIndexed2;
+}
+
 export class NodeIndexed2 {
     set_indices(vec: rust_vec_ptr<'usize'>, initial=false) {
         engine.rust.set_indices(this.node.id,
@@ -65,5 +71,26 @@ export class NodeIndexed2 {
     ) {
         this.set_indices(indicesView,
             true);
+    }
+}
+
+export class IndexedDataNode extends DataNode implements IndexedTrait {
+    override drawable?: Drawable<MainNode> | undefined;
+    indexed: NodeIndexed2;
+    constructor(datanodeProps: DataNodeProps, mesh_id: number, indices: rust_vec_ptr<'usize'>) {
+        super(datanodeProps,
+            mesh_id);
+        this.indexed = new NodeIndexed2(this,
+            indices);
+    }
+}
+
+export class IndexedMainNode extends MainNode implements IndexedTrait {
+    override drawable?: Drawable<MainNode> | undefined;
+    indexed: NodeIndexed2;
+    constructor(mesh_id: number, indices: rust_vec_ptr<'usize'>) {
+        super(mesh_id);
+        this.indexed = new NodeIndexed2(this,
+            indices);
     }
 }

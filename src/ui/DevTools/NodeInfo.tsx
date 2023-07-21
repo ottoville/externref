@@ -2,7 +2,7 @@ import { DrawableDirect } from '../../GPU/Drawables/DrawableDirect.js';
 import type { Drawable } from '../../GPU/Drawables/Drawable.js';
 import { ReadOnlyTerraVector3 } from '../../Math.js';
 import { useEffect, useState } from 'react';
-import { WireFrameMesh } from '../../GPU/Meshes/helpers/wireframe.js';
+import { createWireFrameMesh } from '../../GPU/Meshes/helpers/wireframe.js';
 import { DataNode } from '../../nodes/DataNode.js';
 import { NormalsMesh } from '../../GPU/Meshes/helpers/normals.js';
 import { BoundingBoxMesh } from '../../GPU/Meshes/helpers/boundingbox.js';
@@ -10,6 +10,7 @@ import { DrawableIndexed } from '../../GPU/Drawables/DrawableIndexed.js';
 import type { MainNode } from '../../MainNode.js';
 import { Rotation } from './Rotation.js';
 import { Primitives } from './Primitives.js';
+import { isIndexed } from '../../nodes/NodeIndexed2.js';
 
 export function NodeInfo({ drawable, }: { drawable: Drawable }) {
     const [
@@ -91,7 +92,7 @@ export function NodeInfo({ drawable, }: { drawable: Drawable }) {
                 }} title="scale Z" type="number" step="0.1" value={scale[2].toFixed(3)} />
             </label>
         </fieldset>
-        {drawable.node instanceof DataNode ?
+        {drawable.node instanceof DataNode || isIndexed(drawable.node) ?
             <Primitives node={drawable.node}></Primitives>
             : null}
         <br />
@@ -108,7 +109,7 @@ export function NodeInfo({ drawable, }: { drawable: Drawable }) {
                         new NormalsMesh(drawable);
                     }}>Normals</button>
                     <button type="button" onClick={() => {
-                        new WireFrameMesh(drawable);
+                        createWireFrameMesh(drawable);
                     }}>Wireframe</button>
                     {drawable instanceof DrawableIndexed ? <button type="button" onClick={() => {
                         new BoundingBoxMesh(drawable);

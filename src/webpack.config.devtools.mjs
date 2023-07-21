@@ -14,26 +14,37 @@ export default {
         filename: 'DevToolsApp.js',
     },
     module: {
-        rules: [{ test: /\.ts|tsx$/, use: 'ts-loader' }],
+        rules: [
+            {
+                test: /\.ts|tsx$/, use: 'ts-loader',
+            }
+        ],
     },
     resolve: {
         extensionAlias: {
-            '.js': ['.ts', '.js', '.tsx'],
-            '.mjs': ['.mts', '.mjs'],
-        }
+            '.js': [
+                '.ts',
+                '.js',
+                '.tsx'
+            ],
+            '.mjs': [
+                '.mts',
+                '.mjs'
+            ],
+        },
     },
     externals: {
-        '../../MainNode.js': '../../MainNode.js',
-        '../../nodes/DataNode.js': '../../nodes/DataNode.js',
-        '../../nodes/BoundableNodeIndexed.js': '../../nodes/BoundableNodeIndexed.js',
         '../../GPU/Drawables/DrawableDirect.js': '../../GPU/Drawables/DrawableDirect.js',
+        '../../GPU/Drawables/DrawableIndexed.js': '../../GPU/Drawables/DrawableIndexed.js',
+        '../../GPU/Meshes/helpers/boundingbox.js': '../../GPU/Meshes/helpers/boundingbox.js',
+        '../../GPU/Meshes/helpers/normals.js': '../../GPU/Meshes/helpers/normals.js',
+        '../../GPU/Meshes/helpers/wireframe.js': '../../GPU/Meshes/helpers/wireframe.js',
+        '../../MainNode.js': '../../MainNode.js',
+        '../../Math.js': '../../Math.js',
         '../../controllers/ArcRotateCamera.js': '../../controllers/ArcRotateCamera.js',
         '../../controllers/PositionCamera.js': '../../controllers/PositionCamera.js',
-        '../../GPU/Meshes/helpers/wireframe.js': '../../GPU/Meshes/helpers/wireframe.js',
-        '../../GPU/Meshes/helpers/normals.js': '../../GPU/Meshes/helpers/normals.js',
-        '../../GPU/Meshes/helpers/boundingbox.js': '../../GPU/Meshes/helpers/boundingbox.js',
-        '../../GPU/Drawables/DrawableIndexed.js': '../../GPU/Drawables/DrawableIndexed.js',
-        '../../nodes/NodeIndexed.js': '../../nodes/NodeIndexed.js',
-        '../../Math.js': '../../Math.js'
+        '../../nodes/BoundableNodeIndexed.js': '../../nodes/BoundableNodeIndexed.js',
+        '../../nodes/DataNode.js': '../../nodes/DataNode.js',
+        '../../nodes/NodeIndexed2.js': '../../nodes/NodeIndexed2.js',
     },
 };

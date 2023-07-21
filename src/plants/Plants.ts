@@ -13,6 +13,7 @@ import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
 import { GrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
 import { MainNode, new_rust_mesh } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
+import { Buffer2, BufferUsageEnums } from '../GPU/Buffer/Buffer2.js';
 declare const engine: Engine;
 
 /**
@@ -61,36 +62,30 @@ export class Plants extends MainNode {
                 GPUBufferUsage.COPY_DST
             ],
             'indirectBuffer');
-        const positionGPU = Buffer.create(scene.gpu,
-            numBlades * 4 * 4,
-            [
-                GPUBufferUsage.VERTEX,
-                GPUBufferUsage.COPY_DST
-            ],
-            'positionGPU');
-        const shapeGPU = Buffer.create(scene.gpu,
-            numBlades * 4 * 4,
-            [
-                GPUBufferUsage.VERTEX,
-                GPUBufferUsage.COPY_DST
-            ],
-            'shapeGPU');
-
-
-        const positionGPUSwap = Buffer.create(scene.gpu,
-            numBlades * 4 * 4,
-            [
-                GPUBufferUsage.COPY_SRC,
-                GPUBufferUsage.STORAGE
-            ],
-            'positionGPUSwap');
-        const shapeGPUSwap = Buffer.create(scene.gpu,
-            numBlades * 4 * 4,
-            [
-                GPUBufferUsage.COPY_SRC,
-                GPUBufferUsage.STORAGE
-            ],
-            'shapeGPUSwap');
+        const positionGPU =  new Buffer2({
+            gpu: scene.gpu,
+            label: 'positionGPU',
+            size: numBlades * 4 * 4,
+            usages: BufferUsageEnums['VERTEX|COPY_DST'],
+        });
+        const shapeGPU = new Buffer2({
+            gpu: scene.gpu,
+            label: 'shapeGPU',
+            size: numBlades * 4 * 4,
+            usages: BufferUsageEnums['VERTEX|COPY_DST'],
+        });
+        const positionGPUSwap = new Buffer2({
+            gpu: scene.gpu,
+            label: 'positionGPUSwap',
+            size: numBlades * 4 * 4,
+            usages: BufferUsageEnums['STORAGE|COPY_SRC'],
+        });
+        const shapeGPUSwap = new Buffer2({
+            gpu: scene.gpu,
+            label: 'shapeGPUSwap',
+            size: numBlades * 4 * 4,
+            usages: BufferUsageEnums['STORAGE|COPY_SRC'],
+        });
         if (engine.gpu) {
             const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline,
                 {
@@ -106,8 +101,17 @@ export class Plants extends MainNode {
                 node: this,
                 renderPipeline,
                 vertexBuffers: [
-                    positionGPU,
-                    shapeGPU,
+                    {
+                        stride: 4,
+                        view: positionGPU,
+                    },
+                    {
+                        stride: 4,
+                        view: shapeGPU,
+                    },
+                    {
+                        stride: 2,
+                        view:
                     allocate_vec(
                         Float32Array.of(
                             0.02,
@@ -124,7 +128,8 @@ export class Plants extends MainNode {
                             0.57,
                             0.0,
                             1.0
-                        ))
+                        )),
+                    }
                 ],
             },
             indirectBuffer);

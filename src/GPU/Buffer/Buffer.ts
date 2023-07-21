@@ -32,10 +32,7 @@ export interface BindUniformBuffer extends Buffer {
 export interface BindStorageBuffer extends Buffer {
     getStorageBinding: (bindGroup: BindGroup, offset?: GPUSize64, size?: GPUSize64) => GPUBufferBinding;
 }
-export interface VertexBuffer extends Buffer {
-    getVertexBinding(renderPass: RenderPass) : GPUBuffer
 
-}
 export interface IndexBuffer extends Buffer {
     getIndexBuffer(renderPass: RenderPass) : GPUBuffer
 }
@@ -71,10 +68,7 @@ export class Buffer extends Bindable {
     static create(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUIndexBuffer & GPUStorageBuffer
     */
     static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.INDEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC, GPUBufferUsage.INDEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC, GPUBufferUsage.INDEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): copySrcBuffer & BindStorageBuffer & IndexBuffer
-    //vertex
-    static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.VERTEX], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): VertexBuffer
-    static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE], label:string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): VertexBuffer & BindStorageBuffer
-    static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST, GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): CopyDstBuffer & VertexBuffer
+
     /* static create(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUVertexBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
      //indirect
      static create(size: number, usages: [typeof GPUBufferUsage.INDIRECT], mappedAtCreation?: boolean, label?:string): GPUIndirectBuffer
@@ -86,11 +80,6 @@ export class Buffer extends Bindable {
     static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): copySrcBuffer & BindStorageBuffer
     static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): CopyDstBuffer & BindStorageBuffer
     static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): copySrcBuffer & CopyDstBuffer & BindStorageBuffer
-    static create(gpu: GPU, size: number, usages: readonly [
-        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | GPUBufferUsage.VERTEX,
-        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | GPUBufferUsage.VERTEX,
-        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | GPUBufferUsage.VERTEX,
-        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | GPUBufferUsage.VERTEX], label: string, mappedAtCreation?: (buff: GPUBuffer) => void): copySrcBuffer & CopyDstBuffer & BindStorageBuffer & VertexBuffer
 
     //copy source for mapped at creation
     static create(gpu: GPU, size: number, usages: readonly [GPUBufferUsage.COPY_SRC], label: string, mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void): copySrcBuffer
@@ -151,12 +140,6 @@ export class Buffer extends Bindable {
         if (usages.includes(GPUBufferUsage.STORAGE)) {
             (this as unknown as BindStorageBuffer).getStorageBinding = bufferBinding.bind(this,
                 'STORAGE');
-        }
-        if (usages.includes(GPUBufferUsage.VERTEX)) {
-            (this as unknown as VertexBuffer).getVertexBinding = (renderPass: RenderPass) : GPUBuffer => {
-                this.renderPasses.add(renderPass);
-                return this.buffer;
-            };
         }
         if (usages.includes(GPUBufferUsage.INDEX)) {
             (this as unknown as IndexBuffer).getIndexBuffer = (renderPass: RenderPass) : GPUBuffer => {

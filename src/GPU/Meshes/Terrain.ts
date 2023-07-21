@@ -4,12 +4,13 @@ import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine, rust_pointer, rust_vec_ptr } from '../../engine.js';
 import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
-import type { IndexBuffer, VertexBuffer } from '../../GPU/Buffer/Buffer.js';
+import type { IndexBuffer } from '../../GPU/Buffer/Buffer.js';
 import type { TextureView } from '../TextureView.js';
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 import { new_rust_mesh } from '../../MainNode.js';
 import type { TEXTURE_BINDING_TEXTURE, Texture } from '../../GPU/Texture.js';
+import type { Buffer2, VERTEX_BUFFER } from '../Buffer/Buffer2.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
@@ -29,7 +30,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
     constructor(
         scenes: Scene[],
         public initialTexture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>>,
-        public vBuffer: VertexBuffer,
+        public vBuffer: Buffer2<VERTEX_BUFFER>,
         public iBuffer: IndexBuffer,
         vertices: rust_vec_ptr<'f32'>,
         indicesView: rust_vec_ptr<'usize'>,
@@ -78,7 +79,12 @@ export class TerrainMesh extends BoundableNodeIndexed {
                     engine.gpu.pickRenderPass
                 ]),
                 renderPipeline,
-                vertexBuffers: [this.vBuffer],
+                vertexBuffers: [
+                    {
+                        stride: verticesPositionStride,
+                        view: this.vBuffer,
+                    }
+                ],
             });
 
             this.drawable.setStaticBindGroup('TerrainInitialTexture',

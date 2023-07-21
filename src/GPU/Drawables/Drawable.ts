@@ -1,29 +1,28 @@
 ﻿import type { RenderPass } from '../RenderPasses/RenderPass.js';
 import { GPU } from '../../GPU.js';
-import { Buffer, type VertexBuffer, GPUBufferUsage } from '../Buffer/Buffer.js';
 
 import type { Engine, rust_vec_ptr } from '../../engine.js';
 import { BindGroup } from '../BindGroup.js';
 import { RenderPipeline } from '../RenderPipeline.js';
 import { MainNode } from '../../MainNode.js';
-import { Buffer2, type VERTEX_BUFFER } from '../Buffer/Buffer2.js';
+import { Buffer2, type BufferProps, BufferUsageEnums, type VERTEX_BUFFER } from '../Buffer/Buffer2.js';
 declare const engine: Engine;
 
 export type DrawableProps<N extends MainNode> = {
     renderPipeline: Readonly<RenderPipeline>;
     renderPasses?: Set<RenderPass> | undefined;
     dynamicBindGroups?: [BindGroup, number][];
-    vertexBuffers: readonly (rust_vec_ptr<'f32'> | VertexBuffer | Buffer2<VERTEX_BUFFER>)[] | undefined;
+    vertexBuffers: readonly ({ view: rust_vec_ptr<'f32'> | Buffer2<VERTEX_BUFFER>, stride: number })[] | undefined;
     node: N
 
 }
 export abstract class Drawable<N extends MainNode = MainNode> {
     node: N;
-    #vertexBuffers: Map<number,
+    vertexBuffers: Map<number,
         {
-            buffer: VertexBuffer | Buffer2<VERTEX_BUFFER>,
+            buffer: {stride: number, view: Buffer2<VERTEX_BUFFER>},
             offset: number | undefined,
-            size: number | undefined
+            size: number | undefined,
         }> = new Map();
     #renderList: Map<RenderPass, Set<Drawable<MainNode>>> = new Map();
     public renderPipeline: Readonly<RenderPipeline>;
@@ -38,7 +37,6 @@ export abstract class Drawable<N extends MainNode = MainNode> {
             vertexBuffers = [],
             node,
         }: Readonly<DrawableProps<N>>) {
-
         this.node = node;
         engine.rust.add_drawble(this.node.id);
 
@@ -88,43 +86,55 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     destroy(preserveVerticeBuffers: number[] = []): void {
         this.#renderList.forEach(Drawables =>
             Drawables.delete(this));
-        this.#vertexBuffers.forEach((b, key) => {
+        this.vertexBuffers.forEach((b, key) => {
             if (!preserveVerticeBuffers.includes(key))
-                b.buffer.destroy();
+                b.buffer.view.destroy();
         });
         this.destroyed = true;
     }
-    setVertexBuffer(index: number, buffer: rust_vec_ptr<'f32'>, destroyOld?: boolean): VertexBuffer
-    setVertexBuffer<T extends VertexBuffer | Buffer2<VERTEX_BUFFER>>(index: number, buffer: T, destroyOld?: boolean, GPUoffset?: number, size?: number): T
-    setVertexBuffer(index: number, buffer: rust_vec_ptr<'f32'> | VertexBuffer | Buffer2<VERTEX_BUFFER>, destroyOld?: boolean, GPUoffset?: number, size?: number): VertexBuffer | Buffer2<VERTEX_BUFFER>
-    setVertexBuffer(index: number, buffer: rust_vec_ptr<'f32'> | VertexBuffer | Buffer2<VERTEX_BUFFER>, destroyOld = true, GPUoffset?: number, size?: number): VertexBuffer | Buffer2<VERTEX_BUFFER> {
+    setVertexBuffer(index: number, buffer: { view: rust_vec_ptr<'f32'>, stride: number }, destroyOld?: boolean): Buffer2<VERTEX_BUFFER>
+    setVertexBuffer<T extends Buffer2<VERTEX_BUFFER>>(index: number, buffer: T, destroyOld?: boolean, GPUoffset?: number, size?: number): T
+    setVertexBuffer(index: number, buffer: { view: rust_vec_ptr<'f32'> | Buffer2<VERTEX_BUFFER>, stride: number }, destroyOld?: boolean, GPUoffset?: number, size?: number): Buffer2<VERTEX_BUFFER>
+    setVertexBuffer(index: number, buffer: { view: rust_vec_ptr<'f32'> | Buffer2<VERTEX_BUFFER>, stride: number }, destroyOld = true, GPUoffset?: number, size?: number): Buffer2<VERTEX_BUFFER> {
         if (destroyOld) {
-            const Tbuffer = this.#vertexBuffers.get(index);
+            const Tbuffer = this.vertexBuffers.get(index);
             if (Tbuffer) {
-                Tbuffer.buffer.destroy();
+                Tbuffer.buffer.view.destroy();
             }
         }
-        if (buffer instanceof Buffer || buffer instanceof Buffer2)
-            var Tbuffer = buffer;
+        if (buffer.view instanceof Buffer2)
+            var Tbuffer = buffer as {
+                view: Buffer2<VERTEX_BUFFER>;
+                stride: number;
+            };
         else {
             const gpu = this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
-            //@ts-expect-error remove when Buffer is removed for Buffer2
-            var Tbuffer = Buffer.create(gpu,
-                buffer[1] * Float32Array.BYTES_PER_ELEMENT,
-                [GPUBufferUsage.VERTEX],
-                'DrawableVertex_' + this.node.label,
+            const ptr = buffer.view[0];
+            const len = (buffer.view[1] * Float32Array.BYTES_PER_ELEMENT)/Uint8Array.BYTES_PER_ELEMENT;
+            var Tbuffer = {
+                stride: buffer.stride,
+                view: new Buffer2({
+                    gpu,
+                    label: 'DrawableVertex_' + this.node.label,
+                    size: buffer.view[1] * Float32Array.BYTES_PER_ELEMENT,
+                    usages: BufferUsageEnums.VERTEX,
+                    vertexStride: buffer.stride,
+                } as BufferProps<VERTEX_BUFFER>,
                 b => {
                     const buff = new Uint8Array(b.getMappedRange());
                     buff.set(new Uint8Array(engine.rust.memory.buffer,
-                        buffer[0],
-                        (buffer[1] * Float32Array.BYTES_PER_ELEMENT)/Uint8Array.BYTES_PER_ELEMENT));
-                });
+                        ptr,
+                        len));
+                }),
+            };
         }
-        this.#vertexBuffers.set(index,
+        this.vertexBuffers.set(index,
             {
-                buffer: Tbuffer, offset: GPUoffset, size,
+                buffer: Tbuffer,
+                offset: GPUoffset,
+                size,
             });
-        return Tbuffer;
+        return Tbuffer.view;
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass): void
     draw(renderPass: RenderPass, renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {
@@ -143,10 +153,9 @@ export abstract class Drawable<N extends MainNode = MainNode> {
             renderEncoder.setBindGroup(BindGroupsStart++,
                 this.#staticBindGroup.bindGroup);
         }
-        this.#vertexBuffers.forEach((buffer, index) =>
+        this.vertexBuffers.forEach((buffer, index) =>
             renderEncoder.setVertexBuffer(index,
-                //@ts-expect-error Remove when Buffer is removed for Buffer2
-                buffer.buffer.getVertexBinding(renderPass),
+                buffer.buffer.view.getVertexBinding(renderPass),
                 buffer.offset,
                 buffer.size));
         console.debug('draw',

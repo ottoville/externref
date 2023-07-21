@@ -65,6 +65,13 @@ export function allocate_vec_f32(length: number) {
         3)) as unknown as  rust_vec_ptr<'f32'>;
 }
 
+export function allocate_vec_usize(length: number) {
+    const vec_ptr = engine.rust.alloc_vector_usize(length);
+    return Array.from(new Uint32Array(engine.rust.memory.buffer,
+        vec_ptr,
+        3)) as unknown as  rust_vec_ptr<'usize'>;
+}
+
 export function allocate_vec(array: Uint32Array) : rust_vec_ptr<'usize'>
 export function allocate_vec(array: Float32Array) : rust_vec_ptr<'f32'>
 export function allocate_vec(array: Uint32Array | Float32Array): readonly [ptr: rust_pointer<'usize'> | rust_pointer<'f32'>, len: number, cap: number] {

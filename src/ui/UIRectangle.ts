@@ -109,7 +109,10 @@ export abstract class UIRectangle extends DataNode {
                 const vertices = this.#updateBoundingBoxAndVerticesSuper();
                 const vertices_ptr = allocate_vec(vertices);
                 this.drawable.setVertexBuffer(0,
-                    vertices_ptr);
+                    {
+                        stride: 3,
+                        view: vertices_ptr,
+                    });
                 this.set_vertices(vertices_ptr);
             }
         }
@@ -378,7 +381,12 @@ export abstract class UIRectangle extends DataNode {
                 node: this,
                 renderPasses: new Set([renderPass]),
                 renderPipeline: canvaspipeline,
-                vertexBuffers: [vertices_ptr],
+                vertexBuffers: [
+                    {
+                        stride: 3,
+                        view: vertices_ptr,
+                    }
+                ],
             },
             {
                 firstInstance: 0,
@@ -394,7 +402,10 @@ export abstract class UIRectangle extends DataNode {
                     const new_vertices_ptr = allocate_vec(newVertices);
                     this.set_vertices(new_vertices_ptr);
                     drawable.setVertexBuffer(0,
-                        new_vertices_ptr);
+                        {
+                            stride: 3,
+                            view: new_vertices_ptr,
+                        });
                 });
 
 

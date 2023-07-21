@@ -67,7 +67,7 @@ pub unsafe extern "C" fn new_mesh(
     );
 }
 #[no_mangle]
-pub unsafe extern "C" fn create_geometry(
+pub extern "C" fn create_geometry(
     mesh_id: usize,
     has_bounding: bool,
     vertices_stride: usize,

@@ -1,5 +1,4 @@
 import { new_rust_mesh } from '../../../MainNode.js';
-import { Buffer, GPUBufferUsage } from '../../Buffer/Buffer.js';
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import type { Engine, rust_pointer } from '../../../engine.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
@@ -7,6 +6,7 @@ import type { RenderPipeline } from '../../RenderPipeline.js';
 import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
 import { IndexedTrait, NodeIndexed2 } from '../../../nodes/NodeIndexed2.js';
+import { Buffer2, BufferUsageEnums } from '../../Buffer/Buffer2.js';
 declare const engine: Engine;
 
 
@@ -23,16 +23,18 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
             3);
         const positions_amount = 26;
         const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
-        const debug_render_boundingbox_vertexBuffer = Buffer.create(gpu,
-            positions_amount * 4 * Float32Array.BYTES_PER_ELEMENT,
-            [GPUBufferUsage.VERTEX],
-            'vertex_debug_bounding_box',
-            b => {
-                const view = new Float32Array(b.getMappedRange());
-                view.set(new Float32Array(engine.rust.memory.buffer,
-                    ptr,
-                    len));
-            });
+        const debug_render_boundingbox_vertexBuffer = new Buffer2({
+            gpu,
+            label: 'vertex_debug_bounding_box',
+            size: positions_amount * 4 * Float32Array.BYTES_PER_ELEMENT,
+            usages: BufferUsageEnums.VERTEX,
+        },
+        b => {
+            const view = new Float32Array(b.getMappedRange());
+            view.set(new Float32Array(engine.rust.memory.buffer,
+                ptr,
+                len));
+        });
         super(
             {
                 vertices: {
@@ -91,7 +93,12 @@ cap!
             node: this,
             renderPasses: undefined,
             renderPipeline,
-            vertexBuffers: [debug_render_boundingbox_vertexBuffer],
+            vertexBuffers: [
+                {
+                    stride: 4,
+                    view: debug_render_boundingbox_vertexBuffer,
+                }
+            ],
         });
     }
 }

@@ -1,20 +1,71 @@
-import type { RenderPipeline } from '../../RenderPipeline.js';
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
-import { new_rust_mesh } from '../../../MainNode.js';
-import { DataNode, allocate_vec, allocate_vec_f32 } from '../../../nodes/DataNode.js';
-import { IndexedTrait, NodeIndexed2 } from '../../../nodes/NodeIndexed2.js';
+import { MainNode, new_rust_mesh } from '../../../MainNode.js';
+import { DataNode, allocate_vec_f32, allocate_vec_usize } from '../../../nodes/DataNode.js';
+import { IndexedDataNode, IndexedMainNode, IndexedTrait } from '../../../nodes/NodeIndexed2.js';
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 
-export class WireFrameMesh extends DataNode implements IndexedTrait {
-    drawable: DrawableIndexed<RenderPipeline>;
-    indexed: NodeIndexed2;
-    constructor(targetNode: DrawableDirect<IndexedTrait & DataNode>) {
-        const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
-        const stride = 4;
+export function createWireFrameMesh(targetNode: DrawableDirect<IndexedTrait>) {
+    const mesh_id = new_rust_mesh({
+        label: 'Wireframe_'+targetNode.node.label,
+        rigid_body: false,
+    });
 
+    const indices_vec_ptr = allocate_vec_usize(targetNode.node.indexed.indices_count * 2);
+    const [
+        ind_ptr,
+        ind_len
+    ] = indices_vec_ptr;
+    const indices = new Uint32Array(engine.rust.memory.buffer,
+        ind_ptr,
+        ind_len);
+    const targetIndices = targetNode.node.indexed.indices;
+    for (let i = 0; i < targetIndices.length / 3; i++) {
+        indices[i * 6] = targetIndices[i * 3]!;
+        indices[i * 6 + 1] = targetIndices[i * 3 + 1]!;
+        indices[i * 6 + 2] = targetIndices[i * 3 + 1]!;
+        indices[i * 6 + 3] = targetIndices[i * 3 + 2]!;
+        indices[i * 6 + 4] = targetIndices[i * 3 + 2]!;
+        indices[i * 6 + 5] = targetIndices[i * 3]!;
+    }
+    console.log('new indices',
+        indices);
+    let node: MainNode & IndexedTrait;
+    const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
+    const vertexBuffer = targetNode.vertexBuffers.get(0)?.buffer;
+
+    if(vertexBuffer) {
+        const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline,
+            {
+                topology: 'line-list',
+            },
+            {
+                stride: vertexBuffer.stride,
+            });
+        engine.rust.create_geometry(mesh_id,
+            true,
+            12,
+            true,
+            false);
+        node = new IndexedMainNode(mesh_id,
+            indices_vec_ptr);
+        node.drawable = new DrawableIndexed({
+            node,
+            renderPasses: undefined,
+            renderPipeline,
+            vertexBuffers: [vertexBuffer],
+        });
+    } else if(targetNode.node instanceof DataNode) {
+        const stride = targetNode.node.vertices_stride;
+        const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline,
+            {
+                topology: 'line-list',
+            },
+            {
+                stride,
+            });
         const vertices_ptr = allocate_vec_f32(targetNode.node.positions_count * 4);
         const newVertices = new Float32Array(engine.rust.memory.buffer,
             vertices_ptr[0],
@@ -25,60 +76,45 @@ export class WireFrameMesh extends DataNode implements IndexedTrait {
             newVertices.set(slice,
                 i * stride);
         });
-        const targetIndices = targetNode.node.indexed.indices;
-        const indices = new Uint32Array(targetIndices.length * 2);
-        for (let i = 0; i < targetIndices.length / 3; i++) {
-            indices[i * 6] = targetIndices[i * 3]!;
-            indices[i * 6 + 1] = targetIndices[i * 3 + 1]!;
-            indices[i * 6 + 2] = targetIndices[i * 3 + 1]!;
-            indices[i * 6 + 3] = targetIndices[i * 3 + 2]!;
-            indices[i * 6 + 4] = targetIndices[i * 3 + 2]!;
-            indices[i * 6 + 5] = targetIndices[i * 3]!;
-        }
-        const mesh_id = new_rust_mesh({
-            label: 'Wireframe_'+targetNode.node.label,
-            rigid_body: false,
-        });
-        super(
-            {
-                can_collide: false,
-                character_can_collide_to: false,
-                vertices: {
-                    stride,
-                    view: vertices_ptr,
-                },
-            },
-            mesh_id,
-            false);
-        this.indexed = new NodeIndexed2(this,
-            allocate_vec(indices));
-        this.translation = targetNode.node.translation;
-        this.update_scale(targetNode.node.scale_x,
-            targetNode.node.scale_y,
-            targetNode.node.scale_z);
-        this.rotation = targetNode.node.rotation;
-
-        //TODO: Share same transformation matrix instead of updating it from other
-        targetNode.node.onMeshChange.add(() => {
-            this.translation = targetNode.node.translation;
-            this.update_scale(targetNode.node.scale_x,
-                targetNode.node.scale_y,
-                targetNode.node.scale_z);
-            this.rotation = targetNode.node.rotation;
-        });
-
-        const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline,
-            {
-                topology: 'line-list',
-            },
-            {
+        node = new IndexedDataNode({
+            can_collide: false,
+            character_can_collide_to: false,
+            vertices: {
                 stride,
-            });
-        this.drawable = new DrawableIndexed({
-            node: this,
+                view: vertices_ptr,
+            },
+        },
+        mesh_id,
+        indices_vec_ptr);
+        node.drawable = new DrawableIndexed({
+            node: node as IndexedDataNode,
             renderPasses: undefined,
             renderPipeline,
-            vertexBuffers: [vertices_ptr],
+            vertexBuffers: [
+                {
+                    stride,
+                    view: vertices_ptr,
+                }
+            ],
         });
+    } else {
+        throw new Error('Node has no vertexbuffer and no vertices data, cannot draw wireframe');
     }
+
+    node.translation = targetNode.node.translation;
+    node.update_scale(targetNode.node.scale_x+0.1,
+        targetNode.node.scale_y+0.1,
+        targetNode.node.scale_z+0.1);
+    node.rotation = targetNode.node.rotation;
+
+    //TODO: Share same transformation matrix instead of updating it from other
+    targetNode.node.onMeshChange.add(() => {
+        node.translation = targetNode.node.translation;
+        node.update_scale(targetNode.node.scale_x+0.1,
+            targetNode.node.scale_y+0.1,
+            targetNode.node.scale_z+0.1);
+        node.rotation = targetNode.node.rotation;
+    });
+
+
 }

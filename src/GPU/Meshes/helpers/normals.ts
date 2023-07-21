@@ -32,7 +32,10 @@ export class NormalsMesh extends DataNode {
         targetNode.node.onVerticesChangeListeners.push(() => {
             updateVertices();
             this.drawable.setVertexBuffer(0,
-                vertices_ptr,
+                {
+                    stride,
+                    view: vertices_ptr,
+                },
                 true);
         });
         const mesh_id = new_rust_mesh({
@@ -73,7 +76,12 @@ export class NormalsMesh extends DataNode {
             node: this,
             renderPasses: undefined,
             renderPipeline,
-            vertexBuffers: [vertices_ptr],
+            vertexBuffers: [
+                {
+                    stride,
+                    view: vertices_ptr,
+                }
+            ],
         });
     }
 }
