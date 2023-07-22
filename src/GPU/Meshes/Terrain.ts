@@ -8,7 +8,6 @@ import type { IndexBuffer } from '../../GPU/Buffer/Buffer.js';
 import type { TextureView } from '../TextureView.js';
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
-import { new_rust_mesh } from '../../MainNode.js';
 import type { TEXTURE_BINDING_TEXTURE, Texture } from '../../GPU/Texture.js';
 import type { Buffer2, VERTEX_BUFFER } from '../Buffer/Buffer2.js';
 
@@ -36,12 +35,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
         indicesView: rust_vec_ptr<'usize'>,
         verticesPositionStride: number
     ) {
-        const mesh_id = new_rust_mesh({
-            fixed: true,
-            label: 'terrain',
-            rigid_body: false,
-            scenes,
-        });
         super(
             {
                 can_collide: true,
@@ -51,7 +44,12 @@ export class TerrainMesh extends BoundableNodeIndexed {
                     view: vertices,
                 },
             },
-            mesh_id,
+            {
+                fixed: true,
+                label: 'terrain',
+                rigid_body: false,
+                scenes,
+            },
             false,
             indicesView,
             () => {

@@ -1,7 +1,6 @@
 ﻿import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
 import { MutableTerraVector3 } from '../../Math.js';
-import { new_rust_mesh } from '../../MainNode.js';
 import { allocate_vec } from '../../nodes/DataNode.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
 declare const engine: Engine;
@@ -220,11 +219,6 @@ export class IcoSphere extends IndexedSingleColoredMesh {
                 i * 8,
                 i * 8 + 4);
         }
-        const mesh_id = new_rust_mesh({
-            fixed,
-            label,
-            scenes,
-        });
         super(
             {
                 can_collide,
@@ -234,7 +228,11 @@ export class IcoSphere extends IndexedSingleColoredMesh {
                     view: allocate_vec(verticesAndNormals),
                 },
             },
-            mesh_id,
+            {
+                fixed,
+                label,
+                scenes,
+            },
             allocate_vec(indices));
     }
 }

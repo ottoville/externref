@@ -7,7 +7,6 @@ import { type Texture, TextureUsageEnums, RenderTarget, type TEXTURE_BINDING_TEX
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
 import { DataNode, allocate_vec } from '../nodes/DataNode.js';
-import { new_rust_mesh } from '../MainNode.js';
 import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
 declare const engine: Engine;
 
@@ -113,7 +112,8 @@ export abstract class UIRectangle extends DataNode {
                         stride: 3,
                         view: vertices_ptr,
                     });
-                this.set_vertices(vertices_ptr);
+                this.set_vertices(vertices_ptr,
+                    3);
             }
         }
         if (!this.texture) {
@@ -293,9 +293,6 @@ export abstract class UIRectangle extends DataNode {
         public props: UIRectangleProps,
         texture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>> | ImageBitmap | OffscreenCanvas) {
         props.label = props.label + '_UIRectangle';
-        const mesh_id = new_rust_mesh({
-            label: props.label,
-        });
         super(
             {
                 character_can_collide_to: false,
@@ -304,7 +301,9 @@ export abstract class UIRectangle extends DataNode {
                     view: allocate_vec(new Float32Array(9)),
                 },
             },
-            mesh_id);
+            {
+                label: props.label,
+            });
         const {
             canvaspipeline,
             renderPass,
@@ -375,7 +374,8 @@ export abstract class UIRectangle extends DataNode {
         queueMicrotask(() => {
             const vertices = this.#updateBoundingBoxAndVerticesSuper();
             const vertices_ptr = allocate_vec(vertices);
-            this.set_vertices(vertices_ptr);
+            this.set_vertices(vertices_ptr,
+                3);
 
             const drawable = new DrawableSimple({
                 node: this,
@@ -400,7 +400,8 @@ export abstract class UIRectangle extends DataNode {
                 () => {
                     const newVertices = this.#updateBoundingBoxAndVerticesSuper();
                     const new_vertices_ptr = allocate_vec(newVertices);
-                    this.set_vertices(new_vertices_ptr);
+                    this.set_vertices(new_vertices_ptr,
+                        3);
                     drawable.setVertexBuffer(0,
                         {
                             stride: 3,

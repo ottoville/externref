@@ -1,4 +1,5 @@
 use crate::collider::Collider;
+use crate::geometry::Vertices;
 use crate::math2::{Vec4, Vec3F32, Vec3};
 pub use crate::mesh::Mesh;
 
@@ -24,8 +25,8 @@ fn test_bounding_box() {
         let len = engine2.meshes.len();
         Mesh::new(0.0, 0.0, 0.0, false, false, false, String::from("box"));
         let m = &mut engine2.meshes[len];
-        let mut geometry = Geometry::new(true, 6, false, false);
-        geometry.set_vertices(BOX_POSITIONS.to_vec());
+        let mut geometry = Geometry::new(true, false, false, false);
+        geometry.set_vertices(BOX_POSITIONS.to_vec(), 8);
         geometry.indices = BOX_INDICES.to_vec();
         m.geometry = Some(geometry);
 
@@ -69,15 +70,15 @@ impl BoundingBox {
             need_init:true,
         }
     }
-    pub fn init(&mut self, vertices:&Vec<f32>,vertices_stride: usize) {
-        self.min_original.x=vertices[0];
-        self.min_original.x=vertices[1];
-        self.min_original.x=vertices[2];
-        self.max_original.x=vertices[0];
-        self.max_original.x=vertices[1];
-        self.max_original.x=vertices[2];
+    pub fn init(&mut self, vertices:&Vertices) {
+        self.min_original.x=vertices.vertices[0];
+        self.min_original.x=vertices.vertices[1];
+        self.min_original.x=vertices.vertices[2];
+        self.max_original.x=vertices.vertices[0];
+        self.max_original.x=vertices.vertices[1];
+        self.max_original.x=vertices.vertices[2];
 
-        let positions=vertices.chunks(vertices_stride);
+        let positions=vertices.vertices.chunks(vertices.vertices_stride);
         for position in positions {
             if position[0] < self.min_original.x {
                 self.min_original.x = position[0]

@@ -576,7 +576,8 @@ TODO
             gpuReadBufferPositions.readAndDestroy(readbuff => {
                 return gpuReadBufferIndices.readAndDestroy(buff => {
                     this.mesh.indexed.set_indices_and_vertices(new Uint32Array(buff),
-                        new Float32Array(readbuff));
+                        new Float32Array(readbuff),
+                        this.mesh.vertices_stride);
                     this.updateSwap2(0,
                         readbuff.byteLength,
                         true);

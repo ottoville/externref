@@ -1,5 +1,5 @@
 import { ObjectWorkerThread } from '../WorkerThread.js';
-import { MainNode } from '../MainNode.js';
+import { MainNode, MainNodeProps } from '../MainNode.js';
 import { MutableTerraVector3, ReadOnlyFloat32Array, TerraMatrix, TerraVector3, TerraVector4, Triangle } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
 import type { Engine, rust_pointer, rust_vec_ptr } from '../engine.js';
@@ -41,7 +41,7 @@ export interface Ellipsoid {
 }
 
 export type DataNodeProps = {
-    vertices: {
+    vertices?: {
         view: rust_vec_ptr<'f32'>,
         stride: number
     }
@@ -111,6 +111,41 @@ cap!
 export const closeDistance = 0.0022;
 export const closeDistanceSquared = closeDistance * closeDistance;
 export abstract class DataNode extends MainNode {
+
+    //Physic things
+    acceleration2: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
+    //Actual velocity that occured last tick
+    last_velocity: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
+    last_acceleration: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
+    get speed() {
+        return Math.sqrt(this.velocity[0] * this.velocity[0] + this.velocity[1] * this.velocity[1] + this.velocity[2] * this.velocity[2]);
+    }
+    get speedSquared() {
+        return this.velocity[0] * this.velocity[0] + this.velocity[1] * this.velocity[1] + this.velocity[2] * this.velocity[2];
+    }
+    //coefficient of friction
+    grip = 1;
+    impulse: [number, number, number] = [
+        0,
+        0,
+        0
+    ];
+    hasGravity = false;
+
+
+
     onVerticesChangeListeners: (() => void)[] = [];
     onVerticesChange() {
         this.onVerticesChangeListeners.forEach(cb => {
@@ -182,9 +217,10 @@ cap!);
      *  Set new vertices raw array for the mesh
      * @param vec
      */
-    set_vertices(vec: rust_vec_ptr<'f32'>) {
+    set_vertices(vec: rust_vec_ptr<'f32'>, stride: number) {
         engine.rust.set_vertices(this.id,
-            ...vec);
+            ...vec,
+            stride);
         this.onVerticesChange();
     }
     /**
@@ -216,10 +252,10 @@ cap!);
             frontFace = 'cw',
             character_can_collide_to = true,
         }: DataNodeProps,
-        mesh_id: number,
+        mainNodeProps: MainNodeProps,
         strip = false
     ) {
-        super(mesh_id);
+        super(mainNodeProps);
         this.#frontFace = frontFace;
         this.#character_can_collide_to = character_can_collide_to;
 
@@ -227,10 +263,13 @@ cap!);
             this);
         engine.rust.create_geometry(this.id,
             true,
-            vertices.stride,
+            character_can_collide_to,
             static_faces,
             strip);
-        this.set_vertices(vertices.view);
+        if(vertices) {
+            this.set_vertices(vertices.view,
+                vertices?.stride);
+        }
         // queueMicrotask here so mesh will have indices initialized
         if (can_collide) {
             queueMicrotask(() => {

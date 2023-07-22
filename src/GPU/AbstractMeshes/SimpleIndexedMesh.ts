@@ -9,6 +9,7 @@ import { VertexBufferLayout2, VertexShader } from '../../GPU/Shaders/VertexShade
 import { VertexShaderFunction } from '../Shaders/ShaderFunction.js';
 import { BGLayout } from '../BindGroupLayout.js';
 import { Buffer2, BufferUsageEnums } from '../Buffer/Buffer2.js';
+import { MainNodeProps } from 'MainNode.js';
 declare const engine: Engine;
 
 export type SimpleIndexedMeshProps = {
@@ -20,16 +21,19 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
     drawable: DrawableIndexed<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
         dataNodeProps: DataNodeProps,
-        mesh_id: number,
+        mainNodeProps: MainNodeProps,
         indicesView: rust_vec_ptr<'usize'>,
         createRenderPipeline: CreateRenderPipelineCB<RenderPipeline<VertexShader<readonly BGLayout[], { main: VertexShaderFunction<readonly BGLayout[], readonly [VertexBufferLayout2]> }>>>,
         { vBufferGPU, topology = 'triangle-list', staticVertices = true, }: SimpleIndexedMeshProps = {
             staticVertices: true, topology: 'triangle-list',
         }
     ) {
+        if(!dataNodeProps.vertices) {
+            throw new Error('SimpleIndexedMesh without vertices is not yet supported');
+        }
         const strip = topology === 'triangle-strip' || topology === 'line-strip';
         super(dataNodeProps,
-            mesh_id,
+            mainNodeProps,
             strip,
             indicesView);
         const primitiveState: GPUPrimitiveState = {
@@ -54,8 +58,8 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
                 },
                 b => {
                     new Float32Array(b.getMappedRange()).set(new Float32Array(engine.rust.memory.buffer,
-                        dataNodeProps.vertices.view[0],
-                        dataNodeProps.vertices.view[1]));
+                        dataNodeProps.vertices!.view[0],
+                        dataNodeProps.vertices!.view[1]));
                 });
             }
             const renderPipeline = engine.gpu.createRenderPipeline(createRenderPipeline,

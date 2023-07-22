@@ -1,5 +1,5 @@
 ﻿import type { Engine } from '../../engine.js';
-import { MainNodeProps, new_rust_mesh } from '../../MainNode.js';
+import { MainNodeProps } from '../../MainNode.js';
 import { MutableTerraVector3 } from '../../Math.js';
 import { allocate_vec } from '../../nodes/DataNode.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
@@ -164,7 +164,6 @@ export class Cone extends IndexedSingleColoredMesh {
             indices
         ] = createCone(14,
             8);
-        const mesh_id = new_rust_mesh(mainNodeProps);
         super(
             {
                 can_collide,
@@ -173,7 +172,7 @@ export class Cone extends IndexedSingleColoredMesh {
                     view: allocate_vec(vertices),
                 },
             },
-            mesh_id,
+            mainNodeProps,
             allocate_vec(indices));
         this.color = color;
     }

@@ -1,5 +1,5 @@
 ﻿import type { Scene } from '../Scene.js';
-import { MainNode, new_rust_mesh } from '../MainNode.js';
+import { MainNode } from '../MainNode.js';
 import { Angle } from '../Math.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import type { Engine } from '../engine.js';
@@ -66,9 +66,9 @@ export class Sun extends MainNode {
     };
     drawable: DrawableSimple<RenderPipeline<SunVertShader>> | undefined;
     constructor(gpu: GPU, scenes: Scene[]) {
-        super(new_rust_mesh({
+        super({
             directional_light: 1, label: 'sun', scenes,
-        }));
+        });
         this.positions_count = 14;
         const renderPipeline = gpu.createRenderPipeline(SunRenderPipeline,
             {

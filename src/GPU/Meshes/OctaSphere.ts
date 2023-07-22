@@ -1,5 +1,4 @@
 ﻿import type { Scene } from '../../Scene.js';
-import { new_rust_mesh } from '../../MainNode.js';
 import type { Engine, rust_pointer } from '../../engine.js';
 import { IndexedColoredMesh } from '../AbstractMeshes/IndexedColoredMesh.js';
 declare const engine: Engine;
@@ -44,11 +43,6 @@ export class OctaSphere extends IndexedColoredMesh {
             ptrs,
             6);
 
-        const mesh_id = new_rust_mesh({
-            fixed: false,
-            label: 'OctaSphere' + (uid++),
-            ...meshProperties,
-        });
         const vertices = new Float32Array(engine.rust.memory.buffer,
             pos_ptr,
 pos_len!);
@@ -70,7 +64,11 @@ pos_cap!
                     ], // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
                 },
             },
-            mesh_id,
+            {
+                fixed: false,
+                label: 'OctaSphere' + (uid++),
+                ...meshProperties,
+            },
             [
 ind_ptr as rust_pointer<'usize'>,
 ind_len!,

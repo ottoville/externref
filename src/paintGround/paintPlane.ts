@@ -8,7 +8,6 @@ import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import type { Engine, rust_pointer } from '../engine.js';
 import { PlaneAtGroundHeightVertShader, createPlaneAtGroundHeightVertShader } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
-import { new_rust_mesh } from '../MainNode.js';
 import { DataNode } from '../nodes/DataNode.js';
 import { IndexedTrait, NodeIndexed2 } from '../nodes/NodeIndexed2.js';
 import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
@@ -33,10 +32,6 @@ class PlaneMesh extends DataNode implements IndexedTrait {
             ptrs,
             6);
 
-        const mesh_id = new_rust_mesh({
-            label: 'plane',
-            rigid_body: false,
-        });
         super(
             {
                 character_can_collide_to: false,
@@ -50,7 +45,10 @@ pos_cap!
 
                 },
             },
-            mesh_id,
+            {
+                label: 'plane',
+                rigid_body: false,
+            },
             false);
         this.indexed = new NodeIndexed2(this,
             [

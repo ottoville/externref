@@ -1,7 +1,7 @@
 ﻿import type { Terrain } from '../world/Terrain.js';
 import { WorkerReturn, WorkerThread } from '../WorkerThread.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import { MainNode, new_rust_mesh } from '../MainNode.js';
+import { MainNode } from '../MainNode.js';
 import type { GPU } from '../GPU.js';
 import { MutableTerraVector3, TerraVector3 } from '../Math.js';
 import type { Engine, ListenerObj, rust_pointer } from '../engine.js';
@@ -142,9 +142,9 @@ export class TerrainTool extends MainNode {
     constructor(
         public terrain: Terrain
     ) {
-        super(new_rust_mesh({
+        super({
             label: 'TerrainTool',
-        }));
+        });
         this.positions_count = 4;
         const getRenderPipeline = [
             'TerrainToolRenderpipeline',

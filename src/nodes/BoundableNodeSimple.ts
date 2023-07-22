@@ -1,19 +1,21 @@
+import { MainNodeProps } from 'MainNode.js';
 import type { rust_vec_ptr } from '../engine.js';
 import { type canCollideCharacter, DataNode, DataNodeProps } from './DataNode.js';
 
 export abstract class BoundableNodeSimple extends DataNode implements canCollideCharacter {
     constructor(
         dataNodeProps: DataNodeProps,
-        mesh_id: number,
+        mainNodeProps: MainNodeProps,
         strip = false
     ) {
         super(
             dataNodeProps,
-            mesh_id,
+            mainNodeProps,
             strip);
     }
-    override set_vertices(vec: rust_vec_ptr<'f32'>) {
-        super.set_vertices(vec);
+    override set_vertices(vec: rust_vec_ptr<'f32'>, stride: number) {
+        super.set_vertices(vec,
+            stride);
         this.rebuildTrianglePlanes();
     }
     rebuildTrianglePlanes() {

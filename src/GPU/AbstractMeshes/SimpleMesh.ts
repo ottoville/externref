@@ -6,6 +6,7 @@ import type { RenderPipeline } from '../RenderPipeline.js';
 import type { SimpleVertShader } from '../Shaders/Simple.vert.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import { Buffer2, BufferUsageEnums, type VERTEX_BUFFER } from '../Buffer/Buffer2.js';
+import { MainNodeProps } from 'MainNode.js';
 
 declare const engine: Engine;
 
@@ -13,7 +14,7 @@ export class SimpleMesh extends BoundableNodeSimple {
     drawable: DrawableSimple<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
         dataNodeProps: Omit<DataNodeProps, 'vertices'> & { vertices: { view: rust_vec_ptr<'f32'> } },
-        mesh_id: number,
+        mainNodeProps: MainNodeProps,
         strip = false,
         vBufferGPU?: Buffer2<VERTEX_BUFFER>) {
         super({
@@ -23,7 +24,7 @@ export class SimpleMesh extends BoundableNodeSimple {
                 view: dataNodeProps.vertices.view,
             },
         },
-        mesh_id,
+        mainNodeProps,
         strip);
         if (engine.gpu) {
             if (!vBufferGPU) {

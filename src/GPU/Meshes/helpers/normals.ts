@@ -3,7 +3,6 @@ import { DrawableSimple } from '../../Drawables/DrawableSimple.js';
 import type { RenderPipeline } from '../../RenderPipeline.js';
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DataNode, allocate_vec_f32 } from '../../../nodes/DataNode.js';
-import {  new_rust_mesh } from '../../../MainNode.js';
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 
@@ -38,18 +37,19 @@ export class NormalsMesh extends DataNode {
                 },
                 true);
         });
-        const mesh_id = new_rust_mesh({
-            label: 'NormalsDebug',
-            rigid_body: false,
-        });
-        super({
-            character_can_collide_to: false,
-            vertices: {
-                stride: 8,
-                view: vertices_ptr,
+        super(
+            {
+                character_can_collide_to: false,
+                vertices: {
+                    stride: 8,
+                    view: vertices_ptr,
+                },
             },
-        },
-        mesh_id);
+            {
+                label: 'NormalsDebug',
+                rigid_body: false,
+            }
+        );
 
 
         this.translation = targetNode.node.translation;

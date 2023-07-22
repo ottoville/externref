@@ -70,11 +70,16 @@ pub unsafe extern "C" fn new_mesh(
 pub extern "C" fn create_geometry(
     mesh_id: usize,
     has_bounding: bool,
-    vertices_stride: usize,
+    character_can_collide_to: bool,
     static_faces: bool,
     strip: bool,
 ) {
-    get_mesh_by_id_mut(mesh_id).create_geometry(has_bounding, vertices_stride, static_faces, strip);
+    get_mesh_by_id_mut(mesh_id).geometry = Some(Geometry::new(
+        has_bounding,
+        character_can_collide_to,
+        static_faces,
+        strip,
+    ));
 }
 #[no_mangle]
 pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *const Collider) {
@@ -83,7 +88,7 @@ pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *const Collider)
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_pointer(mesh_id: usize) -> *const f32 {
-    get_mesh_by_id(mesh_id).get_geometry().vertices.as_ptr()
+    get_mesh_by_id(mesh_id).get_geometry().vertices.as_ref().unwrap().vertices.as_ptr()
 }
 #[no_mangle]
 pub unsafe extern "C" fn last_collider_world_vertices_pointer(mesh_id: usize) -> *const f32 {
@@ -95,7 +100,7 @@ pub unsafe extern "C" fn last_collider_world_vertices_pointer(mesh_id: usize) ->
 #[no_mangle]
 pub unsafe extern "C" fn vertices_count(mesh_id: usize) -> usize {
     let mesh = get_mesh_by_id(mesh_id);
-    mesh.get_geometry().vertices.len() / mesh.get_geometry().vertices_stride
+    mesh.get_geometry().vertices.as_ref().unwrap().length()
 }
 #[no_mangle]
 pub unsafe extern "C" fn faces_count(mesh_id: usize) -> usize {
@@ -260,7 +265,7 @@ pub unsafe extern "C" fn scale_z(mesh_id: usize) -> f32 {
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_stride(mesh_id: usize) -> usize {
-    get_mesh_by_id(mesh_id).get_geometry().vertices_stride
+    get_mesh_by_id(mesh_id).get_geometry().vertices.as_ref().unwrap().vertices_stride
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_color(
@@ -351,14 +356,18 @@ impl Mesh {
 }
 
 impl Mesh {
+    /**
+     * Get positions count if set, otherwise fallback to vertices count.
+     * This is because vertex buffr can hold extra vertices that are not drawn.
+     */
     pub fn get_positions_count(&self) -> usize {
         match self.positions_count {
             Some(positions_count) => {
                 return positions_count;
             }
             None => {
-                let geometry = self.get_geometry();
-                return geometry.vertices.len() / geometry.vertices_stride;
+                let vertices = self.get_geometry().vertices.as_ref().unwrap();
+                return vertices.length()
             }
         }
     }
@@ -371,7 +380,8 @@ impl Mesh {
     //TODO: move to geometry
     pub fn create_trimesh_collider(&self) -> *mut Collider {
         let geometry = self.get_geometry();
-        let iterator = geometry.vertices.chunks(geometry.vertices_stride);
+        let vertices = geometry.vertices.as_ref().unwrap();
+        let iterator = vertices.vertices.chunks(vertices.vertices_stride);
         let positions_count = self.get_positions_count();
         let mut vertices: Vec<Point<Real>> = Vec::with_capacity(positions_count);
         iterator.for_each(|i| {
@@ -413,20 +423,6 @@ impl Mesh {
                 .build(),
         );
         Box::leak(collider)
-    }
-    pub fn create_geometry<'a>(
-        &'static mut self,
-        has_bounding: bool,
-        vertices_stride: usize,
-        static_faces: bool,
-        strip: bool,
-    ) {
-        self.geometry = Some(Geometry::new(
-            has_bounding,
-            vertices_stride,
-            static_faces,
-            strip,
-        ));
     }
     pub unsafe fn add_collider<'a>(
         &'static mut self,

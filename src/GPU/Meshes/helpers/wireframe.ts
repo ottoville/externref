@@ -1,17 +1,13 @@
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
-import { MainNode, new_rust_mesh } from '../../../MainNode.js';
+import { MainNode } from '../../../MainNode.js';
 import { DataNode, allocate_vec_f32, allocate_vec_usize } from '../../../nodes/DataNode.js';
-import { IndexedDataNode, IndexedMainNode, IndexedTrait } from '../../../nodes/NodeIndexed2.js';
+import { IndexedDataNode, IndexedTrait } from '../../../nodes/NodeIndexed2.js';
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 
 export function createWireFrameMesh(targetNode: DrawableDirect<IndexedTrait>) {
-    const mesh_id = new_rust_mesh({
-        label: 'Wireframe_'+targetNode.node.label,
-        rigid_body: false,
-    });
 
     const indices_vec_ptr = allocate_vec_usize(targetNode.node.indexed.indices_count * 2);
     const [
@@ -30,11 +26,14 @@ export function createWireFrameMesh(targetNode: DrawableDirect<IndexedTrait>) {
         indices[i * 6 + 4] = targetIndices[i * 3 + 2]!;
         indices[i * 6 + 5] = targetIndices[i * 3]!;
     }
-    console.log('new indices',
-        indices);
     let node: MainNode & IndexedTrait;
     const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
     const vertexBuffer = targetNode.vertexBuffers.get(0)?.buffer;
+
+    const mainNodeProps = {
+        label: 'Wireframe_'+targetNode.node.label,
+        rigid_body: false,
+    };
 
     if(vertexBuffer) {
         const renderPipeline = gpu.createRenderPipeline(DebugLinesPipeline,
@@ -44,12 +43,12 @@ export function createWireFrameMesh(targetNode: DrawableDirect<IndexedTrait>) {
             {
                 stride: vertexBuffer.stride,
             });
-        engine.rust.create_geometry(mesh_id,
-            true,
-            12,
-            true,
-            false);
-        node = new IndexedMainNode(mesh_id,
+        node = new IndexedDataNode(
+            {
+                can_collide: false,
+                character_can_collide_to: false,
+            },
+            mainNodeProps,
             indices_vec_ptr);
         node.drawable = new DrawableIndexed({
             node,
@@ -84,7 +83,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<IndexedTrait>) {
                 view: vertices_ptr,
             },
         },
-        mesh_id,
+        mainNodeProps,
         indices_vec_ptr);
         node.drawable = new DrawableIndexed({
             node: node as IndexedDataNode,

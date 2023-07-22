@@ -1,4 +1,3 @@
-import { new_rust_mesh } from '../../../MainNode.js';
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import type { Engine, rust_pointer } from '../../../engine.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
@@ -46,9 +45,9 @@ cap!
                     ],
                 },
             },
-            new_rust_mesh({
+            {
                 label: 'BoundingBox_' + targetNode.node.label, rigid_body: false,
-            }),
+            },
             true);
         this.indexed = new NodeIndexed2(this,
             allocate_vec(Uint32Array.of(0,

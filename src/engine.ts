@@ -112,15 +112,15 @@ export type rustWasm = {
     create_geometry(
         mesh_id: number,
         has_bounding: boolean,
-        vertices_stride: number,
+        character_can_collide_to: boolean,
         static_faces: boolean,
         strip: boolean): void,
     add_collider(mesh_id: number,
         collider: rust_pointer<'collider'>): void
     memory: WebAssembly.Memory,
-    set_vertices(mesh_id: number, ptr: rust_pointer<'f32'>, length: number, cap: number): void,
+    set_vertices(mesh_id: number, ptr: rust_pointer<'f32'>, length: number, cap: number, vertices_stride: number): void,
     set_indices(mesh_id: number, ptr: rust_pointer<'usize'>, length: number, cap: number): void,
-    set_indices_and_vertices(mesh_id: number, indices: rust_pointer<'usize'>, indices_length: number, indices_cap: number, vertices: rust_pointer<'f32'>, vertices_length: number, vertices_cap: number): void,
+    set_indices_and_vertices(mesh_id: number, indices: rust_pointer<'usize'>, indices_length: number, indices_cap: number, vertices: rust_pointer<'f32'>, vertices_length: number, vertices_cap: number, vertices_stride: number): void,
     vertices_pointer(mesh_id: number): number,
     indices_field_pointer(mesh_id: number): rust_pointer<'indices_indices'>,
     last_collider_world_vertices_pointer(mesh_id: number): number,

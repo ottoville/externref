@@ -1,6 +1,6 @@
 import type { Engine, rust_vec_ptr } from '../engine.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
-import { MainNode } from '../MainNode.js';
+import { MainNode, MainNodeProps } from '../MainNode.js';
 import { DataNode, DataNodeProps, allocate_vec } from './DataNode.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
 declare const engine: Engine;
@@ -23,7 +23,7 @@ export class NodeIndexed2 {
         if(!initial && this.onIndicesChange)
             this.onIndicesChange();
     }
-    set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array) {
+    set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array, vertices_stride: number) {
         const [
             ptr_ind,
             len_ind,
@@ -40,7 +40,8 @@ export class NodeIndexed2 {
             cap_ind,
             ptr_vertices,
             len_vertices,
-            cap_vertices);
+            cap_vertices,
+            vertices_stride);
         if (this.node.drawable && !(this.node.drawable instanceof DrawableIndexed)) {
             throw (new Error('Node is not indexed'));
         }
@@ -77,9 +78,9 @@ export class NodeIndexed2 {
 export class IndexedDataNode extends DataNode implements IndexedTrait {
     override drawable?: Drawable<MainNode> | undefined;
     indexed: NodeIndexed2;
-    constructor(datanodeProps: DataNodeProps, mesh_id: number, indices: rust_vec_ptr<'usize'>) {
+    constructor(datanodeProps: DataNodeProps, mainNodeProps: MainNodeProps, indices: rust_vec_ptr<'usize'>) {
         super(datanodeProps,
-            mesh_id);
+            mainNodeProps);
         this.indexed = new NodeIndexed2(this,
             indices);
     }
@@ -88,8 +89,8 @@ export class IndexedDataNode extends DataNode implements IndexedTrait {
 export class IndexedMainNode extends MainNode implements IndexedTrait {
     override drawable?: Drawable<MainNode> | undefined;
     indexed: NodeIndexed2;
-    constructor(mesh_id: number, indices: rust_vec_ptr<'usize'>) {
-        super(mesh_id);
+    constructor(mainNodeProps: MainNodeProps, indices: rust_vec_ptr<'usize'>) {
+        super(mainNodeProps);
         this.indexed = new NodeIndexed2(this,
             indices);
     }

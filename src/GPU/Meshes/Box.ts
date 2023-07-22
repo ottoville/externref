@@ -1,6 +1,5 @@
 ﻿import type { Scene } from '../../Scene.js';
 import type { Engine, rust_pointer } from '../../engine.js';
-import { new_rust_mesh } from '../../MainNode.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
 declare const engine: Engine;
 
@@ -35,12 +34,6 @@ export class Box extends IndexedSingleColoredMesh {
                 fixed?: boolean
             }
     ) {
-        const mesh_id = new_rust_mesh({
-            fixed,
-            label,
-            point_light,
-            scenes,
-        });
         const boxVertices = engine.rust.get_box_vertices();
         const [
             ptr_vertices,
@@ -70,7 +63,12 @@ cap_vertices!
                     ],
                 },
             },
-            mesh_id,
+            {
+                fixed,
+                label,
+                point_light,
+                scenes,
+            },
             [
 ptr_ind as rust_pointer<'usize'>,
 len_ind!,

@@ -5,7 +5,6 @@ import { WaterRenderPipeline } from '../GPU/RenderPipeLines/Water.js';
 import type { Engine } from '../engine.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import type { WaterVertShader } from '../GPU/Shaders/Water.vert.js';
-import { new_rust_mesh } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 
@@ -48,13 +47,13 @@ export class Sea extends BoundableNodeSimple {
                 can_collide: false,
                 vertices: vertexBuffer,
             },
-            new_rust_mesh({
+            {
                 fixed: true,
                 label: 'water',
                 rigid_body: false,
                 scenes,
                 strip: true,
-            }),
+            },
             true
         ); //48
         if (engine.gpu) {

@@ -11,7 +11,7 @@ import { Buffer, GPUBufferUsage } from '../GPU/Buffer/Buffer.js';
 import type { Engine } from '../engine.js';
 import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
 import { GrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
-import { MainNode, new_rust_mesh } from '../MainNode.js';
+import { MainNode } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import { Buffer2, BufferUsageEnums } from '../GPU/Buffer/Buffer2.js';
 declare const engine: Engine;
@@ -52,9 +52,9 @@ export class Plants extends MainNode {
         scene: Scene,
         terrainP: Promise<Terrain>
     ) {
-        super(new_rust_mesh({
+        super({
             label: 'Plants',
-        }));
+        });
         const indirectBuffer = Buffer.create(scene.gpu,
             4 * 4,
             [

@@ -15,59 +15,9 @@ export type MainNodeProps = {
     fixed?: boolean,
     rigid_body?: boolean,
 };
-export function new_rust_mesh(
-    {
-        point_light = 0,
-        directional_light = 0,
-        strip = false,
-        label,
-        scenes,
-        fixed = false,
-        rigid_body = true,
-    }: MainNodeProps) {
-    const sceneids = scenes ? scenes.reduce((acc, scene) =>
-        acc | scene.id,
-    0) : 1;
-    const vec_ptr = engine.rust.alloc_vector_u8(label.length);
-    const [
-        string_ptr,
-        len,
-        cap
-    ] = new Uint32Array(engine.rust.memory.buffer,
-        vec_ptr,
-        3);
-    textEncoder.encodeInto(label,
-        new Uint8Array(engine.rust.memory.buffer,
-            string_ptr,
-            len));
-    return engine.rust.new_mesh(point_light,
-        directional_light,
-        sceneids,
-        strip,
-        fixed,
-        rigid_body,
-string_ptr!,
-len!,
-cap!);
-}
 export abstract class MainNode {
     abstract drawable?: Drawable | undefined
-    acceleration2: [number, number, number] = [
-        0,
-        0,
-        0
-    ];
-    //Actual velocity that occured last tick
-    last_velocity: [number, number, number] = [
-        0,
-        0,
-        0
-    ];
-    last_acceleration: [number, number, number] = [
-        0,
-        0,
-        0
-    ];
+
     id: number;
     get label(): string {
         const label_field_pointer = engine.rust.label_field_pointer(this.id);
@@ -81,19 +31,6 @@ export abstract class MainNode {
             label_ptr,
             label_len));
     }
-    get speed() {
-        return Math.sqrt(this.velocity[0] * this.velocity[0] + this.velocity[1] * this.velocity[1] + this.velocity[2] * this.velocity[2]);
-    }
-    get speedSquared() {
-        return this.velocity[0] * this.velocity[0] + this.velocity[1] * this.velocity[1] + this.velocity[2] * this.velocity[2];
-    }
-    //coefficient of friction
-    grip = 1;
-    impulse: [number, number, number] = [
-        0,
-        0,
-        0
-    ];
 
     set color(data: [number, number, number, number]) {
         engine.rust.set_color(this.id,
@@ -196,8 +133,6 @@ export abstract class MainNode {
     }
     onMeshChange: Set<() => void> = new Set();
     onPhysicTick?: (time: number) => void;
-    hasGravity = false;
-    isStatic = false;
     static Meshes: Map<number, MainNode> = new Map();
 
     get_transformation = () =>
@@ -242,8 +177,42 @@ export abstract class MainNode {
     get have_rigid_body() {
         return engine.rust.have_rigid_body(this.id);
     }
-    constructor(mesh_id: number) {
-        this.id = mesh_id;
+    constructor({
+        point_light = 0,
+        directional_light = 0,
+        strip = false,
+        label,
+        scenes,
+        fixed = false,
+        rigid_body = true,
+    }: MainNodeProps) {
+
+
+
+        const sceneids = scenes ? scenes.reduce((acc, scene) =>
+            acc | scene.id,
+        0) : 1;
+        const vec_ptr = engine.rust.alloc_vector_u8(label.length);
+        const [
+            string_ptr,
+            len,
+            cap
+        ] = new Uint32Array(engine.rust.memory.buffer,
+            vec_ptr,
+            3);
+        textEncoder.encodeInto(label,
+            new Uint8Array(engine.rust.memory.buffer,
+                string_ptr,
+                len));
+        this.id =  engine.rust.new_mesh(point_light,
+            directional_light,
+            sceneids,
+            strip,
+            fixed,
+            rigid_body,
+string_ptr!,
+len!,
+cap!);
         MainNode.Meshes.set(this.id,
             this);
     }
