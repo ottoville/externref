@@ -7,7 +7,7 @@ import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 
 export class NormalsMesh extends DataNode {
-    drawable: DrawableSimple<RenderPipeline>;
+    override drawable: DrawableSimple<RenderPipeline>;
     constructor(targetNode: DrawableDirect<DataNode>) {
         const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
         const stride = 16; // 8*2;

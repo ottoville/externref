@@ -4,10 +4,10 @@ import { DrawableDirect, DrawableDirectProps, type MappedVertexBuffers } from '.
 import type { RenderPipeline } from '../RenderPipeline.js';
 import type { DrawableProps } from './Drawable.js';
 import type { RenderPass } from '../../GPU/RenderPasses/RenderPass.js';
-import type { IndexedTrait } from '../../nodes/NodeIndexed2.js';
+import type { DataNode } from '../../nodes/DataNode.js';
 declare const engine: Engine;
 
-export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extends IndexedTrait = IndexedTrait> extends DrawableDirect<N> {
+export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extends DataNode = DataNode> extends DrawableDirect<N> {
     #indexBuffer: IndexBuffer | undefined;
     #baseVertex: number;
     #firstIndex: number;
@@ -46,7 +46,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
             },
             drawableDirectProps
         );
-        const indices = this.node.indexed.indices;
+        const indices = this.node.indices;
         if (indices.length > 0)
             this.setIndexBuffer(indices);
         this.#baseVertex = baseVertex;
@@ -96,7 +96,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
         if (this.#indexBuffer) {
             renderEncoder.setIndexBuffer(this.#indexBuffer.getIndexBuffer(renderPass),
                 this.#GPUIndexFormat);
-            const indices_count = this.indices_count ?? this.node.indexed.indices_count;
+            const indices_count = this.indices_count ?? this.node.indices_count;
             if (indices_count === 0) {
                 console.warn('wont draw',
                     this.node.label,

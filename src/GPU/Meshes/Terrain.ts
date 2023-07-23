@@ -22,7 +22,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 });
             });
     };
-    drawable: DrawableIndexed<RenderPipeline<GroundVertShader>> | undefined;
+    override drawable: DrawableIndexed<RenderPipeline<GroundVertShader>> | undefined = undefined;
+
     override create_collider(): rust_pointer<'collider'> {
         return engine.rust.create_trimesh_collider(this.id);
     }

@@ -10,7 +10,6 @@ import { DrawableIndexed } from '../../GPU/Drawables/DrawableIndexed.js';
 import type { MainNode } from '../../MainNode.js';
 import { Rotation } from './Rotation.js';
 import { Primitives } from './Primitives.js';
-import { isIndexed } from '../../nodes/NodeIndexed2.js';
 
 export function NodeInfo({ drawable, }: { drawable: Drawable }) {
     const [
@@ -92,7 +91,7 @@ export function NodeInfo({ drawable, }: { drawable: Drawable }) {
                 }} title="scale Z" type="number" step="0.1" value={scale[2].toFixed(3)} />
             </label>
         </fieldset>
-        {drawable.node instanceof DataNode || isIndexed(drawable.node) ?
+        {drawable.node instanceof DataNode ?
             <Primitives node={drawable.node}></Primitives>
             : null}
         <br />

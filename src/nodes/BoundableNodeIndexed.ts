@@ -1,10 +1,8 @@
 import type { rust_vec_ptr } from 'engine.js';
 import { type canCollideCharacter, DataNodeProps, DataNode } from './DataNode.js';
-import { IndexedTrait, NodeIndexed2 } from './NodeIndexed2.js';
 import { MainNodeProps } from 'MainNode.js';
 
-export abstract class BoundableNodeIndexed extends DataNode implements canCollideCharacter, IndexedTrait {
-    indexed: NodeIndexed2;
+export abstract class BoundableNodeIndexed extends DataNode implements canCollideCharacter {
     constructor(
         dataNodeProps: DataNodeProps,
         mainNodeProps: MainNodeProps,
@@ -15,14 +13,13 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
         super(
             dataNodeProps,
             mainNodeProps,
-            strip);
-        this.indexed = new NodeIndexed2(this,
             indicesView,
-            () => {
-                if(onIndicesChange)
-                    onIndicesChange();
-                this.rebuildTrianglePlanes();
-            });
+            strip);
+        this.onIndicesChange.push(() => {
+            if(onIndicesChange)
+                onIndicesChange();
+            this.rebuildTrianglePlanes();
+        });
         this.rebuildTrianglePlanes();
     }
     override set_vertices(vertices:  rust_vec_ptr<'f32'>, stride: number) {
@@ -31,9 +28,9 @@ export abstract class BoundableNodeIndexed extends DataNode implements canCollid
         this.rebuildTrianglePlanes();
     }
     rebuildTrianglePlanes() {
-        if (!this.initCollider() || !this.indexed /* This function is called from super constructor when indices are not initialized yet */)
+        if (!this.initCollider() || !this.indices_count /* This function is called from super constructor when indices are not initialized yet */)
             return;
-        this.indexed.indices.forEach((indice: number) => {
+        this.indices.forEach((indice: number) => {
             const position = this.colliderVerticesV4[indice];
             if (typeof (position) === 'undefined') {
                 throw (new Error('position ' + indice + ' not found'));

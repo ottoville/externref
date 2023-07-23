@@ -125,6 +125,7 @@ export type rustWasm = {
     indices_field_pointer(mesh_id: number): rust_pointer<'indices_indices'>,
     last_collider_world_vertices_pointer(mesh_id: number): number,
     vertices_count(mesh_id: number): number,
+    have_vertices(mesh_id: number): boolean,
     faces_count(mesh_id: number): number,
     alloc_vector_f32(size: number): rust_pointer<'usize'>,
     alloc_vector_u8(size: number): rust_pointer<'usize'>,

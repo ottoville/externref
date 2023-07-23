@@ -11,6 +11,7 @@ export abstract class BoundableNodeSimple extends DataNode implements canCollide
         super(
             dataNodeProps,
             mainNodeProps,
+            undefined,
             strip);
     }
     override set_vertices(vec: rust_vec_ptr<'f32'>, stride: number) {

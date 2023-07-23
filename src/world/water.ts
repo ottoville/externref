@@ -9,7 +9,7 @@ import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 
 export class Sea extends BoundableNodeSimple {
-    drawable: DrawableSimple<RenderPipeline<WaterVertShader>> | undefined;
+    override drawable: DrawableSimple<RenderPipeline<WaterVertShader>> | undefined = undefined;
     override create_collider() {
         return engine.rust.create_cuboid_collider(50000,
             3,

@@ -9,13 +9,11 @@ import type { Engine, rust_pointer } from '../engine.js';
 import { PlaneAtGroundHeightVertShader, createPlaneAtGroundHeightVertShader } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import { DataNode } from '../nodes/DataNode.js';
-import { IndexedTrait, NodeIndexed2 } from '../nodes/NodeIndexed2.js';
 import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 declare const engine: Engine;
 
-class PlaneMesh extends DataNode implements IndexedTrait {
-    drawable: DrawableIndexed<RenderPipeline<PlaneAtGroundHeightVertShader>>;
-    indexed: NodeIndexed2;
+class PlaneMesh extends DataNode {
+    override drawable: DrawableIndexed<RenderPipeline<PlaneAtGroundHeightVertShader>>;
     constructor(
         renderPipeline: RenderPipeline<PlaneAtGroundHeightVertShader>) {
 
@@ -49,13 +47,12 @@ pos_cap!
                 label: 'plane',
                 rigid_body: false,
             },
-            false);
-        this.indexed = new NodeIndexed2(this,
             [
-ind_ptr as rust_pointer<'usize'>,
-ind_len!,
-ind_cap!
-            ]);
+                ind_ptr as rust_pointer<'usize'>,
+                ind_len!,
+                ind_cap!
+            ],
+            false);
         this.drawable = new DrawableIndexed(
             {
                 node: this,

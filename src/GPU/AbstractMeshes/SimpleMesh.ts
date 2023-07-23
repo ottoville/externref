@@ -11,7 +11,7 @@ import { MainNodeProps } from 'MainNode.js';
 declare const engine: Engine;
 
 export class SimpleMesh extends BoundableNodeSimple {
-    drawable: DrawableSimple<RenderPipeline<SimpleVertShader>> | undefined;
+    override drawable: DrawableSimple<RenderPipeline<SimpleVertShader>> | undefined = undefined;
     constructor(
         dataNodeProps: Omit<DataNodeProps, 'vertices'> & { vertices: { view: rust_vec_ptr<'f32'> } },
         mainNodeProps: MainNodeProps,

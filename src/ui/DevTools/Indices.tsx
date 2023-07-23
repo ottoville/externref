@@ -1,8 +1,7 @@
-import { IndexedTrait } from '../../nodes/NodeIndexed2.js';
 import { DataNode } from '../../nodes/DataNode.js';
 
-export function Indices({ node, }: { node: IndexedTrait }) {
-    const verticesArray = node instanceof DataNode ? node.verticesArray : [];
+export function Indices({ node, }: { node: DataNode }) {
+    const verticesArray = node.verticesArray;
     return <table>
         <thead>
             <tr>
@@ -12,7 +11,7 @@ export function Indices({ node, }: { node: IndexedTrait }) {
             </tr>
         </thead>
         <tbody className="indices">
-            {Array.from(node.indexed.indices).map((index, i) => {
+            {Array.from(node.indices).map((index, i) => {
                 return <tr key={i}>
                     <td>{i}</td>
                     <td>{index}</td>

@@ -1,7 +1,6 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine, rust_vec_ptr } from '../../engine.js';
-import type { SimpleVertShader } from '../Shaders/Simple.vert.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import type { CreateRenderPipelineCB } from '../../GPU.js';
@@ -18,7 +17,6 @@ export type SimpleIndexedMeshProps = {
     staticVertices?: boolean
 };
 export class SimpleIndexedMesh extends BoundableNodeIndexed {
-    drawable: DrawableIndexed<RenderPipeline<SimpleVertShader>> | undefined;
     constructor(
         dataNodeProps: DataNodeProps,
         mainNodeProps: MainNodeProps,
@@ -78,7 +76,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
                     renderPipeline,
                     vertexBuffers: [
                         {
-                            stride: 12,
+                            stride: dataNodeProps.vertices.stride,
                             view: vBufferGPU,
                         }
                     ],

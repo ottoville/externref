@@ -87,7 +87,7 @@ export type UIRectangleProps = {
 */
 export abstract class UIRectangle extends DataNode {
 
-    drawable?: DrawableSimple<RenderPipeline<UIVertShader>>;
+    override drawable?: DrawableSimple<RenderPipeline<UIVertShader>> | undefined = undefined;
     boundingBox = {
         bottom: 0,
         left: 0,

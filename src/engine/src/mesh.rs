@@ -97,11 +97,7 @@ pub unsafe extern "C" fn last_collider_world_vertices_pointer(mesh_id: usize) ->
         .last_collider_world_vertices
         .as_ptr()
 }
-#[no_mangle]
-pub unsafe extern "C" fn vertices_count(mesh_id: usize) -> usize {
-    let mesh = get_mesh_by_id(mesh_id);
-    mesh.get_geometry().vertices.as_ref().unwrap().length()
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn faces_count(mesh_id: usize) -> usize {
     get_mesh_by_id(mesh_id).get_geometry().faces_count()

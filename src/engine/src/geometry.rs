@@ -1,5 +1,9 @@
 pub use crate::boundingbox::BoundingBox;
-use crate::{math2::{Vec4}, mesh::get_mesh_by_id_mut, create_multivalue_vector};
+use crate::{
+    create_multivalue_vector,
+    math2::Vec4,
+    mesh::{get_mesh_by_id, get_mesh_by_id_mut},
+};
 #[no_mangle]
 pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const usize {
     let mesh = get_mesh_by_id_mut(mesh_id);
@@ -8,19 +12,42 @@ pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const
     let geometry = mesh2.get_geometry_mut();
     geometry.update_bounding_box(transformation);
 
-/*
-    Convert SIMD lanes to XYZ
- */
-    let vectors:Vec<f32> = vec![
-        geometry.bounding_box.vectors_simd[0].x.x, geometry.bounding_box.vectors_simd[0].y.x, geometry.bounding_box.vectors_simd[0].z.x, 0.0,
-        geometry.bounding_box.vectors_simd[0].x.y, geometry.bounding_box.vectors_simd[0].y.y, geometry.bounding_box.vectors_simd[0].z.y, 0.0,
-        geometry.bounding_box.vectors_simd[0].x.z, geometry.bounding_box.vectors_simd[0].y.z, geometry.bounding_box.vectors_simd[0].z.z, 0.0,
-        geometry.bounding_box.vectors_simd[0].x.w, geometry.bounding_box.vectors_simd[0].y.w, geometry.bounding_box.vectors_simd[0].z.w, 0.0,
-
-        geometry.bounding_box.vectors_simd[1].x.x, geometry.bounding_box.vectors_simd[1].y.x, geometry.bounding_box.vectors_simd[1].z.x, 0.0,
-        geometry.bounding_box.vectors_simd[1].x.y, geometry.bounding_box.vectors_simd[1].y.y, geometry.bounding_box.vectors_simd[1].z.y, 0.0,
-        geometry.bounding_box.vectors_simd[1].x.z, geometry.bounding_box.vectors_simd[1].y.z, geometry.bounding_box.vectors_simd[1].z.z, 0.0,
-        geometry.bounding_box.vectors_simd[1].x.w, geometry.bounding_box.vectors_simd[1].y.w, geometry.bounding_box.vectors_simd[1].z.w, 0.0,
+    /*
+       Convert SIMD lanes to XYZ
+    */
+    let vectors: Vec<f32> = vec![
+        geometry.bounding_box.vectors_simd[0].x.x,
+        geometry.bounding_box.vectors_simd[0].y.x,
+        geometry.bounding_box.vectors_simd[0].z.x,
+        0.0,
+        geometry.bounding_box.vectors_simd[0].x.y,
+        geometry.bounding_box.vectors_simd[0].y.y,
+        geometry.bounding_box.vectors_simd[0].z.y,
+        0.0,
+        geometry.bounding_box.vectors_simd[0].x.z,
+        geometry.bounding_box.vectors_simd[0].y.z,
+        geometry.bounding_box.vectors_simd[0].z.z,
+        0.0,
+        geometry.bounding_box.vectors_simd[0].x.w,
+        geometry.bounding_box.vectors_simd[0].y.w,
+        geometry.bounding_box.vectors_simd[0].z.w,
+        0.0,
+        geometry.bounding_box.vectors_simd[1].x.x,
+        geometry.bounding_box.vectors_simd[1].y.x,
+        geometry.bounding_box.vectors_simd[1].z.x,
+        0.0,
+        geometry.bounding_box.vectors_simd[1].x.y,
+        geometry.bounding_box.vectors_simd[1].y.y,
+        geometry.bounding_box.vectors_simd[1].z.y,
+        0.0,
+        geometry.bounding_box.vectors_simd[1].x.z,
+        geometry.bounding_box.vectors_simd[1].y.z,
+        geometry.bounding_box.vectors_simd[1].z.z,
+        0.0,
+        geometry.bounding_box.vectors_simd[1].x.w,
+        geometry.bounding_box.vectors_simd[1].y.w,
+        geometry.bounding_box.vectors_simd[1].z.w,
+        0.0,
     ];
     return create_multivalue_vector(vectors);
 }
@@ -39,12 +66,29 @@ pub unsafe extern "C" fn set_indices(mesh_id: usize, ptr: *mut usize, length: us
     geometry.set_indices(indices);
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_vertices(mesh_id: usize, ptr: *mut f32, length: usize, cap: usize, vertices_stride: usize) {
+pub unsafe extern "C" fn set_vertices(
+    mesh_id: usize,
+    ptr: *mut f32,
+    length: usize,
+    cap: usize,
+    vertices_stride: usize,
+) {
     let vertices = Vec::from_raw_parts(ptr, length, cap);
     get_mesh_by_id_mut(mesh_id)
         .get_geometry_mut()
         .set_vertices(vertices, vertices_stride);
 }
+#[no_mangle]
+pub unsafe extern "C" fn vertices_count(mesh_id: usize) -> usize {
+    let mesh = get_mesh_by_id(mesh_id);
+    mesh.get_geometry().vertices.as_ref().unwrap().length()
+}
+#[no_mangle]
+pub unsafe extern "C" fn have_vertices(mesh_id: usize) -> bool {
+    let mesh = get_mesh_by_id(mesh_id);
+    mesh.get_geometry().vertices.is_some()
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices(
     mesh_id: usize,
@@ -54,7 +98,7 @@ pub unsafe extern "C" fn set_indices_and_vertices(
     vertices_ptr: *mut f32,
     vertices_length: usize,
     vertices_cap: usize,
-    vertices_stride: usize
+    vertices_stride: usize,
 ) {
     let indices = Vec::from_raw_parts(indices_ptr, indices_length, indices_cap);
     let vertices = Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_cap);
@@ -87,7 +131,7 @@ pub struct Geometry {
     pub last_collider_world_vertices: Vec<f32>,
 
     pub static_faces: bool, // Used for terrain
-    pub character_can_collide_to: bool
+    pub character_can_collide_to: bool,
 }
 impl Geometry {
     pub fn new(
@@ -106,7 +150,7 @@ impl Geometry {
             last_collider_world_vertices: Vec::new(),
             static_faces,
             strip,
-            character_can_collide_to
+            character_can_collide_to,
         }
     }
     pub fn faces_count(&self) -> usize {
@@ -130,15 +174,17 @@ impl Geometry {
         }
     }
     pub fn allocate_faces(&mut self) {
-        self.last_collider_world_vertices =
-            Vec::with_capacity((self.vertices.as_ref().unwrap().length()) * 4);
-        if self.static_faces {
-            return;
+        if self.vertices.is_some() {
+            self.last_collider_world_vertices =
+                Vec::with_capacity((self.vertices.as_ref().unwrap().length()) * 4);
+            if self.static_faces {
+                return;
+            }
+            let faces_count = self.faces_count();
+            self.faces = Faces::new(faces_count);
+            self.collider_planes = Vec::with_capacity(faces_count);
+            self.collider_planes_parallel = Vec::with_capacity(faces_count * 4usize);
         }
-        let faces_count = self.faces_count();
-        self.faces = Faces::new(faces_count);
-        self.collider_planes = Vec::with_capacity(faces_count);
-        self.collider_planes_parallel = Vec::with_capacity(faces_count * 4usize);
     }
     pub fn update_bounding_box(&mut self, transformation: &Vec4<Vec4<f32>>) {
         if self.bounding_box.need_init {
@@ -149,9 +195,12 @@ impl Geometry {
         }
     }
     pub fn set_vertices(&mut self, vertices: Vec<f32>, vertices_stride: usize) {
-        self.vertices = Some(Vertices { vertices, vertices_stride });
+        self.vertices = Some(Vertices {
+            vertices,
+            vertices_stride,
+        });
         self.bounding_box.need_init = true;
-        if self.character_can_collide_to {
+        if self.character_can_collide_to && self.vertices.is_some() {
             self.allocate_faces();
         }
     }

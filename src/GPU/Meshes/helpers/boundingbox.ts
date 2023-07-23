@@ -4,14 +4,12 @@ import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import type { RenderPipeline } from '../../RenderPipeline.js';
 import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
-import { IndexedTrait, NodeIndexed2 } from '../../../nodes/NodeIndexed2.js';
 import { Buffer2, BufferUsageEnums } from '../../Buffer/Buffer2.js';
 declare const engine: Engine;
 
 
-export class BoundingBoxMesh extends DataNode implements IndexedTrait {
-    drawable: DrawableIndexed<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
-    indexed: NodeIndexed2;
+export class BoundingBoxMesh extends DataNode {
+    override drawable: DrawableIndexed<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
     constructor(targetNode: DrawableIndexed) {
         const [
             ptr,
@@ -34,6 +32,32 @@ export class BoundingBoxMesh extends DataNode implements IndexedTrait {
                 ptr,
                 len));
         });
+        const indicesView = allocate_vec(Uint32Array.of(0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            4,
+            6,
+            1,
+            5,
+            2,
+            0,
+            3,
+            7,
+            0,
+            6,
+            2,
+            4,
+            0,
+            7,
+            1,
+            3,
+            5,
+            7));
         super(
             {
                 vertices: {
@@ -48,34 +72,8 @@ cap!
             {
                 label: 'BoundingBox_' + targetNode.node.label, rigid_body: false,
             },
+            indicesView,
             true);
-        this.indexed = new NodeIndexed2(this,
-            allocate_vec(Uint32Array.of(0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                4,
-                6,
-                1,
-                5,
-                2,
-                0,
-                3,
-                7,
-                0,
-                6,
-                2,
-                4,
-                0,
-                7,
-                1,
-                3,
-                5,
-                7)));
         this.positions_count = 26;
 
 

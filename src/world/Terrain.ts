@@ -306,7 +306,7 @@ TODO
             response.headers.set('content-type',
                 'application/octet-stream');
 
-            const indices = this.mesh.indexed.indices;
+            const indices = this.mesh.indices;
             const response2 = new Response(indices);
             response2.headers.set('content-length',
                 indices.byteLength.toString());
@@ -575,7 +575,7 @@ TODO
             });
             gpuReadBufferPositions.readAndDestroy(readbuff => {
                 return gpuReadBufferIndices.readAndDestroy(buff => {
-                    this.mesh.indexed.set_indices_and_vertices(new Uint32Array(buff),
+                    this.mesh.set_indices_and_vertices(new Uint32Array(buff),
                         new Float32Array(readbuff),
                         this.mesh.vertices_stride);
                     this.updateSwap2(0,

@@ -2,9 +2,8 @@ import { DataNode } from '../../nodes/DataNode.js';
 import { Vertex } from './Vertex.js';
 import { useRef, useState } from 'react';
 import { Indices } from './Indices.js';
-import type { IndexedTrait } from '../../nodes/NodeIndexed2.js';
 
-export function Primitives({ node, }: { node: DataNode | IndexedTrait}) {
+export function Primitives({ node, }: { node: DataNode}) {
     const indices = useRef<HTMLDetailsElement>(null);
     const [
         indicesOpen,
@@ -29,7 +28,7 @@ export function Primitives({ node, }: { node: DataNode | IndexedTrait}) {
                     })}
                 </ol> : null }
         </details>
-        {'indexed' in node ?
+        {node.indices_count !== 0 ?
             <details ref={indices} onToggle={() => {
                 setIndicesOpen(indices.current?.open ?? false);
             }}>

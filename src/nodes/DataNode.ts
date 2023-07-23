@@ -1,14 +1,11 @@
-import { ObjectWorkerThread } from '../WorkerThread.js';
 import { MainNode, MainNodeProps } from '../MainNode.js';
 import { MutableTerraVector3, ReadOnlyFloat32Array, TerraMatrix, TerraVector3, TerraVector4, Triangle } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
 import type { Engine, rust_pointer, rust_vec_ptr } from '../engine.js';
+import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
+import { Drawable } from '../GPU/Drawables/Drawable.js';
 declare const engine: Engine;
 
-const worker = new ObjectWorkerThread('mesh.js',
-    {
-        type: 'module',
-    });
 export interface canCollideCharacter {
     rebuildTrianglePlanes(): void
 }
@@ -110,7 +107,63 @@ cap!
 
 export const closeDistance = 0.0022;
 export const closeDistanceSquared = closeDistance * closeDistance;
-export abstract class DataNode extends MainNode {
+export class DataNode extends MainNode {
+    override drawable?: Drawable<MainNode> | undefined;
+    onIndicesChange: (() => void)[] = [];
+    set_indices(vec: rust_vec_ptr<'usize'>) {
+        engine.rust.set_indices(this.id,
+            ...vec);
+        if (this.drawable && !(this.drawable instanceof DrawableIndexed)) {
+            throw (new Error('Node is not indexed'));
+        }
+        this.drawable?.setIndexBuffer(new Uint32Array(engine.rust.memory.buffer,
+            vec[0],
+            vec[1]));
+        this.onIndicesChange.forEach(cb =>
+            cb());
+    }
+    set_indices_and_vertices(indices: Uint32Array, vertices: Float32Array, vertices_stride: number) {
+        const [
+            ptr_ind,
+            len_ind,
+            cap_ind
+        ] = allocate_vec(indices);
+        const [
+            ptr_vertices,
+            len_vertices,
+            cap_vertices
+        ] = allocate_vec(vertices);
+        engine.rust.set_indices_and_vertices(this.id,
+            ptr_ind,
+            len_ind,
+            cap_ind,
+            ptr_vertices,
+            len_vertices,
+            cap_vertices,
+            vertices_stride);
+        if (this.drawable && !(this.drawable instanceof DrawableIndexed)) {
+            throw (new Error('Node is not indexed'));
+        }
+        this.drawable?.setIndexBuffer(indices);
+        this.onIndicesChange.forEach(cb =>
+            cb());
+    }
+    get indices() {
+        const [
+            indices_len,
+            indices_ptr
+        ] = new Uint32Array(engine.rust.memory.buffer,
+            engine.rust.indices_field_pointer(this.id),
+            2);
+        return new Uint32Array(engine.rust.memory.buffer,
+            indices_ptr,
+            indices_len);
+    }
+    get indices_count() {
+        return new Uint32Array(engine.rust.memory.buffer,
+            engine.rust.indices_field_pointer(this.id),
+            1)[0]!;
+    }
 
     //Physic things
     acceleration2: [number, number, number] = [
@@ -210,6 +263,9 @@ cap!);
     get vertices_count() {
         return engine.rust.vertices_count(this.id);
     }
+    get have_vertices() {
+        return engine.rust.have_vertices(this.id);
+    }
     get vertices_stride(): number {
         return engine.rust.vertices_stride(this.id);
     }
@@ -253,6 +309,7 @@ cap!);
             character_can_collide_to = true,
         }: DataNodeProps,
         mainNodeProps: MainNodeProps,
+        indicesView?: rust_vec_ptr<'usize'>,
         strip = false
     ) {
         super(mainNodeProps);
@@ -266,6 +323,9 @@ cap!);
             character_can_collide_to,
             static_faces,
             strip);
+        if(indicesView) {
+            this.set_indices(indicesView);
+        }
         if(vertices) {
             this.set_vertices(vertices.view,
                 vertices?.stride);
@@ -361,11 +421,6 @@ cap!);
         return true;
     }
 
-    intersectsRay = (ray: Float32Array): Promise<void> => {
-        return worker.message(this.id,
-            'intersectsRay',
-            [ray.buffer]);
-    };
     #updateColliderPlanes() {
         this.#positionsAndCollider.forEach((posAndCol, i) => {
             if (i > this.positions_count) {
