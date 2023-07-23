@@ -330,13 +330,10 @@ cap!);
             this.set_vertices(vertices.view,
                 vertices?.stride);
         }
-        // queueMicrotask here so mesh will have indices initialized
         if (can_collide) {
-            queueMicrotask(() => {
-                const collider_ptr = this.create_collider();
-                engine.rust.add_collider(this.id,
-                    collider_ptr);
-            });
+            const collider_ptr = this.create_collider();
+            engine.rust.add_collider(this.id,
+                collider_ptr);
         }
         if (character_can_collide_to) {
             DataNode.CharacterCanCollideMeshes.add(this);
