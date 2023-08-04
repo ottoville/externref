@@ -7,6 +7,32 @@ import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
 import { Buffer2, BufferUsageEnums } from '../../Buffer/Buffer2.js';
 declare const engine: Engine;
 
+const indices = Uint32Array.of(0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    4,
+    6,
+    1,
+    5,
+    2,
+    0,
+    3,
+    7,
+    0,
+    6,
+    2,
+    4,
+    0,
+    7,
+    1,
+    3,
+    5,
+    7);
 
 export class BoundingBoxMesh extends DataNode {
     override drawable: DrawableIndexed<RenderPipeline<DebugBoundingBoxVertShader>> | undefined;
@@ -32,32 +58,7 @@ export class BoundingBoxMesh extends DataNode {
                 ptr,
                 len));
         });
-        const indicesView = allocate_vec(Uint32Array.of(0,
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            4,
-            6,
-            1,
-            5,
-            2,
-            0,
-            3,
-            7,
-            0,
-            6,
-            2,
-            4,
-            0,
-            7,
-            1,
-            3,
-            5,
-            7));
+        const indicesView = allocate_vec(indices);
         super(
             {
                 vertices: {

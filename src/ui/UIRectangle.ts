@@ -291,7 +291,7 @@ export abstract class UIRectangle extends DataNode {
     ): Float32Array
 
     constructor(
-        public props: UIRectangleProps,
+        protected props: UIRectangleProps,
         texture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>> | ImageBitmap | OffscreenCanvas) {
         props.label = props.label + '_UIRectangle';
         super(

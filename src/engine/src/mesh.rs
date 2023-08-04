@@ -150,7 +150,9 @@ pub unsafe extern "C" fn update_rotation(mesh_id: usize, x: f32, y: f32, z: f32,
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_translation(mesh_id: usize, x: f32, y: f32, z: f32) {
-    get_mesh_by_id_mut(mesh_id).set_translation(x, y, z)
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    // No onupdate is called here because it is called inside set_translation.
+    mesh.set_translation(x, y, z);
 }
 #[no_mangle]
 pub unsafe extern "C" fn apply_impulse(mesh_id: usize, x: f32, y: f32, z: f32) {
@@ -706,12 +708,9 @@ impl Mesh {
         collider: &crate::collider::Collider,
         radius: f32,
     ) -> bool {
-        let pos = self.gpu_mesh_alignment;
-        let g = self.get_geometry_mut();
-        let engine2 = ENGINE.physic_engine();
-        let gpu_mesh = &engine2.gpu_meshes[pos];
-
-        g.update_bounding_box(&gpu_mesh.transformation);
+        let mesh = get_mesh_by_id_mut(self.id);
+        let g = self.get_geometry_mut();        
+        g.update_bounding_box(&mesh.get_transformation());
         self.get_geometry_mut()
             .bounding_box
             .intersect_box_aa_sphere(collider, radius)

@@ -110,6 +110,7 @@ export const closeDistanceSquared = closeDistance * closeDistance;
 export class DataNode extends MainNode {
     override drawable?: Drawable<MainNode> | undefined;
     onIndicesChange: (() => void)[] = [];
+    #props: Readonly<DataNodeProps>;
     set_indices(vec: rust_vec_ptr<'usize'>) {
         engine.rust.set_indices(this.id,
             ...vec);
@@ -290,6 +291,14 @@ cap!);
         cb(view);
         this.onVerticesChange();
     }
+    override update_scale(...args:[number] | [number, number, number]): void {
+        super.update_scale(...args);
+        if (this.#props.can_collide) {
+            const collider_ptr = this.create_collider();
+            engine.rust.add_collider(this.id,
+                collider_ptr);
+        }
+    }
     get last_collider_world_vertices_pointer() {
         return engine.rust.last_collider_world_vertices_pointer(this.id);
     }
@@ -301,18 +310,23 @@ cap!);
     #frontFace: GPUFrontFace;
     #character_can_collide_to: boolean;
     constructor(
-        {
-            vertices,
-            can_collide = false,
-            static_faces = false,
-            frontFace = 'cw',
-            character_can_collide_to = true,
-        }: DataNodeProps,
+        props: DataNodeProps,
         mainNodeProps: MainNodeProps,
         indicesView?: rust_vec_ptr<'usize'>,
         strip = false
     ) {
         super(mainNodeProps);
+        this.#props= Object.freeze(props);
+
+        const {
+            vertices,
+            can_collide = false,
+            static_faces = false,
+            frontFace = 'cw',
+            character_can_collide_to = true,
+        } = props;
+
+
         this.#frontFace = frontFace;
         this.#character_can_collide_to = character_can_collide_to;
 

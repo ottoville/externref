@@ -54,17 +54,16 @@ export abstract class MainNode {
     }
     /**
      *
-     * @param scale Scale for x, y and z dimensions
-     */
-    update_scale(scale: number): void
-    /**
-     *
      * @param x Scale for x dimension
-     * @param y Scale for y dimension
-     * @param z Scale for z dimension
+     * @param y Scale for y dimension, if omited, a X value is used
+     * @param z Scale for z dimension, if omited, a X value is used
      */
-    update_scale(x: number, y: number, z: number): void
-    update_scale(x: number, y?: number, z?: number) {
+    update_scale(...args:[number] | [number, number, number]) {
+        const [
+            x,
+            y,
+            z
+        ] = args;
         engine.rust.update_scale(this.id,
             x,
             y ?? x,
