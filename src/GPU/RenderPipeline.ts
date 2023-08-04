@@ -3,8 +3,9 @@ import type { BindGroup } from './BindGroup.js';
 import type { RenderPipelineLayout } from './PipelineLayout.js';
 import type { VertexShader } from './Shaders/VertexShader.js';
 import type { FragmentShader } from './Shaders/FragmentShader.js';
+import { RenderBundleEncoder } from './RenderBundleEncoder.js';
 
-export type RenderPipelineProps<V extends VertexShader, F extends FragmentShader> = {
+export type RenderPipelineProps<V extends VertexShader, F extends FragmentShader, R extends RenderPipelineLayout> = {
     label: string,
     vertexShader: V,
     fragmentShader: F,
@@ -12,15 +13,15 @@ export type RenderPipelineProps<V extends VertexShader, F extends FragmentShader
     depthBuffer?: {
         depthWriteEnabled: boolean, depthCompare: GPUCompareFunction
     },
-    bindgroupdrawable: RenderPipelineLayout,
+    bindgroupdrawable: R,
     connections: Record<string, string>
 }
-export class RenderPipeline<V extends VertexShader = VertexShader, F extends FragmentShader = FragmentShader> {
+export class RenderPipeline<V extends VertexShader = VertexShader, F extends FragmentShader = FragmentShader, R extends RenderPipelineLayout = RenderPipelineLayout> {
 
     dynamicBindGroupOffset: number[] = [];
     public createSharedBindGroups?: () => Set<BindGroup>;
     constructor(
-        public props: Readonly<RenderPipelineProps<V, F>>
+        public props: Readonly<RenderPipelineProps<V, F, R>>
     ) {
     }
     destroy(): void {
@@ -28,7 +29,7 @@ export class RenderPipeline<V extends VertexShader = VertexShader, F extends Fra
         this.props.bindgroupdrawable.renderPipelineListeners.forEach(cb =>
             cb());
     }
-    draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder,
+    draw(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder,
         renderPass: RenderPass,
         BindGroupsStart: number,
         dynamicIndices: number[] = []): number {
@@ -48,17 +49,17 @@ export class RenderPipeline<V extends VertexShader = VertexShader, F extends Fra
                 ', wont draw anything');
             return 0;
         }
-
-        renderPassEncoder.setPipeline(variant.renderpipeline);
+        const encoder = renderEncoder instanceof RenderBundleEncoder ?  renderEncoder.renderBundleEncoder : renderEncoder;
+        encoder.setPipeline(variant.renderpipeline);
         if (this.createSharedBindGroups) {
             this.createSharedBindGroups().forEach(bindgroup => {
-                renderPassEncoder.setBindGroup(BindGroupsStart++,
+                encoder.setBindGroup(BindGroupsStart++,
                     bindgroup.bindGroup);
             });
         }
         drawables.forEach(drawable =>
             drawable.draw(renderPass,
-                renderPassEncoder,
+                renderEncoder,
                 BindGroupsStart,
                 dynamicIndices));
         return drawables.size;

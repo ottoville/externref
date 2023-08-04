@@ -12,8 +12,7 @@ const x = {
     anchor: Anchor.CENTER,
     value: [0],
 } as const;
-// eslint-disable-next-line @typescript-eslint/ban-types
-export class createSettingsMenu extends UINode<{}> {
+export class createSettingsMenu extends UINode {
     static addKeydownListener() {
         document.addEventListener('keydown',
             function openSettings(e: KeyboardEvent) {

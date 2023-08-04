@@ -14,6 +14,7 @@ import { GrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoor
 import { MainNode } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import { Buffer2, BufferUsageEnums } from '../GPU/Buffer/Buffer2.js';
+import { BindGroup } from '../GPU/BindGroup.js';
 declare const engine: Engine;
 
 /**
@@ -176,7 +177,8 @@ export class Plants extends MainNode {
                             const worldSetArr = buffer.getMappedRange();
                             new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
                         });
-                    const bindGroup2 = getHeightAtCoordinatesShader.props.bindGroupLayouts[1].createBindGroup('bindGroup2',
+                    const bindGroup2 = new BindGroup(getHeightAtCoordinatesShader.props.bindGroupLayouts[1],
+                        'bindGroup2',
                         bg =>
                             ({
                                 positions: worldCopyGPU.getStorageBinding(bg),
@@ -215,7 +217,8 @@ export class Plants extends MainNode {
                 },
                 []);
 
-            const bindGroup = getHeightAtCoordinatesShader.props.bindGroupLayouts[0].createBindGroup('bindGroup1',
+            const bindGroup = new BindGroup(getHeightAtCoordinatesShader.props.bindGroupLayouts[0],
+                'bindGroup1',
                 bindGroup1 =>
                     ({
                         facet12: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1),

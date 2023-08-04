@@ -20,7 +20,7 @@ export function createGroundFragShader(pipelineLayout: PipelineLayout<BindLayout
                 /*{ uniforms, }*/,
                     { /*scene,*/ clusters_array, meshes/*, projection*/, },
                     /*{ world, }*/,
-                    { mySampler, myTexture, }
+                    { mySampler, diffuseTexture, }
                 ]) =>
                 /* wgsl */ `
           var output:Output;
@@ -28,7 +28,7 @@ export function createGroundFragShader(pipelineLayout: PipelineLayout<BindLayout
           //  output.Normals=vec4<f32>(normal.xyz, bitcast<f32>(id));
           
             //outPositions=vec4<f32>(position.xyz, 1.0);
-            output.Diffuse = textureSample(${myTexture}, ${mySampler}, v_uv);
+            output.Diffuse = textureSample(${diffuseTexture}, ${mySampler}, v_uv);
             //output.Diffuse.w=0.0;
           
           

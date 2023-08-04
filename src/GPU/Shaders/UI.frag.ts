@@ -3,6 +3,7 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from '../../GPU.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { Struct, UI_Input } from './structs/Structs.js';
+import { textureLoad } from './std_functions.js';
 
 type BindLayouts = [
     GPU['BindGroupLayoutCanvas']
@@ -21,10 +22,12 @@ export function createUIFragmentShader(pipelineLayout: PipelineLayout<BindLayout
                     }),
                 pipelineLayout,
                 UI_Input,
-                ([{ texture, }]) => /* wgsl */
-                    `
+                ([{ texture, }]) =>
+                /* wgsl */ `
                     let fragCoordI=vec2<i32>(floor(v_uv));
-                    let color:vec4<f32> = textureLoad(${texture}, fragCoordI, 0);
+                    let color:vec4<f32> = ${textureLoad(texture,
+        'fragCoordI',
+        '0')};
                 
                     var output:Output;
                 

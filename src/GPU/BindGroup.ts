@@ -1,6 +1,5 @@
-import type { BGLayout } from './BindGroupLayout.js';
+import type { BGLayout, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
 import type { RenderBundleEncoder } from './RenderBundleEncoder.js';
-import type { RenderPass } from './RenderPasses/RenderPass.js';
 
 export class BindGroup<L extends BGLayout = BGLayout> {
     #dirty = true;
@@ -35,11 +34,6 @@ export class BindGroup<L extends BGLayout = BGLayout> {
     constructor(
         public layout: L,
         private label: string,
-        private entriesf: (bindGroup: BindGroup) => {[index: string] : GPUBindingResource},
-        readonly renderPasses: Set<RenderPass> = new Set()) {
-        this.renderPasses.forEach(rp =>
-            rp.bundles.forEach(bundle => {
-                this.#renderBundles.add(bundle);
-            }));
+        private entriesf: (bindGroup: BindGroup) =>  Readonly<MapToGPUBindGroupEntry<L['entries']>>) {
     }
 }

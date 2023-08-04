@@ -364,7 +364,9 @@ terraEngine.gpu!,
                slope.translation = [23,600,23];*/
 
 
-
+            /**
+             * Main draw area
+             */
             new UIRectangleTextureView({
                 borderSize: {
                     height: [0],

@@ -1,6 +1,4 @@
 import type { GPU } from '../GPU.js';
-import { BindGroup } from './BindGroup.js';
-import type { RenderPass } from './RenderPasses/RenderPass.js';
 import type { Struct } from './Shaders/structs/Structs.js';
 
 
@@ -8,7 +6,7 @@ export interface GPUBindGroupTextureEntry {
     texture: GPUTextureBindingLayout;
 }
 export type MapToGPUBindGroupEntry<T extends {[index:string]: BindGroupLayoutEntry}> = {
-    [K in keyof T]: T[K] extends TextLayout ? GPUTextureView | GPUExternalTexture :
+    [K in keyof T]: T[K] extends TextLayout<ShaderStage, TextLayoutFormats> ? GPUTextureView | GPUExternalTexture :
     T[K] extends BufLayout ? GPUBufferBinding
     : GPUBindingResource };
 export type GPUBindGroupLayoutEntryBuffer = Omit<GPUBindGroupLayoutEntry, 'binding'> & {
@@ -26,12 +24,12 @@ export enum ShaderStage {
 interface BindGroupLayoutEntryProps<V extends ShaderStage = ShaderStage> extends Omit<GPUBindGroupLayoutEntry, 'binding' | 'visibility'> {
     visibility: V
 }
-export abstract class BindGroupLayoutEntry<V extends ShaderStage = ShaderStage> {
+export abstract class BindGroupLayoutEntry<V extends ShaderStage = ShaderStage, F extends string = string> {
     // Each shader will set this variableName to right context when creating wgsl
     variableName = '';
     constructor(
         public entry: BindGroupLayoutEntryProps<V>,
-        public structName: string) {
+        public structName: F) {
     }
     toString() {
         return this.variableName;
@@ -59,13 +57,13 @@ type format = 'f32' | 'i32' | 'u32';
  */
 type storageFormat = 'rgba8unorm' | 'rgba8snorm' | 'rgba8uint' | 'rgba8sint' | 'rgba16uint' | 'rgba16sint' | 'rgba16float' | 'r32uint' | 'r32sint' | 'r32float' | 'rg32uint' | 'rg32sint' | 'rg32float' | 'rgba32uint' | 'rgba32sint' | 'rgba32float' | 'bgra8unorm';
 
-abstract class AbstractTextureLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
+abstract class AbstractTextureLayout<V extends ShaderStage = ShaderStage, F extends string = string> extends BindGroupLayoutEntry<V, F> {
     constructor(
         entry:
             BindGroupLayoutEntryProps<V> &
             ({ texture: Omit<NonNullable<GPUBindGroupLayoutEntry['texture']>, 'viewDimension'> } |
             { storageTexture: Omit<NonNullable<GPUBindGroupLayoutEntry['storageTexture']>, 'viewDimension'> }),
-        structName: string
+        structName: F
     ) {
         const wsglType = structName.split('<')[0]!;
         const types = [
@@ -109,24 +107,24 @@ export class StorageTextLayout<V extends ShaderStage = ShaderStage> extends Abst
             structName);
     }
 }
+type TextLayoutFormats =         //sampled texture types https://www.w3.org/TR/WGSL/#sampled-texture-type
+| `texture_2d<${format}>`
+| `texture_2d_array<${format}>`
+| `texture_3d<${format}>`
+| `texture_cube<${format}>`
+| `texture_cube_array<${format}>`
+//multisampled texture types https://www.w3.org/TR/WGSL/#multisampled-texture-type
+   | `texture_multisampled_2d<${format}>`
+   | 'texture_depth_multisampled_2d'
+//External Sampled Texture Types https://www.w3.org/TR/WGSL/#external-texture-type
+| 'texture_external';
 
-export class TextLayout<V extends ShaderStage = ShaderStage> extends AbstractTextureLayout<V> {
+export class TextLayout<V extends ShaderStage, F extends TextLayoutFormats> extends AbstractTextureLayout<V, F> {
     constructor(
         public override entry:
             Omit<BindGroupLayoutEntryProps<V>, 'texture'> &
                 { texture: Omit<NonNullable<GPUBindGroupLayoutEntry['texture']>, 'viewDimension'> },
-        structName:
-        //sampled texture types https://www.w3.org/TR/WGSL/#sampled-texture-type
-        | `texture_2d<${format}>`
-        | `texture_2d_array<${format}>`
-        | `texture_3d<${format}>`
-        | `texture_cube<${format}>`
-        | `texture_cube_array<${format}>`
-        //multisampled texture types https://www.w3.org/TR/WGSL/#multisampled-texture-type
-           | `texture_multisampled_2d<${format}>`
-           | 'texture_depth_multisampled_2d'
-        //External Sampled Texture Types https://www.w3.org/TR/WGSL/#external-texture-type
-        | 'texture_external'
+        structName: F
     ) {
         super(
             entry,
@@ -134,10 +132,12 @@ export class TextLayout<V extends ShaderStage = ShaderStage> extends AbstractTex
     }
 }
 
-export class SampLayout<V extends ShaderStage = ShaderStage> extends BindGroupLayoutEntry<V> {
+type SamplerFormats = 'sampler' | 'sampler_comparison';
+
+export class SampLayout<V extends ShaderStage, F extends SamplerFormats> extends BindGroupLayoutEntry<V, F> {
     constructor(
         public override entry: BindGroupLayoutEntryProps<V> & { sampler: NonNullable<GPUBindGroupLayoutEntry['sampler']> },
-        structName: 'sampler' | 'sampler_comparison'
+        structName: F
     ) {
         super(entry,
             structName);
@@ -166,14 +166,5 @@ export class BGLayout<T extends {[index:string]: BindGroupLayoutEntry} = {[index
                 break;
             }
         }
-    }
-    createBindGroup(
-        label: string,
-        entries: (bindGroup: BindGroup) => Readonly<MapToGPUBindGroupEntry<T>>,
-        renderPasses?: Set<RenderPass>): BindGroup<BGLayout<T>> {
-        return new BindGroup<typeof this>(this,
-            label,
-            entries,
-            renderPasses);
     }
 }

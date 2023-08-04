@@ -505,7 +505,7 @@ export class Engine {
             showError,
             GPUDataSize);
     }
-    readonly cameras: Set<TerraCamera> = new Set();
+    readonly cameras: TerraCamera[] = [];
 
     showError(e: unknown, gpu?: GPU) {
         if (e instanceof Error) {

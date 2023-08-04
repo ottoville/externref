@@ -2,7 +2,7 @@
 import { Projection } from './GPU/Projection.js';
 import type { Engine } from './engine.js';
 import type { GPU } from './GPU.js';
-import type { BindGroup } from './GPU/BindGroup.js';
+import { BindGroup } from './GPU/BindGroup.js';
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, GPUBufferUsage } from './GPU/Buffer/Buffer.js';
 import type { CameraController } from './controllers/CameraController.js';
 import { ClustersComp } from './GPU/Shaders/Clusters.comp.js';
@@ -51,7 +51,6 @@ export class TerraCamera {
     uniformBindGroup?: BindGroup;
     readonly #controls: CameraControl;
     #doUpdateView = VIEW_UPDATED.NONE;
-    viewUpdated = false;
     readonly beforeViewUpdate: Set<
         (position: MutableTerraVector3, direction: MutableTerraVector3, commandEncoder: GPUCommandEncoder) => void
     > = new Set();
@@ -83,7 +82,8 @@ export class TerraCamera {
                     GPUBufferUsage.COPY_DST
                 ],
                 'uniformBuffer'); //Todo: set to private
-            this.uniformBindGroup = gpu.uniformBindGroupLayoutWithTime.createBindGroup('uniformBindGroup',
+            this.uniformBindGroup = new BindGroup(gpu.uniformBindGroupLayoutWithTime,
+                'uniformBindGroup',
                 (bindGroup) =>
                     ({
                         clusters_array: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
@@ -92,10 +92,9 @@ export class TerraCamera {
                         projection: projection.gpuBuffer.getUniformBinding(bindGroup),
                         scene: this.#uniformBuffer!.getUniformBinding(bindGroup),
                         time: gpu.timeBuffer.getUniformBinding(bindGroup),
-                    })
-                ,
-                new Set([renderPass]));
-            this.updateViewBindGroup = gpu.updateViewShader.props.bindGroupLayouts[1].createBindGroup('updateViewBindGroup2',
+                    }));
+            this.updateViewBindGroup = new BindGroup(gpu.updateViewShader.props.bindGroupLayouts[1],
+                'updateViewBindGroup2',
                 (bindGroup) =>
                     ({
                         clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
@@ -108,7 +107,7 @@ export class TerraCamera {
 
         this.viewArr[15] = 1;
 
-        engine.cameras.add(this);
+        engine.cameras.push(this);
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const me = this;
         this.#controls = {
@@ -154,7 +153,8 @@ export class TerraCamera {
     }
     updateClusters(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: ClustersComp['props']['bindGroupLayouts']['1']) {
         //TODO move out from loop
-        const bindGroup = computePipelineClustersLayout.createBindGroup('updateProjection',
+        const bindGroup = new BindGroup(computePipelineClustersLayout,
+            'updateProjection',
             bindGroup2 =>
                 ({
                     clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup2),
@@ -168,10 +168,14 @@ export class TerraCamera {
     get direction(): Readonly<{ [0]: number, [1]: number, [2]: number }> {
         return this.#direction;
     }
-
-    updateView(commandEncoder: GPUCommandEncoder) {
+    /**
+     * Update camera view
+     * @param commandEncoder GPUCommandEncoder
+     * @returns boolean indicating if view was actually changed
+     */
+    updateView(commandEncoder: GPUCommandEncoder) : boolean {
         if (!this.#doUpdateView)
-            return;
+            return false;
         if (this.beforeViewUpdate.size > 0) {
             this.#doUpdateView |= (VIEW_UPDATED.POSITION & VIEW_UPDATED.DIRECTION);
             this.beforeViewUpdate.forEach(cb =>
@@ -184,7 +188,6 @@ export class TerraCamera {
             this.onUpdatePosition.forEach(cb =>
                 cb());
         }
-        this.viewUpdated = true;
         this.#childCameras.forEach(childCameraControl => {
             if ((this.#doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
                 childCameraControl.updatePosition(position => {
@@ -254,5 +257,6 @@ this.#uniformBuffer!,
 0,
 this.#viewAndProjection.byteLength);
         }
+        return true;
     }
 }

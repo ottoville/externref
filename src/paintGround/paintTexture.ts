@@ -3,8 +3,7 @@ import type { Terrain } from '../world/Terrain.js';
 import type { subTexture, PTResultF } from '../types/interfaces/index.js';
 import type { Scene } from '../Scene.js';
 import { TerraVector2 } from '../Math.js';
-import type { Texture } from '../GPU/Texture.js';
-import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
+import type { Texture, Texture2dSize } from '../GPU/Texture.js';
 
 export class paintTexture extends paintGround {
     private subTextureCache: subTexture = {

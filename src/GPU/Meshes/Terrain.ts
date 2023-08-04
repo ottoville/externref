@@ -1,6 +1,6 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import type { Scene } from '../../Scene.js';
-import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
+import { LightsTextureDrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine, rust_pointer, rust_vec_ptr } from '../../engine.js';
 import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
@@ -10,19 +10,12 @@ import type { GroundVertShader } from '../Shaders/Ground.vert.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 import type { TEXTURE_BINDING_TEXTURE, Texture } from '../../GPU/Texture.js';
 import type { Buffer2, VERTEX_BUFFER } from '../Buffer/Buffer2.js';
+import { FragmentShader } from '../Shaders/FragmentShader.js';
+import type { GPU } from '../../GPU.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
-    setTextureView = (textureview: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>>) => {
-        this.drawable!.setStaticBindGroup('terrainTexture',
-            (bindGroup) => {
-                return ({
-                    todo1: this.sampler!,
-                    todo2: textureview.getTextureBinding(bindGroup),
-                });
-            });
-    };
-    override drawable: DrawableIndexed<RenderPipeline<GroundVertShader>> | undefined = undefined;
+    override drawable: LightsTextureDrawableIndexed<RenderPipeline<GroundVertShader, FragmentShader, GPU['lightsTextureBindGroup']>> | undefined = undefined;
 
     override create_collider(): rust_pointer<'collider'> {
         return engine.rust.create_trimesh_collider(this.id);
@@ -70,7 +63,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 {
                     stride: verticesPositionStride,
                 });
-            this.drawable = new DrawableIndexed({
+
+            this.drawable = new LightsTextureDrawableIndexed({
                 node: this,
                 renderPasses: new Set([
                     engine.gpu.renderPassScreen,
@@ -84,15 +78,9 @@ export class TerrainMesh extends BoundableNodeIndexed {
                         view: this.vBuffer,
                     }
                 ],
-            });
-
-            this.drawable.setStaticBindGroup('TerrainInitialTexture',
-                (bindGroup) => {
-                    return ({
-                        todo1: this.sampler!,
-                        todo2: initialTexture.getTextureBinding(bindGroup),
-                    });
-                });
+            },
+            initialTexture,
+            this.sampler!);
             this.drawable.setIndexBuffer(this.iBuffer,
                 0,
                 true,

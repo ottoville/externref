@@ -3,7 +3,7 @@ import { type GPU } from '../../GPU.js';
 import type { Drawable } from '../Drawables/Drawable.js';
 import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { type BindUniformBuffer, Buffer, GPUBufferUsage } from '../Buffer/Buffer.js';
-import type { BindGroup } from '../BindGroup.js';
+import { BindGroup } from '../BindGroup.js';
 import { RenderBundleEncoder } from '../RenderBundleEncoder.js';
 import type { RENDER_TARGET_FORMAT, RENDER_TARGET_TEXTURE } from '../Texture.js';
 import { RenderPipelineLayout } from '../PipelineLayout.js';
@@ -122,7 +122,8 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
         this.bundles.push(renderBundle);
         this.#sizeBuffer = this.#updateSizeBindGroup(true);
         this.sizeBindGroup = () =>
-            gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup',
+            new BindGroup(gpu.sizeBindGroupLayout,
+                'sizeBindGroup',
                 bindGroup =>
                     ({
                         uniforms: this.#sizeBuffer.getUniformBinding(bindGroup,
@@ -283,7 +284,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
     #renderCamera(renderBundleEncoder: RenderBundleEncoder, rootLayout: RenderPipelineLayout, bindGroupStartIndex: number) {
         let drawedMeshes = 0;
         rootLayout.renderPipeLines.forEach(renderPipeline => {
-            drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder,
+            drawedMeshes += renderPipeline.draw(renderBundleEncoder,
                 this,
                 bindGroupStartIndex);
         });
@@ -294,7 +295,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                 dynamicIndices.push(bindGroupStartIndex);
             }
             subBindGroup.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder,
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder,
                     this,
                     bindGroupStartIndex,
                     dynamicIndices);
@@ -305,7 +306,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                         pipelineLayout.sharedBindgroup.getForRenderBundle(renderBundleEncoder));
                 }
                 pipelineLayout.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder,
+                    drawedMeshes += renderPipeline.draw(renderBundleEncoder,
                         this,
                         bindGroupStartIndex + dynamicIndices.length,
                         dynamicIndices);

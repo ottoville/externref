@@ -2,8 +2,7 @@ import { TextureView } from '../GPU/TextureView.js';
 import type { UIRectangleProps } from './UIRectangle.js';
 import type { TextUV } from './UIRectangleTextOnly.js';
 import { UIRectangleText } from './UIRectangleText.js';
-import type { Texture, TextureUsageEnums } from '../GPU/Texture.js';
-import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
+import type { Texture, Texture2dSize, TextureUsageEnums } from '../GPU/Texture.js';
 export const font = '80pt serif';
 
 export function createBackground(width: number, height: number, text: string, originalAspectRatio?: number) {

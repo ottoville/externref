@@ -9,7 +9,7 @@ import { ComputeShaderFunction } from './ShaderFunction.js';
 type BindLayouts = readonly [
     BGLayout<{
         positions: BufLayout<ShaderStage.COMPUTE, typeof Vertices>,
-        pixels: TextLayout<ShaderStage.COMPUTE>
+        pixels: TextLayout<ShaderStage.COMPUTE, 'texture_2d<f32>'>
     }>
     ];
 

@@ -4,7 +4,7 @@ import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 import { ColorRenderTarget } from './GPU/RenderTargets/ColorRenderTarget.js';
 import { Projection, PROJECTION_BUFFER_SIZE } from './GPU/Projection.js';
 import { MSAARenderTarget } from './GPU/RenderTargets/MSAARenderTarget.js';
-import type { BindGroup } from './GPU/BindGroup.js';
+import { BindGroup } from './GPU/BindGroup.js';
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer, GPUBufferUsage } from './GPU/Buffer/Buffer.js';
 
 import type { Engine } from './engine.js';
@@ -88,8 +88,8 @@ export class GPU {
             world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>
         }>,
         BGLayout<{
-            mySampler: SampLayout<ShaderStage.FRAGMENT>,
-            myTexture: TextLayout<ShaderStage.FRAGMENT>
+            mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>,
+            diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>
         }>
 ]>;
 
@@ -151,19 +151,24 @@ export class GPU {
             BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>
         }
         >,
-        BGLayout<{mySampler: SampLayout<ShaderStage.FRAGMENT>, diffuseTexture: TextLayout<ShaderStage.FRAGMENT>}>]>;
+        BGLayout<{
+            mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>,
+            diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>
+        }>]>;
 
 
     readonly #ro: ResizeObserver;
     readonly #canvasRootLayout: BindablePipelineLayout<[
         typeof this.BindGroupLayoutCanvas
     ]>;
-    readonly UIPipeline: RenderPipeline<UIVertShader>;
+    readonly UIPipeline: RenderPipeline<UIVertShader, FragmentShader, BindablePipelineLayout<[
+        typeof this.BindGroupLayoutCanvas
+    ]>>;
 
     readonly updateViewShader: UpdateView;
     readonly BindGroupLayoutCanvas: BGLayout<{
         uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>,
-        texture: TextLayout<ShaderStage.FRAGMENT>
+        texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>
     }>;
     colorFragShader: FragmentShader<
         typeof this.positionAndTimeBindGroup.bindGroupLayouts,
@@ -260,7 +265,8 @@ export class GPU {
             'GPUDirectionalLights');
 
 
-        this.#updateViewBindGroup = this.updateViewShader.props.bindGroupLayouts[0].createBindGroup('updateViewBindGroup',
+        this.#updateViewBindGroup = new BindGroup(this.updateViewShader.props.bindGroupLayouts[0],
+            'updateViewBindGroup',
             bindGroup =>
                 ({
                     directional_lights: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
@@ -357,7 +363,8 @@ export class GPU {
                     MeshUniforms),
             }
         );
-        this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition',
+        this.BindGroupPosition = new BindGroup(BindGroupLayoutPosition,
+            'BindGroupPosition',
             bindGroup =>
                 ({
                     world: this.GPUMeshes.getUniformBinding(bindGroup,
@@ -373,6 +380,13 @@ export class GPU {
             new BGLayout(this,
                 'lightsBindGroupTexture2',
                 {
+                    diffuseTexture: new TextLayout(
+                        {
+                            texture: {
+                            },
+                            visibility: ShaderStage.FRAGMENT,
+                        },
+                        'texture_2d<f32>'),
                     mySampler: new SampLayout(
                         {
                             sampler: {
@@ -380,13 +394,6 @@ export class GPU {
                             visibility: ShaderStage.FRAGMENT,
                         },
                         'sampler'),
-                    myTexture: new TextLayout(
-                        {
-                            texture: {
-                            },
-                            visibility: ShaderStage.FRAGMENT,
-                        },
-                        'texture_2d<f32>'),
                 }
             ));
         this.bindGroupTextureWater = this.positionAndTimeBindGroup.createSharedLayout('lightsBindGroupTexture2PipelineLayout',
@@ -465,7 +472,8 @@ export class GPU {
                             gpu: this,
                             label: 'diffuseTexture',
                             size: {
-                                height: 300, width: 300,
+                                height: 300,
+                                width: 300,
                             },
                             usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
                         },
@@ -521,7 +529,8 @@ export class GPU {
                             gpu: this,
                             label: 'diffuseTextureWater',
                             size: {
-                                height: 300, width: 300,
+                                height: 300,
+                                width: 300,
                             },
                             usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
                         },
@@ -558,7 +567,8 @@ export class GPU {
                     initialSampleCount: 1,
                     label: 'depthTexture_renderPassWater',
                     size: {
-                        height: 300, width: 300,
+                        height: 300,
+                        width: 300,
                     },
                     usages: TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'],
                 },
@@ -974,8 +984,8 @@ export class GPU {
             this.timeAndDeltaBuffer);
 
         try {
-            engine.cameras.forEach(camera => {
-                camera.updateView(renderEncoder);
+            const updatedCameras = engine.cameras.filter(camera => {
+                return camera.updateView(renderEncoder);
             });
             // Rust render loop start
             this.#GPUQueueCommandEncoder = null;
@@ -989,25 +999,26 @@ export class GPU {
                 this.pendingCommandBuffers.unshift(commandBuff);
             }
             // Rust render loop end
-            const lightPass = renderEncoder.beginComputePass({
-                label: 'lightPassEncoder',
-            });
-            lightPass.setPipeline(updateViewPipeline);
-            lightPass.setBindGroup(0,
-                this.#updateViewBindGroup.bindGroup);
-            engine.cameras.forEach(camera => {
-                if (camera.viewUpdated || engine.updateLights) {
-                    camera.viewUpdated = false;
+            if(engine.updateLights || updatedCameras.length > 0) {
+                const lightPass = renderEncoder.beginComputePass({
+                    label: 'lightPassEncoder',
+                });
+                lightPass.setPipeline(updateViewPipeline);
+                lightPass.setBindGroup(0,
+                    this.#updateViewBindGroup.bindGroup);
+                //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
+                const camerasToUpdate = engine.updateLights ? engine.cameras : updatedCameras;
+                camerasToUpdate.forEach(camera => {
                     lightPass.setBindGroup(1,
 camera.updateViewBindGroup!.bindGroup);
                     lightPass.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
-                }
-            });
-            lightPass.end();
-            // Cluster debug
-            //var readBuffer = engine.mainCamera.clusterArrayBuffer?.createReadCopy(renderEncoder)
 
-            engine.updateLights = false;
+                });
+                lightPass.end();
+                // Cluster debug
+                //var readBuffer = engine.mainCamera.clusterArrayBuffer?.createReadCopy(renderEncoder)
+                engine.updateLights = false;
+            }
 
             this.#renderPasses.forEach(renderPass => {
                 //Do the actual drawing

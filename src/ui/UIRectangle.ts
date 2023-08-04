@@ -3,11 +3,12 @@ import { Buffer, type CopyDstBuffer, GPUBufferUsage, BindUniformBuffer } from '.
 import { TextureView } from '../GPU/TextureView.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import { type Texture, TextureUsageEnums, RenderTarget, type TEXTURE_BINDING_TEXTURE } from '../GPU/Texture.js';
+import { type Texture, TextureUsageEnums, RenderTarget, type TEXTURE_BINDING_TEXTURE, Texture2dSize } from '../GPU/Texture.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
 import { DataNode, allocate_vec } from '../nodes/DataNode.js';
-import type { Texture2dSize } from '../GPU/RenderTargets/RenderPassTarget.js';
+import type { GPU } from '../GPU.js';
+import { BindGroup } from '../GPU/BindGroup.js';
 declare const engine: Engine;
 
 export const enum NumericUnit {
@@ -53,7 +54,7 @@ export type ButtonPosition = {
 }
 
 export type UIRectangleProps = {
-    canvaspipeline: RenderPipeline<UIVertShader>,
+    canvaspipeline: GPU['UIPipeline'],
     renderPass: RenderPass,
     label: string,
     /**
@@ -409,13 +410,13 @@ export abstract class UIRectangle extends DataNode {
                         });
                 });
 
-
-            this.drawable.setStaticBindGroup('UI_bindgroup_' + label,
+            this.drawable.staticBindGroup=new BindGroup(canvaspipeline.props.bindgroupdrawable.bindGroupLayouts[0],
+                'UI_bindgroup_' + label,
                 (bindGroup) => {
-                    return ({
-                        todo1: this.textureView.getTextureBinding(bindGroup),
-                        todo2: this.uniformBuffer.getUniformBinding(bindGroup),
-                    });
+                    return {
+                        texture: this.textureView.getTextureBinding(bindGroup),
+                        uniforms: this.uniformBuffer.getUniformBinding(bindGroup),
+                    };
                 });
         });
 

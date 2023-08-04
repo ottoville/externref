@@ -6,6 +6,7 @@ import { BindGroup } from '../BindGroup.js';
 import { RenderPipeline } from '../RenderPipeline.js';
 import { MainNode } from '../../MainNode.js';
 import { Buffer2, type BufferProps, BufferUsageEnums, type VERTEX_BUFFER } from '../Buffer/Buffer2.js';
+import { RenderBundleEncoder } from '../RenderBundleEncoder.js';
 declare const engine: Engine;
 
 export type DrawableProps<N extends MainNode> = {
@@ -70,19 +71,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         });
     }
 
-    #staticBindGroup?: BindGroup;
-    setStaticBindGroup(label: string,
-        staticBuffers: (bindGroup: BindGroup) => {[index: string] : GPUBindingResource}) {
-        this.renderPasses.forEach(rp =>
-            rp.bundles.forEach(b =>
-                b.destroy()));
-        this.#staticBindGroup = new BindGroup(
-            this.renderPipeline.props.bindgroupdrawable.bindGroupLayout,
-            label,
-            staticBuffers,
-            this.renderPasses
-        );
-    }
+    staticBindGroup?: BindGroup;
     destroy(preserveVerticeBuffers: number[] = []): void {
         this.#renderList.forEach(Drawables =>
             Drawables.delete(this));
@@ -137,30 +126,32 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         return Tbuffer.view;
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass): void
-    draw(renderPass: RenderPass, renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {
+    draw(renderPass: RenderPass, renderEncoder: RenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {
+        const encoder = renderEncoder instanceof RenderBundleEncoder ?  renderEncoder.renderBundleEncoder : renderEncoder;
+
         this.#dynamicBindGroups.forEach(([
             { bindGroup, },
             offset
         ], i) => {
             const di = dynamicIndex[i];
             if (di) {
-                renderEncoder.setBindGroup(di,
+                encoder.setBindGroup(di,
                     bindGroup,
                     [offset * GPU.gpu_memory_index_size]);
             }
         });
-        if (this.#staticBindGroup) {
-            renderEncoder.setBindGroup(BindGroupsStart++,
-                this.#staticBindGroup.bindGroup);
+        if (this.staticBindGroup) {
+            encoder.setBindGroup(BindGroupsStart++,
+                renderEncoder instanceof RenderBundleEncoder ? this.staticBindGroup.getForRenderBundle(renderEncoder) : this.staticBindGroup.bindGroup);
         }
         this.vertexBuffers.forEach((buffer, index) =>
-            renderEncoder.setVertexBuffer(index,
+            encoder.setVertexBuffer(index,
                 buffer.buffer.view.getVertexBinding(renderPass),
                 buffer.offset,
                 buffer.size));
         console.debug('draw',
             this.node.label);
-        this.render(renderEncoder,
+        this.render(encoder,
             renderPass);
     }
 }

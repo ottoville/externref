@@ -50,8 +50,8 @@ export class RenderPipelineLayout<B extends readonly BGLayout[] = readonly BGLay
     }
     renderPipelineListeners: Set<() => void> = new Set();
     protected addRenderPipelineSuper<V extends VertexShader, F extends FragmentShader>(
-        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>  & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>}
-    ): RenderPipeline<V> {
+        props: Omit<RenderPipelineProps<V, F, typeof this>, 'bindgroupdrawable'>  & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>}
+    ): RenderPipeline<V, F, typeof this> {
         const d = new RenderPipeline({
             ...props,
             bindgroupdrawable: this,
@@ -111,8 +111,8 @@ export class SharedPipelineLayout<B extends BGLayout[]> extends RenderPipelineLa
         props: PipeLineLayoutProps<B>) {
         super(props);
     }
-    addRenderPipeline<V extends VertexShader, F extends FragmentShader>(
-        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'>  & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>},
+    addRenderPipeline<V extends VertexShader, F extends FragmentShader, R extends RenderPipelineLayout>(
+        props: Omit<RenderPipelineProps<V, F, R>, 'bindgroupdrawable'>  & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>},
         bindGroups: (bindGroup: BindGroup) => extractGeneric<Last<B>>
     ) {
         const RP = this.addRenderPipelineSuper(props);
@@ -139,10 +139,11 @@ B extends readonly BGLayout[] = readonly BGLayout[]> extends RenderPipelineLayou
     }
     addRenderPipeline<
         V extends VertexShader   <B>,
-        F extends FragmentShader <B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []>
+        F extends FragmentShader <B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []>,
+        R extends RenderPipelineLayout
         >(
-        props: Omit<RenderPipelineProps<V, F>, 'bindgroupdrawable'> & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>}
-    ): RenderPipeline<V> {
+        props: Omit<RenderPipelineProps<V, F, R>, 'bindgroupdrawable'> & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>}
+    ) {
         return this.addRenderPipelineSuper(props);
     }
 }

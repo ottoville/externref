@@ -120,7 +120,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
             if (!staticScene) {
                 throw (new Error('staticScene not found'));
             }
-            this.props.terrain.mesh.setTextureView(new TextureView(this.#zoneTexture));
+            this.props.terrain.mesh.drawable?.setTexture(new TextureView(this.#zoneTexture));
             this.props.terrain.mesh.set_scenes(staticScene.id);
             return [
                 UINode.createCtrProps(UIRectangleNode,
@@ -151,7 +151,7 @@ export class Zones extends UIRectangleNode<object, UIRectangleNodeProps & TopMen
             ];
         } else if (!this.props.open && this.#wasOpen) {
             this.props.terrain.mesh.set_scenes(this.scene.id);
-            this.props.terrain.mesh.setTextureView(new TextureView(this.props.terrain.texture));
+            this.props.terrain.mesh.drawable?.setTexture(new TextureView(this.props.terrain.texture));
             this.#zoneTexture?.destroy();
             this.#PT?.destroy();
             this.#wasOpen = false;

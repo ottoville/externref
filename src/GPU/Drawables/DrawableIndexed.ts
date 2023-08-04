@@ -3,9 +3,22 @@ import type { Engine } from '../../engine.js';
 import { DrawableDirect, DrawableDirectProps, type MappedVertexBuffers } from './DrawableDirect.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 import type { DrawableProps } from './Drawable.js';
-import type { RenderPass } from '../../GPU/RenderPasses/RenderPass.js';
+import type { RenderPass } from '../RenderPasses/RenderPass.js';
 import type { DataNode } from '../../nodes/DataNode.js';
+import { VertexShader } from '../Shaders/VertexShader.js';
+import { BGLayout, SampLayout, ShaderStage, TextLayout } from '../BindGroupLayout.js';
+import { TextureView } from '../TextureView.js';
+import { TEXTURE_BINDING_TEXTURE, Texture } from '../Texture.js';
+import { FragmentShader } from '../Shaders/FragmentShader.js';
+import { RenderPipelineLayout } from '../PipelineLayout.js';
+import { BindGroup } from '../BindGroup.js';
 declare const engine: Engine;
+
+type DrawableIndexedProps = {
+    baseVertex?: number;
+    firstIndex?: number;
+    GPUIndexFormat?: GPUIndexFormat;
+}
 
 export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extends DataNode = DataNode> extends DrawableDirect<N> {
     #indexBuffer: IndexBuffer | undefined;
@@ -26,12 +39,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
             baseVertex = 0,
             firstIndex = 0,
             GPUIndexFormat = 'uint32',
-        }:
-            {
-                baseVertex?: number;
-                firstIndex?: number;
-                GPUIndexFormat?: GPUIndexFormat;
-            } = {
+        }: DrawableIndexedProps = {
         }
     ) {
         super(
@@ -121,5 +129,46 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline, N extend
                 this.node.label,
                 ', no indexBuffer');
         }
+    }
+}
+
+/**
+ * Drawable that is used with lightsTextureBindGroup
+ */
+export class LightsTextureDrawableIndexed<R extends RenderPipeline<VertexShader, FragmentShader, RenderPipelineLayout<readonly [
+    BGLayout, BGLayout, BGLayout,
+    BGLayout<{
+        mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>,
+        diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>
+    }>
+]>>, N extends DataNode = DataNode> extends DrawableIndexed<R, N> {
+    override staticBindGroup: BindGroup<BGLayout<{ mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>; diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>; }>>;
+    constructor(
+        private drawableProps: Omit<DrawableProps<N>, 'label'> & {
+            renderPipeline: R,
+            vertexBuffers: MappedVertexBuffers<R>
+        },
+        private texture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>>,
+        private sampler: GPUSampler,
+        drawableDirectProps?: DrawableDirectProps,
+        drawableIndexedProps: DrawableIndexedProps = {
+        }
+    ) {
+        super(drawableProps,
+            drawableDirectProps,
+            drawableIndexedProps);
+
+        this.staticBindGroup = new BindGroup(this.drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayouts[3],
+            'LightsTextureDrawableIndexed_static',
+            (bindGroup) => {
+                return {
+                    diffuseTexture: this.texture.getTextureBinding(bindGroup),
+                    mySampler: this.sampler,
+                };
+            });
+    }
+    setTexture(texture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>>) {
+        this.texture = texture;
+        this.staticBindGroup?.destroy();
     }
 }

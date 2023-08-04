@@ -41,7 +41,7 @@ export function Cameras() {
     return <fieldset>
         <legend>Cameras</legend>
         <ul>
-            {[...engine.cameras].map(camera => {
+            {engine.cameras.map(camera => {
                 return <Camera key={camera.label} camera={camera}></Camera>;
             })}
         </ul>

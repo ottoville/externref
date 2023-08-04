@@ -1,17 +1,23 @@
 import type { GPU } from '../GPU.js';
 import type { TextureView } from './TextureView.js';
 
+export type Texture2dSize = {
+    readonly width: GPUIntegerCoordinate;
+    readonly height: GPUIntegerCoordinate;
+}
+
+export type RenderTargetSize = {
+    readonly width: GPUIntegerCoordinate;
+    readonly height: GPUIntegerCoordinate;
+    readonly depthOrArrayLayers?: GPUIntegerCoordinate;
+}
 
 export type TextureSize = {
     readonly width: GPUIntegerCoordinate;
-} | {
-    readonly width: GPUIntegerCoordinate;
-    readonly height: GPUIntegerCoordinate;
-} | {
-    readonly width: GPUIntegerCoordinate;
-    readonly height: GPUIntegerCoordinate;
-    readonly depthOrArrayLayers: GPUIntegerCoordinate;
-}
+} | Texture2dSize | RenderTargetSize
+
+
+
 export type TextureParams<F extends GPUTextureFormat, U extends Exclude<TextureUsageEnums, STORAGE_BINDING_TEXTURE>, S extends TextureSize> = {
     gpu: GPU;
     format: F;
@@ -185,7 +191,11 @@ export class Texture<
         );
     }
     resize(size: S, sampleCount: 1 | 4) {
-        this.props.size = size;
+        // Resizing the rendertarget only have width and height, use spread operator to maintain depthOrArrayLayers
+        this.props.size = {
+            ...this.props.size,
+            ...size,
+        };
         this.createTexture(sampleCount);
     }
     destroy() {
@@ -229,11 +239,7 @@ export class Texture<
         return this.texture;
     }
 }
-export type RenderTargetSize = {
-    readonly width: GPUIntegerCoordinate;
-    readonly height: GPUIntegerCoordinate;
-    readonly depthOrArrayLayers?: GPUIntegerCoordinate;
-}
+
 export class RenderTarget<
     F extends RENDER_TARGET_FORMAT = RENDER_TARGET_FORMAT,
     U extends RENDER_TARGET_TEXTURE = RENDER_TARGET_TEXTURE,

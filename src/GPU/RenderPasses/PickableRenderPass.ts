@@ -1,7 +1,7 @@
 import { MutableTerraVector3, ReadOnlyTerraVector3, TerraVector3 } from '../../Math.js';
 import { MainNode } from '../../MainNode.js';
 import { MSAARenderTarget } from '../RenderTargets/MSAARenderTarget.js';
-import type { BindGroup } from '../BindGroup.js';
+import { BindGroup } from '../BindGroup.js';
 import { type BindUniformBuffer, type CopyDstBuffer, Buffer, GPUBufferUsage } from '../Buffer/Buffer.js';
 import { RenderPassProps } from './RenderPass.js';
 import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
@@ -52,14 +52,16 @@ export class PickableRenderPass<T extends {
                 ],
                 'mousePositionBuffer');
 
-            this.#pickPositionBindGroup0 = readDepthShader.props.bindGroupLayouts[0].createBindGroup('pickPositionBindGroup0',
+            this.#pickPositionBindGroup0 = new BindGroup(readDepthShader.props.bindGroupLayouts[0],
+                'pickPositionBindGroup0',
                 () =>
                     ({
                         depth_and_mesh: {
                             buffer: this.#pickBuffer,
                         },
                     }));
-            this.#pickPositionBindGroup1 = readDepthShader.props.bindGroupLayouts[1].createBindGroup('pickPositionBindGroup1',
+            this.#pickPositionBindGroup1 = new BindGroup(readDepthShader.props.bindGroupLayouts[1],
+                'pickPositionBindGroup1',
                 (bindGroup) =>
                     ({
                         depth_texture: depthRenderTarget.view.getTextureBinding(bindGroup),

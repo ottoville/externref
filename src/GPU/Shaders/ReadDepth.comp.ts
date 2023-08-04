@@ -9,8 +9,8 @@ type BindLayouts = readonly [
     BGLayout<{
         depth_and_mesh: BufLayout<ShaderStage.COMPUTE>}>,
     BGLayout<{
-        depth_texture: TextLayout<ShaderStage.COMPUTE>,
-        mesh_texture: TextLayout<ShaderStage.COMPUTE>,
+        depth_texture: TextLayout<ShaderStage.COMPUTE, 'texture_depth_multisampled_2d'>,
+        mesh_texture: TextLayout<ShaderStage.COMPUTE, 'texture_2d<u32>'>,
         mouse: BufLayout<ShaderStage.COMPUTE, typeof Mouse>
     }>]
 export class ReadDepth extends ComputeShader<BindLayouts> {
