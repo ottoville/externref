@@ -10,7 +10,6 @@ type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts']
 
 export function createGroundFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new FragmentShaderFunction(
                 diffuseOutput,

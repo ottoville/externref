@@ -1,4 +1,4 @@
-﻿import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
+import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
 import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 
 import { ColorRenderTarget } from './GPU/RenderTargets/ColorRenderTarget.js';
@@ -158,7 +158,7 @@ export class GPU {
 
 
     readonly #ro: ResizeObserver;
-    readonly #canvasRootLayout: BindablePipelineLayout<[
+    readonly canvasRootLayout: BindablePipelineLayout<[
         typeof this.BindGroupLayoutCanvas
     ]>;
     readonly UIPipeline: RenderPipeline<UIVertShader, FragmentShader, BindablePipelineLayout<[
@@ -171,7 +171,6 @@ export class GPU {
         texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>
     }>;
     colorFragShader: FragmentShader<
-        typeof this.positionAndTimeBindGroup.bindGroupLayouts,
         {
             main: FragmentShaderFunction<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
         }
@@ -265,7 +264,7 @@ export class GPU {
             'GPUDirectionalLights');
 
 
-        this.#updateViewBindGroup = new BindGroup(this.updateViewShader.props.bindGroupLayouts[0],
+        this.#updateViewBindGroup = new BindGroup(this.updateViewShader[0][0],
             'updateViewBindGroup',
             bindGroup =>
                 ({
@@ -615,23 +614,23 @@ export class GPU {
                     UIUniforms),
             }
         );
-        this.#canvasRootLayout = new BindablePipelineLayout({
+        this.canvasRootLayout = new BindablePipelineLayout({
             bindGroupLayouts: [this.BindGroupLayoutCanvas],
             label: 'canvasRootLayout',
         });
-        const vertexShader = createUIVertShader(this.#canvasRootLayout,
+        const vertexShader = createUIVertShader(this.canvasRootLayout,
             {
                 arrayStride: 4 * 4,
                 attributes2: position_uv_attrs,
                 stepMode: 'vertex',
             });
-        const fragmentShader = createUIFragmentShader(this.#canvasRootLayout);
-        this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
+        const UIfragmentShader = createUIFragmentShader(this);
+        this.UIPipeline = this.canvasRootLayout.addRenderPipeline(
             {
                 connections: {
                     'main': 'main',
                 },
-                fragmentShader,
+                fragmentShader: UIfragmentShader,
                 label: 'UIRenderPipeline',
                 renderPipeline: {
                     primitive: {
@@ -642,7 +641,6 @@ export class GPU {
                 vertexShader,
             });
         this.colorFragShader = new FragmentShader({
-            bindGroupLayouts: this.positionAndTimeBindGroup.bindGroupLayouts,
             entryPoints: {
                 main: new FragmentShaderFunction(
                     diffuseOutput,
@@ -703,7 +701,7 @@ export class GPU {
             },
             gpu: this,
             label: 'renderPassCanvas',
-            rootLayout: this.#canvasRootLayout,
+            rootLayout: this.canvasRootLayout,
             sampleCount: 1,
             size: {
                 height: canvas.height, width: canvas.width,
@@ -735,8 +733,8 @@ export class GPU {
             'timeBuffer');
 
         const ClustersShader = createClustersCompShader(this.sizeBindGroupLayout);
-        const computePipelineClustersP = ClustersShader.createComputePipeline('main');
-        const updateViewPipelineP = this.updateViewShader.createComputePipeline('main');
+        const computePipelineClustersP = ClustersShader[1].createComputePipeline('main');
+        const updateViewPipelineP = this.updateViewShader[1].createComputePipeline('main');
 
         let resizeHandler: null | ReturnType<typeof setTimeout> = null;
         const maxResolution = {
@@ -792,7 +790,7 @@ export class GPU {
                             renderPass.sizeBindGroup().bindGroup);
                         renderPass.perspectiveCameras.forEach(camera => {
                             camera.updateClusters(passEncoder,
-                                ClustersShader.props.bindGroupLayouts[1]);
+                                ClustersShader[0][1]);
                         });
                     });
                     // Call onResize after all renderPasses have resizes so callbacks

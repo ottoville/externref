@@ -1,14 +1,15 @@
-import { BGLayout } from '../BindGroupLayout.js';
-import { Shader, ShaderParams } from './Shader.js';
+import type { ShaderParams } from './Shader.js';
 import { FilteredBindgroupEntrys, FragmentEntry, FragmentShaderFunction } from './ShaderFunction.js';
+import { BGLayout } from '../BindGroupLayout.js';
+import { OutputShader } from './OutputShader.js';
 
 export class FragmentShader<
-    const B extends readonly BGLayout[] = readonly BGLayout[],
-    E extends { [index: string]: FragmentShaderFunction<B> } = { [index: string]: FragmentShaderFunction<B> },
-> extends Shader<E> {
+    E extends { [index: string]: FragmentShaderFunction<readonly BGLayout[]> } = { [index: string]: FragmentShaderFunction<readonly BGLayout[]> },
+> extends OutputShader<E> {
     constructor(
-        public override props: ShaderParams<E, B>,
-        constantCode?: (args: FilteredBindgroupEntrys<B, FragmentEntry>) => string
+        public override props: ShaderParams<E>,
+        // Use bindgrouplayot of fist entrypoint to type constantCode bindgrouplayout
+        constantCode?: (args: FilteredBindgroupEntrys<E[keyof E]['pipelineLayout']['bindGroupLayouts'], FragmentEntry>) => string
     ) {
         super(props,
             GPUShaderStage.FRAGMENT,

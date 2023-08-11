@@ -13,7 +13,6 @@ type BindLayouts = Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
 */
 export function createVertexColorShader(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof simpleAttributesWithColor>) {
     return new VertexShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
                 typicalOutput,

@@ -6,13 +6,13 @@ import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, Co
 import { BindGroup } from '../GPU/BindGroup.js';
 import { RenderTarget, Texture, TextureUsageEnums } from '../GPU/Texture.js';
 import { TextureView } from '../GPU/TextureView.js';
-import { CalculatePlaneIndices } from '../GPU/Shaders/calculatePlaneIndices.comp.js';
-import { CalculatePlaneHeights } from '../GPU/Shaders/calculatePlaneHeights.comp.js';
-import { CalculateNormals } from '../GPU/Shaders/CalculateNormals.comp.js';
+import { CalculatePlaneIndices, createCalculatePlaneIndices } from '../GPU/Shaders/calculatePlaneIndices.comp.js';
+import { CalculatePlaneHeights, createCalculatePlaneHeights } from '../GPU/Shaders/calculatePlaneHeights.comp.js';
+import { CalculateNormals, createCalculateNormals } from '../GPU/Shaders/CalculateNormals.comp.js';
 import { BGLayout, BufLayout, ShaderStage } from '../GPU/BindGroupLayout.js';
 import { CreateGroundFromHeightMap } from '../GPU/Shaders/CreateGroundFromHeightMap.comp.js';
 import { GPU } from '../GPU.js';
-import { CreateTerrainTexture, SlopesLayout } from '../GPU/Shaders/CreateTerrainTexture.comp.js';
+import { TerrainTexture, SlopesLayout, CreateTerrainTexture } from '../GPU/Shaders/CreateTerrainTexture.comp.js';
 import { BindablePipelineLayout } from '../GPU/PipelineLayout.js';
 import { IntArray, MeshUniforms, PlaneArray } from '../GPU/Shaders/structs/Structs.js';
 import { allocate_vec } from '../nodes/DataNode.js';
@@ -184,11 +184,15 @@ TODO
                 const b = await (await fetch('/images/tenerife250.webp')).blob();
                 const bitmap = await createImageBitmap(b);
 
-                const CreateGroundFromHeightMapShader = new CreateGroundFromHeightMap(gpu,
+                const [
+                    bindLayouts,
+                    GroundFromHeightMapShader
+                ] = CreateGroundFromHeightMap(gpu,
                     this.settings,
-                    bitmap);
+                    bitmap)
+                ;
 
-                const CreateGroundFromHeightMapPipelineP = CreateGroundFromHeightMapShader.createComputePipeline('main');
+                const CreateGroundFromHeightMapPipelineP = GroundFromHeightMapShader.createComputePipeline('main');
 
 
                 const texture = gpu.device.createTexture({
@@ -222,7 +226,7 @@ TODO
                     size: verticesBufferSize,
                     usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
                 });
-                const sourceBindGroup = new BindGroup(CreateGroundFromHeightMapShader.props.bindGroupLayouts[0],
+                const sourceBindGroup = new BindGroup(bindLayouts[0],
                     'sourceBindGroup',
                     (bindGroup) =>
                         ({
@@ -266,22 +270,22 @@ TODO
             );
 
             const shaders = {
-                calculateNormals: new CalculateNormals(this.settings,
+                calculateNormals: createCalculateNormals(this.settings,
                     slopesLayout),
-                calculatePlaneIndices: new CalculatePlaneIndices(gpu,
+                calculatePlaneIndices: createCalculatePlaneIndices(gpu,
                     this.settings),
-                computePlaneHeights: new CalculatePlaneHeights(gpu,
+                computePlaneHeights: createCalculatePlaneHeights(gpu,
                     this.settings),
-                createTexture: new CreateTerrainTexture(this.settings,
+                createTexture: CreateTerrainTexture(this.settings,
                     slopesLayout),
             };
 
 
             const pipelines: [Indices: GPUComputePipeline, Heights: GPUComputePipeline, Normals: GPUComputePipeline, Texture: GPUComputePipeline] = await Promise.all([
-                shaders.calculatePlaneIndices.createComputePipeline('main'),
-                shaders.computePlaneHeights.createComputePipeline('main'),
-                shaders.calculateNormals.createComputePipeline('main'),
-                shaders.createTexture.createComputePipeline('main')
+                shaders.calculatePlaneIndices[1].createComputePipeline('main'),
+                shaders.computePlaneHeights[1].createComputePipeline('main'),
+                shaders.calculateNormals[1].createComputePipeline('main'),
+                shaders.createTexture[1].createComputePipeline('main')
             ]);
             const terrain = new Terrain(
                 gpu,
@@ -349,7 +353,7 @@ TODO
             calculatePlaneIndices: CalculatePlaneIndices;
             computePlaneHeights: CalculatePlaneHeights;
             calculateNormals: CalculateNormals;
-            createTexture: CreateTerrainTexture;
+            createTexture: TerrainTexture;
         },
         private terrainPositionAndUvsAndNormalsGPU: Buffer2<(typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC|COPY_DST']>,
         [
@@ -446,7 +450,7 @@ TODO
         passEncoder.setPipeline(computePipelineIndices);
 
         passEncoder.setBindGroup(0,
-            new BindGroup(shaders.calculatePlaneIndices.props.bindGroupLayouts[0],
+            new BindGroup(shaders.calculatePlaneIndices[0][0],
                 'terrainIndicesGPUBindgroup',
                 (bindGroup) =>
                     ({
@@ -457,12 +461,12 @@ TODO
 
         passEncoder.setPipeline(computePlaneHeights);
         passEncoder.setBindGroup(0,
-            new BindGroup(shaders.computePlaneHeights.props.bindGroupLayouts[0],
+            new BindGroup(shaders.computePlaneHeights[0][0],
                 'terrainPositionAndUvsAndNormalsGPU_Bindgroup',
                 terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup);
 
         passEncoder.setBindGroup(1,
-            new BindGroup(shaders.computePlaneHeights.props.bindGroupLayouts[1],
+            new BindGroup(shaders.computePlaneHeights[0][1],
                 '_heightsBindGroupEntries',
                 _heightsBindGroupEntries).bindGroup);
         passEncoder.dispatchWorkgroups(...Terrain.#subdivisions);
@@ -470,7 +474,7 @@ TODO
         passEncoder.setPipeline(computePipelineNormals);
 
         passEncoder.setBindGroup(0,
-            new BindGroup(shaders.calculateNormals.props.bindGroupLayouts[0],
+            new BindGroup(shaders.calculateNormals[0][0],
                 'terrainPositionAndUvsAndNormalsGPU_bgroup',
                 terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup);
         passEncoder.setBindGroup(1,
@@ -512,7 +516,7 @@ TODO
                 Terrain.#textureSize);
                 gpu.device.queue.submit([commandEncoder.finish()]);
             } else {
-                const bindGroup1 = new BindGroup(shaders.createTexture.props.bindGroupLayouts[1],
+                const bindGroup1 = new BindGroup(shaders.createTexture[0][1],
                     'writableTexture',
                     (bindGroup) =>
                         ({

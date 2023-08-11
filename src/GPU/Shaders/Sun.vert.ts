@@ -8,7 +8,6 @@ type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
 
 export function createSunVertShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new VertexShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
                 new Struct('Output',

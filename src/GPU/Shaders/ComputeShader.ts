@@ -1,13 +1,12 @@
 import { BGLayout } from '../BindGroupLayout.js';
-import { Shader, ShaderParams } from './Shader.js';
+import { Shader, type ShaderParams } from './Shader.js';
 import type { ComputeEntry, ComputeShaderFunction, FilteredBindgroupEntrys } from './ShaderFunction.js';
 export class ComputeShader<
-    B extends readonly BGLayout[],
-    E extends { [index: string]: ComputeShaderFunction<B> } = { [index: string]: ComputeShaderFunction<B> },
+    E extends { [index: string]: ComputeShaderFunction<readonly BGLayout[]> } = { [index: string]: ComputeShaderFunction<readonly BGLayout[]> },
 > extends Shader<E> {
     constructor(
-        public override props: ShaderParams<E, B>,
-        constantCode?: (args: FilteredBindgroupEntrys<B, ComputeEntry>) => string
+        public override props: ShaderParams<E>,
+        constantCode?: (args: FilteredBindgroupEntrys<E[keyof E]['pipelineLayout']['bindGroupLayouts'], ComputeEntry>) => string
     ) {
         super(props,
             GPUShaderStage.COMPUTE,

@@ -10,7 +10,6 @@ import { colorPositionOutput, diffuseOutput } from './structs/Structs.js';
 
 export function createColorFragmentShader<B extends readonly BGLayout[]>(pipelineLayout: PipelineLayout<B>) {
     return new FragmentShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new FragmentShaderFunction(
                 diffuseOutput,

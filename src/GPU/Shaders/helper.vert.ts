@@ -9,7 +9,6 @@ type BindGroupLayouts = Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts
 export function createHelperVertShader(settings: typeof Terrain.settings,
     pipelineLayout: PipelineLayout<BindGroupLayouts>) {
     return new VertexShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
                 colorPositionOutput,
@@ -21,8 +20,7 @@ export function createHelperVertShader(settings: typeof Terrain.settings,
                     { world, }
                     /*{ slopes, facet12, }*/
                 ]) => /* wgsl */
-                    `
-                var output:Output;
+                    /* wgsl */`var output:Output;
  
      var angle:f32 = (f32(${time.prop('time')}) * 0.001) + f32(instanceIdx) * angleStep;
      var c:f32 = cos(angle);
@@ -50,8 +48,7 @@ export function createHelperVertShader(settings: typeof Terrain.settings,
         /*{ world, }*/,
         { slopes, facet12, }
     ]) =>
-        `
-        const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
+        /* wgsl */ `const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
         ${getHeightAtCoordinates(settings,
         slopes,
         facet12)}

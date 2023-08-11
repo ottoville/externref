@@ -6,8 +6,6 @@ import type { GPU } from '../GPU.js';
 import type { FragmentShader } from './Shaders/FragmentShader.js';
 type extractGeneric<Type> = Type extends BGLayout<infer X> ? MapToGPUBindGroupEntry<X> : never
 type Last<T extends BGLayout[]> = T extends [...BGLayout[], infer R] ? R : never
-// eslint-disable-next-line @typescript-eslint/no-shadow
-type Head<T extends readonly BGLayout[]> = T extends readonly [ ...infer Head, BGLayout ] ? Head : never[];
 
 export type PipeLineLayoutProps<B extends readonly BGLayout[]> = {
     label: string;
@@ -138,8 +136,8 @@ B extends readonly BGLayout[] = readonly BGLayout[]> extends RenderPipelineLayou
             sharedBindgroup);
     }
     addRenderPipeline<
-        V extends VertexShader   <B>,
-        F extends FragmentShader <B|Head<B>|Head<Head<B>>|Head<Head<Head<B>>>|Head<Head<Head<Head<B>>>>|Head<Head<Head<Head<Head<B>>>>>|readonly never []>,
+        V extends VertexShader,
+        F extends FragmentShader,
         R extends RenderPipelineLayout
         >(
         props: Omit<RenderPipelineProps<V, F, R>, 'bindgroupdrawable'> & {connections: Record<keyof V['props']['entryPoints'], keyof F['props']['entryPoints']>}

@@ -11,7 +11,7 @@ declare const engine: Engine;
 export type MappedVertexBuffers<R extends RenderPipeline, B extends readonly BGLayout[] = readonly BGLayout[]> = R extends RenderPipeline<infer VERTEX_SHADER> ? (
     //extract VertexBuffers
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    VERTEX_SHADER extends VertexShader<B, { main:  VertexShaderFunction<B, infer V> }> ? (
+    VERTEX_SHADER extends VertexShader<{ main:  VertexShaderFunction<B, infer V> }> ? (
         Readonly<{
             [Property in keyof V]: { view: rust_vec_ptr<'f32'> | Buffer2<VERTEX_BUFFER>, stride: number };
         }>

@@ -5,74 +5,66 @@ import type { GPU } from '../../GPU.js';
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 
-type BindLayouts = readonly [
-    BGLayout<{
-        depth_and_mesh: BufLayout<ShaderStage.COMPUTE>}>,
-    BGLayout<{
-        depth_texture: TextLayout<ShaderStage.COMPUTE, 'texture_depth_multisampled_2d'>,
-        mesh_texture: TextLayout<ShaderStage.COMPUTE, 'texture_2d<u32>'>,
-        mouse: BufLayout<ShaderStage.COMPUTE, typeof Mouse>
-    }>]
-export class ReadDepth extends ComputeShader<BindLayouts> {
-    constructor(gpu: GPU) {
-        const bindLayouts = [
-            new BGLayout(gpu,
-                'DepthAndMeshLayout',
-                {
-                    depth_and_mesh: new BufLayout(
-                        {
-                            buffer: {
-                                hasDynamicOffset: false,
-                                minBindingSize: 16,
-                                type: 'storage',
-                            },
-                            visibility: ShaderStage.COMPUTE,
+export function createReadDepth(gpu: GPU) {
+    const bindLayouts = [
+        new BGLayout(gpu,
+            'DepthAndMeshLayout',
+            {
+                depth_and_mesh: new BufLayout(
+                    {
+                        buffer: {
+                            hasDynamicOffset: false,
+                            minBindingSize: 16,
+                            type: 'storage',
                         },
-                        Depth_And_Mesh),
-                }
-            ),
-            new BGLayout(gpu,
-                'DepthTextureLayout',
-                {
-                    depth_texture: new TextLayout(
-                        {
-                            texture: {
-                                multisampled: true,
-                                sampleType: 'depth',
-                            },
-                            visibility: ShaderStage.COMPUTE,
+                        visibility: ShaderStage.COMPUTE,
+                    },
+                    Depth_And_Mesh),
+            }
+        ),
+        new BGLayout(gpu,
+            'DepthTextureLayout',
+            {
+                depth_texture: new TextLayout(
+                    {
+                        texture: {
+                            multisampled: true,
+                            sampleType: 'depth',
                         },
-                        'texture_depth_multisampled_2d'),
-                    mesh_texture: new TextLayout(
-                        {
-                            texture: {
-                                multisampled: false,
-                                sampleType: 'uint',
-                            },
-                            visibility: ShaderStage.COMPUTE,
+                        visibility: ShaderStage.COMPUTE,
+                    },
+                    'texture_depth_multisampled_2d'),
+                mesh_texture: new TextLayout(
+                    {
+                        texture: {
+                            multisampled: false,
+                            sampleType: 'uint',
                         },
-                        'texture_2d<u32>'),
-                    mouse: new BufLayout(
-                        {
-                            buffer: {
-                                hasDynamicOffset: false,
-                                minBindingSize: 8,
-                                type: 'uniform',
-                            },
-                            visibility: ShaderStage.COMPUTE,
+                        visibility: ShaderStage.COMPUTE,
+                    },
+                    'texture_2d<u32>'),
+                mouse: new BufLayout(
+                    {
+                        buffer: {
+                            hasDynamicOffset: false,
+                            minBindingSize: 8,
+                            type: 'uniform',
                         },
-                        Mouse),
-                }
-            )
-        ] as const;
+                        visibility: ShaderStage.COMPUTE,
+                    },
+                    Mouse),
+            }
+        )
+    ] as const;
 
 
-        const pipelineLayout = new PipelineLayout({
-            bindGroupLayouts: bindLayouts,
-            label: 'ReadDepthPipeline',
-        });
-        super({
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
+    const pipelineLayout = new PipelineLayout({
+        bindGroupLayouts: bindLayouts,
+        label: 'ReadDepthPipeline',
+    });
+    return [
+        bindLayouts,
+        new ComputeShader({
             entryPoints: {
                 main: new ComputeShaderFunction(
                     '@builtin(global_invocation_id) global_id : vec3<u32>',
@@ -87,12 +79,12 @@ export class ReadDepth extends ComputeShader<BindLayouts> {
                         { depth_texture, mesh_texture, mouse, }
                     ]) =>
                     /* wgsl */ `
-                    ${depth_and_mesh.prop('depth')} = textureLoad(${depth_texture.variableName}, ${mouse.prop('position')}, 1);
-                    ${depth_and_mesh.prop('mesh')} = textureLoad(${mesh_texture.variableName}, ${mouse.prop('position')}, 0).r;
-                `),
+                ${depth_and_mesh.prop('depth')} = textureLoad(${depth_texture.variableName}, ${mouse.prop('position')}, 1);
+                ${depth_and_mesh.prop('mesh')} = textureLoad(${mesh_texture.variableName}, ${mouse.prop('position')}, 0).r;
+            `),
             },
             gpu,
             label: 'ReadDepth.comp',
-        });
-    }
+        })
+    ] as const;
 }

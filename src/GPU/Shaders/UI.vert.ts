@@ -3,7 +3,6 @@ import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { UI_Input } from './structs/Structs.js';
-type BindLayouts = [GPU['BindGroupLayoutCanvas']]
 
 export const position_uv_attrs = Object.freeze({
     position: {
@@ -20,15 +19,14 @@ export const position_uv_attrs = Object.freeze({
     },
 } as const);
 
-export function createUIVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof position_uv_attrs>) {
+export function createUIVertShader(pipelineLayout: PipelineLayout<[GPU['BindGroupLayoutCanvas']]>, buffers: VertexBufferLayout2<typeof position_uv_attrs>) {
     return new VertexShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(UI_Input,
                 pipelineLayout,
                 [buffers],
-                ([{ uniforms, /*texture*/ }], [{ position, uv, }]) => /* wgsl */
-                    `
+                ([{ uniforms, /*texture*/ }], [{ position, uv, }]) =>
+                /* wgsl */ `
       var output : Output;   
       output.Position = vec4<f32>(${uniforms.prop('translate')} + ${position}, 1.0, 1.0);
       output.v_uv=${uv};

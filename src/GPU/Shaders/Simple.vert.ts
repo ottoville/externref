@@ -35,7 +35,6 @@ export function createPickOutput(pipelineLayout: BindablePipelineLayout<BindLayo
 */
 export function createSimpleVertShader(pipelineLayout: BindablePipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof simpleAttributes>) {
     return new VertexShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
                 typicalOutput,

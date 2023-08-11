@@ -21,7 +21,6 @@ export function createPickOutputFragment<P extends PipelineLayout>(pipelineLayou
 }
 export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new FragmentShaderFunction<typeof pipelineLayout.bindGroupLayouts>(
                 diffuseOutput,

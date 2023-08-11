@@ -21,7 +21,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         dataNodeProps: DataNodeProps,
         mainNodeProps: MainNodeProps,
         indicesView: rust_vec_ptr<'usize'>,
-        createRenderPipeline: CreateRenderPipelineCB<RenderPipeline<VertexShader<readonly BGLayout[], { main: VertexShaderFunction<readonly BGLayout[], readonly [VertexBufferLayout2]> }>>>,
+        createRenderPipeline: CreateRenderPipelineCB<RenderPipeline<VertexShader<{ main: VertexShaderFunction<readonly BGLayout[], readonly [VertexBufferLayout2]> }>>>,
         { vBufferGPU, topology = 'triangle-list', staticVertices = true, }: SimpleIndexedMeshProps = {
             staticVertices: true, topology: 'triangle-list',
         }

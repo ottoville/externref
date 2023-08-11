@@ -16,7 +16,6 @@ export const positionAttr = Object.freeze(
 type BindLayouts = GPU['bindGroupTextureWater']['bindGroupLayouts']
 export function createWaterVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2<typeof positionAttr>) {
     return new VertexShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
                 new Struct('Output',

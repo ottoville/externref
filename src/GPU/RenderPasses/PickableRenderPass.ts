@@ -8,7 +8,7 @@ import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
 import type { DEPTH_FORMATS, RENDER_TARGET_FORMAT, RENDER_TARGET_TEXTURE, TEXTURE_BINDING_TEXTURE } from '../Texture.js';
-import { ReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
+import { createReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
 
 export class PickableRenderPass<T extends {
     [index: string]: ColorRenderTarget<RENDER_TARGET_FORMAT, RENDER_TARGET_TEXTURE>;
@@ -29,8 +29,8 @@ export class PickableRenderPass<T extends {
         super(renderPassProps,
             depthRenderTarget);
         if (renderPassProps.sampleCount == 4) {
-            const readDepthShader = new ReadDepth(renderPassProps.gpu);
-            this.#pickPositionPipeline = readDepthShader.createComputePipeline('main').then(pickPositionPipeline => {
+            const readDepthShader = createReadDepth(renderPassProps.gpu);
+            this.#pickPositionPipeline = readDepthShader[1].createComputePipeline('main').then(pickPositionPipeline => {
                 this.#pickPositionPipeline = pickPositionPipeline;
                 return pickPositionPipeline;
             });
@@ -52,7 +52,7 @@ export class PickableRenderPass<T extends {
                 ],
                 'mousePositionBuffer');
 
-            this.#pickPositionBindGroup0 = new BindGroup(readDepthShader.props.bindGroupLayouts[0],
+            this.#pickPositionBindGroup0 = new BindGroup(readDepthShader[0][0],
                 'pickPositionBindGroup0',
                 () =>
                     ({
@@ -60,7 +60,7 @@ export class PickableRenderPass<T extends {
                             buffer: this.#pickBuffer,
                         },
                     }));
-            this.#pickPositionBindGroup1 = new BindGroup(readDepthShader.props.bindGroupLayouts[1],
+            this.#pickPositionBindGroup1 = new BindGroup(readDepthShader[0][1],
                 'pickPositionBindGroup1',
                 (bindGroup) =>
                     ({

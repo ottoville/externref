@@ -13,7 +13,6 @@ export function createPlaneAtGroundHeightVertShader(
     settings: typeof Terrain.settings
 ) {
     return new VertexShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
                 colorPositionOutput,
@@ -24,8 +23,8 @@ export function createPlaneAtGroundHeightVertShader(
                     { scene, /*time, clusters_array, meshes, projection*/ },
                     { world, }
                     /*{ _slopes, _facet12, }*/
-                ]) => /* wgsl */
-                    `
+                ]) =>
+                /* wgsl */ `
                 var output:Output;
                 var worldPos:vec4<f32> = ${world.prop('transformation')} * position;
                 worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 1.0;

@@ -1,29 +1,22 @@
-import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from '../../GPU.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
-import { Struct, UI_Input } from './structs/Structs.js';
+import { UI_Input, diffuseOutput } from './structs/Structs.js';
 import { textureLoad } from './std_functions.js';
 
-type BindLayouts = [
-    GPU['BindGroupLayoutCanvas']
-]
-export function createUIFragmentShader(pipelineLayout: PipelineLayout<BindLayouts>) {
+
+
+
+export function createUIFragmentShader(gpu: GPU) {
+
     return new FragmentShader(
         {
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
-                main: new FragmentShaderFunction(new Struct('Output',
-                    {
-                        Color: [
-                            '@location(0)',
-                            'vec4<f32>'
-                        ],
-                    }),
-                pipelineLayout,
-                UI_Input,
-                ([{ texture, }]) =>
-                /* wgsl */ `
+                main: new FragmentShaderFunction(diffuseOutput,
+                    gpu.canvasRootLayout,
+                    UI_Input,
+                    ([{ texture, }]) =>
+                    /* wgsl */ `
                     let fragCoordI=vec2<i32>(floor(v_uv));
                     let color:vec4<f32> = ${textureLoad(texture,
         'fragCoordI',
@@ -32,12 +25,12 @@ export function createUIFragmentShader(pipelineLayout: PipelineLayout<BindLayout
                     var output:Output;
                 
                     //output.Color=vec4<f32>(0.5,0.5,0.5,1.0);
-                    output.Color=color;
+                    output.Diffuse=color;
                     return output;
         
                 `),
             },
-            gpu: pipelineLayout.gpu,
+            gpu,
             label: 'UI.frag',
         }
     );

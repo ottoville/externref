@@ -10,7 +10,7 @@ import { Buffer, GPUBufferUsage } from '../GPU/Buffer/Buffer.js';
 
 import type { Engine } from '../engine.js';
 import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
-import { GrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
+import { createGrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
 import { MainNode } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import { Buffer2, BufferUsageEnums } from '../GPU/Buffer/Buffer2.js';
@@ -151,7 +151,10 @@ export class Plants extends MainNode {
         };
 
         this.#ready = terrainP.then(async terrain => {
-            const getHeightAtCoordinatesShader = new GrassHeightAtCoordinates(Terrain.settings,
+            const [
+                bindLayouts,
+                getHeightAtCoordinatesShader
+            ] = createGrassHeightAtCoordinates(Terrain.settings,
                 scene.gpu);
 
             const computePipeline = await getHeightAtCoordinatesShader.createComputePipeline('main');
@@ -177,7 +180,7 @@ export class Plants extends MainNode {
                             const worldSetArr = buffer.getMappedRange();
                             new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
                         });
-                    const bindGroup2 = new BindGroup(getHeightAtCoordinatesShader.props.bindGroupLayouts[1],
+                    const bindGroup2 = new BindGroup(bindLayouts[1],
                         'bindGroup2',
                         bg =>
                             ({
@@ -217,7 +220,7 @@ export class Plants extends MainNode {
                 },
                 []);
 
-            const bindGroup = new BindGroup(getHeightAtCoordinatesShader.props.bindGroupLayouts[0],
+            const bindGroup = new BindGroup(bindLayouts[0],
                 'bindGroup1',
                 bindGroup1 =>
                     ({

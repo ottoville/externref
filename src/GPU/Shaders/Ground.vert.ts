@@ -7,7 +7,6 @@ type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts']
 
 export function createGroundVertShader(pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2) {
     return new VertexShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
                 GroundInput,

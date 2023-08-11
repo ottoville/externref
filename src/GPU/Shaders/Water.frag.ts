@@ -8,7 +8,6 @@ type BindLayouts = GPU['bindGroupTextureWater']['bindGroupLayouts']
 export function createWaterFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader(
         {
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: new FragmentShaderFunction(
                     diffuseOutput,
@@ -19,8 +18,8 @@ export function createWaterFragShader(pipelineLayout: PipelineLayout<BindLayouts
                         /*{ scene, clusters_array, meshes, projection, }*/,
                         /*{ world, }*/,
                         { mySampler, diffuseTexture, }
-                    ]) => /* wgsl */
-                        `                
+                    ]) =>
+                    /* wgsl */ `                
                     var output:Output;
                     let uv : vec2<f32> = vec2<f32>(v_uv.x/v_uv.w , (v_uv.y/v_uv.w))*0.5+vec2<f32>(0.5,0.5);
                 

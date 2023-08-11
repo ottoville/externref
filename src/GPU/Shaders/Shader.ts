@@ -1,11 +1,9 @@
-import { type BGLayout, BufLayout, BindGroupLayoutEntry } from '../BindGroupLayout.js';
+import { BufLayout, BindGroupLayoutEntry } from '../BindGroupLayout.js';
 import type { Struct } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
-import { ComputeShaderFunction, type ShaderFunction } from './ShaderFunction.js';
+import { type ShaderFunction } from './ShaderFunction.js';
 
-export type ShaderParams<E extends { [index: string]: ShaderFunction } = { [index: string]: ShaderFunction },
-    B extends readonly BGLayout[] = readonly BGLayout[]> = {
-        bindGroupLayouts: B,
+export type ShaderParams<E extends { [index: string]: ShaderFunction } = { [index: string]: ShaderFunction }> = {
         entryPoints: E,
         label: string,
         gpu: GPU
@@ -21,9 +19,10 @@ export abstract class Shader<
         constantCode?: ((
             b: Readonly<{
                 [index: string]: BindGroupLayoutEntry;
-            }>[]) => string) | undefined) {
-        const structs: Set<Struct> = new Set();
-        const groups = props.bindGroupLayouts.reduce((groupstring, group, gi) => {
+            }>[]) => string) | undefined,
+        structs: Set<Struct> = new Set()) {
+        const firstEntryPoint = Object.values(props.entryPoints)[0]!;
+        const groups = firstEntryPoint.pipelineLayout.bindGroupLayouts.reduce((groupstring, group, gi) => {
             return Object.entries(group.entries).reduce((acc, [
                 variableName,
                 binding
@@ -57,17 +56,7 @@ export abstract class Shader<
             groupstring);
         },
         '\n');
-        const outputs: Struct[] = [];
-        for(const key in props.entryPoints) {
-            const entryPoint = props.entryPoints[key]!;
-            if(!(entryPoint instanceof ComputeShaderFunction)) {
-                outputs.push(entryPoint.output);
-            }
-        }
-        const structString = [
-            ...structs,
-            ...outputs
-        ].reduce((s, struct) => {
+        const structString = Array.from(structs).reduce((s, struct) => {
             return `${s}struct ${struct.name} {\n${struct.getPropertiesAsString()}}\n`;
         },
         '');
@@ -75,7 +64,7 @@ export abstract class Shader<
         this.wgsl = groups + structString;
 
 
-        const entries = this.props.bindGroupLayouts.map(bl =>
+        const entries = firstEntryPoint.pipelineLayout.bindGroupLayouts.map(bl =>
             bl.entries
         );
         if(constantCode)
@@ -88,7 +77,6 @@ export abstract class Shader<
             this.wgsl += entryPoint.createCode(entries,
                 key);
             pipelineLayouts[key] = entryPoint.pipelineLayout;
-
         }
         this.module = this.props.gpu.device.createShaderModule(
             {

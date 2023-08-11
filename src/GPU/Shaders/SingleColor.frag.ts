@@ -10,7 +10,6 @@ type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
 
 export function createSingleColorFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
     return new FragmentShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new FragmentShaderFunction(
                 diffuseOutput,

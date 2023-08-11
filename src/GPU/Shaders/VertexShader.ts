@@ -1,6 +1,7 @@
 import { BGLayout } from '../BindGroupLayout.js';
-import { Shader, type ShaderParams } from './Shader.js';
+import type { ShaderParams } from './Shader.js';
 import type { FilteredBindgroupEntrys, VertexEntry, VertexShaderFunction } from './ShaderFunction.js';
+import { OutputShader } from './OutputShader.js';
 
 export interface VertexAttribute extends GPUVertexAttribute {
     shaderFormat: string;
@@ -13,32 +14,21 @@ export interface VertexBufferLayout2<A extends { [index: string]: GPUVertexAttri
     attributes2: A;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-shadow
-type Head<T extends readonly BGLayout[]> = T extends [...infer Head, BGLayout] ? Head : never[];
-
 export type VertexBuffers = readonly [VertexBufferLayout2]
     | readonly [VertexBufferLayout2, VertexBufferLayout2]
     | readonly [VertexBufferLayout2, VertexBufferLayout2, VertexBufferLayout2]
     | readonly [];
 
 export class VertexShader<
-    B extends readonly BGLayout[] = readonly BGLayout[],
     E extends {
-        [index: string]: VertexShaderFunction<
-            /**
-             * Function must have same bindgrouplayouts than pipelineLayout,
-             * but not every one of then must be defined for shader. Eg. it is allowed to attach shader
-             * with less or no bindgrouplayout, but it is not allowed to attach shader with different or more
-             * bindgrouplayouts than the pipelineLayout has.
-            */
-            B | Head<B> | Head<Head<B>> | Head<Head<Head<B>>> | Head<Head<Head<Head<B>>>> | Head<Head<Head<Head<Head<B>>>>> | readonly never[]
-            , readonly VertexBufferLayout2[] | (readonly [])>
-    } = { [index: string]: VertexShaderFunction<B, readonly VertexBufferLayout2[] | (readonly [])> },
-> extends Shader<E> {
+        [index: string]: VertexShaderFunction<readonly BGLayout[]>
+    } = { [index: string]: VertexShaderFunction<readonly BGLayout[], readonly VertexBufferLayout2[] | (readonly [])> },
+> extends OutputShader<E> {
 
     constructor(
-        props: ShaderParams<E, B>,
-        constantCode?: (args: FilteredBindgroupEntrys<B, VertexEntry>) => string
+        props: ShaderParams<E>,
+        // Use bindgrouplayot of fist entrypoint to type constantCode bindgrouplayout
+        constantCode?: (args: FilteredBindgroupEntrys<E[keyof E]['pipelineLayout']['bindGroupLayouts'], VertexEntry>) => string
     ) {
         super(props,
             GPUShaderStage.VERTEX,

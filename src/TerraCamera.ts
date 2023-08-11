@@ -93,7 +93,7 @@ export class TerraCamera {
                         scene: this.#uniformBuffer!.getUniformBinding(bindGroup),
                         time: gpu.timeBuffer.getUniformBinding(bindGroup),
                     }));
-            this.updateViewBindGroup = new BindGroup(gpu.updateViewShader.props.bindGroupLayouts[1],
+            this.updateViewBindGroup = new BindGroup(gpu.updateViewShader[0][1],
                 'updateViewBindGroup2',
                 (bindGroup) =>
                     ({
@@ -151,7 +151,7 @@ export class TerraCamera {
         controller.cameraControl = this.#controls;
         return this.#controls;
     }
-    updateClusters(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: ClustersComp['props']['bindGroupLayouts']['1']) {
+    updateClusters(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: ClustersComp['0']['1']) {
         //TODO move out from loop
         const bindGroup = new BindGroup(computePipelineClustersLayout,
             'updateProjection',

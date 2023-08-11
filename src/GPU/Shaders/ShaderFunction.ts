@@ -65,7 +65,7 @@ keys[i]!
     }
 }
 
-export class FragmentShaderFunction<B extends readonly BGLayout[]> {
+export class FragmentShaderFunction<B extends readonly BGLayout[] = readonly BGLayout[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     #code: (args: any) => string;
     constructor(

@@ -38,7 +38,6 @@ export function createGrassVertShader(
     buffers: [VertexBufferLayout2<typeof positionAttr>, VertexBufferLayout2<typeof shapeAttr>, VertexBufferLayout2<typeof vertexPositionAttr>]
 ) {
     return new VertexShader({
-        bindGroupLayouts: pipelineLayout.bindGroupLayouts,
         entryPoints: {
             main: new VertexShaderFunction(
                 colorPositionOutput,
@@ -49,8 +48,8 @@ export function createGrassVertShader(
                         { position, },
                         { shape, },
                         { vertex_position, }
-                    ]) => /* wgsl */
-                    `
+                    ]) =>
+                    /* wgsl */ `
                 var output:Output;
                 //ambient = lights.ambient;
                  var vertice:vec3<f32> = vec3<f32>(${vertex_position}.xy,0.0);
@@ -109,8 +108,8 @@ export function createGrassVertShader(
         gpu: pipelineLayout.gpu,
         label: 'grass.vert',
     },
-    () => /* wgsl */
-        `
+    () =>
+        /* wgsl */ `
     const bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
 const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(
 vec2<f32>(0.0,0.0),

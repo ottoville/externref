@@ -12,11 +12,10 @@ type BindLayouts = [
         world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>}>,
 
 ]
-export class Plane extends VertexShader<BindLayouts> {
+export class Plane extends VertexShader {
     constructor(
         pipelineLayout: PipelineLayout<BindLayouts>, buffers: VertexBufferLayout2) {
         super({
-            bindGroupLayouts: pipelineLayout.bindGroupLayouts,
             entryPoints: {
                 main: new VertexShaderFunction(
                     colorPositionOutput,
