@@ -80,13 +80,13 @@ export function createGroundFragShader(pipelineLayout: PipelineLayout<BindLayout
     },
     (
         [
-            { uniforms, },
+            { screen_dimensions, },
             { /*scene, clusters_array, meshes,*/ projection, }
         /*{ world, }*/
         /*{ mySampler, myTexture, }*/
         ]) =>
         /* wgsl */ `
-  ${getClusterIndex(uniforms,
+  ${getClusterIndex(screen_dimensions,
         projection)}
 
   var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(

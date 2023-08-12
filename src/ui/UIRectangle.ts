@@ -3,7 +3,7 @@ import { Buffer, type CopyDstBuffer, GPUBufferUsage, BindUniformBuffer } from '.
 import { TextureView } from '../GPU/TextureView.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import { type Texture, TextureUsageEnums, RenderTarget, type TEXTURE_BINDING_TEXTURE, Texture2dSize } from '../GPU/Texture.js';
+import { type Texture, TextureUsageEnums, RenderTarget, Texture2dSize, TEXTURE_BINDING_TEXTURE } from '../GPU/Texture.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
 import { DataNode, allocate_vec } from '../nodes/DataNode.js';
@@ -53,8 +53,8 @@ export type ButtonPosition = {
     y: VerticalPosition,
 }
 
-export type UIRectangleProps = {
-    canvaspipeline: GPU['UIPipeline'],
+export type UIRectangleProps<P extends GPU['UIPipeline'] | GPU['UIPipelineArray'] = GPU['UIPipeline'] | GPU['UIPipelineArray']> = {
+    canvaspipeline: P
     renderPass: RenderPass,
     label: string,
     /**
@@ -86,7 +86,8 @@ export type UIRectangleProps = {
 /*
     Draws rectangle.
 */
-export abstract class UIRectangle extends DataNode {
+type RectangleTexture = RenderTarget<'bgra8unorm', (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'], { width: number, height: number, depthOrArrayLayers: number}>;
+export abstract class UIRectangle<P extends GPU['UIPipeline'] | GPU['UIPipelineArray'] = GPU['UIPipeline'] | GPU['UIPipelineArray']> extends DataNode {
 
     override drawable?: DrawableSimple<RenderPipeline<UIVertShader>> | undefined = undefined;
     boundingBox = {
@@ -95,12 +96,12 @@ export abstract class UIRectangle extends DataNode {
         right: 0,
         top: 0,
     };
-    texture?: RenderTarget<'bgra8unorm', (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST']> | undefined;
+    texture?: RectangleTexture | undefined;
     uniformBuffer: CopyDstBuffer & BindUniformBuffer;
-    textureView: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>>;
-    createTextureView(
-        copySource: ImageBitmap | OffscreenCanvas
-    ) {
+    textureView: TextureView<P extends GPU['UIPipelineArray'] ? RectangleTexture:  Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>>;
+
+    protected createTextureView(
+        copySource: ImageBitmap | OffscreenCanvas) {
         if (this.drawable && this.texture) {
             if (copySource.width > this.texture.props.size.width ||
                 copySource.height > this.texture.props.size.height) {
@@ -124,7 +125,9 @@ export abstract class UIRectangle extends DataNode {
                     gpu: this.props.renderPass.gpu,
                     label: 'button_' + this.props.label + '_UIRectangle_text',
                     size: {
-                        height: copySource.height, width: copySource.width,
+                        depthOrArrayLayers: 2,
+                        height: copySource.height,
+                        width: copySource.width,
                     },
                     usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
                 }
@@ -291,8 +294,8 @@ export abstract class UIRectangle extends DataNode {
     ): Float32Array
 
     constructor(
-        protected props: UIRectangleProps,
-        texture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>> | ImageBitmap | OffscreenCanvas) {
+        protected props: UIRectangleProps<P>,
+        texture: TextureView<P extends GPU['UIPipelineArray'] ? RectangleTexture:  Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>> | ImageBitmap | OffscreenCanvas) {
         props.label = props.label + '_UIRectangle';
         super(
             {
@@ -312,6 +315,7 @@ export abstract class UIRectangle extends DataNode {
             borderSize,
             events,
         } = props;
+        //canvaspipeline.props.bindgroupdrawable.bindGroupLayouts[0].entries.texture
         this.positions_count = (borderSize.width[0] > 0 || (Array.isArray(borderSize.height) && borderSize.height[0] > 0)) ? 54 : 6;
 
         this.uniformBuffer = Buffer.create(renderPass.gpu,
@@ -366,7 +370,6 @@ export abstract class UIRectangle extends DataNode {
                 type: 'pointerdown',
             } as ListenerObj<'pointerdown'>);
         }
-
         if (!(texture instanceof TextureView)) {
             this.textureView = this.createTextureView(texture);
         } else {
@@ -381,7 +384,7 @@ export abstract class UIRectangle extends DataNode {
             const drawable = new DrawableSimple({
                 node: this,
                 renderPasses: new Set([renderPass]),
-                renderPipeline: canvaspipeline,
+                renderPipeline: canvaspipeline as GPU['UIPipeline'] | GPU['UIPipelineArray'],
                 vertexBuffers: [
                     {
                         stride: 3,
@@ -414,7 +417,7 @@ export abstract class UIRectangle extends DataNode {
                 'UI_bindgroup_' + label,
                 (bindGroup) => {
                     return {
-                        texture: this.textureView.getTextureBinding(bindGroup),
+                        texture: this.textureView,
                         uniforms: this.uniformBuffer.getUniformBinding(bindGroup),
                     };
                 });

@@ -64,8 +64,8 @@ export class PickableRenderPass<T extends {
                 'pickPositionBindGroup1',
                 (bindGroup) =>
                     ({
-                        depth_texture: depthRenderTarget.view.getTextureBinding(bindGroup),
-                        mesh_texture: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view.getTextureBinding(bindGroup),
+                        depth_texture: depthRenderTarget.view,
+                        mesh_texture: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view,
                         mouse: this.#mousePositionBuffer!.getUniformBinding(bindGroup),
                     }));
 

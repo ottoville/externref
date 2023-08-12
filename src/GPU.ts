@@ -18,14 +18,15 @@ import { createUpdateViewShader, UpdateView } from './GPU/Shaders/UpdateView.com
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
 import { SharedPipelineLayout, BindablePipelineLayout } from './GPU/PipelineLayout.js';
 import { RenderPipeline } from './GPU/RenderPipeline.js';
-import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, ProjectionStruct, diffuseOutput, colorPositionOutput } from './GPU/Shaders/structs/Structs.js';
+import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, ScreenDimensions, ProjectionStruct, diffuseOutput, colorPositionOutput } from './GPU/Shaders/structs/Structs.js';
 import { createUIVertShader, position_uv_attrs, UIVertShader } from './GPU/Shaders/UI.vert.js';
-import { createUIFragmentShader } from './GPU/Shaders/UI.frag.js';
+import { createUIFragmentShader, UIFragShader } from './GPU/Shaders/UI.frag.js';
 import { MainNode } from './MainNode.js';
 import type { VertexShader } from './GPU/Shaders/VertexShader.js';
 import { createSimpleFragShader, SimpleFragShader } from './GPU/Shaders/Simple.frag.js';
 import { FragmentShader } from './GPU/Shaders/FragmentShader.js';
 import { FragmentShaderFunction } from './GPU/Shaders/ShaderFunction.js';
+import { createUIFragmentShaderArray, UIFragShaderArray } from './GPU/Shaders/UI_array.frag.js';
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -140,7 +141,7 @@ export class GPU {
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat() as 'rgba8unorm' | 'bgra8unorm';
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<'r32uint', typeof TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']>; }>;
     readonly sizeBindGroupLayout: BGLayout<{
-        uniforms: BufLayout<number, typeof Uniforms>;
+        screen_dimensions: BufLayout<number, typeof ScreenDimensions>;
     }>;
 
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
@@ -161,14 +162,28 @@ export class GPU {
     readonly canvasRootLayout: BindablePipelineLayout<[
         typeof this.BindGroupLayoutCanvas
     ]>;
-    readonly UIPipeline: RenderPipeline<UIVertShader, FragmentShader, BindablePipelineLayout<[
-        typeof this.BindGroupLayoutCanvas
-    ]>>;
+    readonly canvasRootLayoutArray: BindablePipelineLayout<[
+        typeof this.BindGroupLayoutCanvasArray
+    ]>;
+    readonly UIPipeline: RenderPipeline<
+        UIVertShader,
+        UIFragShader,
+        typeof this['canvasRootLayout']
+    >;
+    readonly UIPipelineArray: RenderPipeline<
+        UIVertShader,
+        UIFragShaderArray,
+        typeof this['canvasRootLayoutArray']
+    >;
 
     readonly updateViewShader: UpdateView;
     readonly BindGroupLayoutCanvas: BGLayout<{
         uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>,
         texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>
+    }>;
+    readonly BindGroupLayoutCanvasArray: BGLayout<{
+        uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>,
+        texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d_array<f32>'>
     }>;
     colorFragShader: FragmentShader<
         {
@@ -329,7 +344,7 @@ export class GPU {
         this.sizeBindGroupLayout = new BGLayout(this,
             'sizeBindGroupLayout',
             {
-                uniforms: new BufLayout(
+                screen_dimensions: new BufLayout(
                     {
                         buffer: {
                             minBindingSize: 16,
@@ -337,7 +352,7 @@ export class GPU {
                         },
                         visibility: ShaderStage.FRAGMENT | ShaderStage.COMPUTE,
                     },
-                    Uniforms),
+                    ScreenDimensions),
             }
         );
         this.rootCameralayout = new BindablePipelineLayout({
@@ -453,7 +468,7 @@ export class GPU {
             },
             gpu: this,
             label: 'pickRenderPass',
-            rootLayout: this.rootCameralayout,
+            rootLayouts: [this.rootCameralayout],
             sampleCount: 1,
             size: {
                 height: canvas.height, width: canvas.width,
@@ -497,7 +512,7 @@ export class GPU {
                 },
                 gpu: this,
                 label: 'renderPassScreen',
-                rootLayout: this.rootCameralayout,
+                rootLayouts: [this.rootCameralayout],
                 sampleCount: 4,
                 size: {
                     height: canvas.height, width: canvas.width,
@@ -553,7 +568,7 @@ export class GPU {
                     ],
                 gpu: this,
                 label: 'renderPassWater',
-                rootLayout: this.rootCameralayout,
+                rootLayouts: [this.rootCameralayout],
                 sampleCount: 1,
                 size: {
                     height: canvas.height, width: canvas.width,
@@ -609,6 +624,27 @@ export class GPU {
                             type: 'uniform',
                         },
                         visibility: ShaderStage.VERTEX,
+                    },
+                    UIUniforms),
+            }
+        );
+        this.BindGroupLayoutCanvasArray = new BGLayout(this,
+            'BindGroupLayoutUIArray',
+            {
+                texture: new TextLayout(
+                    {
+                        texture: {
+                        },
+                        visibility: ShaderStage.FRAGMENT,
+                    },
+                    'texture_2d_array<f32>'),
+                uniforms: new BufLayout(
+                    {
+                        buffer: {
+                            minBindingSize: 8,
+                            type: 'uniform',
+                        },
+                        visibility: ShaderStage.VERTEX,
 
                     },
                     UIUniforms),
@@ -618,6 +654,10 @@ export class GPU {
             bindGroupLayouts: [this.BindGroupLayoutCanvas],
             label: 'canvasRootLayout',
         });
+        this.canvasRootLayoutArray = new BindablePipelineLayout({
+            bindGroupLayouts: [this.BindGroupLayoutCanvasArray],
+            label: 'canvasRootLayoutArray',
+        });
         const vertexShader = createUIVertShader(this.canvasRootLayout,
             {
                 arrayStride: 4 * 4,
@@ -625,6 +665,7 @@ export class GPU {
                 stepMode: 'vertex',
             });
         const UIfragmentShader = createUIFragmentShader(this);
+        const UIfragmentShaderArray = createUIFragmentShaderArray(this);
         this.UIPipeline = this.canvasRootLayout.addRenderPipeline(
             {
                 connections: {
@@ -632,6 +673,21 @@ export class GPU {
                 },
                 fragmentShader: UIfragmentShader,
                 label: 'UIRenderPipeline',
+                renderPipeline: {
+                    primitive: {
+                        frontFace: 'ccw',
+                        topology: 'triangle-list',
+                    },
+                },
+                vertexShader,
+            });
+        this.UIPipelineArray = this.canvasRootLayoutArray.addRenderPipeline(
+            {
+                connections: {
+                    'main': 'array',
+                },
+                fragmentShader: UIfragmentShaderArray,
+                label: 'UIRenderPipelineArray',
                 renderPipeline: {
                     primitive: {
                         frontFace: 'ccw',
@@ -701,7 +757,9 @@ export class GPU {
             },
             gpu: this,
             label: 'renderPassCanvas',
-            rootLayout: this.canvasRootLayout,
+            rootLayouts: [
+                this.canvasRootLayout,
+            ],
             sampleCount: 1,
             size: {
                 height: canvas.height, width: canvas.width,

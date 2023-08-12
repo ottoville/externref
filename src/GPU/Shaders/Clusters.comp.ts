@@ -42,15 +42,15 @@ export function createClustersCompShader(sizeGroup: GPU['sizeBindGroupLayout']) 
                         4
                     ],
                     ([
-                        { uniforms, },
+                        { screen_dimensions, },
                         { clusters, screentoview, }
                     ]) =>
                     /* wgsl */ `
             let tileIndex = global_id.x +
             global_id.y * tileCount.x +
             global_id.z * tileCount.x * tileCount.y;
-let tileSize = vec2<f32>(${uniforms.prop('screenDimensions')}.x / f32(tileCount.x),
-                     ${uniforms.prop('screenDimensions')}.y / f32(tileCount.y));
+let tileSize = vec2<f32>(${screen_dimensions.prop('screenDimensions')}.x / f32(tileCount.x),
+                     ${screen_dimensions.prop('screenDimensions')}.y / f32(tileCount.y));
 //Calculating the min and max point in screen space
 
 let maxPoint_sS = vec4<f32>(vec2<f32>(f32(global_id.x+1u), f32(global_id.y+1u)) * tileSize, 1.0, 1.0);
@@ -76,7 +76,7 @@ ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, 
             label: 'Clusters.comp',
         },
         ([
-            { uniforms, },
+            { screen_dimensions, },
             { /*clusters,*/ screentoview, }
         ]) =>
         /* wgsl */ `
@@ -89,7 +89,7 @@ ${clusters.prop('bounds')}[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, 
         
         fn screen2View(screen : vec4<f32>) -> vec4<f32> {
           //Convert to NDC
-         let texCoord = screen.xy /  ${uniforms.prop('screenDimensions')};
+         let texCoord = screen.xy /  ${screen_dimensions.prop('screenDimensions')};
              //Convert to clipSpace
         
          let clip = vec4<f32>(vec2<f32>(texCoord.x, 1.0 - texCoord.y) * 2.0 - 1.0, screen.z, screen.w);

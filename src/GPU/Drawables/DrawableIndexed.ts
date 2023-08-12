@@ -160,9 +160,9 @@ export class LightsTextureDrawableIndexed<R extends RenderPipeline<VertexShader,
 
         this.staticBindGroup = new BindGroup(this.drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayouts[3],
             'LightsTextureDrawableIndexed_static',
-            (bindGroup) => {
+            () => {
                 return {
-                    diffuseTexture: this.texture.getTextureBinding(bindGroup),
+                    diffuseTexture: this.texture,
                     mySampler: this.sampler,
                 };
             });

@@ -150,7 +150,7 @@ export const Time = new Struct('Time',
             'f32'
         ],
     });
-export const Uniforms = new Struct('Uniforms',
+export const ScreenDimensions = new Struct('Screen_Dimensions',
     {
         screenDimensions: [
             '',

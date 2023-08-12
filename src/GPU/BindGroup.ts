@@ -1,5 +1,6 @@
 import type { BGLayout, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
 import type { RenderBundleEncoder } from './RenderBundleEncoder.js';
+import { TextureView } from './TextureView.js';
 
 export class BindGroup<L extends BGLayout = BGLayout> {
     #dirty = true;
@@ -19,11 +20,12 @@ export class BindGroup<L extends BGLayout = BGLayout> {
         if (this.#dirty || !this.#bindGroup) {
             const entries = this.entriesf(this);
             this.#bindGroup = this.layout.gpu.device.createBindGroup({
-                entries: Object.values(entries).map((entry, i) =>
-                    ({
+                entries: Object.values(entries).map((entry, i) => {
+                    return {
                         binding: i,
-                        resource: entry,
-                    })),
+                        resource: entry instanceof TextureView ? entry.getTextureBinding(this) : entry,
+                    };
+                }),
                 label: this.label,
                 layout: this.layout.layout,
             });

@@ -33,7 +33,7 @@ export type RenderPassProps<U> = {
     size: { width: number, height: number };
     getSizeOnResize: (width: number, height: number) => [number, number];
     entryPoint: string;
-    rootLayout: RenderPipelineLayout;
+    rootLayouts: RenderPipelineLayout[];
     label: string;
     GPURenderBundleEncoderDescriptor?: Partial<GPURenderBundleEncoderDescriptor>
 }
@@ -45,11 +45,12 @@ export class RenderPass<U extends {
 > {
 
     readonly perspectiveCameras: Set<TerraCamera> = new Set();
+    readonly #rootLayouts: RenderPipelineLayout[];
 
     readonly bundles: RenderBundleEncoder[] = [];
     readonly renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant | Promise<RenderPipelineVariant>> = new Map();
     readonly sizeBindGroup: () => BindGroup;
-    #sizeBuffer: BindUniformBuffer;
+    #screenDimensionsBuffer: BindUniformBuffer;
     readonly colorRenderTargets = {
     } as U;
     onResize: Map<object, () => void> = new Map();
@@ -58,7 +59,6 @@ export class RenderPass<U extends {
     public size: { width: number, height: number };
     #entryPoint: string;
     #getSizeOnResize: (width: number, height: number) => [number, number];
-    #rootLayout: RenderPipelineLayout;
     public label: string;
     constructor(
         {
@@ -68,7 +68,7 @@ export class RenderPass<U extends {
             size,
             getSizeOnResize,
             entryPoint,
-            rootLayout,
+            rootLayouts: rootLayout,
             label,
             GPURenderBundleEncoderDescriptor,
         }: RenderPassProps<U>
@@ -78,7 +78,7 @@ export class RenderPass<U extends {
         this.size = size;
         this.#getSizeOnResize = getSizeOnResize;
         this.#entryPoint = entryPoint;
-        this.#rootLayout = rootLayout;
+        this.#rootLayouts = rootLayout;
         this.label = label;
         this.colorRenderTargets = colorRenderTargets;
         const renderTargersArray = Object.values(colorRenderTargets);
@@ -93,7 +93,7 @@ export class RenderPass<U extends {
                     if (rt.texture.sampleCount === 0 && rt.view.bindGroups.size === 0) {
                         console.warn('Rendertarget ',
                             rt.props.label,
-                            ' is not binded as texture, render result will be shown.');
+                            ' is not binded as texture, render result will not be shown.');
                     }
                 });
                 //@ts-ignore
@@ -101,7 +101,7 @@ export class RenderPass<U extends {
                 if (this.perspectiveCameras.size === 0) {
                 // Draw UI
                     drawedMeshes += this.#renderCamera(renderBundleEncoder,
-                        this.#rootLayout,
+                        this.#rootLayouts,
                         0);
                 } else {
                     renderBundleEncoder.renderBundleEncoder.setBindGroup(0,
@@ -114,27 +114,27 @@ export class RenderPass<U extends {
 camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         drawedMeshes += this.#renderCamera(renderBundleEncoder,
-                            this.#rootLayout,
+                            this.#rootLayouts,
                             2);
                     });
                 }
             });
         this.bundles.push(renderBundle);
-        this.#sizeBuffer = this.#updateSizeBindGroup(true);
+        this.#screenDimensionsBuffer = this.#updateSizeBindGroup(true);
         this.sizeBindGroup = () =>
             new BindGroup(gpu.sizeBindGroupLayout,
                 'sizeBindGroup',
                 bindGroup =>
                     ({
-                        uniforms: this.#sizeBuffer.getUniformBinding(bindGroup,
+                        screen_dimensions: this.#screenDimensionsBuffer.getUniformBinding(bindGroup,
                             0,
                             16),
                     }));
     }
     #updateSizeBindGroup(initial = false) {
         if (!initial)
-            this.#sizeBuffer.destroy();
-        this.#sizeBuffer = Buffer.create(this.gpu,
+            this.#screenDimensionsBuffer.destroy();
+        this.#screenDimensionsBuffer = Buffer.create(this.gpu,
             this.gpu.gpu_screen_buffer_size,
             [GPUBufferUsage.UNIFORM],
             'screen_buffer',
@@ -150,7 +150,7 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
                 ]);
             });
 
-        return this.#sizeBuffer;
+        return this.#screenDimensionsBuffer;
     }
     onRenderPipelinesChange: Set<() => void> = new Set();
     getVariant(renderPipeline: Readonly<RenderPipeline>) {
@@ -281,38 +281,40 @@ camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder));
         return renderPassDescriptor;
     }
 
-    #renderCamera(renderBundleEncoder: RenderBundleEncoder, rootLayout: RenderPipelineLayout, bindGroupStartIndex: number) {
+    #renderCamera(renderBundleEncoder: RenderBundleEncoder, rootLayout: RenderPipelineLayout[], bindGroupStartIndex: number) {
         let drawedMeshes = 0;
-        rootLayout.renderPipeLines.forEach(renderPipeline => {
-            drawedMeshes += renderPipeline.draw(renderBundleEncoder,
-                this,
-                bindGroupStartIndex);
-        });
-        const dynamicIndices: number[] = [];
-        rootLayout.subBindGroups.forEach(subBindGroup => {
-            //POSITION
-            if (subBindGroup.bindGroupLayout.dynamicIndices) {
-                dynamicIndices.push(bindGroupStartIndex);
-            }
-            subBindGroup.renderPipeLines.forEach(renderPipeline => {
+        rootLayout.forEach(layout => {
+            layout.renderPipeLines.forEach(renderPipeline => {
                 drawedMeshes += renderPipeline.draw(renderBundleEncoder,
                     this,
-                    bindGroupStartIndex,
-                    dynamicIndices);
+                    bindGroupStartIndex);
             });
-            subBindGroup.subBindGroups.forEach(pipelineLayout => {
-                if (pipelineLayout.sharedBindgroup) {
-                    renderBundleEncoder.renderBundleEncoder.setBindGroup(bindGroupStartIndex + 1,
-                        pipelineLayout.sharedBindgroup.getForRenderBundle(renderBundleEncoder));
+            const dynamicIndices: number[] = [];
+            layout.subBindGroups.forEach(subBindGroup => {
+                //POSITION
+                if (subBindGroup.bindGroupLayout.dynamicIndices) {
+                    dynamicIndices.push(bindGroupStartIndex);
                 }
-                pipelineLayout.renderPipeLines.forEach(renderPipeline => {
+                subBindGroup.renderPipeLines.forEach(renderPipeline => {
                     drawedMeshes += renderPipeline.draw(renderBundleEncoder,
                         this,
-                        bindGroupStartIndex + dynamicIndices.length,
+                        bindGroupStartIndex,
                         dynamicIndices);
                 });
+                subBindGroup.subBindGroups.forEach(pipelineLayout => {
+                    if (pipelineLayout.sharedBindgroup) {
+                        renderBundleEncoder.renderBundleEncoder.setBindGroup(bindGroupStartIndex + 1,
+                            pipelineLayout.sharedBindgroup.getForRenderBundle(renderBundleEncoder));
+                    }
+                    pipelineLayout.renderPipeLines.forEach(renderPipeline => {
+                        drawedMeshes += renderPipeline.draw(renderBundleEncoder,
+                            this,
+                            bindGroupStartIndex + dynamicIndices.length,
+                            dynamicIndices);
+                    });
+                });
+                dynamicIndices.length = 0;
             });
-            dynamicIndices.length = 0;
         });
         return drawedMeshes;
     }

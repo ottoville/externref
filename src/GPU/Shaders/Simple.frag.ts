@@ -79,12 +79,12 @@ export function createSimpleFragShader(pipelineLayout: PipelineLayout<BindLayout
         label: 'Simple.frag',
     },
     ([
-        { uniforms, },
+        { screen_dimensions, },
         { /*scene, clusters_array, meshes,*/ projection, }
         /*{ world, }*/
     ]) =>
         `
-      ${getClusterIndex(uniforms,
+      ${getClusterIndex(screen_dimensions,
         projection)}
     `);
 }

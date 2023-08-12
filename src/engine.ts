@@ -674,6 +674,14 @@ export class Engine {
         if (nodes) {
             this.canvas = nodes.canvas;
             this.devTools = nodes.devTools;
+            //@ts-expect-error Way to manually open devtools if UI is not working
+            window.openDevTools = function() {
+                import('./ui/DevTools/DevTools.js')
+                    .then(({ DevTools, }) =>
+                        DevTools(nodes.devTools))
+                    .catch(err =>
+                        engine.showError(err));
+            };
         }
 
         //@ts-ignore

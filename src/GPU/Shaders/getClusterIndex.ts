@@ -1,7 +1,7 @@
 import type { BufLayout, ShaderStage } from '../BindGroupLayout.js';
 import type { ProjectionStruct, Struct } from './structs/Structs.js';
 
-export const getClusterIndex = (uniforms: BufLayout<number, Struct<{
+export const getClusterIndex = (screen_dimensions: BufLayout<number, Struct<{
     screenDimensions: readonly [string, string];
     screendimensions_ratio: readonly [string, string];
 }>>, projection: BufLayout<ShaderStage.FRAGMENT, typeof ProjectionStruct>) =>
@@ -16,7 +16,7 @@ export const getClusterIndex = (uniforms: BufLayout<number, Struct<{
         
         //TODO: zTile lookup can be hardcoded for speed
         let zTile : u32 = u32(max(fma(log2(linearDepth(fragCoord.z)),${projection.prop('slice_scale')},${projection.prop('slice_bias')}), 0.0));
-        let pos: vec2<f32> = fragCoord.xy / ${uniforms.prop('screendimensions_ratio')};
+        let pos: vec2<f32> = fragCoord.xy / ${screen_dimensions.prop('screendimensions_ratio')};
         return vec3<u32>(u32(pos.x),u32(pos.y),zTile);
     }
 

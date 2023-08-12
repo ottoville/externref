@@ -1,12 +1,20 @@
 import type { GPU } from '../GPU.js';
 import type { Struct } from './Shaders/structs/Structs.js';
+import { TEXTURE_BINDING_TEXTURE, Texture, TextureSize } from './Texture.js';
+import { TextureView } from './TextureView.js';
 
 
 export interface GPUBindGroupTextureEntry {
     texture: GPUTextureBindingLayout;
 }
 export type MapToGPUBindGroupEntry<T extends {[index:string]: BindGroupLayoutEntry}> = {
-    [K in keyof T]: T[K] extends TextLayout<ShaderStage, TextLayoutFormats> ? GPUTextureView | GPUExternalTexture :
+    [K in keyof T]:
+    // If texture is array format, then depthOrArrayLayers must be set
+    T[K] extends
+        TextLayout<ShaderStage, TextLayoutArrayFormats> ? TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, TextureSize & {depthOrArrayLayers: GPUIntegerCoordinate}>> :
+    // Any other texture
+    T[K] extends
+        TextLayout<ShaderStage, TextLayoutFormats> ? TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>> | GPUExternalTexture :
     T[K] extends BufLayout ? GPUBufferBinding
     : GPUBindingResource };
 export type GPUBindGroupLayoutEntryBuffer = Omit<GPUBindGroupLayoutEntry, 'binding'> & {
@@ -109,15 +117,20 @@ export class StorageTextLayout<V extends ShaderStage = ShaderStage> extends Abst
 }
 type TextLayoutFormats =         //sampled texture types https://www.w3.org/TR/WGSL/#sampled-texture-type
 | `texture_2d<${format}>`
-| `texture_2d_array<${format}>`
 | `texture_3d<${format}>`
+| TextLayoutArrayFormats
 | `texture_cube<${format}>`
-| `texture_cube_array<${format}>`
 //multisampled texture types https://www.w3.org/TR/WGSL/#multisampled-texture-type
    | `texture_multisampled_2d<${format}>`
    | 'texture_depth_multisampled_2d'
 //External Sampled Texture Types https://www.w3.org/TR/WGSL/#external-texture-type
 | 'texture_external';
+
+type TextLayoutArrayFormats =
+| `texture_2d_array<${format}>`
+| `texture_cube_array<${format}>`
+
+
 
 export class TextLayout<V extends ShaderStage, F extends TextLayoutFormats> extends AbstractTextureLayout<V, F> {
     constructor(

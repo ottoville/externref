@@ -30,9 +30,9 @@ export const WaterRenderPipeline = [
                 },
                 vertexShader: waterVertShader,
             },
-            (bindGroup) =>
+            () =>
                 ({
-                    diffuseTexture: gpu.renderPassWater.colorRenderTargets.diffuse.view.getTextureBinding(bindGroup),
+                    diffuseTexture: gpu.renderPassWater.colorRenderTargets.diffuse.view,
                     mySampler: sampler,
                 })
         );

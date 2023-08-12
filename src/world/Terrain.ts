@@ -194,25 +194,25 @@ TODO
 
                 const CreateGroundFromHeightMapPipelineP = GroundFromHeightMapShader.createComputePipeline('main');
 
-
-                const texture = gpu.device.createTexture({
+                const texture = Texture.create({
                     format: 'rgba8unorm',
-                    size: [
-                        bitmap.width,
-                        bitmap.height
-                    ],
-                    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+                    gpu,
+                    label: 'TerrainTexture',
+                    size: {
+                        height: bitmap.height,
+                        width: bitmap.width,
+                    },
+                    usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
                 });
-                gpu.device.queue.copyExternalImageToTexture({
+                texture.copyFromExternalImage({
                     source: bitmap,
                 },
                 {
-                    texture,
                 },
-                [
-                    bitmap.width,
-                    bitmap.height
-                ]);
+                {
+                    height: bitmap.height,
+                    width: bitmap.width,
+                });
 
                 const commandEncoder = gpu.device.createCommandEncoder({
                     label: 'loadFromTexture_encoder',
@@ -226,11 +226,12 @@ TODO
                     size: verticesBufferSize,
                     usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
                 });
+                const view = new TextureView(texture);
                 const sourceBindGroup = new BindGroup(bindLayouts[0],
                     'sourceBindGroup',
                     (bindGroup) =>
                         ({
-                            pixels: texture.createView(),
+                            pixels: view,
                             positions: terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
                         }));
                 passEncoder.setPipeline(await CreateGroundFromHeightMapPipelineP);
