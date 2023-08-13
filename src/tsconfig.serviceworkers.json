@@ -6,18 +6,14 @@
     "outDir": "../wwwroot",
     "module": "esnext",
     "target": "esnext",
-    "lib": [ "esnext", "webworker" ],
+    "lib": ["esnext", "webworker"],
     "sourceMap": false,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     //"strict": true,
     "tsBuildInfoFile": "tsconfig.serviceworkers.tsbuildinfo",
     "types": []
-    },
-    "exclude": [
-      "node_modules"
-    ],
-  "include": [
-    "./service-worker.ts",
-  ]
+  },
+  "exclude": ["node_modules"],
+  "include": ["./service-worker.ts"]
 }

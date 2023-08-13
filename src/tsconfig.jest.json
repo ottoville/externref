@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports":true,
+    "allowSyntheticDefaultImports": true,
     "target": "ESNext",
     "module": "ESNext",
     "jsx": "react",
@@ -11,12 +11,7 @@
     "strict": true,
     "tsBuildInfoFile": "tsconfig.testbuild.tsbuildinfo",
     "incremental": true,
-    "lib": [
-      "dom",
-      "esnext",
-      "ES2017.SharedMemory",
-      "DOM.Iterable"
-    ],
+    "lib": ["dom", "esnext", "ES2017.SharedMemory", "DOM.Iterable"],
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "typeRoots": ["./node_modules/@webgpu/"],
@@ -30,6 +25,14 @@
     "jest.config.js",
     "package.json"
   ],
-  
-  "include": [ "tests.json", "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "./runTest.ts"],
+
+  "include": [
+    "tests.json",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
+    "./rustwasm/*.js",
+    "./node_modules/@webgpu/**/*",
+    "./runTest.ts"
+  ]
 }

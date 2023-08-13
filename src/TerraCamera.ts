@@ -1,262 +1,323 @@
-﻿import { MutableTerraVector3, ReadOnlyTerraVector3, TerraMatrix } from './Math.js';
+﻿import {
+  MutableTerraVector3,
+  ReadOnlyTerraVector3,
+  TerraMatrix,
+} from './Math.js';
 import { Projection } from './GPU/Projection.js';
 import type { Engine } from './engine.js';
 import type { GPU } from './GPU.js';
 import { BindGroup } from './GPU/BindGroup.js';
-import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, GPUBufferUsage } from './GPU/Buffer/Buffer.js';
+import {
+  BindStorageBuffer,
+  BindUniformBuffer,
+  Buffer,
+  CopyDstBuffer,
+  GPUBufferUsage,
+} from './GPU/Buffer/Buffer.js';
 import type { CameraController } from './controllers/CameraController.js';
 import { ClustersComp } from './GPU/Shaders/Clusters.comp.js';
 declare const engine: Engine;
 
-export type CameraControl = { updatePosition(cb: (position: MutableTerraVector3) => void): void; updateDirection(cb: (direction: MutableTerraVector3) => void): void; }
+export type CameraControl = {
+  updatePosition(cb: (position: MutableTerraVector3) => void): void;
+  updateDirection(cb: (direction: MutableTerraVector3) => void): void;
+};
 const enum VIEW_UPDATED {
-    NONE = 0,
-    POSITION = 1,
-    DIRECTION = 2
+  NONE = 0,
+  POSITION = 1,
+  DIRECTION = 2,
 }
 export class TerraCamera {
-    readonly #childCameras: Set<CameraControl> = new Set();
+  readonly #childCameras: Set<CameraControl> = new Set();
 
-    #clusterArrayBuffer?: BindStorageBuffer;/* & CopySrcBuffer*/
+  #clusterArrayBuffer?: BindStorageBuffer; /* & CopySrcBuffer*/
 
+  readonly #uniformBufferSize =
+    /* modelViewProjectionMatrix + view matrix */ 4 *
+      16 *
+      2 /* viewPosition */ +
+    4 * 4;
+  readonly #direction = new MutableTerraVector3([1, 0, 0]);
 
-    readonly #uniformBufferSize = /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ + 4 * 4;
-    readonly #direction = new MutableTerraVector3([
-        1,
-        0,
-        0
-    ]);
+  readonly #viewProjectionPositionBuffer = new ArrayBuffer(
+    this.#uniformBufferSize,
+  );
 
-    readonly #viewProjectionPositionBuffer = new ArrayBuffer(this.#uniformBufferSize);
+  readonly projectionViewArr = new TerraMatrix(
+    this.#viewProjectionPositionBuffer,
+    0,
+  );
+  readonly projectionViewInverted: TerraMatrix = new TerraMatrix();
+  projectionViewInvertedIsDirty = false;
+  readonly viewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 64);
 
-    readonly projectionViewArr = new TerraMatrix(this.#viewProjectionPositionBuffer,
-        0);
-    readonly projectionViewInverted: TerraMatrix = new TerraMatrix();
-    projectionViewInvertedIsDirty = false;
-    readonly viewArr = new TerraMatrix(this.#viewProjectionPositionBuffer,
-        64);
+  readonly #viewAndProjection = new Float32Array(
+    this.#viewProjectionPositionBuffer,
+    0,
+    32,
+  );
 
-    readonly #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer,
-        0,
-        32);
+  readonly position = new ReadOnlyTerraVector3(
+    this.#viewProjectionPositionBuffer,
+    128,
+  );
+  readonly #positionMutable = new MutableTerraVector3(
+    this.#viewProjectionPositionBuffer,
+    128,
+  );
 
+  #uniformBuffer?: BindUniformBuffer & CopyDstBuffer;
+  updateViewBindGroup?: BindGroup;
+  uniformBindGroup?: BindGroup;
+  readonly #controls: CameraControl;
+  #doUpdateView = VIEW_UPDATED.NONE;
+  readonly beforeViewUpdate: Set<
+    (
+      position: MutableTerraVector3,
+      direction: MutableTerraVector3,
+      commandEncoder: GPUCommandEncoder,
+    ) => void
+  > = new Set();
+  #cameraController?: TerraCamera;
+  #inputController?: CameraController;
+  projection?: Projection;
+  public gpu?: GPU;
 
-    readonly position = new ReadOnlyTerraVector3(this.#viewProjectionPositionBuffer,
-        128);
-    readonly #positionMutable = new MutableTerraVector3(this.#viewProjectionPositionBuffer,
-        128);
+  onUpdatePosition: Set<() => void> = new Set();
+  constructor(
+    public label: string,
+    renderPassName: 'renderPassScreen' | 'renderPassWater',
+    parent?: TerraCamera,
+  ) {
+    engine.getGPU((gpu) => {
+      const projection = parent?.projection ?? new Projection(gpu);
+      const renderPass = gpu[renderPassName];
+      renderPass.perspectiveCameras.add(this);
+      this.#clusterArrayBuffer?.destroy();
+      this.#uniformBuffer?.destroy();
+      this.uniformBindGroup?.destroy();
+      this.updateViewBindGroup?.destroy();
+      this.gpu = gpu;
+      this.projection = projection;
+      this.#clusterArrayBuffer = Buffer.create(
+        gpu,
+        gpu.clusterSizeinBytes,
+        [GPUBufferUsage.STORAGE /*GPUBufferUsage.COPY_SRC*/],
+        'clusterArrayBuffer',
+      );
+      this.#uniformBuffer = Buffer.create(
+        gpu,
+        this.#uniformBufferSize,
+        [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
+        'uniformBuffer',
+      ); //Todo: set to private
+      this.uniformBindGroup = new BindGroup(
+        gpu.uniformBindGroupLayoutWithTime,
+        'uniformBindGroup',
+        (bindGroup) => ({
+          clusters_array:
+            this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
+          meshes: gpu.GPUMeshes.getStorageBinding(bindGroup),
+          //TODO: Set to own group because shared by many cameras
+          projection: projection.gpuBuffer.getUniformBinding(bindGroup),
+          scene: this.#uniformBuffer!.getUniformBinding(bindGroup),
+          time: gpu.timeBuffer.getUniformBinding(bindGroup),
+        }),
+      );
+      this.updateViewBindGroup = new BindGroup(
+        gpu.updateViewShader[0][1],
+        'updateViewBindGroup2',
+        (bindGroup) => ({
+          clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
+          viewUniforms: this.#uniformBuffer!.getUniformBinding(bindGroup),
+        }),
+      );
+      gpu.projections.add(this.projection);
+      gpu.cameras.push(this);
+    });
 
-    #uniformBuffer?: BindUniformBuffer & CopyDstBuffer;
-    updateViewBindGroup?: BindGroup;
-    uniformBindGroup?: BindGroup;
-    readonly #controls: CameraControl;
-    #doUpdateView = VIEW_UPDATED.NONE;
-    readonly beforeViewUpdate: Set<
-        (position: MutableTerraVector3, direction: MutableTerraVector3, commandEncoder: GPUCommandEncoder) => void
-    > = new Set();
-    #cameraController?: TerraCamera;
-    #inputController?: CameraController;
-    projection?: Projection;
-    public gpu?: GPU;
+    this.viewArr[15] = 1;
 
-    onUpdatePosition: Set<() => void> = new Set();
-    constructor(public label: string, renderPassName: 'renderPassScreen' | 'renderPassWater', parent?: TerraCamera) {
-        engine.getGPU(gpu => {
-            const projection = parent?.projection ?? new Projection(gpu);
-            const renderPass = gpu[renderPassName];
-            renderPass.perspectiveCameras.add(this);
-            this.#clusterArrayBuffer?.destroy();
-            this.#uniformBuffer?.destroy();
-            this.uniformBindGroup?.destroy();
-            this.updateViewBindGroup?.destroy();
-            this.gpu = gpu;
-            this.projection = projection;
-            this.#clusterArrayBuffer = Buffer.create(gpu,
-                gpu.clusterSizeinBytes,
-                [GPUBufferUsage.STORAGE/*GPUBufferUsage.COPY_SRC*/],
-                'clusterArrayBuffer');
-            this.#uniformBuffer = Buffer.create(gpu,
-                this.#uniformBufferSize,
-                [
-                    GPUBufferUsage.UNIFORM,
-                    GPUBufferUsage.COPY_DST
-                ],
-                'uniformBuffer'); //Todo: set to private
-            this.uniformBindGroup = new BindGroup(gpu.uniformBindGroupLayoutWithTime,
-                'uniformBindGroup',
-                (bindGroup) =>
-                    ({
-                        clusters_array: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
-                        meshes: gpu.GPUMeshes.getStorageBinding(bindGroup),
-                        //TODO: Set to own group because shared by many cameras
-                        projection: projection.gpuBuffer.getUniformBinding(bindGroup),
-                        scene: this.#uniformBuffer!.getUniformBinding(bindGroup),
-                        time: gpu.timeBuffer.getUniformBinding(bindGroup),
-                    }));
-            this.updateViewBindGroup = new BindGroup(gpu.updateViewShader[0][1],
-                'updateViewBindGroup2',
-                (bindGroup) =>
-                    ({
-                        clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
-                        viewUniforms: this.#uniformBuffer!.getUniformBinding(bindGroup),
-                    })
-            );
-            gpu.projections.add(this.projection);
-            gpu.cameras.push(this);
-        });
-
-        this.viewArr[15] = 1;
-
-        engine.cameras.push(this);
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const me = this;
-        this.#controls = {
-            updateDirection(cb: (direction: MutableTerraVector3) => void) {
-                cb(me.#direction);
-                if (me.viewArr[2] !== me.#direction[0] || me.viewArr[6] !== me.#direction[1] || me.viewArr[10] !== me.#direction[2]) {
-                    me.#doUpdateView |= VIEW_UPDATED.DIRECTION;
-                }
-            },
-            updatePosition(cb: (position: MutableTerraVector3) => void) {
-                cb(me.#positionMutable);
-                me.#doUpdateView |= VIEW_UPDATED.POSITION;
-            },
-        };
-        if (parent) {
-            parent.#childCameras.add(this.getControlForCamera(parent));
+    engine.cameras.push(this);
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const me = this;
+    this.#controls = {
+      updateDirection(cb: (direction: MutableTerraVector3) => void) {
+        cb(me.#direction);
+        if (
+          me.viewArr[2] !== me.#direction[0] ||
+          me.viewArr[6] !== me.#direction[1] ||
+          me.viewArr[10] !== me.#direction[2]
+        ) {
+          me.#doUpdateView |= VIEW_UPDATED.DIRECTION;
         }
+      },
+      updatePosition(cb: (position: MutableTerraVector3) => void) {
+        cb(me.#positionMutable);
+        me.#doUpdateView |= VIEW_UPDATED.POSITION;
+      },
+    };
+    if (parent) {
+      parent.#childCameras.add(this.getControlForCamera(parent));
     }
-    getControlForCamera(owner: TerraCamera) {
-        if (this.#cameraController && this.#cameraController !== owner)
-            throw new Error('Camera is already controlled');
-        else {
-            this.#cameraController = owner;
-            return this.#controls;
-        }
+  }
+  getControlForCamera(owner: TerraCamera) {
+    if (this.#cameraController && this.#cameraController !== owner)
+      throw new Error('Camera is already controlled');
+    else {
+      this.#cameraController = owner;
+      return this.#controls;
     }
-    attachControllerForCamera(controller: CameraController) {
-        if (this.#inputController) {
-            if (this.#inputController !== controller) {
-                if (typeof document !== 'undefined')
-                    this.#inputController.deAttachCameraController();
-                delete this.#inputController.cameraControl;
-            } else {
-                return this.#controls;
-            }
-        }
-        this.#inputController = controller;
-        engine.inputManager = controller;
+  }
+  attachControllerForCamera(controller: CameraController) {
+    if (this.#inputController) {
+      if (this.#inputController !== controller) {
         if (typeof document !== 'undefined')
-            controller.attachCameraController();
-        controller.cameraControl = this.#controls;
+          this.#inputController.deAttachCameraController();
+        delete this.#inputController.cameraControl;
+      } else {
         return this.#controls;
+      }
     }
-    updateClusters(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: ClustersComp['0']['1']) {
-        //TODO move out from loop
-        const bindGroup = new BindGroup(computePipelineClustersLayout,
-            'updateProjection',
-            bindGroup2 =>
-                ({
-                    clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup2),
-                    screentoview: this.projection!.gpuBuffer.getUniformBinding(bindGroup2),
-                }));
-        passEncoder.setBindGroup(1,
-            bindGroup.bindGroup);
-        passEncoder.dispatchWorkgroups(...this.gpu!.CLUSTER_DISPATCH_SIZE);
-    }
+    this.#inputController = controller;
+    engine.inputManager = controller;
+    if (typeof document !== 'undefined') controller.attachCameraController();
+    controller.cameraControl = this.#controls;
+    return this.#controls;
+  }
+  updateClusters(
+    passEncoder: GPUComputePassEncoder,
+    computePipelineClustersLayout: ClustersComp['0']['1'],
+  ) {
+    //TODO move out from loop
+    const bindGroup = new BindGroup(
+      computePipelineClustersLayout,
+      'updateProjection',
+      (bindGroup2) => ({
+        clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup2),
+        screentoview: this.projection!.gpuBuffer.getUniformBinding(bindGroup2),
+      }),
+    );
+    passEncoder.setBindGroup(1, bindGroup.bindGroup);
+    passEncoder.dispatchWorkgroups(...this.gpu!.CLUSTER_DISPATCH_SIZE);
+  }
 
-    get direction(): Readonly<{ [0]: number, [1]: number, [2]: number }> {
-        return this.#direction;
+  get direction(): Readonly<{ [0]: number; [1]: number; [2]: number }> {
+    return this.#direction;
+  }
+  /**
+   * Update camera view
+   * @param commandEncoder GPUCommandEncoder
+   * @returns boolean indicating if view was actually changed
+   */
+  updateView(commandEncoder: GPUCommandEncoder): boolean {
+    if (!this.#doUpdateView) return false;
+    if (this.beforeViewUpdate.size > 0) {
+      this.#doUpdateView |= VIEW_UPDATED.POSITION & VIEW_UPDATED.DIRECTION;
+      this.beforeViewUpdate.forEach((cb) =>
+        cb(this.#positionMutable, this.#direction, commandEncoder),
+      );
     }
-    /**
-     * Update camera view
-     * @param commandEncoder GPUCommandEncoder
-     * @returns boolean indicating if view was actually changed
-     */
-    updateView(commandEncoder: GPUCommandEncoder) : boolean {
-        if (!this.#doUpdateView)
-            return false;
-        if (this.beforeViewUpdate.size > 0) {
-            this.#doUpdateView |= (VIEW_UPDATED.POSITION & VIEW_UPDATED.DIRECTION);
-            this.beforeViewUpdate.forEach(cb =>
-                cb(this.#positionMutable,
-                    this.#direction,
-                    commandEncoder)
-            );
-        }
-        if ((this.#doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
-            this.onUpdatePosition.forEach(cb =>
-                cb());
-        }
-        this.#childCameras.forEach(childCameraControl => {
-            if ((this.#doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
-                childCameraControl.updatePosition(position => {
-                    position[0] = this.position[0];
-                    position[1] = this.position[1];
-                    position[2] = this.position[2];
-                });
-            }
-            if ((this.#doUpdateView & VIEW_UPDATED.DIRECTION) === VIEW_UPDATED.DIRECTION) {
-                //TODO: share same buffer;
-                childCameraControl.updateDirection(direction => {
-                    direction.set(this.#direction);
-                });
-            }
+    if (
+      (this.#doUpdateView & VIEW_UPDATED.POSITION) ===
+      VIEW_UPDATED.POSITION
+    ) {
+      this.onUpdatePosition.forEach((cb) => cb());
+    }
+    this.#childCameras.forEach((childCameraControl) => {
+      if (
+        (this.#doUpdateView & VIEW_UPDATED.POSITION) ===
+        VIEW_UPDATED.POSITION
+      ) {
+        childCameraControl.updatePosition((position) => {
+          position[0] = this.position[0];
+          position[1] = this.position[1];
+          position[2] = this.position[2];
         });
-        this.#doUpdateView = VIEW_UPDATED.NONE;
+      }
+      if (
+        (this.#doUpdateView & VIEW_UPDATED.DIRECTION) ===
+        VIEW_UPDATED.DIRECTION
+      ) {
+        //TODO: share same buffer;
+        childCameraControl.updateDirection((direction) => {
+          direction.set(this.#direction);
+        });
+      }
+    });
+    this.#doUpdateView = VIEW_UPDATED.NONE;
 
-        //Camera direction
-        this.viewArr[2] = this.#direction[0];
-        this.viewArr[6] = this.#direction[1];
-        this.viewArr[10] = this.#direction[2];
+    //Camera direction
+    this.viewArr[2] = this.#direction[0];
+    this.viewArr[6] = this.#direction[1];
+    this.viewArr[10] = this.#direction[2];
 
-        this.viewArr[0] = this.viewArr[10];
-        this.viewArr[8] = -this.viewArr[2];
+    this.viewArr[0] = this.viewArr[10];
+    this.viewArr[8] = -this.viewArr[2];
 
-        const xSquareLength = this.viewArr[0] * this.viewArr[0] + this.viewArr[8] * this.viewArr[8];
-        if (xSquareLength === 0) {
-            this.viewArr[0] = 1.0;
-        } else {
-            const len = Math.sqrt(xSquareLength);
-            if (!(len === 0 || len === 1.0)) {
-                const scale = 1.0 / len;
-                this.viewArr[0] *= scale;
-                this.viewArr[8] *= scale;
-            }
-        }
-
-        // Y axis
-        this.viewArr[1] = this.viewArr[6] * this.viewArr[8];
-        this.viewArr[5] = this.viewArr[10] * this.viewArr[0] - this.viewArr[2] * this.viewArr[8];
-        this.viewArr[9] = -(this.viewArr[6] * this.viewArr[0]);
-        // Eye angles, dot products
-
-        //x
-        this.viewArr[12] = -(this.viewArr[0] * this.position[0] + this.viewArr[8] * this.position[2]);
-        //y
-        this.viewArr[13] = -(this.viewArr[1] * this.position[0] + this.viewArr[5] * this.position[1] + this.viewArr[9] * this.position[2]);
-        //z
-        this.viewArr[14] = -(this.viewArr[2] * this.position[0] + this.viewArr[6] * this.position[1] + this.viewArr[10] * this.position[2]);
-        if (this.projection) {
-            this.viewArr.multiplyToRef(this.projection.projectionReversedZ,
-                this.projectionViewArr);
-        }
-        this.projectionViewInvertedIsDirty = true;
-        if (this.gpu) {
-            const tempBuffer = Buffer.create(this.gpu,
-                this.#viewAndProjection.byteLength,
-                [GPUBufferUsage.COPY_SRC],
-                'camera_tempBuffer',
-                b => {
-                this.gpu!.tempGPUBuffers.push(b);
-                new Float32Array(b.getMappedRange()).set(this.#viewAndProjection);
-                });
-            tempBuffer.copyTo(commandEncoder,
-this.#uniformBuffer!,
-0,
-0,
-this.#viewAndProjection.byteLength);
-        }
-        return true;
+    const xSquareLength =
+      this.viewArr[0] * this.viewArr[0] + this.viewArr[8] * this.viewArr[8];
+    if (xSquareLength === 0) {
+      this.viewArr[0] = 1.0;
+    } else {
+      const len = Math.sqrt(xSquareLength);
+      if (!(len === 0 || len === 1.0)) {
+        const scale = 1.0 / len;
+        this.viewArr[0] *= scale;
+        this.viewArr[8] *= scale;
+      }
     }
+
+    // Y axis
+    this.viewArr[1] = this.viewArr[6] * this.viewArr[8];
+    this.viewArr[5] =
+      this.viewArr[10] * this.viewArr[0] - this.viewArr[2] * this.viewArr[8];
+    this.viewArr[9] = -(this.viewArr[6] * this.viewArr[0]);
+    // Eye angles, dot products
+
+    //x
+    this.viewArr[12] = -(
+      this.viewArr[0] * this.position[0] +
+      this.viewArr[8] * this.position[2]
+    );
+    //y
+    this.viewArr[13] = -(
+      this.viewArr[1] * this.position[0] +
+      this.viewArr[5] * this.position[1] +
+      this.viewArr[9] * this.position[2]
+    );
+    //z
+    this.viewArr[14] = -(
+      this.viewArr[2] * this.position[0] +
+      this.viewArr[6] * this.position[1] +
+      this.viewArr[10] * this.position[2]
+    );
+    if (this.projection) {
+      this.viewArr.multiplyToRef(
+        this.projection.projectionReversedZ,
+        this.projectionViewArr,
+      );
+    }
+    this.projectionViewInvertedIsDirty = true;
+    if (this.gpu) {
+      const tempBuffer = Buffer.create(
+        this.gpu,
+        this.#viewAndProjection.byteLength,
+        [GPUBufferUsage.COPY_SRC],
+        'camera_tempBuffer',
+        (b) => {
+          this.gpu!.tempGPUBuffers.push(b);
+          new Float32Array(b.getMappedRange()).set(this.#viewAndProjection);
+        },
+      );
+      tempBuffer.copyTo(
+        commandEncoder,
+        this.#uniformBuffer!,
+        0,
+        0,
+        this.#viewAndProjection.byteLength,
+      );
+    }
+    return true;
+  }
 }

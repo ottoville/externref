@@ -13,31 +13,25 @@
 
  */
 export class LazyEval {
-    #timerStart: number | null = null;
-    #timeoutID = 0;
-    constructor(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        private callback: (...args: any[]) => void) {
+  #timerStart: number | null = null;
+  #timeoutID = 0;
+  constructor(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private callback: (...args: any[]) => void,
+  ) {}
+  eval(timeout: number, ...args: Event[]) {
+    if (this.#timerStart === null) {
+      this.#timerStart = Date.now();
+      this.#timeoutID = setTimeout(() => this.run(args), timeout);
+    } else {
+      const lazyTimer = timeout - (Date.now() - this.#timerStart);
+      clearTimeout(this.#timeoutID);
+      if (lazyTimer <= 0) this.run(args);
+      else this.#timeoutID = setTimeout(() => this.run(args), lazyTimer);
     }
-    eval(timeout: number, ...args: (Event)[]) {
-        if (this.#timerStart === null) {
-            this.#timerStart = Date.now();
-            this.#timeoutID = setTimeout(() =>
-                this.run(args),
-            timeout);
-        } else {
-            const lazyTimer = timeout - (Date.now() - this.#timerStart);
-            clearTimeout(this.#timeoutID);
-            if (lazyTimer <= 0)
-                this.run(args);
-            else
-                this.#timeoutID = setTimeout(() =>
-                    this.run(args),
-                lazyTimer);
-        }
-    }
-    run(args: Event[]) {
-        this.#timerStart = null;
-        this.callback(...args);
-    }
+  }
+  run(args: Event[]) {
+    this.#timerStart = null;
+    this.callback(...args);
+  }
 }

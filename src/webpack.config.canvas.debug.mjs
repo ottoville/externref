@@ -2,8 +2,8 @@
 import canvasConfig from './webpack.config.canvas.mjs';
 
 canvasConfig.module.rules.push({
-    test: /\.js$/,
-    enforce: 'pre',
-    use: ['source-map-loader'],
+  enforce: 'pre',
+  test: /\.js$/,
+  use: ['source-map-loader'],
 });
 export default canvasConfig;

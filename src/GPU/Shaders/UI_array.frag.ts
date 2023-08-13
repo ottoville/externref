@@ -4,22 +4,21 @@ import { FragmentShaderFunction } from './ShaderFunction.js';
 import { UI_Input, diffuseOutput } from './structs/Structs.js';
 import { textureLoad } from './std_functions.js';
 
-
 export function createUIFragmentShaderArray(gpu: GPU) {
-
-    return new FragmentShader(
-        {
-            entryPoints: {
-                array: new FragmentShaderFunction(diffuseOutput,
-                    gpu.canvasRootLayoutArray,
-                    UI_Input,
-                    ([{ texture, }]) =>
-                    /* wgsl */ `
+  return new FragmentShader({
+    entryPoints: {
+      array: new FragmentShaderFunction(
+        diffuseOutput,
+        gpu.canvasRootLayoutArray,
+        UI_Input,
+        ([{ texture }]) => /* wgsl */ `
                     let fragCoordI=vec2<i32>(floor(v_uv));
-                    let color:vec4<f32> = ${textureLoad(texture,
-        'fragCoordI',
-        '0',
-        '0')};
+                    let color:vec4<f32> = ${textureLoad(
+                      texture,
+                      'fragCoordI',
+                      '0',
+                      '0',
+                    )};
                 
                     var output:Output;
                 
@@ -27,11 +26,11 @@ export function createUIFragmentShaderArray(gpu: GPU) {
                     output.Diffuse=color;
                     return output;
         
-                `),
-            },
-            gpu,
-            label: 'UI.frag',
-        }
-    );
+                `,
+      ),
+    },
+    gpu,
+    label: 'UI.frag',
+  });
 }
-export type UIFragShaderArray = ReturnType<typeof createUIFragmentShaderArray>
+export type UIFragShaderArray = ReturnType<typeof createUIFragmentShaderArray>;

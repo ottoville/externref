@@ -1,117 +1,141 @@
 import { BGLayout, BufLayout, ShaderStage } from '../../BindGroupLayout.js';
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
-import { FloatArray, IntArray, PlaneArray, PositionAndRotateArray, Vec2Array } from '../structs/Structs.js';
+import {
+  FloatArray,
+  IntArray,
+  PlaneArray,
+  PositionAndRotateArray,
+  Vec2Array,
+} from '../structs/Structs.js';
 import type { Terrain } from '../../../world/Terrain.js';
 import type { GPU } from '../../../GPU.js';
 import { getHeightAtCoordinates } from '../getHeightAtCoordinates.js';
 import { ComputeShaderFunction } from '../ShaderFunction.js';
 
-export function createGrassHeightAtCoordinates(settings: typeof Terrain.settings, gpu: GPU) {
-    const bindLayouts = [
-        new BGLayout(gpu,
-            'slopesBindGroupLayout',
-            {
-                facet12: new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'read-only-storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
-                    },
-                    PlaneArray),
-
-                positionAndRotate: new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
-
-                    },
-                    PositionAndRotateArray),
-                shapes: new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
-
-                    },
-                    FloatArray),
-                slopes: new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'read-only-storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
-                    },
-                    IntArray),
-            }
-        ),
-        new BGLayout(gpu,
-            'positionsBindGroupLayout',
-            {
-                positions: new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'read-only-storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
-
-                    },
-                    Vec2Array),
-            }
-        )
-    ] as const;
-
-
-    const pipelineLayout = new PipelineLayout({
-        bindGroupLayouts: bindLayouts,
-        label: 'GetHeightAtCoordinatesPipeLine',
-    });
-    return [
-        bindLayouts,
-        new ComputeShader({
-            entryPoints: {
-                main: new ComputeShaderFunction(
-                    '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-                    pipelineLayout,
-                    [1],
-                    (
-                        [
-                            { /*slopes, facet12,*/ positionAndRotate, shapes, },
-                            { positions, }
-                        ]
-                    ) => /* wgsl */
-                        `
-            let flatpos:vec2<f32> = ${positions.prop('vectors')}[GlobalInvocationID.x]; 
-            let y:f32 = getHeightAtCoordinates(flatpos);
-            ${positionAndRotate.prop('arr')}[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
-            ${positionAndRotate.prop('arr')}[GlobalInvocationID.x].rotation = 3.145 * rand(flatpos);
-            var index:u32 = GlobalInvocationID.x * u32(4);
-            ${shapes.prop('numbers')}[index] = 0.4 + 0.6 * rand(vec2<f32>(flatpos.yx)); // x:scale
-            ${shapes.prop('numbers')}[index + u32(1)] = PI *0.2 * rand(vec2<f32>(flatpos.x, flatpos.y + f32(GlobalInvocationID.x))); // baseAngle
-            ${shapes.prop('numbers')}[index + u32(2)] = PI *0.2 * rand(vec2<f32>(flatpos.xy)); // z:curve
-            ${shapes.prop('numbers')}[index + u32(3)] = snoise(vec2<f32>(flatpos.xy)); //  w:color
-            return;
-            `),
-            },
-            gpu,
-            label: 'GetHeightAtCoordinates.comp',
+export function createGrassHeightAtCoordinates(
+  settings: typeof Terrain.settings,
+  gpu: GPU,
+) {
+  const bindLayouts = [
+    new BGLayout(gpu, 'slopesBindGroupLayout', {
+      facet12: new BufLayout(
+        {
+          buffer: {
+            hasDynamicOffset: false,
+            minBindingSize: 32,
+            type: 'read-only-storage',
+          },
+          visibility: ShaderStage.COMPUTE,
         },
-        ([{ slopes, facet12, /* positionAndRotate, shapes, */ }/*, { positions, }*/]) =>
-        /* wgsl */ `
+        PlaneArray,
+      ),
+
+      positionAndRotate: new BufLayout(
+        {
+          buffer: {
+            hasDynamicOffset: false,
+            minBindingSize: 32,
+            type: 'storage',
+          },
+          visibility: ShaderStage.COMPUTE,
+        },
+        PositionAndRotateArray,
+      ),
+      shapes: new BufLayout(
+        {
+          buffer: {
+            hasDynamicOffset: false,
+            minBindingSize: 32,
+            type: 'storage',
+          },
+          visibility: ShaderStage.COMPUTE,
+        },
+        FloatArray,
+      ),
+      slopes: new BufLayout(
+        {
+          buffer: {
+            hasDynamicOffset: false,
+            minBindingSize: 32,
+            type: 'read-only-storage',
+          },
+          visibility: ShaderStage.COMPUTE,
+        },
+        IntArray,
+      ),
+    }),
+    new BGLayout(gpu, 'positionsBindGroupLayout', {
+      positions: new BufLayout(
+        {
+          buffer: {
+            hasDynamicOffset: false,
+            minBindingSize: 32,
+            type: 'read-only-storage',
+          },
+          visibility: ShaderStage.COMPUTE,
+        },
+        Vec2Array,
+      ),
+    }),
+  ] as const;
+
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'GetHeightAtCoordinatesPipeLine',
+  });
+  return [
+    bindLayouts,
+    new ComputeShader(
+      {
+        entryPoints: {
+          main: new ComputeShaderFunction(
+            '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
+            pipelineLayout,
+            [1],
+            (
+              [
+                { /*slopes, facet12,*/ positionAndRotate, shapes },
+                { positions },
+              ] /* wgsl */,
+            ) =>
+              `
+            let flatpos:vec2<f32> = ${positions.prop(
+              'vectors',
+            )}[GlobalInvocationID.x]; 
+            let y:f32 = getHeightAtCoordinates(flatpos);
+            ${positionAndRotate.prop(
+              'arr',
+            )}[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
+            ${positionAndRotate.prop(
+              'arr',
+            )}[GlobalInvocationID.x].rotation = 3.145 * rand(flatpos);
+            var index:u32 = GlobalInvocationID.x * u32(4);
+            ${shapes.prop(
+              'numbers',
+            )}[index] = 0.4 + 0.6 * rand(vec2<f32>(flatpos.yx)); // x:scale
+            ${shapes.prop(
+              'numbers',
+            )}[index + u32(1)] = PI *0.2 * rand(vec2<f32>(flatpos.x, flatpos.y + f32(GlobalInvocationID.x))); // baseAngle
+            ${shapes.prop(
+              'numbers',
+            )}[index + u32(2)] = PI *0.2 * rand(vec2<f32>(flatpos.xy)); // z:curve
+            ${shapes.prop(
+              'numbers',
+            )}[index + u32(3)] = snoise(vec2<f32>(flatpos.xy)); //  w:color
+            return;
+            `,
+          ),
+        },
+        gpu,
+        label: 'GetHeightAtCoordinates.comp',
+      },
+      ([
+        {
+          slopes,
+          facet12 /* positionAndRotate, shapes, */,
+        } /*, { positions, }*/,
+      ]) => /* wgsl */ `
     const PI:f32 = 3.141592653589793;
     //
     // Description : Array and textureless GLSL 2D simplex noise function.
@@ -193,10 +217,11 @@ export function createGrassHeightAtCoordinates(settings: typeof Terrain.settings
     fn rand(co:vec2<f32>) -> f32 {
         return fract(sin(dot(co.xy ,vec2<f32>(12.9898,78.233))) * 43758.5453);
     }
-    ${getHeightAtCoordinates(settings,
-                slopes,
-                facet12)}
-    `)
-    ] as const;
+    ${getHeightAtCoordinates(settings, slopes, facet12)}
+    `,
+    ),
+  ] as const;
 }
-export type GrassHeightAtCoordinates = ReturnType<typeof createGrassHeightAtCoordinates>;
+export type GrassHeightAtCoordinates = ReturnType<
+  typeof createGrassHeightAtCoordinates
+>;

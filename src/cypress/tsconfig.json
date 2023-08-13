@@ -20,12 +20,7 @@
     //"strict": true,
     "target": "ESNext",
     "module": "ESNext",
-    "lib": [
-      "dom",
-      "esnext",
-      "ES2017.SharedMemory",
-      "DOM.Iterable"
-    ],
+    "lib": ["dom", "esnext", "ES2017.SharedMemory", "DOM.Iterable"],
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "allowJs": true,
@@ -33,9 +28,9 @@
     "tsBuildInfoFile": "tsconfig.main.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "/js/engine/*": ["../wwwroot/js/engine/*"],
+      "/js/engine/*": ["../wwwroot/js/engine/*"]
     },
-    "allowSyntheticDefaultImports": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx"]
 }

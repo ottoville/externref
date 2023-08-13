@@ -6,28 +6,37 @@ import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from '../../GPU.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { diffuseOutput } from './structs/Structs.js';
-type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts']
+type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
-export function createSingleColorFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
-    return new FragmentShader({
-        entryPoints: {
-            main: new FragmentShaderFunction(
-                diffuseOutput,
-                pipelineLayout,
-                undefined,
-                ([
-                    /*{ uniforms, }*/,
-                    /*{ scene, clusters_array, meshes, projection, }*/,
-                    { world, }
-                ]) => /* wgsl */
-                    `
+export function createSingleColorFragShader(
+  pipelineLayout: PipelineLayout<BindLayouts>,
+) {
+  return new FragmentShader({
+    entryPoints: {
+      main: new FragmentShaderFunction(
+        diffuseOutput,
+        pipelineLayout,
+        undefined,
+        (
+          [
+            ,
+            ,
+            /*{ uniforms, }*/ /*{ scene, clusters_array, meshes, projection, }*/ {
+              world,
+            },
+          ] /* wgsl */,
+        ) =>
+          `
                 var output:Output;
                 output.Diffuse = vec4<f32>(${world.prop('color')}, 1.0);
                 return output;
-          `),
-        },
-        gpu: pipelineLayout.gpu,
-        label: 'SingleColor.frag',
-    });
+          `,
+      ),
+    },
+    gpu: pipelineLayout.gpu,
+    label: 'SingleColor.frag',
+  });
 }
-export type SingleColorFragShader = ReturnType<typeof createSingleColorFragShader>;
+export type SingleColorFragShader = ReturnType<
+  typeof createSingleColorFragShader
+>;

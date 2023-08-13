@@ -3,39 +3,43 @@ import type { RenderBundleEncoder } from './RenderBundleEncoder.js';
 import { TextureView } from './TextureView.js';
 
 export class BindGroup<L extends BGLayout = BGLayout> {
-    #dirty = true;
-    #bindGroup?: GPUBindGroup;
-    readonly #renderBundles: Set<RenderBundleEncoder> = new Set();
-    getForRenderBundle(renderBundleEncoder: RenderBundleEncoder) {
-        this.#renderBundles.add(renderBundleEncoder);
-        return this.bindGroup;
+  #dirty = true;
+  #bindGroup?: GPUBindGroup;
+  readonly #renderBundles: Set<RenderBundleEncoder> = new Set();
+  getForRenderBundle(renderBundleEncoder: RenderBundleEncoder) {
+    this.#renderBundles.add(renderBundleEncoder);
+    return this.bindGroup;
+  }
+  destroy() {
+    this.#renderBundles.forEach((bundle) => bundle.destroy());
+    this.#dirty = true;
+  }
+  //TODO: set private
+  get bindGroup(): GPUBindGroup {
+    if (this.#dirty || !this.#bindGroup) {
+      const entries = this.entriesf(this);
+      this.#bindGroup = this.layout.gpu.device.createBindGroup({
+        entries: Object.values(entries).map((entry, i) => {
+          return {
+            binding: i,
+            resource:
+              entry instanceof TextureView
+                ? entry.getTextureBinding(this)
+                : entry,
+          };
+        }),
+        label: this.label,
+        layout: this.layout.layout,
+      });
+      this.#dirty = false;
     }
-    destroy() {
-        this.#renderBundles.forEach(bundle =>
-            bundle.destroy());
-        this.#dirty = true;
-    }
-    //TODO: set private
-    get bindGroup(): GPUBindGroup {
-        if (this.#dirty || !this.#bindGroup) {
-            const entries = this.entriesf(this);
-            this.#bindGroup = this.layout.gpu.device.createBindGroup({
-                entries: Object.values(entries).map((entry, i) => {
-                    return {
-                        binding: i,
-                        resource: entry instanceof TextureView ? entry.getTextureBinding(this) : entry,
-                    };
-                }),
-                label: this.label,
-                layout: this.layout.layout,
-            });
-            this.#dirty = false;
-        }
-        return this.#bindGroup;
-    }
-    constructor(
-        public layout: L,
-        private label: string,
-        private entriesf: (bindGroup: BindGroup) =>  Readonly<MapToGPUBindGroupEntry<L['entries']>>) {
-    }
+    return this.#bindGroup;
+  }
+  constructor(
+    public layout: L,
+    private label: string,
+    private entriesf: (
+      bindGroup: BindGroup,
+    ) => Readonly<MapToGPUBindGroupEntry<L['entries']>>,
+  ) {}
 }

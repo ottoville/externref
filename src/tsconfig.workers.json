@@ -6,7 +6,7 @@
     "outDir": "../wwwroot/js",
     "module": "esnext",
     "target": "ESNext",
-    "lib": [ "esnext", "webworker" ],
+    "lib": ["esnext", "webworker"],
     "sourceMap": false,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
@@ -14,10 +14,6 @@
     "tsBuildInfoFile": "tsconfig.workers.tsbuildinfo",
     "types": []
   },
-  "exclude": [
-    "node_modules"
-  ],
-  "include": [
-    "./workers/webworkers/*.ts",
-  ]
+  "exclude": ["node_modules"],
+  "include": ["./workers/webworkers/*.ts"]
 }

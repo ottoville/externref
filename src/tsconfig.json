@@ -20,12 +20,7 @@
     //"strict": true,
     "target": "ESNext",
     "module": "ESNext",
-    "lib": [
-      "dom",
-      "esnext",
-      "ES2017.SharedMemory",
-      "DOM.Iterable"
-    ],
+    "lib": ["dom", "esnext", "ES2017.SharedMemory", "DOM.Iterable"],
     "typeRoots": ["./node_modules/", "./node_modules/@types/"],
     "types": ["@webgpu/types", "offscreencanvas"],
     "resolveJsonModule": true,
@@ -35,11 +30,11 @@
     "tsBuildInfoFile": "tsconfig.main.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "/js/engine/*": ["../wwwroot/js/engine/*"],
+      "/js/engine/*": ["../wwwroot/js/engine/*"]
     },
-    "allowSyntheticDefaultImports": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "./rustwasm/*.js", "code.ts" ],
+  "include": ["**/*.ts", "**/*.tsx", "./rustwasm/*.js", "code.ts"],
   "exclude": [
     "node_modules",
     "jestWorker.ts",
@@ -54,6 +49,6 @@
   ],
   "references": [
     { "path": "./tsconfig.workers.json" },
-    { "path": "./tsconfig.serviceworkers.json" },
+    { "path": "./tsconfig.serviceworkers.json" }
   ]
 }

@@ -8,20 +8,22 @@ import { FragmentShader } from './FragmentShader.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';
 import { colorPositionOutput, diffuseOutput } from './structs/Structs.js';
 
-export function createColorFragmentShader<B extends readonly BGLayout[]>(pipelineLayout: PipelineLayout<B>) {
-    return new FragmentShader({
-        entryPoints: {
-            main: new FragmentShaderFunction(
-                diffuseOutput,
-                pipelineLayout,
-                colorPositionOutput,
-                () =>
-                /* wgsl */ `
+export function createColorFragmentShader<B extends readonly BGLayout[]>(
+  pipelineLayout: PipelineLayout<B>,
+) {
+  return new FragmentShader({
+    entryPoints: {
+      main: new FragmentShaderFunction(
+        diffuseOutput,
+        pipelineLayout,
+        colorPositionOutput,
+        () => /* wgsl */ `
         var output:Output;
         output.Diffuse = vec4<f32>(color,1.0);
-        return output;`),
-        },
-        gpu: pipelineLayout.gpu,
-        label: 'color.frag',
-    });
+        return output;`,
+      ),
+    },
+    gpu: pipelineLayout.gpu,
+    label: 'color.frag',
+  });
 }

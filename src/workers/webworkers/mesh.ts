@@ -1,17 +1,15 @@
 ﻿const meshes: Map<number, Mesh> = new Map();
 interface pickInfo {
-    pickMesh?: number;
-    faceId?: number;
-    bv?: number;
-    bu?: number;
-    pickedMesh?: number;
-    distance?: number;
-    hit: boolean;
-
+  pickMesh?: number;
+  faceId?: number;
+  bv?: number;
+  bu?: number;
+  pickedMesh?: number;
+  distance?: number;
+  hit: boolean;
 }
 class Mesh {
-
-    /* static async collissionCheck(rayFunction: (mesh: Mesh) => any, boundables: IterableIterator<Mesh>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: Mesh) => boolean): Promise<PickingInfo | null> {
+  /* static async collissionCheck(rayFunction: (mesh: Mesh) => any, boundables: IterableIterator<Mesh>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: Mesh) => boolean): Promise<PickingInfo | null> {
          let boundableMesh: Mesh;
          do {
              const boundable = boundables.next();
@@ -34,51 +32,45 @@ class Mesh {
              return this.collissionCheck(rayFunction, boundables, pickResult);
      }*/
 
+  readonly #positionsView: Float32Array;
+  readonly #indicesView: Uint32Array | undefined;
+  readonly #boundingBox: Float32Array;
+  #pickingPoint: Float32Array;
+  #pickingDistance: Float32Array;
+  constructor(
+    public readonly uniqueID: number,
+    readonly indices: SharedArrayBuffer | undefined,
+    readonly positions: SharedArrayBuffer,
+    private readonly positionsStride: number,
+    private readonly boundingBoxBuffer: SharedArrayBuffer,
+    readonly pickingBuffer: SharedArrayBuffer,
+  ) {
+    this.#boundingBox = new Float32Array(this.boundingBoxBuffer);
+    this.#positionsView = new Float32Array(positions);
+    this.#pickingPoint = new Float32Array(pickingBuffer, 0, 3);
+    this.#pickingDistance = new Float32Array(pickingBuffer, 3 * 4, 1);
 
-    readonly #positionsView: Float32Array;
-    readonly #indicesView: Uint32Array | undefined;
-    readonly #boundingBox: Float32Array;
-    #pickingPoint: Float32Array;
-    #pickingDistance: Float32Array;
-    constructor(
-        public readonly uniqueID: number,
-        readonly indices: SharedArrayBuffer | undefined,
-        readonly positions: SharedArrayBuffer,
-        private readonly positionsStride: number,
-        private readonly boundingBoxBuffer: SharedArrayBuffer,
-        readonly pickingBuffer: SharedArrayBuffer
-    ) {
-        this.#boundingBox = new Float32Array(this.boundingBoxBuffer);
-        this.#positionsView = new Float32Array(positions);
-        this.#pickingPoint = new Float32Array(pickingBuffer,
-            0,
-            3);
-        this.#pickingDistance = new Float32Array(pickingBuffer,
-            3 * 4,
-            1);
-
-        if (indices)
-            this.#indicesView = new Uint32Array(indices);
-    }
-    /**
- * Compute normals for given positions and indices
- * @param positions an array of vertex positions, [...., x, y, z, ......]
- * @param indices an array of indices in groups of three for each triangular facet, [...., i, j, k, ......]
- * @param normals an array of vertex normals, [...., x, y, z, ......]
- * @param options an object used to set the following optional parameters for the TorusKnot, optional
-  * * facetNormals : optional array of facet normals (vector3)
-  * * facetPositions : optional array of facet positions (vector3)
-  * * facetPartitioning : optional partitioning array. facetPositions is required for facetPartitioning computation
-  * * ratio : optional partitioning ratio / bounding box, required for facetPartitioning computation
-  * * bInfo : optional bounding info, required for facetPartitioning computation
-  * * bbSize : optional bounding box size data, required for facetPartitioning computation
-  * * subDiv : optional partitioning data about subdivsions on  each axis (int), required for facetPartitioning computation
-  * * useRightHandedSystem: optional boolean to for right handed system computation
-  * * depthSort : optional boolean to enable the facet depth sort computation
-  * * distanceTo : optional Vector3 to compute the facet depth from this location
-  * * depthSortedFacets : optional array of depthSortedFacets to store the facet distances from the reference location
- */
-    /*  ComputeNormals(options?: {
+    if (indices) this.#indicesView = new Uint32Array(indices);
+  }
+  /**
+   * Compute normals for given positions and indices
+   * @param positions an array of vertex positions, [...., x, y, z, ......]
+   * @param indices an array of indices in groups of three for each triangular facet, [...., i, j, k, ......]
+   * @param normals an array of vertex normals, [...., x, y, z, ......]
+   * @param options an object used to set the following optional parameters for the TorusKnot, optional
+   * * facetNormals : optional array of facet normals (vector3)
+   * * facetPositions : optional array of facet positions (vector3)
+   * * facetPartitioning : optional partitioning array. facetPositions is required for facetPartitioning computation
+   * * ratio : optional partitioning ratio / bounding box, required for facetPartitioning computation
+   * * bInfo : optional bounding info, required for facetPartitioning computation
+   * * bbSize : optional bounding box size data, required for facetPartitioning computation
+   * * subDiv : optional partitioning data about subdivsions on  each axis (int), required for facetPartitioning computation
+   * * useRightHandedSystem: optional boolean to for right handed system computation
+   * * depthSort : optional boolean to enable the facet depth sort computation
+   * * distanceTo : optional Vector3 to compute the facet depth from this location
+   * * depthSortedFacets : optional array of depthSortedFacets to store the facet distances from the reference location
+   */
+  /*  ComputeNormals(options?: {
           facetNormals?: any, facetPositions?: any, facetPartitioning?: any, ratio?: number, bInfo?: any, bbSize?: Vector3, subDiv?: any,
           useRightHandedSystem?: boolean, depthSort?: boolean, distanceTo?: { x: number, y: number, z: number }, depthSortedFacets?: any
       }): SharedArrayBuffer {
@@ -299,29 +291,43 @@ class Mesh {
       }*/
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-onmessage = (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>) => {
-    if (e.data.action == 'init') {
-        meshes.set(e.data.data.objId!,
-            new Mesh(e.data.data.objId!,
-                ...<[SharedArrayBuffer, SharedArrayBuffer, number, SharedArrayBuffer, SharedArrayBuffer]>e.data.data.args));
-        //meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
-    } else if ('objId' in e.data.data) {
-        let mesh: Mesh | undefined;
-        if (mesh = meshes.get(e.data.data.objId!)) {
-            //@ts-ignore
-            const r = mesh[e.data.action](...e.data.data.args);
-            if (typeof (e.data.id) !== 'undefined') {
-                self.postMessage({
-                    data: r, id: e.data.id,
-                });
-            }
-        }
-    } else {
-        //@ts-ignore
-        const r = Mesh[e.data.action](...e.data.data.args);
-        if (typeof (e.data.id) !== 'undefined')
-            self.postMessage({
-                data: r, id: e.data.id,
-            });
+onmessage = (e: WorkerMessageObject<{ objId?: number; args: any[] }, Mesh>) => {
+  if (e.data.action == 'init') {
+    meshes.set(
+      e.data.data.objId!,
+      new Mesh(
+        e.data.data.objId!,
+        ...(<
+          [
+            SharedArrayBuffer,
+            SharedArrayBuffer,
+            number,
+            SharedArrayBuffer,
+            SharedArrayBuffer,
+          ]
+        >e.data.data.args),
+      ),
+    );
+    //meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
+  } else if ('objId' in e.data.data) {
+    let mesh: Mesh | undefined;
+    if ((mesh = meshes.get(e.data.data.objId!))) {
+      //@ts-ignore
+      const r = mesh[e.data.action](...e.data.data.args);
+      if (typeof e.data.id !== 'undefined') {
+        self.postMessage({
+          data: r,
+          id: e.data.id,
+        });
+      }
     }
+  } else {
+    //@ts-ignore
+    const r = Mesh[e.data.action](...e.data.data.args);
+    if (typeof e.data.id !== 'undefined')
+      self.postMessage({
+        data: r,
+        id: e.data.id,
+      });
+  }
 };

@@ -6,22 +6,27 @@ import { FragmentShaderFunction } from './ShaderFunction.js';
 import { GroundInput, diffuseOutput } from './structs/Structs.js';
 import { createPickOutputFragment } from './Simple.frag.js';
 
-type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts']
+type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts'];
 
-export function createGroundFragShader(pipelineLayout: PipelineLayout<BindLayouts>) {
-    return new FragmentShader({
-        entryPoints: {
-            main: new FragmentShaderFunction(
-                diffuseOutput,
-                pipelineLayout,
-                GroundInput,
-                ([
-                /*{ uniforms, }*/,
-                    { /*scene,*/ clusters_array, meshes/*, projection*/, },
-                    /*{ world, }*/,
-                    { mySampler, diffuseTexture, }
-                ]) =>
-                /* wgsl */ `
+export function createGroundFragShader(
+  pipelineLayout: PipelineLayout<BindLayouts>,
+) {
+  return new FragmentShader(
+    {
+      entryPoints: {
+        main: new FragmentShaderFunction(
+          diffuseOutput,
+          pipelineLayout,
+          GroundInput,
+          ([
+            ,
+            /*{ uniforms, }*/ {
+              /*scene,*/ clusters_array,
+              meshes /*, projection*/,
+            },
+            ,
+            /*{ world, }*/ { mySampler, diffuseTexture },
+          ]) => /* wgsl */ `
           var output:Output;
 
           //  output.Normals=vec4<f32>(normal.xyz, bitcast<f32>(id));
@@ -38,7 +43,9 @@ export function createGroundFragShader(pipelineLayout: PipelineLayout<BindLayout
           
           
               let cluster_index = getClusterIndex(vec4<f32>(fragCoord.xyz, 1.0));
-              let cluster_lights_count=${clusters_array.prop('lightsCount')}[cluster_index];
+              let cluster_lights_count=${clusters_array.prop(
+                'lightsCount',
+              )}[cluster_index];
               var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);
           
             var shading:f32;
@@ -46,7 +53,9 @@ export function createGroundFragShader(pipelineLayout: PipelineLayout<BindLayout
           
               if(cluster_lights_count>0u) {
                 for (var light_pointer_index : u32 = 0u; light_pointer_index < cluster_lights_count; light_pointer_index = light_pointer_index + 1u) {
-                  let light_index:u32 = ${clusters_array.prop('lights')}[cluster_index*63u + light_pointer_index];
+                  let light_index:u32 = ${clusters_array.prop(
+                    'lights',
+                  )}[cluster_index*63u + light_pointer_index];
                   let light = ${meshes.prop('mesh')}[light_index];
                   if((scenes & light.scenes) != 0u) {
                     let light_position:vec3<f32> = light.transformation[3].xyz;
@@ -71,23 +80,20 @@ export function createGroundFragShader(pipelineLayout: PipelineLayout<BindLayout
               // output.Diffuse=vec4<f32>(colorSet[tile.z % 9u],1.0);
           
             return output;
-        `
-            ),
-            pick: createPickOutputFragment(pipelineLayout),
-        },
-        gpu: pipelineLayout.gpu,
-        label: 'Ground.frag',
+        `,
+        ),
+        pick: createPickOutputFragment(pipelineLayout),
+      },
+      gpu: pipelineLayout.gpu,
+      label: 'Ground.frag',
     },
-    (
-        [
-            { screen_dimensions, },
-            { /*scene, clusters_array, meshes,*/ projection, }
-        /*{ world, }*/
-        /*{ mySampler, myTexture, }*/
-        ]) =>
-        /* wgsl */ `
-  ${getClusterIndex(screen_dimensions,
-        projection)}
+    ([
+      { screen_dimensions },
+      { /*scene, clusters_array, meshes,*/ projection },
+      /*{ world, }*/
+      /*{ mySampler, myTexture, }*/
+    ]) => /* wgsl */ `
+  ${getClusterIndex(screen_dimensions, projection)}
 
   var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
     vec3<f32>(1.0, 0.0, 0.0),
@@ -100,6 +106,7 @@ export function createGroundFragShader(pipelineLayout: PipelineLayout<BindLayout
     vec3<f32>(0.5, 0.0, 1.0),
     vec3<f32>(1.0, 0.0, 0.5)
   );
-`);
+`,
+  );
 }
-export type GroundFragShader = ReturnType<typeof createGroundFragShader>
+export type GroundFragShader = ReturnType<typeof createGroundFragShader>;

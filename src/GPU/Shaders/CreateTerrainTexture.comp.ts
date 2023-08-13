@@ -1,4 +1,9 @@
-import { BGLayout, BufLayout, ShaderStage, StorageTextLayout } from '../BindGroupLayout.js';
+import {
+  BGLayout,
+  BufLayout,
+  ShaderStage,
+  StorageTextLayout,
+} from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/Terrain.js';
@@ -7,43 +12,43 @@ import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 
 export type SlopesLayout = BGLayout<{
-    slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>,
-    facet12: BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>
+  slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>;
+  facet12: BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>;
 }>;
-export function CreateTerrainTexture(settings: typeof Terrain.settings,
-    slopesLayout: SlopesLayout) {
-    const bindLayouts = [
-        slopesLayout,
-        new BGLayout(slopesLayout.gpu,
-            'TerrainTextureLayout',
-            {
-                ground_texture: new StorageTextLayout(
-                    {
-                        storageTexture: {
-                            access: 'write-only',
-                            format: 'rgba8unorm',
-                        },
-                        visibility: ShaderStage.COMPUTE,
-                    },
-                    'texture_storage_2d<rgba8unorm,write>'
-                ),
-            }
-        )
-    ] as const;
+export function CreateTerrainTexture(
+  settings: typeof Terrain.settings,
+  slopesLayout: SlopesLayout,
+) {
+  const bindLayouts = [
+    slopesLayout,
+    new BGLayout(slopesLayout.gpu, 'TerrainTextureLayout', {
+      ground_texture: new StorageTextLayout(
+        {
+          storageTexture: {
+            access: 'write-only',
+            format: 'rgba8unorm',
+          },
+          visibility: ShaderStage.COMPUTE,
+        },
+        'texture_storage_2d<rgba8unorm,write>',
+      ),
+    }),
+  ] as const;
 
-    const pipelineLayout = new PipelineLayout({
-        bindGroupLayouts: bindLayouts,
-        label: 'CreateTerrainTexturePipeline',
-    });
-    return [
-        bindLayouts,
-        new ComputeShader({
-            entryPoints: {
-                main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-                    pipelineLayout,
-                    [1],
-                    ([/*{ _slopes, _facet12, }*/, { ground_texture, }]) =>
-                    /* wgsl */ `
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'CreateTerrainTexturePipeline',
+  });
+  return [
+    bindLayouts,
+    new ComputeShader(
+      {
+        entryPoints: {
+          main: new ComputeShaderFunction(
+            '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
+            pipelineLayout,
+            [1],
+            ([, /*{ _slopes, _facet12, }*/ { ground_texture }]) => /* wgsl */ `
             let cx:f32 = f32(GlobalInvocationID.x) * (f32(${settings.size[0]})/f32(${settings.textureSize.width})) - f32(${settings.size[0]}/u32(2));
             let cz:f32 = f32(GlobalInvocationID.y) * (f32(${settings.size[1]})/f32(${settings.textureSize.height})) - f32(${settings.size[1]}/u32(2));
         
@@ -57,13 +62,13 @@ export function CreateTerrainTexture(settings: typeof Terrain.settings,
              }
             return;
            
-            `),
-            },
-            gpu: pipelineLayout.gpu,
-            label: 'CreateTerrainTexture.comp',
+            `,
+          ),
         },
-        ([{ slopes, facet12, }/*{ _ground_texture, }*/]) =>
-        /* wgsl */ `
+        gpu: pipelineLayout.gpu,
+        label: 'CreateTerrainTexture.comp',
+      },
+      ([{ slopes, facet12 } /*{ _ground_texture, }*/]) => /* wgsl */ `
     fn mod289(x:f32) -> f32 {
         return x - floor(x * (1. / 289.)) * 289.;
         }
@@ -160,10 +165,9 @@ export function CreateTerrainTexture(settings: typeof Terrain.settings,
          return 42.0 * dot( m*m, vec4<f32>( dot(p0,x0), dot(p1,x1),
                                      dot(p2,x2), dot(p3,x3) ) );
         }
-        ${getHeightAtCoordinates(settings,
-                slopes,
-                facet12)}
-    `)
-    ] as const;
+        ${getHeightAtCoordinates(settings, slopes, facet12)}
+    `,
+    ),
+  ] as const;
 }
-export type TerrainTexture = ReturnType<typeof CreateTerrainTexture>
+export type TerrainTexture = ReturnType<typeof CreateTerrainTexture>;

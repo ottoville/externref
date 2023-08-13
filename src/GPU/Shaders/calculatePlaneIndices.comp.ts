@@ -6,38 +6,40 @@ import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 
-export function createCalculatePlaneIndices(gpu: GPU, settings: typeof Terrain.settings) {
-    const bindLayouts = [
-        new BGLayout(gpu,
-            'calculateIndicesBindGroupLayout',
-            {
-                indices: new BufLayout(
-                    {
-                        buffer: {
-                            hasDynamicOffset: false,
-                            minBindingSize: 32,
-                            type: 'storage',
-                        },
-                        visibility: ShaderStage.COMPUTE,
+export function createCalculatePlaneIndices(
+  gpu: GPU,
+  settings: typeof Terrain.settings,
+) {
+  const bindLayouts = [
+    new BGLayout(gpu, 'calculateIndicesBindGroupLayout', {
+      indices: new BufLayout(
+        {
+          buffer: {
+            hasDynamicOffset: false,
+            minBindingSize: 32,
+            type: 'storage',
+          },
+          visibility: ShaderStage.COMPUTE,
+        },
+        Indices,
+      ),
+    }),
+  ] as const;
 
-                    },
-                    Indices),
-            })
-    ] as const;
-
-    const pipelineLayout = new PipelineLayout({
-        bindGroupLayouts: bindLayouts,
-        label: 'calculatePlaneIndicesPipeline',
-    });
-    return [
-        bindLayouts,
-        new ComputeShader({
-            entryPoints: {
-                main: new ComputeShaderFunction('@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-                    pipelineLayout,
-                    [1],
-                    ([{ indices, }]) => /* wgsl */
-                        `
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'calculatePlaneIndicesPipeline',
+  });
+  return [
+    bindLayouts,
+    new ComputeShader({
+      entryPoints: {
+        main: new ComputeShaderFunction(
+          '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
+          pipelineLayout,
+          [1],
+          ([{ indices }] /* wgsl */) =>
+            `
             let idx1: u32 = (GlobalInvocationID.x + u32(1) + (GlobalInvocationID.y + u32(1)) * (${settings.subdivisions[0]} + u32(1)));
             let idx2: u32 = (GlobalInvocationID.x + u32(1) + GlobalInvocationID.y * (${settings.subdivisions[1]} + u32(1)));
             let idx3: u32 = (GlobalInvocationID.x + GlobalInvocationID.y * (${settings.subdivisions[0]} + u32(1)));
@@ -51,11 +53,14 @@ export function createCalculatePlaneIndices(gpu: GPU, settings: typeof Terrain.s
             ${indices.variableName}.numbers[index+u32(4)]=idx1;
             ${indices.variableName}.numbers[index+u32(5)]=idx3;
     
-            `),
-            },
-            gpu: pipelineLayout.gpu,
-            label: 'calculatePlaneIndices.comp',
-        })
-    ] as const;
+            `,
+        ),
+      },
+      gpu: pipelineLayout.gpu,
+      label: 'calculatePlaneIndices.comp',
+    }),
+  ] as const;
 }
-export type CalculatePlaneIndices = ReturnType<typeof createCalculatePlaneIndices>
+export type CalculatePlaneIndices = ReturnType<
+  typeof createCalculatePlaneIndices
+>;

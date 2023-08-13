@@ -1,6 +1,5 @@
 ﻿import { Engine } from '../engine.js';
 
-
 import { Plants } from '../plants/Plants.js';
 import { PlantsUI } from '../tools/plantsUI.js';
 /*import { CameraTAB } from "../tools/camera.js";
@@ -35,395 +34,332 @@ import { UIRectangleTextureView } from './UIRectangleTextureView.js';
 declare const engine: Engine;
 
 class Light extends MainNode {
-    drawable = undefined;
-    constructor(scene: Scene) {
-        super({
-            directional_light: 1, label: 'Light', point_light: 0, scenes: [scene],
-        });
-    }
+  drawable = undefined;
+  constructor(scene: Scene) {
+    super({
+      directional_light: 1,
+      label: 'Light',
+      point_light: 0,
+      scenes: [scene],
+    });
+  }
 }
 const errors: Error[] = [];
 export class Canvas {
-    #progressBar: HTMLProgressElement = document.createElement('progress');
-    #progresElem = document.createElement('span');
-    #errorDialog = document.createElement('dialog');
-    #canvasElem = document.createElement('canvas');
-    currentGameTime = 0;
-    showError() {
-        if (!this.#errorDialog.open) {
-            const e = errors.shift();
-            if (e) {
-                console.error(e);
-                if (e.cause)
-                    console.error(e.cause);
-                this.#errorDialog.textContent = e.name + ', ' + e.message;
-                this.#errorDialog.showModal();
-            }
-        }
+  #progressBar: HTMLProgressElement = document.createElement('progress');
+  #progresElem = document.createElement('span');
+  #errorDialog = document.createElement('dialog');
+  #canvasElem = document.createElement('canvas');
+  currentGameTime = 0;
+  showError() {
+    if (!this.#errorDialog.open) {
+      const e = errors.shift();
+      if (e) {
+        console.error(e);
+        if (e.cause) console.error(e.cause);
+        this.#errorDialog.textContent = e.name + ', ' + e.message;
+        this.#errorDialog.showModal();
+      }
     }
-    constructor(container: HTMLElement) {
-        this.#canvasElem.addEventListener('contextmenu',
-            (e) => {
-                e.stopPropagation();
-                e.preventDefault();
+  }
+  constructor(container: HTMLElement) {
+    this.#canvasElem.addEventListener('contextmenu', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    });
+    this.#progressBar.max = 100;
+
+    this.#errorDialog.addEventListener('close', () => {
+      this.showError();
+    });
+    this.setProgress(2);
+    this.setProgress(6);
+
+    const mainContainer = container.appendChild(document.createElement('div'));
+    mainContainer.id = 'mainContainer';
+    mainContainer.appendChild(this.#errorDialog);
+    mainContainer.appendChild(this.#canvasElem);
+    const devTools = container.appendChild(document.createElement('aside'));
+    devTools.style.display = 'none';
+    const progressBarContainer = mainContainer.appendChild(
+      document.createElement('div'),
+    );
+    progressBarContainer.id = 'progressBarContainer';
+    progressBarContainer.appendChild(this.#progresElem);
+    progressBarContainer.appendChild(document.createElement('br'));
+    progressBarContainer.appendChild(this.#progressBar);
+
+    const progressForWasmLoading = 34;
+    Engine.initEngine(
+      {
+        canvas: this.#canvasElem,
+        devTools,
+      },
+      (e) => {
+        errors.push(e);
+        this.showError();
+      },
+      {
+        collider: fetch('../collider/colliderSimdO.wasm'),
+        rust: fetch('/engine.wasm').then((response) => {
+          if (response.body) {
+            const contentLengthHeader = response.headers.get('Content-Length');
+            if (!contentLengthHeader) {
+              return response;
+            }
+            const reader = response.body.getReader();
+            const contentLength = parseInt(contentLengthHeader);
+            let receivedLength = 0; // received that many bytes at the moment
+            let done = false;
+            const progressBar = this.#progressBar;
+            const progressElem = this.#progresElem;
+            const reableStream = new ReadableStream({
+              async start(controller) {
+                do {
+                  const results = await reader.read();
+                  done = results.done;
+                  if (!done) {
+                    const value = results.value;
+                    controller.enqueue(value);
+                    receivedLength += value!.length;
+                    const percentOfReceived = receivedLength / contentLength;
+                    const progress =
+                      6 + progressForWasmLoading * percentOfReceived;
+                    progressBar.value = progress;
+                    progressElem.textContent = Math.floor(progress).toFixed(0);
+                  }
+                } while (!done);
+                controller.close();
+              },
             });
-        this.#progressBar.max = 100;
-
-        this.#errorDialog.addEventListener('close',
-            () => {
-                this.showError();
+            return new Response(reableStream, {
+              headers: response.headers,
             });
-        this.setProgress(2);
-        this.setProgress(6);
+          }
+          return response;
+        }),
+      },
+    )
+      .then(async (terraEngine) => {
+        if (!terraEngine) return;
+        this.setProgress(40);
 
-        const mainContainer = container.appendChild(document.createElement('div'));
-        mainContainer.id = 'mainContainer';
-        mainContainer.appendChild(this.#errorDialog);
-        mainContainer.appendChild(this.#canvasElem);
-        const devTools = container.appendChild(document.createElement('aside'));
-        devTools.style.display = 'none';
-        const progressBarContainer = mainContainer.appendChild(document.createElement('div'));
-        progressBarContainer.id = 'progressBarContainer';
-        progressBarContainer.appendChild(this.#progresElem);
-        progressBarContainer.appendChild(document.createElement('br'));
-        progressBarContainer.appendChild(this.#progressBar);
+        const gpu = await terraEngine.GPUReady;
 
+        this.setProgress(41);
 
+        createSettingsMenu.addKeydownListener();
+        new createTimeControls();
+        new CreateFPSMeter();
+        new Scene('main', gpu, (terrascene) => {
+          new Sun(gpu, [terrascene]);
+          // Initial scene objects here
 
-        const progressForWasmLoading = 34;
-        Engine.initEngine({
-            canvas: this.#canvasElem, devTools,
-        },
-        (e) => {
-            errors.push(e);
-            this.showError();
-        },
-        {
-            collider: fetch('../collider/colliderSimdO.wasm'),
-            rust: fetch('/engine.wasm').then(response => {
-                if (response.body) {
-                    const contentLengthHeader = response.headers.get('Content-Length');
-                    if (!contentLengthHeader) {
-                        return response;
-                    }
-                    const reader = response.body.getReader();
-                    const contentLength = parseInt(contentLengthHeader);
-                    let receivedLength = 0; // received that many bytes at the moment
-                    let done = false;
-                    const progressBar = this.#progressBar;
-                    const progressElem = this.#progresElem;
-                    const reableStream = new ReadableStream({
-                        async start(controller) {
-                            do {
-                                const results = await reader.read();
-                                done = results.done;
-                                if (!done) {
-                                    const value = results.value;
-                                    controller.enqueue(value);
-                                    receivedLength += value!.length;
-                                    const percentOfReceived = receivedLength / contentLength;
-                                    const progress = 6 + progressForWasmLoading * percentOfReceived;
-                                    progressBar.value = progress;
-                                    progressElem.textContent = Math.floor(progress).toFixed(0);
-                                }
-                            } while (!done);
-                            controller.close();
-                        },
-                    });
-                    return new Response(reableStream,
-                        {
-                            headers: response.headers,
-                        });
-                }
-                return response;
-            }),
-        }).then(async terraEngine => {
-            if (!terraEngine)
-                return;
-            this.setProgress(40);
+          new Sea([terrascene]);
+          //new testPlane(terrascene);
+          const archRotateController = new ArcRotateCamera(
+            engine.mainCamera,
+            true,
+          );
+          engine.mainCamera.attachControllerForCamera(archRotateController);
+          const human = new Human({
+            inputEnabled: false,
+            scenes: [terrascene],
+          });
+          // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
+          human.translation = [403.4, 1000, 23];
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+              if (engine.inputManager === human.inputManager) {
+                engine.mainCamera.attachControllerForCamera(
+                  archRotateController,
+                );
+              } else {
+                engine.mainCamera.attachControllerForCamera(human.inputManager);
+              }
+            }
+          });
+          const terrainInited = Terrain.loadFromTexture(gpu, [terrascene]);
+          terrainInited
+            .then(
+              (terrain) =>
+                new createTopMenu({
+                  gpu,
+                  terrain,
+                }),
+            )
+            .catch((err) => {
+              errors.push(err);
+              this.showError();
+            });
 
-            const gpu = await terraEngine.GPUReady;
+          PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
 
-            this.setProgress(41);
+          this.setProgress(100);
+          return terrainInited;
+        });
+        //Debug scene
+        new Scene('static', terraEngine.gpu!, (scene) => {
+          const sun = new Light(scene);
+          sun.translation = [0, 1, 0];
+          sun.ambient = [0, 0, 0];
+          sun.shadow = 1; // shadow to 1 (no shadow)
+          return undefined;
+        });
 
-            createSettingsMenu.addKeydownListener();
-            new createTimeControls();
-            new CreateFPSMeter();
-            new Scene('main',
-                gpu,
-                (terrascene) => {
-                    new Sun(gpu,
-                        [terrascene]);
-                    // Initial scene objects here
-
-                    new Sea([terrascene]);
-                    //new testPlane(terrascene);
-                    const archRotateController = new ArcRotateCamera(engine.mainCamera,
-                        true);
-                    engine.mainCamera.attachControllerForCamera(archRotateController);
-                    const human = new Human({
-                        inputEnabled: false, scenes: [terrascene],
-                    });
-                    // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
-                    human.translation = [
-                        403.4,
-                        1000,
-                        23
-                    ];
-                    document.addEventListener('keydown',
-                        e => {
-                            if (e.key === 'Tab') {
-                                if (engine.inputManager === human.inputManager) {
-                                    engine.mainCamera.attachControllerForCamera(archRotateController);
-                                } else {
-                                    engine.mainCamera.attachControllerForCamera(human.inputManager);
-                                }
-                            }
-                        });
-                    const terrainInited = Terrain.loadFromTexture(gpu,
-                        [terrascene]);
-                    terrainInited.then(terrain =>
-                        new createTopMenu({
-                            gpu, terrain,
-                        })).catch(err => {
-                        errors.push(err);
-                        this.showError();
-                    });
-
-                    PlantsUI.plantsMesh = new Plants(terrascene,
-                        terrainInited);
-
-                    this.setProgress(100);
-                    return terrainInited;
-                });
-            //Debug scene
-            new Scene('static',
-terraEngine.gpu!,
-(scene) => {
-    const sun = new Light(scene);
-    sun.translation = [
-        0,
-        1,
-        0
-    ];
-    sun.ambient = [
-        0,
-        0,
-        0
-    ];
-    sun.shadow = 1; // shadow to 1 (no shadow)
-    return undefined;
-});
-
-            /* const slope = new Box(
+        /* const slope = new Box(
                  {can_collide: true, label: 'gravitybixbox2', fixed: true});
              slope.update_scale(200, 5, 200);
              slope.update_rotation(Math.sin(1.4), 0, 0, Math.cos(1.4));
              slope.translation = [23, 500, 23];
          */
-            const cone = new Cone({
-                label: 'cone',
-            },
-            true);
-            cone.euler_angles = [
-                90,
-                0,
-                0
-            ];
-            cone.translation = [
-                0,
-                900,
-                -70
-            ];
-            cone.update_scale(50,
-                50,
-                50);
-            cone.radius = 50;
-            cone.color = [
-                1,
-                0,
-                0,
-                0
-            ];
+        const cone = new Cone(
+          {
+            label: 'cone',
+          },
+          true,
+        );
+        cone.euler_angles = [90, 0, 0];
+        cone.translation = [0, 900, -70];
+        cone.update_scale(50, 50, 50);
+        cone.radius = 50;
+        cone.color = [1, 0, 0, 0];
 
+        const capsule = new Capsule(true, CAPSULE_ORIENTATION.x, 3, {
+          label: 'capsule1',
+        });
+        capsule.translation = [60, 900, -70];
+        capsule.radius = 30;
+        capsule.color = [0, 0, 1, 0];
+        const capsule2 = new Capsule(true, CAPSULE_ORIENTATION.y, 3, {
+          label: 'capsule2',
+        });
+        capsule2.translation = [100, 900, -70];
+        capsule2.radius = 30;
+        capsule2.color = [0, 0, 1, 0];
 
-            const capsule = new Capsule(true,
-                CAPSULE_ORIENTATION.x,
-                3,
-                {
-                    label: 'capsule1',
-                });
-            capsule.translation = [
-                60,
-                900,
-                -70
-            ];
-            capsule.radius = 30;
-            capsule.color = [
-                0,
-                0,
-                1,
-                0
-            ];
-            const capsule2 = new Capsule(true,
-                CAPSULE_ORIENTATION.y,
-                3,
-                {
-                    label: 'capsule2',
-                });
-            capsule2.translation = [
-                100,
-                900,
-                -70
-            ];
-            capsule2.radius = 30;
-            capsule2.color = [
-                0,
-                0,
-                1,
-                0
-            ];
+        const capsule3 = new Capsule(true, CAPSULE_ORIENTATION.z, 3, {
+          label: 'capsule3',
+        });
+        capsule3.translation = [140, 900, -70];
+        capsule3.radius = 30;
+        capsule3.color = [0, 0, 1, 0];
 
-            const capsule3 = new Capsule(true,
-                CAPSULE_ORIENTATION.z,
-                3,
-                {
-                    label: 'capsule3',
-                });
-            capsule3.translation = [
-                140,
-                900,
-                -70
-            ];
-            capsule3.radius = 30;
-            capsule3.color = [
-                0,
-                0,
-                1,
-                0
-            ];
+        const roundCuboid = new RoundCuboid(
+          {
+            depth: 80,
+            height: 40,
+            width: 40,
+          },
+          {
+            borderRadius: 10,
+          },
+          {
+            fixed: true,
+            label: 'roundCuboid',
+          },
+        );
+        roundCuboid.translation = [200, 900, -70];
+        roundCuboid.color = [0, 0, 1, 0];
 
+        const sphere4 = new IcoSphere({
+          can_collide: true,
+          fixed: false,
+          label: 'blueball3',
+          order: 1,
+        });
+        sphere4.translation = [-100, 900, -70];
+        sphere4.update_scale(30);
+        sphere4.color = [1, 0, 1, 0];
 
-            const roundCuboid = new RoundCuboid({
-                depth: 80, height: 40, width: 40,
-            },
-            {
-                borderRadius: 10,
-            },
-            {
-                fixed: true, label: 'roundCuboid',
-            });
-            roundCuboid.translation = [
-                200,
-                900,
-                -70
-            ];
-            roundCuboid.color = [
-                0,
-                0,
-                1,
-                0
-            ];
-
-            const sphere4 = new IcoSphere({
-                can_collide: true, fixed: false, label: 'blueball3', order: 1,
-            });
-            sphere4.translation = [
-                -100,
-                900,
-                -70
-            ];
-            sphere4.update_scale(30);
-            sphere4.color = [
-                1,
-                0,
-                1,
-                0
-            ];
-
-
-            /*const b = new Box(
+        /*const b = new Box(
                 { can_collide: false, label: 'PickGreenbox' });
             b.translation = [0, 400, 0]
             b.update_scale(500, 500, 500);*/
 
-            /* const b = new Box(undefined, undefined, true, 'gravitybixbox',undefined,true);
+        /* const b = new Box(undefined, undefined, true, 'gravitybixbox',undefined,true);
              b.update_scale(100, 5, 100);
              b.translation = [123, 300, 123];
          */
 
-            /*  const b2 = new Box({point_light: 400, can_collide: true, label: 'gravitygreenbox2', color: [0, 1, 0, 0]});
+        /*  const b2 = new Box({point_light: 400, can_collide: true, label: 'gravitygreenbox2', color: [0, 1, 0, 0]});
               b2.translation = [23, 500, -100];
               b2.hasGravity = true;*/
 
-            /*   const slope = new Triangle('slopeTriangle',undefined,true);
+        /*   const slope = new Triangle('slopeTriangle',undefined,true);
                slope.update_scale(0, 400, 400);
 
             //   slope.update_euler_angles(0,0,Math.PI*-0.5);
                slope.update_euler_angles(0,0,Math.PI*-0.4);
                slope.translation = [23,600,23];*/
 
-
-            /**
-             * Main draw area
-             */
-            new UIRectangleTextureView({
-                borderSize: {
-                    height: [0],
-                    width: [0],
-                },
-                canvaspipeline: gpu.UIPipeline,
-                label: 'UICanvas',
-                renderPass: gpu.renderPassCanvas,
-
-                scale: {
-                    min_width: 1, unit: NumericUnit['%'], y: 1,
-                },
-                translate: {
-                    x: {
-                        anchor: Anchor.CENTER,
-                        value: [0],
-                    },
-                    y: {
-                        anchor: Anchor.CENTER,
-                        value: [0],
-                    },
-                },
+        /**
+         * Main draw area
+         */
+        new UIRectangleTextureView(
+          {
+            borderSize: {
+              height: [0],
+              width: [0],
             },
-gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view);
-            this.setProgress(45);
+            canvaspipeline: gpu.UIPipeline,
+            label: 'UICanvas',
+            renderPass: gpu.renderPassCanvas,
 
-            const webSocket = new WebSocket('wss://localhost:8081/echo');
-            webSocket.onopen = () => {
-                console.log('websocket onopen');
-                webSocket.send(JSON.stringify({
-                    action: 'init',
-                    data: {
-                        /* userinfo: state.userInfo, ticks */ },
-                }));
-                webSocket.onmessage = (e) => {
-                    console.log('message from WS',
-                        e);
-                    const msg = JSON.parse(e.data);
-                    if (msg.action == 'init') {
-                        console.debug('going to init game',
-                            msg.currentPlayData);
-                    }
-                };
+            scale: {
+              min_width: 1,
+              unit: NumericUnit['%'],
+              y: 1,
+            },
+            translate: {
+              x: {
+                anchor: Anchor.CENTER,
+                value: [0],
+              },
+              y: {
+                anchor: Anchor.CENTER,
+                value: [0],
+              },
+            },
+          },
+          gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
+        );
+        this.setProgress(45);
 
-            };
-            webSocket.onerror = () => {
-                console.error('websocket onerror');
-            };
-        }).catch(e => {
-            errors.push(e);
-            this.showError();
-        });
-    }
-    setProgress(value: number) {
-        this.#progressBar.value = value;
-        this.#progresElem.textContent = value.toFixed(0);
-        if (value === 100)
-            this.#progressBar.parentNode?.parentNode?.removeChild(this.#progressBar.parentNode);
-    }
+        const webSocket = new WebSocket('wss://localhost:8081/echo');
+        webSocket.onopen = () => {
+          console.log('websocket onopen');
+          webSocket.send(
+            JSON.stringify({
+              action: 'init',
+              data: {
+                /* userinfo: state.userInfo, ticks */
+              },
+            }),
+          );
+          webSocket.onmessage = (e) => {
+            console.log('message from WS', e);
+            const msg = JSON.parse(e.data);
+            if (msg.action == 'init') {
+              console.debug('going to init game', msg.currentPlayData);
+            }
+          };
+        };
+        webSocket.onerror = () => {
+          console.error('websocket onerror');
+        };
+      })
+      .catch((e) => {
+        errors.push(e);
+        this.showError();
+      });
+  }
+  setProgress(value: number) {
+    this.#progressBar.value = value;
+    this.#progresElem.textContent = value.toFixed(0);
+    if (value === 100)
+      this.#progressBar.parentNode?.parentNode?.removeChild(
+        this.#progressBar.parentNode,
+      );
+  }
 }

@@ -33,7 +33,9 @@ module.exports = {
   // ],
 
   // Indicates which provider should be used to instrument code for coverage
-  coverageProvider: "v8",
+  coverageProvider: 'v8',
+
+  extensionsToTreatAsEsm: ['.ts'],
 
   // A list of reporter names that Jest uses when writing coverage reports
   // coverageReporters: [
@@ -61,14 +63,13 @@ module.exports = {
   // forceCoverageMatch: [],
 
   // A path to a module which exports an async function that is triggered once before all test suites
- //  globalSetup: './setup.js',
+  //  globalSetup: './setup.js',
 
   // A path to a module which exports an async function that is triggered once after all test suites
-   //globalTeardown: './teardown.js',
+  //globalTeardown: './teardown.js',
 
   // A set of global variables that need to be available in all test environments
-   globals: {
-   },
+  globals: {},
 
   // The maximum amount of workers used to run your tests. Can be specified as % or a number. E.g. maxWorkers: 10% will use 10% of your CPU amount + 1 as the maximum worker number. maxWorkers: 2 will use a maximum of 2 workers.
   // maxWorkers: "50%",
@@ -91,10 +92,9 @@ module.exports = {
   // ],
 
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
-   moduleNameMapper: {
-    "(.+)\\.js": "$1"
-   },
-   extensionsToTreatAsEsm: [".ts"],
+  moduleNameMapper: {
+    '(.+)\\.js': '$1',
+  },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
   // modulePathIgnorePatterns: [],
@@ -106,7 +106,7 @@ module.exports = {
   // notifyMode: "failure-change",
 
   // A preset that is used as a base for Jest's configuration
-   preset: "ts-jest/presets/default-esm",
+  preset: 'ts-jest/presets/default-esm',
 
   // Run tests from one or more projects
   // projects: undefined,
@@ -150,7 +150,7 @@ module.exports = {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-   //testEnvironment: "./puppeteer_environment_unit_test.js",
+  //testEnvironment: "./puppeteer_environment_unit_test.js",
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
@@ -179,16 +179,17 @@ module.exports = {
   // testRunner: "jest-circus/runner",
 
   // A map from regular expressions to paths to transformers
-   transform: {
-    "\\.[jt]sx?$": [
-      "ts-jest", {
-      // ts-jest configuration goes here
-      //tsconfig: "tsconfig.jest.json",
-      useESM: true,
-      diagnostics: true
-    }
-  ],
-   },
+  transform: {
+    '\\.[jt]sx?$': [
+      'ts-jest',
+      {
+        // ts-jest configuration goes here
+        //tsconfig: "tsconfig.jest.json",
+        useESM: true,
+        diagnostics: true,
+      },
+    ],
+  },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [

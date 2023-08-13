@@ -3,21 +3,32 @@ import type { Terrain } from '../../world/Terrain.js';
 import type { IntArray, PlaneArray } from './structs/Structs.js';
 
 export const getHeightAtCoordinates = (
-    settings: typeof Terrain.settings,
-    slopes: BufLayout<ShaderStage, typeof IntArray>,
-    facet12: BufLayout<ShaderStage, typeof PlaneArray>) => /* wgsl */
-    `
+  settings: typeof Terrain.settings,
+  slopes: BufLayout<ShaderStage, typeof IntArray>,
+  facet12: BufLayout<ShaderStage, typeof PlaneArray> /* wgsl */,
+) =>
+  `
 fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
-    let col:u32 = u32(floor((xz.x + ${settings.maxXZ[0]}) * ${settings.subdivisions[0]} / ${settings.size[0]}));
-    let row:u32 = u32(floor(- (xz.y + ${settings.maxXZ[1]}) * ${settings.subdivisions[1]} / ${settings.size[0]} + ${settings.subdivisions[0]}));
-    let slope:f32 = f32(${slopes.prop('numbers')}[row * ${settings.subdivisions[0]} + col]);
+    let col:u32 = u32(floor((xz.x + ${settings.maxXZ[0]}) * ${
+      settings.subdivisions[0]
+    } / ${settings.size[0]}));
+    let row:u32 = u32(floor(- (xz.y + ${settings.maxXZ[1]}) * ${
+      settings.subdivisions[1]
+    } / ${settings.size[0]} + ${settings.subdivisions[0]}));
+    let slope:f32 = f32(${slopes.prop('numbers')}[row * ${
+      settings.subdivisions[0]
+    } + col]);
     var norm:vec3<f32>;
     var d:f32;
     if(xz.y < -1.0 * xz.x + slope) {
-        norm = ${facet12.prop('plane')}[row * ${settings.subdivisions[0]} + col].norm;
+        norm = ${facet12.prop('plane')}[row * ${
+          settings.subdivisions[0]
+        } + col].norm;
         d = ${facet12.prop('plane')}[row * ${settings.subdivisions[0]} + col].d;
     } else {
-        var index:u32=${settings.facetSize} + u32(row * ${settings.subdivisions[0]} + col);
+        var index:u32=${settings.facetSize} + u32(row * ${
+          settings.subdivisions[0]
+        } + col);
         norm = ${facet12.prop('plane')}[index].norm;
         d = ${facet12.prop('plane')}[index].d;
     }

@@ -2,54 +2,55 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
-import {  colorPositionOutput } from './structs/Structs.js';
+import { colorPositionOutput } from './structs/Structs.js';
 
 export const positionAttr = Object.freeze({
-    position: {
-        format: 'float32x4',
-        offset: 0,
-        shaderFormat: 'vec4<f32>',
-        shaderLocation: 0,
-    },
+  position: {
+    format: 'float32x4',
+    offset: 0,
+    shaderFormat: 'vec4<f32>',
+    shaderLocation: 0,
+  },
 } as const);
 
 export const shapeAttr = Object.freeze({
-    shape: {
-        format: 'float32x4',
-        offset: 0,
-        shaderFormat: 'vec4<f32>',
-        shaderLocation: 1,
-    },
+  shape: {
+    format: 'float32x4',
+    offset: 0,
+    shaderFormat: 'vec4<f32>',
+    shaderLocation: 1,
+  },
 } as const);
 
 export const vertexPositionAttr = Object.freeze({
-    vertex_position: {
-        format: 'float32x2',
-        offset: 0,
-        shaderFormat: 'vec2<f32>',
-        shaderLocation: 2,
-    },
+  vertex_position: {
+    format: 'float32x2',
+    offset: 0,
+    shaderFormat: 'vec2<f32>',
+    shaderLocation: 2,
+  },
 } as const);
 
-
-type BindLayouts = GPU['rootCameralayout']['bindGroupLayouts']
+type BindLayouts = GPU['rootCameralayout']['bindGroupLayouts'];
 export function createGrassVertShader(
-    pipelineLayout: PipelineLayout<BindLayouts>,
-    buffers: [VertexBufferLayout2<typeof positionAttr>, VertexBufferLayout2<typeof shapeAttr>, VertexBufferLayout2<typeof vertexPositionAttr>]
+  pipelineLayout: PipelineLayout<BindLayouts>,
+  buffers: [
+    VertexBufferLayout2<typeof positionAttr>,
+    VertexBufferLayout2<typeof shapeAttr>,
+    VertexBufferLayout2<typeof vertexPositionAttr>,
+  ],
 ) {
-    return new VertexShader({
-        entryPoints: {
-            main: new VertexShaderFunction(
-                colorPositionOutput,
-                pipelineLayout,
-                buffers,
-                ([, { scene, time, }],
-                    [
-                        { position, },
-                        { shape, },
-                        { vertex_position, }
-                    ]) =>
-                    /* wgsl */ `
+  return new VertexShader(
+    {
+      entryPoints: {
+        main: new VertexShaderFunction(
+          colorPositionOutput,
+          pipelineLayout,
+          buffers,
+          (
+            [, { scene, time }],
+            [{ position }, { shape }, { vertex_position }],
+          ) => /* wgsl */ `
                 var output:Output;
                 //ambient = lights.ambient;
                  var vertice:vec3<f32> = vec3<f32>(${vertex_position}.xy,0.0);
@@ -60,7 +61,9 @@ export function createGrassVertShader(
                  //How fast wind direction and intensivy change
                
                
-                 var windIntensivy:f32 =(cos((f32(${time.prop('time')})*0.01 + ${position}.x)*0.1)+1.0)*0.5;
+                 var windIntensivy:f32 =(cos((f32(${time.prop(
+                   'time',
+                 )})*0.01 + ${position}.x)*0.1)+1.0)*0.5;
                //  float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
                
                  //var leanAndBaseCurve:f32 = ${shape}.y + vertice.y*${shape}.z;
@@ -92,24 +95,27 @@ export function createGrassVertShader(
                
                   
                   var worldPos:vec4<f32> = vec4<f32>(${position}.xyz, 1.0) + vec4<f32>(scaled.x, scaled.y, scaled.z, 0.0);
-                 // var viewDirectionW:vec3<f32> = normalize(${scene.prop('viewPosition')} - worldPos.xyz);
+                 // var viewDirectionW:vec3<f32> = normalize(${scene.prop(
+                   'viewPosition',
+                 )} - worldPos.xyz);
                   //normal = normal * sign(dot(viewDirectionW, normal));
                
                   //var diffuse:f32 = dot(normal, lights.sunDirection)*lights.shadow;
                
-                  output.position = ${scene.prop('modelViewProjection')} * worldPos;
+                  output.position = ${scene.prop(
+                    'modelViewProjection',
+                  )} * worldPos;
                
                   output.color = vec3<f32>(clamp(${shape}.w,0.0,1.0),1.0,0.0);//*diffuse;
                    return output;
                
-                `
-            ),
-        },
-        gpu: pipelineLayout.gpu,
-        label: 'grass.vert',
+                `,
+        ),
+      },
+      gpu: pipelineLayout.gpu,
+      label: 'grass.vert',
     },
-    () =>
-        /* wgsl */ `
+    () => /* wgsl */ `
     const bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
 const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(
 vec2<f32>(0.0,0.0),
@@ -148,7 +154,8 @@ vec2<f32>(0.007, 0.57),
 vec2<f32>(-0.007, 0.57),
 vec2<f32>(0.0, 1.0)
 );
-    `);
+    `,
+  );
 }
 
-export type GrassVertShader = ReturnType<typeof createGrassVertShader>
+export type GrassVertShader = ReturnType<typeof createGrassVertShader>;

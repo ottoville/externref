@@ -1,29 +1,37 @@
 import * as path from 'path';
 
 export default {
-    mode: 'development',
-    entry: './bundled.ts',
-    experiments: {
-        outputModule: true,
-    },
-    output: {
-        library: {
-            type: 'module',
-        },
-        path: path.resolve('../wwwroot/js/'),
-        filename: 'bundled.js',
-    },
-    module: {
-        rules: [
-            {
-                test: /\.ts$/, use: 'ts-loader'
+  entry: './bundled.ts',
+  experiments: {
+    outputModule: true,
+  },
+  mode: 'development',
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              transpileOnly: true,
             },
+          },
         ],
+      },
+    ],
+  },
+  output: {
+    filename: 'bundled.js',
+    library: {
+      type: 'module',
     },
-    resolve: {
-        extensionAlias: {
-            '.js': ['.ts', '.js'],
-            '.mjs': ['.mts', '.mjs'],
-        }
+    path: path.resolve('../wwwroot/js/'),
+  },
+  resolve: {
+    extensionAlias: {
+      '.js': ['.ts', '.js'],
+      '.mjs': ['.mts', '.mjs'],
     },
+  },
 };
