@@ -1,4 +1,4 @@
-import { BindablePipelineLayout } from '../PipelineLayout.js';
+import { RenderPipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
@@ -6,7 +6,7 @@ import { pickOutput, typicalOutput } from './structs/Structs.js';
 import { simpleAttributes } from './structs/Attributes.js';
 
 export function createPickOutput(
-  pipelineLayout: BindablePipelineLayout<
+  pipelineLayout: RenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
   buffers: VertexBufferLayout2<typeof simpleAttributes>,
@@ -41,7 +41,7 @@ export function createPickOutput(
   Shader where mesh is single colored
 */
 export function createSimpleVertShader(
-  pipelineLayout: BindablePipelineLayout<
+  pipelineLayout: RenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
   buffers: VertexBufferLayout2<typeof simpleAttributes>,

@@ -32,10 +32,7 @@ import {
   UpdateView,
 } from './GPU/Shaders/UpdateView.comp.js';
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
-import {
-  BindablePipelineLayout,
-  RenderPipelineLayout,
-} from './GPU/PipelineLayout.js';
+import { RenderPipelineLayout } from './GPU/PipelineLayout.js';
 import { RenderPipeline } from './GPU/RenderPipeline.js';
 import {
   Clusters,
@@ -111,7 +108,7 @@ export class GPU {
   readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
   readonly tempGPUBuffers: GPUBuffer[] = [];
 
-  readonly rootCameralayout: BindablePipelineLayout<
+  readonly rootCameralayout: RenderPipelineLayout<
     readonly [
       typeof this.sizeBindGroupLayout,
       typeof this.uniformBindGroupLayoutWithTime,
@@ -130,7 +127,7 @@ export class GPU {
     BindStorageBuffer &
     BindUniformBuffer;
   readonly #GPUDirectionalLights: CopyDstBuffer & BindStorageBuffer;
-  readonly positionAndTimeBindGroup: BindablePipelineLayout<
+  readonly positionAndTimeBindGroup: RenderPipelineLayout<
     readonly [
       typeof this.sizeBindGroupLayout,
       typeof this.uniformBindGroupLayoutWithTime,
@@ -139,7 +136,7 @@ export class GPU {
       }>,
     ]
   >;
-  readonly lightsTextureBindGroup: BindablePipelineLayout<
+  readonly lightsTextureBindGroup: RenderPipelineLayout<
     [
       typeof this.sizeBindGroupLayout,
       typeof this.uniformBindGroupLayoutWithTime,
@@ -234,10 +231,10 @@ export class GPU {
   >;
 
   readonly #ro: ResizeObserver;
-  readonly canvasRootLayout: BindablePipelineLayout<
+  readonly canvasRootLayout: RenderPipelineLayout<
     [typeof this.BindGroupLayoutCanvas]
   >;
-  readonly canvasRootLayoutArray: BindablePipelineLayout<
+  readonly canvasRootLayoutArray: RenderPipelineLayout<
     [typeof this.BindGroupLayoutCanvasArray]
   >;
   readonly UIPipeline: RenderPipeline<
@@ -470,7 +467,7 @@ export class GPU {
         ScreenDimensions,
       ),
     });
-    this.rootCameralayout = new BindablePipelineLayout({
+    this.rootCameralayout = new RenderPipelineLayout({
       bindGroupLayouts: [
         this.sizeBindGroupLayout,
         this.uniformBindGroupLayoutWithTime,
@@ -781,11 +778,11 @@ export class GPU {
         ),
       },
     );
-    this.canvasRootLayout = new BindablePipelineLayout({
+    this.canvasRootLayout = new RenderPipelineLayout({
       bindGroupLayouts: [this.BindGroupLayoutCanvas],
       label: 'canvasRootLayout',
     });
-    this.canvasRootLayoutArray = new BindablePipelineLayout({
+    this.canvasRootLayoutArray = new RenderPipelineLayout({
       bindGroupLayouts: [this.BindGroupLayoutCanvasArray],
       label: 'canvasRootLayoutArray',
     });

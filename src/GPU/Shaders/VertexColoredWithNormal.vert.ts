@@ -1,4 +1,4 @@
-import { BindablePipelineLayout } from '../PipelineLayout.js';
+import { RenderPipelineLayout } from '../PipelineLayout.js';
 import { type VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js';
 import type { simpleAttributesWithColor } from '../RenderPipeLines/ColoredRenderPipeline.js';
@@ -10,7 +10,7 @@ import { createPickOutput } from './SingleColoredWithNormal.vert.js';
   Shader where each vertex carries a color property
 */
 export function createVertexColorShader(
-  pipelineLayout: BindablePipelineLayout<
+  pipelineLayout: RenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
   buffers: VertexBufferLayout2<typeof simpleAttributesWithColor>,

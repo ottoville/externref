@@ -34,7 +34,7 @@ import {
   SlopesLayout,
   CreateTerrainTexture,
 } from '../GPU/Shaders/CreateTerrainTexture.comp.js';
-import { BindablePipelineLayout } from '../GPU/PipelineLayout.js';
+import { RenderPipelineLayout } from '../GPU/PipelineLayout.js';
 import {
   IntArray,
   MeshUniforms,
@@ -84,8 +84,8 @@ TODO
 
   readonly mesh: TerrainMesh;
 
-  TerrainHeightsbindGroupTree: BindablePipelineLayout<
-    [
+  TerrainHeightsbindGroupTree: RenderPipelineLayout<
+    readonly [
       typeof this.gpu.sizeBindGroupLayout,
       typeof this.gpu.uniformBindGroupLayoutWithTime,
       BGLayout<{
