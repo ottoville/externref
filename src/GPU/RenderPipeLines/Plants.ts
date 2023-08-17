@@ -1,4 +1,4 @@
-import { GPU } from '../../GPU.js';
+import type { CreateRenderPipelineProps } from '../../GPU.js';
 import {
   createGrassVertShader,
   positionAttr,
@@ -6,13 +6,12 @@ import {
   vertexPositionAttr,
 } from '../Shaders/Grass.vert.js';
 import { createColorFragmentShader } from '../Shaders/Color.frag.js';
+import { RenderPipeline } from '../RenderPipeline.js';
 
 export const PlantsRenderPipeline = [
   'PlantsRenderPipeline',
   function PlantsRenderPipeline(
-    gpu: GPU,
-    label: string,
-    primitive: GPUPrimitiveState,
+    { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
     const vertexShader = createGrassVertShader(gpu.rootCameralayout, [
@@ -33,16 +32,20 @@ export const PlantsRenderPipeline = [
       },
     ]);
     const fragmentShader = createColorFragmentShader(gpu.rootCameralayout);
-    return gpu.rootCameralayout.addRenderPipeline({
-      connections: {
-        main: 'main',
+    return new RenderPipeline(
+      {
+        bindgroupdrawable: gpu.rootCameralayout,
+        connections: {
+          main: 'main',
+        },
+        fragmentShader,
+        label,
+        renderPipeline: {
+          primitive,
+        },
+        vertexShader,
       },
-      fragmentShader,
-      label,
-      renderPipeline: {
-        primitive,
-      },
-      vertexShader,
-    });
+      undefined,
+    );
   },
 ] as const;

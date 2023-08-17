@@ -2,7 +2,7 @@
 import { WorkerReturn, WorkerThread } from '../WorkerThread.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { MainNode } from '../MainNode.js';
-import type { GPU } from '../GPU.js';
+import type { CreateRenderPipelineProps, GPU } from '../GPU.js';
 import { MutableTerraVector3, TerraVector3 } from '../Math.js';
 import type { Engine, ListenerObj, rust_pointer } from '../engine.js';
 import type { Scene } from '../Scene.js';
@@ -10,7 +10,7 @@ import {
   HelperVertShader,
   createHelperVertShader,
 } from '../GPU/Shaders/helper.vert.js';
-import type { RenderPipeline } from '../GPU/RenderPipeline.js';
+import { RenderPipeline } from '../GPU/RenderPipeline.js';
 import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
@@ -150,11 +150,10 @@ export class TerrainTool extends MainNode {
     this.positions_count = 4;
     const getRenderPipeline = [
       'TerrainToolRenderpipeline',
-      function getRenderPipelinef(
-        _gpu: GPU,
-        label: string,
-        primitive: GPUPrimitiveState,
-      ) {
+      function getRenderPipelinef({
+        label,
+        primitive,
+      }: CreateRenderPipelineProps) {
         const vertexShader = createHelperVertShader(
           terrain.settings,
           terrain.TerrainHeightsbindGroupTree,
@@ -162,8 +161,9 @@ export class TerrainTool extends MainNode {
         const fragmentShader = createColorFragmentShader(
           terrain.TerrainHeightsbindGroupTree,
         );
-        const renderPipeline =
-          terrain.TerrainHeightsbindGroupTree.addRenderPipeline({
+        const renderPipeline = new RenderPipeline(
+          {
+            bindgroupdrawable: terrain.TerrainHeightsbindGroupTree,
             connections: {
               main: 'main',
             },
@@ -173,7 +173,9 @@ export class TerrainTool extends MainNode {
               primitive,
             },
             vertexShader,
-          });
+          },
+          undefined,
+        );
         return renderPipeline;
       },
     ] as const;

@@ -9,6 +9,10 @@ import { SimpleRenderPipeline } from '../GPU/RenderPipeLines/SimpleRenderPipelin
 import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
+import { RenderPipeline } from '../GPU/RenderPipeline.js';
+import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
+import { createWaterVertShader } from '../GPU/Shaders/Water.vert.js';
+import { positionAttr } from '../GPU/Shaders/structs/Attributes.js';
 declare const engine: Engine;
 
 Texture.create({
@@ -165,3 +169,51 @@ new DrawableSimple({
   //@ts-expect-error The renderpipeline does not need vertexBuffer
   vertexBuffers: [new Float32Array()],
 });
+
+const waterVertShader = createWaterVertShader(
+  engine.gpu!.bindGroupTextureWater,
+  {
+    arrayStride: 16,
+    attributes2: positionAttr,
+    stepMode: 'vertex',
+  },
+);
+const sampler = engine.gpu!.device.createSampler({
+  magFilter: 'nearest',
+  minFilter: 'nearest',
+  mipmapFilter: 'nearest',
+});
+new RenderPipeline(
+  {
+    bindgroupdrawable: engine.gpu!.bindGroupTextureWater,
+    connections: {
+      main: 'main',
+    },
+    fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
+    label: 'test',
+    renderPipeline: {},
+    vertexShader: waterVertShader,
+  },
+  //Should be fine
+  () => ({
+    diffuseTexture: engine.gpu!.renderPassWater.colorRenderTargets.diffuse.view,
+    mySampler: sampler,
+  }),
+);
+new RenderPipeline(
+  {
+    bindgroupdrawable: engine.gpu!.positionAndTimeBindGroup,
+    connections: {
+      main: 'main',
+    },
+    fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
+    label: 'test',
+    renderPipeline: {},
+    vertexShader: waterVertShader,
+  },
+  //@ts-expect-error Shared bindgroup is undefined
+  () => ({
+    diffuseTexture: engine.gpu!.renderPassWater.colorRenderTargets.diffuse.view,
+    mySampler: sampler,
+  }),
+);

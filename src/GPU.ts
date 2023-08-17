@@ -33,8 +33,8 @@ import {
 } from './GPU/Shaders/UpdateView.comp.js';
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
 import {
-  SharedPipelineLayout,
   BindablePipelineLayout,
+  RenderPipelineLayout,
 } from './GPU/PipelineLayout.js';
 import { RenderPipeline } from './GPU/RenderPipeline.js';
 import {
@@ -81,17 +81,19 @@ window.resetDebugNumber = () => {
     debugNumber = 0;
 }
 */
+
+export type CreateRenderPipelineProps = {
+  gpu: GPU;
+  label: string;
+  primitive: GPUPrimitiveState;
+};
+
 export type CreateRenderPipelineCB<
   R extends RenderPipeline,
   VP extends { stride: number } = { stride: number },
 > = readonly [
   label: string,
-  create: (
-    gpu: GPU,
-    hash: string,
-    primitive: GPUPrimitiveState,
-    vertexBufferProps: VP,
-  ) => R,
+  create: (props: CreateRenderPipelineProps, vertexBufferProps: VP) => R,
 ];
 
 export class GPU {
@@ -213,7 +215,7 @@ export class GPU {
   }>;
 
   static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
-  readonly bindGroupTextureWater: SharedPipelineLayout<
+  readonly bindGroupTextureWater: RenderPipelineLayout<
     [
       typeof this.sizeBindGroupLayout,
       typeof this.uniformBindGroupLayoutWithTime,
@@ -221,10 +223,14 @@ export class GPU {
         world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
       }>,
       BGLayout<{
-        mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
         diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
+        mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
       }>,
-    ]
+    ],
+    BGLayout<{
+      diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
+      mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
+    }>
   >;
 
   readonly #ro: ResizeObserver;
@@ -271,7 +277,7 @@ export class GPU {
       topology: 'triangle-strip' | 'line-strip';
       stripIndexFormat: GPUIndexFormat;
     },
-    vertexBufferProps: Parameters<D['1']>[3],
+    vertexBufferProps: Parameters<D['1']>['1'],
   ): ReturnType<D['1']>;
   createRenderPipeline<
     D extends CreateRenderPipelineCB<RenderPipeline<V>>,
@@ -281,7 +287,7 @@ export class GPU {
     primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & {
       topology: 'triangle-list' | 'line-list';
     },
-    vertexBufferProps: Parameters<D['1']>[3],
+    vertexBufferProps: Parameters<D['1']>['1'],
   ): ReturnType<D['1']>;
   createRenderPipeline<
     D extends CreateRenderPipelineCB<RenderPipeline<V>>,
@@ -289,7 +295,7 @@ export class GPU {
   >(
     desc: D,
     primitive: Omit<GPUPrimitiveState, 'topology'>,
-    vertexBufferProps: Parameters<D['1']>[3],
+    vertexBufferProps: Parameters<D['1']>['1'],
   ): ReturnType<D['1']>;
   createRenderPipeline<
     D extends CreateRenderPipelineCB<RenderPipeline<V>>,
@@ -297,7 +303,7 @@ export class GPU {
   >(
     desc: D,
     primitive: GPUPrimitiveState = {},
-    vertexBufferProps: Parameters<D['1']>[3],
+    vertexBufferProps: Parameters<D['1']>['1'],
   ): ReturnType<D['1']> {
     const primitiveWithDefaults: GPUPrimitiveState = {
       cullMode: 'back',
@@ -317,9 +323,11 @@ export class GPU {
     let renderPipeline = GPU.#renderPipelines.get(hash);
     if (!renderPipeline) {
       renderPipeline = createRenderPipeline(
-        this,
-        hash,
-        primitiveWithDefaults,
+        {
+          gpu: this,
+          label: hash,
+          primitive: primitiveWithDefaults,
+        },
         vertexBufferProps,
       );
       GPU.#renderPipelines.set(hash, renderPipeline);
@@ -788,34 +796,42 @@ export class GPU {
     });
     const UIfragmentShader = createUIFragmentShader(this);
     const UIfragmentShaderArray = createUIFragmentShaderArray(this);
-    this.UIPipeline = this.canvasRootLayout.addRenderPipeline({
-      connections: {
-        main: 'main',
-      },
-      fragmentShader: UIfragmentShader,
-      label: 'UIRenderPipeline',
-      renderPipeline: {
-        primitive: {
-          frontFace: 'ccw',
-          topology: 'triangle-list',
+    this.UIPipeline = new RenderPipeline(
+      {
+        bindgroupdrawable: this.canvasRootLayout,
+        connections: {
+          main: 'main',
         },
-      },
-      vertexShader,
-    });
-    this.UIPipelineArray = this.canvasRootLayoutArray.addRenderPipeline({
-      connections: {
-        main: 'array',
-      },
-      fragmentShader: UIfragmentShaderArray,
-      label: 'UIRenderPipelineArray',
-      renderPipeline: {
-        primitive: {
-          frontFace: 'ccw',
-          topology: 'triangle-list',
+        fragmentShader: UIfragmentShader,
+        label: 'UIRenderPipeline',
+        renderPipeline: {
+          primitive: {
+            frontFace: 'ccw',
+            topology: 'triangle-list',
+          },
         },
+        vertexShader,
       },
-      vertexShader,
-    });
+      undefined,
+    );
+    this.UIPipelineArray = new RenderPipeline(
+      {
+        bindgroupdrawable: this.canvasRootLayoutArray,
+        connections: {
+          main: 'array',
+        },
+        fragmentShader: UIfragmentShaderArray,
+        label: 'UIRenderPipelineArray',
+        renderPipeline: {
+          primitive: {
+            frontFace: 'ccw',
+            topology: 'triangle-list',
+          },
+        },
+        vertexShader,
+      },
+      undefined,
+    );
     this.colorFragShader = new FragmentShader({
       entryPoints: {
         main: new FragmentShaderFunction(

@@ -3,13 +3,13 @@ import { VertexBufferLayout2, VertexShader } from '../VertexShader.js';
 import { GPU } from '../../../GPU.js';
 import { VertexShaderFunction } from '../ShaderFunction.js';
 import { colorPositionOutput } from '../structs/Structs.js';
-import { simpleAttributes } from '../../RenderPipeLines/SimpleRenderPipeline.js';
+import { simpleAttributes } from '../structs/Attributes.js';
 
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createDebugNormalsVertShader(
   pipelineLayout: PipelineLayout<BindLayouts>,
-  buffers: VertexBufferLayout2<typeof simpleAttributes>,
+  arrayStride: number,
 ) {
   return new VertexShader({
     entryPoints: {
@@ -19,7 +19,13 @@ export function createDebugNormalsVertShader(
       >(
         colorPositionOutput,
         pipelineLayout,
-        [buffers],
+        [
+          {
+            arrayStride: arrayStride * 4,
+            attributes2: simpleAttributes,
+            stepMode: 'vertex',
+          },
+        ],
         (
           [
             ,

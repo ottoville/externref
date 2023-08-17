@@ -1,14 +1,14 @@
 import { BindablePipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js';
-import type { simpleAttributes } from '../RenderPipeLines/SimpleRenderPipeline.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { pickOutput, typicalOutput } from './structs/Structs.js';
-
-type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
+import { simpleAttributes } from './structs/Attributes.js';
 
 export function createPickOutput(
-  pipelineLayout: BindablePipelineLayout<BindLayouts>,
+  pipelineLayout: BindablePipelineLayout<
+    Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
+  >,
   buffers: VertexBufferLayout2<typeof simpleAttributes>,
 ) {
   return new VertexShaderFunction(
@@ -41,7 +41,9 @@ export function createPickOutput(
   Shader where mesh is single colored
 */
 export function createSimpleVertShader(
-  pipelineLayout: BindablePipelineLayout<BindLayouts>,
+  pipelineLayout: BindablePipelineLayout<
+    Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
+  >,
   buffers: VertexBufferLayout2<typeof simpleAttributes>,
 ) {
   return new VertexShader({
@@ -62,19 +64,18 @@ export function createSimpleVertShader(
         ) => /* wgsl */ `
             var output:Output;
             var curPos : mat4x4<f32> = ${world.prop('transformation')};
-            curPos[3].w=1.0;
             var worldPos=curPos * ${position};
+
             output.normal = normalize((curPos * vec4<f32>(${normal}, 0.0)).xyz);
-          
             output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
             output.id=${world.prop('id')};
-            output.color = ${world.prop('color')};
             output.position=vec3<f32>(worldPos.xyz);
             output.scenes=${world.prop('scenes')};
+            output.color = ${world.prop('color')};
+
             //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
             //ambient=lights.ambient;
-            return output;
-          `,
+            return output;`,
       ),
       pick: createPickOutput(pipelineLayout, buffers),
     },

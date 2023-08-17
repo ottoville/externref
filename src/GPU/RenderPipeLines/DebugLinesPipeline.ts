@@ -1,41 +1,31 @@
-import { GPU } from '../../GPU.js';
+import { RenderPipeline } from '../RenderPipeline.js';
+import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { createDebugBoundingBoxVertShader } from '../Shaders/devtools/debug_boundingbox.vert.js';
-const positionAttr = Object.freeze({
-  position: {
-    format: 'float32x3',
-    offset: 0,
-    shaderFormat: 'vec3<f32>',
-    shaderLocation: 0,
-  },
-} as const);
+
 export const DebugLinesPipeline = Object.freeze([
   'DebugLinesPipeline',
   function create(
-    gpu: GPU,
-    label: string,
-    primitive: GPUPrimitiveState,
-    vertexBufferProps: {
-      stride: number;
-    },
+    { gpu, label, primitive }: CreateRenderPipelineProps,
+    vertexBufferProps: { stride: number },
   ) {
     const vertexShader = createDebugBoundingBoxVertShader(
       gpu.positionAndTimeBindGroup,
-      {
-        arrayStride: vertexBufferProps.stride * 4,
-        attributes2: positionAttr,
-        stepMode: 'vertex',
-      },
+      vertexBufferProps.stride * 4,
     );
-    return gpu.positionAndTimeBindGroup.addRenderPipeline({
-      connections: {
-        main: 'main',
+    return new RenderPipeline(
+      {
+        bindgroupdrawable: gpu.positionAndTimeBindGroup,
+        connections: {
+          main: 'main',
+        },
+        fragmentShader: gpu.colorFragShader,
+        label,
+        renderPipeline: {
+          primitive,
+        },
+        vertexShader,
       },
-      fragmentShader: gpu.colorFragShader,
-      label,
-      renderPipeline: {
-        primitive,
-      },
-      vertexShader,
-    });
+      undefined,
+    );
   },
 ] as const);

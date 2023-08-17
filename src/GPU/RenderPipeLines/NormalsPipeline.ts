@@ -1,0 +1,30 @@
+import { RenderPipeline } from '../RenderPipeline.js';
+import type { CreateRenderPipelineProps } from '../../GPU.js';
+import { createDebugNormalsVertShader } from '../Shaders/devtools/debug_normals.vert.js';
+
+export const NormalsPipeline = Object.freeze([
+  'NormalsPipeline',
+  function create(
+    { gpu, label, primitive }: CreateRenderPipelineProps,
+    vertexBufferProps: { stride: number },
+  ) {
+    return new RenderPipeline(
+      {
+        bindgroupdrawable: gpu.positionAndTimeBindGroup,
+        connections: {
+          main: 'main',
+        },
+        fragmentShader: gpu.colorFragShader,
+        label,
+        renderPipeline: {
+          primitive,
+        },
+        vertexShader: createDebugNormalsVertShader(
+          gpu.positionAndTimeBindGroup,
+          vertexBufferProps.stride * 4,
+        ),
+      },
+      undefined,
+    );
+  },
+] as const);

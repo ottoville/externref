@@ -3,7 +3,7 @@ import { DrawableSimple } from '../Drawables/DrawableSimple.js';
 import type { Engine, rust_vec_ptr } from '../../engine.js';
 import { SimpleRenderPipeline } from '../RenderPipeLines/SimpleRenderPipeline.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
-import type { SimpleVertShader } from '../Shaders/Simple.vert.js';
+import type { SimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import {
   Buffer2,

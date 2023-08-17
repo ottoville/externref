@@ -1,16 +1,13 @@
-import type { GPU } from '../../GPU.js';
-import {
-  createWaterVertShader,
-  positionAttr,
-} from '../../GPU/Shaders/Water.vert.js';
+import { positionAttr } from '../Shaders/structs/Attributes.js';
+import type { CreateRenderPipelineProps } from '../../GPU.js';
+import { createWaterVertShader } from '../../GPU/Shaders/Water.vert.js';
 import { createWaterFragShader } from '../Shaders/Water.frag.js';
+import { RenderPipeline } from '../RenderPipeline.js';
 
 export const WaterRenderPipeline = [
   'WaterRenderPipeline',
   function create(
-    gpu: GPU,
-    label: string,
-    primitive: GPUPrimitiveState,
+    { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
     //TODO: Reuse sampler with terrain.ts?
@@ -25,8 +22,10 @@ export const WaterRenderPipeline = [
       attributes2: positionAttr,
       stepMode: 'vertex',
     });
-    return gpu.bindGroupTextureWater.addRenderPipeline(
+
+    return new RenderPipeline(
       {
+        bindgroupdrawable: gpu.bindGroupTextureWater,
         connections: {
           main: 'main',
         },

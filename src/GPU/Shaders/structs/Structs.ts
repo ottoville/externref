@@ -129,7 +129,7 @@ export const UI_Input = new Struct('Output', {
 export const WaterInput = new Struct('Output', {
   Position: ['@builtin(position)', 'vec4<f32>'],
   v_uv: ['@location(0)', 'vec4<f32>'],
-  position: ['@location(1)', 'vec3<f32>'],
+  position: ['@location(1)', 'vec4<f32>'],
   id: ['@location(2) @interpolate(flat)', 'u32'],
 });
 export const GroundInput = new Struct('Output', {

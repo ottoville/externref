@@ -1,27 +1,24 @@
-﻿import { BindGroup } from './BindGroup.js';
-import type { BGLayout, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
-import { RenderPipeline, type RenderPipelineProps } from './RenderPipeline.js';
-import type { VertexShader } from './Shaders/VertexShader.js';
+﻿import type { BindGroup } from './BindGroup.js';
+import type { BGLayout } from './BindGroupLayout.js';
+import { RenderPipeline } from './RenderPipeline.js';
 import type { GPU } from '../GPU.js';
-import type { FragmentShader } from './Shaders/FragmentShader.js';
-type extractGeneric<Type> = Type extends BGLayout<infer X>
-  ? MapToGPUBindGroupEntry<X>
-  : never;
-type Last<T extends BGLayout[]> = T extends [...BGLayout[], infer R]
-  ? R
-  : never;
 
-export type PipeLineLayoutProps<B extends readonly BGLayout[]> = {
+export type PipeLineLayoutProps<
+  B extends readonly BGLayout[],
+  S extends BGLayout | undefined,
+> = {
   label: string;
   bindGroupLayouts: B;
+  sharedLayout?: S;
 };
 export class PipelineLayout<
   B extends readonly BGLayout[] = readonly BGLayout[],
+  S extends BGLayout | undefined = undefined,
 > {
   bindGroupLayouts: B;
   layout: GPUPipelineLayout;
   gpu: GPU;
-  constructor({ label, bindGroupLayouts }: PipeLineLayoutProps<B>) {
+  constructor({ label, bindGroupLayouts }: PipeLineLayoutProps<B, S>) {
     if (!bindGroupLayouts[0]) {
       throw new Error('pipelineLayout needs bindgrouplayouts');
     }
@@ -34,44 +31,28 @@ export class PipelineLayout<
     });
   }
 }
+
 export class RenderPipelineLayout<
   B extends readonly BGLayout[] = readonly BGLayout[],
-> extends PipelineLayout<B> {
+  S extends BGLayout | undefined = undefined,
+> extends PipelineLayout<B, S> {
   renderPipeLines: Set<RenderPipeline> = new Set();
   subBindGroups: RenderPipelineLayout[] = [];
   bindGroupLayout: BGLayout;
 
   constructor(
-    props: PipeLineLayoutProps<B>,
+    props: PipeLineLayoutProps<B, S>,
     public sharedBindgroup?: BindGroup | undefined,
   ) {
     super(Object.freeze(props));
     this.bindGroupLayout = props.bindGroupLayouts.at(-1)!;
   }
   renderPipelineListeners: Set<() => void> = new Set();
-  protected addRenderPipelineSuper<
-    V extends VertexShader,
-    F extends FragmentShader,
-  >(
-    props: Omit<RenderPipelineProps<V, F, typeof this>, 'bindgroupdrawable'> & {
-      connections: Record<
-        keyof V['props']['entryPoints'],
-        keyof F['props']['entryPoints']
-      >;
-    },
-  ): RenderPipeline<V, F, typeof this> {
-    const d = new RenderPipeline({
-      ...props,
-      bindgroupdrawable: this,
-    });
-    this.renderPipeLines.add(d);
-    this.renderPipelineListeners.forEach((cb) => cb());
-    return d;
-  }
   createSharedLayout<T extends BGLayout>(label: string, layout: T) {
-    const p = new SharedPipelineLayout({
+    const p = new RenderPipelineLayout({
       bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
       label,
+      sharedLayout: layout,
     });
     this.subBindGroups.push(p);
     return p;
@@ -114,42 +95,9 @@ export class RenderPipelineLayout<
     return p;
   }
 }
-
-export class SharedPipelineLayout<
-  B extends BGLayout[],
-> extends RenderPipelineLayout<B> {
-  constructor(props: PipeLineLayoutProps<B>) {
-    super(props);
-  }
-  addRenderPipeline<
-    V extends VertexShader,
-    F extends FragmentShader,
-    R extends RenderPipelineLayout,
-  >(
-    props: Omit<RenderPipelineProps<V, F, R>, 'bindgroupdrawable'> & {
-      connections: Record<
-        keyof V['props']['entryPoints'],
-        keyof F['props']['entryPoints']
-      >;
-    },
-    bindGroups: (bindGroup: BindGroup) => extractGeneric<Last<B>>,
-  ) {
-    const RP = this.addRenderPipelineSuper(props);
-    RP.createSharedBindGroups = (): Set<BindGroup> => {
-      return new Set([
-        new BindGroup(
-          this.bindGroupLayout,
-          'sharedBindGroup_' + props.label,
-          bindGroups,
-        ),
-      ]);
-    };
-    return RP;
-  }
-}
 export class BindablePipelineLayout<
   B extends readonly BGLayout[] = readonly BGLayout[],
-> extends RenderPipelineLayout<B> {
+> extends RenderPipelineLayout<B, undefined> {
   constructor(
     props: {
       label: string;
@@ -158,19 +106,5 @@ export class BindablePipelineLayout<
     sharedBindgroup?: BindGroup | undefined,
   ) {
     super(props, sharedBindgroup);
-  }
-  addRenderPipeline<
-    V extends VertexShader,
-    F extends FragmentShader,
-    R extends RenderPipelineLayout,
-  >(
-    props: Omit<RenderPipelineProps<V, F, R>, 'bindgroupdrawable'> & {
-      connections: Record<
-        keyof V['props']['entryPoints'],
-        keyof F['props']['entryPoints']
-      >;
-    },
-  ) {
-    return this.addRenderPipelineSuper(props);
   }
 }

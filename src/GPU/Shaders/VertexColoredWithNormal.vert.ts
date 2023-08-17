@@ -4,17 +4,15 @@ import { GPU } from '../../GPU.js';
 import type { simpleAttributesWithColor } from '../RenderPipeLines/ColoredRenderPipeline.js';
 import { typicalOutput } from './structs/Structs.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
-import { createPickOutput } from './Simple.vert.js';
-
-type BindLayouts = Readonly<
-  GPU['positionAndTimeBindGroup']['bindGroupLayouts']
->;
+import { createPickOutput } from './SingleColoredWithNormal.vert.js';
 
 /**
   Shader where each vertex carries a color property
 */
 export function createVertexColorShader(
-  pipelineLayout: BindablePipelineLayout<BindLayouts>,
+  pipelineLayout: BindablePipelineLayout<
+    Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
+  >,
   buffers: VertexBufferLayout2<typeof simpleAttributesWithColor>,
 ) {
   return new VertexShader({
@@ -32,19 +30,22 @@ export function createVertexColorShader(
             { world },
           ],
           [{ color, position, normal }],
-        ) => /* wgsl */ `var output:Output;
-      //output.normal=normal;
-      var curPos : mat4x4<f32> = ${world.prop('transformation')};
-      var worldPos=curPos * ${position};
-      output.normal = normalize((curPos * vec4<f32>(${normal}, 0.0)).xyz);
-      output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
-      output.id=${world.prop('id')};
-      output.color = ${color};
-      output.position=vec3<f32>(worldPos.xyz);
-      output.scenes=${world.prop('scenes')};
-      //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
-      //ambient=lights.ambient;
-      return output;`,
+        ) => /* wgsl */ `
+            var output:Output;
+            //output.normal=normal;
+            var curPos : mat4x4<f32> = ${world.prop('transformation')};
+            var worldPos=curPos * ${position};
+
+            output.normal = normalize((curPos * vec4<f32>(${normal}, 0.0)).xyz);
+            output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
+            output.id=${world.prop('id')};
+            output.position=vec3<f32>(worldPos.xyz);
+            output.scenes=${world.prop('scenes')};
+            output.color = ${color};
+
+            //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
+            //ambient=lights.ambient;
+            return output;`,
       ),
       pick: createPickOutput(pipelineLayout, buffers),
     },

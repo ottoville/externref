@@ -1,27 +1,12 @@
-import { GPU } from '../../GPU.js';
-import { createSimpleVertShader } from '../Shaders/Simple.vert.js';
-
-export const simpleAttributes = Object.freeze({
-  normal: {
-    format: 'float32x3',
-    offset: 16,
-    shaderFormat: 'vec3<f32>',
-    shaderLocation: 1,
-  },
-  position: {
-    format: 'float32x3',
-    offset: 0,
-    shaderFormat: 'vec4<f32>',
-    shaderLocation: 0,
-  },
-} as const);
+import { simpleAttributes } from '../Shaders/structs/Attributes.js';
+import type { CreateRenderPipelineProps } from '../../GPU.js';
+import { createSimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
+import { RenderPipeline } from '../RenderPipeline.js';
 
 export const SimpleRenderPipeline = [
   'SimpleRenderPipeline',
   function SimpleRenderPipeline(
-    gpu: GPU,
-    label: string,
-    primitive: GPUPrimitiveState,
+    { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
     const vertexShader = createSimpleVertShader(gpu.positionAndTimeBindGroup, {
@@ -29,17 +14,21 @@ export const SimpleRenderPipeline = [
       attributes2: simpleAttributes,
       stepMode: 'vertex',
     });
-    return gpu.positionAndTimeBindGroup.addRenderPipeline({
-      connections: {
-        main: 'main',
-        pick: 'pick',
+    return new RenderPipeline(
+      {
+        bindgroupdrawable: gpu.positionAndTimeBindGroup,
+        connections: {
+          main: 'main',
+          pick: 'pick',
+        },
+        fragmentShader: gpu.simpleFragShader,
+        label,
+        renderPipeline: {
+          primitive,
+        },
+        vertexShader,
       },
-      fragmentShader: gpu.simpleFragShader,
-      label,
-      renderPipeline: {
-        primitive,
-      },
-      vertexShader,
-    });
+      undefined,
+    );
   },
 ] as const;

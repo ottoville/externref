@@ -32,16 +32,17 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     rigid_body: false,
   };
 
+  const renderPipeline = gpu.createRenderPipeline(
+    DebugLinesPipeline,
+    {
+      topology: 'line-list',
+    },
+    {
+      stride: vertexBuffer?.stride ?? targetNode.node.vertices_stride,
+    },
+  );
+
   if (vertexBuffer) {
-    const renderPipeline = gpu.createRenderPipeline(
-      DebugLinesPipeline,
-      {
-        topology: 'line-list',
-      },
-      {
-        stride: vertexBuffer.stride,
-      },
-    );
     node = new DataNode(
       {
         can_collide: false,
@@ -58,15 +59,6 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     });
   } else if (targetNode.node instanceof DataNode) {
     const stride = targetNode.node.vertices_stride;
-    const renderPipeline = gpu.createRenderPipeline(
-      DebugLinesPipeline,
-      {
-        topology: 'line-list',
-      },
-      {
-        stride,
-      },
-    );
     const vertices_ptr = allocate_vec_f32(targetNode.node.positions_count * 4);
     const newVertices = new Float32Array(
       engine.rust.memory.buffer,
@@ -106,16 +98,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     );
   }
 
-  node.translation = targetNode.node.translation;
-  node.update_scale(
-    targetNode.node.scale_x + 0.1,
-    targetNode.node.scale_y + 0.1,
-    targetNode.node.scale_z + 0.1,
-  );
-  node.rotation = targetNode.node.rotation;
-
-  //TODO: Share same transformation matrix instead of updating it from other
-  targetNode.node.onMeshChange.add(() => {
+  const updateNode = () => {
     node.translation = targetNode.node.translation;
     node.update_scale(
       targetNode.node.scale_x + 0.1,
@@ -123,5 +106,9 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       targetNode.node.scale_z + 0.1,
     );
     node.rotation = targetNode.node.rotation;
-  });
+  };
+  updateNode();
+
+  //TODO: Share same transformation matrix instead of updating it from other
+  targetNode.node.onMeshChange.add(updateNode);
 }

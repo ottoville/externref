@@ -1,4 +1,4 @@
-import { NormalsPipeline } from '../../RenderPipeLines/Normals.js';
+import { NormalsPipeline } from '../../RenderPipeLines/NormalsPipeline.js';
 import { DrawableSimple } from '../../Drawables/DrawableSimple.js';
 import type { RenderPipeline } from '../../RenderPipeline.js';
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';

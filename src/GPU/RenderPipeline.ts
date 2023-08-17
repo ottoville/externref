@@ -1,14 +1,14 @@
 ﻿import type { RenderPass } from './RenderPasses/RenderPass.js';
-import type { BindGroup } from './BindGroup.js';
-import type { RenderPipelineLayout } from './PipelineLayout.js';
+import { BindGroup } from './BindGroup.js';
+import { type RenderPipelineLayout } from './PipelineLayout.js';
 import type { VertexShader } from './Shaders/VertexShader.js';
 import type { FragmentShader } from './Shaders/FragmentShader.js';
 import { RenderBundleEncoder } from './RenderBundleEncoder.js';
+import { BGLayout, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
 
 export type RenderPipelineProps<
   V extends VertexShader,
   F extends FragmentShader,
-  R extends RenderPipelineLayout,
 > = {
   label: string;
   vertexShader: V;
@@ -21,17 +21,42 @@ export type RenderPipelineProps<
     depthWriteEnabled: boolean;
     depthCompare: GPUCompareFunction;
   };
-  bindgroupdrawable: R;
   connections: Record<string, string>;
 };
+
+export interface RenderPipelineDrawableProps<
+  V extends VertexShader = VertexShader,
+  F extends FragmentShader = FragmentShader,
+  R extends RenderPipelineLayout = RenderPipelineLayout,
+> extends RenderPipelineProps<V, F> {
+  bindgroupdrawable: R;
+}
 export class RenderPipeline<
   V extends VertexShader = VertexShader,
   F extends FragmentShader = FragmentShader,
   R extends RenderPipelineLayout = RenderPipelineLayout,
 > {
   dynamicBindGroupOffset: number[] = [];
-  public createSharedBindGroups?: () => Set<BindGroup>;
-  constructor(public props: Readonly<RenderPipelineProps<V, F, R>>) {}
+  public readonly props: RenderPipelineDrawableProps<V, F, R>;
+  constructor(
+    props: Readonly<
+      RenderPipelineDrawableProps<V, F, R> & {
+        connections: Record<
+          keyof V['props']['entryPoints'],
+          keyof F['props']['entryPoints']
+        >;
+      }
+    >,
+    private sharedBindGroups: R extends RenderPipelineLayout<infer _, infer S>
+      ? S extends BGLayout
+        ? (bindGroup: BindGroup) => MapToGPUBindGroupEntry<S['entries']>
+        : undefined
+      : undefined,
+  ) {
+    this.props = Object.freeze(props);
+    props.bindgroupdrawable.renderPipeLines.add(this);
+    props.bindgroupdrawable.renderPipelineListeners.forEach((cb) => cb());
+  }
   destroy(): void {
     this.props.bindgroupdrawable.renderPipeLines.delete(this);
     this.props.bindgroupdrawable.renderPipelineListeners.forEach((cb) => cb());
@@ -65,10 +90,15 @@ export class RenderPipeline<
         ? renderEncoder.renderBundleEncoder
         : renderEncoder;
     encoder.setPipeline(variant.renderpipeline);
-    if (this.createSharedBindGroups) {
-      this.createSharedBindGroups().forEach((bindgroup) => {
-        encoder.setBindGroup(BindGroupsStart++, bindgroup.bindGroup);
-      });
+
+    if (this.sharedBindGroups) {
+      // TODO: Do not create new BindGroup on each draw call
+      const bindgroup = new BindGroup(
+        this.props.bindgroupdrawable.bindGroupLayout,
+        'sharedBindGroup_' + this.props.label,
+        this.sharedBindGroups,
+      );
+      encoder.setBindGroup(BindGroupsStart++, bindgroup.bindGroup);
     }
     drawables.forEach((drawable) =>
       drawable.draw(renderPass, renderEncoder, BindGroupsStart, dynamicIndices),

@@ -1,7 +1,8 @@
-import { createVertexColorShader } from '../Shaders/VertexColor.vert.js';
-import { GPU } from '../../GPU.js';
-import { simpleAttributes } from './SimpleRenderPipeline.js';
+import { createVertexColorShader } from '../Shaders/VertexColoredWithNormal.vert.js';
+import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { VertexBufferLayout2 } from '../Shaders/VertexShader.js';
+import { simpleAttributes } from '../Shaders/structs/Attributes.js';
+import { RenderPipeline } from '../RenderPipeline.js';
 
 export const simpleAttributesWithColor = Object.freeze({
   ...simpleAttributes,
@@ -16,9 +17,7 @@ export const simpleAttributesWithColor = Object.freeze({
 export const ColoredRenderPipeline = [
   'ColoredRenderPipeline',
   function SimpleRenderPipeline(
-    gpu: GPU,
-    label: string,
-    primitive: GPUPrimitiveState,
+    { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
     const buffers = {
@@ -30,17 +29,21 @@ export const ColoredRenderPipeline = [
       gpu.positionAndTimeBindGroup,
       buffers,
     );
-    return gpu.positionAndTimeBindGroup.addRenderPipeline({
-      connections: {
-        main: 'main',
-        pick: 'pick',
+    return new RenderPipeline(
+      {
+        bindgroupdrawable: gpu.positionAndTimeBindGroup,
+        connections: {
+          main: 'main',
+          pick: 'pick',
+        },
+        fragmentShader: gpu.simpleFragShader,
+        label,
+        renderPipeline: {
+          primitive,
+        },
+        vertexShader,
       },
-      fragmentShader: gpu.simpleFragShader,
-      label,
-      renderPipeline: {
-        primitive,
-      },
-      vertexShader,
-    });
+      undefined,
+    );
   },
 ] as const;

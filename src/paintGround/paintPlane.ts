@@ -10,9 +10,10 @@ import {
   PlaneAtGroundHeightVertShader,
   createPlaneAtGroundHeightVertShader,
 } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
-import type { RenderPipeline } from '../GPU/RenderPipeline.js';
+import { RenderPipeline } from '../GPU/RenderPipeline.js';
 import { DataNode } from '../nodes/DataNode.js';
 import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
+import type { CreateRenderPipelineProps } from 'GPU.js';
 declare const engine: Engine;
 
 class PlaneMesh extends DataNode {
@@ -68,7 +69,10 @@ export class paintPlane extends paintGround {
     const renderPipeline = ground.gpu.createRenderPipeline(
       [
         'paintPlaneRenderpipeline',
-        (_gpu, label, primitive, vertexBufferProps) => {
+        (
+          { label, primitive }: CreateRenderPipelineProps,
+          vertexBufferProps,
+        ) => {
           const vertexShader = createPlaneAtGroundHeightVertShader(
             ground.TerrainHeightsbindGroupTree,
             {
@@ -88,17 +92,21 @@ export class paintPlane extends paintGround {
           const fragmentShader = createColorFragmentShader(
             ground.TerrainHeightsbindGroupTree,
           );
-          return ground.TerrainHeightsbindGroupTree.addRenderPipeline({
-            connections: {
-              main: 'main',
+          return new RenderPipeline(
+            {
+              bindgroupdrawable: ground.TerrainHeightsbindGroupTree,
+              connections: {
+                main: 'main',
+              },
+              fragmentShader,
+              label,
+              renderPipeline: {
+                primitive,
+              },
+              vertexShader,
             },
-            fragmentShader,
-            label,
-            renderPipeline: {
-              primitive,
-            },
-            vertexShader,
-          });
+            undefined,
+          );
         },
       ],
       {

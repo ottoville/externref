@@ -1,6 +1,7 @@
-import type { GPU } from '../../GPU';
+import type { CreateRenderPipelineProps } from '../../GPU';
 import { createGroundVertShader } from '../Shaders/Ground.vert.js';
 import { createGroundFragShader } from '../Shaders/Ground.frag.js';
+import { RenderPipeline } from '../RenderPipeline.js';
 
 const attributes = Object.freeze({
   normal: {
@@ -27,12 +28,8 @@ const attributes = Object.freeze({
 export const TerrainRenderPipeline = [
   'TerrainRenderPipeline',
   function create(
-    gpu: GPU,
-    label: string,
-    primitive: GPUPrimitiveState,
-    vertexBufferProps: {
-      stride: number;
-    },
+    { gpu, label, primitive }: CreateRenderPipelineProps,
+    vertexBufferProps: { stride: number },
   ) {
     const vertexShader = createGroundVertShader(gpu.lightsTextureBindGroup, {
       arrayStride: vertexBufferProps.stride * 4,
@@ -40,17 +37,21 @@ export const TerrainRenderPipeline = [
       stepMode: 'vertex',
     });
     const fragmentShader = createGroundFragShader(gpu.lightsTextureBindGroup);
-    return gpu.lightsTextureBindGroup.addRenderPipeline({
-      connections: {
-        main: 'main',
-        pick: 'pick',
+    return new RenderPipeline(
+      {
+        bindgroupdrawable: gpu.lightsTextureBindGroup,
+        connections: {
+          main: 'main',
+          pick: 'pick',
+        },
+        fragmentShader,
+        label,
+        renderPipeline: {
+          primitive,
+        },
+        vertexShader,
       },
-      fragmentShader,
-      label,
-      renderPipeline: {
-        primitive,
-      },
-      vertexShader,
-    });
+      undefined,
+    );
   },
 ] as const;

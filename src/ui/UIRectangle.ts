@@ -142,12 +142,15 @@ export abstract class UIRectangle<
       }
     }
     if (!this.texture) {
+      const structName =
+        this.props.canvaspipeline.props.bindgroupdrawable.bindGroupLayouts[0]
+          .entries.texture.structName;
       this.texture = new RenderTarget({
         format: 'bgra8unorm',
         gpu: this.props.renderPass.gpu,
         label: 'button_' + this.props.label + '_UIRectangle_text',
         size: {
-          depthOrArrayLayers: 2,
+          depthOrArrayLayers: structName.includes('array') ? 2 : 1,
           height: copySource.height,
           width: copySource.width,
         },
