@@ -1,5 +1,5 @@
 import { BindGroupLayoutEntry } from '../BindGroupLayout.js';
-import { Shader, ShaderParams } from './Shader.js';
+import { Shader, type ShaderParams, ShaderStage } from './Shader.js';
 import {
   FragmentShaderFunction,
   VertexShaderFunction,
@@ -18,10 +18,7 @@ export abstract class OutputShader<
 > extends Shader<E> {
   constructor(
     props: ShaderParams<E>,
-    shaderFlag:
-      | typeof GPUShaderStage.VERTEX
-      | typeof GPUShaderStage.FRAGMENT
-      | typeof GPUShaderStage.COMPUTE,
+    shaderFlag: ShaderStage,
     constantCode?:
       | ((
           b: Readonly<{

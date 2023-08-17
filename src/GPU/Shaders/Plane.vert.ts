@@ -1,9 +1,10 @@
-import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, colorPositionOutput } from './structs/Structs.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
+import type { ShaderStage } from './Shader.js';
 
 type BindLayouts = [
   GPU['sizeBindGroupLayout'],

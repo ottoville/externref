@@ -1,8 +1,5 @@
-import {
-  ShaderStage,
-  StorageTextLayout,
-  TextLayout,
-} from '../BindGroupLayout.js';
+import { StorageTextLayout, TextLayout } from '../BindGroupLayout.js';
+import type { ShaderStage } from './Shader.js';
 
 export const textureStore = (
   texture: StorageTextLayout,

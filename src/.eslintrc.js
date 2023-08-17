@@ -44,7 +44,6 @@ module.exports = {
     'no-loop-func': 2,
 
     // Style rules
-    'array-bracket-newline': 2,
     'object-curly-spacing': [2, 'always'],
     'no-trailing-spaces': 2,
     'key-spacing': [

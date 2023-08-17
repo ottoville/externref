@@ -1,14 +1,10 @@
-import {
-  BGLayout,
-  BufLayout,
-  ShaderStage,
-  TextLayout,
-} from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
+import { ShaderStage } from './Shader.js';
 
 export function createReadDepth(gpu: GPU) {
   const bindLayouts = [

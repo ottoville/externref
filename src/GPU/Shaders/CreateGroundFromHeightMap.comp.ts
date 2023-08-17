@@ -1,15 +1,11 @@
-import {
-  BGLayout,
-  BufLayout,
-  ShaderStage,
-  TextLayout,
-} from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
+import { ShaderStage } from './Shader.js';
 
 export function CreateGroundFromHeightMap(
   gpu: GPU,

@@ -1,5 +1,6 @@
 /* eslint-disable sort-keys */
-import { BufLayout, ShaderStage } from '../../BindGroupLayout.js';
+import { BufLayout } from '../../BindGroupLayout.js';
+import { ShaderStage } from '../Shader.js';
 
 export class Struct<
   const T extends {

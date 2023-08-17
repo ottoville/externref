@@ -1,5 +1,5 @@
 import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
-import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import {
@@ -8,6 +8,7 @@ import {
 } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
+import { ShaderStage } from './Shader.js';
 export function createClustersCompShader(
   sizeGroup: GPU['sizeBindGroupLayout'],
 ) {

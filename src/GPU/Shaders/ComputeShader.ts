@@ -1,5 +1,5 @@
 import { BGLayout } from '../BindGroupLayout.js';
-import { Shader, type ShaderParams } from './Shader.js';
+import { Shader, ShaderStage, type ShaderParams } from './Shader.js';
 import type {
   ComputeEntry,
   ComputeShaderFunction,
@@ -21,7 +21,7 @@ export class ComputeShader<
   ) {
     super(
       props,
-      GPUShaderStage.COMPUTE,
+      ShaderStage.COMPUTE,
       //@ts-expect-error TODO
       constantCode,
     );

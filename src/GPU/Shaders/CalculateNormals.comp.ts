@@ -1,10 +1,11 @@
-import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { FloatArray } from './structs/Structs.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { SlopesLayout } from './CreateTerrainTexture.comp.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
+import { ShaderStage } from './Shader.js';
 
 export function createCalculateNormals(
   settings: typeof Terrain.settings,

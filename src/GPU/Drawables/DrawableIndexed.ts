@@ -10,17 +10,13 @@ import type { DrawableProps } from './Drawable.js';
 import type { RenderPass } from '../RenderPasses/RenderPass.js';
 import type { DataNode } from '../../nodes/DataNode.js';
 import { VertexShader } from '../Shaders/VertexShader.js';
-import {
-  BGLayout,
-  SampLayout,
-  ShaderStage,
-  TextLayout,
-} from '../BindGroupLayout.js';
+import { BGLayout, SampLayout, TextLayout } from '../BindGroupLayout.js';
 import { TextureView } from '../TextureView.js';
 import { TEXTURE_BINDING_TEXTURE, Texture } from '../Texture.js';
 import { FragmentShader } from '../Shaders/FragmentShader.js';
 import { RenderPipelineLayout } from '../PipelineLayout.js';
 import { BindGroup } from '../BindGroup.js';
+import type { ShaderStage } from '../Shaders/Shader.js';
 declare const engine: Engine;
 
 type DrawableIndexedProps = {

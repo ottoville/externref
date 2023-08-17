@@ -71,21 +71,18 @@ export class RenderPipelineLayout<
   addChildBindGroupLayout<T extends BindGroup>(
     label: string,
     sharedBindgroup: T,
-  ): RenderPipelineLayout<
-    readonly [...B, T extends BindGroup<infer X> ? X : never]
-  > {
+  ) {
     const p = new RenderPipelineLayout(
       {
         bindGroupLayouts: [
           ...this.bindGroupLayouts,
           sharedBindgroup.layout,
-        ] as [...B, typeof sharedBindgroup.layout],
+        ] as [...B, T extends BindGroup<infer X> ? X : never],
         label,
       },
       sharedBindgroup,
     );
     this.subBindGroups.push(p);
-    //@ts-expect-error bug in TS?
     return p;
   }
 }

@@ -1,4 +1,4 @@
-import { BGLayout, BufLayout, ShaderStage } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
@@ -9,6 +9,7 @@ import {
   ViewUniforms,
 } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
+import { ShaderStage } from './Shader.js';
 
 export function createUpdateViewShader(gpu: GPU) {
   const bindLayouts = [

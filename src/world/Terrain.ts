@@ -26,7 +26,7 @@ import {
   CalculateNormals,
   createCalculateNormals,
 } from '../GPU/Shaders/CalculateNormals.comp.js';
-import { BGLayout, BufLayout, ShaderStage } from '../GPU/BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../GPU/BindGroupLayout.js';
 import { CreateGroundFromHeightMap } from '../GPU/Shaders/CreateGroundFromHeightMap.comp.js';
 import { GPU } from '../GPU.js';
 import {
@@ -42,6 +42,7 @@ import {
 } from '../GPU/Shaders/structs/Structs.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import { Buffer2, BufferUsageEnums } from '../GPU/Buffer/Buffer2.js';
+import { ShaderStage } from '../GPU/Shaders/Shader.js';
 declare const engine: Engine;
 
 const terrainSize = [10000, 10000] as const;

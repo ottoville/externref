@@ -3,6 +3,15 @@ import type { Struct } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import { type ShaderFunction } from './ShaderFunction.js';
 
+export const enum ShaderStage {
+  VERTEX = 1,
+  FRAGMENT = 2,
+  COMPUTE = 4,
+  VERTEX_AND_FRAGMENT = 3, //GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+  COMPUTE_AND_FRAGMENT = 6, // GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT
+  COMPUTE_AND_VERTEX = 5, // GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX
+}
+
 export type ShaderParams<
   E extends { [index: string]: ShaderFunction } = {
     [index: string]: ShaderFunction;
@@ -21,10 +30,7 @@ export abstract class Shader<
   wgsl: string;
   constructor(
     public props: ShaderParams<E>,
-    shaderFlag:
-      | typeof GPUShaderStage.VERTEX
-      | typeof GPUShaderStage.FRAGMENT
-      | typeof GPUShaderStage.COMPUTE,
+    shaderFlag: ShaderStage,
     constantCode?:
       | ((
           b: Readonly<{

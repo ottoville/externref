@@ -1,4 +1,5 @@
 import type { GPU } from '../GPU.js';
+import type { ShaderStage } from './Shaders/Shader.js';
 import type { Struct } from './Shaders/structs/Structs.js';
 import { TEXTURE_BINDING_TEXTURE, Texture, TextureSize } from './Texture.js';
 import { TextureView } from './TextureView.js';
@@ -33,14 +34,6 @@ export type GPUBindGroupLayoutEntryBuffer = Omit<
   buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 };
 };
 
-export enum ShaderStage {
-  VERTEX = 1,
-  FRAGMENT = 2,
-  COMPUTE = 4,
-  VERTEX_AND_FRAGMENT = 3, //GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-  COMPUTE_AND_FRAGMENT = 6, // GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT
-  COMPUTE_AND_VERTEX = 5, // GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX
-}
 interface BindGroupLayoutEntryProps<V extends ShaderStage = ShaderStage>
   extends Omit<GPUBindGroupLayoutEntry, 'binding' | 'visibility'> {
   visibility: V;

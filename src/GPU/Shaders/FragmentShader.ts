@@ -1,4 +1,4 @@
-import type { ShaderParams } from './Shader.js';
+import { ShaderStage, type ShaderParams } from './Shader.js';
 import {
   FilteredBindgroupEntrys,
   FragmentEntry,
@@ -24,7 +24,7 @@ export class FragmentShader<
   ) {
     super(
       props,
-      GPUShaderStage.FRAGMENT,
+      ShaderStage.FRAGMENT,
       //@ts-expect-error TODO
       constantCode,
     );

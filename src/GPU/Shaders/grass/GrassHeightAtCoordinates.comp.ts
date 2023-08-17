@@ -1,4 +1,4 @@
-import { BGLayout, BufLayout, ShaderStage } from '../../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../../BindGroupLayout.js';
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
 import {
@@ -12,6 +12,7 @@ import type { Terrain } from '../../../world/Terrain.js';
 import type { GPU } from '../../../GPU.js';
 import { getHeightAtCoordinates } from '../getHeightAtCoordinates.js';
 import { ComputeShaderFunction } from '../ShaderFunction.js';
+import { ShaderStage } from '../Shader.js';
 
 export function createGrassHeightAtCoordinates(
   settings: typeof Terrain.settings,

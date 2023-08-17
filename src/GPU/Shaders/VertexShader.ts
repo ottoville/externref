@@ -1,5 +1,5 @@
 import { BGLayout } from '../BindGroupLayout.js';
-import type { ShaderParams } from './Shader.js';
+import { ShaderStage, type ShaderParams } from './Shader.js';
 import type {
   FilteredBindgroupEntrys,
   VertexEntry,
@@ -50,7 +50,7 @@ export class VertexShader<
   ) {
     super(
       props,
-      GPUShaderStage.VERTEX,
+      ShaderStage.VERTEX,
       //@ts-expect-error TODO
       constantCode,
     );

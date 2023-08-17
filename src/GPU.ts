@@ -25,7 +25,6 @@ import {
   BufLayout,
   SampLayout,
   TextLayout,
-  ShaderStage,
 } from './GPU/BindGroupLayout.js';
 import {
   createUpdateViewShader,
@@ -64,6 +63,7 @@ import {
   createUIFragmentShaderArray,
   UIFragShaderArray,
 } from './GPU/Shaders/UI_array.frag.js';
+import { ShaderStage } from './GPU/Shaders/Shader.js';
 declare const engine: Engine;
 
 let curSecond = 0;

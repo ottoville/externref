@@ -1,11 +1,8 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import type {
-  BGLayout,
-  BindGroupLayoutEntry,
-  ShaderStage,
-} from '../BindGroupLayout.js';
+import type { BGLayout, BindGroupLayoutEntry } from '../BindGroupLayout.js';
 import type { VertexBufferLayout2 } from './VertexShader.js';
 import type { Struct } from './structs/Structs.js';
+import type { ShaderStage } from './Shader.js';
 
 export type VertexEntry = BindGroupLayoutEntry<
   | ShaderStage.VERTEX

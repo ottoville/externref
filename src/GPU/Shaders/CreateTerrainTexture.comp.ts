@@ -1,15 +1,11 @@
-import {
-  BGLayout,
-  BufLayout,
-  ShaderStage,
-  StorageTextLayout,
-} from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, StorageTextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { PlaneArray, IntArray } from './structs/Structs.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
+import { ShaderStage } from './Shader.js';
 
 export type SlopesLayout = BGLayout<{
   slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>;
