@@ -18,11 +18,11 @@ export const DebugLinesPipeline = Object.freeze([
         connections: {
           main: 'main',
         },
-        fragmentShader: gpu.colorFragShader,
-        label,
-        renderPipeline: {
+        descriptor: {
           primitive,
         },
+        fragmentShader: gpu.colorFragShader,
+        label,
         vertexShader,
       },
       undefined,

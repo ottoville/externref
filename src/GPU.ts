@@ -799,14 +799,14 @@ export class GPU {
         connections: {
           main: 'main',
         },
-        fragmentShader: UIfragmentShader,
-        label: 'UIRenderPipeline',
-        renderPipeline: {
+        descriptor: {
           primitive: {
             frontFace: 'ccw',
             topology: 'triangle-list',
           },
         },
+        fragmentShader: UIfragmentShader,
+        label: 'UIRenderPipeline',
         vertexShader,
       },
       undefined,
@@ -817,14 +817,14 @@ export class GPU {
         connections: {
           main: 'array',
         },
-        fragmentShader: UIfragmentShaderArray,
-        label: 'UIRenderPipelineArray',
-        renderPipeline: {
+        descriptor: {
           primitive: {
             frontFace: 'ccw',
             topology: 'triangle-list',
           },
         },
+        fragmentShader: UIfragmentShaderArray,
+        label: 'UIRenderPipelineArray',
         vertexShader,
       },
       undefined,

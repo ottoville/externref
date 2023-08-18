@@ -47,8 +47,7 @@ export class BoundingBoxMesh extends DataNode {
       3,
     );
     const positions_amount = 26;
-    const gpu =
-      targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
+    const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
     const debug_render_boundingbox_vertexBuffer = new Buffer2(
       {
         gpu,

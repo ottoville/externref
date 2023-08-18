@@ -14,11 +14,11 @@ export const NormalsPipeline = Object.freeze([
         connections: {
           main: 'main',
         },
-        fragmentShader: gpu.colorFragShader,
-        label,
-        renderPipeline: {
+        descriptor: {
           primitive,
         },
+        fragmentShader: gpu.colorFragShader,
+        label,
         vertexShader: createDebugNormalsVertShader(
           gpu.positionAndTimeBindGroup,
           vertexBufferProps.stride * 4,

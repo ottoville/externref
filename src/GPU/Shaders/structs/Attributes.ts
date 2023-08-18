@@ -15,3 +15,12 @@ export const simpleAttributes = Object.freeze({
     shaderLocation: 1,
   },
 } as const);
+export const simpleAttributesWithColor = Object.freeze({
+  ...simpleAttributes,
+  color: {
+    format: 'float32x3',
+    offset: 32,
+    shaderFormat: 'vec3<f32>',
+    shaderLocation: 2,
+  },
+} as const);

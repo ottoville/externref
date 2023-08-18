@@ -13,34 +13,16 @@ declare const engine: Engine;
 const getPositionBindGroupForScreen = (gpu: GPU) =>
   Array.from(gpu.renderPassScreen.renderPipelines).filter(
     (map): map is [RenderPipeline, RenderPipelineVariant] => {
-      const [renderPipeline, renderPipelineVariant] = map;
-      return (
-        (renderPipeline.props.bindgroupdrawable ===
-          gpu.positionAndTimeBindGroup ||
-          gpu.positionAndTimeBindGroup.subBindGroups.includes(
-            renderPipeline.props.bindgroupdrawable,
-          )) &&
-        !(renderPipelineVariant instanceof Promise)
-      );
+      const [, renderPipelineVariant] = map;
+      return !(renderPipelineVariant instanceof Promise);
     },
   );
 
 const getUIBindGroupForScreen = (gpu: GPU) =>
   Array.from(gpu.renderPassCanvas.renderPipelines).filter(
     (map): map is [RenderPipeline, RenderPipelineVariant] => {
-      const [renderPipeline, renderPipelineVariant] = map;
-      return (
-        (renderPipeline.props.bindgroupdrawable === gpu.canvasRootLayout ||
-          renderPipeline.props.bindgroupdrawable ===
-            gpu.canvasRootLayoutArray ||
-          gpu.canvasRootLayout.subBindGroups.includes(
-            renderPipeline.props.bindgroupdrawable,
-          ) ||
-          gpu.canvasRootLayoutArray.subBindGroups.includes(
-            renderPipeline.props.bindgroupdrawable,
-          )) &&
-        !(renderPipelineVariant instanceof Promise)
-      );
+      const [, renderPipelineVariant] = map;
+      return !(renderPipelineVariant instanceof Promise);
     },
   );
 export function Meshes() {

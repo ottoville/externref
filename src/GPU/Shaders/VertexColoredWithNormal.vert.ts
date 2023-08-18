@@ -1,10 +1,10 @@
-import { RenderPipelineLayout } from '../PipelineLayout.js';
-import { type VertexBufferLayout2, VertexShader } from './VertexShader.js';
+import type { RenderPipelineLayout } from '../PipelineLayout.js';
+import { VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js';
-import type { simpleAttributesWithColor } from '../RenderPipeLines/ColoredRenderPipeline.js';
 import { typicalOutput } from './structs/Structs.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
 import { createPickOutput } from './SingleColoredWithNormal.vert.js';
+import { simpleAttributesWithColor } from './structs/Attributes.js';
 
 /**
   Shader where each vertex carries a color property
@@ -13,14 +13,21 @@ export function createVertexColorShader(
   pipelineLayout: RenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
-  buffers: VertexBufferLayout2<typeof simpleAttributesWithColor>,
+  arrayStride: number,
 ) {
+  const buffers = Object.freeze([
+    {
+      arrayStride,
+      attributes2: simpleAttributesWithColor,
+      stepMode: 'vertex',
+    },
+  ] as const);
   return new VertexShader({
     entryPoints: {
       main: new VertexShaderFunction(
         typicalOutput,
         pipelineLayout,
-        [buffers],
+        buffers,
         (
           [
             ,

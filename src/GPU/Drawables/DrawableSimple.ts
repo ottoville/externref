@@ -27,12 +27,9 @@ export class DrawableSimple<
     } = {},
   ) {
     const dynamicIndex = engine.rust.gpu_alignment(drawableProps.node.id);
+    const gpu = drawableProps.renderPipeline.props.vertexShader.props.gpu;
     const dynamicBindGroups: [BindGroup, number][] = [
-      [
-        drawableProps.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu
-          .BindGroupPosition,
-        dynamicIndex,
-      ],
+      [gpu.BindGroupPosition, dynamicIndex],
     ];
 
     super(

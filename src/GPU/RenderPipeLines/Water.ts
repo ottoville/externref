@@ -29,11 +29,11 @@ export const WaterRenderPipeline = [
         connections: {
           main: 'main',
         },
-        fragmentShader: createWaterFragShader(gpu.bindGroupTextureWater),
-        label,
-        renderPipeline: {
+        descriptor: {
           primitive,
         },
+        fragmentShader: createWaterFragShader(gpu.bindGroupTextureWater),
+        label,
         vertexShader: waterVertShader,
       },
       () => ({

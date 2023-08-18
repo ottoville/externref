@@ -1,4 +1,4 @@
-import { PipelineLayout } from '../PipelineLayout.js';
+import type { RenderPipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 
 import { GPU } from '../../GPU.js';
@@ -7,7 +7,7 @@ import { Struct } from './structs/Structs.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createSunVertShader(
-  pipelineLayout: PipelineLayout<BindLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindLayouts>,
 ) {
   return new VertexShader(
     {

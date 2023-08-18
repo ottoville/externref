@@ -1,4 +1,4 @@
-import { PipelineLayout } from '../PipelineLayout.js';
+import type { RenderPipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { GPU } from '../../GPU.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
@@ -20,7 +20,7 @@ export const position_uv_attrs = Object.freeze({
 } as const);
 
 export function createUIVertShader(
-  pipelineLayout: PipelineLayout<[GPU['BindGroupLayoutCanvas']]>,
+  pipelineLayout: RenderPipelineLayout<[GPU['BindGroupLayoutCanvas']]>,
   buffers: VertexBufferLayout2<typeof position_uv_attrs>,
 ) {
   return new VertexShader({

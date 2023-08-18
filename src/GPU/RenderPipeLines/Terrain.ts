@@ -44,11 +44,11 @@ export const TerrainRenderPipeline = [
           main: 'main',
           pick: 'pick',
         },
-        fragmentShader,
-        label,
-        renderPipeline: {
+        descriptor: {
           primitive,
         },
+        fragmentShader,
+        label,
         vertexShader,
       },
       undefined,

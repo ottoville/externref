@@ -142,9 +142,17 @@ export abstract class UIRectangle<
       }
     }
     if (!this.texture) {
-      const structName =
-        this.props.canvaspipeline.props.bindgroupdrawable.bindGroupLayouts[0]
-          .entries.texture.structName;
+      const frag = this.props.canvaspipeline.props.fragmentShader;
+      let structName: string;
+      if ('main' in frag.props.entryPoints) {
+        structName =
+          frag.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0].entries
+            .texture.structName;
+      } else {
+        structName =
+          frag.props.entryPoints.array.pipelineLayout.bindGroupLayouts[0]
+            .entries.texture.structName;
+      }
       this.texture = new RenderTarget({
         format: 'bgra8unorm',
         gpu: this.props.renderPass.gpu,
@@ -453,7 +461,7 @@ export abstract class UIRectangle<
       });
 
       this.drawable.staticBindGroup = new BindGroup(
-        canvaspipeline.props.bindgroupdrawable.bindGroupLayouts[0],
+        canvaspipeline.props.vertexShader.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0],
         'UI_bindgroup_' + label,
         (bindGroup) => {
           return {

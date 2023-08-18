@@ -38,11 +38,11 @@ export const PlantsRenderPipeline = [
         connections: {
           main: 'main',
         },
-        fragmentShader,
-        label,
-        renderPipeline: {
+        descriptor: {
           primitive,
         },
+        fragmentShader,
+        label,
         vertexShader,
       },
       undefined,

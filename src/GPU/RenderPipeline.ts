@@ -13,7 +13,7 @@ export type RenderPipelineProps<
   label: string;
   vertexShader: V;
   fragmentShader: F;
-  renderPipeline: Omit<
+  descriptor: Omit<
     GPURenderPipelineDescriptor,
     'depthStencil' | 'fragment' | 'vertex' | 'layout'
   >;
@@ -54,12 +54,18 @@ export class RenderPipeline<
       : undefined,
   ) {
     this.props = Object.freeze(props);
-    props.bindgroupdrawable.renderPipeLines.add(this);
-    props.bindgroupdrawable.renderPipelineListeners.forEach((cb) => cb());
+    Object.values(props.vertexShader.props.entryPoints).forEach((entry) => {
+      entry.pipelineLayout.renderPipeLines.add(this);
+      entry.pipelineLayout.renderPipelineListeners.forEach((cb) => cb());
+    });
   }
   destroy(): void {
-    this.props.bindgroupdrawable.renderPipeLines.delete(this);
-    this.props.bindgroupdrawable.renderPipelineListeners.forEach((cb) => cb());
+    Object.values(this.props.vertexShader.props.entryPoints).forEach(
+      (entry) => {
+        entry.pipelineLayout.renderPipeLines.delete(this);
+        entry.pipelineLayout.renderPipelineListeners.forEach((cb) => cb());
+      },
+    );
   }
   draw(
     renderEncoder: RenderBundleEncoder | GPURenderPassEncoder,

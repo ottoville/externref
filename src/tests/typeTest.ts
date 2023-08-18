@@ -189,9 +189,9 @@ new RenderPipeline(
     connections: {
       main: 'main',
     },
+    descriptor: {},
     fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
     label: 'test',
-    renderPipeline: {},
     vertexShader: waterVertShader,
   },
   //Should be fine
@@ -206,9 +206,9 @@ new RenderPipeline(
     connections: {
       main: 'main',
     },
+    descriptor: {},
     fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
     label: 'test',
-    renderPipeline: {},
     vertexShader: waterVertShader,
   },
   //@ts-expect-error Shared bindgroup is undefined

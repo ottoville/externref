@@ -1,4 +1,4 @@
-import { PipelineLayout } from '../PipelineLayout.js';
+import type { RenderPipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
@@ -9,7 +9,7 @@ type BindGroupLayouts =
   Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts'];
 
 export function createPlaneAtGroundHeightVertShader(
-  pipelineLayout: PipelineLayout<BindGroupLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindGroupLayouts>,
   buffers: VertexBufferLayout2,
   settings: typeof Terrain.settings,
 ) {

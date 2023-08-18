@@ -1,4 +1,4 @@
-import { PipelineLayout } from '../../PipelineLayout.js';
+import type { RenderPipelineLayout } from '../../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from '../VertexShader.js';
 import { GPU } from '../../../GPU.js';
 import { VertexShaderFunction } from '../ShaderFunction.js';
@@ -8,7 +8,7 @@ import { simpleAttributes } from '../structs/Attributes.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createDebugNormalsVertShader(
-  pipelineLayout: PipelineLayout<BindLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindLayouts>,
   arrayStride: number,
 ) {
   return new VertexShader({

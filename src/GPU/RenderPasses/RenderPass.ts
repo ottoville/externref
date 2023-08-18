@@ -175,9 +175,13 @@ export class RenderPass<
   getVariant(renderPipeline: Readonly<RenderPipeline>) {
     let variant = this.renderPipelines.get(renderPipeline);
     if (!variant) {
+      // Use layout from vertex shader for pipeline layout.
+      const layout =
+        renderPipeline.props.vertexShader.props.entryPoints[this.#entryPoint]!
+          .pipelineLayout.layout;
       const params = {
-        ...renderPipeline.props.renderPipeline,
-        layout: renderPipeline.props.bindgroupdrawable.layout,
+        ...renderPipeline.props.descriptor,
+        layout,
         ...this.onDecoratePipeline(renderPipeline),
         label:
           'renderPipeline:' +

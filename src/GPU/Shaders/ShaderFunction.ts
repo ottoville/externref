@@ -1,4 +1,4 @@
-import { PipelineLayout } from '../PipelineLayout.js';
+import { PipelineLayout, RenderPipelineLayout } from '../PipelineLayout.js';
 import type { BGLayout, BindGroupLayoutEntry } from '../BindGroupLayout.js';
 import type { VertexBufferLayout2 } from './VertexShader.js';
 import type { Struct } from './structs/Structs.js';
@@ -43,7 +43,7 @@ export class VertexShaderFunction<
   buffers: GPUVertexBufferLayout[] = [];
   constructor(
     public output: Struct,
-    public pipelineLayout: PipelineLayout<B>,
+    public pipelineLayout: RenderPipelineLayout<B>,
     vertexBufferLayout: V,
     code: (
       args: FilteredBindgroupEntrys<B, VertexEntry>,

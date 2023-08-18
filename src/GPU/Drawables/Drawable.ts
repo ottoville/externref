@@ -128,8 +128,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         stride: number;
       };
     else {
-      const gpu =
-        this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
+      const gpu = this.renderPipeline.props.vertexShader.props.gpu;
       const ptr = buffer.view[0];
       const len =
         (buffer.view[1] * Float32Array.BYTES_PER_ELEMENT) /

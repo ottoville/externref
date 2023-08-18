@@ -1,6 +1,5 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import type { Scene } from '../../Scene.js';
-import { LightsTextureDrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine, rust_pointer, rust_vec_ptr } from '../../engine.js';
 import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
@@ -12,6 +11,7 @@ import type { TEXTURE_BINDING_TEXTURE, Texture } from '../../GPU/Texture.js';
 import type { Buffer2, VERTEX_BUFFER } from '../Buffer/Buffer2.js';
 import { FragmentShader } from '../Shaders/FragmentShader.js';
 import type { GPU } from '../../GPU.js';
+import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;
@@ -90,6 +90,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
             },
           ],
         },
+        engine.gpu.lightsTextureBindGroup,
         initialTexture,
         this.sampler!,
       );

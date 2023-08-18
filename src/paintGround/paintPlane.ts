@@ -98,11 +98,11 @@ export class paintPlane extends paintGround {
               connections: {
                 main: 'main',
               },
-              fragmentShader,
-              label,
-              renderPipeline: {
+              descriptor: {
                 primitive,
               },
+              fragmentShader,
+              label,
               vertexShader,
             },
             undefined,

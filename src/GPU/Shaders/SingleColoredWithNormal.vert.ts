@@ -9,12 +9,12 @@ export function createPickOutput(
   pipelineLayout: RenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
-  buffers: VertexBufferLayout2<typeof simpleAttributes>,
+  buffers: readonly [VertexBufferLayout2<typeof simpleAttributes>],
 ) {
   return new VertexShaderFunction(
     pickOutput,
     pipelineLayout,
-    [buffers],
+    buffers,
     (
       [
         ,
@@ -44,14 +44,21 @@ export function createSimpleVertShader(
   pipelineLayout: RenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
-  buffers: VertexBufferLayout2<typeof simpleAttributes>,
+  arrayStride: number,
 ) {
+  const buffers = Object.freeze([
+    {
+      arrayStride,
+      attributes2: simpleAttributes,
+      stepMode: 'vertex',
+    },
+  ] as const);
   return new VertexShader({
     entryPoints: {
       main: new VertexShaderFunction(
         typicalOutput,
         pipelineLayout,
-        [buffers],
+        buffers,
         (
           [
             ,

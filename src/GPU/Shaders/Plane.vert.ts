@@ -1,5 +1,5 @@
 import { BGLayout, BufLayout } from '../BindGroupLayout.js';
-import { PipelineLayout } from '../PipelineLayout.js';
+import type { RenderPipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, colorPositionOutput } from './structs/Structs.js';
@@ -15,7 +15,7 @@ type BindLayouts = [
 ];
 export class Plane extends VertexShader {
   constructor(
-    pipelineLayout: PipelineLayout<BindLayouts>,
+    pipelineLayout: RenderPipelineLayout<BindLayouts>,
     buffers: VertexBufferLayout2,
   ) {
     super({

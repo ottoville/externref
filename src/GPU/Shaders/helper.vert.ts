@@ -1,4 +1,4 @@
-import { PipelineLayout } from '../PipelineLayout.js';
+import type { RenderPipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
@@ -9,7 +9,7 @@ type BindGroupLayouts =
 
 export function createHelperVertShader(
   settings: typeof Terrain.settings,
-  pipelineLayout: PipelineLayout<BindGroupLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindGroupLayouts>,
 ) {
   return new VertexShader(
     {

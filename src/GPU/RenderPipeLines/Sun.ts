@@ -20,11 +20,11 @@ export const SunRenderPipeline = [
           depthCompare: 'always',
           depthWriteEnabled: false,
         },
-        fragmentShader,
-        label,
-        renderPipeline: {
+        descriptor: {
           primitive,
         },
+        fragmentShader,
+        label,
         vertexShader,
       },
       undefined,

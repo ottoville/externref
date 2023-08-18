@@ -23,8 +23,8 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     indices[i * 6 + 5] = targetIndices[i * 3]!;
   }
   let node: DataNode;
-  const gpu =
-    targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
+
+  const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
   const vertexBuffer = targetNode.vertexBuffers.get(0)?.buffer;
 
   const mainNodeProps = {
