@@ -1,5 +1,4 @@
-﻿//@ts-ignore
-import { TerraMatrix } from './Math.js';
+﻿import { TerraMatrix } from './Math.js';
 import { MeshCamera } from './controllers/MeshCamera.js';
 import type { Engine } from './engine.js';
 import { Box } from './GPU/Meshes/Box.js';
@@ -7,7 +6,7 @@ import type { Scene } from './Scene.js';
 import { ARROW_KEYS } from './controllers/CameraController.js';
 declare const engine: Engine;
 const maxAcceleration = 10;
-export const closeDistance = 0.0022;
+const closeDistance = 0.0022;
 const maxSpeedSquared = 1.4 * 1.4;
 export class Human extends Box {
   inputManager: MeshCamera;

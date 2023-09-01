@@ -9,6 +9,7 @@ declare const engine: Engine;
     This camera is used for camera that can be moved with keyboard
     without being attached to any mesh
 */
+// eslint-disable-next-line import/no-unused-modules
 export class PositionCamera extends CameraController {
   name = 'PositionCamera';
   #angle = Math.PI;

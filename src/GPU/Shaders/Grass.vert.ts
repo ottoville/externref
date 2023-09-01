@@ -157,5 +157,3 @@ vec2<f32>(0.0, 1.0)
     `,
   );
 }
-
-export type GrassVertShader = ReturnType<typeof createGrassVertShader>;

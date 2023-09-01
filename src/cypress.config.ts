@@ -2,6 +2,7 @@
 import { defineConfig } from 'cypress';
 import { initPlugin } from '@frsource/cypress-plugin-visual-regression-diff/plugins';
 
+// eslint-disable-next-line import/no-unused-modules
 export default defineConfig({
   e2e: {
     setupNodeEvents(on, config) {

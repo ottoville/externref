@@ -1,4 +1,4 @@
-export class CameraTAB {
+class CameraTAB {
   /* activate = (): void => {
         this.activated=true;
     }*/

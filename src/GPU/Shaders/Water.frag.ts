@@ -37,4 +37,3 @@ export function createWaterFragShader(
     label: 'Water.frag',
   });
 }
-export type WaterFragShader = ReturnType<typeof createWaterFragShader>;

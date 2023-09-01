@@ -6,10 +6,7 @@ import type { FragmentShader } from './Shaders/FragmentShader.js';
 import { RenderBundleEncoder } from './RenderBundleEncoder.js';
 import { BGLayout, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
 
-export type RenderPipelineProps<
-  V extends VertexShader,
-  F extends FragmentShader,
-> = {
+type RenderPipelineProps<V extends VertexShader, F extends FragmentShader> = {
   label: string;
   vertexShader: V;
   fragmentShader: F;
@@ -24,7 +21,7 @@ export type RenderPipelineProps<
   connections: Record<string, string>;
 };
 
-export interface RenderPipelineDrawableProps<
+interface RenderPipelineDrawableProps<
   V extends VertexShader = VertexShader,
   F extends FragmentShader = FragmentShader,
   R extends RenderPipelineLayout = RenderPipelineLayout,

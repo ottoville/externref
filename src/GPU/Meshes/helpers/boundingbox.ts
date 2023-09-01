@@ -36,6 +36,7 @@ const indices = Uint32Array.of(
   7,
 );
 
+// eslint-disable-next-line import/no-unused-modules
 export class BoundingBoxMesh extends DataNode {
   override drawable:
     | DrawableIndexed<RenderPipeline<DebugBoundingBoxVertShader>>

@@ -34,7 +34,7 @@ export const enum Anchor {
   RIGHT,
 }
 
-export type ValueUnit =
+type ValueUnit =
   | readonly [value: number, unit: NumericUnit]
   | readonly [value: 0];
 
@@ -42,12 +42,12 @@ export type VerticalPosition = {
   value: ValueUnit;
   anchor: Anchor.CENTER | Anchor.TOP | Anchor.BOTTOM;
 };
-export type HorizontalPosition = {
+type HorizontalPosition = {
   value: ValueUnit;
   anchor: Anchor.CENTER | Anchor.LEFT | Anchor.RIGHT;
 };
 
-export type ButtonSize = {
+type ButtonSize = {
   min_width: number;
   /**
    * Ignored if originalAspectRatio is set
@@ -56,7 +56,7 @@ export type ButtonSize = {
   unit: NumericUnit;
 };
 
-export type ButtonPosition = {
+type ButtonPosition = {
   x: HorizontalPosition;
   y: VerticalPosition;
 };

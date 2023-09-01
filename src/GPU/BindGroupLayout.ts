@@ -4,9 +4,6 @@ import type { Struct } from './Shaders/structs/Structs.js';
 import { TEXTURE_BINDING_TEXTURE, Texture, TextureSize } from './Texture.js';
 import { TextureView } from './TextureView.js';
 
-export interface GPUBindGroupTextureEntry {
-  texture: GPUTextureBindingLayout;
-}
 export type MapToGPUBindGroupEntry<
   T extends { [index: string]: BindGroupLayoutEntry },
 > = {
@@ -26,12 +23,6 @@ export type MapToGPUBindGroupEntry<
     : T[K] extends BufLayout
     ? GPUBufferBinding
     : GPUBindingResource;
-};
-export type GPUBindGroupLayoutEntryBuffer = Omit<
-  GPUBindGroupLayoutEntry,
-  'binding'
-> & {
-  buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 };
 };
 
 interface BindGroupLayoutEntryProps<V extends ShaderStage = ShaderStage>

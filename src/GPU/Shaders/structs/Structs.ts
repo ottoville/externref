@@ -72,7 +72,7 @@ export const ScreenDimensions = new Struct('Screen_Dimensions', {
   screenDimensions: ['', 'vec2<f32>'],
   screendimensions_ratio: ['', 'vec2<f32>'],
 });
-export const ClusterBounds = new Struct('ClusterBounds', {
+const ClusterBounds = new Struct('ClusterBounds', {
   minAABB: ['', 'vec4<f32>'],
   maxAABB: ['', 'vec4<f32>'],
 });
@@ -90,7 +90,7 @@ export const ProjectionStruct = new Struct('Projection', {
 export const IntArray = new Struct('IntArray', {
   numbers: ['', 'array<i32>'],
 });
-export const Plane = new Struct('Plane', {
+const Plane = new Struct('Plane', {
   norm: ['', 'vec3<f32>'],
   d: ['', 'f32'],
 });
@@ -101,7 +101,7 @@ export const PlaneArray = new Struct(
   },
   [Plane],
 );
-export const PositionAndRotate = new Struct('PositionAndRotate', {
+const PositionAndRotate = new Struct('PositionAndRotate', {
   position: ['', 'vec3<f32>'],
   rotation: ['', 'f32'],
 });
@@ -118,7 +118,7 @@ export const FloatArray = new Struct('FloatArray', {
 export const Vec2Array = new Struct('Vec2Array', {
   vectors: ['', 'array<vec2<f32>>'],
 });
-export const Vertice = new Struct('Vertice', {
+const Vertice = new Struct('Vertice', {
   position: ['', 'vec3<f32>'],
   normal: ['', 'vec3<f32>'],
   uv: ['@size(16)', 'vec2<f32>'],

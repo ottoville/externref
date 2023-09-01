@@ -9,6 +9,7 @@ import {
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 
+// eslint-disable-next-line import/no-unused-modules
 export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   const indices_vec_ptr = allocate_vec_usize(targetNode.node.indices_count * 2);
   const [ind_ptr, ind_len] = indices_vec_ptr;

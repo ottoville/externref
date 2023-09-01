@@ -16,6 +16,7 @@ import type {
 import { RenderPipelineLayout } from '../PipelineLayout.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 
+// eslint-disable-next-line import/no-unused-modules
 export class RenderPipelineVariant {
   constructor(
     public renderpipeline: GPURenderPipeline,

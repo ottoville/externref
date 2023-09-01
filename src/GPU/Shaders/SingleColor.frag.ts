@@ -37,6 +37,3 @@ export function createSingleColorFragShader(
     label: 'SingleColor.frag',
   });
 }
-export type SingleColorFragShader = ReturnType<
-  typeof createSingleColorFragShader
->;

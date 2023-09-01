@@ -3,7 +3,7 @@ import type { BGLayout } from './BindGroupLayout.js';
 import { RenderPipeline } from './RenderPipeline.js';
 import type { GPU } from '../GPU.js';
 
-export type PipeLineLayoutProps<
+type PipeLineLayoutProps<
   B extends readonly BGLayout[],
   S extends BGLayout | undefined,
 > = {

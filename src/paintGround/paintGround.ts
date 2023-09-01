@@ -1,5 +1,3 @@
-//let tempplane: BABYLON.Mesh | null
-//let end_position: Vector2
 const fullRad = Math.PI * 2;
 import { TerraVector2, Angle } from '../Math.js';
 
@@ -9,12 +7,6 @@ import type { Scene } from '../Scene.js';
 import type { Engine, ListenerObj } from '../engine.js';
 declare const engine: Engine;
 
-export enum DrawType {
-  plane = 1,
-  texture = 2,
-  line = 3,
-}
-//type test = keyof HTMLElementEventMap;
 export abstract class paintGround {
   protected ang360: Angle = new Angle(0);
   #end_position: Float32Array = new Float32Array(2);

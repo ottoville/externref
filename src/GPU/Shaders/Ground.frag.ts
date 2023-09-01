@@ -109,4 +109,3 @@ export function createGroundFragShader(
 `,
   );
 }
-export type GroundFragShader = ReturnType<typeof createGroundFragShader>;

@@ -223,6 +223,3 @@ export function createGrassHeightAtCoordinates(
     ),
   ] as const;
 }
-export type GrassHeightAtCoordinates = ReturnType<
-  typeof createGrassHeightAtCoordinates
->;

@@ -16,12 +16,7 @@ declare const engine: Engine;
 export interface canCollideCharacter {
   rebuildTrianglePlanes(): void;
 }
-export interface PickingInfo {
-  hit: boolean;
-  pickedPoint: { x: number; y: number; z: number };
-  pickedMesh: DataNode;
-  distance: number;
-}
+
 class pickInfo {
   buffer = new SharedArrayBuffer(6 * 4);
   point = new MutableTerraVector3(this.buffer);

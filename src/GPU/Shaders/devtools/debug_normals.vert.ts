@@ -65,6 +65,3 @@ export function createDebugNormalsVertShader(
     label: 'debug_normals.vert',
   });
 }
-export type DebugNormalsVertShader = ReturnType<
-  typeof createDebugNormalsVertShader
->;

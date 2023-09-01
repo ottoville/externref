@@ -42,6 +42,7 @@ export interface CopyDstBuffer extends Buffer {
   ) => void;
 }
 //TODO
+// eslint-disable-next-line import/no-unused-modules
 export interface MappedBuffer {
   getMappedRange: () => void;
 }
@@ -511,8 +512,9 @@ export class WriteBuffer extends copySrcBuffer {
   }
 }
 //MAP read (Only CopyDtst is allowed with MapRead)
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-interface, @typescript-eslint/no-unsafe-declaration-merging
 export interface ReadBuffer extends CopyDstBuffer {}
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class ReadBuffer extends Buffer {
   constructor(gpu: GPU, size: number, label: string) {
     super(

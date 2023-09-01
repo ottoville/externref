@@ -383,7 +383,7 @@ interface EarthDatabase extends IDBDatabase {
     optionalParameters?: IDBObjectStoreParameters,
   ): IDBObjectStore;
 }
-export interface ColliderWasm {
+interface ColliderWasm {
   construct(
     collisionFound: number,
     nearestDistanceSquaredPointer: number,

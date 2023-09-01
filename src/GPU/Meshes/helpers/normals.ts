@@ -6,11 +6,11 @@ import { DataNode, allocate_vec_f32 } from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 
+// eslint-disable-next-line import/no-unused-modules
 export class NormalsMesh extends DataNode {
   override drawable: DrawableSimple<RenderPipeline>;
   constructor(targetNode: DrawableDirect<DataNode>) {
-    const gpu =
-      targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
+    const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
     const stride = 16; // 8*2;
     const vertices_ptr = allocate_vec_f32(
       targetNode.node.positions_count * stride,

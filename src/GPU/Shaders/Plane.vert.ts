@@ -13,6 +13,7 @@ type BindLayouts = [
     world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
   }>,
 ];
+// eslint-disable-next-line import/no-unused-modules
 export class Plane extends VertexShader {
   constructor(
     pipelineLayout: RenderPipelineLayout<BindLayouts>,

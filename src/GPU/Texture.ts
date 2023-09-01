@@ -101,7 +101,7 @@ export type DEPTH_FORMATS =
   | 'depth32float'
   | 'depth32float-stencil8';
 
-export type TextureParamsStorage<
+type TextureParamsStorage<
   F extends STORAGE_FORMATS,
   U extends STORAGE_BINDING_TEXTURE,
   S extends TextureSize,

@@ -7,7 +7,7 @@ import type {
 } from './ShaderFunction.js';
 import { OutputShader } from './OutputShader.js';
 
-export interface VertexAttribute extends GPUVertexAttribute {
+interface VertexAttribute extends GPUVertexAttribute {
   shaderFormat: string;
 }
 
@@ -21,12 +21,6 @@ export interface VertexBufferLayout2<
    */
   attributes2: A;
 }
-
-export type VertexBuffers =
-  | readonly [VertexBufferLayout2]
-  | readonly [VertexBufferLayout2, VertexBufferLayout2]
-  | readonly [VertexBufferLayout2, VertexBufferLayout2, VertexBufferLayout2]
-  | readonly [];
 
 export class VertexShader<
   E extends {

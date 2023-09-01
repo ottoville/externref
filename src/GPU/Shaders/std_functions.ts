@@ -1,6 +1,7 @@
 import { StorageTextLayout, TextLayout } from '../BindGroupLayout.js';
 import type { ShaderStage } from './Shader.js';
 
+// eslint-disable-next-line import/no-unused-modules
 export const textureStore = (
   texture: StorageTextLayout,
   coords: string,

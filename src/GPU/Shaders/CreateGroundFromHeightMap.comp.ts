@@ -98,4 +98,3 @@ export function CreateGroundFromHeightMap(
     ),
   ] as const;
 }
-export type GroundFromHeightMap = ReturnType<typeof CreateGroundFromHeightMap>;
