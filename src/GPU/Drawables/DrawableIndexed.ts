@@ -1,4 +1,3 @@
-import { Buffer, type IndexBuffer, GPUBufferUsage } from '../Buffer/Buffer.js';
 import type { Engine } from '../../engine.js';
 import {
   DrawableDirect,
@@ -9,6 +8,11 @@ import type { RenderPipeline } from '../RenderPipeline.js';
 import type { DrawableProps } from './Drawable.js';
 import type { RenderPass } from '../RenderPasses/RenderPass.js';
 import type { DataNode } from '../../nodes/DataNode.js';
+import {
+  Buffer2,
+  BufferUsageEnums,
+  type INDEX_BUFFER,
+} from 'GPU/Buffer/Buffer2.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {
@@ -21,7 +25,7 @@ export class DrawableIndexed<
   R extends RenderPipeline = RenderPipeline,
   N extends DataNode = DataNode,
 > extends DrawableDirect<N> {
-  #indexBuffer: IndexBuffer | undefined;
+  #indexBuffer: Buffer2<INDEX_BUFFER> | undefined;
   #baseVertex: number;
   #firstIndex: number;
   #GPUIndexFormat: GPUIndexFormat;
@@ -72,39 +76,40 @@ export class DrawableIndexed<
   }
 
   setIndexBuffer(
-    buffer: IndexBuffer,
+    buffer: Buffer2<INDEX_BUFFER>,
     baseVertex?: number,
     destroyOld?: boolean,
     GPUIndexFormat?: GPUIndexFormat,
-  ): IndexBuffer;
+  ): Buffer2<INDEX_BUFFER>;
   setIndexBuffer(
     buffer: Uint16Array | Uint32Array,
     baseVertex?: number,
     destroyOld?: boolean,
-  ): IndexBuffer;
+  ): Buffer2<INDEX_BUFFER>;
   setIndexBuffer(
-    buffer: Uint16Array | Uint32Array | IndexBuffer,
+    buffer: Uint16Array | Uint32Array | Buffer2<INDEX_BUFFER>,
     baseVertex = 0,
     destroyOld = true,
     GPUIndexFormat?: GPUIndexFormat,
-  ): IndexBuffer {
+  ): Buffer2<INDEX_BUFFER> {
     this.#baseVertex = baseVertex;
     if (destroyOld && this.#indexBuffer) {
       this.#indexBuffer.destroy();
     }
-    if (buffer instanceof Buffer) {
+    if (buffer instanceof Buffer2) {
       this.#indexBuffer = buffer;
       if (GPUIndexFormat) {
         this.#GPUIndexFormat = GPUIndexFormat;
       }
     } else {
       const gpu = this.renderPipeline.props.vertexShader.props.gpu;
-
-      this.#indexBuffer = Buffer.create(
-        gpu,
-        buffer.byteLength,
-        [GPUBufferUsage.INDEX],
-        'index_' + this.node.label,
+      this.#indexBuffer = new Buffer2(
+        {
+          gpu,
+          label: 'index_' + this.node.label,
+          size: buffer.byteLength,
+          usages: BufferUsageEnums.INDEX,
+        },
         (b) => {
           if (buffer.BYTES_PER_ELEMENT == 4) {
             new Uint32Array(b.getMappedRange()).set(buffer);
@@ -124,7 +129,7 @@ export class DrawableIndexed<
   ) {
     if (this.#indexBuffer) {
       renderEncoder.setIndexBuffer(
-        this.#indexBuffer.getIndexBuffer(renderPass),
+        this.#indexBuffer.getIndexBinding(renderPass),
         this.#GPUIndexFormat,
       );
       const indices_count = this.indices_count ?? this.node.indices_count;

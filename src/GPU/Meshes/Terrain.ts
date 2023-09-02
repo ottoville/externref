@@ -3,11 +3,14 @@ import type { Scene } from '../../Scene.js';
 import type { Engine, rust_pointer, rust_vec_ptr } from '../../engine.js';
 import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
-import type { IndexBuffer } from '../../GPU/Buffer/Buffer.js';
 import type { TextureView } from '../TextureView.js';
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
-import type { Buffer2, VERTEX_BUFFER } from '../Buffer/Buffer2.js';
+import type {
+  Buffer2,
+  INDEX_BUFFER,
+  VERTEX_BUFFER,
+} from '../Buffer/Buffer2.js';
 import { FragmentShader } from '../Shaders/FragmentShader.js';
 import type { GPU } from '../../GPU.js';
 import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
@@ -37,7 +40,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
       Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>
     >,
     public vBuffer: Buffer2<VERTEX_BUFFER>,
-    public iBuffer: IndexBuffer,
+    public iBuffer: Buffer2<INDEX_BUFFER>,
     vertices: rust_vec_ptr<'f32'>,
     indicesView: rust_vec_ptr<'usize'>,
     verticesPositionStride: number,

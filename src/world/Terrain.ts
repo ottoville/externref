@@ -506,12 +506,12 @@ TODO
           this.terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
       }) as const;
     //todo: remove unneeded flags
-    const terrainIndicesGPU = Buffer.create(
+    const terrainIndicesGPU = new Buffer2({
       gpu,
-      this.#terrainIndicesLength,
-      [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],
-      'terrainIndicesGPUBuffer',
-    );
+      label: 'terrainIndicesGPUBuffer',
+      size: this.#terrainIndicesLength,
+      usages: BufferUsageEnums['INDEX|STORAGE|COPY_SRC'],
+    });
 
     passEncoder.setPipeline(computePipelineIndices);
 
@@ -601,7 +601,7 @@ TODO
             0,
           );
           var gpuReadBufferIndices =
-            terrainIndicesGPU.createReadCopy(commandEncoder);
+            terrainIndicesGPU.createCopy(commandEncoder);
           const bitmap = await createImageBitmap(await cachedtexture.blob());
           this.texture.copyFromExternalImage(
             {
@@ -659,7 +659,7 @@ TODO
           );
 
           var gpuReadBufferIndices =
-            terrainIndicesGPU.createReadCopy(commandEncoder);
+            terrainIndicesGPU.createCopy(commandEncoder);
           const gpuCommands = commandEncoder.finish();
           gpu.device.queue.submit([gpuCommands]);
           const c = new OffscreenCanvas(

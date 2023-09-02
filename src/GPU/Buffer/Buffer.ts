@@ -61,9 +61,6 @@ export interface BindStorageBuffer extends Buffer {
   ) => GPUBufferBinding;
 }
 
-export interface IndexBuffer extends Buffer {
-  getIndexBuffer(renderPass: RenderPass): GPUBuffer;
-}
 export interface IndirectBuffer extends Buffer {
   indirectBuffer: GPUBuffer;
 }
@@ -160,29 +157,6 @@ export class Buffer extends Bindable {
     label: string,
     mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void,
   ): copySrcBuffer & CopyDstBuffer & BindUniformBuffer & BindStorageBuffer;
-
-  //index
-  static create(
-    gpu: GPU,
-    size: number,
-    usages: readonly [GPUBufferUsage.INDEX],
-    label: string,
-    mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void,
-  ): IndexBuffer;
-  /* static create(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean, label?:string): GPUIndexBuffer & GPUCopyDSTBuffer
-    static create(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUIndexBuffer & GPUStorageBuffer
-    */
-  static create(
-    gpu: GPU,
-    size: number,
-    usages: readonly [
-      GPUBufferUsage.INDEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-      GPUBufferUsage.INDEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-      GPUBufferUsage.INDEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    ],
-    label: string,
-    mappedAtCreation?: (buff: GPUBuffer, gpu: GPU) => void,
-  ): copySrcBuffer & BindStorageBuffer & IndexBuffer;
 
   /* static create(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUVertexBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
      //indirect
@@ -330,14 +304,6 @@ export class Buffer extends Bindable {
     if (usages.includes(GPUBufferUsage.STORAGE)) {
       (this as unknown as BindStorageBuffer).getStorageBinding =
         bufferBinding.bind(this, 'STORAGE');
-    }
-    if (usages.includes(GPUBufferUsage.INDEX)) {
-      (this as unknown as IndexBuffer).getIndexBuffer = (
-        renderPass: RenderPass,
-      ): GPUBuffer => {
-        this.renderPasses.add(renderPass);
-        return this.buffer;
-      };
     }
     if (usages.includes(GPUBufferUsage.INDIRECT)) {
       (this as unknown as IndirectBuffer).indirectBuffer = this.buffer;

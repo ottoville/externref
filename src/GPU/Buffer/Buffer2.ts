@@ -26,6 +26,10 @@ export const enum BufferUsageEnums {
     BufferUsageEnums.STORAGE |
     BufferUsageEnums.COPY_SRC |
     BufferUsageEnums.COPY_DST,
+
+  'INDEX|STORAGE|COPY_SRC' = BufferUsageEnums.INDEX |
+    BufferUsageEnums.STORAGE |
+    BufferUsageEnums.COPY_SRC,
 }
 type MAP_READ_BUFFER =
   | (typeof BufferUsageEnums)['MAP_READ']
@@ -34,7 +38,9 @@ type COPY_SRC_BUFFER =
   | (typeof BufferUsageEnums)['COPY_SRC']
   | (typeof BufferUsageEnums)['STORAGE|COPY_SRC']
   | (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC']
-  | (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC|COPY_DST'];
+  | (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC|COPY_DST']
+  | (typeof BufferUsageEnums)['INDEX|STORAGE|COPY_SRC'];
+
 type COPY_DST_BUFFER =
   | (typeof BufferUsageEnums)['COPY_DST']
   | (typeof BufferUsageEnums)['MAP_READ|COPY_DST']
@@ -45,7 +51,9 @@ type STORAGE_BUFFER =
   | (typeof BufferUsageEnums)['STORAGE|COPY_SRC']
   | (typeof BufferUsageEnums)['VERTEX|STORAGE']
   | (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC']
-  | (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC|COPY_DST'];
+  | (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC|COPY_DST']
+  | (typeof BufferUsageEnums)['INDEX|STORAGE|COPY_SRC'];
+
 type UNIFORM_BUFFER = (typeof BufferUsageEnums)['UNIFORM'];
 export type VERTEX_BUFFER =
   | (typeof BufferUsageEnums)['VERTEX']
@@ -53,6 +61,10 @@ export type VERTEX_BUFFER =
   | (typeof BufferUsageEnums)['VERTEX|COPY_DST']
   | (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC']
   | (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC|COPY_DST'];
+
+export type INDEX_BUFFER =
+  | (typeof BufferUsageEnums)['INDEX']
+  | (typeof BufferUsageEnums)['INDEX|STORAGE|COPY_SRC'];
 
 export type BufferProps<U extends BufferUsageEnums> = {
   gpu: GPU;
@@ -158,8 +170,8 @@ export class Buffer2<U extends BufferUsageEnums> extends Bindable {
     this: Buffer2<COPY_DST_BUFFER>,
     commandEncoder: GPUCommandEncoder,
     from: GPUBuffer,
-    sourceOffset: GPUSize64,
-    destinationOffset: GPUSize64,
+    sourceOffset: GPUSize64 = 0,
+    destinationOffset: GPUSize64 = 0,
     copySize?: GPUSize64,
   ) {
     commandEncoder.copyBufferToBuffer(
@@ -175,8 +187,8 @@ export class Buffer2<U extends BufferUsageEnums> extends Bindable {
     this: Buffer2<COPY_SRC_BUFFER>,
     commandEncoder: GPUCommandEncoder,
     buffer: Buffer2<COPY_DST_BUFFER>,
-    sourceOffset: GPUSize64,
-    destinationOffset: GPUSize64,
+    sourceOffset?: GPUSize64,
+    destinationOffset?: GPUSize64,
     copySize?: GPUSize64,
   ) {
     buffer.copyFrom(
@@ -223,6 +235,21 @@ export class Buffer2<U extends BufferUsageEnums> extends Bindable {
   getVertexBinding(this: Buffer2<VERTEX_BUFFER>, renderPass: RenderPass) {
     this.renderPasses.add(renderPass);
     return this.#buffer;
+  }
+  getIndexBinding(this: Buffer2<INDEX_BUFFER>, renderPass: RenderPass) {
+    this.renderPasses.add(renderPass);
+    return this.#buffer;
+  }
+  createCopy(
+    this: Buffer2<COPY_SRC_BUFFER>,
+    commandEncoder: GPUCommandEncoder,
+  ) {
+    const dst = new Buffer2({
+      ...this.props,
+      usages: BufferUsageEnums['MAP_READ|COPY_DST'],
+    });
+    this.copyTo(commandEncoder, dst);
+    return dst;
   }
   override destroy() {
     this.#buffer.destroy();
