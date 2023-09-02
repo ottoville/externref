@@ -54,6 +54,7 @@ export function createHelperVertShader(
       },
       gpu: pipelineLayout.gpu,
       label: 'helper.vert',
+      pipelineLayouts: [pipelineLayout],
     },
     ([
       ,

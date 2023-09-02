@@ -56,6 +56,7 @@ export function createSunVertShader(
       },
       gpu: pipelineLayout.gpu,
       label: 'Sun.vert',
+      pipelineLayouts: [pipelineLayout],
     },
     () => /* wgsl */ `
       const sunDistance: f32= 1495000.0;  //divided by 100000 correct one

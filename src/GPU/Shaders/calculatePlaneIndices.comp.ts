@@ -64,6 +64,7 @@ export function createCalculatePlaneIndices(
       },
       gpu: pipelineLayout.gpu,
       label: 'calculatePlaneIndices.comp',
+      pipelineLayouts: [pipelineLayout],
     }),
   ] as const;
 }

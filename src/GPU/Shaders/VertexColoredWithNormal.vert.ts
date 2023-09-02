@@ -58,5 +58,6 @@ export function createVertexColorShader(
     },
     gpu: pipelineLayout.gpu,
     label: 'VertexColor.vert',
+    pipelineLayouts: [pipelineLayout],
   });
 }

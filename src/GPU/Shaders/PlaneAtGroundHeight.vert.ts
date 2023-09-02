@@ -43,6 +43,7 @@ export function createPlaneAtGroundHeightVertShader(
       },
       gpu: pipelineLayout.gpu,
       label: 'PlaneAtGroundHeight.vert',
+      pipelineLayouts: [pipelineLayout],
     },
     ([
       ,

@@ -866,6 +866,7 @@ export class GPU {
       },
       gpu: this,
       label: 'color.frag',
+      pipelineLayouts: [this.positionAndTimeBindGroup],
     });
 
     this.renderPassCanvas = new RenderPass({

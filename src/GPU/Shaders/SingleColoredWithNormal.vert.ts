@@ -88,6 +88,7 @@ export function createSimpleVertShader(
     },
     gpu: pipelineLayout.gpu,
     label: 'Simple.vert',
+    pipelineLayouts: [pipelineLayout],
   });
 }
 export type SimpleVertShader = ReturnType<typeof createSimpleVertShader>;

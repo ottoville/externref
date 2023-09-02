@@ -12,7 +12,7 @@ import {
   Buffer2,
   BufferUsageEnums,
   type INDEX_BUFFER,
-} from 'GPU/Buffer/Buffer2.js';
+} from '../../GPU/Buffer/Buffer2.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {

@@ -92,6 +92,7 @@ export function createReadDepth(gpu: GPU) {
       },
       gpu,
       label: 'ReadDepth.comp',
+      pipelineLayouts: [pipelineLayout],
     }),
   ] as const;
 }

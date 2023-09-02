@@ -35,5 +35,6 @@ export function createWaterFragShader(
     },
     gpu: pipelineLayout.gpu,
     label: 'Water.frag',
+    pipelineLayouts: [pipelineLayout],
   });
 }

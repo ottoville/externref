@@ -58,6 +58,7 @@ export function createGroundVertShader(
     },
     gpu: pipelineLayout.gpu,
     label: 'Ground.vert',
+    pipelineLayouts: [pipelineLayout],
   });
 }
 

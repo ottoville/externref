@@ -94,6 +94,7 @@ export function CreateGroundFromHeightMap(
         },
         gpu,
         label: 'CreateGroundFromHeightMap.comp',
+        pipelineLayouts: [pipelineLayout],
       },
       () => /* wgsl */ `
         const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0); 

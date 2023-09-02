@@ -129,6 +129,7 @@ ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
         },
         gpu,
         label: 'UpdateView.comp',
+        pipelineLayouts: [pipelineLayout],
       },
       () => /* wgsl */ `
           fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {

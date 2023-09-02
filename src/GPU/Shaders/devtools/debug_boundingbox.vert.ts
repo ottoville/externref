@@ -46,6 +46,7 @@ export function createDebugBoundingBoxVertShader(
     },
     gpu: pipelineLayout.gpu,
     label: 'debug_boundingBox.vert',
+    pipelineLayouts: [pipelineLayout],
   });
 }
 export type DebugBoundingBoxVertShader = ReturnType<

@@ -86,6 +86,7 @@ export function createGroundFragShader(
       },
       gpu: pipelineLayout.gpu,
       label: 'Ground.frag',
+      pipelineLayouts: [pipelineLayout],
     },
     ([
       { screen_dimensions },

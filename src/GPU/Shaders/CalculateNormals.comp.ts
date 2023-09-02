@@ -87,6 +87,7 @@ export function createCalculateNormals(
       },
       gpu: pipelineLayout.gpu,
       label: 'CalculateNormals.comp',
+      pipelineLayouts: [pipelineLayout],
     }),
   ] as const;
 }

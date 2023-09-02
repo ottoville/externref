@@ -2,7 +2,7 @@ import { positionAttr } from '../Shaders/structs/Attributes.js';
 import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { createWaterVertShader } from '../../GPU/Shaders/Water.vert.js';
 import { createWaterFragShader } from '../Shaders/Water.frag.js';
-import { RenderPipeline } from '../RenderPipeline.js';
+import { RenderPipeline as LegacyRenderPipeline } from '../RenderPipeline.js';
 
 export const WaterRenderPipeline = [
   'WaterRenderPipeline',
@@ -23,7 +23,7 @@ export const WaterRenderPipeline = [
       stepMode: 'vertex',
     });
 
-    return new RenderPipeline(
+    return new LegacyRenderPipeline(
       {
         bindgroupdrawable: gpu.bindGroupTextureWater,
         connections: {

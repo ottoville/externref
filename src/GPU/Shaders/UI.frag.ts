@@ -30,6 +30,7 @@ export function createUIFragmentShader(gpu: GPU) {
     },
     gpu,
     label: 'UI.frag',
+    pipelineLayouts: [gpu.canvasRootLayout],
   });
 }
 export type UIFragShader = ReturnType<typeof createUIFragmentShader>;

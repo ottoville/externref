@@ -72,6 +72,7 @@ export function CreateTerrainTexture(
         },
         gpu: pipelineLayout.gpu,
         label: 'CreateTerrainTexture.comp',
+        pipelineLayouts: [pipelineLayout],
       },
       ([{ slopes, facet12 } /*{ _ground_texture, }*/]) => /* wgsl */ `
     fn mod289(x:f32) -> f32 {

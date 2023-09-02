@@ -31,6 +31,7 @@ export function createUIFragmentShaderArray(gpu: GPU) {
     },
     gpu,
     label: 'UI.frag',
+    pipelineLayouts: [gpu.canvasRootLayoutArray],
   });
 }
 export type UIFragShaderArray = ReturnType<typeof createUIFragmentShaderArray>;

@@ -96,6 +96,7 @@ export function createSimpleFragShader(
       },
       gpu: pipelineLayout.gpu,
       label: 'Simple.frag',
+      pipelineLayouts: [pipelineLayout],
     },
     ([
       { screen_dimensions },

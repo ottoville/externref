@@ -107,6 +107,7 @@ ${clusters.prop(
         },
         gpu: pipelineLayout.gpu,
         label: 'Clusters.comp',
+        pipelineLayouts: [pipelineLayout],
       },
       ([{ screen_dimensions }, { /*clusters,*/ screentoview }]) => /* wgsl */ `
     fn clipToView(clip : vec4<f32>) -> vec4<f32> {

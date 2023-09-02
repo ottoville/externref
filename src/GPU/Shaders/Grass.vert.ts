@@ -114,6 +114,7 @@ export function createGrassVertShader(
       },
       gpu: pipelineLayout.gpu,
       label: 'grass.vert',
+      pipelineLayouts: [pipelineLayout],
     },
     () => /* wgsl */ `
     const bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);

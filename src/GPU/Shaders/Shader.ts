@@ -6,6 +6,7 @@ import {
   BufLayout,
 } from '../../webgpu-ts/BindgroupLayout.js';
 import type { ShaderStage } from 'webgpu-ts/Shader.js';
+import { PipelineLayout } from 'GPU/PipelineLayout.js';
 
 /*export const enum ShaderStage {
   VERTEX = 1,
@@ -21,9 +22,11 @@ export type ShaderParams<
   E extends { [index: string]: ShaderFunction } = {
     [index: string]: ShaderFunction;
   },
+  P extends readonly PipelineLayout[] = readonly PipelineLayout[],
 > = {
   entryPoints: E;
   label: string;
+  pipelineLayouts: P;
   gpu: GPU;
 };
 export abstract class Shader<
@@ -89,7 +92,7 @@ export abstract class Shader<
     //
     this.wgsl = groups + structString;
 
-    const entries = firstEntryPoint.pipelineLayout.bindGroupLayouts.map(
+    const entries = this.props.pipelineLayouts[0]!.bindGroupLayouts.map(
       (bl) => bl.entries,
     );
     if (constantCode) this.wgsl += constantCode(entries);
@@ -99,7 +102,10 @@ export abstract class Shader<
       const entryPoint = props.entryPoints[key]!;
       //@ts-expect-error
       this.wgsl += entryPoint.createCode(entries, key);
-      pipelineLayouts[key] = entryPoint.pipelineLayout;
+      //@ts-expect-error https://github.com/gpuweb/gpuweb/issues/4233
+      pipelineLayouts[key] = this.props.pipelineLayouts.map(
+        (pipelineLayout) => pipelineLayout.layout,
+      );
     }
     this.module = this.props.gpu.device.createShaderModule({
       code: this.wgsl,
