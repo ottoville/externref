@@ -1,11 +1,12 @@
-import { ShaderStage, type ShaderParams } from './Shader.js';
+import { type ShaderParams } from './Shader.js';
 import {
   FilteredBindgroupEntrys,
   FragmentEntry,
   FragmentShaderFunction,
 } from './ShaderFunction.js';
-import { BGLayout } from '../BindGroupLayout.js';
 import { OutputShader } from './OutputShader.js';
+import { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
 
 export class FragmentShader<
   E extends { [index: string]: FragmentShaderFunction<readonly BGLayout[]> } = {

@@ -3,7 +3,6 @@
  * This file is not intent to build or include in any build.
  */
 
-import { Texture, TextureUsageEnums } from 'GPU/Texture';
 import type { Engine } from '../engine.js';
 import { SimpleRenderPipeline } from '../GPU/RenderPipeLines/SimpleRenderPipeline.js';
 import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
@@ -13,11 +12,12 @@ import { RenderPipeline } from '../GPU/RenderPipeline.js';
 import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
 import { createWaterVertShader } from '../GPU/Shaders/Water.vert.js';
 import { positionAttr } from '../GPU/Shaders/structs/Attributes.js';
+import { Texture, TextureUsageEnums } from '../webgpu-ts/Texture.js';
 declare const engine: Engine;
 
 Texture.create({
   format: 'r8unorm',
-  gpu: engine.gpu!,
+  gpu: engine.gpu!.device,
   label: 'normalsTexture',
   size: {
     depthOrArrayLayers: 1,
@@ -29,7 +29,7 @@ Texture.create({
 });
 Texture.create({
   format: 'r8unorm',
-  gpu: engine.gpu!,
+  gpu: engine.gpu!.device,
   label: 'normalsTexture',
   size: {
     depthOrArrayLayers: 1,
@@ -42,7 +42,7 @@ Texture.create({
 //This should be fine
 const text1 = Texture.create({
   format: 'rgba8unorm',
-  gpu: engine.gpu!,
+  gpu: engine.gpu!.device,
   label: 'normalsTexture',
   size: {
     depthOrArrayLayers: 1,
@@ -54,7 +54,7 @@ const text1 = Texture.create({
 //This should be fine
 const text2 = Texture.create({
   format: 'astc-10x10-unorm',
-  gpu: engine.gpu!,
+  gpu: engine.gpu!.device,
   label: 'test',
   size: {
     height: 100,
@@ -78,7 +78,7 @@ text2.copyFrom(
 );
 Texture.create({
   format: 'astc-10x10-unorm',
-  gpu: engine.gpu!,
+  gpu: engine.gpu!.device,
   label: 'test',
   size: {
     width: 100,
@@ -89,7 +89,7 @@ Texture.create({
 //This should be fine
 const text3 = Texture.create({
   format: 'astc-10x10-unorm',
-  gpu: engine.gpu!,
+  gpu: engine.gpu!.device,
   label: 'test',
   size: {
     height: 100,
@@ -196,6 +196,7 @@ new RenderPipeline(
   },
   //Should be fine
   () => ({
+    //@ts-expect-error
     diffuseTexture: engine.gpu!.renderPassWater.colorRenderTargets.diffuse.view,
     mySampler: sampler,
   }),

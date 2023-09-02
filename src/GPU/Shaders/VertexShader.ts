@@ -1,11 +1,12 @@
-import { BGLayout } from '../BindGroupLayout.js';
-import { ShaderStage, type ShaderParams } from './Shader.js';
+import { type ShaderParams } from './Shader.js';
 import type {
   FilteredBindgroupEntrys,
   VertexEntry,
   VertexShaderFunction,
 } from './ShaderFunction.js';
 import { OutputShader } from './OutputShader.js';
+import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
+import { ShaderStage } from '../../webgpu-ts/Shader.js';
 
 interface VertexAttribute extends GPUVertexAttribute {
   shaderFormat: string;

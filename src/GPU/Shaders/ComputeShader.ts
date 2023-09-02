@@ -1,5 +1,6 @@
-import { BGLayout } from '../BindGroupLayout.js';
-import { Shader, ShaderStage, type ShaderParams } from './Shader.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
+import { Shader, type ShaderParams } from './Shader.js';
 import type {
   ComputeEntry,
   ComputeShaderFunction,

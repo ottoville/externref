@@ -4,7 +4,7 @@ import type {
   RenderTargetSize,
   STORAGE_BINDING_TEXTURE,
   TextureParams,
-} from '../Texture.js';
+} from '../../webgpu-ts/Texture.js';
 import {
   RenderPassTarget,
   type RenderPassTargetOptions,

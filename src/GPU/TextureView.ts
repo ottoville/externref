@@ -3,7 +3,7 @@ import type {
   TEXTURE_BINDING_TEXTURE,
   Texture,
   TextureUsageEnums,
-} from './Texture.js';
+} from '../webgpu-ts/Texture.js';
 import type { BindGroup } from './BindGroup.js';
 import { Bindable } from './Bindable.js';
 import type { RenderPass } from './RenderPasses/RenderPass.js';
@@ -28,6 +28,7 @@ export class TextureView<
     descriptor.label = texture.props.label + 'View';
     this.descriptor = Object.freeze(descriptor);
     this.view = this.reCreate();
+    //@ts-expect-error
     texture.views.add(this);
   }
   reCreate(debug = false) {

@@ -9,9 +9,9 @@ import {
   VertexShader,
 } from '../../GPU/Shaders/VertexShader.js';
 import { VertexShaderFunction } from '../Shaders/ShaderFunction.js';
-import { BGLayout } from '../BindGroupLayout.js';
 import { Buffer2, BufferUsageEnums } from '../Buffer/Buffer2.js';
 import { MainNodeProps } from 'MainNode.js';
+import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
 declare const engine: Engine;
 
 export type SimpleIndexedMeshProps = {

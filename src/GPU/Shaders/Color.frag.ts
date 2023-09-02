@@ -2,7 +2,7 @@
 // See Simple.frag.ts for pickable counterpart
 // See SingleColor.frag.ts for pickable shared single color for all vertices
 
-import { BGLayout } from '../BindGroupLayout.js';
+import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { FragmentShader } from './FragmentShader.js';
 import { FragmentShaderFunction } from './ShaderFunction.js';

@@ -1,10 +1,10 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import type { RenderPipelineLayout } from '../PipelineLayout.js';
 import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, colorPositionOutput } from './structs/Structs.js';
 import { VertexShaderFunction } from './ShaderFunction.js';
-import type { ShaderStage } from './Shader.js';
+import type { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
+import type { ShaderStage } from '../../webgpu-ts/Shader.js';
 
 type BindLayouts = [
   GPU['sizeBindGroupLayout'],

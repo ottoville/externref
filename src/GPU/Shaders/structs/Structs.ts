@@ -1,6 +1,4 @@
 /* eslint-disable sort-keys */
-import { BufLayout } from '../../BindGroupLayout.js';
-import { ShaderStage } from '../Shader.js';
 
 export class Struct<
   const T extends {
@@ -171,17 +169,7 @@ export const Clusters = new Struct(
   },
   [ClusterBounds],
 );
-export const UpdateClustersBufferLayout = new BufLayout(
-  {
-    visibility: ShaderStage.COMPUTE,
-    buffer: {
-      type: 'storage',
-      hasDynamicOffset: false,
-      minBindingSize: 7962624,
-    },
-  },
-  Clusters,
-);
+
 export const ViewUniforms = new Struct('ViewUniforms', {
   modelViewProjectionMatrix: ['', 'mat4x4<f32>'],
   view: ['', 'mat4x4<f32>'],

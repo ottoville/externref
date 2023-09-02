@@ -1,10 +1,11 @@
-import { BindGroupLayoutEntry } from '../BindGroupLayout.js';
-import { Shader, type ShaderParams, ShaderStage } from './Shader.js';
+import type { ShaderStage } from 'webgpu-ts/Shader.js';
+import { Shader, type ShaderParams } from './Shader.js';
 import {
   FragmentShaderFunction,
   VertexShaderFunction,
 } from './ShaderFunction.js';
 import { Struct } from './structs/Structs.js';
+import type { BindGroupLayoutEntry } from '../../webgpu-ts/BindgroupLayout.js';
 
 type outputShaderFunction = VertexShaderFunction | FragmentShaderFunction;
 

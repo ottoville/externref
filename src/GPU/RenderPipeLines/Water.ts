@@ -37,6 +37,7 @@ export const WaterRenderPipeline = [
         vertexShader: waterVertShader,
       },
       () => ({
+        //@ts-expect-error
         diffuseTexture: gpu.renderPassWater.colorRenderTargets.diffuse.view,
         mySampler: sampler,
       }),

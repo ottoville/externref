@@ -1,7 +1,7 @@
-import type { BufLayout } from '../BindGroupLayout.js';
+import type { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import type { Terrain } from '../../world/Terrain.js';
 import type { IntArray, PlaneArray } from './structs/Structs.js';
-import type { ShaderStage } from './Shader.js';
 
 export const getHeightAtCoordinates = (
   settings: typeof Terrain.settings,

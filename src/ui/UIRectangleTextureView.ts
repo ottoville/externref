@@ -1,10 +1,10 @@
-import type { TextureView } from '../GPU/TextureView.js';
-import { UIRectangle } from './UIRectangle.js';
 import type {
   Texture,
   Texture2dSize,
   TextureUsageEnums,
-} from '../GPU/Texture.js';
+} from '../webgpu-ts/Texture.js';
+import type { TextureView } from '../GPU/TextureView.js';
+import { UIRectangle } from './UIRectangle.js';
 
 export class UIRectangleTextureView extends UIRectangle {
   createTexture(): TextureView<

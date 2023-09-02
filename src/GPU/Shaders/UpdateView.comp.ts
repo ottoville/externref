@@ -1,19 +1,18 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
-import {
-  Lights,
-  MeshArray,
-  UpdateClustersBufferLayout,
-  ViewUniforms,
-} from './structs/Structs.js';
+import { Lights, MeshArray, ViewUniforms } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from './Shader.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
+
+import { UpdateClustersBufferLayout } from './Clusters.comp.js';
+import type { Engine } from 'engine.js';
+declare const engine: Engine;
 
 export function createUpdateViewShader(gpu: GPU) {
   const bindLayouts = [
-    new BGLayout(gpu, 'UpdateViewLayout', {
+    new BGLayout(gpu.device, 'UpdateViewLayout', {
       directional_lights: new BufLayout(
         {
           buffer: {
@@ -49,7 +48,7 @@ export function createUpdateViewShader(gpu: GPU) {
         Lights,
       ),
     }),
-    new BGLayout(gpu, 'UpdateClustersLayout', {
+    new BGLayout(gpu.device, 'UpdateClustersLayout', {
       clusters: UpdateClustersBufferLayout,
       viewUniforms: new BufLayout(
         {
@@ -64,10 +63,13 @@ export function createUpdateViewShader(gpu: GPU) {
       ),
     }),
   ] as const;
-  const pipelineLayout = new PipelineLayout({
-    bindGroupLayouts: bindLayouts,
-    label: 'UpdateViewPipeline',
-  });
+  const pipelineLayout = new PipelineLayout(
+    {
+      bindGroupLayouts: bindLayouts,
+      label: 'UpdateViewPipeline',
+    },
+    engine.gpu!,
+  );
   return [
     bindLayouts,
     new ComputeShader(

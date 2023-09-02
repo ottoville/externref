@@ -4,7 +4,6 @@ import { PTDresult } from '../types/interfaces/index.js';
 import type { GPU } from '../GPU.js';
 import type { Scene } from '../Scene.js';
 import type { Engine, ListenerObj } from '../engine.js';
-import { RenderTarget, TextureUsageEnums } from '../GPU/Texture.js';
 import { TextureView } from '../GPU/TextureView.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
@@ -14,6 +13,7 @@ import {
   UIRectangleNode,
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
+import { RenderTarget, TextureUsageEnums } from '../webgpu-ts/Texture.js';
 declare const engine: Engine;
 export class Zones extends UIRectangleNode<
   object,
@@ -67,7 +67,7 @@ export class Zones extends UIRectangleNode<
       this.#wasOpen = true;
       this.#zoneTexture = new RenderTarget({
         format: 'rgba8unorm',
-        gpu: engine.gpu!,
+        gpu: engine.gpu!.device,
         label: 'ZoneTexture',
         size: {
           height: 5120,

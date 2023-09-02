@@ -1,11 +1,11 @@
 import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { RenderPass, RenderPassProps } from './RenderPass.js';
 import type { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
+import type { RenderPipeline } from '../RenderPipeline.js';
 import type {
   RENDER_TARGET_FORMAT,
   RENDER_TARGET_TEXTURE,
-} from '../Texture.js';
-import type { RenderPipeline } from '../RenderPipeline.js';
+} from '../../webgpu-ts/Texture.js';
 
 export class DepthRenderPass<
   T extends {

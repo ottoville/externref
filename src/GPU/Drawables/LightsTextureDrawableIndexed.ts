@@ -3,11 +3,13 @@ import type {
   DrawableDirectProps,
   MappedVertexBuffers,
 } from './DrawableDirect.js';
-import type { TEXTURE_BINDING_TEXTURE, Texture } from '../Texture.js';
 import type { TextureView } from '../TextureView.js';
-import type { BGLayout, SampLayout, TextLayout } from '../BindGroupLayout.js';
+import type {
+  BGLayout,
+  SampLayout,
+  TextLayout,
+} from '../../webgpu-ts/BindgroupLayout.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
-import type { ShaderStage } from '../Shaders/Shader.js';
 import type { DataNode } from '../../nodes/DataNode.js';
 import {
   DrawableIndexed,
@@ -17,6 +19,11 @@ import type { DrawableProps } from './Drawable.js';
 import type { FragmentShader } from '../Shaders/FragmentShader.js';
 import type { VertexShader } from 'GPU/Shaders/VertexShader';
 import type { RenderPipelineLayout } from 'GPU/PipelineLayout';
+import type {
+  TEXTURE_BINDING_TEXTURE,
+  Texture,
+} from '../../webgpu-ts/Texture.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
 
 /**
  * Drawable that is used with lightsTextureBindGroup
@@ -59,6 +66,7 @@ export class LightsTextureDrawableIndexed<
     this.staticBindGroup = new BindGroup(
       layout.bindGroupLayouts[3],
       'LightsTextureDrawableIndexed_static',
+      //@ts-expect-error
       () => {
         return {
           diffuseTexture: this.texture,

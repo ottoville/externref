@@ -1,3 +1,10 @@
+import type {
+  RENDER_TARGET_FORMAT,
+  RENDER_TARGET_TEXTURE,
+  TextureParams,
+  STORAGE_BINDING_TEXTURE,
+  Texture2dSize,
+} from '../../webgpu-ts/Texture.js';
 import {
   ColorRenderTarget,
   ColorRenderTargetParams,
@@ -6,13 +13,6 @@ import {
   RenderPassTarget,
   type RenderPassTargetOptions,
 } from './RenderPassTarget.js';
-import type {
-  RENDER_TARGET_FORMAT,
-  RENDER_TARGET_TEXTURE,
-  STORAGE_BINDING_TEXTURE,
-  Texture2dSize,
-  TextureParams,
-} from '../Texture.js';
 
 export class MSAARenderTarget<
   F extends RENDER_TARGET_FORMAT = RENDER_TARGET_FORMAT,

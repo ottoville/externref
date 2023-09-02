@@ -4,7 +4,10 @@ import { type RenderPipelineLayout } from './PipelineLayout.js';
 import type { VertexShader } from './Shaders/VertexShader.js';
 import type { FragmentShader } from './Shaders/FragmentShader.js';
 import { RenderBundleEncoder } from './RenderBundleEncoder.js';
-import { BGLayout, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
+import type {
+  BGLayout,
+  MapToGPUBindGroupEntry,
+} from '../webgpu-ts/BindgroupLayout.js';
 
 type RenderPipelineProps<V extends VertexShader, F extends FragmentShader> = {
   label: string;

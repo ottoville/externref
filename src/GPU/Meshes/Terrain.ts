@@ -7,11 +7,14 @@ import type { IndexBuffer } from '../../GPU/Buffer/Buffer.js';
 import type { TextureView } from '../TextureView.js';
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
-import type { TEXTURE_BINDING_TEXTURE, Texture } from '../../GPU/Texture.js';
 import type { Buffer2, VERTEX_BUFFER } from '../Buffer/Buffer2.js';
 import { FragmentShader } from '../Shaders/FragmentShader.js';
 import type { GPU } from '../../GPU.js';
 import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
+import type {
+  TEXTURE_BINDING_TEXTURE,
+  Texture,
+} from '../../webgpu-ts/Texture.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;

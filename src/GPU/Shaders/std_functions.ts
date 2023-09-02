@@ -1,5 +1,8 @@
-import { StorageTextLayout, TextLayout } from '../BindGroupLayout.js';
-import type { ShaderStage } from './Shader.js';
+import type { ShaderStage } from 'webgpu-ts/Shader.js';
+import type {
+  StorageTextLayout,
+  TextLayout,
+} from '../../webgpu-ts/BindgroupLayout.js';
 
 // eslint-disable-next-line import/no-unused-modules
 export const textureStore = (

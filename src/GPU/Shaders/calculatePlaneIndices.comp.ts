@@ -1,18 +1,20 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Indices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from './Shader.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { Engine } from 'engine.js';
+declare const engine: Engine;
 
 export function createCalculatePlaneIndices(
   gpu: GPU,
   settings: typeof Terrain.settings,
 ) {
   const bindLayouts = [
-    new BGLayout(gpu, 'calculateIndicesBindGroupLayout', {
+    new BGLayout(gpu.device, 'calculateIndicesBindGroupLayout', {
       indices: new BufLayout(
         {
           buffer: {
@@ -27,10 +29,13 @@ export function createCalculatePlaneIndices(
     }),
   ] as const;
 
-  const pipelineLayout = new PipelineLayout({
-    bindGroupLayouts: bindLayouts,
-    label: 'calculatePlaneIndicesPipeline',
-  });
+  const pipelineLayout = new PipelineLayout(
+    {
+      bindGroupLayouts: bindLayouts,
+      label: 'calculatePlaneIndicesPipeline',
+    },
+    engine.gpu!,
+  );
   return [
     bindLayouts,
     new ComputeShader({

@@ -1,5 +1,5 @@
-import type { BufLayout } from '../BindGroupLayout.js';
-import type { ShaderStage } from './Shader.js';
+import type { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import type { ProjectionStruct, Struct } from './structs/Structs.js';
 
 export const getClusterIndex = (

@@ -2,3 +2,6 @@
 	path = src/rapier
 	url = https://terraSim@dev.azure.com/terraSim/terrasim/_git/rapier
 	branch = terrasim
+[submodule "src/webgpu-ts"]
+	path = src/webgpu-ts
+	url = https://terraSim@dev.azure.com/terraSim/terrasim/_git/webgpu-ts

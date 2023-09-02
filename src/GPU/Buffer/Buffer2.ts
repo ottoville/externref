@@ -1,9 +1,9 @@
 import { Bindable } from '../Bindable.js';
 import type { GPU } from '../../GPU.js';
 import type { Engine } from '../../engine.js';
-import { COPY_SRC_TEXTURE, Texture } from '../Texture.js';
 import { RenderPass } from '../RenderPasses/RenderPass.js';
 import { BindGroup } from '../BindGroup.js';
+import type { COPY_SRC_TEXTURE, Texture } from '../../webgpu-ts/Texture.js';
 declare const engine: Engine;
 
 export const enum BufferUsageEnums {

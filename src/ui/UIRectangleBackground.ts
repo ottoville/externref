@@ -6,7 +6,7 @@ import type {
   Texture,
   Texture2dSize,
   TextureUsageEnums,
-} from '../GPU/Texture.js';
+} from '../webgpu-ts/Texture.js';
 export const font = '80pt serif';
 
 export function createBackground(

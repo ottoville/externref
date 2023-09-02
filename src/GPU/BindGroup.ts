@@ -1,4 +1,7 @@
-import type { BGLayout, MapToGPUBindGroupEntry } from './BindGroupLayout.js';
+import type {
+  BGLayout,
+  MapToGPUBindGroupEntry,
+} from '../webgpu-ts/BindgroupLayout.js';
 import type { RenderBundleEncoder } from './RenderBundleEncoder.js';
 import { TextureView } from './TextureView.js';
 
@@ -18,7 +21,7 @@ export class BindGroup<L extends BGLayout = BGLayout> {
   get bindGroup(): GPUBindGroup {
     if (this.#dirty || !this.#bindGroup) {
       const entries = this.entriesf(this);
-      this.#bindGroup = this.layout.gpu.device.createBindGroup({
+      this.#bindGroup = this.layout.gpu.createBindGroup({
         entries: Object.values(entries).map((entry, i) => {
           return {
             binding: i,

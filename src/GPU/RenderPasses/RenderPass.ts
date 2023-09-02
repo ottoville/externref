@@ -9,12 +9,12 @@ import {
 } from '../Buffer/Buffer.js';
 import { BindGroup } from '../BindGroup.js';
 import { RenderBundleEncoder } from '../RenderBundleEncoder.js';
+import { RenderPipelineLayout } from '../PipelineLayout.js';
+import type { RenderPipeline } from '../RenderPipeline.js';
 import type {
   RENDER_TARGET_FORMAT,
   RENDER_TARGET_TEXTURE,
-} from '../Texture.js';
-import { RenderPipelineLayout } from '../PipelineLayout.js';
-import type { RenderPipeline } from '../RenderPipeline.js';
+} from '../../webgpu-ts/Texture.js';
 
 // eslint-disable-next-line import/no-unused-modules
 export class RenderPipelineVariant {

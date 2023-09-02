@@ -4,7 +4,7 @@ import { Drawable, type DrawableProps } from './Drawable.js';
 import type { MainNode } from '../../MainNode.js';
 import type { Engine, rust_vec_ptr } from '../../engine.js';
 import { VertexShaderFunction } from '../Shaders/ShaderFunction.js';
-import { type BGLayout } from '../BindGroupLayout.js';
+import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import { Buffer2, type VERTEX_BUFFER } from '../Buffer/Buffer2.js';
 declare const engine: Engine;
 

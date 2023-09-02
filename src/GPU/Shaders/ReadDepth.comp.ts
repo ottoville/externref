@@ -1,14 +1,20 @@
-import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js';
+import {
+  BGLayout,
+  BufLayout,
+  TextLayout,
+} from '../../webgpu-ts/BindgroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from './Shader.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { Engine } from 'engine.js';
+declare const engine: Engine;
 
 export function createReadDepth(gpu: GPU) {
   const bindLayouts = [
-    new BGLayout(gpu, 'DepthAndMeshLayout', {
+    new BGLayout(gpu.device, 'DepthAndMeshLayout', {
       depth_and_mesh: new BufLayout(
         {
           buffer: {
@@ -21,7 +27,7 @@ export function createReadDepth(gpu: GPU) {
         Depth_And_Mesh,
       ),
     }),
-    new BGLayout(gpu, 'DepthTextureLayout', {
+    new BGLayout(gpu.device, 'DepthTextureLayout', {
       depth_texture: new TextLayout(
         {
           texture: {
@@ -56,10 +62,13 @@ export function createReadDepth(gpu: GPU) {
     }),
   ] as const;
 
-  const pipelineLayout = new PipelineLayout({
-    bindGroupLayouts: bindLayouts,
-    label: 'ReadDepthPipeline',
-  });
+  const pipelineLayout = new PipelineLayout(
+    {
+      bindGroupLayouts: bindLayouts,
+      label: 'ReadDepthPipeline',
+    },
+    engine.gpu!,
+  );
   return [
     bindLayouts,
     new ComputeShader({

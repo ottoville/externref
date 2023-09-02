@@ -1,16 +1,21 @@
-import { BufLayout, BindGroupLayoutEntry } from '../BindGroupLayout.js';
 import type { Struct } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import { type ShaderFunction } from './ShaderFunction.js';
+import {
+  type BindGroupLayoutEntry,
+  BufLayout,
+} from '../../webgpu-ts/BindgroupLayout.js';
+import type { ShaderStage } from 'webgpu-ts/Shader.js';
 
-export const enum ShaderStage {
+/*export const enum ShaderStage {
   VERTEX = 1,
   FRAGMENT = 2,
   COMPUTE = 4,
   VERTEX_AND_FRAGMENT = 3, //GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
   COMPUTE_AND_FRAGMENT = 6, // GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT
   COMPUTE_AND_VERTEX = 5, // GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX
-}
+  COMPUTE_AND_VERTEX_AND_FRAGMENT = 7,
+}*/
 
 export type ShaderParams<
   E extends { [index: string]: ShaderFunction } = {

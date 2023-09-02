@@ -1,11 +1,13 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { FloatArray } from './structs/Structs.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { SlopesLayout } from './CreateTerrainTexture.comp.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from './Shader.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { Engine } from 'engine.js';
+declare const engine: Engine;
 
 export function createCalculateNormals(
   settings: typeof Terrain.settings,
@@ -29,10 +31,13 @@ export function createCalculateNormals(
     slopesLayout,
   ] as const;
 
-  const pipelineLayout = new PipelineLayout({
-    bindGroupLayouts: bindLayouts,
-    label: 'calculateNormalsPipeline',
-  });
+  const pipelineLayout = new PipelineLayout(
+    {
+      bindGroupLayouts: bindLayouts,
+      label: 'calculateNormalsPipeline',
+    },
+    engine.gpu!,
+  );
   return [
     bindLayouts,
     new ComputeShader({

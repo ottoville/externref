@@ -1,18 +1,20 @@
-import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from './Shader.js';
+import { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { Engine } from 'engine.js';
+declare const engine: Engine;
 
 export function createCalculatePlaneHeights(
   gpu: GPU,
   settings: typeof Terrain.settings,
 ) {
   const bindLayouts = [
-    new BGLayout(gpu, 'verticesBindGroupLayout', {
+    new BGLayout(gpu.device, 'verticesBindGroupLayout', {
       vertices: new BufLayout(
         {
           buffer: {
@@ -25,7 +27,7 @@ export function createCalculatePlaneHeights(
         Vertices,
       ),
     }),
-    new BGLayout(gpu, 'slopesAndFacesBindGroupLayout', {
+    new BGLayout(gpu.device, 'slopesAndFacesBindGroupLayout', {
       facet12: new BufLayout(
         {
           buffer: {
@@ -51,10 +53,13 @@ export function createCalculatePlaneHeights(
     }),
   ] as const;
 
-  const pipelineLayout = new PipelineLayout({
-    bindGroupLayouts: bindLayouts,
-    label: 'calculatePlaneHeightsPipeline',
-  });
+  const pipelineLayout = new PipelineLayout(
+    {
+      bindGroupLayouts: bindLayouts,
+      label: 'calculatePlaneHeightsPipeline',
+    },
+    engine.gpu!,
+  );
   const subdivisions_plus_one = settings.subdivisions[0] + 1;
   const facetSize = settings.subdivisions[0] * settings.subdivisions[1];
 

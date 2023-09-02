@@ -1,11 +1,17 @@
-import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from './Shader.js';
+import {
+  BGLayout,
+  BufLayout,
+  TextLayout,
+} from '../../webgpu-ts/BindgroupLayout.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { Engine } from 'engine.js';
+declare const engine: Engine;
 
 export function CreateGroundFromHeightMap(
   gpu: GPU,
@@ -13,7 +19,7 @@ export function CreateGroundFromHeightMap(
   textureSize: { width: number; height: number },
 ) {
   const bindLayouts = [
-    new BGLayout(gpu, 'indicesBindGroupLayout', {
+    new BGLayout(gpu.device, 'indicesBindGroupLayout', {
       pixels: new TextLayout(
         {
           texture: {},
@@ -35,10 +41,13 @@ export function CreateGroundFromHeightMap(
     }),
   ] as const;
 
-  const pipelineLayout = new PipelineLayout({
-    bindGroupLayouts: bindLayouts,
-    label: 'CreateGroundFromHeightMapPipeline',
-  });
+  const pipelineLayout = new PipelineLayout(
+    {
+      bindGroupLayouts: bindLayouts,
+      label: 'CreateGroundFromHeightMapPipeline',
+    },
+    engine.gpu!,
+  );
   return [
     bindLayouts,
     new ComputeShader(

@@ -19,13 +19,6 @@ import { Uint16Vector2 } from './Math.js';
 import { DepthRenderTarget } from './GPU/RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './GPU/RenderPasses/DepthRenderPass.js';
 import { TerraCamera } from './TerraCamera.js';
-import { RENDER_TARGET_FORMAT, TextureUsageEnums } from './GPU/Texture.js';
-import {
-  BGLayout,
-  BufLayout,
-  SampLayout,
-  TextLayout,
-} from './GPU/BindGroupLayout.js';
 import {
   createUpdateViewShader,
   UpdateView,
@@ -63,7 +56,17 @@ import {
   createUIFragmentShaderArray,
   UIFragShaderArray,
 } from './GPU/Shaders/UI_array.frag.js';
-import { ShaderStage } from './GPU/Shaders/Shader.js';
+import {
+  type RENDER_TARGET_FORMAT,
+  TextureUsageEnums,
+} from './webgpu-ts/Texture.js';
+import {
+  BGLayout,
+  BufLayout,
+  SampLayout,
+  TextLayout,
+} from './webgpu-ts/BindgroupLayout.js';
+import { ShaderStage } from 'webgpu-ts/Shader.js';
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -397,7 +400,7 @@ export class GPU {
       }),
     );
     this.uniformBindGroupLayoutWithTime = new BGLayout(
-      this,
+      this.device,
       'uniformBindGroupLayoutWithTime',
       {
         clusters_array: new BufLayout(
@@ -455,30 +458,37 @@ export class GPU {
         ),
       },
     );
-    this.sizeBindGroupLayout = new BGLayout(this, 'sizeBindGroupLayout', {
-      screen_dimensions: new BufLayout(
-        {
-          buffer: {
-            minBindingSize: 16,
-            type: 'uniform',
+    this.sizeBindGroupLayout = new BGLayout(
+      this.device,
+      'sizeBindGroupLayout',
+      {
+        screen_dimensions: new BufLayout(
+          {
+            buffer: {
+              minBindingSize: 16,
+              type: 'uniform',
+            },
+            visibility: ShaderStage.FRAGMENT | ShaderStage.COMPUTE,
           },
-          visibility: ShaderStage.FRAGMENT | ShaderStage.COMPUTE,
-        },
-        ScreenDimensions,
-      ),
-    });
-    this.rootCameralayout = new RenderPipelineLayout({
-      bindGroupLayouts: [
-        this.sizeBindGroupLayout,
-        this.uniformBindGroupLayoutWithTime,
-      ] as [
-        typeof this.sizeBindGroupLayout,
-        typeof this.uniformBindGroupLayoutWithTime,
-      ],
-      label: 'rootCamera',
-    });
-    const BindGroupLayoutPosition = new BGLayout(
+          ScreenDimensions,
+        ),
+      },
+    );
+    this.rootCameralayout = new RenderPipelineLayout(
+      {
+        bindGroupLayouts: [
+          this.sizeBindGroupLayout,
+          this.uniformBindGroupLayoutWithTime,
+        ] as [
+          typeof this.sizeBindGroupLayout,
+          typeof this.uniformBindGroupLayoutWithTime,
+        ],
+        label: 'rootCamera',
+      },
       this,
+    );
+    const BindGroupLayoutPosition = new BGLayout(
+      this.device,
       'BindGroupLayoutPosition',
       {
         world: new BufLayout(
@@ -508,6 +518,7 @@ export class GPU {
     this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout(
       'positionBindGroupTimeWGSLLayot',
       BindGroupLayoutPosition,
+      this,
     );
     this.simpleFragShader = createSimpleFragShader(
       this.positionAndTimeBindGroup,
@@ -516,7 +527,7 @@ export class GPU {
     this.lightsTextureBindGroup =
       this.positionAndTimeBindGroup.createAppendedLayout(
         'lightsBindGroupTexture2Layout',
-        new BGLayout(this, 'lightsBindGroupTexture2', {
+        new BGLayout(this.device, 'lightsBindGroupTexture2', {
           diffuseTexture: new TextLayout(
             {
               texture: {},
@@ -532,11 +543,12 @@ export class GPU {
             'sampler',
           ),
         }),
+        this,
       );
     this.bindGroupTextureWater =
       this.positionAndTimeBindGroup.createSharedLayout(
         'lightsBindGroupTexture2PipelineLayout',
-        new BGLayout(this, 'lightsBindGroupTexture2water', {
+        new BGLayout(this.device, 'lightsBindGroupTexture2water', {
           diffuseTexture: new TextLayout(
             {
               texture: {},
@@ -552,6 +564,7 @@ export class GPU {
             'sampler',
           ),
         }),
+        this,
       );
 
     this.pickRenderPass = new RenderPass({
@@ -559,7 +572,7 @@ export class GPU {
         gRenderTargetId: new ColorRenderTarget(
           {
             format: 'r32uint',
-            gpu: this,
+            gpu: this.device,
             label: 'idTexture',
             size: {
               height: 300,
@@ -606,7 +619,7 @@ export class GPU {
           gRenderTargetDiffuse: new MSAARenderTarget(
             {
               format: 'bgra8unorm',
-              gpu: this,
+              gpu: this.device,
               label: 'diffuseTexture',
               size: {
                 height: 300,
@@ -645,7 +658,7 @@ export class GPU {
         0,
         {
           format: 'depth32float',
-          gpu: this,
+          gpu: this.device,
           initialSampleCount: 4,
           label: 'depthTexture_renderPassScreen',
           size: {
@@ -667,7 +680,7 @@ export class GPU {
           diffuse: new ColorRenderTarget(
             {
               format: 'bgra8unorm',
-              gpu: this,
+              gpu: this.device,
               label: 'diffuseTextureWater',
               size: {
                 height: 300,
@@ -704,7 +717,7 @@ export class GPU {
         0,
         {
           format: 'depth32float',
-          gpu: this,
+          gpu: this.device,
           initialSampleCount: 1,
           label: 'depthTexture_renderPassWater',
           size: {
@@ -736,27 +749,31 @@ export class GPU {
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    this.BindGroupLayoutCanvas = new BGLayout(this, 'BindGroupLayoutUI', {
-      texture: new TextLayout(
-        {
-          texture: {},
-          visibility: ShaderStage.FRAGMENT,
-        },
-        'texture_2d<f32>',
-      ),
-      uniforms: new BufLayout(
-        {
-          buffer: {
-            minBindingSize: 8,
-            type: 'uniform',
+    this.BindGroupLayoutCanvas = new BGLayout(
+      this.device,
+      'BindGroupLayoutUI',
+      {
+        texture: new TextLayout(
+          {
+            texture: {},
+            visibility: ShaderStage.FRAGMENT,
           },
-          visibility: ShaderStage.VERTEX,
-        },
-        UIUniforms,
-      ),
-    });
+          'texture_2d<f32>',
+        ),
+        uniforms: new BufLayout(
+          {
+            buffer: {
+              minBindingSize: 8,
+              type: 'uniform',
+            },
+            visibility: ShaderStage.VERTEX,
+          },
+          UIUniforms,
+        ),
+      },
+    );
     this.BindGroupLayoutCanvasArray = new BGLayout(
-      this,
+      this.device,
       'BindGroupLayoutUIArray',
       {
         texture: new TextLayout(
@@ -778,14 +795,20 @@ export class GPU {
         ),
       },
     );
-    this.canvasRootLayout = new RenderPipelineLayout({
-      bindGroupLayouts: [this.BindGroupLayoutCanvas],
-      label: 'canvasRootLayout',
-    });
-    this.canvasRootLayoutArray = new RenderPipelineLayout({
-      bindGroupLayouts: [this.BindGroupLayoutCanvasArray],
-      label: 'canvasRootLayoutArray',
-    });
+    this.canvasRootLayout = new RenderPipelineLayout(
+      {
+        bindGroupLayouts: [this.BindGroupLayoutCanvas],
+        label: 'canvasRootLayout',
+      },
+      this,
+    );
+    this.canvasRootLayoutArray = new RenderPipelineLayout(
+      {
+        bindGroupLayouts: [this.BindGroupLayoutCanvasArray],
+        label: 'canvasRootLayoutArray',
+      },
+      this,
+    );
     const vertexShader = createUIVertShader(this.canvasRootLayout, {
       arrayStride: 4 * 4,
       attributes2: position_uv_attrs,
@@ -850,7 +873,7 @@ export class GPU {
         swap: new ColorRenderTarget(
           {
             format: this.#presentationFormat,
-            gpu: this,
+            gpu: this.device,
             label: 'canvasTexture',
             size: {
               height: 300,
@@ -918,7 +941,10 @@ export class GPU {
       'timeBuffer',
     );
 
-    const ClustersShader = createClustersCompShader(this.sizeBindGroupLayout);
+    const ClustersShader = createClustersCompShader(
+      this.sizeBindGroupLayout,
+      this,
+    );
     const computePipelineClustersP =
       ClustersShader[1].createComputePipeline('main');
     const updateViewPipelineP =

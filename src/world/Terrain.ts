@@ -12,7 +12,6 @@ import {
   BindStorageBuffer,
 } from '../GPU/Buffer/Buffer.js';
 import { BindGroup } from '../GPU/BindGroup.js';
-import { RenderTarget, Texture, TextureUsageEnums } from '../GPU/Texture.js';
 import { TextureView } from '../GPU/TextureView.js';
 import {
   CalculatePlaneIndices,
@@ -26,7 +25,6 @@ import {
   CalculateNormals,
   createCalculateNormals,
 } from '../GPU/Shaders/CalculateNormals.comp.js';
-import { BGLayout, BufLayout } from '../GPU/BindGroupLayout.js';
 import { CreateGroundFromHeightMap } from '../GPU/Shaders/CreateGroundFromHeightMap.comp.js';
 import { GPU } from '../GPU.js';
 import {
@@ -42,7 +40,13 @@ import {
 } from '../GPU/Shaders/structs/Structs.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import { Buffer2, BufferUsageEnums } from '../GPU/Buffer/Buffer2.js';
-import { ShaderStage } from '../GPU/Shaders/Shader.js';
+import {
+  type RenderTarget,
+  Texture,
+  TextureUsageEnums,
+} from '../webgpu-ts/Texture.js';
+import { BGLayout, BufLayout } from '../webgpu-ts/BindgroupLayout.js';
+import { ShaderStage } from '../webgpu-ts/Shader.js';
 declare const engine: Engine;
 
 const terrainSize = [10000, 10000] as const;
@@ -222,7 +226,7 @@ TODO
 
           const texture = Texture.create({
             format: 'rgba8unorm',
-            gpu,
+            gpu: gpu.device,
             label: 'TerrainTexture',
             size: {
               height: bitmap.height,
@@ -259,6 +263,7 @@ TODO
             bindLayouts[0],
             'sourceBindGroup',
             (bindGroup) => ({
+              //@ts-expect-error
               pixels: view,
               positions:
                 terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
@@ -275,7 +280,7 @@ TODO
         }
 
         const slopesLayout = new BGLayout(
-          gpu,
+          gpu.device,
           'slopesAndFacesBindGroupLayoutReadOnly',
           {
             facet12: new BufLayout(
@@ -440,7 +445,7 @@ TODO
     );
     this.texture = Texture.create({
       format: 'rgba8unorm',
-      gpu,
+      gpu: gpu.device,
       label: 'Terrain',
       size: Terrain.#textureSize,
       usages:
@@ -452,7 +457,7 @@ TODO
       facet12: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
       slopes: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
     });
-    this.heightsLayout = new BGLayout(gpu, 'terrainBindGroupLayout', {
+    this.heightsLayout = new BGLayout(gpu.device, 'terrainBindGroupLayout', {
       facet12: new BufLayout(
         {
           buffer: {
@@ -485,6 +490,7 @@ TODO
             slopes: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
           }),
         ),
+        gpu,
       );
 
     const commandEncoder = gpu.device.createCommandEncoder({

@@ -8,18 +8,18 @@ import {
 import { TextureView } from '../GPU/TextureView.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import {
-  type Texture,
-  TextureUsageEnums,
-  RenderTarget,
-  Texture2dSize,
-  TEXTURE_BINDING_TEXTURE,
-} from '../GPU/Texture.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
 import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
 import { DataNode, allocate_vec } from '../nodes/DataNode.js';
 import type { GPU } from '../GPU.js';
 import { BindGroup } from '../GPU/BindGroup.js';
+import {
+  RenderTarget,
+  type TEXTURE_BINDING_TEXTURE,
+  type Texture,
+  type Texture2dSize,
+  TextureUsageEnums,
+} from '../webgpu-ts/Texture.js';
 declare const engine: Engine;
 
 export const enum NumericUnit {
@@ -155,7 +155,7 @@ export abstract class UIRectangle<
       }
       this.texture = new RenderTarget({
         format: 'bgra8unorm',
-        gpu: this.props.renderPass.gpu,
+        gpu: this.props.renderPass.gpu.device,
         label: 'button_' + this.props.label + '_UIRectangle_text',
         size: {
           depthOrArrayLayers: structName.includes('array') ? 2 : 1,
@@ -463,6 +463,7 @@ export abstract class UIRectangle<
       this.drawable.staticBindGroup = new BindGroup(
         canvaspipeline.props.vertexShader.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0],
         'UI_bindgroup_' + label,
+        //@ts-expect-error
         (bindGroup) => {
           return {
             texture: this.textureView,
