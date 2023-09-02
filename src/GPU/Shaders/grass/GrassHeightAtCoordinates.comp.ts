@@ -12,9 +12,7 @@ import type { GPU } from '../../../GPU.js';
 import { getHeightAtCoordinates } from '../getHeightAtCoordinates.js';
 import { ComputeShaderFunction } from '../ShaderFunction.js';
 import { BGLayout, BufLayout } from '../../../webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
-import type { Engine } from 'engine.js';
-declare const engine: Engine;
+import { ShaderStage } from '../../../webgpu-ts/Shader.js';
 
 export function createGrassHeightAtCoordinates(
   settings: typeof Terrain.settings,
@@ -83,13 +81,10 @@ export function createGrassHeightAtCoordinates(
     }),
   ] as const;
 
-  const pipelineLayout = new PipelineLayout(
-    {
-      bindGroupLayouts: bindLayouts,
-      label: 'GetHeightAtCoordinatesPipeLine',
-    },
-    engine.gpu!,
-  );
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'GetHeightAtCoordinatesPipeLine',
+  });
   return [
     bindLayouts,
     new ComputeShader(
@@ -133,7 +128,7 @@ export function createGrassHeightAtCoordinates(
             `,
           ),
         },
-        gpu,
+        gpu: gpu.device,
         label: 'GetHeightAtCoordinates.comp',
         pipelineLayouts: [pipelineLayout],
       },

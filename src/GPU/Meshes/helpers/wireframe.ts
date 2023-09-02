@@ -25,7 +25,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   }
   let node: DataNode;
 
-  const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
+  //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
   const vertexBuffer = targetNode.vertexBuffers.get(0)?.buffer;
 
   const mainNodeProps = {
@@ -33,7 +33,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     rigid_body: false,
   };
 
-  const renderPipeline = gpu.createRenderPipeline(
+  const renderPipeline = engine.gpu!.createRenderPipeline(
     DebugLinesPipeline,
     {
       topology: 'line-list',

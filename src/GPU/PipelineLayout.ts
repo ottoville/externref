@@ -1,6 +1,5 @@
 ﻿import type { BindGroup } from './BindGroup.js';
 import { RenderPipeline } from './RenderPipeline.js';
-import type { GPU } from '../GPU.js';
 import type { BGLayout } from '../webgpu-ts/BindgroupLayout.js';
 
 type PipeLineLayoutProps<
@@ -17,18 +16,13 @@ export class PipelineLayout<
 > {
   bindGroupLayouts: B;
   layout: GPUPipelineLayout;
-  gpu: GPU;
-  gpuDevice: GPUDevice;
-  constructor(
-    { label, bindGroupLayouts }: PipeLineLayoutProps<B, S>,
-    legacyGPU: GPU,
-  ) {
+  gpu: GPUDevice;
+  constructor({ label, bindGroupLayouts }: PipeLineLayoutProps<B, S>) {
     if (!bindGroupLayouts[0]) {
       throw new Error('pipelineLayout needs bindgrouplayouts');
     }
     Object.freeze(bindGroupLayouts);
-    this.gpu = legacyGPU;
-    this.gpuDevice = bindGroupLayouts[0].gpu;
+    this.gpu = bindGroupLayouts[0].gpu;
     this.bindGroupLayouts = bindGroupLayouts;
     this.layout = bindGroupLayouts[0].gpu.createPipelineLayout({
       bindGroupLayouts: bindGroupLayouts.map((b) => b.layout),
@@ -47,41 +41,26 @@ export class RenderPipelineLayout<
 
   constructor(
     props: PipeLineLayoutProps<B, S>,
-    legacyGPU: GPU,
     public sharedBindgroup?: BindGroup | undefined,
   ) {
-    super(Object.freeze(props), legacyGPU);
+    super(Object.freeze(props));
     this.bindGroupLayout = props.bindGroupLayouts.at(-1)!;
   }
   renderPipelineListeners: Set<() => void> = new Set();
-  createSharedLayout<T extends BGLayout>(
-    label: string,
-    layout: T,
-    legacyGPU: GPU,
-  ) {
-    const p = new RenderPipelineLayout(
-      {
-        bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
-        label,
-        sharedLayout: layout,
-      },
-      legacyGPU,
-    );
+  createSharedLayout<T extends BGLayout>(label: string, layout: T) {
+    const p = new RenderPipelineLayout({
+      bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
+      label,
+      sharedLayout: layout,
+    });
     this.subBindGroups.push(p);
     return p;
   }
-  createAppendedLayout<T extends BGLayout>(
-    label: string,
-    layout: T,
-    legacyGPU: GPU,
-  ) {
-    const p = new RenderPipelineLayout(
-      {
-        bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
-        label,
-      },
-      legacyGPU,
-    );
+  createAppendedLayout<T extends BGLayout>(label: string, layout: T) {
+    const p = new RenderPipelineLayout({
+      bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
+      label,
+    });
     this.subBindGroups.push(p);
     return p;
   }
@@ -91,7 +70,6 @@ export class RenderPipelineLayout<
   addChildBindGroupLayout<T extends BindGroup>(
     label: string,
     sharedBindgroup: T,
-    legacyGPU: GPU,
   ) {
     const p = new RenderPipelineLayout(
       {
@@ -101,7 +79,6 @@ export class RenderPipelineLayout<
         ] as [...B, T extends BindGroup<infer X> ? X : never],
         label,
       },
-      legacyGPU,
       sharedBindgroup,
     );
     this.subBindGroups.push(p);

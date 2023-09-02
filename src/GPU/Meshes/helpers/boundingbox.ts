@@ -48,10 +48,10 @@ export class BoundingBoxMesh extends DataNode {
       3,
     );
     const positions_amount = 26;
-    const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
+    //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
     const debug_render_boundingbox_vertexBuffer = new Buffer2(
       {
-        gpu,
+        gpu: engine.gpu!,
         label: 'vertex_debug_bounding_box',
         size: positions_amount * 4 * Float32Array.BYTES_PER_ELEMENT,
         usages: BufferUsageEnums.VERTEX,
@@ -78,7 +78,7 @@ export class BoundingBoxMesh extends DataNode {
     );
     this.positions_count = 26;
 
-    const renderPipeline = gpu.createRenderPipeline(
+    const renderPipeline = engine.gpu!.createRenderPipeline(
       DebugLinesPipeline,
       {
         stripIndexFormat: 'uint32',

@@ -128,7 +128,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         stride: number;
       };
     else {
-      const gpu = this.renderPipeline.props.vertexShader.props.gpu;
+      //const gpu = this.renderPipeline.props.vertexShader.props.gpu;
       const ptr = buffer.view[0];
       const len =
         (buffer.view[1] * Float32Array.BYTES_PER_ELEMENT) /
@@ -137,7 +137,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         stride: buffer.stride,
         view: new Buffer2(
           {
-            gpu,
+            gpu: engine.gpu!,
             label: 'DrawableVertex_' + this.node.label,
             size: buffer.view[1] * Float32Array.BYTES_PER_ELEMENT,
             usages: BufferUsageEnums.VERTEX,

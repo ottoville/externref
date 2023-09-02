@@ -9,9 +9,7 @@ import {
   BufLayout,
   TextLayout,
 } from '../../webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
-import type { Engine } from 'engine.js';
-declare const engine: Engine;
+import { ShaderStage } from '../../webgpu-ts/Shader.js';
 
 export function CreateGroundFromHeightMap(
   gpu: GPU,
@@ -41,13 +39,10 @@ export function CreateGroundFromHeightMap(
     }),
   ] as const;
 
-  const pipelineLayout = new PipelineLayout(
-    {
-      bindGroupLayouts: bindLayouts,
-      label: 'CreateGroundFromHeightMapPipeline',
-    },
-    engine.gpu!,
-  );
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'CreateGroundFromHeightMapPipeline',
+  });
   return [
     bindLayouts,
     new ComputeShader(
@@ -92,7 +87,7 @@ export function CreateGroundFromHeightMap(
             `,
           ),
         },
-        gpu,
+        gpu: gpu.device,
         label: 'CreateGroundFromHeightMap.comp',
         pipelineLayouts: [pipelineLayout],
       },

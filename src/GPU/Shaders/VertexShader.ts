@@ -1,4 +1,3 @@
-import { type ShaderParams } from './Shader.js';
 import type {
   FilteredBindgroupEntrys,
   VertexEntry,
@@ -6,7 +5,7 @@ import type {
 } from './ShaderFunction.js';
 import { OutputShader } from './OutputShader.js';
 import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from '../../webgpu-ts/Shader.js';
+import { type ShaderParams, ShaderStage } from '../../webgpu-ts/Shader.js';
 
 interface VertexAttribute extends GPUVertexAttribute {
   shaderFormat: string;
@@ -34,6 +33,7 @@ export class VertexShader<
   },
 > extends OutputShader<E> {
   constructor(
+    //@ts-expect-error
     props: ShaderParams<E>,
     // Use bindgrouplayot of fist entrypoint to type constantCode bindgrouplayout
     constantCode?: (

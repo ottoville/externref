@@ -4,7 +4,7 @@ import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
 import { Lights, MeshArray, ViewUniforms } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
+import { ShaderStage } from '../../webgpu-ts/Shader.js';
 
 import { UpdateClustersBufferLayout } from './Clusters.comp.js';
 import type { Engine } from 'engine.js';
@@ -63,13 +63,10 @@ export function createUpdateViewShader(gpu: GPU) {
       ),
     }),
   ] as const;
-  const pipelineLayout = new PipelineLayout(
-    {
-      bindGroupLayouts: bindLayouts,
-      label: 'UpdateViewPipeline',
-    },
-    engine.gpu!,
-  );
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'UpdateViewPipeline',
+  });
   return [
     bindLayouts,
     new ComputeShader(
@@ -127,7 +124,7 @@ ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
         `,
           ),
         },
-        gpu,
+        gpu: gpu.device,
         label: 'UpdateView.comp',
         pipelineLayouts: [pipelineLayout],
       },

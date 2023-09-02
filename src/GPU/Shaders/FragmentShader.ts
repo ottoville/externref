@@ -1,4 +1,3 @@
-import { type ShaderParams } from './Shader.js';
 import {
   FilteredBindgroupEntrys,
   FragmentEntry,
@@ -6,7 +5,7 @@ import {
 } from './ShaderFunction.js';
 import { OutputShader } from './OutputShader.js';
 import { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
+import { type ShaderParams, ShaderStage } from '../../webgpu-ts/Shader.js';
 
 export class FragmentShader<
   E extends { [index: string]: FragmentShaderFunction<readonly BGLayout[]> } = {
@@ -14,6 +13,7 @@ export class FragmentShader<
   },
 > extends OutputShader<E> {
   constructor(
+    //@ts-expect-error
     public override props: ShaderParams<E>,
     // Use bindgrouplayot of fist entrypoint to type constantCode bindgrouplayout
     constantCode?: (

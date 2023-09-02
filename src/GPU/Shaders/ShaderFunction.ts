@@ -1,4 +1,4 @@
-import type { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { ShaderStage } from '../../webgpu-ts/Shader.js';
 import { PipelineLayout, RenderPipelineLayout } from '../PipelineLayout.js';
 import type { VertexBufferLayout2 } from './VertexShader.js';
 import type { Struct } from './structs/Structs.js';

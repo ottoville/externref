@@ -66,7 +66,7 @@ import {
   SampLayout,
   TextLayout,
 } from './webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
+import { ShaderStage } from './webgpu-ts/Shader.js';
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -474,19 +474,16 @@ export class GPU {
         ),
       },
     );
-    this.rootCameralayout = new RenderPipelineLayout(
-      {
-        bindGroupLayouts: [
-          this.sizeBindGroupLayout,
-          this.uniformBindGroupLayoutWithTime,
-        ] as [
-          typeof this.sizeBindGroupLayout,
-          typeof this.uniformBindGroupLayoutWithTime,
-        ],
-        label: 'rootCamera',
-      },
-      this,
-    );
+    this.rootCameralayout = new RenderPipelineLayout({
+      bindGroupLayouts: [
+        this.sizeBindGroupLayout,
+        this.uniformBindGroupLayoutWithTime,
+      ] as [
+        typeof this.sizeBindGroupLayout,
+        typeof this.uniformBindGroupLayoutWithTime,
+      ],
+      label: 'rootCamera',
+    });
     const BindGroupLayoutPosition = new BGLayout(
       this.device,
       'BindGroupLayoutPosition',
@@ -518,7 +515,6 @@ export class GPU {
     this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout(
       'positionBindGroupTimeWGSLLayot',
       BindGroupLayoutPosition,
-      this,
     );
     this.simpleFragShader = createSimpleFragShader(
       this.positionAndTimeBindGroup,
@@ -543,7 +539,6 @@ export class GPU {
             'sampler',
           ),
         }),
-        this,
       );
     this.bindGroupTextureWater =
       this.positionAndTimeBindGroup.createSharedLayout(
@@ -564,7 +559,6 @@ export class GPU {
             'sampler',
           ),
         }),
-        this,
       );
 
     this.pickRenderPass = new RenderPass({
@@ -795,20 +789,14 @@ export class GPU {
         ),
       },
     );
-    this.canvasRootLayout = new RenderPipelineLayout(
-      {
-        bindGroupLayouts: [this.BindGroupLayoutCanvas],
-        label: 'canvasRootLayout',
-      },
-      this,
-    );
-    this.canvasRootLayoutArray = new RenderPipelineLayout(
-      {
-        bindGroupLayouts: [this.BindGroupLayoutCanvasArray],
-        label: 'canvasRootLayoutArray',
-      },
-      this,
-    );
+    this.canvasRootLayout = new RenderPipelineLayout({
+      bindGroupLayouts: [this.BindGroupLayoutCanvas],
+      label: 'canvasRootLayout',
+    });
+    this.canvasRootLayoutArray = new RenderPipelineLayout({
+      bindGroupLayouts: [this.BindGroupLayoutCanvasArray],
+      label: 'canvasRootLayoutArray',
+    });
     const vertexShader = createUIVertShader(this.canvasRootLayout, {
       arrayStride: 4 * 4,
       attributes2: position_uv_attrs,
@@ -864,7 +852,7 @@ export class GPU {
             return output;`,
         ),
       },
-      gpu: this,
+      gpu: this.device,
       label: 'color.frag',
       pipelineLayouts: [this.positionAndTimeBindGroup],
     });
@@ -942,10 +930,7 @@ export class GPU {
       'timeBuffer',
     );
 
-    const ClustersShader = createClustersCompShader(
-      this.sizeBindGroupLayout,
-      this,
-    );
+    const ClustersShader = createClustersCompShader(this.sizeBindGroupLayout);
     const computePipelineClustersP =
       ClustersShader[1].createComputePipeline('main');
     const updateViewPipelineP =

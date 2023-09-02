@@ -5,9 +5,7 @@ import { ComputeShader } from './ComputeShader.js';
 import { Clusters, ProjectionStruct } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
-import type { Engine } from 'engine.js';
-declare const engine: Engine;
+import { ShaderStage } from '../../webgpu-ts/Shader.js';
 
 export const UpdateClustersBufferLayout = new BufLayout(
   {
@@ -23,7 +21,6 @@ export const UpdateClustersBufferLayout = new BufLayout(
 
 export function createClustersCompShader(
   sizeGroup: GPU['sizeBindGroupLayout'],
-  legacyGPU: GPU,
 ) {
   const bindLayouts = [
     sizeGroup,
@@ -42,13 +39,10 @@ export function createClustersCompShader(
       ),
     }),
   ] as const;
-  const pipelineLayout = new PipelineLayout(
-    {
-      bindGroupLayouts: bindLayouts,
-      label: 'ClustersPipeline',
-    },
-    legacyGPU,
-  );
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'ClustersPipeline',
+  });
   return [
     bindLayouts,
     new ComputeShader(

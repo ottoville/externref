@@ -1,5 +1,8 @@
-import type { ShaderStage } from 'webgpu-ts/Shader.js';
-import { Shader, type ShaderParams } from './Shader.js';
+import {
+  Shader,
+  type ShaderParams,
+  type ShaderStage,
+} from '../../webgpu-ts/Shader.js';
 import {
   FragmentShaderFunction,
   VertexShaderFunction,
@@ -16,8 +19,10 @@ export abstract class OutputShader<
   E extends { [index: string]: outputShaderFunction } = {
     [index: string]: outputShaderFunction;
   },
+  //@ts-expect-error
 > extends Shader<E> {
   constructor(
+    //@ts-expect-error
     props: ShaderParams<E>,
     shaderFlag: ShaderStage,
     constantCode?:

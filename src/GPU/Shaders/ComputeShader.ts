@@ -1,6 +1,9 @@
-import { ShaderStage } from 'webgpu-ts/Shader.js';
+import {
+  Shader,
+  type ShaderParams,
+  ShaderStage,
+} from '../../webgpu-ts/Shader.js';
 import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
-import { Shader, type ShaderParams } from './Shader.js';
 import type {
   ComputeEntry,
   ComputeShaderFunction,
@@ -10,8 +13,10 @@ export class ComputeShader<
   E extends { [index: string]: ComputeShaderFunction<readonly BGLayout[]> } = {
     [index: string]: ComputeShaderFunction<readonly BGLayout[]>;
   },
+  //@ts-expect-error
 > extends Shader<E> {
   constructor(
+    //@ts-expect-error
     public override props: ShaderParams<E>,
     constantCode?: (
       args: FilteredBindgroupEntrys<
@@ -28,7 +33,7 @@ export class ComputeShader<
     );
   }
   createComputePipeline(entryPoint: keyof E) {
-    return this.props.gpu.device
+    return this.props.gpu
       .createComputePipelineAsync({
         compute: {
           entryPoint: entryPoint as string,

@@ -5,9 +5,7 @@ import { Indices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
-import type { Engine } from 'engine.js';
-declare const engine: Engine;
+import { ShaderStage } from '../../webgpu-ts/Shader.js';
 
 export function createCalculatePlaneIndices(
   gpu: GPU,
@@ -29,13 +27,10 @@ export function createCalculatePlaneIndices(
     }),
   ] as const;
 
-  const pipelineLayout = new PipelineLayout(
-    {
-      bindGroupLayouts: bindLayouts,
-      label: 'calculatePlaneIndicesPipeline',
-    },
-    engine.gpu!,
-  );
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'calculatePlaneIndicesPipeline',
+  });
   return [
     bindLayouts,
     new ComputeShader({

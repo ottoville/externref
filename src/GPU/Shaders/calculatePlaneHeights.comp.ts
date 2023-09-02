@@ -5,9 +5,7 @@ import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
 import { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
-import type { Engine } from 'engine.js';
-declare const engine: Engine;
+import { ShaderStage } from '../../webgpu-ts/Shader.js';
 
 export function createCalculatePlaneHeights(
   gpu: GPU,
@@ -53,13 +51,10 @@ export function createCalculatePlaneHeights(
     }),
   ] as const;
 
-  const pipelineLayout = new PipelineLayout(
-    {
-      bindGroupLayouts: bindLayouts,
-      label: 'calculatePlaneHeightsPipeline',
-    },
-    engine.gpu!,
-  );
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'calculatePlaneHeightsPipeline',
+  });
   const subdivisions_plus_one = settings.subdivisions[0] + 1;
   const facetSize = settings.subdivisions[0] * settings.subdivisions[1];
 

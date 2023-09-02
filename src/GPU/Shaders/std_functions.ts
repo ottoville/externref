@@ -1,4 +1,4 @@
-import type { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { ShaderStage } from '../../webgpu-ts/Shader.js';
 import type {
   StorageTextLayout,
   TextLayout,

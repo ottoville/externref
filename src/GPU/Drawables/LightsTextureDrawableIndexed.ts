@@ -23,7 +23,7 @@ import type {
   TEXTURE_BINDING_TEXTURE,
   Texture,
 } from '../../webgpu-ts/Texture.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { ShaderStage } from '../../webgpu-ts/Shader.js';
 
 /**
  * Drawable that is used with lightsTextureBindGroup

@@ -10,7 +10,7 @@ declare const engine: Engine;
 export class NormalsMesh extends DataNode {
   override drawable: DrawableSimple<RenderPipeline>;
   constructor(targetNode: DrawableDirect<DataNode>) {
-    const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
+    //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
     const stride = 16; // 8*2;
     const vertices_ptr = allocate_vec_f32(
       targetNode.node.positions_count * stride,
@@ -71,7 +71,7 @@ export class NormalsMesh extends DataNode {
       );
       this.rotation = targetNode.node.rotation;
     });
-    const renderPipeline = gpu.createRenderPipeline(
+    const renderPipeline = engine.gpu!.createRenderPipeline(
       NormalsPipeline,
       {
         topology: 'line-list',

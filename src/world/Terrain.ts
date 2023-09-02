@@ -490,7 +490,6 @@ TODO
             slopes: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
           }),
         ),
-        gpu,
       );
 
     const commandEncoder = gpu.device.createCommandEncoder({

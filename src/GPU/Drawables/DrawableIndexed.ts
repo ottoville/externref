@@ -45,13 +45,13 @@ export class DrawableIndexed<
       GPUIndexFormat = 'uint32',
     }: DrawableIndexedProps = {},
   ) {
-    const gpu = drawableProps.renderPipeline.props.vertexShader.props.gpu;
+    //const gpu = drawableProps.renderPipeline.props.vertexShader.props.gpu;
     super(
       {
         ...drawableProps,
         dynamicBindGroups: [
           [
-            gpu.BindGroupPosition,
+            engine.gpu!.BindGroupPosition,
             engine.rust.gpu_alignment(drawableProps.node.id),
           ],
         ],
@@ -102,10 +102,10 @@ export class DrawableIndexed<
         this.#GPUIndexFormat = GPUIndexFormat;
       }
     } else {
-      const gpu = this.renderPipeline.props.vertexShader.props.gpu;
+      // const gpu = this.renderPipeline.props.vertexShader.props.gpu;
       this.#indexBuffer = new Buffer2(
         {
-          gpu,
+          gpu: engine.gpu!,
           label: 'index_' + this.node.label,
           size: buffer.byteLength,
           usages: BufferUsageEnums.INDEX,

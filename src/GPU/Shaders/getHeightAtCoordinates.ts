@@ -1,4 +1,4 @@
-import type { ShaderStage } from 'webgpu-ts/Shader.js';
+import type { ShaderStage } from '../../webgpu-ts/Shader.js';
 import type { BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import type { Terrain } from '../../world/Terrain.js';
 import type { IntArray, PlaneArray } from './structs/Structs.js';

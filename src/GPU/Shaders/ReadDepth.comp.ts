@@ -8,7 +8,7 @@ import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from 'webgpu-ts/Shader.js';
+import { ShaderStage } from '../../webgpu-ts/Shader.js';
 import type { Engine } from 'engine.js';
 declare const engine: Engine;
 
@@ -62,13 +62,10 @@ export function createReadDepth(gpu: GPU) {
     }),
   ] as const;
 
-  const pipelineLayout = new PipelineLayout(
-    {
-      bindGroupLayouts: bindLayouts,
-      label: 'ReadDepthPipeline',
-    },
-    engine.gpu!,
-  );
+  const pipelineLayout = new PipelineLayout({
+    bindGroupLayouts: bindLayouts,
+    label: 'ReadDepthPipeline',
+  });
   return [
     bindLayouts,
     new ComputeShader({
@@ -90,7 +87,7 @@ export function createReadDepth(gpu: GPU) {
             `,
         ),
       },
-      gpu,
+      gpu: gpu.device,
       label: 'ReadDepth.comp',
       pipelineLayouts: [pipelineLayout],
     }),
