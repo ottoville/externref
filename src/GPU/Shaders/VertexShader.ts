@@ -4,8 +4,8 @@ import type {
   VertexShaderFunction,
 } from './ShaderFunction.js';
 import { OutputShader } from './OutputShader.js';
-import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import { type ShaderParams, ShaderStage } from '../../webgpu-ts/Shader.js';
+import type { PipelineLayout } from '../../GPU/PipelineLayout.js';
 
 interface VertexAttribute extends GPUVertexAttribute {
   shaderFormat: string;
@@ -24,23 +24,18 @@ export interface VertexBufferLayout2<
 
 export class VertexShader<
   E extends {
-    [index: string]: VertexShaderFunction<readonly BGLayout[]>;
+    [index: string]: VertexShaderFunction;
   } = {
-    [index: string]: VertexShaderFunction<
-      readonly BGLayout[],
-      readonly VertexBufferLayout2[] | readonly []
-    >;
+    [index: string]: VertexShaderFunction;
   },
+  P extends readonly PipelineLayout[] = readonly PipelineLayout[],
 > extends OutputShader<E> {
   constructor(
     //@ts-expect-error
-    props: ShaderParams<E>,
+    props: ShaderParams<E, P>,
     // Use bindgrouplayot of fist entrypoint to type constantCode bindgrouplayout
     constantCode?: (
-      args: FilteredBindgroupEntrys<
-        E[keyof E]['pipelineLayout']['bindGroupLayouts'],
-        VertexEntry
-      >,
+      args: FilteredBindgroupEntrys<P[number]['bindGroupLayouts'], VertexEntry>,
     ) => string,
   ) {
     super(
