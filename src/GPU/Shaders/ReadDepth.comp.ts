@@ -1,12 +1,12 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
-import { ComputeShaderFunction } from './ShaderFunction.js';
 import type { Engine } from 'engine.js';
 import {
   BGLayout,
   BufLayout,
+  ComputeShader,
+  ComputeShaderFunction,
   ShaderStage,
   TextLayout,
 } from '../../webgpu-ts/index.js';
@@ -70,9 +70,25 @@ export function createReadDepth(gpu: GPU) {
     bindLayouts,
     new ComputeShader({
       entryPoints: {
-        main: new ComputeShaderFunction(
+        main: new ComputeShaderFunction<
+          [
+            {
+              depth_and_mesh: BufLayout<
+                ShaderStage.COMPUTE,
+                typeof Depth_And_Mesh
+              >;
+            },
+            {
+              depth_texture: TextLayout<
+                ShaderStage.COMPUTE,
+                'texture_depth_multisampled_2d'
+              >;
+              mesh_texture: TextLayout<ShaderStage.COMPUTE, 'texture_2d<u32>'>;
+              mouse: BufLayout<ShaderStage.COMPUTE, typeof Mouse>;
+            },
+          ]
+        >(
           '@builtin(global_invocation_id) global_id : vec3<u32>',
-          pipelineLayout,
           [1, 1, 1],
           ([
             { depth_and_mesh },

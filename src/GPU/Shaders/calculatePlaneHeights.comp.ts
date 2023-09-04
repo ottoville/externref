@@ -1,10 +1,14 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { ComputeShader } from './ComputeShader.js';
 import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
-import { ComputeShaderFunction } from './ShaderFunction.js';
-import { BGLayout, BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
+import {
+  BGLayout,
+  BufLayout,
+  ComputeShader,
+  ComputeShaderFunction,
+  ShaderStage,
+} from '../../webgpu-ts/index.js';
 
 export function createCalculatePlaneHeights(
   gpu: GPU,
@@ -62,9 +66,18 @@ export function createCalculatePlaneHeights(
     new ComputeShader(
       {
         entryPoints: {
-          main: new ComputeShaderFunction(
+          main: new ComputeShaderFunction<
+            [
+              {
+                vertices: BufLayout<ShaderStage.COMPUTE, typeof Vertices>;
+              },
+              {
+                facet12: BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>;
+                slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>;
+              },
+            ]
+          >(
             '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-            pipelineLayout,
             [1],
             ([{ vertices }, { slopes, facet12 }]) => /* wgsl */ `
             

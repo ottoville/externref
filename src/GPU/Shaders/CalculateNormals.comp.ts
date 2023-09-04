@@ -1,10 +1,14 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { ComputeShader } from './ComputeShader.js';
-import { FloatArray } from './structs/Structs.js';
+import { FloatArray, IntArray, PlaneArray } from './structs/Structs.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { SlopesLayout } from './CreateTerrainTexture.comp.js';
-import { ComputeShaderFunction } from './ShaderFunction.js';
-import { BGLayout, BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
+import {
+  BGLayout,
+  BufLayout,
+  ComputeShader,
+  ComputeShaderFunction,
+  ShaderStage,
+} from '../../webgpu-ts/index.js';
 
 export function createCalculateNormals(
   settings: typeof Terrain.settings,
@@ -36,9 +40,18 @@ export function createCalculateNormals(
     bindLayouts,
     new ComputeShader({
       entryPoints: {
-        main: new ComputeShaderFunction(
+        main: new ComputeShaderFunction<
+          [
+            {
+              vertices: BufLayout<ShaderStage.COMPUTE, typeof FloatArray>;
+            },
+            {
+              slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>;
+              facet12: BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>;
+            },
+          ]
+        >(
           '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-          pipelineLayout,
           [1],
           ([{ vertices }, { /*slopes,*/ facet12 }]) => /* wgsl */ `
             let stride : u32 = 12u;

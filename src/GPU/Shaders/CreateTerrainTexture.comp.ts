@@ -1,12 +1,12 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { PlaneArray, IntArray } from './structs/Structs.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
-import { ComputeShaderFunction } from './ShaderFunction.js';
 import {
   BGLayout,
-  BufLayout,
+  type BufLayout,
+  ComputeShader,
+  ComputeShaderFunction,
   ShaderStage,
   StorageTextLayout,
 } from '../../webgpu-ts/index.js';
@@ -44,9 +44,16 @@ export function CreateTerrainTexture(
     new ComputeShader(
       {
         entryPoints: {
-          main: new ComputeShaderFunction(
+          main: new ComputeShaderFunction<
+            [
+              // eslint-disable-next-line @typescript-eslint/ban-types
+              {},
+              {
+                ground_texture: StorageTextLayout<ShaderStage.COMPUTE>;
+              },
+            ]
+          >(
             '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-            pipelineLayout,
             [1],
             ([, /*{ _slopes, _facet12, }*/ { ground_texture }]) => /* wgsl */ `
             let cx:f32 = f32(GlobalInvocationID.x) * (f32(${settings.size[0]})/f32(${settings.textureSize.width})) - f32(${settings.size[0]}/u32(2));

@@ -1,5 +1,4 @@
 import { PipelineLayout } from '../../PipelineLayout.js';
-import { ComputeShader } from '../ComputeShader.js';
 import {
   FloatArray,
   IntArray,
@@ -10,8 +9,13 @@ import {
 import type { Terrain } from '../../../world/Terrain.js';
 import type { GPU } from '../../../GPU.js';
 import { getHeightAtCoordinates } from '../getHeightAtCoordinates.js';
-import { ComputeShaderFunction } from '../ShaderFunction.js';
-import { BGLayout, BufLayout, ShaderStage } from '../../../webgpu-ts/index.js';
+import {
+  BGLayout,
+  BufLayout,
+  ComputeShader,
+  ComputeShaderFunction,
+  ShaderStage,
+} from '../../../webgpu-ts/index.js';
 
 export function createGrassHeightAtCoordinates(
   settings: typeof Terrain.settings,
@@ -89,9 +93,21 @@ export function createGrassHeightAtCoordinates(
     new ComputeShader(
       {
         entryPoints: {
-          main: new ComputeShaderFunction(
+          main: new ComputeShaderFunction<
+            [
+              {
+                positionAndRotate: BufLayout<
+                  ShaderStage.COMPUTE,
+                  typeof PositionAndRotateArray
+                >;
+                shapes: BufLayout<ShaderStage.COMPUTE, typeof FloatArray>;
+              },
+              {
+                positions: BufLayout<ShaderStage.COMPUTE, typeof Vec2Array>;
+              },
+            ]
+          >(
             '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-            pipelineLayout,
             [1],
             (
               [

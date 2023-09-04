@@ -1,11 +1,20 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
-import { Lights, MeshArray, ViewUniforms } from './structs/Structs.js';
-import { ComputeShaderFunction } from './ShaderFunction.js';
+import {
+  Clusters,
+  Lights,
+  MeshArray,
+  ViewUniforms,
+} from './structs/Structs.js';
 
 import { UpdateClustersBufferLayout } from './Clusters.comp.js';
-import { BGLayout, BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
+import {
+  BGLayout,
+  BufLayout,
+  ComputeShader,
+  ComputeShaderFunction,
+  ShaderStage,
+} from '../../webgpu-ts/index.js';
 
 export function createUpdateViewShader(gpu: GPU) {
   const bindLayouts = [
@@ -69,9 +78,26 @@ export function createUpdateViewShader(gpu: GPU) {
     new ComputeShader(
       {
         entryPoints: {
-          main: new ComputeShaderFunction(
+          main: new ComputeShaderFunction<
+            [
+              {
+                meshes: BufLayout<ShaderStage.COMPUTE, typeof MeshArray>;
+                point_lights: BufLayout<ShaderStage.COMPUTE, typeof Lights>;
+                directional_lights: BufLayout<
+                  ShaderStage.COMPUTE,
+                  typeof Lights
+                >;
+              },
+              {
+                clusters: BufLayout<ShaderStage.COMPUTE, typeof Clusters>;
+                viewUniforms: BufLayout<
+                  ShaderStage.COMPUTE,
+                  typeof ViewUniforms
+                >;
+              },
+            ]
+          >(
             '@builtin(global_invocation_id) global_id : vec3<u32>',
-            pipelineLayout,
             [4, 2, 4],
             ([
               { meshes, point_lights, directional_lights },

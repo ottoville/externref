@@ -1,12 +1,12 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { ComputeShader } from './ComputeShader.js';
 import { Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
-import { ComputeShaderFunction } from './ShaderFunction.js';
 import {
   BGLayout,
   BufLayout,
+  ComputeShader,
+  ComputeShaderFunction,
   ShaderStage,
   TextLayout,
 } from '../../webgpu-ts/index.js';
@@ -48,9 +48,15 @@ export function CreateGroundFromHeightMap(
     new ComputeShader(
       {
         entryPoints: {
-          main: new ComputeShaderFunction(
+          main: new ComputeShaderFunction<
+            [
+              {
+                pixels: TextLayout<ShaderStage.COMPUTE, 'texture_2d<f32>'>;
+                positions: BufLayout<ShaderStage.COMPUTE, typeof Vertices>;
+              },
+            ]
+          >(
             '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-            pipelineLayout,
             [1, 1],
             ([{ positions, pixels }] /* wgsl */) =>
               `

@@ -1,10 +1,18 @@
 import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
 import { PipelineLayout } from '../PipelineLayout.js';
-import { ComputeShader } from './ComputeShader.js';
-import { Clusters, ProjectionStruct } from './structs/Structs.js';
+import {
+  Clusters,
+  ProjectionStruct,
+  ScreenDimensions,
+} from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
-import { ComputeShaderFunction } from './ShaderFunction.js';
-import { BGLayout, BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
+import {
+  BGLayout,
+  BufLayout,
+  ComputeShader,
+  ComputeShaderFunction,
+  ShaderStage,
+} from '../../webgpu-ts/index.js';
 
 export const UpdateClustersBufferLayout = new BufLayout(
   {
@@ -47,9 +55,21 @@ export function createClustersCompShader(
     new ComputeShader(
       {
         entryPoints: {
-          main: new ComputeShaderFunction(
+          main: new ComputeShaderFunction<
+            [
+              {
+                screen_dimensions: BufLayout<number, typeof ScreenDimensions>;
+              },
+              {
+                clusters: BufLayout<ShaderStage.COMPUTE, typeof Clusters>;
+                screentoview: BufLayout<
+                  ShaderStage.COMPUTE,
+                  typeof ProjectionStruct
+                >;
+              },
+            ]
+          >(
             '@builtin(global_invocation_id) global_id : vec3<u32>',
-            pipelineLayout,
             [4, 2, 4],
             ([
               { screen_dimensions },

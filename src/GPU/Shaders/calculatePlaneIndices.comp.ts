@@ -1,10 +1,14 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { ComputeShader } from './ComputeShader.js';
 import { Indices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
-import { ComputeShaderFunction } from './ShaderFunction.js';
-import { BGLayout, BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
+import {
+  BGLayout,
+  BufLayout,
+  ComputeShader,
+  ComputeShaderFunction,
+  ShaderStage,
+} from '../../webgpu-ts/index.js';
 
 export function createCalculatePlaneIndices(
   gpu: GPU,
@@ -34,9 +38,14 @@ export function createCalculatePlaneIndices(
     bindLayouts,
     new ComputeShader({
       entryPoints: {
-        main: new ComputeShaderFunction(
+        main: new ComputeShaderFunction<
+          [
+            {
+              indices: BufLayout<ShaderStage.COMPUTE, typeof Indices>;
+            },
+          ]
+        >(
           '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-          pipelineLayout,
           [1],
           ([{ indices }] /* wgsl */) =>
             `
