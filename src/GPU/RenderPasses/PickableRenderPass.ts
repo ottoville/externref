@@ -4,7 +4,6 @@ import {
   TerraVector3,
 } from '../../Math.js';
 import { MainNode } from '../../MainNode.js';
-import { MSAARenderTarget } from '../RenderTargets/MSAARenderTarget.js';
 import { BindGroup } from '../BindGroup.js';
 import {
   type BindUniformBuffer,
@@ -16,12 +15,13 @@ import { RenderPassProps } from './RenderPass.js';
 import { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
 import { createReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
-import type {
-  ColorRenderTarget,
-  DEPTH_FORMATS,
-  RENDER_TARGET_FORMAT,
-  RENDER_TARGET_TEXTURE,
-  TEXTURE_BINDING_TEXTURE,
+import {
+  MSAARenderTarget,
+  type ColorRenderTarget,
+  type DEPTH_FORMATS,
+  type RENDER_TARGET_FORMAT,
+  type RENDER_TARGET_TEXTURE,
+  type TEXTURE_BINDING_TEXTURE,
 } from '../../webgpu-ts/index.js';
 
 export class PickableRenderPass<

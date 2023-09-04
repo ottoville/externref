@@ -2,7 +2,6 @@
 import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 
 import { Projection, PROJECTION_BUFFER_SIZE } from './GPU/Projection.js';
-import { MSAARenderTarget } from './GPU/RenderTargets/MSAARenderTarget.js';
 import { BindGroup } from './GPU/BindGroup.js';
 import {
   BindStorageBuffer,
@@ -56,6 +55,7 @@ import {
   FragmentShader,
   FragmentShaderFunction,
   ColorRenderTarget,
+  MSAARenderTarget,
 } from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,
