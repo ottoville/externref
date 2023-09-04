@@ -1,4 +1,3 @@
-import { TextureView } from '../GPU/TextureView.js';
 import type { UIRectangleProps } from './UIRectangle.js';
 import type { TextUV } from './UIRectangleTextOnly.js';
 import { UIRectangleText } from './UIRectangleText.js';
@@ -6,7 +5,8 @@ import type {
   Texture,
   Texture2dSize,
   TextureUsageEnums,
-} from '../webgpu-ts/Texture.js';
+  TextureView,
+} from '../webgpu-ts/index.js';
 export const font = '80pt serif';
 
 export function createBackground(

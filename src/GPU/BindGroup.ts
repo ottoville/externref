@@ -1,9 +1,9 @@
-import type {
-  BGLayout,
-  MapToGPUBindGroupEntry,
-} from '../webgpu-ts/BindgroupLayout.js';
+import {
+  type BGLayout,
+  type MapToGPUBindGroupEntry,
+  TextureView,
+} from '../webgpu-ts/index.js';
 import type { RenderBundleEncoder } from './RenderBundleEncoder.js';
-import { TextureView } from './TextureView.js';
 
 export class BindGroup<L extends BGLayout = BGLayout> {
   #dirty = true;
@@ -27,7 +27,8 @@ export class BindGroup<L extends BGLayout = BGLayout> {
             binding: i,
             resource:
               entry instanceof TextureView
-                ? entry.getTextureBinding(this)
+                ? //@ts-expect-error
+                  entry.getTextureBinding(this)
                 : entry,
           };
         }),

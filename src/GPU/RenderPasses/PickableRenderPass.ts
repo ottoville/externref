@@ -13,16 +13,16 @@ import {
   GPUBufferUsage,
 } from '../Buffer/Buffer.js';
 import { RenderPassProps } from './RenderPass.js';
-import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
 import { createReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
 import type {
+  ColorRenderTarget,
   DEPTH_FORMATS,
   RENDER_TARGET_FORMAT,
   RENDER_TARGET_TEXTURE,
   TEXTURE_BINDING_TEXTURE,
-} from '../../webgpu-ts/Texture.js';
+} from '../../webgpu-ts/index.js';
 
 export class PickableRenderPass<
   T extends {
@@ -91,9 +91,7 @@ export class PickableRenderPass<
         readDepthShader[0][1],
         'pickPositionBindGroup1',
         (bindGroup) => ({
-          //@ts-expect-error
           depth_texture: depthRenderTarget.view,
-          //@ts-expect-error
           mesh_texture:
             this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view,
           mouse: this.#mousePositionBuffer!.getUniformBinding(bindGroup),

@@ -1,23 +1,13 @@
-import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import { RenderPass, RenderPassProps } from './RenderPass.js';
 import type { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
-import type {
-  RENDER_TARGET_FORMAT,
-  RENDER_TARGET_TEXTURE,
-} from '../../webgpu-ts/Texture.js';
+import type { ColorRenderTarget } from '../../webgpu-ts/index.js';
 
 export class DepthRenderPass<
   T extends {
-    [index: string]: ColorRenderTarget<
-      RENDER_TARGET_FORMAT,
-      RENDER_TARGET_TEXTURE
-    >;
+    [index: string]: ColorRenderTarget;
   } = {
-    [index: string]: ColorRenderTarget<
-      RENDER_TARGET_FORMAT,
-      RENDER_TARGET_TEXTURE
-    >;
+    [index: string]: ColorRenderTarget;
   },
 > extends RenderPass<T> {
   depthRenderTarget: DepthRenderTarget;
@@ -42,6 +32,7 @@ export class DepthRenderPass<
       depthClearValue: this.depthRenderTarget.clearValue,
       depthLoadOp: 'clear',
       depthStoreOp: 'store',
+      //@ts-expect-error
       view: this.depthRenderTarget.view.getAsRenderTarget(this),
     };
     return renderPassDescriptor;

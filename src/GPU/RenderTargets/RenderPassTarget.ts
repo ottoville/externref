@@ -1,14 +1,14 @@
+import { RenderTargetSize } from 'webgpu-ts/Texture';
 import {
   type RENDER_TARGET_FORMAT,
   type RENDER_TARGET_TEXTURE,
   RenderTarget,
-  type RenderTargetSize,
   type STORAGE_BINDING_TEXTURE,
   type Texture,
   type Texture2dSize,
   type TextureParams,
-} from '../../webgpu-ts/Texture.js';
-import { TextureView } from '../TextureView.js';
+  TextureView,
+} from '../../webgpu-ts/index.js';
 
 export type RenderPassTargetOptions = {
   textureViewDescriptor?: GPUTextureViewDescriptor | undefined;

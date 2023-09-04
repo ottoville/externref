@@ -1,7 +1,6 @@
 ﻿import type { TerraCamera } from '../../TerraCamera.js';
 import { type GPU } from '../../GPU.js';
 import type { Drawable } from '../Drawables/Drawable.js';
-import type { ColorRenderTarget } from '../RenderTargets/ColorRenderTarget.js';
 import {
   type BindUniformBuffer,
   Buffer,
@@ -11,10 +10,7 @@ import { BindGroup } from '../BindGroup.js';
 import { RenderBundleEncoder } from '../RenderBundleEncoder.js';
 import { RenderPipelineLayout } from '../PipelineLayout.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
-import type {
-  RENDER_TARGET_FORMAT,
-  RENDER_TARGET_TEXTURE,
-} from '../../webgpu-ts/Texture.js';
+import type { ColorRenderTarget } from '../../webgpu-ts/index.js';
 
 // eslint-disable-next-line import/no-unused-modules
 export class RenderPipelineVariant {
@@ -44,15 +40,9 @@ export type RenderPassProps<U> = {
 
 export class RenderPass<
   U extends {
-    [index: string]: ColorRenderTarget<
-      RENDER_TARGET_FORMAT,
-      RENDER_TARGET_TEXTURE
-    >;
+    [index: string]: ColorRenderTarget;
   } = {
-    [index: string]: ColorRenderTarget<
-      RENDER_TARGET_FORMAT,
-      RENDER_TARGET_TEXTURE
-    >;
+    [index: string]: ColorRenderTarget;
   },
 > {
   readonly perspectiveCameras: Set<TerraCamera> = new Set();

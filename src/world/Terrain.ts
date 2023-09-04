@@ -12,7 +12,6 @@ import {
   BindStorageBuffer,
 } from '../GPU/Buffer/Buffer.js';
 import { BindGroup } from '../GPU/BindGroup.js';
-import { TextureView } from '../GPU/TextureView.js';
 import {
   CalculatePlaneIndices,
   createCalculatePlaneIndices,
@@ -47,6 +46,7 @@ import {
   ShaderStage,
   Texture,
   TextureUsageEnums,
+  TextureView,
 } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -264,7 +264,6 @@ TODO
             bindLayouts[0],
             'sourceBindGroup',
             (bindGroup) => ({
-              //@ts-expect-error
               pixels: view,
               positions:
                 terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
@@ -616,6 +615,7 @@ TODO
             shaders.createTexture[0][1],
             'writableTexture',
             (bindGroup) => ({
+              //@ts-expect-error
               ground_texture: textureView.getTextureBinding(bindGroup),
             }),
           );

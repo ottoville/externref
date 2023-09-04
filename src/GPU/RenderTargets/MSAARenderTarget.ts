@@ -1,14 +1,12 @@
-import type {
-  RENDER_TARGET_FORMAT,
-  RENDER_TARGET_TEXTURE,
-  TextureParams,
-  STORAGE_BINDING_TEXTURE,
-  Texture2dSize,
-} from '../../webgpu-ts/Texture.js';
 import {
   ColorRenderTarget,
-  ColorRenderTargetParams,
-} from './ColorRenderTarget.js';
+  type ColorRenderTargetParams,
+  type RENDER_TARGET_FORMAT,
+  type RENDER_TARGET_TEXTURE,
+  type STORAGE_BINDING_TEXTURE,
+  type Texture2dSize,
+  type TextureParams,
+} from '../../webgpu-ts/index.js';
 import {
   RenderPassTarget,
   type RenderPassTargetOptions,

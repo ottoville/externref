@@ -196,7 +196,6 @@ new RenderPipeline(
   },
   //Should be fine
   () => ({
-    //@ts-expect-error
     diffuseTexture: engine.gpu!.renderPassWater.colorRenderTargets.diffuse.view,
     mySampler: sampler,
   }),

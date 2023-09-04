@@ -5,7 +5,6 @@ import {
   GPUBufferUsage,
   BindUniformBuffer,
 } from '../GPU/Buffer/Buffer.js';
-import { TextureView } from '../GPU/TextureView.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import type { RenderPipeline } from '../GPU/RenderPipeline.js';
@@ -19,7 +18,8 @@ import {
   type Texture,
   type Texture2dSize,
   TextureUsageEnums,
-} from '../webgpu-ts/Texture.js';
+  TextureView,
+} from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export const enum NumericUnit {
@@ -464,7 +464,6 @@ export abstract class UIRectangle<
         canvaspipeline.props.vertexShader.props.pipelineLayouts[0]!.bindGroupLayouts[0]!,
         //canvaspipeline.props.vertexShader.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0],
         'UI_bindgroup_' + label,
-        //@ts-expect-error
         (bindGroup) => {
           return {
             texture: this.textureView,
