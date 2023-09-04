@@ -4,11 +4,6 @@ import type {
   MappedVertexBuffers,
 } from './DrawableDirect.js';
 import type { TextureView } from '../TextureView.js';
-import type {
-  BGLayout,
-  SampLayout,
-  TextLayout,
-} from '../../webgpu-ts/BindgroupLayout.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 import type { DataNode } from '../../nodes/DataNode.js';
 import {
@@ -17,13 +12,16 @@ import {
 } from './DrawableIndexed.js';
 import type { DrawableProps } from './Drawable.js';
 import type { FragmentShader } from '../Shaders/FragmentShader.js';
-import type { VertexShader } from 'GPU/Shaders/VertexShader';
-import type { RenderPipelineLayout } from 'GPU/PipelineLayout';
 import type {
+  BGLayout,
+  SampLayout,
+  ShaderStage,
   TEXTURE_BINDING_TEXTURE,
+  TextLayout,
   Texture,
-} from '../../webgpu-ts/Texture.js';
-import type { ShaderStage } from '../../webgpu-ts/Shader.js';
+  VertexShader,
+} from '../../webgpu-ts/index.js';
+import type { RenderPipelineLayout } from 'GPU/PipelineLayout';
 
 /**
  * Drawable that is used with lightsTextureBindGroup

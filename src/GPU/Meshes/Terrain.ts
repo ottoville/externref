@@ -14,10 +14,7 @@ import type {
 import { FragmentShader } from '../Shaders/FragmentShader.js';
 import type { GPU } from '../../GPU.js';
 import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
-import type {
-  TEXTURE_BINDING_TEXTURE,
-  Texture,
-} from '../../webgpu-ts/Texture.js';
+import type { TEXTURE_BINDING_TEXTURE, Texture } from 'webgpu-ts/index.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;

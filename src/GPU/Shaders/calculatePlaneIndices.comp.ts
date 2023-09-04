@@ -1,11 +1,10 @@
-import { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { Indices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from '../../webgpu-ts/Shader.js';
+import { BGLayout, BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
 
 export function createCalculatePlaneIndices(
   gpu: GPU,

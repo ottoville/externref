@@ -1,8 +1,13 @@
 import type { RenderPipelineLayout } from '../PipelineLayout.js';
-import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
+import {
+  type VertexBufferLayout2,
+  VertexShader,
+  VertexShaderFunction,
+  type BufLayout,
+  type ShaderStage,
+} from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import { VertexShaderFunction } from './ShaderFunction.js';
-import { UI_Input } from './structs/Structs.js';
+import { UIUniforms, UI_Input } from './structs/Structs.js';
 
 export const position_uv_attrs = Object.freeze({
   position: {
@@ -27,7 +32,6 @@ export function createUIVertShader(
     entryPoints: {
       main: new VertexShaderFunction(
         UI_Input,
-        pipelineLayout,
         [buffers],
         ([{ uniforms /*texture*/ }], [{ position, uv }]) => /* wgsl */ `
       var output : Output;   
@@ -37,7 +41,13 @@ export function createUIVertShader(
       output.v_uv=${uv};
       return output;
     `,
-      ),
+      ) satisfies VertexShaderFunction<
+        [
+          {
+            uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>;
+          },
+        ]
+      >,
     },
     gpu: pipelineLayout.gpu,
     label: 'UI.vert',

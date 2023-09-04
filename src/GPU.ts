@@ -45,7 +45,16 @@ import {
 } from './GPU/Shaders/UI.vert.js';
 import { createUIFragmentShader, UIFragShader } from './GPU/Shaders/UI.frag.js';
 import { MainNode } from './MainNode.js';
-import type { VertexShader } from './GPU/Shaders/VertexShader.js';
+import {
+  BGLayout,
+  BufLayout,
+  type RENDER_TARGET_FORMAT,
+  SampLayout,
+  ShaderStage,
+  TextLayout,
+  TextureUsageEnums,
+  type VertexShader,
+} from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,
   SimpleFragShader,
@@ -56,17 +65,6 @@ import {
   createUIFragmentShaderArray,
   UIFragShaderArray,
 } from './GPU/Shaders/UI_array.frag.js';
-import {
-  type RENDER_TARGET_FORMAT,
-  TextureUsageEnums,
-} from './webgpu-ts/Texture.js';
-import {
-  BGLayout,
-  BufLayout,
-  SampLayout,
-  TextLayout,
-} from './webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from './webgpu-ts/Shader.js';
 declare const engine: Engine;
 
 let curSecond = 0;

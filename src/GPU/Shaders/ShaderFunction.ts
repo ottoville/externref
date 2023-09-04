@@ -1,11 +1,11 @@
-import type { ShaderStage } from '../../webgpu-ts/Shader.js';
-import { PipelineLayout, RenderPipelineLayout } from '../PipelineLayout.js';
-import type { VertexBufferLayout2 } from './VertexShader.js';
+import { PipelineLayout } from '../PipelineLayout.js';
 import type { Struct } from './structs/Structs.js';
 import type {
+  ShaderStage,
+  VertexShaderFunction,
   BindGroupLayoutEntry,
   BGLayout,
-} from '../../webgpu-ts/BindgroupLayout.js';
+} from '../../webgpu-ts/index.js';
 
 export type VertexEntry = BindGroupLayoutEntry<
   | ShaderStage.VERTEX
@@ -33,70 +33,6 @@ export type FilteredBindgroupEntrys<
       : never;
   };
 }>;
-
-export class VertexShaderFunction<
-  B extends readonly BGLayout[] = readonly BGLayout[],
-  const V extends readonly VertexBufferLayout2[] | readonly [] =
-    | readonly VertexBufferLayout2[]
-    | readonly [],
-> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  #code: (args: any, bufferArgs: any) => string;
-  readonly vertexBufferLayout: V;
-  buffers: GPUVertexBufferLayout[] = [];
-  constructor(
-    public output: Struct,
-    public pipelineLayout: RenderPipelineLayout<B>,
-    vertexBufferLayout: V,
-    code: (
-      args: FilteredBindgroupEntrys<B, VertexEntry>,
-      bufferArgs: Readonly<{
-        [K in keyof V]: { [KK in keyof V[K]['attributes2']]: KK };
-      }>,
-    ) => string,
-    // TODO: use enums
-    private inputs = '',
-  ) {
-    this.#code = code;
-    this.vertexBufferLayout = Object.freeze(vertexBufferLayout);
-    this.buffers = vertexBufferLayout.map((layout) => {
-      return {
-        ...layout,
-        attributes: Object.values(layout.attributes2),
-      };
-    });
-  }
-  createCode(
-    bindGroups: FilteredBindgroupEntrys<B, VertexEntry>,
-    name: string,
-  ) {
-    const variableNames = this.vertexBufferLayout.map((buffer) => {
-      const keys = Object.keys(buffer.attributes2);
-      return Object.fromEntries(keys.map((o, i) => [o, keys[i]!]));
-    }) as { [K in keyof V]: { [KK in keyof V[K]['attributes2']]: KK } };
-
-    let attributesString = '';
-    const bufferVariables: string[] = [];
-    this.vertexBufferLayout.forEach((buffer) => {
-      for (const varName in buffer.attributes2) {
-        bufferVariables.push(varName);
-        attributesString += `@location(${
-          buffer.attributes2[varName]!.shaderLocation
-        }) ${varName} : ${buffer.attributes2[varName]!.shaderFormat},\n`;
-      }
-    });
-    const wgsl = /* wgsl */ `
-            @vertex
-            fn ${name}(
-                ${this.inputs}
-                ${attributesString}
-                ) -> ${this.output.name} {
-                    ${this.#code(bindGroups, variableNames)}
-                }`;
-    return wgsl;
-  }
-}
-
 export class FragmentShaderFunction<
   B extends readonly BGLayout[] = readonly BGLayout[],
 > {
@@ -157,6 +93,6 @@ export class ComputeShaderFunction<B extends readonly BGLayout[]> {
 }
 
 export type ShaderFunction =
-  | VertexShaderFunction<readonly BGLayout[]>
+  | VertexShaderFunction
   | ComputeShaderFunction<readonly BGLayout[]>
   | FragmentShaderFunction<readonly BGLayout[]>;

@@ -3,14 +3,18 @@ import {
   FragmentEntry,
   FragmentShaderFunction,
 } from './ShaderFunction.js';
-import { OutputShader } from './OutputShader.js';
-import { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
-import { type ShaderParams, ShaderStage } from '../../webgpu-ts/Shader.js';
+import {
+  OutputShader,
+  type ShaderParams,
+  ShaderStage,
+  type BGLayout,
+} from '../../webgpu-ts/index.js';
 
 export class FragmentShader<
   E extends { [index: string]: FragmentShaderFunction<readonly BGLayout[]> } = {
     [index: string]: FragmentShaderFunction<readonly BGLayout[]>;
   },
+  //@ts-expect-error
 > extends OutputShader<E> {
   constructor(
     //@ts-expect-error

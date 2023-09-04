@@ -4,8 +4,7 @@ import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from '../../webgpu-ts/Shader.js';
+import { BGLayout, BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
 
 export function createCalculatePlaneHeights(
   gpu: GPU,

@@ -1,9 +1,12 @@
 import type { RenderPipelineLayout } from '../PipelineLayout.js';
-import { VertexShader } from './VertexShader.js';
-
+import {
+  type BufLayout,
+  type ShaderStage,
+  VertexShader,
+  VertexShaderFunction,
+} from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { VertexShaderFunction } from './ShaderFunction.js';
-import { Struct } from './structs/Structs.js';
+import { MeshUniforms, Scene, Struct } from './structs/Structs.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createSunVertShader(
@@ -16,7 +19,6 @@ export function createSunVertShader(
           new Struct('Output', {
             Position: ['@builtin(position)', 'vec4<f32>'],
           }),
-          pipelineLayout,
           [],
           ([
             ,
@@ -52,7 +54,21 @@ export function createSunVertShader(
             
               `,
           '@builtin(vertex_index) VertexIndex : u32,',
-        ),
+        ) satisfies VertexShaderFunction<
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+            },
+            {
+              world: BufLayout<
+                ShaderStage.VERTEX_AND_FRAGMENT,
+                typeof MeshUniforms
+              >;
+            },
+          ]
+        >,
       },
       gpu: pipelineLayout.gpu,
       label: 'Sun.vert',

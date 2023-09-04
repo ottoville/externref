@@ -1,9 +1,14 @@
 import type { RenderPipelineLayout } from '../PipelineLayout.js';
-import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
-import { VertexShaderFunction } from './ShaderFunction.js';
-import { colorPositionOutput } from './structs/Structs.js';
+import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
+import {
+  type VertexBufferLayout2,
+  VertexShader,
+  VertexShaderFunction,
+  type BufLayout,
+  type ShaderStage,
+} from '../../webgpu-ts/index.js';
 
 type BindGroupLayouts =
   Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts'];
@@ -18,7 +23,6 @@ export function createPlaneAtGroundHeightVertShader(
       entryPoints: {
         main: new VertexShaderFunction(
           colorPositionOutput,
-          pipelineLayout,
           [buffers],
           ([
             ,
@@ -39,7 +43,21 @@ export function createPlaneAtGroundHeightVertShader(
                 output.color = vec3<f32>(1.0,1.0,1.0);
                 return output;
             `,
-        ),
+        ) satisfies VertexShaderFunction<
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+            },
+            {
+              world: BufLayout<
+                ShaderStage.VERTEX_AND_FRAGMENT,
+                typeof MeshUniforms
+              >;
+            },
+          ]
+        >,
       },
       gpu: pipelineLayout.gpu,
       label: 'PlaneAtGroundHeight.vert',

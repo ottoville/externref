@@ -461,7 +461,8 @@ export abstract class UIRectangle<
       });
 
       this.drawable.staticBindGroup = new BindGroup(
-        canvaspipeline.props.vertexShader.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0],
+        canvaspipeline.props.vertexShader.props.pipelineLayouts[0]!.bindGroupLayouts[0]!,
+        //canvaspipeline.props.vertexShader.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0],
         'UI_bindgroup_' + label,
         //@ts-expect-error
         (bindGroup) => {

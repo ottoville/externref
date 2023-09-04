@@ -1,19 +1,25 @@
 import { RenderPipelineLayout } from '../PipelineLayout.js';
-import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
+import {
+  type VertexBufferLayout2,
+  VertexShader,
+  VertexShaderFunction,
+  type BufLayout,
+  type ShaderStage,
+} from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import { VertexShaderFunction } from './ShaderFunction.js';
-import { pickOutput, typicalOutput } from './structs/Structs.js';
+import {
+  MeshUniforms,
+  Scene,
+  pickOutput,
+  typicalOutput,
+} from './structs/Structs.js';
 import { simpleAttributes } from './structs/Attributes.js';
 
 export function createPickOutput(
-  pipelineLayout: RenderPipelineLayout<
-    Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
-  >,
   buffers: readonly [VertexBufferLayout2<typeof simpleAttributes>],
 ) {
   return new VertexShaderFunction(
     pickOutput,
-    pipelineLayout,
     buffers,
     (
       [
@@ -34,7 +40,18 @@ export function createPickOutput(
         return output;
     
     `,
-  );
+  ) satisfies VertexShaderFunction<
+    [
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      {},
+      {
+        scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+      },
+      {
+        world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
+      },
+    ]
+  >;
 }
 
 /**
@@ -57,7 +74,6 @@ export function createSimpleVertShader(
     entryPoints: {
       main: new VertexShaderFunction(
         typicalOutput,
-        pipelineLayout,
         buffers,
         (
           [
@@ -83,8 +99,22 @@ export function createSimpleVertShader(
             //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
             //ambient=lights.ambient;
             return output;`,
-      ),
-      pick: createPickOutput(pipelineLayout, buffers),
+      ) satisfies VertexShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+          },
+          {
+            world: BufLayout<
+              ShaderStage.VERTEX_AND_FRAGMENT,
+              typeof MeshUniforms
+            >;
+          },
+        ]
+      >,
+      pick: createPickOutput(buffers),
     },
     gpu: pipelineLayout.gpu,
     label: 'Simple.vert',

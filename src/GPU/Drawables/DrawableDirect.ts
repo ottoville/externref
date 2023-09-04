@@ -1,16 +1,23 @@
 import type { RenderPipeline } from '../RenderPipeline.js';
-import type { VertexShader } from '../Shaders/VertexShader.js';
+import type {
+  AnyVertexStage,
+  BindGroupLayoutEntry,
+  VertexShader,
+  VertexShaderFunction,
+} from '../../webgpu-ts/index.js';
 import { Drawable, type DrawableProps } from './Drawable.js';
 import type { MainNode } from '../../MainNode.js';
 import type { Engine, rust_vec_ptr } from '../../engine.js';
-import { VertexShaderFunction } from '../Shaders/ShaderFunction.js';
-import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import { Buffer2, type VERTEX_BUFFER } from '../Buffer/Buffer2.js';
 declare const engine: Engine;
 
 export type MappedVertexBuffers<
   R extends RenderPipeline,
-  B extends readonly BGLayout[] = readonly BGLayout[],
+  B extends readonly {
+    [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
+  }[] = readonly {
+    [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
+  }[],
 > = R extends RenderPipeline<infer VERTEX_SHADER>
   ? //extract VertexBuffers
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

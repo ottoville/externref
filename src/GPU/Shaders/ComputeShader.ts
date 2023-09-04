@@ -1,14 +1,14 @@
-import {
-  Shader,
-  type ShaderParams,
-  ShaderStage,
-} from '../../webgpu-ts/Shader.js';
-import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import type {
   ComputeEntry,
   ComputeShaderFunction,
   FilteredBindgroupEntrys,
 } from './ShaderFunction.js';
+import {
+  BGLayout,
+  Shader,
+  ShaderParams,
+  ShaderStage,
+} from '../../webgpu-ts/index.js';
 export class ComputeShader<
   E extends { [index: string]: ComputeShaderFunction<readonly BGLayout[]> } = {
     [index: string]: ComputeShaderFunction<readonly BGLayout[]>;

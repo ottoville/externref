@@ -103,14 +103,8 @@ export class Plants extends MainNode {
           node: this,
           renderPipeline,
           vertexBuffers: [
-            {
-              stride: 4,
-              view: positionGPU,
-            },
-            {
-              stride: 4,
-              view: shapeGPU,
-            },
+            { stride: 4, view: positionGPU },
+            { stride: 4, view: shapeGPU },
             {
               stride: 2,
               view: allocate_vec(

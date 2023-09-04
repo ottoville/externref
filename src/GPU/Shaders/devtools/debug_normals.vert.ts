@@ -1,8 +1,16 @@
 import type { RenderPipelineLayout } from '../../PipelineLayout.js';
-import { VertexBufferLayout2, VertexShader } from '../VertexShader.js';
+import {
+  VertexShader,
+  VertexShaderFunction,
+  type BufLayout,
+  type ShaderStage,
+} from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
-import { VertexShaderFunction } from '../ShaderFunction.js';
-import { colorPositionOutput } from '../structs/Structs.js';
+import {
+  MeshUniforms,
+  Scene,
+  colorPositionOutput,
+} from '../structs/Structs.js';
 import { simpleAttributes } from '../structs/Attributes.js';
 
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
@@ -13,12 +21,8 @@ export function createDebugNormalsVertShader(
 ) {
   return new VertexShader({
     entryPoints: {
-      main: new VertexShaderFunction<
-        BindLayouts,
-        [VertexBufferLayout2<typeof simpleAttributes>]
-      >(
+      main: new VertexShaderFunction(
         colorPositionOutput,
-        pipelineLayout,
         [
           {
             arrayStride: arrayStride * 4,
@@ -59,7 +63,21 @@ export function createDebugNormalsVertShader(
             return output;
             `,
         '@builtin(vertex_index) gl_VertexIndex : u32,',
-      ),
+      ) satisfies VertexShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+          },
+          {
+            world: BufLayout<
+              ShaderStage.VERTEX_AND_FRAGMENT,
+              typeof MeshUniforms
+            >;
+          },
+        ]
+      >,
     },
     gpu: pipelineLayout.gpu,
     label: 'debug_normals.vert',

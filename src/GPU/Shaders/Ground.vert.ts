@@ -1,8 +1,18 @@
 import type { RenderPipelineLayout } from '../PipelineLayout.js';
-import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
+import {
+  type VertexBufferLayout2,
+  VertexShader,
+  VertexShaderFunction,
+  BufLayout,
+  ShaderStage,
+} from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import { VertexShaderFunction } from './ShaderFunction.js';
-import { GroundInput, pickOutput } from './structs/Structs.js';
+import {
+  GroundInput,
+  MeshUniforms,
+  Scene,
+  pickOutput,
+} from './structs/Structs.js';
 type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts'];
 
 export function createGroundVertShader(
@@ -13,7 +23,6 @@ export function createGroundVertShader(
     entryPoints: {
       main: new VertexShaderFunction(
         GroundInput,
-        pipelineLayout,
         [buffers],
         ([
           ,
@@ -37,10 +46,23 @@ export function createGroundVertShader(
             output.scenes=${world.prop('scenes')};
             return output;
             `,
-      ),
+      ) satisfies VertexShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+          },
+          {
+            world: BufLayout<
+              ShaderStage.VERTEX_AND_FRAGMENT,
+              typeof MeshUniforms
+            >;
+          },
+        ]
+      >,
       pick: new VertexShaderFunction(
         pickOutput,
-        pipelineLayout,
         [buffers],
         ([
           ,
@@ -54,7 +76,21 @@ export function createGroundVertShader(
                 output.id=${world.prop('id')};
                 return output;
             `,
-      ),
+      ) satisfies VertexShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+          },
+          {
+            world: BufLayout<
+              ShaderStage.VERTEX_AND_FRAGMENT,
+              typeof MeshUniforms
+            >;
+          },
+        ]
+      >,
     },
     gpu: pipelineLayout.gpu,
     label: 'Ground.vert',

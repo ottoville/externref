@@ -1,14 +1,11 @@
-import { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
 import { Lights, MeshArray, ViewUniforms } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from '../../webgpu-ts/Shader.js';
 
 import { UpdateClustersBufferLayout } from './Clusters.comp.js';
-import type { Engine } from 'engine.js';
-declare const engine: Engine;
+import { BGLayout, BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
 
 export function createUpdateViewShader(gpu: GPU) {
   const bindLayouts = [

@@ -7,9 +7,9 @@ import { ComputeShaderFunction } from './ShaderFunction.js';
 import {
   BGLayout,
   BufLayout,
+  ShaderStage,
   TextLayout,
-} from '../../webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from '../../webgpu-ts/Shader.js';
+} from '../../webgpu-ts/index.js';
 
 export function CreateGroundFromHeightMap(
   gpu: GPU,

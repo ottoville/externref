@@ -1,10 +1,14 @@
 import type { RenderPipelineLayout } from '../PipelineLayout.js';
-import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
+import {
+  type VertexBufferLayout2,
+  VertexShader,
+  VertexShaderFunction,
+  type BGLayout,
+  type ShaderStage,
+  type BufLayout,
+} from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { MeshUniforms, colorPositionOutput } from './structs/Structs.js';
-import { VertexShaderFunction } from './ShaderFunction.js';
-import type { BGLayout, BufLayout } from '../../webgpu-ts/BindgroupLayout.js';
-import type { ShaderStage } from '../../webgpu-ts/Shader.js';
+import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
 
 type BindLayouts = [
   GPU['sizeBindGroupLayout'],
@@ -23,7 +27,6 @@ export class Plane extends VertexShader {
       entryPoints: {
         main: new VertexShaderFunction(
           colorPositionOutput,
-          pipelineLayout,
           [buffers],
           ([
             ,
@@ -42,7 +45,21 @@ export class Plane extends VertexShader {
                 output.color = vec3<f32>(1.0,1.0,1.0);
                 return output;
                 `,
-        ),
+        ) satisfies VertexShaderFunction<
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+            },
+            {
+              world: BufLayout<
+                ShaderStage.VERTEX_AND_FRAGMENT,
+                typeof MeshUniforms
+              >;
+            },
+          ]
+        >,
       },
       gpu: pipelineLayout.gpu,
       label: 'plane.vert',

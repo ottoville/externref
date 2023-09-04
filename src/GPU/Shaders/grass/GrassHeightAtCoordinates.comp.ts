@@ -11,8 +11,7 @@ import type { Terrain } from '../../../world/Terrain.js';
 import type { GPU } from '../../../GPU.js';
 import { getHeightAtCoordinates } from '../getHeightAtCoordinates.js';
 import { ComputeShaderFunction } from '../ShaderFunction.js';
-import { BGLayout, BufLayout } from '../../../webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from '../../../webgpu-ts/Shader.js';
+import { BGLayout, BufLayout, ShaderStage } from '../../../webgpu-ts/index.js';
 
 export function createGrassHeightAtCoordinates(
   settings: typeof Terrain.settings,

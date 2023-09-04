@@ -1,15 +1,15 @@
-import {
-  BGLayout,
-  BufLayout,
-  StorageTextLayout,
-} from '../../webgpu-ts/BindgroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { PlaneArray, IntArray } from './structs/Structs.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from '../../webgpu-ts/Shader.js';
+import {
+  BGLayout,
+  BufLayout,
+  ShaderStage,
+  StorageTextLayout,
+} from '../../webgpu-ts/index.js';
 
 export type SlopesLayout = BGLayout<{
   slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>;

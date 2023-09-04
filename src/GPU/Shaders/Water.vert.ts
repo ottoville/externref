@@ -1,7 +1,12 @@
-import { VertexShaderFunction } from './ShaderFunction.js';
-import { type VertexBufferLayout2, VertexShader } from './VertexShader.js';
+import {
+  type VertexBufferLayout2,
+  VertexShader,
+  VertexShaderFunction,
+  type BufLayout,
+  type ShaderStage,
+} from '../../webgpu-ts/index.js';
 import type { GPU } from 'GPU.js';
-import { Struct } from './structs/Structs.js';
+import { MeshUniforms, Scene, Struct } from './structs/Structs.js';
 import { positionAttr } from './structs/Attributes.js';
 
 export function createWaterVertShader(
@@ -19,7 +24,6 @@ export function createWaterVertShader(
           // eslint-disable-next-line sort-keys
           id: ['@location(2) @interpolate(flat)', 'u32'],
         }),
-        pipelineLayout,
         [buffers],
         (
           [
@@ -44,7 +48,21 @@ export function createWaterVertShader(
                         //ambient=lights.ambient;
                         return output;
                     `,
-      ),
+      ) satisfies VertexShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+          },
+          {
+            world: BufLayout<
+              ShaderStage.VERTEX_AND_FRAGMENT,
+              typeof MeshUniforms
+            >;
+          },
+        ]
+      >,
     },
     gpu: pipelineLayout.gpu,
     label: 'water.vert',

@@ -133,7 +133,7 @@ new DrawableIndexed({
   node: {},
   renderPasses: new Set([]),
   renderPipeline,
-  //@ts-expect-error The renderPipeline needs vertexBuffer
+  // @ts-expect-error The renderPipeline needs vertexBuffer
   vertexBuffers: [] as [],
 });
 

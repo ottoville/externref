@@ -41,12 +41,13 @@ import {
 import { allocate_vec } from '../nodes/DataNode.js';
 import { Buffer2, BufferUsageEnums } from '../GPU/Buffer/Buffer2.js';
 import {
+  BGLayout,
+  BufLayout,
   type RenderTarget,
+  ShaderStage,
   Texture,
   TextureUsageEnums,
-} from '../webgpu-ts/Texture.js';
-import { BGLayout, BufLayout } from '../webgpu-ts/BindgroupLayout.js';
-import { ShaderStage } from '../webgpu-ts/Shader.js';
+} from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
 const terrainSize = [10000, 10000] as const;

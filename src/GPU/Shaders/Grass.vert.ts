@@ -1,8 +1,13 @@
 import type { RenderPipelineLayout } from '../PipelineLayout.js';
-import { VertexBufferLayout2, VertexShader } from './VertexShader.js';
+import {
+  type VertexBufferLayout2,
+  VertexShader,
+  VertexShaderFunction,
+  ShaderStage,
+  type BufLayout,
+} from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { VertexShaderFunction } from './ShaderFunction.js';
-import { colorPositionOutput } from './structs/Structs.js';
+import { Scene, Time, colorPositionOutput } from './structs/Structs.js';
 
 export const positionAttr = Object.freeze({
   position: {
@@ -45,7 +50,6 @@ export function createGrassVertShader(
       entryPoints: {
         main: new VertexShaderFunction(
           colorPositionOutput,
-          pipelineLayout,
           buffers,
           (
             [, { scene, time }],
@@ -110,7 +114,16 @@ export function createGrassVertShader(
                    return output;
                
                 `,
-        ),
+        ) satisfies VertexShaderFunction<
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+              time: BufLayout<ShaderStage.VERTEX, typeof Time>;
+            },
+          ]
+        >,
       },
       gpu: pipelineLayout.gpu,
       label: 'grass.vert',

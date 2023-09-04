@@ -1,8 +1,12 @@
 import type { RenderPipelineLayout } from '../PipelineLayout.js';
-import { VertexShader } from './VertexShader.js';
+import {
+  type BufLayout,
+  type ShaderStage,
+  VertexShader,
+  VertexShaderFunction,
+} from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { typicalOutput } from './structs/Structs.js';
-import { VertexShaderFunction } from './ShaderFunction.js';
+import { MeshUniforms, Scene, typicalOutput } from './structs/Structs.js';
 import { createPickOutput } from './SingleColoredWithNormal.vert.js';
 import { simpleAttributesWithColor } from './structs/Attributes.js';
 
@@ -26,7 +30,6 @@ export function createVertexColorShader(
     entryPoints: {
       main: new VertexShaderFunction(
         typicalOutput,
-        pipelineLayout,
         buffers,
         (
           [
@@ -53,8 +56,22 @@ export function createVertexColorShader(
             //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
             //ambient=lights.ambient;
             return output;`,
-      ),
-      pick: createPickOutput(pipelineLayout, buffers),
+      ) satisfies VertexShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+          },
+          {
+            world: BufLayout<
+              ShaderStage.VERTEX_AND_FRAGMENT,
+              typeof MeshUniforms
+            >;
+          },
+        ]
+      >,
+      pick: createPickOutput(buffers),
     },
     gpu: pipelineLayout.gpu,
     label: 'VertexColor.vert',

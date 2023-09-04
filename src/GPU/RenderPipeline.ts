@@ -1,7 +1,7 @@
 ﻿import type { RenderPass } from './RenderPasses/RenderPass.js';
 import { BindGroup } from './BindGroup.js';
 import { type RenderPipelineLayout } from './PipelineLayout.js';
-import type { VertexShader } from './Shaders/VertexShader.js';
+import type { VertexShader } from '../webgpu-ts/index.js';
 import type { FragmentShader } from './Shaders/FragmentShader.js';
 import { RenderBundleEncoder } from './RenderBundleEncoder.js';
 import type {
@@ -54,15 +54,19 @@ export class RenderPipeline<
       : undefined,
   ) {
     this.props = Object.freeze(props);
-    Object.values(props.vertexShader.props.entryPoints).forEach((entry) => {
-      entry.pipelineLayout.renderPipeLines.add(this);
-      entry.pipelineLayout.renderPipelineListeners.forEach((cb) => cb());
+    props.vertexShader.props.pipelineLayouts.forEach((layout) => {
+      //@ts-expect-error
+      layout.renderPipeLines.add(this);
+      //@ts-expect-error
+      layout.renderPipelineListeners.forEach((cb) => cb());
     });
   }
   destroy(): void {
     Object.values(this.props.vertexShader.props.entryPoints).forEach(
       (entry) => {
+        //@ts-expect-error
         entry.pipelineLayout.renderPipeLines.delete(this);
+        //@ts-expect-error
         entry.pipelineLayout.renderPipelineListeners.forEach((cb) => cb());
       },
     );

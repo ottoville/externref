@@ -1,8 +1,16 @@
 import type { RenderPipelineLayout } from '../../PipelineLayout.js';
-import { VertexShader } from '../VertexShader.js';
+import {
+  type BufLayout,
+  type ShaderStage,
+  VertexShader,
+  VertexShaderFunction,
+} from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
-import { VertexShaderFunction } from '../ShaderFunction.js';
-import { colorPositionOutput } from '../structs/Structs.js';
+import {
+  MeshUniforms,
+  Scene,
+  colorPositionOutput,
+} from '../structs/Structs.js';
 import { positionAttr } from '../structs/Attributes.js';
 
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
@@ -15,7 +23,6 @@ export function createDebugBoundingBoxVertShader(
     entryPoints: {
       main: new VertexShaderFunction(
         colorPositionOutput,
-        pipelineLayout,
         [
           {
             arrayStride: arrayStride * 4,
@@ -42,7 +49,21 @@ export function createDebugBoundingBoxVertShader(
                 output.color = vec3<f32>(0.0,1.0,0.0);
                 return output;
             `,
-      ),
+      ) satisfies VertexShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+          },
+          {
+            world: BufLayout<
+              ShaderStage.VERTEX_AND_FRAGMENT,
+              typeof MeshUniforms
+            >;
+          },
+        ]
+      >,
     },
     gpu: pipelineLayout.gpu,
     label: 'debug_boundingBox.vert',

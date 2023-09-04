@@ -1,9 +1,18 @@
 import type { RenderPipelineLayout } from '../PipelineLayout.js';
-import { VertexShader } from './VertexShader.js';
+import {
+  type BufLayout,
+  type ShaderStage,
+  VertexShader,
+  VertexShaderFunction,
+} from '../../webgpu-ts/index.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
-import { VertexShaderFunction } from './ShaderFunction.js';
-import { colorPositionOutput } from './structs/Structs.js';
+import {
+  MeshUniforms,
+  Scene,
+  Time,
+  colorPositionOutput,
+} from './structs/Structs.js';
 type BindGroupLayouts =
   Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts'];
 
@@ -16,7 +25,6 @@ export function createHelperVertShader(
       entryPoints: {
         main: new VertexShaderFunction(
           colorPositionOutput,
-          pipelineLayout,
           [],
           (
             [
@@ -50,7 +58,22 @@ export function createHelperVertShader(
                 `,
           `@builtin(instance_index) instanceIdx : u32,
                 @builtin(vertex_index) VertexIndex : u32,`,
-        ),
+        ) satisfies VertexShaderFunction<
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+              time: BufLayout<ShaderStage.VERTEX, typeof Time>;
+            },
+            {
+              world: BufLayout<
+                ShaderStage.VERTEX_AND_FRAGMENT,
+                typeof MeshUniforms
+              >;
+            },
+          ]
+        >,
       },
       gpu: pipelineLayout.gpu,
       label: 'helper.vert',

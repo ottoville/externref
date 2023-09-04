@@ -4,14 +4,15 @@ import type { Engine, rust_vec_ptr } from '../../engine.js';
 import type { RenderPipeline } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import type { CreateRenderPipelineCB } from '../../GPU.js';
-import {
+import type {
+  AnyVertexStage,
+  BindGroupLayoutEntry,
   VertexBufferLayout2,
   VertexShader,
-} from '../../GPU/Shaders/VertexShader.js';
-import { VertexShaderFunction } from '../Shaders/ShaderFunction.js';
+  VertexShaderFunction,
+} from '../../webgpu-ts/index.js';
 import { Buffer2, BufferUsageEnums } from '../Buffer/Buffer2.js';
 import { MainNodeProps } from 'MainNode.js';
-import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
 declare const engine: Engine;
 
 export type SimpleIndexedMeshProps = {
@@ -30,7 +31,9 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
       RenderPipeline<
         VertexShader<{
           main: VertexShaderFunction<
-            readonly BGLayout[],
+            readonly {
+              [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
+            }[],
             readonly [VertexBufferLayout2]
           >;
         }>

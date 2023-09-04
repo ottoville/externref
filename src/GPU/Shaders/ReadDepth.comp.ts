@@ -1,15 +1,15 @@
-import {
-  BGLayout,
-  BufLayout,
-  TextLayout,
-} from '../../webgpu-ts/BindgroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js';
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 import { ComputeShaderFunction } from './ShaderFunction.js';
-import { ShaderStage } from '../../webgpu-ts/Shader.js';
 import type { Engine } from 'engine.js';
+import {
+  BGLayout,
+  BufLayout,
+  ShaderStage,
+  TextLayout,
+} from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export function createReadDepth(gpu: GPU) {
