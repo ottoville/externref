@@ -11,10 +11,13 @@ import type {
   INDEX_BUFFER,
   VERTEX_BUFFER,
 } from '../Buffer/Buffer2.js';
-import { FragmentShader } from '../Shaders/FragmentShader.js';
 import type { GPU } from '../../GPU.js';
 import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
-import type { TEXTURE_BINDING_TEXTURE, Texture } from 'webgpu-ts/index.js';
+import type {
+  FragmentShader,
+  TEXTURE_BINDING_TEXTURE,
+  Texture,
+} from 'webgpu-ts/index.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;

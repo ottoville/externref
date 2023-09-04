@@ -1,10 +1,10 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import type { Struct } from './structs/Structs.js';
 import type {
   ShaderStage,
   VertexShaderFunction,
   BindGroupLayoutEntry,
   BGLayout,
+  FragmentShaderFunction,
 } from '../../webgpu-ts/index.js';
 
 export type VertexEntry = BindGroupLayoutEntry<
@@ -33,34 +33,6 @@ export type FilteredBindgroupEntrys<
       : never;
   };
 }>;
-export class FragmentShaderFunction<
-  B extends readonly BGLayout[] = readonly BGLayout[],
-> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  #code: (args: any) => string;
-  constructor(
-    public output: Struct,
-    public pipelineLayout: PipelineLayout<B>,
-    /* TODO: use struct array from vertex shader output */
-    private inputs: Struct | undefined,
-    code: (args: FilteredBindgroupEntrys<B, FragmentEntry>) => string,
-  ) {
-    this.#code = code;
-  }
-  createCode(
-    bindGroups: FilteredBindgroupEntrys<B, FragmentEntry>,
-    name: string,
-  ) {
-    const wgsl = /* wgsl */ `
-                @fragment
-                fn ${name}(
-                    ${this.inputs?.getPropertiesAsString() ?? ''}
-                    ) -> ${this.output.name} {
-                        ${this.#code(bindGroups)}
-                    }`;
-    return wgsl;
-  }
-}
 export class ComputeShaderFunction<B extends readonly BGLayout[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   #code: (args: any) => string;
@@ -95,4 +67,4 @@ export class ComputeShaderFunction<B extends readonly BGLayout[]> {
 export type ShaderFunction =
   | VertexShaderFunction
   | ComputeShaderFunction<readonly BGLayout[]>
-  | FragmentShaderFunction<readonly BGLayout[]>;
+  | FragmentShaderFunction;

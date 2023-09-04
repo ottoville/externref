@@ -1,8 +1,13 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js';
-import { FragmentShaderFunction } from './ShaderFunction.js';
 import { WaterInput, diffuseOutput } from './structs/Structs.js';
+import {
+  FragmentShader,
+  FragmentShaderFunction,
+  type SampLayout,
+  type ShaderStage,
+  type TextLayout,
+} from '../../webgpu-ts/index.js';
 type BindLayouts = GPU['bindGroupTextureWater']['bindGroupLayouts'];
 
 export function createWaterFragShader(
@@ -10,9 +15,21 @@ export function createWaterFragShader(
 ) {
   return new FragmentShader({
     entryPoints: {
-      main: new FragmentShaderFunction(
+      main: new FragmentShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
+            mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
+          },
+        ]
+      >(
         diffuseOutput,
-        pipelineLayout,
         WaterInput,
         ([
           ,

@@ -11,9 +11,9 @@ import {
   type DrawableIndexedProps,
 } from './DrawableIndexed.js';
 import type { DrawableProps } from './Drawable.js';
-import type { FragmentShader } from '../Shaders/FragmentShader.js';
 import type {
   BGLayout,
+  FragmentShader,
   SampLayout,
   ShaderStage,
   TEXTURE_BINDING_TEXTURE,

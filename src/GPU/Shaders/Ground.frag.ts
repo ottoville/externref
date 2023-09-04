@@ -1,10 +1,23 @@
 import { PipelineLayout } from '../PipelineLayout.js';
-import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js';
 import { getClusterIndex } from './getClusterIndex.js';
-import { FragmentShaderFunction } from './ShaderFunction.js';
-import { GroundInput, diffuseOutput } from './structs/Structs.js';
+import {
+  Clusters,
+  GroundInput,
+  MeshArray,
+  ProjectionStruct,
+  Scene,
+  diffuseOutput,
+} from './structs/Structs.js';
 import { createPickOutputFragment } from './Simple.frag.js';
+import {
+  type BufLayout,
+  FragmentShader,
+  FragmentShaderFunction,
+  type SampLayout,
+  type ShaderStage,
+  type TextLayout,
+} from '../../webgpu-ts/index.js';
 
 type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts'];
 
@@ -14,9 +27,31 @@ export function createGroundFragShader(
   return new FragmentShader(
     {
       entryPoints: {
-        main: new FragmentShaderFunction(
+        main: new FragmentShaderFunction<
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+              clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
+              meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
+              projection: BufLayout<
+                ShaderStage.FRAGMENT,
+                typeof ProjectionStruct
+              >;
+            },
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
+              diffuseTexture: TextLayout<
+                ShaderStage.FRAGMENT,
+                'texture_2d<f32>'
+              >;
+            },
+          ]
+        >(
           diffuseOutput,
-          pipelineLayout,
           GroundInput,
           ([
             ,
@@ -82,7 +117,7 @@ export function createGroundFragShader(
             return output;
         `,
         ),
-        pick: createPickOutputFragment(pipelineLayout),
+        pick: createPickOutputFragment(),
       },
       gpu: pipelineLayout.gpu,
       label: 'Ground.frag',

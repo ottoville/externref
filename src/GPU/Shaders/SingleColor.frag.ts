@@ -2,10 +2,14 @@
 // TODO: Make actual shading
 
 import { PipelineLayout } from '../PipelineLayout.js';
-import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from '../../GPU.js';
-import { FragmentShaderFunction } from './ShaderFunction.js';
-import { diffuseOutput } from './structs/Structs.js';
+import { MeshUniforms, diffuseOutput } from './structs/Structs.js';
+import {
+  type BufLayout,
+  FragmentShader,
+  FragmentShaderFunction,
+  type ShaderStage,
+} from '../../webgpu-ts/index.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createSingleColorFragShader(
@@ -13,9 +17,21 @@ export function createSingleColorFragShader(
 ) {
   return new FragmentShader({
     entryPoints: {
-      main: new FragmentShaderFunction(
+      main: new FragmentShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            world: BufLayout<
+              ShaderStage.VERTEX_AND_FRAGMENT,
+              typeof MeshUniforms
+            >;
+          },
+        ]
+      >(
         diffuseOutput,
-        pipelineLayout,
         undefined,
         (
           [

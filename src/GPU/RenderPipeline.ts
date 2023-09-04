@@ -1,13 +1,13 @@
 ﻿import type { RenderPass } from './RenderPasses/RenderPass.js';
 import { BindGroup } from './BindGroup.js';
 import { type RenderPipelineLayout } from './PipelineLayout.js';
-import type { VertexShader } from '../webgpu-ts/index.js';
-import type { FragmentShader } from './Shaders/FragmentShader.js';
-import { RenderBundleEncoder } from './RenderBundleEncoder.js';
 import type {
   BGLayout,
+  FragmentShader,
   MapToGPUBindGroupEntry,
-} from '../webgpu-ts/BindgroupLayout.js';
+  VertexShader,
+} from '../webgpu-ts/index.js';
+import { RenderBundleEncoder } from './RenderBundleEncoder.js';
 
 type RenderPipelineProps<V extends VertexShader, F extends FragmentShader> = {
   label: string;

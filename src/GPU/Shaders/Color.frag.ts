@@ -2,10 +2,12 @@
 // See Simple.frag.ts for pickable counterpart
 // See SingleColor.frag.ts for pickable shared single color for all vertices
 
-import type { BGLayout } from '../../webgpu-ts/BindgroupLayout.js';
+import {
+  type BGLayout,
+  FragmentShader,
+  FragmentShaderFunction,
+} from '../../webgpu-ts/index.js';
 import { PipelineLayout } from '../PipelineLayout.js';
-import { FragmentShader } from './FragmentShader.js';
-import { FragmentShaderFunction } from './ShaderFunction.js';
 import { colorPositionOutput, diffuseOutput } from './structs/Structs.js';
 
 export function createColorFragmentShader<B extends readonly BGLayout[]>(
@@ -15,7 +17,6 @@ export function createColorFragmentShader<B extends readonly BGLayout[]>(
     entryPoints: {
       main: new FragmentShaderFunction(
         diffuseOutput,
-        pipelineLayout,
         colorPositionOutput,
         () => /* wgsl */ `
         var output:Output;

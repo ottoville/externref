@@ -146,12 +146,12 @@ export abstract class UIRectangle<
       let structName: string;
       if ('main' in frag.props.entryPoints) {
         structName =
-          frag.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0].entries
-            .texture.structName;
+          frag.props.pipelineLayouts[0]!.bindGroupLayouts[0].entries.texture
+            .structName;
       } else {
         structName =
-          frag.props.entryPoints.array.pipelineLayout.bindGroupLayouts[0]
-            .entries.texture.structName;
+          frag.props.pipelineLayouts[0]!.bindGroupLayouts[0].entries.texture
+            .structName;
       }
       this.texture = new RenderTarget({
         format: 'bgra8unorm',

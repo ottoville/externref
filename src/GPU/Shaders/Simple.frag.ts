@@ -2,24 +2,27 @@
 //TODO: Make actual shading to diverse this shader from color.frag
 
 import { PipelineLayout } from '../PipelineLayout.js';
-import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from 'GPU.js';
 import { getClusterIndex } from './getClusterIndex.js';
-import { FragmentShaderFunction } from './ShaderFunction.js';
 import {
+  Clusters,
+  MeshArray,
   diffuseOutput,
   pickOutput,
   pickOutputFragment,
   typicalOutput,
 } from './structs/Structs.js';
+import {
+  type BufLayout,
+  FragmentShader,
+  FragmentShaderFunction,
+  type ShaderStage,
+} from '../../webgpu-ts/index.js';
 
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
-export function createPickOutputFragment<P extends PipelineLayout>(
-  pipelineLayout: P,
-) {
-  return new FragmentShaderFunction<P['bindGroupLayouts']>(
+export function createPickOutputFragment() {
+  return new FragmentShaderFunction(
     pickOutputFragment,
-    pipelineLayout,
     pickOutput,
     () =>
       ` var output:PickOutput;
@@ -34,10 +37,16 @@ export function createSimpleFragShader(
     {
       entryPoints: {
         main: new FragmentShaderFunction<
-          typeof pipelineLayout.bindGroupLayouts
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
+              meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
+            },
+          ]
         >(
           diffuseOutput,
-          pipelineLayout,
           typicalOutput,
           ([
             ,
@@ -92,7 +101,7 @@ export function createSimpleFragShader(
                 output.Diffuse= output.Diffuse*max(vec4<f32>(total_shading,1.0),vec4<f32>(shading_rgb,0.0));
               return output;`,
         ),
-        pick: createPickOutputFragment(pipelineLayout),
+        pick: createPickOutputFragment(),
       },
       gpu: pipelineLayout.gpu,
       label: 'Simple.frag',

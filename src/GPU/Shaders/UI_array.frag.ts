@@ -1,15 +1,24 @@
-import { FragmentShader } from './FragmentShader.js';
 import type { GPU } from '../../GPU.js';
-import { FragmentShaderFunction } from './ShaderFunction.js';
 import { UI_Input, diffuseOutput } from './structs/Structs.js';
 import { textureLoad } from './std_functions.js';
+import {
+  FragmentShader,
+  FragmentShaderFunction,
+  type ShaderStage,
+  type TextLayout,
+} from '../../webgpu-ts/index.js';
 
 export function createUIFragmentShaderArray(gpu: GPU) {
   return new FragmentShader({
     entryPoints: {
-      array: new FragmentShaderFunction(
+      array: new FragmentShaderFunction<
+        [
+          {
+            texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d_array<f32>'>;
+          },
+        ]
+      >(
         diffuseOutput,
-        gpu.canvasRootLayoutArray,
         UI_Input,
         ([{ texture }]) => /* wgsl */ `
                     let fragCoordI=vec2<i32>(floor(v_uv));

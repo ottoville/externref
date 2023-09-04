@@ -54,13 +54,13 @@ import {
   TextLayout,
   TextureUsageEnums,
   type VertexShader,
+  FragmentShader,
+  FragmentShaderFunction,
 } from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,
   SimpleFragShader,
 } from './GPU/Shaders/Simple.frag.js';
-import { FragmentShader } from './GPU/Shaders/FragmentShader.js';
-import { FragmentShaderFunction } from './GPU/Shaders/ShaderFunction.js';
 import {
   createUIFragmentShaderArray,
   UIFragShaderArray,
@@ -259,9 +259,7 @@ export class GPU {
     texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d_array<f32>'>;
   }>;
   colorFragShader: FragmentShader<{
-    main: FragmentShaderFunction<
-      GPU['positionAndTimeBindGroup']['bindGroupLayouts']
-    >;
+    main: FragmentShaderFunction;
   }>;
   destroyed = false;
   fps = 0;
@@ -842,7 +840,6 @@ export class GPU {
       entryPoints: {
         main: new FragmentShaderFunction(
           diffuseOutput,
-          this.positionAndTimeBindGroup,
           colorPositionOutput,
           () => /* wgsl */ `
             var output:Output;
