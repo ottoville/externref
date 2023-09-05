@@ -1,4 +1,3 @@
-import { PipelineLayout } from '../PipelineLayout.js';
 import { Vertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
@@ -7,6 +6,7 @@ import {
   BufLayout,
   ComputeShader,
   ComputeShaderFunction,
+  PipelineLayout,
   ShaderStage,
   TextLayout,
 } from '../../webgpu-ts/index.js';

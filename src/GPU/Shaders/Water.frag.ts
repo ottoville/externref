@@ -1,4 +1,4 @@
-import { PipelineLayout } from '../PipelineLayout.js';
+import { RenderPipelineLayout } from '../PipelineLayout.js';
 import type { GPU } from 'GPU.js';
 import { WaterInput, diffuseOutput } from './structs/Structs.js';
 import {
@@ -11,7 +11,7 @@ import {
 type BindLayouts = GPU['bindGroupTextureWater']['bindGroupLayouts'];
 
 export function createWaterFragShader(
-  pipelineLayout: PipelineLayout<BindLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindLayouts>,
 ) {
   return new FragmentShader({
     entryPoints: {
@@ -52,6 +52,6 @@ export function createWaterFragShader(
     },
     gpu: pipelineLayout.gpu,
     label: 'Water.frag',
-    pipelineLayouts: [pipelineLayout],
+    pipelineLayouts: [pipelineLayout] as const,
   });
 }

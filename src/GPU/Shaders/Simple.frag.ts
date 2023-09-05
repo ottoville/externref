@@ -1,7 +1,6 @@
 // Pickable single color shader where color is set from vertice
 //TODO: Make actual shading to diverse this shader from color.frag
 
-import { PipelineLayout } from '../PipelineLayout.js';
 import type { GPU } from 'GPU.js';
 import { getClusterIndex } from './getClusterIndex.js';
 import {
@@ -17,6 +16,7 @@ import {
   FragmentShader,
   FragmentShaderFunction,
   type ShaderStage,
+  type PipelineLayout,
 } from '../../webgpu-ts/index.js';
 
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];

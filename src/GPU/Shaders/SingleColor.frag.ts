@@ -1,7 +1,6 @@
 // Non pickable shared single color for all vertices
 // TODO: Make actual shading
 
-import { PipelineLayout } from '../PipelineLayout.js';
 import type { GPU } from '../../GPU.js';
 import { MeshUniforms, diffuseOutput } from './structs/Structs.js';
 import {
@@ -9,6 +8,7 @@ import {
   FragmentShader,
   FragmentShaderFunction,
   type ShaderStage,
+  type PipelineLayout,
 } from '../../webgpu-ts/index.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 

@@ -1,5 +1,4 @@
 import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
-import { PipelineLayout } from '../PipelineLayout.js';
 import {
   Clusters,
   ProjectionStruct,
@@ -11,6 +10,7 @@ import {
   BufLayout,
   ComputeShader,
   ComputeShaderFunction,
+  PipelineLayout,
   ShaderStage,
 } from '../../webgpu-ts/index.js';
 

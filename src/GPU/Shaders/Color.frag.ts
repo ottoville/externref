@@ -6,8 +6,8 @@ import {
   type BGLayout,
   FragmentShader,
   FragmentShaderFunction,
+  type PipelineLayout,
 } from '../../webgpu-ts/index.js';
-import { PipelineLayout } from '../PipelineLayout.js';
 import { colorPositionOutput, diffuseOutput } from './structs/Structs.js';
 
 export function createColorFragmentShader<B extends readonly BGLayout[]>(

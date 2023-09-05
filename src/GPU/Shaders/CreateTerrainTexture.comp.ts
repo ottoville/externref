@@ -1,4 +1,3 @@
-import { PipelineLayout } from '../PipelineLayout.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { PlaneArray, IntArray } from './structs/Structs.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
@@ -9,6 +8,7 @@ import {
   ComputeShaderFunction,
   ShaderStage,
   StorageTextLayout,
+  PipelineLayout,
 } from '../../webgpu-ts/index.js';
 
 export type SlopesLayout = BGLayout<{

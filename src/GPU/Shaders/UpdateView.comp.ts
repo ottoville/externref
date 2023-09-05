@@ -1,4 +1,3 @@
-import { PipelineLayout } from '../PipelineLayout.js';
 import type { GPU } from '../../GPU.js';
 import {
   Clusters,
@@ -13,6 +12,7 @@ import {
   BufLayout,
   ComputeShader,
   ComputeShaderFunction,
+  PipelineLayout,
   ShaderStage,
 } from '../../webgpu-ts/index.js';
 

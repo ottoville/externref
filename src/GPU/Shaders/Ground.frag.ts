@@ -1,4 +1,3 @@
-import { PipelineLayout } from '../PipelineLayout.js';
 import type { GPU } from 'GPU.js';
 import { getClusterIndex } from './getClusterIndex.js';
 import {
@@ -17,6 +16,7 @@ import {
   type SampLayout,
   type ShaderStage,
   type TextLayout,
+  PipelineLayout,
 } from '../../webgpu-ts/index.js';
 
 type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts'];

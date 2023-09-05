@@ -1,4 +1,3 @@
-import { PipelineLayout } from '../../PipelineLayout.js';
 import {
   FloatArray,
   IntArray,
@@ -14,6 +13,7 @@ import {
   BufLayout,
   ComputeShader,
   ComputeShaderFunction,
+  PipelineLayout,
   ShaderStage,
 } from '../../../webgpu-ts/index.js';
 

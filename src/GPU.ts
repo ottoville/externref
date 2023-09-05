@@ -61,10 +61,7 @@ import {
   createSimpleFragShader,
   SimpleFragShader,
 } from './GPU/Shaders/Simple.frag.js';
-import {
-  createUIFragmentShaderArray,
-  UIFragShaderArray,
-} from './GPU/Shaders/UI_array.frag.js';
+
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -243,11 +240,11 @@ export class GPU {
     UIFragShader,
     (typeof this)['canvasRootLayout']
   >;
-  readonly UIPipelineArray: RenderPipeline<
+  /*readonly UIPipelineArray: RenderPipeline<
     UIVertShader,
     UIFragShaderArray,
     (typeof this)['canvasRootLayoutArray']
-  >;
+  >;*/
 
   readonly updateViewShader: UpdateView;
   readonly BindGroupLayoutCanvas: BGLayout<{
@@ -264,6 +261,12 @@ export class GPU {
   destroyed = false;
   fps = 0;
   simpleFragShader: SimpleFragShader;
+  screenRenderTargets: {
+    gRenderTargetDiffuse: MSAARenderTarget<
+      'bgra8unorm',
+      (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING']
+    >;
+  };
   createRenderPipeline<
     D extends CreateRenderPipelineCB<RenderPipeline<V>>,
     V extends VertexShader,
@@ -602,35 +605,35 @@ export class GPU {
         width: canvas.width,
       },
     });
-
+    this.screenRenderTargets = {
+      gRenderTargetDiffuse: new MSAARenderTarget(
+        {
+          format: 'bgra8unorm',
+          gpu: this.device,
+          label: 'diffuseTexture',
+          size: {
+            height: 300,
+            width: 300,
+          },
+          usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
+        },
+        {
+          context: undefined,
+          writeMask: 0xf,
+        },
+        {
+          blend: undefined,
+          // prettier-ignore
+          clearValue: {
+            // eslint-disable-next-line sort-keys
+            r: 0.53, g: 0.8, b: 0.92, a: 0.0,
+          },
+        },
+      ),
+    };
     this.renderPassScreen = new PickableRenderPass(
       {
-        colorRenderTargets: {
-          gRenderTargetDiffuse: new MSAARenderTarget(
-            {
-              format: 'bgra8unorm',
-              gpu: this.device,
-              label: 'diffuseTexture',
-              size: {
-                height: 300,
-                width: 300,
-              },
-              usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
-            },
-            {
-              context: undefined,
-              writeMask: 0xf,
-            },
-            {
-              blend: undefined,
-              // prettier-ignore
-              clearValue: {
-                // eslint-disable-next-line sort-keys
-                r: 0.53, g: 0.8, b: 0.92, a: 0.0,
-              },
-            },
-          ),
-        },
+        colorRenderTargets: this.screenRenderTargets,
         entryPoint: 'main',
         getSizeOnResize: (w, h) => {
           return [w, h];
@@ -799,7 +802,7 @@ export class GPU {
       stepMode: 'vertex',
     });
     const UIfragmentShader = createUIFragmentShader(this);
-    const UIfragmentShaderArray = createUIFragmentShaderArray(this);
+    //const UIfragmentShaderArray = createUIFragmentShaderArray(this);
     this.UIPipeline = new RenderPipeline(
       {
         bindgroupdrawable: this.canvasRootLayout,
@@ -818,7 +821,7 @@ export class GPU {
       },
       undefined,
     );
-    this.UIPipelineArray = new RenderPipeline(
+    /*this.UIPipelineArray = new RenderPipeline(
       {
         bindgroupdrawable: this.canvasRootLayoutArray,
         connections: {
@@ -835,7 +838,7 @@ export class GPU {
         vertexShader,
       },
       undefined,
-    );
+    );*/
     this.colorFragShader = new FragmentShader({
       entryPoints: {
         main: new FragmentShaderFunction(

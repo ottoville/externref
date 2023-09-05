@@ -1,46 +1,28 @@
 ﻿import type { BindGroup } from './BindGroup.js';
 import { RenderPipeline } from './RenderPipeline.js';
-import type { BGLayout } from '../webgpu-ts/BindgroupLayout.js';
+import { type BGLayout, PipelineLayout } from 'webgpu-ts/index.js';
 
-type PipeLineLayoutProps<
-  B extends readonly BGLayout[],
-  S extends BGLayout | undefined,
-> = {
+type PipeLineLayoutProps<B extends readonly BGLayout[]> = {
   label: string;
   bindGroupLayouts: B;
-  sharedLayout?: S;
 };
-export class PipelineLayout<
-  B extends readonly BGLayout[] = readonly BGLayout[],
-  S extends BGLayout | undefined = undefined,
-> {
-  bindGroupLayouts: B;
-  layout: GPUPipelineLayout;
-  gpu: GPUDevice;
-  constructor({ label, bindGroupLayouts }: PipeLineLayoutProps<B, S>) {
-    if (!bindGroupLayouts[0]) {
-      throw new Error('pipelineLayout needs bindgrouplayouts');
-    }
-    Object.freeze(bindGroupLayouts);
-    this.gpu = bindGroupLayouts[0].gpu;
-    this.bindGroupLayouts = bindGroupLayouts;
-    this.layout = bindGroupLayouts[0].gpu.createPipelineLayout({
-      bindGroupLayouts: bindGroupLayouts.map((b) => b.layout),
-      label,
-    });
-  }
+interface RenderPipeLineLayoutProps<
+  B extends readonly BGLayout[],
+  S extends BGLayout | undefined,
+> extends PipeLineLayoutProps<B> {
+  sharedLayout?: S;
 }
 
 export class RenderPipelineLayout<
   B extends readonly BGLayout[] = readonly BGLayout[],
   S extends BGLayout | undefined = undefined,
-> extends PipelineLayout<B, S> {
+> extends PipelineLayout<B> {
   renderPipeLines: Set<RenderPipeline> = new Set();
   subBindGroups: RenderPipelineLayout[] = [];
   bindGroupLayout: BGLayout;
 
   constructor(
-    props: PipeLineLayoutProps<B, S>,
+    props: RenderPipeLineLayoutProps<B, S>,
     public sharedBindgroup?: BindGroup | undefined,
   ) {
     super(Object.freeze(props));

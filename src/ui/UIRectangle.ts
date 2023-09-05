@@ -62,9 +62,8 @@ type ButtonPosition = {
 };
 
 export type UIRectangleProps<
-  P extends GPU['UIPipeline'] | GPU['UIPipelineArray'] =
-    | GPU['UIPipeline']
-    | GPU['UIPipelineArray'],
+  P extends GPU['UIPipeline'] /* | GPU['UIPipelineArray']*/ = GPU['UIPipeline'],
+  /*| GPU['UIPipelineArray']*/
 > = {
   canvaspipeline: P;
   renderPass: RenderPass;
@@ -104,9 +103,8 @@ type RectangleTexture = RenderTarget<
   { width: number; height: number; depthOrArrayLayers: number }
 >;
 export abstract class UIRectangle<
-  P extends GPU['UIPipeline'] | GPU['UIPipelineArray'] =
-    | GPU['UIPipeline']
-    | GPU['UIPipelineArray'],
+  P extends GPU['UIPipeline'] /*| GPU['UIPipelineArray']*/ = GPU['UIPipeline'],
+  /*| GPU['UIPipelineArray']*/
 > extends DataNode {
   override drawable?: DrawableSimple<RenderPipeline<UIVertShader>> | undefined =
     undefined;
@@ -119,9 +117,9 @@ export abstract class UIRectangle<
   texture?: RectangleTexture | undefined;
   uniformBuffer: CopyDstBuffer & BindUniformBuffer;
   textureView: TextureView<
-    P extends GPU['UIPipelineArray']
+    /*P extends GPU['UIPipelineArray']
       ? RectangleTexture
-      : Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>
+      :*/ Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>
   >;
 
   protected createTextureView(copySource: ImageBitmap | OffscreenCanvas) {
@@ -340,9 +338,13 @@ export abstract class UIRectangle<
     protected props: UIRectangleProps<P>,
     texture:
       | TextureView<
-          P extends GPU['UIPipelineArray']
+          /* P extends GPU['UIPipelineArray']
             ? RectangleTexture
-            : Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>
+            :*/ Texture<
+            GPUTextureFormat,
+            TEXTURE_BINDING_TEXTURE,
+            Texture2dSize
+          >
         >
       | ImageBitmap
       | OffscreenCanvas,
@@ -431,10 +433,8 @@ export abstract class UIRectangle<
         {
           node: this,
           renderPasses: new Set([renderPass]),
-          renderPipeline: canvaspipeline as
-            | GPU['UIPipeline']
-            | GPU['UIPipelineArray'],
-          vertexBuffers: [
+          renderPipeline: canvaspipeline as GPU['UIPipeline'],
+          /* | GPU['UIPipelineArray']*/ vertexBuffers: [
             {
               stride: 3,
               view: vertices_ptr,

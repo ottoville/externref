@@ -1,15 +1,21 @@
 ﻿import type { RenderPass } from './RenderPasses/RenderPass.js';
 import { BindGroup } from './BindGroup.js';
-import { type RenderPipelineLayout } from './PipelineLayout.js';
 import type {
   BGLayout,
   FragmentShader,
   MapToGPUBindGroupEntry,
+  PipelineLayout,
+  RenderPipelineBuilder,
   VertexShader,
 } from '../webgpu-ts/index.js';
 import { RenderBundleEncoder } from './RenderBundleEncoder.js';
+import type { RenderPipelineLayout } from './PipelineLayout.js';
 
-type RenderPipelineProps<V extends VertexShader, F extends FragmentShader> = {
+type RenderPipelineProps<
+  V extends VertexShader,
+  F extends FragmentShader,
+  R extends RenderPipelineLayout = RenderPipelineLayout,
+> = {
   label: string;
   vertexShader: V;
   fragmentShader: F;
@@ -22,25 +28,21 @@ type RenderPipelineProps<V extends VertexShader, F extends FragmentShader> = {
     depthCompare: GPUCompareFunction;
   };
   connections: Record<string, string>;
+  bindgroupdrawable: R;
+  builder?: RenderPipelineBuilder;
 };
 
-interface RenderPipelineDrawableProps<
-  V extends VertexShader = VertexShader,
-  F extends FragmentShader = FragmentShader,
-  R extends RenderPipelineLayout = RenderPipelineLayout,
-> extends RenderPipelineProps<V, F> {
-  bindgroupdrawable: R;
-}
 export class RenderPipeline<
   V extends VertexShader = VertexShader,
   F extends FragmentShader = FragmentShader,
   R extends RenderPipelineLayout = RenderPipelineLayout,
 > {
   dynamicBindGroupOffset: number[] = [];
-  public readonly props: RenderPipelineDrawableProps<V, F, R>;
+  public readonly props: RenderPipelineProps<V, F, R>;
+  pipelineLayout: PipelineLayout;
   constructor(
     props: Readonly<
-      RenderPipelineDrawableProps<V, F, R> & {
+      RenderPipelineProps<V, F, R> & {
         connections: Record<
           keyof V['props']['entryPoints'],
           keyof F['props']['entryPoints']
@@ -54,6 +56,17 @@ export class RenderPipeline<
       : undefined,
   ) {
     this.props = Object.freeze(props);
+    /*
+    Get intersection of vertex and fragment pipelinelayouts and
+    use first layout from that intersection as layout for renderpipeline
+   */
+    const [pipelineLayout] = props.vertexShader.props.pipelineLayouts.filter(
+      (p) => props.fragmentShader.props.pipelineLayouts.includes(p),
+    );
+    if (!pipelineLayout) {
+      throw new Error('pipelineLayout not found');
+    }
+    this.pipelineLayout = pipelineLayout;
     props.vertexShader.props.pipelineLayouts.forEach((layout) => {
       //@ts-expect-error
       layout.renderPipeLines.add(this);

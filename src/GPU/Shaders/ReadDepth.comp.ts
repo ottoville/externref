@@ -1,4 +1,3 @@
-import { PipelineLayout } from '../PipelineLayout.js';
 import type { GPU } from '../../GPU.js';
 import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 import type { Engine } from 'engine.js';
@@ -7,6 +6,7 @@ import {
   BufLayout,
   ComputeShader,
   ComputeShaderFunction,
+  PipelineLayout,
   ShaderStage,
   TextLayout,
 } from '../../webgpu-ts/index.js';

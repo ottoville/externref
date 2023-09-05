@@ -66,7 +66,7 @@ export function createWaterVertShader(
     },
     gpu: pipelineLayout.gpu,
     label: 'water.vert',
-    pipelineLayouts: [pipelineLayout],
+    pipelineLayouts: [pipelineLayout] as const,
   });
 }
 export type WaterVertShader = ReturnType<typeof createWaterVertShader>;
