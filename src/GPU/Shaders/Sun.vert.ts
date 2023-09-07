@@ -70,7 +70,6 @@ export function createSunVertShader(
           ]
         >,
       },
-      gpu: pipelineLayout.gpu,
       label: 'Sun.vert',
       pipelineLayouts: [pipelineLayout],
     },

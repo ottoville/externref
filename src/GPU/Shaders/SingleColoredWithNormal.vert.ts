@@ -116,7 +116,6 @@ export function createSimpleVertShader(
       >,
       pick: createPickOutput(buffers),
     },
-    gpu: pipelineLayout.gpu,
     label: 'Simple.vert',
     pipelineLayouts: [pipelineLayout],
   });

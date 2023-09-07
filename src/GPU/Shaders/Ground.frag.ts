@@ -119,7 +119,6 @@ export function createGroundFragShader(
         ),
         pick: createPickOutputFragment(),
       },
-      gpu: pipelineLayout.gpu,
       label: 'Ground.frag',
       pipelineLayouts: [pipelineLayout],
     },

@@ -24,7 +24,6 @@ export function createColorFragmentShader<B extends readonly BGLayout[]>(
         return output;`,
       ),
     },
-    gpu: pipelineLayout.gpu,
     label: 'color.frag',
     pipelineLayouts: [pipelineLayout],
   });

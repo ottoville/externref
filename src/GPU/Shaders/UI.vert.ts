@@ -49,7 +49,6 @@ export function createUIVertShader(
         ]
       >,
     },
-    gpu: pipelineLayout.gpu,
     label: 'UI.vert',
     pipelineLayouts: [pipelineLayout],
   });

@@ -125,7 +125,6 @@ export function createGrassVertShader(
           ]
         >,
       },
-      gpu: pipelineLayout.gpu,
       label: 'grass.vert',
       pipelineLayouts: [pipelineLayout],
     },

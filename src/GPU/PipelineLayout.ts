@@ -1,6 +1,6 @@
 ﻿import type { BindGroup } from './BindGroup.js';
 import { RenderPipeline } from './RenderPipeline.js';
-import { type BGLayout, PipelineLayout } from 'webgpu-ts/index.js';
+import { type BGLayout, PipelineLayout } from '../webgpu-ts/index.js';
 
 type PipeLineLayoutProps<B extends readonly BGLayout[]> = {
   label: string;

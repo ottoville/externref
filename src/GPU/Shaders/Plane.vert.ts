@@ -61,7 +61,6 @@ export class Plane extends VertexShader {
           ]
         >,
       },
-      gpu: pipelineLayout.gpu,
       label: 'plane.vert',
       pipelineLayouts: [pipelineLayout],
     });

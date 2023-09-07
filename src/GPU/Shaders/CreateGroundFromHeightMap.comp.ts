@@ -93,7 +93,6 @@ export function CreateGroundFromHeightMap(
             `,
           ),
         },
-        gpu: gpu.device,
         label: 'CreateGroundFromHeightMap.comp',
         pipelineLayouts: [pipelineLayout],
       },

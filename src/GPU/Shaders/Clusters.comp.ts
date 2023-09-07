@@ -118,7 +118,6 @@ ${clusters.prop(
             `,
           ),
         },
-        gpu: pipelineLayout.gpu,
         label: 'Clusters.comp',
         pipelineLayouts: [pipelineLayout],
       },

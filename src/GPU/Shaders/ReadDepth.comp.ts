@@ -103,7 +103,6 @@ export function createReadDepth(gpu: GPU) {
             `,
         ),
       },
-      gpu: gpu.device,
       label: 'ReadDepth.comp',
       pipelineLayouts: [pipelineLayout],
     }),

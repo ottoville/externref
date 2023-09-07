@@ -64,7 +64,6 @@ export function createWaterVertShader(
         ]
       >,
     },
-    gpu: pipelineLayout.gpu,
     label: 'water.vert',
     pipelineLayouts: [pipelineLayout] as const,
   });

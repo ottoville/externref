@@ -140,7 +140,6 @@ export function createCalculatePlaneHeights(
             `,
           ),
         },
-        gpu: pipelineLayout.gpu,
         label: 'calculatePlaneHeights.comp',
         pipelineLayouts: [pipelineLayout],
       },

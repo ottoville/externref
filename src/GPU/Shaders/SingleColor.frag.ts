@@ -49,7 +49,6 @@ export function createSingleColorFragShader(
           `,
       ),
     },
-    gpu: pipelineLayout.gpu,
     label: 'SingleColor.frag',
     pipelineLayouts: [pipelineLayout],
   });

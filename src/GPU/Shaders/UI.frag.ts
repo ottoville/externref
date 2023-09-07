@@ -37,7 +37,6 @@ export function createUIFragmentShader(gpu: GPU) {
                 `,
       ),
     },
-    gpu: gpu.device,
     label: 'UI.frag',
     pipelineLayouts: [gpu.canvasRootLayout],
   });

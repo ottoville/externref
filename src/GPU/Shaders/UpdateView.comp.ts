@@ -147,7 +147,6 @@ ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
         `,
           ),
         },
-        gpu: gpu.device,
         label: 'UpdateView.comp',
         pipelineLayouts: [pipelineLayout],
       },

@@ -211,7 +211,7 @@ export class GPU {
 
   static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
   readonly bindGroupTextureWater: RenderPipelineLayout<
-    [
+    readonly [
       typeof this.sizeBindGroupLayout,
       typeof this.uniformBindGroupLayoutWithTime,
       BGLayout<{
@@ -850,7 +850,6 @@ export class GPU {
             return output;`,
         ),
       },
-      gpu: this.device,
       label: 'color.frag',
       pipelineLayouts: [this.positionAndTimeBindGroup],
     });

@@ -72,7 +72,6 @@ export function CreateTerrainTexture(
             `,
           ),
         },
-        gpu: pipelineLayout.gpu,
         label: 'CreateTerrainTexture.comp',
         pipelineLayouts: [pipelineLayout],
       },

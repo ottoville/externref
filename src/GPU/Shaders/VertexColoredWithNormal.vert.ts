@@ -73,7 +73,6 @@ export function createVertexColorShader(
       >,
       pick: createPickOutput(buffers),
     },
-    gpu: pipelineLayout.gpu,
     label: 'VertexColor.vert',
     pipelineLayouts: [pipelineLayout],
   });

@@ -79,7 +79,6 @@ export function createDebugNormalsVertShader(
         ]
       >,
     },
-    gpu: pipelineLayout.gpu,
     label: 'debug_normals.vert',
     pipelineLayouts: [pipelineLayout],
   });

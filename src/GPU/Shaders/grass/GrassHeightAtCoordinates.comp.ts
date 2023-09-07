@@ -143,7 +143,6 @@ export function createGrassHeightAtCoordinates(
             `,
           ),
         },
-        gpu: gpu.device,
         label: 'GetHeightAtCoordinates.comp',
         pipelineLayouts: [pipelineLayout],
       },

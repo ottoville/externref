@@ -103,7 +103,6 @@ export function createSimpleFragShader(
         ),
         pick: createPickOutputFragment(),
       },
-      gpu: pipelineLayout.gpu,
       label: 'Simple.frag',
       pipelineLayouts: [pipelineLayout],
     },
