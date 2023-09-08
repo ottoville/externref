@@ -56,6 +56,7 @@ import {
   FragmentShaderFunction,
   ColorRenderTarget,
   MSAARenderTarget,
+  createRenderPipelineBuilder,
 } from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,
@@ -806,6 +807,7 @@ export class GPU {
     this.UIPipeline = new RenderPipeline(
       {
         bindgroupdrawable: this.canvasRootLayout,
+        builder: createRenderPipelineBuilder(vertexShader, UIfragmentShader),
         connections: {
           main: 'main',
         },

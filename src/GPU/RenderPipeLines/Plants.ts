@@ -7,6 +7,7 @@ import {
 } from '../Shaders/Grass.vert.js';
 import { createColorFragmentShader } from '../Shaders/Color.frag.js';
 import { RenderPipeline } from '../RenderPipeline.js';
+import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 export const PlantsRenderPipeline = [
   'PlantsRenderPipeline',
@@ -35,6 +36,7 @@ export const PlantsRenderPipeline = [
     return new RenderPipeline(
       {
         bindgroupdrawable: gpu.rootCameralayout,
+        builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
         connections: {
           main: 'main',
         },

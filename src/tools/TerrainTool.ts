@@ -20,6 +20,7 @@ import {
   UIRectangleNode,
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
+import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
@@ -164,6 +165,7 @@ export class TerrainTool extends MainNode {
         const renderPipeline = new RenderPipeline(
           {
             bindgroupdrawable: terrain.TerrainHeightsbindGroupTree,
+            builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
             connections: {
               main: 'main',
             },

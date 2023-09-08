@@ -29,7 +29,7 @@ type RenderPipelineProps<
   };
   connections: Record<string, string>;
   bindgroupdrawable: R;
-  builder?: RenderPipelineBuilder;
+  builder: RenderPipelineBuilder;
 };
 
 export class RenderPipeline<

@@ -14,6 +14,7 @@ import { RenderPipeline } from '../GPU/RenderPipeline.js';
 import { DataNode } from '../nodes/DataNode.js';
 import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 import type { CreateRenderPipelineProps } from 'GPU.js';
+import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
 class PlaneMesh extends DataNode {
@@ -95,6 +96,10 @@ export class paintPlane extends paintGround {
           return new RenderPipeline(
             {
               bindgroupdrawable: ground.TerrainHeightsbindGroupTree,
+              builder: createRenderPipelineBuilder(
+                vertexShader,
+                fragmentShader,
+              ),
               connections: {
                 main: 'main',
               },

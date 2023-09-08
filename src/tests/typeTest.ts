@@ -13,6 +13,7 @@ import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
 import { createWaterVertShader } from '../GPU/Shaders/Water.vert.js';
 import { positionAttr } from '../GPU/Shaders/structs/Attributes.js';
 import { Texture, TextureUsageEnums } from '../webgpu-ts/Texture.js';
+import { createRenderPipelineBuilder } from 'webgpu-ts/index.js';
 declare const engine: Engine;
 
 Texture.create({
@@ -186,6 +187,10 @@ const sampler = engine.gpu!.device.createSampler({
 new RenderPipeline(
   {
     bindgroupdrawable: engine.gpu!.bindGroupTextureWater,
+    builder: createRenderPipelineBuilder(
+      waterVertShader,
+      createWaterFragShader(engine.gpu!.bindGroupTextureWater),
+    ),
     connections: {
       main: 'main',
     },
@@ -203,6 +208,10 @@ new RenderPipeline(
 new RenderPipeline(
   {
     bindgroupdrawable: engine.gpu!.positionAndTimeBindGroup,
+    builder: createRenderPipelineBuilder(
+      waterVertShader,
+      createWaterFragShader(engine.gpu!.bindGroupTextureWater),
+    ),
     connections: {
       main: 'main',
     },

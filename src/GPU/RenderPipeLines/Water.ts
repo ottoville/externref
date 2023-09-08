@@ -3,7 +3,7 @@ import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { createWaterVertShader } from '../../GPU/Shaders/Water.vert.js';
 import { createWaterFragShader } from '../Shaders/Water.frag.js';
 import { RenderPipeline as LegacyRenderPipeline } from '../RenderPipeline.js';
-//import { RenderPipeline } from 'webgpu-ts/RenderPipeline.js';
+import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 export const WaterRenderPipeline = [
   'WaterRenderPipeline',
@@ -23,16 +23,16 @@ export const WaterRenderPipeline = [
       attributes2: positionAttr,
       stepMode: 'vertex',
     });
-    /*new RenderPipeline({
-      vertexShader: waterVertShader,
-      vertexEntry: 'main',
-      fragmentShader: createWaterFragShader(gpu.bindGroupTextureWater),
-      fragmentEntry: 'main',
-      colorRenderTargets
-    });*/
+    const waterFragShader = createWaterFragShader(gpu.bindGroupTextureWater);
+
+    const builder = createRenderPipelineBuilder(
+      waterVertShader,
+      waterFragShader,
+    );
     return new LegacyRenderPipeline(
       {
         bindgroupdrawable: gpu.bindGroupTextureWater,
+        builder,
         connections: {
           main: 'main',
         },

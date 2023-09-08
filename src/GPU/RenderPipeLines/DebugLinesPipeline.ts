@@ -1,6 +1,7 @@
 import { RenderPipeline } from '../RenderPipeline.js';
 import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { createDebugBoundingBoxVertShader } from '../Shaders/devtools/debug_boundingbox.vert.js';
+import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 export const DebugLinesPipeline = Object.freeze([
   'DebugLinesPipeline',
@@ -15,6 +16,7 @@ export const DebugLinesPipeline = Object.freeze([
     return new RenderPipeline(
       {
         bindgroupdrawable: gpu.positionAndTimeBindGroup,
+        builder: createRenderPipelineBuilder(vertexShader, gpu.colorFragShader),
         connections: {
           main: 'main',
         },

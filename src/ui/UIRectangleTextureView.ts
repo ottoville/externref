@@ -3,7 +3,7 @@ import type {
   Texture2dSize,
   TextureUsageEnums,
   TextureView,
-} from 'webgpu-ts/index.js';
+} from '../webgpu-ts/index.js';
 import { UIRectangle } from './UIRectangle.js';
 
 export class UIRectangleTextureView extends UIRectangle {

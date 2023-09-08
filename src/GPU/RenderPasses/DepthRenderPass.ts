@@ -46,7 +46,7 @@ export class DepthRenderPass<
         depthWriteEnabled:
           renderpipeline.props.depthBuffer?.depthWriteEnabled ?? true,
         format: this.depthRenderTarget.props.format,
-      },
+      } as GPUDepthStencilState,
     };
   }
 }

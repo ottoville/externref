@@ -60,7 +60,7 @@ export class RenderPass<
   public gpu: GPU;
   public sampleCount: 1 | 4;
   public size: { width: number; height: number };
-  #entryPoint: string;
+  entryPoint: string;
   #getSizeOnResize: (width: number, height: number) => [number, number];
   public label: string;
   constructor({
@@ -78,7 +78,7 @@ export class RenderPass<
     this.sampleCount = sampleCount;
     this.size = size;
     this.#getSizeOnResize = getSizeOnResize;
-    this.#entryPoint = entryPoint;
+    this.entryPoint = entryPoint;
     this.#rootLayouts = rootLayout;
     this.label = label;
     this.colorRenderTargets = colorRenderTargets;
@@ -163,101 +163,15 @@ export class RenderPass<
     return this.#screenDimensionsBuffer;
   }
   onRenderPipelinesChange: Set<() => void> = new Set();
-  getVariant(renderPipeline: Readonly<RenderPipeline>) {
-    let variant = this.renderPipelines.get(renderPipeline);
-    if (!variant) {
-      const params = {
-        ...renderPipeline.props.descriptor,
-        layout: renderPipeline.pipelineLayout.layout,
-        ...this.onDecoratePipeline(renderPipeline),
-        label:
-          'renderPipeline:' +
-          renderPipeline.props.label +
-          ' RenderPass:' +
-          this.label,
-      };
-      console.debug(
-        'Create renderpipeline ',
-        renderPipeline.props.label,
-        params,
-      );
-      const variantP = this.gpu.device
-        .createRenderPipelineAsync(params)
-        .catch((err: unknown) => {
-          if (err instanceof DOMException) {
-            if (
-              err.message.includes(
-                renderPipeline.props.vertexShader.module.label,
-              )
-            ) {
-              console.error(
-                'createRenderPipelineAsync failed, vertex',
-                renderPipeline.props.vertexShader.module.label,
-                'wgsl:',
-                renderPipeline.props.vertexShader.wgsl,
-                {
-                  cause: err,
-                },
-              );
-            } else if (
-              err.message.includes(
-                renderPipeline.props.fragmentShader.module.label,
-              )
-            ) {
-              console.error(
-                'createRenderPipelineAsync failed, fragment',
-                renderPipeline.props.fragmentShader.module.label,
-                'wgsl:',
-                renderPipeline.props.fragmentShader.wgsl,
-                {
-                  cause: err,
-                },
-              );
-            } else {
-              console.error(
-                'createRenderPipelineAsync failed, vertex',
-                renderPipeline.props.vertexShader.module.label,
-                ' wgsl:',
-                renderPipeline.props.vertexShader.wgsl,
-                'fragment',
-                renderPipeline.props.fragmentShader.module,
-                ' wgsl:',
-                renderPipeline.props.fragmentShader.wgsl,
-                {
-                  cause: err,
-                },
-              );
-            }
-          }
-          throw new Error('createRenderPipelineAsync failed', {
-            cause: err,
-          });
-        })
-        .then((variantPipeline) => {
-          variant = new RenderPipelineVariant(
-            variantPipeline,
-            new Set<Drawable>(),
-          );
-          // Replace promise with real object
-          this.renderPipelines.set(renderPipeline, variant);
-          this.onRenderPipelinesChange.forEach((cb) => cb());
-          return variant;
-        });
-      // Save promise
-      this.renderPipelines.set(renderPipeline, variantP);
-      variant = variantP;
-    }
-    return variant;
-  }
 
-  protected onDecoratePipeline(
+  public onDecoratePipeline(
     renderpipeline: Readonly<RenderPipeline>,
   ): Omit<GPURenderPipelineDescriptor, 'layout'> {
-    const fragmentEntry = renderpipeline.props.connections[this.#entryPoint];
+    const fragmentEntry = renderpipeline.props.connections[this.entryPoint];
     if (!fragmentEntry) {
       throw new Error(
         'Fragmentshader has no corresponding entry for output ' +
-          this.#entryPoint,
+          this.entryPoint,
       );
     }
     const renderPipelineDescriptor: Omit<
@@ -280,9 +194,9 @@ export class RenderPass<
       },
       vertex: {
         buffers:
-          renderpipeline.props.vertexShader.props.entryPoints[this.#entryPoint]!
+          renderpipeline.props.vertexShader.props.entryPoints[this.entryPoint]!
             .buffers,
-        entryPoint: this.#entryPoint,
+        entryPoint: this.entryPoint,
         module: renderpipeline.props.vertexShader.module,
       },
     };

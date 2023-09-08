@@ -1,4 +1,7 @@
-﻿import type { RenderPass } from '../RenderPasses/RenderPass.js';
+﻿import {
+  RenderPipelineVariant,
+  type RenderPass,
+} from '../RenderPasses/RenderPass.js';
 import { GPU } from '../../GPU.js';
 
 import type { Engine, rust_vec_ptr } from '../../engine.js';
@@ -59,10 +62,120 @@ export abstract class Drawable<N extends MainNode = MainNode> {
       this.setVertexBuffer(i, vertexBuffer);
     });
     this.renderPasses.forEach((rp) => {
-      const variantP = rp.getVariant(this.renderPipeline);
+      const fragmentEntry =
+        this.renderPipeline.props.connections[rp.entryPoint];
+      if (!fragmentEntry) {
+        throw new Error(
+          'Fragmentshader has no corresponding entry for output ' +
+            rp.entryPoint,
+        );
+      }
+      let variantPP = rp.renderPipelines.get(renderPipeline);
+      if (!variantPP) {
+        if (this.renderPipeline.props.builder) {
+          var nativePipeline = this.renderPipeline.props.builder.build({
+            //primitive, multisample, label
+            ...renderPipeline.props.descriptor,
+            ...rp.onDecoratePipeline(renderPipeline),
+            fragment: {
+              entryPoint: fragmentEntry,
+              targets: Object.values(rp.colorRenderTargets),
+            },
+            label:
+              'renderPipeline:' +
+              renderPipeline.props.label +
+              ' RenderPass:' +
+              rp.label,
+
+            vertex: {
+              entryPoint: rp.entryPoint,
+            },
+          });
+        } else {
+          const params = {
+            ...renderPipeline.props.descriptor,
+            layout: renderPipeline.pipelineLayout.layout,
+            ...rp.onDecoratePipeline(renderPipeline),
+            label:
+              'renderPipeline:' +
+              renderPipeline.props.label +
+              ' RenderPass:' +
+              rp.label,
+          };
+          console.debug(
+            'Create renderpipeline ',
+            renderPipeline.props.label,
+            params,
+          );
+          var nativePipeline = rp.gpu.device.createRenderPipelineAsync(params);
+        }
+        variantPP = nativePipeline
+          .catch((err: unknown) => {
+            if (err instanceof DOMException) {
+              if (
+                err.message.includes(
+                  renderPipeline.props.vertexShader.module.label,
+                )
+              ) {
+                console.error(
+                  'createRenderPipelineAsync failed, vertex',
+                  renderPipeline.props.vertexShader.module.label,
+                  'wgsl:',
+                  renderPipeline.props.vertexShader.wgsl,
+                  {
+                    cause: err,
+                  },
+                );
+              } else if (
+                err.message.includes(
+                  renderPipeline.props.fragmentShader.module.label,
+                )
+              ) {
+                console.error(
+                  'createRenderPipelineAsync failed, fragment',
+                  renderPipeline.props.fragmentShader.module.label,
+                  'wgsl:',
+                  renderPipeline.props.fragmentShader.wgsl,
+                  {
+                    cause: err,
+                  },
+                );
+              } else {
+                console.error(
+                  'createRenderPipelineAsync failed, vertex',
+                  renderPipeline.props.vertexShader.module.label,
+                  ' wgsl:',
+                  renderPipeline.props.vertexShader.wgsl,
+                  'fragment',
+                  renderPipeline.props.fragmentShader.module,
+                  ' wgsl:',
+                  renderPipeline.props.fragmentShader.wgsl,
+                  {
+                    cause: err,
+                  },
+                );
+              }
+            }
+            throw new Error('createRenderPipelineAsync failed', {
+              cause: err,
+            });
+          })
+          .then((variantPipeline) => {
+            variantPP = new RenderPipelineVariant(
+              variantPipeline,
+              new Set<Drawable>(),
+            );
+            // Replace promise with real object
+            rp.renderPipelines.set(renderPipeline, variantPP);
+            rp.onRenderPipelinesChange.forEach((cb) => cb());
+            return variantPP;
+          });
+        // Save promise
+        rp.renderPipelines.set(renderPipeline, variantPP);
+      }
       // variabtP can be either a promise or results of a promise
-      if (variantP instanceof Promise) {
-        variantP
+      if (variantPP instanceof Promise) {
+        variantPP
           .then((variant) => {
             if (this.destroyed) return;
             this.#renderList.set(rp, variant.addRootDrawable(this));
@@ -70,7 +183,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
           })
           .catch((err) => engine.showError(err));
       } else {
-        this.#renderList.set(rp, variantP.addRootDrawable(this));
+        this.#renderList.set(rp, variantPP.addRootDrawable(this));
         rp.bundles.forEach((b) => b.destroy());
       }
     });

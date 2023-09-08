@@ -2,6 +2,7 @@ import type { CreateRenderPipelineProps } from '../../GPU';
 import { createGroundVertShader } from '../Shaders/Ground.vert.js';
 import { createGroundFragShader } from '../Shaders/Ground.frag.js';
 import { RenderPipeline } from '../RenderPipeline.js';
+import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 const attributes = Object.freeze({
   normal: {
@@ -40,6 +41,7 @@ export const TerrainRenderPipeline = [
     return new RenderPipeline(
       {
         bindgroupdrawable: gpu.lightsTextureBindGroup,
+        builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
         connections: {
           main: 'main',
           pick: 'pick',
