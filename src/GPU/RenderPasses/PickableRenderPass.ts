@@ -4,13 +4,6 @@ import {
   TerraVector3,
 } from '../../Math.js';
 import { MainNode } from '../../MainNode.js';
-import { BindGroup } from '../BindGroup.js';
-import {
-  type BindUniformBuffer,
-  type CopyDstBuffer,
-  Buffer,
-  GPUBufferUsage,
-} from '../Buffer/Buffer.js';
 import { RenderPassProps } from './RenderPass.js';
 import { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
@@ -22,6 +15,9 @@ import {
   type RENDER_TARGET_FORMAT,
   type RENDER_TARGET_TEXTURE,
   type TEXTURE_BINDING_TEXTURE,
+  Buffer2,
+  BufferUsageEnums,
+  BindGroup,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import type { Engine } from '../../engine.js';
@@ -43,7 +39,9 @@ export class PickableRenderPass<
   #pickBuffer: GPUBuffer;
   readonly #pickBufferRead?: GPUBuffer;
   #pickPositionPipeline?: GPUComputePipeline | Promise<GPUComputePipeline>;
-  readonly #mousePositionBuffer?: CopyDstBuffer & BindUniformBuffer;
+  readonly #mousePositionBuffer?: Buffer2<
+    (typeof BufferUsageEnums)['UNIFORM|COPY_DST']
+  >;
   readonly #pickPositionBindGroup0?: BindGroup;
   readonly #pickPositionBindGroup1?: BindGroup;
   #rowBytes = this.size.width * 4;
@@ -75,12 +73,12 @@ export class PickableRenderPass<
         size: 4 + 4, //depth + meshID (four pixel)
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
       });
-      this.#mousePositionBuffer = Buffer.create(
-        gpu,
-        8,
-        [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
-        'mousePositionBuffer',
-      );
+      this.#mousePositionBuffer = new Buffer2({
+        gpu: gpu.device,
+        label: 'mousePositionBuffer',
+        size: 8,
+        usages: BufferUsageEnums['UNIFORM|COPY_DST'],
+      });
 
       this.#pickPositionBindGroup0 = new BindGroup(
         readDepthShader[0][0],
@@ -159,11 +157,13 @@ export class PickableRenderPass<
       engine.gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse;
     if (gRenderTargetDiffuse instanceof MSAARenderTarget) {
       if (!this.#zAndIDPromise) {
-        const mousePositionSwapBuffer = Buffer.create(
-          engine.gpu!,
-          8,
-          [GPUBufferUsage.COPY_SRC],
-          'mousePositionSwapBuffer',
+        const mousePositionSwapBuffer = new Buffer2(
+          {
+            gpu: engine.gpu!.device,
+            label: 'mousePositionSwapBuffer',
+            size: 8,
+            usages: BufferUsageEnums.COPY_SRC,
+          },
           (b) => {
             new Uint32Array(b.getMappedRange(0, 8)).set([
               engine.gpu!.mousePosition[0],

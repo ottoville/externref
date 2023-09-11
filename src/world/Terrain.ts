@@ -2,7 +2,6 @@ import type { Scene } from '../Scene.js';
 import { TerrainTool } from '../tools/TerrainTool.js';
 import { TerrainMesh } from '../GPU/Meshes/Terrain.js';
 import type { Engine } from '../engine.js';
-import { ReadBuffer, WriteBuffer } from '../GPU/Buffer/Buffer.js';
 import {
   CalculatePlaneIndices,
   createCalculatePlaneIndices,
@@ -79,7 +78,6 @@ TODO
   readonly facet12ArrGPUBuffer: Buffer2<
     (typeof BufferUsageEnums)['STORAGE|COPY_SRC|COPY_DST']
   >;
-  readonly facet12ArrGPUBufferSwap: WriteBuffer;
 
   readonly mesh: TerrainMesh;
 
@@ -429,15 +427,7 @@ TODO
         2,
       usages: BufferUsageEnums['STORAGE|COPY_SRC|COPY_DST'],
     });
-    this.facet12ArrGPUBufferSwap = new WriteBuffer(
-      gpu,
-      Float32Array.BYTES_PER_ELEMENT *
-        Terrain.#subdivisions[0] *
-        Terrain.#subdivisions[1] *
-        4 *
-        2,
-      'facet12ArrGPUBufferSwap',
-    );
+
     this.texture = Texture.create({
       format: 'rgba8unorm',
       gpu: gpu.device,
@@ -635,17 +625,17 @@ TODO
           );
 
           // Get a GPU buffer for reading in an unmapped state.
-          const gpuReadBuffer = new ReadBuffer(
-            gpu,
-            textureSizeBytes,
-            'terrainReaduBuffer',
-          );
+          const gpuReadBuffer = new Buffer2({
+            gpu: gpu.device,
+            label: 'terrainReaduBuffer',
+            size: textureSizeBytes,
+            usages: BufferUsageEnums['MAP_READ|COPY_DST'],
+          });
           // Encode commands for copying buffer to buffer.
           gpuReadBuffer.copyFromTexture(
             commandEncoder,
-            {
-              texture: this.texture.texture,
-            },
+            this.texture,
+            {},
             {
               bytesPerRow: 4 * Terrain.#textureSize.width,
             },

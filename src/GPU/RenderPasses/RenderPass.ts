@@ -320,13 +320,7 @@ export class RenderPass<
               variant.renderpipeline.pipeline,
             );
             drawables.forEach((drawable) => {
-              console.log('draw', drawable.node.label);
               drawable.bindGroups.forEach((bindGroup, i) => {
-                console.log(
-                  'set bindgroup',
-                  i + bindGroupStartIndex,
-                  bindGroup.bindGroup.bindGroup.label,
-                );
                 renderBundleEncoder.renderBundleEncoder.setBindGroup(
                   i + bindGroupStartIndex,
                   bindGroup.bindGroup.getForRenderBundle(renderBundleEncoder),

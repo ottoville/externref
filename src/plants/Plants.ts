@@ -6,7 +6,6 @@ import { PTDresult } from '../types/interfaces/index.js';
 
 import type { Scene } from '../Scene.js';
 import { PlantsRenderPipeline } from '../GPU/RenderPipeLines/Plants.js';
-import { Buffer, GPUBufferUsage } from '../GPU/Buffer/Buffer.js';
 
 import type { Engine } from '../engine.js';
 import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
@@ -55,12 +54,13 @@ export class Plants extends MainNode {
     super({
       label: 'Plants',
     });
-    const indirectBuffer = Buffer.create(
-      scene.gpu,
-      4 * 4,
-      [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST],
-      'indirectBuffer',
-    );
+
+    const indirectBuffer = new Buffer2({
+      gpu: scene.gpu.device,
+      label: 'indirectBuffer',
+      size: 4 * 4,
+      usages: BufferUsageEnums['INDIRECT|COPY_DST'],
+    });
     const positionGPU = new Buffer2({
       gpu: scene.gpu.device,
       label: 'positionGPU',
@@ -209,10 +209,28 @@ export class Plants extends MainNode {
               0,
               numBlades * 4 * 4,
             );
-            indirectBuffer.updateBufferRaw(
-              commandEncoder,
-              new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer,
+            const data2 = new Uint32Array([7, (data.buffer.byteLength / 4) * 2])
+              .buffer;
+            const swapBuffer = new Buffer2(
+              {
+                gpu: scene.gpu.device,
+                label: '_swap',
+                size: data2.byteLength,
+                usages: BufferUsageEnums.COPY_SRC,
+              },
+              (tempBuffer) => {
+                scene.gpu.tempGPUBuffers.push(tempBuffer);
+                const srcOffset = 0;
+                new Int8Array(tempBuffer.getMappedRange()).set(
+                  new Int8Array(
+                    data2,
+                    srcOffset,
+                    data2.byteLength / Int8Array.BYTES_PER_ELEMENT,
+                  ),
+                );
+              },
             );
+            indirectBuffer.copyFrom(commandEncoder, swapBuffer);
             scene.gpu.pendingCommandBuffers.push(commandEncoder.finish());
           },
         );

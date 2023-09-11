@@ -2,7 +2,6 @@
 import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 
 import { Projection, PROJECTION_BUFFER_SIZE } from './GPU/Projection.js';
-import { Buffer, GPUBufferUsage } from './GPU/Buffer/Buffer.js';
 
 import type { Engine } from './engine.js';
 import { Uint16Vector2 } from './Math.js';
@@ -1045,12 +1044,15 @@ export class GPU {
       label: 'handle_gpu_queue_encoder',
     });
     let tempOffset = 0;
-    Buffer.create(
-      this,
-      this.GPUDataSizeBytes * length,
-      [GPUBufferUsage.COPY_SRC],
-      'handle_gpu_queue',
-      (tempBuffer, gpu2) => {
+
+    new Buffer2(
+      {
+        gpu: this.device,
+        label: 'handle_gpu_queue',
+        size: this.GPUDataSizeBytes * length,
+        usages: BufferUsageEnums.COPY_SRC,
+      },
+      (tempBuffer, swapBuffer) => {
         const pointers_to_gpumesh_and_offset = new Uint32Array(
           engine.memory.buffer,
           pointerVec,
@@ -1093,15 +1095,15 @@ export class GPU {
               this.GPUDataSizeBytes,
             ),
           ).set(data);
-          gpu2.GPUMeshes.copyFrom(
+          this.GPUMeshes.copyFrom(
             this.#GPUQueueCommandEncoder!,
-            tempBuffer,
+            swapBuffer,
             tempOffset++ * this.GPUDataSizeBytes,
             offset * GPU.gpu_memory_index_size,
             this.GPUDataSizeBytes,
           );
         }
-        gpu2.tempGPUBuffers.push(tempBuffer);
+        this.tempGPUBuffers.push(tempBuffer);
       },
     );
   }
