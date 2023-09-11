@@ -4,8 +4,8 @@ import { Angle } from '../Math.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import type { Engine } from '../engine.js';
 import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
-import type { GPU } from '../GPU.js';
-import type { RenderPipeline } from '../GPU/RenderPipeline.js';
+import { GPU } from '../GPU.js';
+import type { LegacyRenderPipeline } from '../GPU/RenderPipeline.js';
 import type { SunVertShader } from '../GPU/Shaders/Sun.vert.js';
 declare const engine: Engine;
 
@@ -46,7 +46,7 @@ export class Sun extends MainNode {
     this.shadow = this.#clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
     this.update_dynamic_buffer();
   };
-  drawable: DrawableSimple<RenderPipeline<SunVertShader>> | undefined;
+  drawable: DrawableSimple<LegacyRenderPipeline<SunVertShader>> | undefined;
   constructor(gpu: GPU, scenes: Scene[]) {
     super({
       directional_light: 1,
@@ -64,6 +64,14 @@ export class Sun extends MainNode {
       undefined,
     );
     this.drawable = new DrawableSimple({
+      bindGroups: [
+        {
+          bindGroup: engine.gpu!.BindGroupPosition,
+          offsets: [
+            engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
+          ],
+        },
+      ],
       node: this,
       renderPasses: new Set([gpu.renderPassScreen, gpu.renderPassWater]),
       renderPipeline,

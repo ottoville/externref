@@ -1,12 +1,14 @@
 import type { IndirectBuffer } from '../Buffer/Buffer.js';
 import { Drawable, DrawableProps } from './Drawable.js';
-import type { RenderPipeline } from '../RenderPipeline.js';
+import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { MainNode } from '../../MainNode.js';
 import { MappedVertexBuffers } from './DrawableDirect.js';
+import { RenderBundleEncoder } from '../../webgpu-ts/index.js';
 
 export class DrawableIndirect<
-  R extends RenderPipeline = RenderPipeline,
+  R extends LegacyRenderPipeline = LegacyRenderPipeline,
 > extends Drawable {
+  override bindGroups = [];
   constructor(
     drawableProps: DrawableProps<MainNode> & {
       vertexBuffers: MappedVertexBuffers<R>;
@@ -16,7 +18,11 @@ export class DrawableIndirect<
   ) {
     super(drawableProps);
   }
-  render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
-    renderEncoder.drawIndirect(this.buffer.indirectBuffer, 0);
+  render(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder) {
+    const encoder =
+      renderEncoder instanceof RenderBundleEncoder
+        ? renderEncoder.renderBundleEncoder
+        : renderEncoder;
+    encoder.drawIndirect(this.buffer.indirectBuffer, 0);
   }
 }

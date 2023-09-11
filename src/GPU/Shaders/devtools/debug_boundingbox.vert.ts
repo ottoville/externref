@@ -1,4 +1,4 @@
-import type { RenderPipelineLayout } from '../../PipelineLayout.js';
+import type { LegacyRenderPipelineLayout } from '../../PipelineLayout.js';
 import {
   type BufLayout,
   type ShaderStage,
@@ -16,7 +16,7 @@ import { positionAttr } from '../structs/Attributes.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createDebugBoundingBoxVertShader(
-  pipelineLayout: RenderPipelineLayout<BindLayouts>,
+  pipelineLayout: LegacyRenderPipelineLayout<BindLayouts>,
   arrayStride: number,
 ) {
   return new VertexShader({

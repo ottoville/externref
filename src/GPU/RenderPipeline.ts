@@ -1,27 +1,26 @@
 ﻿import type { RenderPass } from './RenderPasses/RenderPass.js';
 import { BindGroup } from './BindGroup.js';
-import type {
-  BGLayout,
-  FragmentShader,
-  MapToGPUBindGroupEntry,
-  PipelineLayout,
-  RenderPipelineBuilder,
-  VertexShader,
+import {
+  type BGLayout,
+  type FragmentShader,
+  type MapToGPUBindGroupEntry,
+  RenderBundleEncoder,
+  type RenderPipelineBuilder,
+  type VertexShader,
 } from '../webgpu-ts/index.js';
-import { RenderBundleEncoder } from './RenderBundleEncoder.js';
-import type { RenderPipelineLayout } from './PipelineLayout.js';
+import type { LegacyRenderPipelineLayout } from './PipelineLayout.js';
 
 type RenderPipelineProps<
   V extends VertexShader,
   F extends FragmentShader,
-  R extends RenderPipelineLayout = RenderPipelineLayout,
+  R extends LegacyRenderPipelineLayout = LegacyRenderPipelineLayout,
 > = {
   label: string;
   vertexShader: V;
   fragmentShader: F;
   descriptor: Omit<
     GPURenderPipelineDescriptor,
-    'depthStencil' | 'fragment' | 'vertex' | 'layout'
+    'depthStencil' | 'fragmenst' | 'vertex' | 'layout'
   >;
   depthBuffer?: {
     depthWriteEnabled: boolean;
@@ -32,14 +31,13 @@ type RenderPipelineProps<
   builder: RenderPipelineBuilder;
 };
 
-export class RenderPipeline<
+export class LegacyRenderPipeline<
   V extends VertexShader = VertexShader,
   F extends FragmentShader = FragmentShader,
-  R extends RenderPipelineLayout = RenderPipelineLayout,
+  R extends LegacyRenderPipelineLayout = LegacyRenderPipelineLayout,
 > {
   dynamicBindGroupOffset: number[] = [];
   public readonly props: RenderPipelineProps<V, F, R>;
-  pipelineLayout: PipelineLayout;
   constructor(
     props: Readonly<
       RenderPipelineProps<V, F, R> & {
@@ -49,30 +47,16 @@ export class RenderPipeline<
         >;
       }
     >,
-    private sharedBindGroups: R extends RenderPipelineLayout<infer _, infer S>
+    private sharedBindGroups: R extends LegacyRenderPipelineLayout<
+      infer _,
+      infer S
+    >
       ? S extends BGLayout
         ? (bindGroup: BindGroup) => MapToGPUBindGroupEntry<S['entries']>
         : undefined
       : undefined,
   ) {
     this.props = Object.freeze(props);
-    /*
-    Get intersection of vertex and fragment pipelinelayouts and
-    use first layout from that intersection as layout for renderpipeline
-   */
-    const [pipelineLayout] = props.vertexShader.props.pipelineLayouts.filter(
-      (p) => props.fragmentShader.props.pipelineLayouts.includes(p),
-    );
-    if (!pipelineLayout) {
-      throw new Error('pipelineLayout not found');
-    }
-    this.pipelineLayout = pipelineLayout;
-    props.vertexShader.props.pipelineLayouts.forEach((layout) => {
-      //@ts-expect-error
-      layout.renderPipeLines.add(this);
-      //@ts-expect-error
-      layout.renderPipelineListeners.forEach((cb) => cb());
-    });
   }
   destroy(): void {
     Object.values(this.props.vertexShader.props.entryPoints).forEach(
@@ -90,6 +74,7 @@ export class RenderPipeline<
     BindGroupsStart: number,
     dynamicIndices: number[] = [],
   ): number {
+    //@ts-expect-error
     const variant = renderPass.renderPipelines.get(this);
     if (!variant) {
       //console.warn('Renderpipeline,', this.props.label,' has no variants for renderpass', renderPass.label, ', wont draw anything')
@@ -112,6 +97,7 @@ export class RenderPipeline<
       renderEncoder instanceof RenderBundleEncoder
         ? renderEncoder.renderBundleEncoder
         : renderEncoder;
+    //@ts-expect-error
     encoder.setPipeline(variant.renderpipeline);
 
     if (this.sharedBindGroups) {
@@ -124,6 +110,7 @@ export class RenderPipeline<
       encoder.setBindGroup(BindGroupsStart++, bindgroup.bindGroup);
     }
     drawables.forEach((drawable) =>
+      //@ts-expect-error
       drawable.draw(renderPass, renderEncoder, BindGroupsStart, dynamicIndices),
     );
     return drawables.size;

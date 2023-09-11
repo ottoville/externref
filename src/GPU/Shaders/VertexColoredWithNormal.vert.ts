@@ -1,4 +1,4 @@
-import type { RenderPipelineLayout } from '../PipelineLayout.js';
+import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type BufLayout,
   type ShaderStage,
@@ -14,7 +14,7 @@ import { simpleAttributesWithColor } from './structs/Attributes.js';
   Shader where each vertex carries a color property
 */
 export function createVertexColorShader(
-  pipelineLayout: RenderPipelineLayout<
+  pipelineLayout: LegacyRenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
   arrayStride: number,

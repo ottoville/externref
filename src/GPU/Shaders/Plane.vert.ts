@@ -1,4 +1,4 @@
-import type { RenderPipelineLayout } from '../PipelineLayout.js';
+import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type VertexBufferLayout2,
   VertexShader,
@@ -20,7 +20,7 @@ type BindLayouts = [
 // eslint-disable-next-line import/no-unused-modules
 export class Plane extends VertexShader {
   constructor(
-    pipelineLayout: RenderPipelineLayout<BindLayouts>,
+    pipelineLayout: LegacyRenderPipelineLayout<BindLayouts>,
     buffers: VertexBufferLayout2,
   ) {
     super({

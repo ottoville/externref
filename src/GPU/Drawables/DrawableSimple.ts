@@ -5,13 +5,13 @@ import {
   type MappedVertexBuffers,
 } from './DrawableDirect.js';
 import { MainNode } from '../../MainNode.js';
-import type { BindGroup } from '../BindGroup.js';
-import { RenderPipeline } from '../RenderPipeline.js';
+import { LegacyRenderPipeline } from '../RenderPipeline.js';
 import { DrawableProps } from './Drawable.js';
+import { type BindGroup, RenderBundleEncoder } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export class DrawableSimple<
-  const R extends RenderPipeline,
+  const R extends LegacyRenderPipeline,
 > extends DrawableDirect<MainNode> {
   #firstVertex = 0;
   constructor(
@@ -31,18 +31,20 @@ export class DrawableSimple<
     const dynamicBindGroups: [BindGroup, number][] = [
       [engine.gpu!.BindGroupPosition, dynamicIndex],
     ];
-
-    super(
-      {
-        ...drawableProps,
-        dynamicBindGroups,
-      },
-      drawableDirectProps,
-    );
+    const props = {
+      ...drawableProps,
+      dynamicBindGroups,
+    };
+    super(props, drawableDirectProps);
     this.#firstVertex = firstVertex;
   }
-  render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
-    renderEncoder.draw(
+  render(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder) {
+    const encoder =
+      renderEncoder instanceof RenderBundleEncoder
+        ? renderEncoder.renderBundleEncoder
+        : renderEncoder;
+
+    encoder.draw(
       this.node.positions_count,
       this.instanceCount,
       this.#firstVertex,

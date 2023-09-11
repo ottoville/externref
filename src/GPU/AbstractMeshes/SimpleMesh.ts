@@ -2,21 +2,22 @@
 import { DrawableSimple } from '../Drawables/DrawableSimple.js';
 import type { Engine, rust_vec_ptr } from '../../engine.js';
 import { SimpleRenderPipeline } from '../RenderPipeLines/SimpleRenderPipeline.js';
-import type { RenderPipeline } from '../RenderPipeline.js';
+import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { SimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
+import { MainNodeProps } from 'MainNode.js';
 import {
   Buffer2,
   BufferUsageEnums,
   type VERTEX_BUFFER,
-} from '../Buffer/Buffer2.js';
-import { MainNodeProps } from 'MainNode.js';
+} from '../../webgpu-ts/index.js';
+import { GPU } from '../../GPU.js';
 
 declare const engine: Engine;
 
 export class SimpleMesh extends BoundableNodeSimple {
   override drawable:
-    | DrawableSimple<RenderPipeline<SimpleVertShader>>
+    | DrawableSimple<LegacyRenderPipeline<SimpleVertShader>>
     | undefined = undefined;
   constructor(
     dataNodeProps: Omit<DataNodeProps, 'vertices'> & {
@@ -41,7 +42,7 @@ export class SimpleMesh extends BoundableNodeSimple {
       if (!vBufferGPU) {
         vBufferGPU = new Buffer2(
           {
-            gpu: engine.gpu,
+            gpu: engine.gpu.device,
             label: 'SimpleMeshVertex_' + this.label,
             size:
               dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
@@ -62,6 +63,14 @@ export class SimpleMesh extends BoundableNodeSimple {
         },
       );
       this.drawable = new DrawableSimple({
+        bindGroups: [
+          {
+            bindGroup: engine.gpu!.BindGroupPosition,
+            offsets: [
+              engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
+            ],
+          },
+        ],
         node: this,
         renderPasses: undefined,
         renderPipeline,

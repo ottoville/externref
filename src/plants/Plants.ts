@@ -13,8 +13,7 @@ import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
 import { createGrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
 import { MainNode } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
-import { Buffer2, BufferUsageEnums } from '../GPU/Buffer/Buffer2.js';
-import { BindGroup } from '../GPU/BindGroup.js';
+import { BindGroup, Buffer2, BufferUsageEnums } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
 /**
@@ -63,25 +62,25 @@ export class Plants extends MainNode {
       'indirectBuffer',
     );
     const positionGPU = new Buffer2({
-      gpu: scene.gpu,
+      gpu: scene.gpu.device,
       label: 'positionGPU',
       size: numBlades * 4 * 4,
       usages: BufferUsageEnums['VERTEX|COPY_DST'],
     });
     const shapeGPU = new Buffer2({
-      gpu: scene.gpu,
+      gpu: scene.gpu.device,
       label: 'shapeGPU',
       size: numBlades * 4 * 4,
       usages: BufferUsageEnums['VERTEX|COPY_DST'],
     });
     const positionGPUSwap = new Buffer2({
-      gpu: scene.gpu,
+      gpu: scene.gpu.device,
       label: 'positionGPUSwap',
       size: numBlades * 4 * 4,
       usages: BufferUsageEnums['STORAGE|COPY_SRC'],
     });
     const shapeGPUSwap = new Buffer2({
-      gpu: scene.gpu,
+      gpu: scene.gpu.device,
       label: 'shapeGPUSwap',
       size: numBlades * 4 * 4,
       usages: BufferUsageEnums['STORAGE|COPY_SRC'],
@@ -170,12 +169,13 @@ export class Plants extends MainNode {
               label: 'plants_pass_encoder',
             });
             passEncoder.setPipeline(computePipeline);
-
-            const worldCopyGPU = Buffer.create(
-              scene.gpu,
-              numBlades * 2 * 4,
-              [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],
-              'worldCopyGPU',
+            const worldCopyGPU = new Buffer2(
+              {
+                gpu: scene.gpu.device,
+                label: 'worldCopyGPU',
+                size: numBlades * 2 * 4,
+                usages: BufferUsageEnums['STORAGE|COPY_DST'],
+              },
               (buffer) => {
                 const worldSetArr = buffer.getMappedRange();
                 new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));

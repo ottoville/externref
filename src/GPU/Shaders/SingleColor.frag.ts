@@ -8,12 +8,12 @@ import {
   FragmentShader,
   FragmentShaderFunction,
   type ShaderStage,
-  type PipelineLayout,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createSingleColorFragShader(
-  pipelineLayout: PipelineLayout<BindLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindLayouts>,
 ) {
   return new FragmentShader({
     entryPoints: {

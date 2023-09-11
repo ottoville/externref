@@ -4,26 +4,24 @@ import type { Engine, rust_pointer, rust_vec_ptr } from '../../engine.js';
 import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
-import type { RenderPipeline } from '../RenderPipeline.js';
-import type {
-  Buffer2,
-  INDEX_BUFFER,
-  VERTEX_BUFFER,
-} from '../Buffer/Buffer2.js';
+import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { GPU } from '../../GPU.js';
 import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
 import type {
+  Buffer2,
   FragmentShader,
+  INDEX_BUFFER,
   TEXTURE_BINDING_TEXTURE,
   Texture,
   TextureView,
+  VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;
   override drawable:
     | LightsTextureDrawableIndexed<
-        RenderPipeline<
+        LegacyRenderPipeline<
           GroundVertShader,
           FragmentShader,
           GPU['lightsTextureBindGroup']

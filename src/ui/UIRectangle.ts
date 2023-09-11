@@ -1,17 +1,10 @@
 import type { RenderPass } from '../GPU/RenderPasses/RenderPass.js';
-import {
-  Buffer,
-  type CopyDstBuffer,
-  GPUBufferUsage,
-  BindUniformBuffer,
-} from '../GPU/Buffer/Buffer.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import type { RenderPipeline } from '../GPU/RenderPipeline.js';
+import type { LegacyRenderPipeline } from '../GPU/RenderPipeline.js';
 import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
 import { DataNode, allocate_vec } from '../nodes/DataNode.js';
 import type { GPU } from '../GPU.js';
-import { BindGroup } from '../GPU/BindGroup.js';
 import {
   RenderTarget,
   type TEXTURE_BINDING_TEXTURE,
@@ -19,6 +12,9 @@ import {
   type Texture2dSize,
   TextureUsageEnums,
   TextureView,
+  BindGroup,
+  Buffer2,
+  BufferUsageEnums,
 } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -106,8 +102,9 @@ export abstract class UIRectangle<
   P extends GPU['UIPipeline'] /*| GPU['UIPipelineArray']*/ = GPU['UIPipeline'],
   /*| GPU['UIPipelineArray']*/
 > extends DataNode {
-  override drawable?: DrawableSimple<RenderPipeline<UIVertShader>> | undefined =
-    undefined;
+  override drawable?:
+    | DrawableSimple<LegacyRenderPipeline<UIVertShader>>
+    | undefined = undefined;
   boundingBox = {
     bottom: 0,
     left: 0,
@@ -115,7 +112,7 @@ export abstract class UIRectangle<
     top: 0,
   };
   texture?: RectangleTexture | undefined;
-  uniformBuffer: CopyDstBuffer & BindUniformBuffer;
+  uniformBuffer: Buffer2<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
   textureView: TextureView<
     /*P extends GPU['UIPipelineArray']
       ? RectangleTexture
@@ -153,7 +150,8 @@ export abstract class UIRectangle<
       }
       this.texture = new RenderTarget({
         format: 'bgra8unorm',
-        gpu: this.props.renderPass.gpu.device,
+        gpu: this.props.canvaspipeline.props.vertexShader.props
+          .pipelineLayouts[0]!.gpu,
         label: 'button_' + this.props.label + '_UIRectangle_text',
         size: {
           depthOrArrayLayers: structName.includes('array') ? 2 : 1,
@@ -369,12 +367,13 @@ export abstract class UIRectangle<
       (Array.isArray(borderSize.height) && borderSize.height[0] > 0)
         ? 54
         : 6;
-
-    this.uniformBuffer = Buffer.create(
-      renderPass.gpu,
-      8 /* size of vec2<f32> */,
-      [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
-      'UI_transform',
+    this.uniformBuffer = new Buffer2(
+      {
+        gpu: renderPass.props.gpu,
+        label: 'UI_transform',
+        size: 8,
+        usages: BufferUsageEnums['UNIFORM|COPY_DST'],
+      },
       (buff) => {
         this.updatePosition(buff.getMappedRange());
       },
@@ -431,6 +430,22 @@ export abstract class UIRectangle<
 
       const drawable = new DrawableSimple(
         {
+          bindGroups: [
+            {
+              bindGroup: new BindGroup(
+                canvaspipeline.props.vertexShader.props.pipelineLayouts[0]!.bindGroupLayouts[0]!,
+                //canvaspipeline.props.vertexShader.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0],
+                'UI_bindgroup_' + label,
+                (bindGroup) => {
+                  return {
+                    texture: this.textureView,
+                    uniforms: this.uniformBuffer.getUniformBinding(bindGroup),
+                  };
+                },
+              ),
+              offsets: [],
+            },
+          ],
           node: this,
           renderPasses: new Set([renderPass]),
           renderPipeline: canvaspipeline as GPU['UIPipeline'],
@@ -460,7 +475,7 @@ export abstract class UIRectangle<
         });
       });
 
-      this.drawable.staticBindGroup = new BindGroup(
+      /*this.drawable.staticBindGroup = new BindGroup(
         canvaspipeline.props.vertexShader.props.pipelineLayouts[0]!.bindGroupLayouts[0]!,
         //canvaspipeline.props.vertexShader.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0],
         'UI_bindgroup_' + label,
@@ -470,7 +485,7 @@ export abstract class UIRectangle<
             uniforms: this.uniformBuffer.getUniformBinding(bindGroup),
           };
         },
-      );
+      );*/
     });
   }
   override destroy() {

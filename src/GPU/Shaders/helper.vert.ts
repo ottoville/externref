@@ -1,4 +1,4 @@
-import type { RenderPipelineLayout } from '../PipelineLayout.js';
+import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type BufLayout,
   type ShaderStage,
@@ -18,7 +18,7 @@ type BindGroupLayouts =
 
 export function createHelperVertShader(
   settings: typeof Terrain.settings,
-  pipelineLayout: RenderPipelineLayout<BindGroupLayouts>,
+  pipelineLayout: LegacyRenderPipelineLayout<BindGroupLayouts>,
 ) {
   return new VertexShader(
     {

@@ -1,11 +1,12 @@
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import type { Engine, rust_pointer } from '../../../engine.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
-import type { RenderPipeline } from '../../RenderPipeline.js';
+import type { LegacyRenderPipeline } from '../../RenderPipeline.js';
 import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
-import { Buffer2, BufferUsageEnums } from '../../Buffer/Buffer2.js';
+import { Buffer2, BufferUsageEnums } from '../../../webgpu-ts/index.js';
 declare const engine: Engine;
+import { GPU } from '../../../GPU.js';
 
 const indices = Uint32Array.of(
   0,
@@ -39,7 +40,7 @@ const indices = Uint32Array.of(
 // eslint-disable-next-line import/no-unused-modules
 export class BoundingBoxMesh extends DataNode {
   override drawable:
-    | DrawableIndexed<RenderPipeline<DebugBoundingBoxVertShader>>
+    | DrawableIndexed<LegacyRenderPipeline<DebugBoundingBoxVertShader>>
     | undefined;
   constructor(targetNode: DrawableIndexed) {
     const [ptr, len, cap] = new Uint32Array(
@@ -51,7 +52,7 @@ export class BoundingBoxMesh extends DataNode {
     //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
     const debug_render_boundingbox_vertexBuffer = new Buffer2(
       {
-        gpu: engine.gpu!,
+        gpu: engine.gpu!.device,
         label: 'vertex_debug_bounding_box',
         size: positions_amount * 4 * Float32Array.BYTES_PER_ELEMENT,
         usages: BufferUsageEnums.VERTEX,
@@ -89,6 +90,14 @@ export class BoundingBoxMesh extends DataNode {
       },
     );
     this.drawable = new DrawableIndexed({
+      bindGroups: [
+        {
+          bindGroup: engine.gpu!.BindGroupPosition,
+          offsets: [
+            engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
+          ],
+        },
+      ],
       node: this,
       renderPasses: undefined,
       renderPipeline,

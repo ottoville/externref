@@ -1,4 +1,4 @@
-import { RenderPipeline } from '../RenderPipeline.js';
+import { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { createDebugBoundingBoxVertShader } from '../Shaders/devtools/debug_boundingbox.vert.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
@@ -13,7 +13,7 @@ export const DebugLinesPipeline = Object.freeze([
       gpu.positionAndTimeBindGroup,
       vertexBufferProps.stride * 4,
     );
-    return new RenderPipeline(
+    return new LegacyRenderPipeline(
       {
         bindgroupdrawable: gpu.positionAndTimeBindGroup,
         builder: createRenderPipelineBuilder(vertexShader, gpu.colorFragShader),

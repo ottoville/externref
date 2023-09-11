@@ -2,25 +2,25 @@
   RenderPipelineVariant,
   type RenderPass,
 } from '../RenderPasses/RenderPass.js';
-import { GPU } from '../../GPU.js';
 
 import type { Engine, rust_vec_ptr } from '../../engine.js';
-import { BindGroup } from '../BindGroup.js';
-import { RenderPipeline } from '../RenderPipeline.js';
 import { MainNode } from '../../MainNode.js';
+import { LegacyRenderPipeline } from 'GPU/RenderPipeline.js';
 import {
+  BindGroup,
   Buffer2,
   type BufferProps,
   BufferUsageEnums,
   type VERTEX_BUFFER,
-} from '../Buffer/Buffer2.js';
-import { RenderBundleEncoder } from '../RenderBundleEncoder.js';
+  RenderBundleEncoder,
+} from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export type DrawableProps<N extends MainNode> = {
-  renderPipeline: Readonly<RenderPipeline>;
+  renderPipeline: Readonly<LegacyRenderPipeline>;
   renderPasses?: Set<RenderPass> | undefined;
   dynamicBindGroups?: [BindGroup, number][];
+  bindGroups?: { bindGroup: BindGroup; offsets?: number[] }[];
   vertexBuffers:
     | readonly {
         view: rust_vec_ptr<'f32'> | Buffer2<VERTEX_BUFFER>;
@@ -31,7 +31,12 @@ export type DrawableProps<N extends MainNode> = {
 };
 export abstract class Drawable<N extends MainNode = MainNode> {
   node: N;
-  vertexBuffers: Map<
+  vertexBuffers: {
+    buffer: Buffer2<VERTEX_BUFFER>;
+    offset?: GPUSize64 | undefined;
+    size?: GPUSize64 | undefined;
+  }[] = [];
+  vertexBuffers_legact: Map<
     number,
     {
       buffer: { stride: number; view: Buffer2<VERTEX_BUFFER> };
@@ -40,23 +45,26 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     }
   > = new Map();
   #renderList: Map<RenderPass, Set<Drawable<MainNode>>> = new Map();
-  public renderPipeline: Readonly<RenderPipeline>;
+  public renderPipeline: Readonly<LegacyRenderPipeline>;
   protected renderPasses: Set<RenderPass>;
-  #dynamicBindGroups: [BindGroup, number][];
+  //#dynamicBindGroups: [BindGroup, number][];
   destroyed = false;
+  bindGroups: { bindGroup: BindGroup; offsets?: number[] }[];
   constructor({
     renderPipeline,
     renderPasses = new Set([engine.gpu!.renderPassScreen]),
-    dynamicBindGroups = [],
+    //dynamicBindGroups = [],
+    bindGroups,
     vertexBuffers = [],
     node,
   }: Readonly<DrawableProps<N>>) {
+    this.bindGroups = bindGroups ?? [];
     this.node = node;
     engine.rust.add_drawble(this.node.id);
 
     this.renderPipeline = renderPipeline;
     this.renderPasses = renderPasses;
-    this.#dynamicBindGroups = dynamicBindGroups;
+    //this.#dynamicBindGroups = dynamicBindGroups;
 
     vertexBuffers?.forEach((vertexBuffer, i) => {
       this.setVertexBuffer(i, vertexBuffer);
@@ -70,10 +78,19 @@ export abstract class Drawable<N extends MainNode = MainNode> {
             rp.entryPoint,
         );
       }
-      let variantPP = rp.renderPipelines.get(renderPipeline);
+      let variantPP = rp.renderPipelines.get(renderPipeline.props.builder);
       if (!variantPP) {
-        if (this.renderPipeline.props.builder) {
-          var nativePipeline = this.renderPipeline.props.builder.build({
+        /*const params = {
+            ...renderPipeline.props.descriptor,
+            ...rp.onDecoratePipeline(renderPipeline),
+            label:
+              'renderPipeline:' +
+              renderPipeline.props.label +
+              ' RenderPass:' +
+              rp.label,
+          };*/
+        variantPP = this.renderPipeline.props.builder
+          .build({
             //primitive, multisample, label
             ...renderPipeline.props.descriptor,
             ...rp.onDecoratePipeline(renderPipeline),
@@ -90,26 +107,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
             vertex: {
               entryPoint: rp.entryPoint,
             },
-          });
-        } else {
-          const params = {
-            ...renderPipeline.props.descriptor,
-            layout: renderPipeline.pipelineLayout.layout,
-            ...rp.onDecoratePipeline(renderPipeline),
-            label:
-              'renderPipeline:' +
-              renderPipeline.props.label +
-              ' RenderPass:' +
-              rp.label,
-          };
-          console.debug(
-            'Create renderpipeline ',
-            renderPipeline.props.label,
-            params,
-          );
-          var nativePipeline = rp.gpu.device.createRenderPipelineAsync(params);
-        }
-        variantPP = nativePipeline
+          })
           .catch((err: unknown) => {
             if (err instanceof DOMException) {
               if (
@@ -161,17 +159,18 @@ export abstract class Drawable<N extends MainNode = MainNode> {
             });
           })
           .then((variantPipeline) => {
+            variantPipeline.drawables.push(this);
             variantPP = new RenderPipelineVariant(
               variantPipeline,
               new Set<Drawable>(),
             );
             // Replace promise with real object
-            rp.renderPipelines.set(renderPipeline, variantPP);
+            rp.renderPipelines.set(renderPipeline.props.builder, variantPP);
             rp.onRenderPipelinesChange.forEach((cb) => cb());
             return variantPP;
           });
         // Save promise
-        rp.renderPipelines.set(renderPipeline, variantPP);
+        rp.renderPipelines.set(renderPipeline.props.builder, variantPP);
       }
       // variabtP can be either a promise or results of a promise
       if (variantPP instanceof Promise) {
@@ -189,11 +188,11 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     });
   }
 
-  staticBindGroup?: BindGroup;
+  //staticBindGroup?: BindGroup;
   destroy(preserveVerticeBuffers: number[] = []): void {
     this.#renderList.forEach((Drawables) => Drawables.delete(this));
     this.vertexBuffers.forEach((b, key) => {
-      if (!preserveVerticeBuffers.includes(key)) b.buffer.view.destroy();
+      if (!preserveVerticeBuffers.includes(key)) b.buffer.destroy();
     });
     this.destroyed = true;
   }
@@ -230,9 +229,9 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     size?: number,
   ): Buffer2<VERTEX_BUFFER> {
     if (destroyOld) {
-      const Tbuffer = this.vertexBuffers.get(index);
+      const Tbuffer = this.vertexBuffers[index];
       if (Tbuffer) {
-        Tbuffer.buffer.view.destroy();
+        Tbuffer.buffer?.destroy();
       }
     }
     if (buffer.view instanceof Buffer2)
@@ -250,7 +249,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         stride: buffer.stride,
         view: new Buffer2(
           {
-            gpu: engine.gpu!,
+            gpu: engine.gpu!.device,
             label: 'DrawableVertex_' + this.node.label,
             size: buffer.view[1] * Float32Array.BYTES_PER_ELEMENT,
             usages: BufferUsageEnums.VERTEX,
@@ -263,18 +262,17 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         ),
       };
     }
-    this.vertexBuffers.set(index, {
-      buffer: Tbuffer,
+    this.vertexBuffers[index] = {
+      buffer: Tbuffer.view,
       offset: GPUoffset,
       size,
-    });
+    };
     return Tbuffer.view;
   }
   abstract render(
-    renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder,
-    renderPass: RenderPass,
+    renderEncoder: RenderBundleEncoder | GPURenderPassEncoder,
   ): void;
-  draw(
+  /*draw(
     renderPass: RenderPass,
     renderEncoder: RenderBundleEncoder | GPURenderPassEncoder,
     BindGroupsStart: number,
@@ -296,7 +294,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     if (this.staticBindGroup) {
       encoder.setBindGroup(
         BindGroupsStart++,
-        renderEncoder instanceof RenderBundleEncoder
+        renderEncoder instanceof RenderBundleEncoder //@ts-expect-error
           ? this.staticBindGroup.getForRenderBundle(renderEncoder)
           : this.staticBindGroup.bindGroup,
       );
@@ -311,5 +309,5 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     );
     console.debug('draw', this.node.label);
     this.render(encoder, renderPass);
-  }
+  }*/
 }

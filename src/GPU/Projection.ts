@@ -1,10 +1,6 @@
 import { TerraMatrix } from '../Math.js';
 import type { GPU } from '../GPU.js';
-import {
-  BindUniformBuffer,
-  Buffer,
-  GPUBufferUsage,
-} from '../GPU/Buffer/Buffer.js';
+import { Buffer2, BufferUsageEnums } from '../webgpu-ts/index.js';
 export const PROJECTION_BUFFER_SIZE = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 export class Projection {
   readonly projectionReversedZ = new TerraMatrix();
@@ -13,7 +9,7 @@ export class Projection {
   readonly #fov = 0.4;
   readonly farPlane = 100000;
   readonly nearPlane = 1;
-  gpuBuffer: BindUniformBuffer;
+  gpuBuffer: Buffer2<BufferUsageEnums.UNIFORM>;
 
   constructor(gpu: GPU) {
     this.gpuBuffer = this.update(1, gpu, true);
@@ -61,11 +57,13 @@ export class Projection {
     ]);
 
     if (!initial && this.gpuBuffer) this.gpuBuffer.destroy();
-    this.gpuBuffer = Buffer.create(
-      gpu,
-      PROJECTION_BUFFER_SIZE,
-      [GPUBufferUsage.UNIFORM],
-      'uniform_projection',
+    this.gpuBuffer = new Buffer2(
+      {
+        gpu: gpu.device,
+        label: 'uniform_projection',
+        size: PROJECTION_BUFFER_SIZE,
+        usages: BufferUsageEnums.UNIFORM,
+      },
       (b) => {
         const gpuBuffer = b.getMappedRange();
         this.projectionReversedZ.invertToRef(new TerraMatrix(gpuBuffer));

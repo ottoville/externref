@@ -1,6 +1,8 @@
-﻿import type { BindGroup } from './BindGroup.js';
-import { RenderPipeline } from './RenderPipeline.js';
-import { type BGLayout, PipelineLayout } from '../webgpu-ts/index.js';
+﻿import {
+  RenderPipelineLayout,
+  type BGLayout,
+  type BindGroup,
+} from '../webgpu-ts/index.js';
 
 type PipeLineLayoutProps<B extends readonly BGLayout[]> = {
   label: string;
@@ -13,12 +15,11 @@ interface RenderPipeLineLayoutProps<
   sharedLayout?: S;
 }
 
-export class RenderPipelineLayout<
+export class LegacyRenderPipelineLayout<
   B extends readonly BGLayout[] = readonly BGLayout[],
   S extends BGLayout | undefined = undefined,
-> extends PipelineLayout<B> {
-  renderPipeLines: Set<RenderPipeline> = new Set();
-  subBindGroups: RenderPipelineLayout[] = [];
+> extends RenderPipelineLayout<B> {
+  subBindGroups: LegacyRenderPipelineLayout[] = [];
   bindGroupLayout: BGLayout;
 
   constructor(
@@ -28,9 +29,8 @@ export class RenderPipelineLayout<
     super(Object.freeze(props));
     this.bindGroupLayout = props.bindGroupLayouts.at(-1)!;
   }
-  renderPipelineListeners: Set<() => void> = new Set();
   createSharedLayout<T extends BGLayout>(label: string, layout: T) {
-    const p = new RenderPipelineLayout({
+    const p = new LegacyRenderPipelineLayout({
       bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
       label,
       sharedLayout: layout,
@@ -38,9 +38,9 @@ export class RenderPipelineLayout<
     this.subBindGroups.push(p);
     return p;
   }
-  createAppendedLayout<T extends BGLayout>(label: string, layout: T) {
-    const p = new RenderPipelineLayout({
-      bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
+  createAppendedLayout<T extends BGLayout[]>(label: string, layout: T) {
+    const p = new LegacyRenderPipelineLayout({
+      bindGroupLayouts: [...this.bindGroupLayouts, ...layout] as [...B, ...T],
       label,
     });
     this.subBindGroups.push(p);
@@ -53,7 +53,7 @@ export class RenderPipelineLayout<
     label: string,
     sharedBindgroup: T,
   ) {
-    const p = new RenderPipelineLayout(
+    const p = new LegacyRenderPipelineLayout(
       {
         bindGroupLayouts: [
           ...this.bindGroupLayouts,

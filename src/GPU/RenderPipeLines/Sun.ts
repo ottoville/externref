@@ -1,7 +1,7 @@
 import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { createSunVertShader } from '../Shaders/Sun.vert.js';
 import { createSingleColorFragShader } from '../Shaders/SingleColor.frag.js';
-import { RenderPipeline } from '../RenderPipeline.js';
+import { LegacyRenderPipeline } from '../RenderPipeline.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 export const SunRenderPipeline = [
@@ -11,7 +11,7 @@ export const SunRenderPipeline = [
     const fragmentShader = createSingleColorFragShader(
       gpu.positionAndTimeBindGroup,
     );
-    return new RenderPipeline(
+    return new LegacyRenderPipeline(
       {
         bindgroupdrawable: gpu.positionAndTimeBindGroup,
         builder: createRenderPipelineBuilder(vertexShader, fragmentShader),

@@ -1,4 +1,4 @@
-import type { GPU } from 'GPU.js';
+import type { GPU } from '../../GPU.js';
 import { getClusterIndex } from './getClusterIndex.js';
 import {
   Clusters,
@@ -16,13 +16,13 @@ import {
   type SampLayout,
   type ShaderStage,
   type TextLayout,
-  PipelineLayout,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 
 type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts'];
 
 export function createGroundFragShader(
-  pipelineLayout: PipelineLayout<BindLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindLayouts>,
 ) {
   return new FragmentShader(
     {

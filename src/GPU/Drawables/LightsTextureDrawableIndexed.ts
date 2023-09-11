@@ -1,36 +1,39 @@
-import { BindGroup } from '../BindGroup.js';
 import type {
   DrawableDirectProps,
   MappedVertexBuffers,
 } from './DrawableDirect.js';
-import type { RenderPipeline } from '../RenderPipeline.js';
+import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { DataNode } from '../../nodes/DataNode.js';
 import {
   DrawableIndexed,
   type DrawableIndexedProps,
 } from './DrawableIndexed.js';
 import type { DrawableProps } from './Drawable.js';
-import type {
-  BGLayout,
-  FragmentShader,
-  SampLayout,
-  ShaderStage,
-  TEXTURE_BINDING_TEXTURE,
-  TextLayout,
-  Texture,
-  TextureView,
-  VertexShader,
+import {
+  type BGLayout,
+  BindGroup,
+  type FragmentShader,
+  type SampLayout,
+  type ShaderStage,
+  type TEXTURE_BINDING_TEXTURE,
+  type TextLayout,
+  type Texture,
+  type TextureView,
+  type VertexShader,
 } from '../../webgpu-ts/index.js';
-import type { RenderPipelineLayout } from 'GPU/PipelineLayout';
+import type { LegacyRenderPipelineLayout } from 'GPU/PipelineLayout';
+import type { Engine } from 'engine.js';
+import { GPU } from '../../GPU.js';
+declare const engine: Engine;
 
 /**
  * Drawable that is used with lightsTextureBindGroup
  */
 export class LightsTextureDrawableIndexed<
-  R extends RenderPipeline<VertexShader, FragmentShader>,
+  R extends LegacyRenderPipeline<VertexShader, FragmentShader>,
   N extends DataNode = DataNode,
 > extends DrawableIndexed<R, N> {
-  override staticBindGroup: BindGroup<
+  textureBindGroup: BindGroup<
     BGLayout<{
       mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
       diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
@@ -41,7 +44,7 @@ export class LightsTextureDrawableIndexed<
       renderPipeline: R;
       vertexBuffers: MappedVertexBuffers<R>;
     },
-    layout: RenderPipelineLayout<
+    layout: LegacyRenderPipelineLayout<
       readonly [
         BGLayout,
         BGLayout,
@@ -59,9 +62,7 @@ export class LightsTextureDrawableIndexed<
     drawableDirectProps?: DrawableDirectProps,
     drawableIndexedProps: DrawableIndexedProps = {},
   ) {
-    super(drawableProps, drawableDirectProps, drawableIndexedProps);
-
-    this.staticBindGroup = new BindGroup(
+    const textureBindGroup = new BindGroup(
       layout.bindGroupLayouts[3],
       'LightsTextureDrawableIndexed_static',
       () => {
@@ -71,11 +72,36 @@ export class LightsTextureDrawableIndexed<
         };
       },
     );
+    drawableProps.bindGroups = [
+      {
+        bindGroup: engine.gpu!.BindGroupPosition,
+        offsets: [
+          engine.rust.gpu_alignment(drawableProps.node.id) *
+            GPU.gpu_memory_index_size,
+        ],
+      },
+      {
+        bindGroup: textureBindGroup,
+      },
+    ];
+    super(drawableProps, drawableDirectProps, drawableIndexedProps);
+    this.textureBindGroup = textureBindGroup;
+    /*this.staticBindGroup = new BindGroup(
+      layout.bindGroupLayouts[3],
+      'LightsTextureDrawableIndexed_static',
+      () => {
+        return {
+          diffuseTexture: this.texture,
+          mySampler: this.sampler,
+        };
+      },
+    );*/
   }
   setTexture(
     texture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>>,
   ) {
     this.texture = texture;
-    this.staticBindGroup?.destroy();
+    this.textureBindGroup.destroy();
+    //this.staticBindGroup?.destroy();
   }
 }

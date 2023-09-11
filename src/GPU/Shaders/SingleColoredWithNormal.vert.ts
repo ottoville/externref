@@ -1,4 +1,4 @@
-import { RenderPipelineLayout } from '../PipelineLayout.js';
+import { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type VertexBufferLayout2,
   VertexShader,
@@ -58,7 +58,7 @@ export function createPickOutput(
   Shader where mesh is single colored
 */
 export function createSimpleVertShader(
-  pipelineLayout: RenderPipelineLayout<
+  pipelineLayout: LegacyRenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
   arrayStride: number,

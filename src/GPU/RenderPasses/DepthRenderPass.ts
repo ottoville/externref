@@ -1,7 +1,8 @@
 import { RenderPass, RenderPassProps } from './RenderPass.js';
 import type { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
-import type { RenderPipeline } from '../RenderPipeline.js';
+import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { ColorRenderTarget } from '../../webgpu-ts/index.js';
+import type { GPU } from '../../GPU.js';
 
 export class DepthRenderPass<
   T extends {
@@ -14,11 +15,12 @@ export class DepthRenderPass<
   constructor(
     renderPassProps: RenderPassProps<T>,
     depthRenderTarget: DepthRenderTarget,
+    gpu: GPU,
   ) {
     renderPassProps.GPURenderBundleEncoderDescriptor = {
       depthStencilFormat: depthRenderTarget.props.format,
     };
-    super(renderPassProps);
+    super(renderPassProps, gpu);
     this.depthRenderTarget = depthRenderTarget;
   }
   override resize(width: number, height: number) {
@@ -32,12 +34,11 @@ export class DepthRenderPass<
       depthClearValue: this.depthRenderTarget.clearValue,
       depthLoadOp: 'clear',
       depthStoreOp: 'store',
-      //@ts-expect-error
       view: this.depthRenderTarget.view.getAsRenderTarget(this),
     };
     return renderPassDescriptor;
   }
-  override onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>) {
+  override onDecoratePipeline(renderpipeline: Readonly<LegacyRenderPipeline>) {
     return {
       ...super.onDecoratePipeline(renderpipeline),
       depthStencil: {

@@ -1,4 +1,4 @@
-import type { RenderPipelineLayout } from '../PipelineLayout.js';
+import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type VertexBufferLayout2,
   VertexShader,
@@ -16,7 +16,7 @@ import {
 type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts'];
 
 export function createGroundVertShader(
-  pipelineLayout: RenderPipelineLayout<BindLayouts>,
+  pipelineLayout: LegacyRenderPipelineLayout<BindLayouts>,
   buffers: VertexBufferLayout2,
 ) {
   return new VertexShader({

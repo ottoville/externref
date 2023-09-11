@@ -2,8 +2,8 @@ import {
   type BGLayout,
   type MapToGPUBindGroupEntry,
   TextureView,
+  type RenderBundleEncoder,
 } from '../webgpu-ts/index.js';
-import type { RenderBundleEncoder } from './RenderBundleEncoder.js';
 
 export class BindGroup<L extends BGLayout = BGLayout> {
   #dirty = true;

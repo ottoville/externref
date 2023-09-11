@@ -1,6 +1,6 @@
 import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { createSimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
-import { RenderPipeline } from '../RenderPipeline.js';
+import { LegacyRenderPipeline } from '../RenderPipeline.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 export const SimpleRenderPipeline = [
@@ -9,7 +9,7 @@ export const SimpleRenderPipeline = [
     { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
-    return new RenderPipeline(
+    return new LegacyRenderPipeline(
       {
         bindgroupdrawable: gpu.positionAndTimeBindGroup,
         builder: createRenderPipelineBuilder(

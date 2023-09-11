@@ -23,6 +23,9 @@ import {
   type RENDER_TARGET_TEXTURE,
   type TEXTURE_BINDING_TEXTURE,
 } from '../../webgpu-ts/index.js';
+import type { GPU } from '../../GPU.js';
+import type { Engine } from '../../engine.js';
+declare const engine: Engine;
 
 export class PickableRenderPass<
   T extends {
@@ -51,28 +54,29 @@ export class PickableRenderPass<
       DEPTH_FORMATS,
       RENDER_TARGET_TEXTURE & TEXTURE_BINDING_TEXTURE
     >,
+    gpu: GPU,
   ) {
-    super(renderPassProps, depthRenderTarget);
+    super(renderPassProps, depthRenderTarget, gpu);
     if (renderPassProps.sampleCount == 4) {
-      const readDepthShader = createReadDepth(renderPassProps.gpu);
+      const readDepthShader = createReadDepth(gpu);
       this.#pickPositionPipeline = readDepthShader[1]
         .createComputePipeline('main')
         .then((pickPositionPipeline) => {
           this.#pickPositionPipeline = pickPositionPipeline;
           return pickPositionPipeline;
         });
-      this.#pickBuffer = renderPassProps.gpu.device.createBuffer({
+      this.#pickBuffer = renderPassProps.gpu.createBuffer({
         label: 'pickBuffer',
         size: 4 * 4, //depth + meshID (four pixel)
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       });
-      this.#pickBufferRead = renderPassProps.gpu.device.createBuffer({
+      this.#pickBufferRead = renderPassProps.gpu.createBuffer({
         label: 'pickBufferRead',
         size: 4 + 4, //depth + meshID (four pixel)
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
       });
       this.#mousePositionBuffer = Buffer.create(
-        renderPassProps.gpu,
+        gpu,
         8,
         [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],
         'mousePositionBuffer',
@@ -93,7 +97,7 @@ export class PickableRenderPass<
         (bindGroup) => ({
           depth_texture: depthRenderTarget.view,
           mesh_texture:
-            this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view,
+            gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view,
           mouse: this.#mousePositionBuffer!.getUniformBinding(bindGroup),
         }),
       );
@@ -104,7 +108,7 @@ export class PickableRenderPass<
   #createPickBuffer() {
     const offset = this.#rowBytes % 256;
     if (offset !== 0) this.#rowBytes = this.#rowBytes - offset + 256;
-    return this.gpu.device.createBuffer({
+    return this.props.gpu.createBuffer({
       label: 'pickBuffer',
       size: this.#rowBytes * this.size.height,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
@@ -148,22 +152,22 @@ export class PickableRenderPass<
       return this.pickPromise;
     }
     const camera = [...this.perspectiveCameras][0]!;
-    const encoder = this.gpu.device.createCommandEncoder({
+    const encoder = this.props.gpu.createCommandEncoder({
       label: 'pickPosition_encoder',
     });
     const gRenderTargetDiffuse =
-      this.gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse;
+      engine.gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse;
     if (gRenderTargetDiffuse instanceof MSAARenderTarget) {
       if (!this.#zAndIDPromise) {
         const mousePositionSwapBuffer = Buffer.create(
-          this.gpu,
+          engine.gpu!,
           8,
           [GPUBufferUsage.COPY_SRC],
           'mousePositionSwapBuffer',
           (b) => {
             new Uint32Array(b.getMappedRange(0, 8)).set([
-              this.gpu.mousePosition[0],
-              this.gpu.mousePosition[1],
+              engine.gpu!.mousePosition[0],
+              engine.gpu!.mousePosition[1],
             ]);
           },
         );
@@ -193,7 +197,7 @@ export class PickableRenderPass<
           0,
           4 + 4,
         );
-        this.gpu.device.queue.submit([encoder.finish()]);
+        this.props.gpu.queue.submit([encoder.finish()]);
 
         this.#zAndIDPromise = this.#pickBufferRead!.mapAsync(
           GPUMapMode.READ,
@@ -210,8 +214,8 @@ export class PickableRenderPass<
       }
     } else {
       let newOffset =
-        this.gpu.mousePosition[1] * this.#rowBytes +
-        this.gpu.mousePosition[0] * 4;
+        engine.gpu!.mousePosition[1] * this.#rowBytes +
+        engine.gpu!.mousePosition[0] * 4;
       //For MapAsync
       const missOffset = newOffset % 8;
       if (missOffset !== 0) {
@@ -239,12 +243,12 @@ export class PickableRenderPass<
         encoder.copyTextureToBuffer(
           {
             origin: {
-              x: this.gpu.mousePosition[0],
-              y: this.gpu.mousePosition[1],
+              x: engine.gpu!.mousePosition[0],
+              y: engine.gpu!.mousePosition[1],
               z: 0,
             },
             texture:
-              this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId
+              engine.gpu!.pickRenderPass.colorRenderTargets.gRenderTargetId
                 .texture,
           },
           {
@@ -255,7 +259,7 @@ export class PickableRenderPass<
           [1, 1, 1],
         );
       }
-      this.gpu.device.queue.submit([encoder.finish()]);
+      this.props.gpu.queue.submit([encoder.finish()]);
       const buffer = this.#pickBuffer;
       if (!this.#zAndIDPromise) {
         this.#zAndIDPromise = this.#pickBuffer
@@ -282,8 +286,8 @@ export class PickableRenderPass<
         return null;
       }
       const result = new MutableTerraVector3();
-      const x = (this.gpu.mousePosition[0] / this.size.width) * 2 - 1;
-      const y = -((this.gpu.mousePosition[1] / this.size.height) * 2 - 1);
+      const x = (engine.gpu!.mousePosition[0] / this.size.width) * 2 - 1;
+      const y = -((engine.gpu!.mousePosition[1] / this.size.height) * 2 - 1);
       new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(
         camera.projectionViewInverted,
         result,

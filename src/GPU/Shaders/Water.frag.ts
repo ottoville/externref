@@ -1,4 +1,4 @@
-import type { GPU } from 'GPU.js';
+import type { GPU } from '../../GPU.js';
 import { WaterInput, diffuseOutput } from './structs/Structs.js';
 import {
   FragmentShaderFunction,

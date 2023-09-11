@@ -1,17 +1,18 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine, rust_vec_ptr } from '../../engine.js';
-import type { RenderPipeline } from '../RenderPipeline.js';
+import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import type { CreateRenderPipelineCB } from '../../GPU.js';
-import type {
-  AnyVertexStage,
-  BindGroupLayoutEntry,
-  VertexBufferLayout2,
-  VertexShader,
-  VertexShaderFunction,
+import { GPU, type CreateRenderPipelineCB } from '../../GPU.js';
+import {
+  type AnyVertexStage,
+  type BindGroupLayoutEntry,
+  type VertexBufferLayout2,
+  type VertexShader,
+  type VertexShaderFunction,
+  Buffer2,
+  BufferUsageEnums,
 } from '../../webgpu-ts/index.js';
-import { Buffer2, BufferUsageEnums } from '../Buffer/Buffer2.js';
 import { MainNodeProps } from 'MainNode.js';
 declare const engine: Engine;
 
@@ -28,7 +29,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
     mainNodeProps: MainNodeProps,
     indicesView: rust_vec_ptr<'usize'>,
     createRenderPipeline: CreateRenderPipelineCB<
-      RenderPipeline<
+      LegacyRenderPipeline<
         VertexShader<{
           main: VertexShaderFunction<
             readonly {
@@ -72,7 +73,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         }
         vBufferGPU = new Buffer2(
           {
-            gpu: engine.gpu,
+            gpu: engine.gpu.device,
             label: 'SimpleIndexedMeshVertex_' + this.label,
             size:
               dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
@@ -97,6 +98,14 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         },
       );
       this.drawable = new DrawableIndexed({
+        bindGroups: [
+          {
+            bindGroup: engine.gpu!.BindGroupPosition,
+            offsets: [
+              engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
+            ],
+          },
+        ],
         node: this,
         renderPasses: new Set([
           engine.gpu.renderPassScreen,

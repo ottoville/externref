@@ -2,16 +2,7 @@ import type { Scene } from '../Scene.js';
 import { TerrainTool } from '../tools/TerrainTool.js';
 import { TerrainMesh } from '../GPU/Meshes/Terrain.js';
 import type { Engine } from '../engine.js';
-import {
-  Buffer,
-  GPUBufferUsage,
-  type CopySrcBuffer,
-  ReadBuffer,
-  WriteBuffer,
-  CopyDstBuffer,
-  BindStorageBuffer,
-} from '../GPU/Buffer/Buffer.js';
-import { BindGroup } from '../GPU/BindGroup.js';
+import { ReadBuffer, WriteBuffer } from '../GPU/Buffer/Buffer.js';
 import {
   CalculatePlaneIndices,
   createCalculatePlaneIndices,
@@ -31,14 +22,13 @@ import {
   SlopesLayout,
   CreateTerrainTexture,
 } from '../GPU/Shaders/CreateTerrainTexture.comp.js';
-import { RenderPipelineLayout } from '../GPU/PipelineLayout.js';
+import { LegacyRenderPipelineLayout } from '../GPU/PipelineLayout.js';
 import {
   IntArray,
   MeshUniforms,
   PlaneArray,
 } from '../GPU/Shaders/structs/Structs.js';
 import { allocate_vec } from '../nodes/DataNode.js';
-import { Buffer2, BufferUsageEnums } from '../GPU/Buffer/Buffer2.js';
 import {
   BGLayout,
   BufLayout,
@@ -47,6 +37,9 @@ import {
   Texture,
   TextureUsageEnums,
   TextureView,
+  Buffer2,
+  BufferUsageEnums,
+  BindGroup,
 } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -80,17 +73,17 @@ TODO
   } as const;
   settings = Terrain.settings;
 
-  readonly slopeArrGPUBuffer: BindStorageBuffer;
+  readonly slopeArrGPUBuffer: Buffer2<BufferUsageEnums.STORAGE>;
   //TODO: Remove copy_src
 
-  readonly facet12ArrGPUBuffer: CopySrcBuffer &
-    CopyDstBuffer &
-    BindStorageBuffer;
+  readonly facet12ArrGPUBuffer: Buffer2<
+    (typeof BufferUsageEnums)['STORAGE|COPY_SRC|COPY_DST']
+  >;
   readonly facet12ArrGPUBufferSwap: WriteBuffer;
 
   readonly mesh: TerrainMesh;
 
-  TerrainHeightsbindGroupTree: RenderPipelineLayout<
+  TerrainHeightsbindGroupTree: LegacyRenderPipelineLayout<
     readonly [
       typeof this.gpu.sizeBindGroupLayout,
       typeof this.gpu.uniformBindGroupLayoutWithTime,
@@ -128,7 +121,7 @@ TODO
     if (!engine.gpu) return;
     const b1 = new Buffer2(
       {
-        gpu: engine.gpu,
+        gpu: engine.gpu.device,
         label: 'terrain_b1',
         size: byteLength,
         usages: BufferUsageEnums.COPY_SRC,
@@ -154,15 +147,17 @@ TODO
       offset,
       byteLength,
     );
-    let b2: CopySrcBuffer;
     if (!nofaces) {
       const facesByteLength =
         this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
-      b2 = Buffer.create(
-        engine.gpu,
-        facesByteLength,
-        [GPUBufferUsage.COPY_SRC],
-        'terrain_b2',
+
+      const b2 = new Buffer2(
+        {
+          gpu: engine.gpu.device,
+          label: 'terrain_b2',
+          size: facesByteLength,
+          usages: BufferUsageEnums.COPY_SRC,
+        },
         (b) => {
           new Float32Array(b.getMappedRange()).set(
             new Float32Array(
@@ -205,7 +200,7 @@ TODO
           const cachedBuffer = await Terrain.fromSave(cachedvertices);
           var terrainPositionAndUvsAndNormalsGPU = new Buffer2(
             {
-              gpu,
+              gpu: gpu.device,
               label: 'terrainPositionAndUvsAndNormalsGPU0',
               size: verticesBufferSize,
               usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
@@ -254,7 +249,7 @@ TODO
             label: 'loadFromTexture_encoder_pass_encoder',
           });
           var terrainPositionAndUvsAndNormalsGPU = new Buffer2({
-            gpu,
+            gpu: gpu.device,
             label: 'terrainPositionAndUvsAndNormalsGPU1',
             size: verticesBufferSize,
             usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
@@ -329,6 +324,7 @@ TODO
           shaders.calculateNormals[1].createComputePipeline('main'),
           shaders.createTexture[1].createComputePipeline('main'),
         ]);
+
         const terrain = new Terrain(
           gpu,
           scenes,
@@ -412,28 +408,27 @@ TODO
     ],
     positionsCount: number,
   ) {
-    this.slopeArrGPUBuffer = Buffer.create(
-      gpu,
-      Int32Array.BYTES_PER_ELEMENT *
+    this.slopeArrGPUBuffer = new Buffer2({
+      gpu: gpu.device,
+      label: 'slopeArrGPUBuffer',
+      size:
+        Int32Array.BYTES_PER_ELEMENT *
         Terrain.#subdivisions[0] *
         Terrain.#subdivisions[1],
-      [GPUBufferUsage.STORAGE],
-      'slopeArrGPUBuffer',
-    );
-    this.facet12ArrGPUBuffer = Buffer.create(
-      gpu,
-      Float32Array.BYTES_PER_ELEMENT *
+      usages: BufferUsageEnums.STORAGE,
+    });
+
+    this.facet12ArrGPUBuffer = new Buffer2({
+      gpu: gpu.device,
+      label: 'facet12ArrGPUBuffer',
+      size:
+        Float32Array.BYTES_PER_ELEMENT *
         Terrain.#subdivisions[0] *
         Terrain.#subdivisions[1] *
         4 *
         2,
-      [
-        GPUBufferUsage.STORAGE,
-        GPUBufferUsage.COPY_DST,
-        GPUBufferUsage.COPY_SRC,
-      ],
-      'facet12ArrGPUBuffer',
-    );
+      usages: BufferUsageEnums['STORAGE|COPY_SRC|COPY_DST'],
+    });
     this.facet12ArrGPUBufferSwap = new WriteBuffer(
       gpu,
       Float32Array.BYTES_PER_ELEMENT *
@@ -506,7 +501,7 @@ TODO
       }) as const;
     //todo: remove unneeded flags
     const terrainIndicesGPU = new Buffer2({
-      gpu,
+      gpu: gpu.device,
       label: 'terrainIndicesGPUBuffer',
       size: this.#terrainIndicesLength,
       usages: BufferUsageEnums['INDEX|STORAGE|COPY_SRC'],
@@ -583,7 +578,7 @@ TODO
       .match(new Request('/terrainTexture.webp'))
       .then(async (cachedtexture) => {
         const gpuReadBufferPositions = new Buffer2({
-          gpu,
+          gpu: gpu.device,
           label: 'terrainPositionAndUvsAndNormalsGPURead',
           size: this.terrainPositionAndUvsAndNormalsGPU.props.size,
           usages: BufferUsageEnums['MAP_READ|COPY_DST'],
@@ -615,7 +610,6 @@ TODO
             shaders.createTexture[0][1],
             'writableTexture',
             (bindGroup) => ({
-              //@ts-expect-error
               ground_texture: textureView.getTextureBinding(bindGroup),
             }),
           );
@@ -693,7 +687,7 @@ TODO
           label: 'terrain_encoder2',
         });
         const readBuffer2 =
-          this.facet12ArrGPUBuffer.createReadCopy(commandEncoder2);
+          this.facet12ArrGPUBuffer.createCopy(commandEncoder2);
         gpu.device.queue.submit([commandEncoder2.finish()]);
         readBuffer2.readAndDestroy((buff) => {
           this.mesh.faces = new Float32Array(buff);

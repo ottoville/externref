@@ -2,7 +2,7 @@
 import { WorkerReturn, WorkerThread } from '../WorkerThread.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { MainNode } from '../MainNode.js';
-import type { CreateRenderPipelineProps, GPU } from '../GPU.js';
+import { type CreateRenderPipelineProps, GPU } from '../GPU.js';
 import { MutableTerraVector3, TerraVector3 } from '../Math.js';
 import type { Engine, ListenerObj, rust_pointer } from '../engine.js';
 import type { Scene } from '../Scene.js';
@@ -10,7 +10,7 @@ import {
   HelperVertShader,
   createHelperVertShader,
 } from '../GPU/Shaders/helper.vert.js';
-import { RenderPipeline } from '../GPU/RenderPipeline.js';
+import { LegacyRenderPipeline } from '../GPU/RenderPipeline.js';
 import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
@@ -140,7 +140,7 @@ export class TerrainToolButton extends UIRectangleNode<
 }
 export class TerrainTool extends MainNode {
   elevator: rust_pointer<'elevator'>;
-  drawable: DrawableSimple<RenderPipeline<HelperVertShader>>;
+  drawable: DrawableSimple<LegacyRenderPipeline<HelperVertShader>>;
   readonly #pick: { readonly position: TerraVector3; meshId: number };
   scene: Scene;
 
@@ -162,7 +162,7 @@ export class TerrainTool extends MainNode {
         const fragmentShader = createColorFragmentShader(
           terrain.TerrainHeightsbindGroupTree,
         );
-        const renderPipeline = new RenderPipeline(
+        const renderPipeline = new LegacyRenderPipeline(
           {
             bindgroupdrawable: terrain.TerrainHeightsbindGroupTree,
             builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
@@ -197,6 +197,14 @@ export class TerrainTool extends MainNode {
     this.elevator = engine.rust.create_elevator(terrain.mesh.id);
     this.drawable = new DrawableSimple(
       {
+        bindGroups: [
+          {
+            bindGroup: engine.gpu!.BindGroupPosition,
+            offsets: [
+              engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
+            ],
+          },
+        ],
         node: this,
         renderPasses: undefined,
         renderPipeline,

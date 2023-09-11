@@ -4,15 +4,15 @@ import {
   type DrawableDirectProps,
   type MappedVertexBuffers,
 } from './DrawableDirect.js';
-import type { RenderPipeline } from '../RenderPipeline.js';
+import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { DrawableProps } from './Drawable.js';
-import type { RenderPass } from '../RenderPasses/RenderPass.js';
 import type { DataNode } from '../../nodes/DataNode.js';
 import {
   Buffer2,
   BufferUsageEnums,
+  RenderBundleEncoder,
   type INDEX_BUFFER,
-} from '../../GPU/Buffer/Buffer2.js';
+} from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {
@@ -22,7 +22,7 @@ export type DrawableIndexedProps = {
 };
 
 export class DrawableIndexed<
-  R extends RenderPipeline = RenderPipeline,
+  R extends LegacyRenderPipeline = LegacyRenderPipeline,
   N extends DataNode = DataNode,
 > extends DrawableDirect<N> {
   #indexBuffer: Buffer2<INDEX_BUFFER> | undefined;
@@ -105,7 +105,7 @@ export class DrawableIndexed<
       // const gpu = this.renderPipeline.props.vertexShader.props.gpu;
       this.#indexBuffer = new Buffer2(
         {
-          gpu: engine.gpu!,
+          gpu: engine.gpu!.device,
           label: 'index_' + this.node.label,
           size: buffer.byteLength,
           usages: BufferUsageEnums.INDEX,
@@ -123,15 +123,23 @@ export class DrawableIndexed<
     }
     return this.#indexBuffer;
   }
-  render(
-    renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder,
-    renderPass: RenderPass,
-  ) {
+  render(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder) {
     if (this.#indexBuffer) {
-      renderEncoder.setIndexBuffer(
-        this.#indexBuffer.getIndexBinding(renderPass),
-        this.#GPUIndexFormat,
-      );
+      let encoder: GPURenderBundleEncoder | GPURenderPassEncoder;
+      if (renderEncoder instanceof RenderBundleEncoder) {
+        encoder = renderEncoder.renderBundleEncoder;
+        encoder.setIndexBuffer(
+          this.#indexBuffer.getIndexBinding(renderEncoder),
+          this.#GPUIndexFormat,
+        );
+      } else {
+        encoder = renderEncoder;
+        encoder.setIndexBuffer(
+          this.#indexBuffer.getIndexBinding(),
+          this.#GPUIndexFormat,
+        );
+      }
+
       const indices_count = this.indices_count ?? this.node.indices_count;
       if (indices_count === 0) {
         console.warn('wont draw', this.node.label, ', zero indices');
@@ -146,7 +154,7 @@ export class DrawableIndexed<
           'indexFormat',
           this.#GPUIndexFormat,
         );
-        renderEncoder.drawIndexed(
+        encoder.drawIndexed(
           indices_count,
           this.instanceCount,
           this.#firstIndex,

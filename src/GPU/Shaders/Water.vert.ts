@@ -5,7 +5,7 @@ import {
   type BufLayout,
   type ShaderStage,
 } from '../../webgpu-ts/index.js';
-import type { GPU } from 'GPU.js';
+import type { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, Struct } from './structs/Structs.js';
 import { positionAttr } from './structs/Attributes.js';
 
