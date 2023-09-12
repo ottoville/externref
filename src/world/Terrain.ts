@@ -77,13 +77,6 @@ TODO
 
   readonly mesh: TerrainMesh;
 
-  TerrainHeightsbindGroupTree: LegacyRenderPipelineLayout<
-    readonly [
-      typeof this.gpu.sizeBindGroupLayout,
-      typeof this.gpu.uniformBindGroupLayoutWithTime,
-      typeof this.heightsLayout,
-    ]
-  >;
   TerrainHeightsbindGroupTreePosition: LegacyRenderPipelineLayout<
     readonly [
       typeof this.gpu.sizeBindGroupLayout,
@@ -465,8 +458,9 @@ TODO
         IntArray,
       ),
     });
-    this.TerrainHeightsbindGroupTree =
-      gpu.rootCameralayout.addChildBindGroupLayouts('terrainPipelineLayout2', [
+    this.TerrainHeightsbindGroupTreePosition = gpu.rootCameralayout.appendBinds(
+      'TerrainHeightsbindGroupTreePosition',
+      [
         {
           bindGroup: new BindGroup(
             this.heightsLayout,
@@ -477,12 +471,9 @@ TODO
             }),
           ),
         },
-      ]);
-    this.TerrainHeightsbindGroupTreePosition =
-      this.TerrainHeightsbindGroupTree.createAppendedLayout(
-        'TerrainHeightsbindGroupTreePosition',
-        [gpu.BindGroupLayoutPosition],
-      );
+        gpu.BindGroupLayoutPosition,
+      ],
+    );
 
     const commandEncoder = gpu.device.createCommandEncoder({
       label: 'terrain_encoder',

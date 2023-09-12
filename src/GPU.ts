@@ -503,14 +503,14 @@ export class GPU {
         ),
       }),
     );
-    this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout(
+    this.positionAndTimeBindGroup = this.rootCameralayout.appendBinds(
       'positionBindGroupTimeWGSLLayot',
       [this.BindGroupLayoutPosition],
     );
     this.simpleFragShader = createSimpleFragShader(
       this.positionAndTimeBindGroup,
     );
-    this.lightsTextureBindGroup = this.rootCameralayout.createAppendedLayout(
+    this.lightsTextureBindGroup = this.rootCameralayout.appendBinds(
       'lightsBindGroupTexture2Layout2',
       [
         this.BindGroupLayoutPosition,
@@ -552,7 +552,7 @@ export class GPU {
           ),
         }),
       );*/
-    this.bindGroupTextureWater = this.rootCameralayout.createAppendedLayout(
+    this.bindGroupTextureWater = this.rootCameralayout.appendBinds(
       'lightsBindGroupTexture2PipelineLayout',
       [
         this.BindGroupLayoutPosition,
