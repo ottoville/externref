@@ -1,14 +1,14 @@
-﻿import {
-  type FragmentShader,
-  type RenderPipelineBuilder,
-  type VertexShader,
+﻿import type {
+  RenderPipelineLayout,
+  FragmentShader,
+  RenderPipelineBuilder,
+  VertexShader,
 } from '../webgpu-ts/index.js';
-import type { LegacyRenderPipelineLayout } from './PipelineLayout.js';
 
 type RenderPipelineProps<
   V extends VertexShader,
   F extends FragmentShader,
-  R extends LegacyRenderPipelineLayout = LegacyRenderPipelineLayout,
+  R extends RenderPipelineLayout = RenderPipelineLayout,
 > = {
   label: string;
   vertexShader: V;
@@ -29,7 +29,7 @@ type RenderPipelineProps<
 export class LegacyRenderPipeline<
   V extends VertexShader = VertexShader,
   F extends FragmentShader = FragmentShader,
-  R extends LegacyRenderPipelineLayout = LegacyRenderPipelineLayout,
+  R extends RenderPipelineLayout = RenderPipelineLayout,
 > {
   public readonly props: RenderPipelineProps<V, F, R>;
   constructor(

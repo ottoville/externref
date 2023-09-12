@@ -1,10 +1,10 @@
-import { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type VertexBufferLayout2,
   VertexShader,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import {
@@ -58,7 +58,7 @@ export function createPickOutput(
   Shader where mesh is single colored
 */
 export function createSimpleVertShader(
-  pipelineLayout: LegacyRenderPipelineLayout<
+  pipelineLayout: RenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
   arrayStride: number,

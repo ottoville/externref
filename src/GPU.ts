@@ -12,7 +12,6 @@ import {
   UpdateView,
 } from './GPU/Shaders/UpdateView.comp.js';
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
-import { LegacyRenderPipelineLayout } from './GPU/PipelineLayout.js';
 import { LegacyRenderPipeline } from './GPU/RenderPipeline.js';
 import {
   Clusters,
@@ -51,6 +50,7 @@ import {
   Buffer2,
   BufferUsageEnums,
   DepthRenderTarget,
+  RenderPipelineLayout,
 } from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,
@@ -100,7 +100,7 @@ export class GPU {
   readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
   readonly tempGPUBuffers: GPUBuffer[] = [];
 
-  readonly rootCameralayout: LegacyRenderPipelineLayout<
+  readonly rootCameralayout: RenderPipelineLayout<
     readonly [
       typeof this.sizeBindGroupLayout,
       typeof this.uniformBindGroupLayoutWithTime,
@@ -120,22 +120,18 @@ export class GPU {
   readonly #GPUDirectionalLights: Buffer2<
     (typeof BufferUsageEnums)['STORAGE|COPY_DST']
   >;
-  readonly positionAndTimeBindGroup: LegacyRenderPipelineLayout<
+  readonly positionAndTimeBindGroup: RenderPipelineLayout<
     readonly [
       typeof this.sizeBindGroupLayout,
       typeof this.uniformBindGroupLayoutWithTime,
-      BGLayout<{
-        world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
-      }>,
+      typeof this.BindGroupLayoutPosition,
     ]
   >;
-  readonly lightsTextureBindGroup: LegacyRenderPipelineLayout<
+  readonly lightsTextureBindGroup: RenderPipelineLayout<
     [
       typeof this.sizeBindGroupLayout,
       typeof this.uniformBindGroupLayoutWithTime,
-      BGLayout<{
-        world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
-      }>,
+      typeof this.BindGroupLayoutPosition,
       BGLayout<{
         mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
         diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
@@ -143,7 +139,7 @@ export class GPU {
     ]
   >;
 
-  readonly BindGroupPosition: BindGroup;
+  readonly BindGroupPosition: BindGroup<typeof this.BindGroupLayoutPosition>;
   readonly timeBuffer: Buffer2<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
 
   readonly #renderPasses: RenderPass[];
@@ -206,25 +202,20 @@ export class GPU {
 
   static readonly #renderPipelines: Map<string, LegacyRenderPipeline> =
     new Map();
-  readonly bindGroupTextureWater: LegacyRenderPipelineLayout<
+  readonly bindGroupTextureWater: RenderPipelineLayout<
     readonly [
       typeof this.sizeBindGroupLayout,
       typeof this.uniformBindGroupLayoutWithTime,
-      BGLayout<{
-        world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
-      }>,
-      BGLayout<{
-        diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
-        mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
-      }>,
+      typeof this.BindGroupLayoutPosition,
+      typeof this.waterTextureLayot,
     ]
   >;
 
   readonly #ro: ResizeObserver;
-  readonly canvasRootLayout: LegacyRenderPipelineLayout<
+  readonly canvasRootLayout: RenderPipelineLayout<
     [typeof this.BindGroupLayoutCanvas]
   >;
-  readonly canvasRootLayoutArray: LegacyRenderPipelineLayout<
+  readonly canvasRootLayoutArray: RenderPipelineLayout<
     [typeof this.BindGroupLayoutCanvasArray]
   >;
   readonly UIPipeline: LegacyRenderPipeline<
@@ -261,6 +252,10 @@ export class GPU {
   };
   BindGroupLayoutPosition: BGLayout<{
     world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
+  }>;
+  waterTextureLayot: BGLayout<{
+    diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
+    mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
   }>;
   createRenderPipeline<
     D extends CreateRenderPipelineCB<LegacyRenderPipeline<V>>,
@@ -465,7 +460,7 @@ export class GPU {
         ),
       },
     );
-    this.rootCameralayout = new LegacyRenderPipelineLayout({
+    this.rootCameralayout = new RenderPipelineLayout({
       bindGroupLayouts: [
         this.sizeBindGroupLayout,
         this.uniformBindGroupLayoutWithTime,
@@ -552,27 +547,29 @@ export class GPU {
           ),
         }),
       );*/
+    this.waterTextureLayot = new BGLayout(
+      this.device,
+      'lightsBindGroupTexture2water',
+      {
+        diffuseTexture: new TextLayout(
+          {
+            texture: {},
+            visibility: ShaderStage.FRAGMENT,
+          },
+          'texture_2d<f32>',
+        ),
+        mySampler: new SampLayout(
+          {
+            sampler: {},
+            visibility: ShaderStage.FRAGMENT,
+          },
+          'sampler',
+        ),
+      },
+    );
     this.bindGroupTextureWater = this.rootCameralayout.appendBinds(
       'lightsBindGroupTexture2PipelineLayout',
-      [
-        this.BindGroupLayoutPosition,
-        new BGLayout(this.device, 'lightsBindGroupTexture2water', {
-          diffuseTexture: new TextLayout(
-            {
-              texture: {},
-              visibility: ShaderStage.FRAGMENT,
-            },
-            'texture_2d<f32>',
-          ),
-          mySampler: new SampLayout(
-            {
-              sampler: {},
-              visibility: ShaderStage.FRAGMENT,
-            },
-            'sampler',
-          ),
-        }),
-      ],
+      [this.BindGroupLayoutPosition, this.waterTextureLayot],
     );
 
     this.pickRenderPass = new RenderPass(
@@ -808,11 +805,11 @@ export class GPU {
         ),
       },
     );
-    this.canvasRootLayout = new LegacyRenderPipelineLayout({
+    this.canvasRootLayout = new RenderPipelineLayout({
       bindGroupLayouts: [this.BindGroupLayoutCanvas],
       label: 'canvasRootLayout',
     });
-    this.canvasRootLayoutArray = new LegacyRenderPipelineLayout({
+    this.canvasRootLayoutArray = new RenderPipelineLayout({
       bindGroupLayouts: [this.BindGroupLayoutCanvasArray],
       label: 'canvasRootLayoutArray',
     });

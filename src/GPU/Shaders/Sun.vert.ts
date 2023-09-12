@@ -1,16 +1,16 @@
-import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type BufLayout,
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, Struct } from './structs/Structs.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createSunVertShader(
-  pipelineLayout: LegacyRenderPipelineLayout<BindLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindLayouts>,
 ) {
   return new VertexShader(
     {

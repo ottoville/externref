@@ -21,7 +21,6 @@ import {
   SlopesLayout,
   CreateTerrainTexture,
 } from '../GPU/Shaders/CreateTerrainTexture.comp.js';
-import { LegacyRenderPipelineLayout } from '../GPU/PipelineLayout.js';
 import { IntArray, PlaneArray } from '../GPU/Shaders/structs/Structs.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import {
@@ -35,6 +34,7 @@ import {
   Buffer2,
   BufferUsageEnums,
   BindGroup,
+  type RenderPipelineLayout,
 } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -77,7 +77,7 @@ TODO
 
   readonly mesh: TerrainMesh;
 
-  TerrainHeightsbindGroupTreePosition: LegacyRenderPipelineLayout<
+  TerrainHeightsbindGroupTreePosition: RenderPipelineLayout<
     readonly [
       typeof this.gpu.sizeBindGroupLayout,
       typeof this.gpu.uniformBindGroupLayoutWithTime,

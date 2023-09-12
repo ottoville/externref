@@ -1,9 +1,9 @@
-import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type BufLayout,
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, typicalOutput } from './structs/Structs.js';
@@ -14,7 +14,7 @@ import { simpleAttributesWithColor } from './structs/Attributes.js';
   Shader where each vertex carries a color property
 */
 export function createVertexColorShader(
-  pipelineLayout: LegacyRenderPipelineLayout<
+  pipelineLayout: RenderPipelineLayout<
     Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
   >,
   arrayStride: number,

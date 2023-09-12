@@ -1,10 +1,10 @@
-import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type VertexBufferLayout2,
   VertexShader,
   VertexShaderFunction,
-  BufLayout,
+  type BufLayout,
   ShaderStage,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import {
@@ -16,7 +16,7 @@ import {
 type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts'];
 
 export function createGroundVertShader(
-  pipelineLayout: LegacyRenderPipelineLayout<BindLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindLayouts>,
   buffers: VertexBufferLayout2,
 ) {
   return new VertexShader({

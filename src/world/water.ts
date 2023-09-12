@@ -86,10 +86,9 @@ export class Sea extends BoundableNodeSimple {
           },
           {
             bindGroup: new BindGroup(
-              engine.gpu.bindGroupTextureWater.bindGroupLayout,
+              engine.gpu.waterTextureLayot,
               'waterTexture',
               () => ({
-                //@ts-expect-error
                 diffuseTexture:
                   engine.gpu!.renderPassWater.colorRenderTargets.diffuse.view,
                 mySampler: sampler,

@@ -1,9 +1,9 @@
-import type { LegacyRenderPipelineLayout } from '../../PipelineLayout.js';
 import {
   type BufLayout,
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
+  type RenderPipelineLayout,
 } from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
 import {
@@ -16,7 +16,7 @@ import { positionAttr } from '../structs/Attributes.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createDebugBoundingBoxVertShader(
-  pipelineLayout: LegacyRenderPipelineLayout<BindLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindLayouts>,
   arrayStride: number,
 ) {
   return new VertexShader({

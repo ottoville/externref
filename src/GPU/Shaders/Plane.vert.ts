@@ -1,11 +1,10 @@
-import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type VertexBufferLayout2,
   VertexShader,
   VertexShaderFunction,
-  type BGLayout,
   type ShaderStage,
   type BufLayout,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
@@ -13,14 +12,12 @@ import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
 type BindLayouts = [
   GPU['sizeBindGroupLayout'],
   GPU['uniformBindGroupLayoutWithTime'],
-  BGLayout<{
-    world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
-  }>,
+  GPU['BindGroupLayoutPosition'],
 ];
 // eslint-disable-next-line import/no-unused-modules
 export class Plane extends VertexShader {
   constructor(
-    pipelineLayout: LegacyRenderPipelineLayout<BindLayouts>,
+    pipelineLayout: RenderPipelineLayout<BindLayouts>,
     buffers: VertexBufferLayout2,
   ) {
     super({

@@ -1,10 +1,10 @@
-import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type VertexBufferLayout2,
   VertexShader,
   VertexShaderFunction,
   ShaderStage,
   type BufLayout,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { Scene, Time, colorPositionOutput } from './structs/Structs.js';
@@ -38,7 +38,7 @@ export const vertexPositionAttr = Object.freeze({
 
 type BindLayouts = GPU['rootCameralayout']['bindGroupLayouts'];
 export function createGrassVertShader(
-  pipelineLayout: LegacyRenderPipelineLayout<BindLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindLayouts>,
   buffers: [
     VertexBufferLayout2<typeof positionAttr>,
     VertexBufferLayout2<typeof shapeAttr>,

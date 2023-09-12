@@ -1,9 +1,9 @@
-import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   type BufLayout,
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
@@ -18,7 +18,7 @@ type BindGroupLayouts =
 
 export function createHelperVertShader(
   settings: typeof Terrain.settings,
-  pipelineLayout: LegacyRenderPipelineLayout<BindGroupLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindGroupLayouts>,
 ) {
   return new VertexShader(
     {

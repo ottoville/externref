@@ -1,4 +1,3 @@
-import type { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
@@ -8,13 +7,14 @@ import {
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 
 type BindGroupLayouts =
   Terrain['TerrainHeightsbindGroupTreePosition']['bindGroupLayouts'];
 
 export function createPlaneAtGroundHeightVertShader(
-  pipelineLayout: LegacyRenderPipelineLayout<BindGroupLayouts>,
+  pipelineLayout: RenderPipelineLayout<BindGroupLayouts>,
   buffers: VertexBufferLayout2,
   settings: typeof Terrain.settings,
 ) {

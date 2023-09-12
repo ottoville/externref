@@ -20,8 +20,8 @@ import {
   type Texture,
   type TextureView,
   type VertexShader,
+  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
-import type { LegacyRenderPipelineLayout } from 'GPU/PipelineLayout';
 import type { Engine } from 'engine.js';
 import { GPU } from '../../GPU.js';
 declare const engine: Engine;
@@ -44,7 +44,7 @@ export class LightsTextureDrawableIndexed<
       renderPipeline: R;
       vertexBuffers: MappedVertexBuffers<R>;
     },
-    layout: LegacyRenderPipelineLayout<
+    layout: RenderPipelineLayout<
       readonly [
         BGLayout,
         BGLayout,

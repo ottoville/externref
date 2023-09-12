@@ -1,6 +1,5 @@
 ﻿import type { TerraCamera } from '../../TerraCamera.js';
 import type { Drawable } from '../Drawables/Drawable.js';
-import { LegacyRenderPipelineLayout } from '../PipelineLayout.js';
 import {
   RenderBundleEncoder,
   type ColorRenderTarget,
@@ -9,6 +8,7 @@ import {
   Buffer2,
   BufferUsageEnums,
   BindGroup,
+  RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import { LegacyRenderPipeline } from 'GPU/RenderPipeline.js';
 import type { Engine } from '../../engine.js';
@@ -38,7 +38,7 @@ export type RenderPassProps<U> = {
   size: { width: number; height: number };
   getSizeOnResize: (width: number, height: number) => [number, number];
   entryPoint: string;
-  rootLayouts: LegacyRenderPipelineLayout[];
+  rootLayouts: RenderPipelineLayout[];
   label: string;
   GPURenderBundleEncoderDescriptor?: Partial<GPURenderBundleEncoderDescriptor>;
 };
@@ -51,7 +51,7 @@ export class RenderPass<
   },
 > {
   readonly perspectiveCameras: Set<TerraCamera> = new Set();
-  readonly #rootLayouts: LegacyRenderPipelineLayout[];
+  readonly #rootLayouts: RenderPipelineLayout[];
 
   readonly bundles: RenderBundleEncoder[] = [];
   readonly renderPipelines: Map<
@@ -235,7 +235,7 @@ export class RenderPass<
   }
   renderLayout(
     renderBundleEncoder: RenderBundleEncoder,
-    legacyLayout: LegacyRenderPipelineLayout,
+    legacyLayout: RenderPipelineLayout,
     bindGroupStartIndex: number,
   ): number {
     let meshesDrawn = 0;
