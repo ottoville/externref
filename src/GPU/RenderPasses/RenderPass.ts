@@ -244,10 +244,19 @@ export class RenderPass<
   }
   renderLayout(
     renderBundleEncoder: RenderBundleEncoder,
-    renderPipelines: Set<RenderPipelineBuilder>,
+    legacyLayout: LegacyRenderPipelineLayout,
     bindGroupStartIndex: number,
   ) {
-    renderPipelines.forEach((renderPipeline) => {
+    if (legacyLayout.sharedBindgroup) {
+      renderBundleEncoder.renderBundleEncoder.setBindGroup(
+        bindGroupStartIndex++,
+        legacyLayout.sharedBindgroup.bindGroup.getForRenderBundle(
+          renderBundleEncoder,
+        ),
+        legacyLayout.sharedBindgroup.offsets,
+      );
+    }
+    legacyLayout.renderPipeLines.forEach((renderPipeline) => {
       const variant = this.renderPipelines.get(renderPipeline);
       if (variant && 'renderpipeline' in variant) {
         var drawables = variant.rootDrawables;
@@ -283,6 +292,9 @@ export class RenderPass<
       }
       return 0;
     });
+    legacyLayout.subBindGroups.forEach((subBindGroup) => {
+      this.renderLayout(renderBundleEncoder, subBindGroup, bindGroupStartIndex);
+    });
   }
   #renderCamera(
     renderBundleEncoder: RenderBundleEncoder,
@@ -291,18 +303,7 @@ export class RenderPass<
   ) {
     const drawedMeshes = 0;
     this.#rootLayouts.forEach((layout) => {
-      this.renderLayout(
-        renderBundleEncoder,
-        layout.renderPipeLines,
-        bindGroupStartIndex,
-      );
-      layout.subBindGroups.forEach((subBindGroup) => {
-        this.renderLayout(
-          renderBundleEncoder,
-          subBindGroup.renderPipeLines,
-          bindGroupStartIndex,
-        );
-      });
+      this.renderLayout(renderBundleEncoder, layout, bindGroupStartIndex);
       return 0;
     });
     return drawedMeshes;

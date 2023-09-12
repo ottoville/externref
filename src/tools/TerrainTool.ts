@@ -157,13 +157,13 @@ export class TerrainTool extends MainNode {
       }: CreateRenderPipelineProps) {
         const vertexShader = createHelperVertShader(
           terrain.settings,
-          terrain.TerrainHeightsbindGroupTree,
+          terrain.TerrainHeightsbindGroupTreePosition,
         );
         const fragmentShader = createColorFragmentShader(
-          terrain.TerrainHeightsbindGroupTree,
+          terrain.TerrainHeightsbindGroupTreePosition,
         );
         const renderPipeline = new LegacyRenderPipeline({
-          bindgroupdrawable: terrain.TerrainHeightsbindGroupTree,
+          bindgroupdrawable: terrain.TerrainHeightsbindGroupTreePosition,
           builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
           connections: {
             main: 'main',

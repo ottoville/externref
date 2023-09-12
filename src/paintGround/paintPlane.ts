@@ -86,7 +86,7 @@ export class paintPlane extends paintGround {
           vertexBufferProps,
         ) => {
           const vertexShader = createPlaneAtGroundHeightVertShader(
-            ground.TerrainHeightsbindGroupTree,
+            ground.TerrainHeightsbindGroupTreePosition,
             {
               arrayStride: vertexBufferProps.stride * 4,
               attributes2: Object.freeze({
@@ -102,10 +102,10 @@ export class paintPlane extends paintGround {
             Terrain.settings,
           );
           const fragmentShader = createColorFragmentShader(
-            ground.TerrainHeightsbindGroupTree,
+            ground.TerrainHeightsbindGroupTreePosition,
           );
           return new LegacyRenderPipeline({
-            bindgroupdrawable: ground.TerrainHeightsbindGroupTree,
+            bindgroupdrawable: ground.TerrainHeightsbindGroupTreePosition,
             builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
             connections: {
               main: 'main',

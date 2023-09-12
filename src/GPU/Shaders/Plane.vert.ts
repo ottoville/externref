@@ -33,6 +33,7 @@ export class Plane extends VertexShader {
             /*{uniforms,}*/ {
               scene /*time, clusters_array, meshes, projection*/,
             },
+            ,
             { world },
           ]) => /* wgsl */ `
                 var output:Output;
@@ -52,6 +53,8 @@ export class Plane extends VertexShader {
             {
               scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
             },
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
             {
               world: BufLayout<
                 ShaderStage.VERTEX_AND_FRAGMENT,

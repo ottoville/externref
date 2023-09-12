@@ -263,6 +263,9 @@ export class GPU {
       (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING']
     >;
   };
+  BindGroupLayoutPosition: BGLayout<{
+    world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
+  }>;
   createRenderPipeline<
     D extends CreateRenderPipelineCB<LegacyRenderPipeline<V>>,
     V extends VertexShader,
@@ -476,7 +479,7 @@ export class GPU {
       ],
       label: 'rootCamera',
     });
-    const BindGroupLayoutPosition = new BGLayout(
+    this.BindGroupLayoutPosition = new BGLayout(
       this.device,
       'BindGroupLayoutPosition',
       {
@@ -494,7 +497,7 @@ export class GPU {
       },
     );
     this.BindGroupPosition = new BindGroup(
-      BindGroupLayoutPosition,
+      this.BindGroupLayoutPosition,
       'BindGroupPosition',
       (bindGroup) => ({
         world: this.GPUMeshes.getUniformBinding(
@@ -506,7 +509,7 @@ export class GPU {
     );
     this.positionAndTimeBindGroup = this.rootCameralayout.createAppendedLayout(
       'positionBindGroupTimeWGSLLayot',
-      [BindGroupLayoutPosition],
+      [this.BindGroupLayoutPosition],
     );
     this.simpleFragShader = createSimpleFragShader(
       this.positionAndTimeBindGroup,
@@ -514,7 +517,7 @@ export class GPU {
     this.lightsTextureBindGroup = this.rootCameralayout.createAppendedLayout(
       'lightsBindGroupTexture2Layout2',
       [
-        BindGroupLayoutPosition,
+        this.BindGroupLayoutPosition,
         new BGLayout(this.device, 'lightsBindGroupTexture2', {
           diffuseTexture: new TextLayout(
             {
@@ -556,7 +559,7 @@ export class GPU {
     this.bindGroupTextureWater = this.rootCameralayout.createAppendedLayout(
       'lightsBindGroupTexture2PipelineLayout',
       [
-        BindGroupLayoutPosition,
+        this.BindGroupLayoutPosition,
         new BGLayout(this.device, 'lightsBindGroupTexture2water', {
           diffuseTexture: new TextLayout(
             {

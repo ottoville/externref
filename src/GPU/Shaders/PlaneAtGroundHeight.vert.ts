@@ -11,7 +11,7 @@ import {
 } from '../../webgpu-ts/index.js';
 
 type BindGroupLayouts =
-  Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts'];
+  Terrain['TerrainHeightsbindGroupTreePosition']['bindGroupLayouts'];
 
 export function createPlaneAtGroundHeightVertShader(
   pipelineLayout: LegacyRenderPipelineLayout<BindGroupLayouts>,
@@ -63,7 +63,6 @@ export function createPlaneAtGroundHeightVertShader(
       pipelineLayouts: [pipelineLayout],
     },
     ([
-      ,
       ,
       ,
       /*{ uniforms, }*/ /*{ scene,time, clusters_array, meshes, projection}*/ /*{ world, }*/ {

@@ -22,11 +22,7 @@ import {
   CreateTerrainTexture,
 } from '../GPU/Shaders/CreateTerrainTexture.comp.js';
 import { LegacyRenderPipelineLayout } from '../GPU/PipelineLayout.js';
-import {
-  IntArray,
-  MeshUniforms,
-  PlaneArray,
-} from '../GPU/Shaders/structs/Structs.js';
+import { IntArray, PlaneArray } from '../GPU/Shaders/structs/Structs.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import {
   BGLayout,
@@ -85,10 +81,15 @@ TODO
     readonly [
       typeof this.gpu.sizeBindGroupLayout,
       typeof this.gpu.uniformBindGroupLayoutWithTime,
-      BGLayout<{
-        world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
-      }>,
       typeof this.heightsLayout,
+    ]
+  >;
+  TerrainHeightsbindGroupTreePosition: LegacyRenderPipelineLayout<
+    readonly [
+      typeof this.gpu.sizeBindGroupLayout,
+      typeof this.gpu.uniformBindGroupLayoutWithTime,
+      typeof this.heightsLayout,
+      typeof this.gpu.BindGroupLayoutPosition,
     ]
   >;
 
@@ -465,9 +466,8 @@ TODO
       ),
     });
     this.TerrainHeightsbindGroupTree =
-      gpu.positionAndTimeBindGroup.addChildBindGroupLayout(
-        'terrainPipelineLayout',
-        new BindGroup(
+      gpu.rootCameralayout.addChildBindGroupLayout('terrainPipelineLayout2', {
+        bindGroup: new BindGroup(
           this.heightsLayout,
           'TerrainHeightsbindGroupTree',
           (bindGroup) => ({
@@ -475,6 +475,11 @@ TODO
             slopes: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
           }),
         ),
+      });
+    this.TerrainHeightsbindGroupTreePosition =
+      this.TerrainHeightsbindGroupTree.createAppendedLayout(
+        'TerrainHeightsbindGroupTreePosition',
+        [gpu.BindGroupLayoutPosition],
       );
 
     const commandEncoder = gpu.device.createCommandEncoder({

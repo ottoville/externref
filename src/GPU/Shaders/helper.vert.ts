@@ -14,7 +14,7 @@ import {
   colorPositionOutput,
 } from './structs/Structs.js';
 type BindGroupLayouts =
-  Terrain['TerrainHeightsbindGroupTree']['bindGroupLayouts'];
+  Terrain['TerrainHeightsbindGroupTreePosition']['bindGroupLayouts'];
 
 export function createHelperVertShader(
   settings: typeof Terrain.settings,
@@ -33,8 +33,8 @@ export function createHelperVertShader(
                 scene,
                 time /*clusters_array, meshes, projection*/,
               },
+              ,
               { world },
-              /*{ slopes, facet12, }*/
             ] /* wgsl */,
           ) => /* wgsl */ `var output:Output;
  
@@ -66,6 +66,8 @@ export function createHelperVertShader(
               scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
               time: BufLayout<ShaderStage.VERTEX, typeof Time>;
             },
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
             {
               world: BufLayout<
                 ShaderStage.VERTEX_AND_FRAGMENT,
@@ -79,7 +81,6 @@ export function createHelperVertShader(
       pipelineLayouts: [pipelineLayout],
     },
     ([
-      ,
       ,
       ,
       /*{ uniforms, }*/ /*{ scene,time, clusters_array, meshes, projection }*/ /*{ world, }*/ {
