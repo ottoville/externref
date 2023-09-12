@@ -8,25 +8,19 @@ type PipeLineLayoutProps<B extends readonly BGLayout[]> = {
   label: string;
   bindGroupLayouts: B;
 };
-interface RenderPipeLineLayoutProps<
-  B extends readonly BGLayout[],
-  S extends BGLayout | undefined,
-> extends PipeLineLayoutProps<B> {
-  sharedLayout?: S;
-}
 
 export class LegacyRenderPipelineLayout<
   B extends readonly BGLayout[] = readonly BGLayout[],
-  S extends BGLayout | undefined = undefined,
 > extends RenderPipelineLayout<B> {
   subBindGroups: LegacyRenderPipelineLayout[] = [];
   bindGroupLayout: BGLayout;
 
   constructor(
-    props: RenderPipeLineLayoutProps<B, S>,
-    public sharedBindgroup?:
-      | { bindGroup: BindGroup; offsets?: number[] }
-      | undefined,
+    props: PipeLineLayoutProps<B>,
+    public sharedBindgroups: readonly {
+      bindGroup: BindGroup;
+      offsets?: number[];
+    }[] = [],
   ) {
     super(Object.freeze(props));
     this.bindGroupLayout = props.bindGroupLayouts.at(-1)!;
@@ -39,21 +33,29 @@ export class LegacyRenderPipelineLayout<
     this.subBindGroups.push(p);
     return p;
   }
-  /*
-        Bind group is shared with renderpipelines
-    */
-  addChildBindGroupLayout<
-    T extends { bindGroup: BindGroup; offsets?: number[] },
-  >(label: string, sharedBindgroup: T) {
+  /**
+   * Bind groups are shared with renderpipelines
+   * @param label
+   * @param sharedBindgroups Bindgroups that are binded for all renderpipelines
+   * @returns
+   */
+  addChildBindGroupLayouts<
+    const T extends readonly { bindGroup: BindGroup; offsets?: number[] }[],
+  >(label: string, sharedBindgroups: T) {
     const p = new LegacyRenderPipelineLayout(
       {
         bindGroupLayouts: [
           ...this.bindGroupLayouts,
-          sharedBindgroup.bindGroup.layout,
-        ] as [...B, T extends BindGroup<infer X> ? X : never],
+          ...sharedBindgroups.map((bindGroup) => bindGroup.bindGroup.layout),
+        ] as unknown as [
+          ...B,
+          ...{
+            [K in keyof T]: T[K]['bindGroup']['layout'];
+          },
+        ],
         label,
       },
-      sharedBindgroup,
+      sharedBindgroups,
     );
     this.subBindGroups.push(p);
     return p;

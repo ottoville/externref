@@ -466,16 +466,18 @@ TODO
       ),
     });
     this.TerrainHeightsbindGroupTree =
-      gpu.rootCameralayout.addChildBindGroupLayout('terrainPipelineLayout2', {
-        bindGroup: new BindGroup(
-          this.heightsLayout,
-          'TerrainHeightsbindGroupTree',
-          (bindGroup) => ({
-            facet12: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
-            slopes: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
-          }),
-        ),
-      });
+      gpu.rootCameralayout.addChildBindGroupLayouts('terrainPipelineLayout2', [
+        {
+          bindGroup: new BindGroup(
+            this.heightsLayout,
+            'TerrainHeightsbindGroupTree',
+            (bindGroup) => ({
+              facet12: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
+              slopes: this.slopeArrGPUBuffer.getStorageBinding(bindGroup),
+            }),
+          ),
+        },
+      ]);
     this.TerrainHeightsbindGroupTreePosition =
       this.TerrainHeightsbindGroupTree.createAppendedLayout(
         'TerrainHeightsbindGroupTreePosition',

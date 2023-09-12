@@ -217,11 +217,7 @@ export class GPU {
         diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
         mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
       }>,
-    ],
-    BGLayout<{
-      diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
-      mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
-    }>
+    ]
   >;
 
   readonly #ro: ResizeObserver;

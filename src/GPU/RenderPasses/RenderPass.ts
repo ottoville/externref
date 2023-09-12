@@ -107,34 +107,25 @@ export class RenderPass<
           }
         });
 
-        //@ts-ignore
         let drawedMeshes = 0;
         if (this.perspectiveCameras.size === 0) {
           // Draw UI
-          drawedMeshes += this.#renderCamera(
-            renderBundleEncoder,
-            // this.#rootLayouts,
-            0,
-          );
+          this.#rootLayouts.forEach((layout) => {
+            drawedMeshes += this.renderLayout(renderBundleEncoder, layout, 0);
+          });
         } else {
           renderBundleEncoder.renderBundleEncoder.setBindGroup(
             0,
             this.createSizeBindGroup().getForRenderBundle(renderBundleEncoder),
           );
           this.perspectiveCameras.forEach((camera) => {
-            // TODO: camera.uniformBindGroup holds gpu.GPUMeshes on binding 3 which
-            // is not used in rendering shaders, but it is binded later with dynamic indices.
-            // Concider refactoring it out of this
             renderBundleEncoder.renderBundleEncoder.setBindGroup(
               1,
               camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder),
             );
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            drawedMeshes += this.#renderCamera(
-              renderBundleEncoder,
-              // this.#rootLayouts,
-              2,
-            );
+            this.#rootLayouts.forEach((layout) => {
+              drawedMeshes += this.renderLayout(renderBundleEncoder, layout, 2);
+            });
           });
         }
       },
@@ -246,16 +237,15 @@ export class RenderPass<
     renderBundleEncoder: RenderBundleEncoder,
     legacyLayout: LegacyRenderPipelineLayout,
     bindGroupStartIndex: number,
-  ) {
-    if (legacyLayout.sharedBindgroup) {
+  ): number {
+    let meshesDrawn = 0;
+    legacyLayout.sharedBindgroups.forEach((sharedBindgroup) => {
       renderBundleEncoder.renderBundleEncoder.setBindGroup(
         bindGroupStartIndex++,
-        legacyLayout.sharedBindgroup.bindGroup.getForRenderBundle(
-          renderBundleEncoder,
-        ),
-        legacyLayout.sharedBindgroup.offsets,
+        sharedBindgroup.bindGroup.getForRenderBundle(renderBundleEncoder),
+        sharedBindgroup.offsets,
       );
-    }
+    });
     legacyLayout.renderPipeLines.forEach((renderPipeline) => {
       const variant = this.renderPipelines.get(renderPipeline);
       if (variant && 'renderpipeline' in variant) {
@@ -266,7 +256,7 @@ export class RenderPass<
             this.props.label,
             ', wont draw anything',
           );
-          return 0;
+          return;
         }
         renderBundleEncoder.renderBundleEncoder.setPipeline(
           variant.renderpipeline.pipeline,
@@ -288,25 +278,18 @@ export class RenderPass<
             ),
           );
           drawable.render(renderBundleEncoder);
+          meshesDrawn++;
         });
       }
-      return 0;
     });
     legacyLayout.subBindGroups.forEach((subBindGroup) => {
-      this.renderLayout(renderBundleEncoder, subBindGroup, bindGroupStartIndex);
+      meshesDrawn += this.renderLayout(
+        renderBundleEncoder,
+        subBindGroup,
+        bindGroupStartIndex,
+      );
     });
-  }
-  #renderCamera(
-    renderBundleEncoder: RenderBundleEncoder,
-    //  rootLayout: LegacyRenderPipelineLayout[],
-    bindGroupStartIndex: number,
-  ) {
-    const drawedMeshes = 0;
-    this.#rootLayouts.forEach((layout) => {
-      this.renderLayout(renderBundleEncoder, layout, bindGroupStartIndex);
-      return 0;
-    });
-    return drawedMeshes;
+    return meshesDrawn;
   }
 
   render(renderEncoder: GPUCommandEncoder) {
