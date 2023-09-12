@@ -7,7 +7,7 @@ import {
 import { MainNode } from '../../MainNode.js';
 import { LegacyRenderPipeline } from '../RenderPipeline.js';
 import { DrawableProps } from './Drawable.js';
-import { type BindGroup, RenderBundleEncoder } from '../../webgpu-ts/index.js';
+import { RenderBundleEncoder } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export class DrawableSimple<
@@ -26,16 +26,7 @@ export class DrawableSimple<
       firstVertex?: number;
     } = {},
   ) {
-    const dynamicIndex = engine.rust.gpu_alignment(drawableProps.node.id);
-    //const gpu = drawableProps.renderPipeline.props.vertexShader.props.gpu;
-    const dynamicBindGroups: [BindGroup, number][] = [
-      [engine.gpu!.BindGroupPosition, dynamicIndex],
-    ];
-    const props = {
-      ...drawableProps,
-      dynamicBindGroups,
-    };
-    super(props, drawableDirectProps);
+    super(drawableProps, drawableDirectProps);
     this.#firstVertex = firstVertex;
   }
   render(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder) {

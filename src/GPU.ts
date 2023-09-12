@@ -824,25 +824,22 @@ export class GPU {
     });
     const UIfragmentShader = createUIFragmentShader(this);
     //const UIfragmentShaderArray = createUIFragmentShaderArray(this);
-    this.UIPipeline = new LegacyRenderPipeline(
-      {
-        bindgroupdrawable: this.canvasRootLayout,
-        builder: createRenderPipelineBuilder(vertexShader, UIfragmentShader),
-        connections: {
-          main: 'main',
-        },
-        descriptor: {
-          primitive: {
-            frontFace: 'ccw',
-            topology: 'triangle-list',
-          },
-        },
-        fragmentShader: UIfragmentShader,
-        label: 'UIRenderPipeline',
-        vertexShader,
+    this.UIPipeline = new LegacyRenderPipeline({
+      bindgroupdrawable: this.canvasRootLayout,
+      builder: createRenderPipelineBuilder(vertexShader, UIfragmentShader),
+      connections: {
+        main: 'main',
       },
-      undefined,
-    );
+      descriptor: {
+        primitive: {
+          frontFace: 'ccw',
+          topology: 'triangle-list',
+        },
+      },
+      fragmentShader: UIfragmentShader,
+      label: 'UIRenderPipeline',
+      vertexShader,
+    });
     /*this.UIPipelineArray = new RenderPipeline(
       {
         bindgroupdrawable: this.canvasRootLayoutArray,

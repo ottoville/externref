@@ -9,30 +9,27 @@ export const NormalsPipeline = Object.freeze([
     { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
-    return new LegacyRenderPipeline(
-      {
-        bindgroupdrawable: gpu.positionAndTimeBindGroup,
-        builder: createRenderPipelineBuilder(
-          createDebugNormalsVertShader(
-            gpu.positionAndTimeBindGroup,
-            vertexBufferProps.stride * 4,
-          ),
-          gpu.colorFragShader,
-        ),
-        connections: {
-          main: 'main',
-        },
-        descriptor: {
-          primitive,
-        },
-        fragmentShader: gpu.colorFragShader,
-        label,
-        vertexShader: createDebugNormalsVertShader(
+    return new LegacyRenderPipeline({
+      bindgroupdrawable: gpu.positionAndTimeBindGroup,
+      builder: createRenderPipelineBuilder(
+        createDebugNormalsVertShader(
           gpu.positionAndTimeBindGroup,
           vertexBufferProps.stride * 4,
         ),
+        gpu.colorFragShader,
+      ),
+      connections: {
+        main: 'main',
       },
-      undefined,
-    );
+      descriptor: {
+        primitive,
+      },
+      fragmentShader: gpu.colorFragShader,
+      label,
+      vertexShader: createDebugNormalsVertShader(
+        gpu.positionAndTimeBindGroup,
+        vertexBufferProps.stride * 4,
+      ),
+    });
   },
 ] as const);

@@ -9,31 +9,28 @@ export const SimpleRenderPipeline = [
     { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
-    return new LegacyRenderPipeline(
-      {
-        bindgroupdrawable: gpu.positionAndTimeBindGroup,
-        builder: createRenderPipelineBuilder(
-          createSimpleVertShader(
-            gpu.positionAndTimeBindGroup,
-            vertexBufferProps.stride * 4,
-          ),
-          gpu.simpleFragShader,
-        ),
-        connections: {
-          main: 'main',
-          pick: 'pick',
-        },
-        descriptor: {
-          primitive,
-        },
-        fragmentShader: gpu.simpleFragShader,
-        label,
-        vertexShader: createSimpleVertShader(
+    return new LegacyRenderPipeline({
+      bindgroupdrawable: gpu.positionAndTimeBindGroup,
+      builder: createRenderPipelineBuilder(
+        createSimpleVertShader(
           gpu.positionAndTimeBindGroup,
           vertexBufferProps.stride * 4,
         ),
+        gpu.simpleFragShader,
+      ),
+      connections: {
+        main: 'main',
+        pick: 'pick',
       },
-      undefined,
-    );
+      descriptor: {
+        primitive,
+      },
+      fragmentShader: gpu.simpleFragShader,
+      label,
+      vertexShader: createSimpleVertShader(
+        gpu.positionAndTimeBindGroup,
+        vertexBufferProps.stride * 4,
+      ),
+    });
   },
 ] as const;

@@ -179,50 +179,31 @@ const waterVertShader = createWaterVertShader(
     stepMode: 'vertex',
   },
 );
-const sampler = engine.gpu!.device.createSampler({
-  magFilter: 'nearest',
-  minFilter: 'nearest',
-  mipmapFilter: 'nearest',
+new LegacyRenderPipeline({
+  bindgroupdrawable: engine.gpu!.bindGroupTextureWater,
+  builder: createRenderPipelineBuilder(
+    waterVertShader,
+    createWaterFragShader(engine.gpu!.bindGroupTextureWater),
+  ),
+  connections: {
+    main: 'main',
+  },
+  descriptor: {},
+  fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
+  label: 'test',
+  vertexShader: waterVertShader,
 });
-new LegacyRenderPipeline(
-  {
-    bindgroupdrawable: engine.gpu!.bindGroupTextureWater,
-    builder: createRenderPipelineBuilder(
-      waterVertShader,
-      createWaterFragShader(engine.gpu!.bindGroupTextureWater),
-    ),
-    connections: {
-      main: 'main',
-    },
-    descriptor: {},
-    fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
-    label: 'test',
-    vertexShader: waterVertShader,
+new LegacyRenderPipeline({
+  bindgroupdrawable: engine.gpu!.positionAndTimeBindGroup,
+  builder: createRenderPipelineBuilder(
+    waterVertShader,
+    createWaterFragShader(engine.gpu!.bindGroupTextureWater),
+  ),
+  connections: {
+    main: 'main',
   },
-  //Should be fine
-  () => ({
-    diffuseTexture: engine.gpu!.renderPassWater.colorRenderTargets.diffuse.view,
-    mySampler: sampler,
-  }),
-);
-new LegacyRenderPipeline(
-  {
-    bindgroupdrawable: engine.gpu!.positionAndTimeBindGroup,
-    builder: createRenderPipelineBuilder(
-      waterVertShader,
-      createWaterFragShader(engine.gpu!.bindGroupTextureWater),
-    ),
-    connections: {
-      main: 'main',
-    },
-    descriptor: {},
-    fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
-    label: 'test',
-    vertexShader: waterVertShader,
-  },
-  //@ts-expect-error Shared bindgroup is undefined
-  () => ({
-    diffuseTexture: engine.gpu!.renderPassWater.colorRenderTargets.diffuse.view,
-    mySampler: sampler,
-  }),
-);
+  descriptor: {},
+  fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
+  label: 'test',
+  vertexShader: waterVertShader,
+});

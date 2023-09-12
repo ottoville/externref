@@ -248,16 +248,7 @@ export class RenderPass<
     //  rootLayout: LegacyRenderPipelineLayout[],
     bindGroupStartIndex: number,
   ) {
-    /*this.renderPipelines.forEach((renderPipeline) => {
-      if (!(renderPipeline instanceof Promise)) {
-        renderPipeline.renderpipeline.draw(
-          renderBundleEncoder,
-          bindGroupStartIndex,
-        );
-      }
-    });*/
-
-    let drawedMeshes = 0;
+    const drawedMeshes = 0;
     this.#rootLayouts.forEach((layout) => {
       //@ts-expect-error
       layout.renderPipeLines.forEach((renderPipeline) => {
@@ -294,16 +285,9 @@ export class RenderPass<
             );
             drawable.render(renderBundleEncoder);
           });
-          //variant.renderpipeline.draw(renderBundleEncoder, bindGroupStartIndex);
-        } /*
-        drawedMeshes += renderPipeline.draw(
-          renderBundleEncoder,
-          this,
-          bindGroupStartIndex,
-        );*/
+        }
       });
       layout.subBindGroups.forEach((subBindGroup) => {
-        //@ts-expect-error
         subBindGroup.renderPipeLines.forEach((renderPipeline) => {
           const variant = this.renderPipelines.get(renderPipeline);
           if (variant && 'renderpipeline' in variant) {
@@ -338,48 +322,12 @@ export class RenderPass<
               drawable.render(renderBundleEncoder);
             });
           }
+          return 0;
         });
       });
       return 0;
-      const dynamicIndices: number[] = [];
-      layout.subBindGroups.forEach((subBindGroup) => {
-        //POSITION
-        if (subBindGroup.bindGroupLayout.dynamicIndices) {
-          dynamicIndices.push(bindGroupStartIndex);
-        }
-        subBindGroup.renderPipeLines.forEach((renderPipeline) => {
-          //@ts-expect-error
-          drawedMeshes += renderPipeline.draw(
-            renderBundleEncoder,
-            this,
-            bindGroupStartIndex,
-            dynamicIndices,
-          );
-        });
-        subBindGroup.subBindGroups.forEach((pipelineLayout) => {
-          if (pipelineLayout.sharedBindgroup) {
-            renderBundleEncoder.renderBundleEncoder.setBindGroup(
-              bindGroupStartIndex + 1,
-              pipelineLayout.sharedBindgroup.getForRenderBundle(
-                renderBundleEncoder,
-              ),
-            );
-          }
-          pipelineLayout.renderPipeLines.forEach((renderPipeline) => {
-            //@ts-expect-error
-            drawedMeshes += renderPipeline.draw(
-              renderBundleEncoder,
-              this,
-              bindGroupStartIndex + dynamicIndices.length,
-              dynamicIndices,
-            );
-          });
-        });
-        dynamicIndices.length = 0;
-      });
     });
     return drawedMeshes;
-    return 0;
   }
 
   render(renderEncoder: GPUCommandEncoder) {

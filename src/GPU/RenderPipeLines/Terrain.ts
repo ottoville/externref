@@ -38,22 +38,19 @@ export const TerrainRenderPipeline = [
       stepMode: 'vertex',
     });
     const fragmentShader = createGroundFragShader(gpu.lightsTextureBindGroup);
-    return new LegacyRenderPipeline(
-      {
-        bindgroupdrawable: gpu.lightsTextureBindGroup,
-        builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
-        connections: {
-          main: 'main',
-          pick: 'pick',
-        },
-        descriptor: {
-          primitive,
-        },
-        fragmentShader,
-        label,
-        vertexShader,
+    return new LegacyRenderPipeline({
+      bindgroupdrawable: gpu.lightsTextureBindGroup,
+      builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
+      connections: {
+        main: 'main',
+        pick: 'pick',
       },
-      undefined,
-    );
+      descriptor: {
+        primitive,
+      },
+      fragmentShader,
+      label,
+      vertexShader,
+    });
   },
 ] as const;

@@ -11,25 +11,22 @@ export const SunRenderPipeline = [
     const fragmentShader = createSingleColorFragShader(
       gpu.positionAndTimeBindGroup,
     );
-    return new LegacyRenderPipeline(
-      {
-        bindgroupdrawable: gpu.positionAndTimeBindGroup,
-        builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
-        connections: {
-          main: 'main',
-        },
-        depthBuffer: {
-          depthCompare: 'always',
-          depthWriteEnabled: false,
-        },
-        descriptor: {
-          primitive,
-        },
-        fragmentShader,
-        label,
-        vertexShader,
+    return new LegacyRenderPipeline({
+      bindgroupdrawable: gpu.positionAndTimeBindGroup,
+      builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
+      connections: {
+        main: 'main',
       },
-      undefined,
-    );
+      depthBuffer: {
+        depthCompare: 'always',
+        depthWriteEnabled: false,
+      },
+      descriptor: {
+        primitive,
+      },
+      fragmentShader,
+      label,
+      vertexShader,
+    });
   },
 ] as const;

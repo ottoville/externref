@@ -9,31 +9,28 @@ export const ColoredRenderPipeline = [
     { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
-    return new LegacyRenderPipeline(
-      {
-        bindgroupdrawable: gpu.positionAndTimeBindGroup,
-        builder: createRenderPipelineBuilder(
-          createVertexColorShader(
-            gpu.positionAndTimeBindGroup,
-            vertexBufferProps.stride * 4,
-          ),
-          gpu.simpleFragShader,
-        ),
-        connections: {
-          main: 'main',
-          pick: 'pick',
-        },
-        descriptor: {
-          primitive,
-        },
-        fragmentShader: gpu.simpleFragShader,
-        label,
-        vertexShader: createVertexColorShader(
+    return new LegacyRenderPipeline({
+      bindgroupdrawable: gpu.positionAndTimeBindGroup,
+      builder: createRenderPipelineBuilder(
+        createVertexColorShader(
           gpu.positionAndTimeBindGroup,
           vertexBufferProps.stride * 4,
         ),
+        gpu.simpleFragShader,
+      ),
+      connections: {
+        main: 'main',
+        pick: 'pick',
       },
-      undefined,
-    );
+      descriptor: {
+        primitive,
+      },
+      fragmentShader: gpu.simpleFragShader,
+      label,
+      vertexShader: createVertexColorShader(
+        gpu.positionAndTimeBindGroup,
+        vertexBufferProps.stride * 4,
+      ),
+    });
   },
 ] as const;

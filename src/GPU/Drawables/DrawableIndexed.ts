@@ -45,19 +45,7 @@ export class DrawableIndexed<
       GPUIndexFormat = 'uint32',
     }: DrawableIndexedProps = {},
   ) {
-    //const gpu = drawableProps.renderPipeline.props.vertexShader.props.gpu;
-    super(
-      {
-        ...drawableProps,
-        dynamicBindGroups: [
-          [
-            engine.gpu!.BindGroupPosition,
-            engine.rust.gpu_alignment(drawableProps.node.id),
-          ],
-        ],
-      },
-      drawableDirectProps,
-    );
+    super(drawableProps, drawableDirectProps);
     const indices = this.node.indices;
     if (indices.length > 0) this.setIndexBuffer(indices);
     this.#baseVertex = baseVertex;

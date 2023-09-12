@@ -19,7 +19,6 @@ declare const engine: Engine;
 export type DrawableProps<N extends MainNode> = {
   renderPipeline: Readonly<LegacyRenderPipeline>;
   renderPasses?: Set<RenderPass> | undefined;
-  dynamicBindGroups?: [BindGroup, number][];
   bindGroups?: { bindGroup: BindGroup; offsets?: number[] }[];
   vertexBuffers:
     | readonly {
@@ -47,13 +46,11 @@ export abstract class Drawable<N extends MainNode = MainNode> {
   #renderList: Map<RenderPass, Set<Drawable<MainNode>>> = new Map();
   public renderPipeline: Readonly<LegacyRenderPipeline>;
   protected renderPasses: Set<RenderPass>;
-  //#dynamicBindGroups: [BindGroup, number][];
   destroyed = false;
   bindGroups: { bindGroup: BindGroup; offsets?: number[] }[];
   constructor({
     renderPipeline,
     renderPasses = new Set([engine.gpu!.renderPassScreen]),
-    //dynamicBindGroups = [],
     bindGroups,
     vertexBuffers = [],
     node,
@@ -64,7 +61,6 @@ export abstract class Drawable<N extends MainNode = MainNode> {
 
     this.renderPipeline = renderPipeline;
     this.renderPasses = renderPasses;
-    //this.#dynamicBindGroups = dynamicBindGroups;
 
     vertexBuffers?.forEach((vertexBuffer, i) => {
       this.setVertexBuffer(i, vertexBuffer);
@@ -272,42 +268,4 @@ export abstract class Drawable<N extends MainNode = MainNode> {
   abstract render(
     renderEncoder: RenderBundleEncoder | GPURenderPassEncoder,
   ): void;
-  /*draw(
-    renderPass: RenderPass,
-    renderEncoder: RenderBundleEncoder | GPURenderPassEncoder,
-    BindGroupsStart: number,
-    dynamicIndex: number[],
-  ) {
-    const encoder =
-      renderEncoder instanceof RenderBundleEncoder
-        ? renderEncoder.renderBundleEncoder
-        : renderEncoder;
-
-    this.#dynamicBindGroups.forEach(([{ bindGroup }, offset], i) => {
-      const di = dynamicIndex[i];
-      if (di) {
-        encoder.setBindGroup(di, bindGroup, [
-          offset * GPU.gpu_memory_index_size,
-        ]);
-      }
-    });
-    if (this.staticBindGroup) {
-      encoder.setBindGroup(
-        BindGroupsStart++,
-        renderEncoder instanceof RenderBundleEncoder //@ts-expect-error
-          ? this.staticBindGroup.getForRenderBundle(renderEncoder)
-          : this.staticBindGroup.bindGroup,
-      );
-    }
-    this.vertexBuffers.forEach((buffer, index) =>
-      encoder.setVertexBuffer(
-        index,
-        buffer.buffer.view.getVertexBinding(renderPass),
-        buffer.offset,
-        buffer.size,
-      ),
-    );
-    console.debug('draw', this.node.label);
-    this.render(encoder, renderPass);
-  }*/
 }

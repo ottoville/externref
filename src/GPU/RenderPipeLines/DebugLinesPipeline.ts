@@ -13,21 +13,18 @@ export const DebugLinesPipeline = Object.freeze([
       gpu.positionAndTimeBindGroup,
       vertexBufferProps.stride * 4,
     );
-    return new LegacyRenderPipeline(
-      {
-        bindgroupdrawable: gpu.positionAndTimeBindGroup,
-        builder: createRenderPipelineBuilder(vertexShader, gpu.colorFragShader),
-        connections: {
-          main: 'main',
-        },
-        descriptor: {
-          primitive,
-        },
-        fragmentShader: gpu.colorFragShader,
-        label,
-        vertexShader,
+    return new LegacyRenderPipeline({
+      bindgroupdrawable: gpu.positionAndTimeBindGroup,
+      builder: createRenderPipelineBuilder(vertexShader, gpu.colorFragShader),
+      connections: {
+        main: 'main',
       },
-      undefined,
-    );
+      descriptor: {
+        primitive,
+      },
+      fragmentShader: gpu.colorFragShader,
+      label,
+      vertexShader,
+    });
   },
 ] as const);

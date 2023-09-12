@@ -162,22 +162,19 @@ export class TerrainTool extends MainNode {
         const fragmentShader = createColorFragmentShader(
           terrain.TerrainHeightsbindGroupTree,
         );
-        const renderPipeline = new LegacyRenderPipeline(
-          {
-            bindgroupdrawable: terrain.TerrainHeightsbindGroupTree,
-            builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
-            connections: {
-              main: 'main',
-            },
-            descriptor: {
-              primitive,
-            },
-            fragmentShader,
-            label,
-            vertexShader,
+        const renderPipeline = new LegacyRenderPipeline({
+          bindgroupdrawable: terrain.TerrainHeightsbindGroupTree,
+          builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
+          connections: {
+            main: 'main',
           },
-          undefined,
-        );
+          descriptor: {
+            primitive,
+          },
+          fragmentShader,
+          label,
+          vertexShader,
+        });
         return renderPipeline;
       },
     ] as const;

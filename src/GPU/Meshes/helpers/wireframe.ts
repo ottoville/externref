@@ -8,7 +8,7 @@ import {
 } from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
-
+import { GPU } from '../../../GPU.js';
 // eslint-disable-next-line import/no-unused-modules
 export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   const indices_vec_ptr = allocate_vec_usize(targetNode.node.indices_count * 2);
@@ -26,7 +26,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   let node: DataNode;
 
   //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
-  const vertexBuffer = targetNode.vertexBuffers.get(0)?.buffer;
+  const vertexBuffer = targetNode.vertexBuffers[0]?.buffer;
 
   const mainNodeProps = {
     label: 'Wireframe_' + targetNode.node.label,
@@ -39,6 +39,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       topology: 'line-list',
     },
     {
+      //@ts-expect-error
       stride: vertexBuffer?.stride ?? targetNode.node.vertices_stride,
     },
   );
@@ -53,9 +54,17 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       indices_vec_ptr,
     );
     node.drawable = new DrawableIndexed({
+      bindGroups: [
+        {
+          bindGroup: engine.gpu!.BindGroupPosition,
+          offsets: [
+            engine.rust.gpu_alignment(node.id) * GPU.gpu_memory_index_size,
+          ],
+        },
+      ],
       node,
       renderPasses: undefined,
-      renderPipeline,
+      renderPipeline, //@ts-expect-error
       vertexBuffers: [vertexBuffer],
     });
   } else if (targetNode.node instanceof DataNode) {
@@ -83,6 +92,14 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       indices_vec_ptr,
     );
     node.drawable = new DrawableIndexed({
+      bindGroups: [
+        {
+          bindGroup: engine.gpu!.BindGroupPosition,
+          offsets: [
+            engine.rust.gpu_alignment(node.id) * GPU.gpu_memory_index_size,
+          ],
+        },
+      ],
       node,
       renderPasses: undefined,
       renderPipeline,

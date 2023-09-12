@@ -22,21 +22,9 @@ export class LegacyRenderPipelineLayout<
   subBindGroups: LegacyRenderPipelineLayout[] = [];
   bindGroupLayout: BGLayout;
 
-  constructor(
-    props: RenderPipeLineLayoutProps<B, S>,
-    public sharedBindgroup?: BindGroup | undefined,
-  ) {
+  constructor(props: RenderPipeLineLayoutProps<B, S>) {
     super(Object.freeze(props));
     this.bindGroupLayout = props.bindGroupLayouts.at(-1)!;
-  }
-  createSharedLayout<T extends BGLayout>(label: string, layout: T) {
-    const p = new LegacyRenderPipelineLayout({
-      bindGroupLayouts: [...this.bindGroupLayouts, layout] as [...B, T],
-      label,
-      sharedLayout: layout,
-    });
-    this.subBindGroups.push(p);
-    return p;
   }
   createAppendedLayout<T extends BGLayout[]>(label: string, layout: T) {
     const p = new LegacyRenderPipelineLayout({
@@ -53,16 +41,13 @@ export class LegacyRenderPipelineLayout<
     label: string,
     sharedBindgroup: T,
   ) {
-    const p = new LegacyRenderPipelineLayout(
-      {
-        bindGroupLayouts: [
-          ...this.bindGroupLayouts,
-          sharedBindgroup.layout,
-        ] as [...B, T extends BindGroup<infer X> ? X : never],
-        label,
-      },
-      sharedBindgroup,
-    );
+    const p = new LegacyRenderPipelineLayout({
+      bindGroupLayouts: [...this.bindGroupLayouts, sharedBindgroup.layout] as [
+        ...B,
+        T extends BindGroup<infer X> ? X : never,
+      ],
+      label,
+    });
     this.subBindGroups.push(p);
     return p;
   }

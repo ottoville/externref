@@ -11,13 +11,6 @@ export const WaterRenderPipeline = [
     { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
-    //TODO: Reuse sampler with terrain.ts?
-    const sampler = gpu.device.createSampler({
-      magFilter: 'nearest',
-      minFilter: 'nearest',
-      mipmapFilter: 'nearest',
-    });
-
     const waterVertShader = createWaterVertShader(gpu.bindGroupTextureWater, {
       arrayStride: vertexBufferProps.stride * 4,
       attributes2: positionAttr,
@@ -29,24 +22,18 @@ export const WaterRenderPipeline = [
       waterVertShader,
       waterFragShader,
     );
-    return new LegacyRenderPipeline(
-      {
-        bindgroupdrawable: gpu.bindGroupTextureWater,
-        builder,
-        connections: {
-          main: 'main',
-        },
-        descriptor: {
-          primitive,
-        },
-        fragmentShader: createWaterFragShader(gpu.bindGroupTextureWater),
-        label,
-        vertexShader: waterVertShader,
+    return new LegacyRenderPipeline({
+      bindgroupdrawable: gpu.bindGroupTextureWater,
+      builder,
+      connections: {
+        main: 'main',
       },
-      () => ({
-        diffuseTexture: gpu.renderPassWater.colorRenderTargets.diffuse.view,
-        mySampler: sampler,
-      }),
-    );
+      descriptor: {
+        primitive,
+      },
+      fragmentShader: createWaterFragShader(gpu.bindGroupTextureWater),
+      label,
+      vertexShader: waterVertShader,
+    });
   },
 ] as const;

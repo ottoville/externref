@@ -104,25 +104,19 @@ export class paintPlane extends paintGround {
           const fragmentShader = createColorFragmentShader(
             ground.TerrainHeightsbindGroupTree,
           );
-          return new LegacyRenderPipeline(
-            {
-              bindgroupdrawable: ground.TerrainHeightsbindGroupTree,
-              builder: createRenderPipelineBuilder(
-                vertexShader,
-                fragmentShader,
-              ),
-              connections: {
-                main: 'main',
-              },
-              descriptor: {
-                primitive,
-              },
-              fragmentShader,
-              label,
-              vertexShader,
+          return new LegacyRenderPipeline({
+            bindgroupdrawable: ground.TerrainHeightsbindGroupTree,
+            builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
+            connections: {
+              main: 'main',
             },
-            undefined,
-          );
+            descriptor: {
+              primitive,
+            },
+            fragmentShader,
+            label,
+            vertexShader,
+          });
         },
       ],
       {
