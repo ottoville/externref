@@ -1,7 +1,7 @@
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import type { Engine, rust_pointer } from '../../../engine.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
-import type { LegacyRenderPipeline } from '../../RenderPipeline.js';
+import type { RenderPipelineProps } from '../../RenderPipeline.js';
 import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
 import { Buffer, BufferUsageEnums } from '../../../webgpu-ts/index.js';
@@ -40,7 +40,7 @@ const indices = Uint32Array.of(
 // eslint-disable-next-line import/no-unused-modules
 export class BoundingBoxMesh extends DataNode {
   override drawable:
-    | DrawableIndexed<LegacyRenderPipeline<DebugBoundingBoxVertShader>>
+    | DrawableIndexed<RenderPipelineProps<DebugBoundingBoxVertShader>>
     | undefined;
   constructor(targetNode: DrawableIndexed) {
     const [ptr, len, cap] = new Uint32Array(

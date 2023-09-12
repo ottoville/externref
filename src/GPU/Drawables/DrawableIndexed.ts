@@ -4,7 +4,7 @@ import {
   type DrawableDirectProps,
   type MappedVertexBuffers,
 } from './DrawableDirect.js';
-import type { LegacyRenderPipeline } from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { DrawableProps } from './Drawable.js';
 import type { DataNode } from '../../nodes/DataNode.js';
 import {
@@ -22,7 +22,7 @@ export type DrawableIndexedProps = {
 };
 
 export class DrawableIndexed<
-  R extends LegacyRenderPipeline = LegacyRenderPipeline,
+  R extends RenderPipelineProps = RenderPipelineProps,
   N extends DataNode = DataNode,
 > extends DrawableDirect<N> {
   #indexBuffer: Buffer<INDEX_BUFFER> | undefined;

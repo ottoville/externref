@@ -5,7 +5,7 @@
 
 import type { Engine, rust_vec_ptr } from '../../engine.js';
 import { MainNode } from '../../MainNode.js';
-import { LegacyRenderPipeline } from 'GPU/RenderPipeline.js';
+import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import {
   BindGroup,
   Buffer,
@@ -18,7 +18,7 @@ import {
 declare const engine: Engine;
 
 export type DrawableProps<N extends MainNode> = {
-  renderPipeline: Readonly<LegacyRenderPipeline>;
+  renderPipeline: RenderPipelineProps;
   renderPasses?: Set<RenderPass> | undefined;
   bindGroups?: { bindGroup: BindGroup; offsets?: number[] }[];
   vertexBuffers:
@@ -45,7 +45,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     }
   > = new Map();
   #renderList: Map<RenderPass, Set<Drawable<MainNode>>> = new Map();
-  public renderPipeline: Readonly<LegacyRenderPipeline>;
+  public renderPipeline: RenderPipelineProps;
   protected renderPasses: Set<RenderPass>;
   destroyed = false;
   bindGroups: { bindGroup: BindGroup; offsets?: number[] }[];
@@ -67,32 +67,31 @@ export abstract class Drawable<N extends MainNode = MainNode> {
       this.setVertexBuffer(i, vertexBuffer);
     });
     this.renderPasses.forEach((rp) => {
-      const fragmentEntry =
-        this.renderPipeline.props.connections[rp.entryPoint];
+      const fragmentEntry = this.renderPipeline.connections[rp.entryPoint];
       if (!fragmentEntry) {
         throw new Error(
           'Fragmentshader has no corresponding entry for output ' +
             rp.entryPoint,
         );
       }
-      let variantPP = rp.renderPipelines.get(renderPipeline.props.builder);
+      let variantPP = rp.renderPipelines.get(renderPipeline.builder);
       if (!variantPP) {
         const renderPipelineDescriptor: RenderPipelineBuilderDesc = {
-          //primitive, label
-          ...renderPipeline.props.descriptor,
           fragment: {
             entryPoint: fragmentEntry,
             targets: Object.values(rp.colorRenderTargets),
           },
           label:
             'renderPipeline:' +
-            renderPipeline.props.label +
+            renderPipeline.label +
             ' RenderPass:' +
             rp.label,
           vertex: {
             entryPoint: rp.entryPoint,
           },
         };
+        if (renderPipeline.primitive)
+          renderPipelineDescriptor.primitive = renderPipeline.primitive;
         if (rp.sampleCount > 1)
           renderPipelineDescriptor.multisample = {
             count: rp.sampleCount,
@@ -100,7 +99,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         if (rp.onDecoratePipeline)
           rp.onDecoratePipeline(renderPipeline, renderPipelineDescriptor);
 
-        variantPP = this.renderPipeline.props.builder
+        variantPP = this.renderPipeline.builder
           .build(renderPipelineDescriptor)
           .then((variantPipeline) => {
             variantPipeline.drawables.push(this);
@@ -109,12 +108,12 @@ export abstract class Drawable<N extends MainNode = MainNode> {
               new Set<Drawable>(),
             );
             // Replace promise with real object
-            rp.renderPipelines.set(renderPipeline.props.builder, variantPP);
+            rp.renderPipelines.set(renderPipeline.builder, variantPP);
             rp.onRenderPipelinesChange.forEach((cb) => cb());
             return variantPP;
           });
         // Save promise
-        rp.renderPipelines.set(renderPipeline.props.builder, variantPP);
+        rp.renderPipelines.set(renderPipeline.builder, variantPP);
       }
       // variabtP can be either a promise or results of a promise
       if (variantPP instanceof Promise) {

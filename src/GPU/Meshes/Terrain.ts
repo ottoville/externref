@@ -4,7 +4,7 @@ import type { Engine, rust_pointer, rust_vec_ptr } from '../../engine.js';
 import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
-import type { LegacyRenderPipeline } from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
 import type {
   Buffer,
@@ -20,7 +20,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;
   override drawable:
     | LightsTextureDrawableIndexed<
-        LegacyRenderPipeline<GroundVertShader, FragmentShader>
+        RenderPipelineProps<GroundVertShader, FragmentShader>
       >
     | undefined = undefined;
 

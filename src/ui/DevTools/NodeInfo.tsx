@@ -29,7 +29,7 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
   return (
     <fieldset>
       <legend>{drawable.node.label}</legend>
-      {drawable.renderPipeline.props.label}
+      {drawable.renderPipeline.label}
       <br />
       <fieldset>
         <legend>Translation</legend>

@@ -2,7 +2,7 @@ import type {
   DrawableDirectProps,
   MappedVertexBuffers,
 } from './DrawableDirect.js';
-import type { LegacyRenderPipeline } from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { DataNode } from '../../nodes/DataNode.js';
 import {
   DrawableIndexed,
@@ -30,7 +30,7 @@ declare const engine: Engine;
  * Drawable that is used with lightsTextureBindGroup
  */
 export class LightsTextureDrawableIndexed<
-  R extends LegacyRenderPipeline<VertexShader, FragmentShader>,
+  R extends RenderPipelineProps<VertexShader, FragmentShader>,
   N extends DataNode = DataNode,
 > extends DrawableIndexed<R, N> {
   textureBindGroup: BindGroup<

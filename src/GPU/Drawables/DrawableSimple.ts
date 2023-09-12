@@ -5,13 +5,13 @@ import {
   type MappedVertexBuffers,
 } from './DrawableDirect.js';
 import { MainNode } from '../../MainNode.js';
-import { LegacyRenderPipeline } from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import { DrawableProps } from './Drawable.js';
 import { RenderBundleEncoder } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export class DrawableSimple<
-  const R extends LegacyRenderPipeline,
+  const R extends RenderPipelineProps,
 > extends DrawableDirect<MainNode> {
   #firstVertex = 0;
   constructor(

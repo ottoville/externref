@@ -1,5 +1,5 @@
 import { RenderPass, RenderPassProps } from './RenderPass.js';
-import type { LegacyRenderPipeline } from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type {
   ColorRenderTarget,
   DepthRenderTarget,
@@ -42,13 +42,12 @@ export class DepthRenderPass<
     return renderPassDescriptor;
   }
   override onDecoratePipeline = (
-    renderpipeline: Readonly<LegacyRenderPipeline>,
+    renderpipeline: RenderPipelineProps,
     renderPipelineDescriptor: RenderPipelineBuilderDesc,
   ) => {
     renderPipelineDescriptor.depthStencil = {
-      depthCompare: renderpipeline.props.depthBuffer?.depthCompare ?? 'greater',
-      depthWriteEnabled:
-        renderpipeline.props.depthBuffer?.depthWriteEnabled ?? true,
+      depthCompare: renderpipeline.depthBuffer?.depthCompare ?? 'greater',
+      depthWriteEnabled: renderpipeline.depthBuffer?.depthWriteEnabled ?? true,
       format: this.depthRenderTarget.props.format,
     };
   };

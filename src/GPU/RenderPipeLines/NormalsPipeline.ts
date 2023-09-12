@@ -1,4 +1,3 @@
-import { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { createDebugNormalsVertShader } from '../Shaders/devtools/debug_normals.vert.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
@@ -9,7 +8,7 @@ export const NormalsPipeline = Object.freeze([
     { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
-    return new LegacyRenderPipeline({
+    return Object.freeze({
       builder: createRenderPipelineBuilder(
         createDebugNormalsVertShader(
           gpu.positionAndTimeBindGroup,
@@ -20,10 +19,8 @@ export const NormalsPipeline = Object.freeze([
       connections: {
         main: 'main',
       },
-      descriptor: {
-        primitive,
-      },
       label,
+      primitive,
     });
   },
 ] as const);

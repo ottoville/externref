@@ -10,7 +10,7 @@ import {
   PlaneAtGroundHeightVertShader,
   createPlaneAtGroundHeightVertShader,
 } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
-import { LegacyRenderPipeline } from '../GPU/RenderPipeline.js';
+import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import { DataNode } from '../nodes/DataNode.js';
 import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 import type { CreateRenderPipelineProps } from '../GPU.js';
@@ -20,10 +20,10 @@ import { GPU } from '../GPU.js';
 
 class PlaneMesh extends DataNode {
   override drawable: DrawableIndexed<
-    LegacyRenderPipeline<PlaneAtGroundHeightVertShader>
+    RenderPipelineProps<PlaneAtGroundHeightVertShader>
   >;
   constructor(
-    renderPipeline: LegacyRenderPipeline<PlaneAtGroundHeightVertShader>,
+    renderPipeline: RenderPipelineProps<PlaneAtGroundHeightVertShader>,
   ) {
     const ptrs = engine.rust.create_tiled_mesh_ptr(100, 100);
     const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] =
@@ -33,7 +33,7 @@ class PlaneMesh extends DataNode {
         character_can_collide_to: false,
         vertices: {
           stride:
-            renderPipeline.props.builder.vertexShader.props.entryPoints.main
+            renderPipeline.builder.vertexShader.props.entryPoints.main
               .vertexBufferLayout[0].arrayStride,
           view: [pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!],
         },
@@ -103,15 +103,13 @@ export class paintPlane extends paintGround {
           const fragmentShader = createColorFragmentShader(
             ground.TerrainHeightsbindGroupTreePosition,
           );
-          return new LegacyRenderPipeline({
+          return Object.freeze({
             builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
             connections: {
               main: 'main',
             },
-            descriptor: {
-              primitive,
-            },
             label,
+            primitive,
           });
         },
       ],

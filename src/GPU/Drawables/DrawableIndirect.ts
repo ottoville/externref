@@ -1,5 +1,5 @@
 import { Drawable, DrawableProps } from './Drawable.js';
-import type { LegacyRenderPipeline } from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { MainNode } from '../../MainNode.js';
 import { MappedVertexBuffers } from './DrawableDirect.js';
 import {
@@ -9,7 +9,7 @@ import {
 } from '../../webgpu-ts/index.js';
 
 export class DrawableIndirect<
-  R extends LegacyRenderPipeline = LegacyRenderPipeline,
+  R extends RenderPipelineProps = RenderPipelineProps,
 > extends Drawable {
   override bindGroups = [];
   constructor(

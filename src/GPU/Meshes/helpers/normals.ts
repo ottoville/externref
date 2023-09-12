@@ -1,15 +1,14 @@
 import { NormalsPipeline } from '../../RenderPipeLines/NormalsPipeline.js';
 import { DrawableSimple } from '../../Drawables/DrawableSimple.js';
-import type { LegacyRenderPipeline } from '../../RenderPipeline.js';
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DataNode, allocate_vec_f32 } from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 import { GPU } from '../../../GPU.js';
+import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 
-// eslint-disable-next-line import/no-unused-modules
 export class NormalsMesh extends DataNode {
-  override drawable: DrawableSimple<LegacyRenderPipeline>;
+  override drawable: DrawableSimple<RenderPipelineProps>;
   constructor(targetNode: DrawableDirect<DataNode>) {
     //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
     const stride = 16; // 8*2;

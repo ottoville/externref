@@ -1,7 +1,7 @@
 import type { RenderPass } from '../GPU/RenderPasses/RenderPass.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import type { LegacyRenderPipeline } from '../GPU/RenderPipeline.js';
+import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
 import { DataNode, allocate_vec } from '../nodes/DataNode.js';
 import type { GPU } from '../GPU.js';
@@ -103,7 +103,7 @@ export abstract class UIRectangle<
   /*| GPU['UIPipelineArray']*/
 > extends DataNode {
   override drawable?:
-    | DrawableSimple<LegacyRenderPipeline<UIVertShader>>
+    | DrawableSimple<RenderPipelineProps<UIVertShader>>
     | undefined = undefined;
   boundingBox = {
     bottom: 0,
@@ -137,7 +137,7 @@ export abstract class UIRectangle<
       }
     }
     if (!this.texture) {
-      const frag = this.props.canvaspipeline.props.builder.fragmentShader;
+      const frag = this.props.canvaspipeline.builder.fragmentShader;
       let structName: string;
       if ('main' in frag.props.entryPoints) {
         structName =
@@ -150,7 +150,7 @@ export abstract class UIRectangle<
       }
       this.texture = new RenderTarget({
         format: 'bgra8unorm',
-        gpu: this.props.canvaspipeline.props.builder.vertexShader.props
+        gpu: this.props.canvaspipeline.builder.vertexShader.props
           .pipelineLayouts[0]!.gpu,
         label: 'button_' + this.props.label + '_UIRectangle_text',
         size: {

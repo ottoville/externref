@@ -1,6 +1,5 @@
 import { createVertexColorShader } from '../Shaders/VertexColoredWithNormal.vert.js';
 import type { CreateRenderPipelineProps } from '../../GPU.js';
-import { LegacyRenderPipeline } from '../RenderPipeline.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 export const ColoredRenderPipeline = [
@@ -9,7 +8,7 @@ export const ColoredRenderPipeline = [
     { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
-    return new LegacyRenderPipeline({
+    return Object.freeze({
       builder: createRenderPipelineBuilder(
         createVertexColorShader(
           gpu.positionAndTimeBindGroup,
@@ -21,10 +20,8 @@ export const ColoredRenderPipeline = [
         main: 'main',
         pick: 'pick',
       },
-      descriptor: {
-        primitive,
-      },
       label,
+      primitive,
     });
   },
 ] as const;

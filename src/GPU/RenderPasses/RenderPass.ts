@@ -13,7 +13,7 @@ import {
 } from '../../webgpu-ts/index.js';
 import type { Engine } from '../../engine.js';
 import type { GPU } from '../../GPU.js';
-import { LegacyRenderPipeline } from 'GPU/RenderPipeline.js';
+import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 declare const engine: Engine;
 
 const gpu_screen_buffer_size = 16; //screen width and height and ratio
@@ -70,7 +70,7 @@ export class RenderPass<
   public label: string;
   sizeBindGroup: BindGroup;
   onDecoratePipeline?: (
-    renderpipeline: Readonly<LegacyRenderPipeline>,
+    renderpipeline: RenderPipelineProps,
     renderPipelineDescriptor: RenderPipelineBuilderDesc,
   ) => void;
   constructor(

@@ -2,7 +2,7 @@
 import { DrawableSimple } from '../Drawables/DrawableSimple.js';
 import type { Engine, rust_vec_ptr } from '../../engine.js';
 import { SimpleRenderPipeline } from '../RenderPipeLines/SimpleRenderPipeline.js';
-import type { LegacyRenderPipeline } from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { SimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import { MainNodeProps } from 'MainNode.js';
@@ -17,7 +17,7 @@ declare const engine: Engine;
 
 export class SimpleMesh extends BoundableNodeSimple {
   override drawable:
-    | DrawableSimple<LegacyRenderPipeline<SimpleVertShader>>
+    | DrawableSimple<RenderPipelineProps<SimpleVertShader>>
     | undefined = undefined;
   constructor(
     dataNodeProps: Omit<DataNodeProps, 'vertices'> & {

@@ -8,12 +8,9 @@ import { SimpleRenderPipeline } from '../GPU/RenderPipeLines/SimpleRenderPipelin
 import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import { LegacyRenderPipeline } from '../GPU/RenderPipeline.js';
-import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
 import { createWaterVertShader } from '../GPU/Shaders/Water.vert.js';
 import { positionAttr } from '../GPU/Shaders/structs/Attributes.js';
 import { Texture, TextureUsageEnums } from '../webgpu-ts/Texture.js';
-import { createRenderPipelineBuilder } from 'webgpu-ts/index.js';
 declare const engine: Engine;
 
 Texture.create({
@@ -171,33 +168,8 @@ new DrawableSimple({
   vertexBuffers: [new Float32Array()],
 });
 
-const waterVertShader = createWaterVertShader(
-  engine.gpu!.bindGroupTextureWater,
-  {
-    arrayStride: 16,
-    attributes2: positionAttr,
-    stepMode: 'vertex',
-  },
-);
-new LegacyRenderPipeline({
-  builder: createRenderPipelineBuilder(
-    waterVertShader,
-    createWaterFragShader(engine.gpu!.bindGroupTextureWater),
-  ),
-  connections: {
-    main: 'main',
-  },
-  descriptor: {},
-  label: 'test',
-});
-new LegacyRenderPipeline({
-  builder: createRenderPipelineBuilder(
-    waterVertShader,
-    createWaterFragShader(engine.gpu!.bindGroupTextureWater),
-  ),
-  connections: {
-    main: 'main',
-  },
-  descriptor: {},
-  label: 'test',
+createWaterVertShader(engine.gpu!.bindGroupTextureWater, {
+  arrayStride: 16,
+  attributes2: positionAttr,
+  stepMode: 'vertex',
 });

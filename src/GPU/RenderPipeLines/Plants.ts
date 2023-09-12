@@ -6,7 +6,6 @@ import {
   vertexPositionAttr,
 } from '../Shaders/Grass.vert.js';
 import { createColorFragmentShader } from '../Shaders/Color.frag.js';
-import { LegacyRenderPipeline } from '../RenderPipeline.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 export const PlantsRenderPipeline = [
@@ -33,15 +32,13 @@ export const PlantsRenderPipeline = [
       },
     ]);
     const fragmentShader = createColorFragmentShader(gpu.rootCameralayout);
-    return new LegacyRenderPipeline({
+    return Object.freeze({
       builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
       connections: {
         main: 'main',
       },
-      descriptor: {
-        primitive,
-      },
       label,
+      primitive,
     });
   },
 ] as const;

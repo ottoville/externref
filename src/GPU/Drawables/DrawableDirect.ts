@@ -1,4 +1,4 @@
-import type { LegacyRenderPipeline } from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type {
   AnyVertexStage,
   BindGroupLayoutEntry,
@@ -13,13 +13,13 @@ import type { Engine, rust_vec_ptr } from '../../engine.js';
 declare const engine: Engine;
 
 export type MappedVertexBuffers<
-  R extends LegacyRenderPipeline,
+  R extends RenderPipelineProps,
   B extends readonly {
     [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
   }[] = readonly {
     [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
   }[],
-> = R extends LegacyRenderPipeline<infer VERTEX_SHADER>
+> = R extends RenderPipelineProps<infer VERTEX_SHADER>
   ? //extract VertexBuffers
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     VERTEX_SHADER extends VertexShader<{

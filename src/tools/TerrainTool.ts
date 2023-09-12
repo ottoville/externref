@@ -10,7 +10,7 @@ import {
   HelperVertShader,
   createHelperVertShader,
 } from '../GPU/Shaders/helper.vert.js';
-import { LegacyRenderPipeline } from '../GPU/RenderPipeline.js';
+import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
@@ -140,7 +140,7 @@ export class TerrainToolButton extends UIRectangleNode<
 }
 export class TerrainTool extends MainNode {
   elevator: rust_pointer<'elevator'>;
-  drawable: DrawableSimple<LegacyRenderPipeline<HelperVertShader>>;
+  drawable: DrawableSimple<RenderPipelineProps<HelperVertShader>>;
   readonly #pick: { readonly position: TerraVector3; meshId: number };
   scene: Scene;
 
@@ -162,15 +162,13 @@ export class TerrainTool extends MainNode {
         const fragmentShader = createColorFragmentShader(
           terrain.TerrainHeightsbindGroupTreePosition,
         );
-        const renderPipeline = new LegacyRenderPipeline({
+        const renderPipeline = Object.freeze({
           builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
           connections: {
             main: 'main',
           },
-          descriptor: {
-            primitive,
-          },
           label,
+          primitive,
         });
         return renderPipeline;
       },

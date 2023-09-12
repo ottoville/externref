@@ -12,7 +12,7 @@ import {
   UpdateView,
 } from './GPU/Shaders/UpdateView.comp.js';
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
-import { LegacyRenderPipeline } from './GPU/RenderPipeline.js';
+import type { RenderPipelineProps } from './GPU/RenderPipeline.js';
 import {
   Clusters,
   MeshArray,
@@ -79,7 +79,7 @@ export type CreateRenderPipelineProps = {
 };
 
 export type CreateRenderPipelineCB<
-  R extends LegacyRenderPipeline,
+  R extends RenderPipelineProps,
   VP extends { stride: number } = { stride: number },
 > = readonly [
   label: string,
@@ -200,7 +200,7 @@ export class GPU {
     screen_dimensions: BufLayout<number, typeof ScreenDimensions>;
   }>;
 
-  static readonly #renderPipelines: Map<string, LegacyRenderPipeline> =
+  static readonly #renderPipelines: Map<string, RenderPipelineProps> =
     new Map();
   readonly bindGroupTextureWater: RenderPipelineLayout<
     readonly [
@@ -218,7 +218,7 @@ export class GPU {
   readonly canvasRootLayoutArray: RenderPipelineLayout<
     [typeof this.BindGroupLayoutCanvasArray]
   >;
-  readonly UIPipeline: LegacyRenderPipeline<UIVertShader, UIFragShader>;
+  readonly UIPipeline: RenderPipelineProps<UIVertShader, UIFragShader>;
 
   readonly updateViewShader: UpdateView;
   readonly BindGroupLayoutCanvas: BGLayout<{
@@ -249,7 +249,7 @@ export class GPU {
     mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
   }>;
   createRenderPipeline<
-    D extends CreateRenderPipelineCB<LegacyRenderPipeline<V>>,
+    D extends CreateRenderPipelineCB<RenderPipelineProps<V>>,
     V extends VertexShader,
   >(
     desc: D,
@@ -260,7 +260,7 @@ export class GPU {
     vertexBufferProps: Parameters<D['1']>['1'],
   ): ReturnType<D['1']>;
   createRenderPipeline<
-    D extends CreateRenderPipelineCB<LegacyRenderPipeline<V>>,
+    D extends CreateRenderPipelineCB<RenderPipelineProps<V>>,
     V extends VertexShader,
   >(
     desc: D,
@@ -270,7 +270,7 @@ export class GPU {
     vertexBufferProps: Parameters<D['1']>['1'],
   ): ReturnType<D['1']>;
   createRenderPipeline<
-    D extends CreateRenderPipelineCB<LegacyRenderPipeline<V>>,
+    D extends CreateRenderPipelineCB<RenderPipelineProps<V>>,
     V extends VertexShader,
   >(
     desc: D,
@@ -278,7 +278,7 @@ export class GPU {
     vertexBufferProps: Parameters<D['1']>['1'],
   ): ReturnType<D['1']>;
   createRenderPipeline<
-    D extends CreateRenderPipelineCB<LegacyRenderPipeline<V>>,
+    D extends CreateRenderPipelineCB<RenderPipelineProps<V>>,
     V extends VertexShader,
   >(
     desc: D,
@@ -811,19 +811,17 @@ export class GPU {
     });
     const UIfragmentShader = createUIFragmentShader(this);
     //const UIfragmentShaderArray = createUIFragmentShaderArray(this);
-    this.UIPipeline = new LegacyRenderPipeline({
+    this.UIPipeline = {
       builder: createRenderPipelineBuilder(vertexShader, UIfragmentShader),
       connections: {
         main: 'main',
       },
-      descriptor: {
-        primitive: {
-          frontFace: 'ccw',
-          topology: 'triangle-list',
-        },
-      },
       label: 'UIRenderPipeline',
-    });
+      primitive: {
+        frontFace: 'ccw',
+        topology: 'triangle-list',
+      },
+    } as RenderPipelineProps<UIVertShader, UIFragShader>;
     /*this.UIPipelineArray = new RenderPipeline(
       {
         bindgroupdrawable: this.canvasRootLayoutArray,

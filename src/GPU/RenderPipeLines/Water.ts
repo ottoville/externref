@@ -2,7 +2,6 @@ import { positionAttr } from '../Shaders/structs/Attributes.js';
 import type { CreateRenderPipelineProps } from '../../GPU.js';
 import { createWaterVertShader } from '../../GPU/Shaders/Water.vert.js';
 import { createWaterFragShader } from '../Shaders/Water.frag.js';
-import { LegacyRenderPipeline as LegacyRenderPipeline } from '../RenderPipeline.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 export const WaterRenderPipeline = [
@@ -22,15 +21,13 @@ export const WaterRenderPipeline = [
       waterVertShader,
       waterFragShader,
     );
-    return new LegacyRenderPipeline({
+    return Object.freeze({
       builder,
       connections: {
         main: 'main',
       },
-      descriptor: {
-        primitive,
-      },
       label,
+      primitive,
     });
   },
 ] as const;

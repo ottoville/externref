@@ -3,7 +3,7 @@ import type { Scene } from '../Scene.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { WaterRenderPipeline } from '../GPU/RenderPipeLines/Water.js';
 import type { Engine } from '../engine.js';
-import type { LegacyRenderPipeline } from '../GPU/RenderPipeline.js';
+import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import type { WaterVertShader } from '../GPU/Shaders/Water.vert.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
@@ -12,7 +12,7 @@ import { BindGroup } from '../webgpu-ts/index.js';
 
 export class Sea extends BoundableNodeSimple {
   override drawable:
-    | DrawableSimple<LegacyRenderPipeline<WaterVertShader>>
+    | DrawableSimple<RenderPipelineProps<WaterVertShader>>
     | undefined = undefined;
   override create_collider() {
     return engine.rust.create_cuboid_collider(50000, 3, 50000, 0, false);

@@ -1,7 +1,7 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine, rust_vec_ptr } from '../../engine.js';
-import type { LegacyRenderPipeline } from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import { GPU, type CreateRenderPipelineCB } from '../../GPU.js';
 import {
@@ -29,7 +29,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
     mainNodeProps: MainNodeProps,
     indicesView: rust_vec_ptr<'usize'>,
     createRenderPipeline: CreateRenderPipelineCB<
-      LegacyRenderPipeline<
+      RenderPipelineProps<
         VertexShader<{
           main: VertexShaderFunction<
             readonly {
