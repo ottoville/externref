@@ -5,7 +5,6 @@ import { Projection, PROJECTION_BUFFER_SIZE } from './GPU/Projection.js';
 
 import type { Engine } from './engine.js';
 import { Uint16Vector2 } from './Math.js';
-import { DepthRenderTarget } from './GPU/RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './GPU/RenderPasses/DepthRenderPass.js';
 import { TerraCamera } from './TerraCamera.js';
 import {
@@ -51,6 +50,7 @@ import {
   BindGroup,
   Buffer2,
   BufferUsageEnums,
+  DepthRenderTarget,
 } from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,

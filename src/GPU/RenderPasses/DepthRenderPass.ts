@@ -1,7 +1,9 @@
 import { RenderPass, RenderPassProps } from './RenderPass.js';
-import type { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import type { LegacyRenderPipeline } from '../RenderPipeline.js';
-import type { ColorRenderTarget } from '../../webgpu-ts/index.js';
+import type {
+  ColorRenderTarget,
+  DepthRenderTarget,
+} from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 
 export class DepthRenderPass<

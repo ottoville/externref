@@ -5,7 +5,6 @@ import {
 } from '../../Math.js';
 import { MainNode } from '../../MainNode.js';
 import { RenderPassProps } from './RenderPass.js';
-import { DepthRenderTarget } from '../RenderTargets/DepthRenderTarget.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
 import { createReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
 import {
@@ -18,6 +17,7 @@ import {
   Buffer2,
   BufferUsageEnums,
   BindGroup,
+  type DepthRenderTarget,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import type { Engine } from '../../engine.js';
