@@ -23,7 +23,6 @@ export const WaterRenderPipeline = [
       waterFragShader,
     );
     return new LegacyRenderPipeline({
-      bindgroupdrawable: gpu.bindGroupTextureWater,
       builder,
       connections: {
         main: 'main',
@@ -31,9 +30,7 @@ export const WaterRenderPipeline = [
       descriptor: {
         primitive,
       },
-      fragmentShader: createWaterFragShader(gpu.bindGroupTextureWater),
       label,
-      vertexShader: waterVertShader,
     });
   },
 ] as const;

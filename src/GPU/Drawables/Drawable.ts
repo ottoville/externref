@@ -104,56 +104,6 @@ export abstract class Drawable<N extends MainNode = MainNode> {
               entryPoint: rp.entryPoint,
             },
           })
-          .catch((err: unknown) => {
-            if (err instanceof DOMException) {
-              if (
-                err.message.includes(
-                  renderPipeline.props.vertexShader.module.label,
-                )
-              ) {
-                console.error(
-                  'createRenderPipelineAsync failed, vertex',
-                  renderPipeline.props.vertexShader.module.label,
-                  'wgsl:',
-                  renderPipeline.props.vertexShader.wgsl,
-                  {
-                    cause: err,
-                  },
-                );
-              } else if (
-                err.message.includes(
-                  renderPipeline.props.fragmentShader.module.label,
-                )
-              ) {
-                console.error(
-                  'createRenderPipelineAsync failed, fragment',
-                  renderPipeline.props.fragmentShader.module.label,
-                  'wgsl:',
-                  renderPipeline.props.fragmentShader.wgsl,
-                  {
-                    cause: err,
-                  },
-                );
-              } else {
-                console.error(
-                  'createRenderPipelineAsync failed, vertex',
-                  renderPipeline.props.vertexShader.module.label,
-                  ' wgsl:',
-                  renderPipeline.props.vertexShader.wgsl,
-                  'fragment',
-                  renderPipeline.props.fragmentShader.module,
-                  ' wgsl:',
-                  renderPipeline.props.fragmentShader.wgsl,
-                  {
-                    cause: err,
-                  },
-                );
-              }
-            }
-            throw new Error('createRenderPipelineAsync failed', {
-              cause: err,
-            });
-          })
           .then((variantPipeline) => {
             variantPipeline.drawables.push(this);
             variantPP = new RenderPipelineVariant(

@@ -14,7 +14,6 @@ export const DebugLinesPipeline = Object.freeze([
       vertexBufferProps.stride * 4,
     );
     return new LegacyRenderPipeline({
-      bindgroupdrawable: gpu.positionAndTimeBindGroup,
       builder: createRenderPipelineBuilder(vertexShader, gpu.colorFragShader),
       connections: {
         main: 'main',
@@ -22,9 +21,7 @@ export const DebugLinesPipeline = Object.freeze([
       descriptor: {
         primitive,
       },
-      fragmentShader: gpu.colorFragShader,
       label,
-      vertexShader,
     });
   },
 ] as const);

@@ -218,16 +218,7 @@ export class GPU {
   readonly canvasRootLayoutArray: RenderPipelineLayout<
     [typeof this.BindGroupLayoutCanvasArray]
   >;
-  readonly UIPipeline: LegacyRenderPipeline<
-    UIVertShader,
-    UIFragShader,
-    (typeof this)['canvasRootLayout']
-  >;
-  /*readonly UIPipelineArray: RenderPipeline<
-    UIVertShader,
-    UIFragShaderArray,
-    (typeof this)['canvasRootLayoutArray']
-  >;*/
+  readonly UIPipeline: LegacyRenderPipeline<UIVertShader, UIFragShader>;
 
   readonly updateViewShader: UpdateView;
   readonly BindGroupLayoutCanvas: BGLayout<{
@@ -821,7 +812,6 @@ export class GPU {
     const UIfragmentShader = createUIFragmentShader(this);
     //const UIfragmentShaderArray = createUIFragmentShaderArray(this);
     this.UIPipeline = new LegacyRenderPipeline({
-      bindgroupdrawable: this.canvasRootLayout,
       builder: createRenderPipelineBuilder(vertexShader, UIfragmentShader),
       connections: {
         main: 'main',
@@ -832,9 +822,7 @@ export class GPU {
           topology: 'triangle-list',
         },
       },
-      fragmentShader: UIfragmentShader,
       label: 'UIRenderPipeline',
-      vertexShader,
     });
     /*this.UIPipelineArray = new RenderPipeline(
       {

@@ -137,7 +137,7 @@ export abstract class UIRectangle<
       }
     }
     if (!this.texture) {
-      const frag = this.props.canvaspipeline.props.fragmentShader;
+      const frag = this.props.canvaspipeline.props.builder.fragmentShader;
       let structName: string;
       if ('main' in frag.props.entryPoints) {
         structName =
@@ -150,7 +150,7 @@ export abstract class UIRectangle<
       }
       this.texture = new RenderTarget({
         format: 'bgra8unorm',
-        gpu: this.props.canvaspipeline.props.vertexShader.props
+        gpu: this.props.canvaspipeline.props.builder.vertexShader.props
           .pipelineLayouts[0]!.gpu,
         label: 'button_' + this.props.label + '_UIRectangle_text',
         size: {
@@ -433,8 +433,7 @@ export abstract class UIRectangle<
           bindGroups: [
             {
               bindGroup: new BindGroup(
-                canvaspipeline.props.vertexShader.props.pipelineLayouts[0]!.bindGroupLayouts[0]!,
-                //canvaspipeline.props.vertexShader.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0],
+                engine.gpu!.BindGroupLayoutCanvas,
                 'UI_bindgroup_' + label,
                 (bindGroup) => {
                   return {

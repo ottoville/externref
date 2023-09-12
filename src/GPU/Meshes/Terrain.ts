@@ -5,7 +5,6 @@ import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
 import type { LegacyRenderPipeline } from '../RenderPipeline.js';
-import type { GPU } from '../../GPU.js';
 import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
 import type {
   Buffer,
@@ -21,11 +20,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;
   override drawable:
     | LightsTextureDrawableIndexed<
-        LegacyRenderPipeline<
-          GroundVertShader,
-          FragmentShader,
-          GPU['lightsTextureBindGroup']
-        >
+        LegacyRenderPipeline<GroundVertShader, FragmentShader>
       >
     | undefined = undefined;
 

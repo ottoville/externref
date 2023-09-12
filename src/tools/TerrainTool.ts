@@ -163,7 +163,6 @@ export class TerrainTool extends MainNode {
           terrain.TerrainHeightsbindGroupTreePosition,
         );
         const renderPipeline = new LegacyRenderPipeline({
-          bindgroupdrawable: terrain.TerrainHeightsbindGroupTreePosition,
           builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
           connections: {
             main: 'main',
@@ -171,9 +170,7 @@ export class TerrainTool extends MainNode {
           descriptor: {
             primitive,
           },
-          fragmentShader,
           label,
-          vertexShader,
         });
         return renderPipeline;
       },

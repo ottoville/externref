@@ -180,7 +180,6 @@ const waterVertShader = createWaterVertShader(
   },
 );
 new LegacyRenderPipeline({
-  bindgroupdrawable: engine.gpu!.bindGroupTextureWater,
   builder: createRenderPipelineBuilder(
     waterVertShader,
     createWaterFragShader(engine.gpu!.bindGroupTextureWater),
@@ -189,12 +188,9 @@ new LegacyRenderPipeline({
     main: 'main',
   },
   descriptor: {},
-  fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
   label: 'test',
-  vertexShader: waterVertShader,
 });
 new LegacyRenderPipeline({
-  bindgroupdrawable: engine.gpu!.positionAndTimeBindGroup,
   builder: createRenderPipelineBuilder(
     waterVertShader,
     createWaterFragShader(engine.gpu!.bindGroupTextureWater),
@@ -203,7 +199,5 @@ new LegacyRenderPipeline({
     main: 'main',
   },
   descriptor: {},
-  fragmentShader: createWaterFragShader(engine.gpu!.bindGroupTextureWater),
   label: 'test',
-  vertexShader: waterVertShader,
 });

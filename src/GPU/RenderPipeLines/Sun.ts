@@ -12,7 +12,6 @@ export const SunRenderPipeline = [
       gpu.positionAndTimeBindGroup,
     );
     return new LegacyRenderPipeline({
-      bindgroupdrawable: gpu.positionAndTimeBindGroup,
       builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
       connections: {
         main: 'main',
@@ -24,9 +23,7 @@ export const SunRenderPipeline = [
       descriptor: {
         primitive,
       },
-      fragmentShader,
       label,
-      vertexShader,
     });
   },
 ] as const;

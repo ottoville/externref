@@ -186,8 +186,8 @@ export class RenderPass<
       GPURenderPipelineDescriptor,
       'layout'
     > = {
+      //@ts-expect-error
       fragment: {
-        ...renderpipeline.props.fragmentShader,
         entryPoint: fragmentEntry,
         targets: Object.values(this.colorRenderTargets).map((rt) => {
           const state: GPUColorTargetState = {
@@ -200,12 +200,9 @@ export class RenderPass<
           return state;
         }),
       },
+      //@ts-expect-error
       vertex: {
-        buffers:
-          renderpipeline.props.vertexShader.props.entryPoints[this.entryPoint]!
-            .buffers,
         entryPoint: this.entryPoint,
-        module: renderpipeline.props.vertexShader.module,
       },
     };
     if (this.sampleCount > 1)

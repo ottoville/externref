@@ -28,13 +28,12 @@ class PlaneMesh extends DataNode {
     const ptrs = engine.rust.create_tiled_mesh_ptr(100, 100);
     const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] =
       new Uint32Array(engine.rust.memory.buffer, ptrs, 6);
-
     super(
       {
         character_can_collide_to: false,
         vertices: {
           stride:
-            renderPipeline.props.vertexShader.props.entryPoints.main
+            renderPipeline.props.builder.vertexShader.props.entryPoints.main
               .vertexBufferLayout[0].arrayStride,
           view: [pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!],
         },
@@ -105,7 +104,6 @@ export class paintPlane extends paintGround {
             ground.TerrainHeightsbindGroupTreePosition,
           );
           return new LegacyRenderPipeline({
-            bindgroupdrawable: ground.TerrainHeightsbindGroupTreePosition,
             builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
             connections: {
               main: 'main',
@@ -113,9 +111,7 @@ export class paintPlane extends paintGround {
             descriptor: {
               primitive,
             },
-            fragmentShader,
             label,
-            vertexShader,
           });
         },
       ],

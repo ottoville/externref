@@ -10,7 +10,6 @@ export const SimpleRenderPipeline = [
     vertexBufferProps: { stride: number },
   ) {
     return new LegacyRenderPipeline({
-      bindgroupdrawable: gpu.positionAndTimeBindGroup,
       builder: createRenderPipelineBuilder(
         createSimpleVertShader(
           gpu.positionAndTimeBindGroup,
@@ -25,12 +24,7 @@ export const SimpleRenderPipeline = [
       descriptor: {
         primitive,
       },
-      fragmentShader: gpu.simpleFragShader,
       label,
-      vertexShader: createSimpleVertShader(
-        gpu.positionAndTimeBindGroup,
-        vertexBufferProps.stride * 4,
-      ),
     });
   },
 ] as const;

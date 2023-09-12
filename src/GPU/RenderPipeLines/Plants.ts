@@ -34,7 +34,6 @@ export const PlantsRenderPipeline = [
     ]);
     const fragmentShader = createColorFragmentShader(gpu.rootCameralayout);
     return new LegacyRenderPipeline({
-      bindgroupdrawable: gpu.rootCameralayout,
       builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
       connections: {
         main: 'main',
@@ -42,9 +41,7 @@ export const PlantsRenderPipeline = [
       descriptor: {
         primitive,
       },
-      fragmentShader,
       label,
-      vertexShader,
     });
   },
 ] as const;
