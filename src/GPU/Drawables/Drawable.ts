@@ -13,6 +13,7 @@ import {
   BufferUsageEnums,
   type VERTEX_BUFFER,
   RenderBundleEncoder,
+  type RenderPipelineBuilderDesc,
 } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -76,34 +77,31 @@ export abstract class Drawable<N extends MainNode = MainNode> {
       }
       let variantPP = rp.renderPipelines.get(renderPipeline.props.builder);
       if (!variantPP) {
-        /*const params = {
-            ...renderPipeline.props.descriptor,
-            ...rp.onDecoratePipeline(renderPipeline),
-            label:
-              'renderPipeline:' +
-              renderPipeline.props.label +
-              ' RenderPass:' +
-              rp.label,
-          };*/
-        variantPP = this.renderPipeline.props.builder
-          .build({
-            //primitive, multisample, label
-            ...renderPipeline.props.descriptor,
-            ...rp.onDecoratePipeline(renderPipeline),
-            fragment: {
-              entryPoint: fragmentEntry,
-              targets: Object.values(rp.colorRenderTargets),
-            },
-            label:
-              'renderPipeline:' +
-              renderPipeline.props.label +
-              ' RenderPass:' +
-              rp.label,
+        const renderPipelineDescriptor: RenderPipelineBuilderDesc = {
+          //primitive, label
+          ...renderPipeline.props.descriptor,
+          fragment: {
+            entryPoint: fragmentEntry,
+            targets: Object.values(rp.colorRenderTargets),
+          },
+          label:
+            'renderPipeline:' +
+            renderPipeline.props.label +
+            ' RenderPass:' +
+            rp.label,
+          vertex: {
+            entryPoint: rp.entryPoint,
+          },
+        };
+        if (rp.sampleCount > 1)
+          renderPipelineDescriptor.multisample = {
+            count: rp.sampleCount,
+          };
+        if (rp.onDecoratePipeline)
+          rp.onDecoratePipeline(renderPipeline, renderPipelineDescriptor);
 
-            vertex: {
-              entryPoint: rp.entryPoint,
-            },
-          })
+        variantPP = this.renderPipeline.props.builder
+          .build(renderPipelineDescriptor)
           .then((variantPipeline) => {
             variantPipeline.drawables.push(this);
             variantPP = new RenderPipelineVariant(

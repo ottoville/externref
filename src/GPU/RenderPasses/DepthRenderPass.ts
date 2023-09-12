@@ -3,6 +3,7 @@ import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type {
   ColorRenderTarget,
   DepthRenderTarget,
+  RenderPipelineBuilderDesc,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 
@@ -40,16 +41,15 @@ export class DepthRenderPass<
     };
     return renderPassDescriptor;
   }
-  override onDecoratePipeline(renderpipeline: Readonly<LegacyRenderPipeline>) {
-    return {
-      ...super.onDecoratePipeline(renderpipeline),
-      depthStencil: {
-        depthCompare:
-          renderpipeline.props.depthBuffer?.depthCompare ?? 'greater',
-        depthWriteEnabled:
-          renderpipeline.props.depthBuffer?.depthWriteEnabled ?? true,
-        format: this.depthRenderTarget.props.format,
-      } as GPUDepthStencilState,
+  override onDecoratePipeline = (
+    renderpipeline: Readonly<LegacyRenderPipeline>,
+    renderPipelineDescriptor: RenderPipelineBuilderDesc,
+  ) => {
+    renderPipelineDescriptor.depthStencil = {
+      depthCompare: renderpipeline.props.depthBuffer?.depthCompare ?? 'greater',
+      depthWriteEnabled:
+        renderpipeline.props.depthBuffer?.depthWriteEnabled ?? true,
+      format: this.depthRenderTarget.props.format,
     };
-  }
+  };
 }

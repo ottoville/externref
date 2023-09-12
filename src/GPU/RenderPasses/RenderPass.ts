@@ -9,10 +9,11 @@ import {
   BufferUsageEnums,
   BindGroup,
   RenderPipelineLayout,
+  RenderPipelineBuilderDesc,
 } from '../../webgpu-ts/index.js';
-import { LegacyRenderPipeline } from 'GPU/RenderPipeline.js';
 import type { Engine } from '../../engine.js';
 import type { GPU } from '../../GPU.js';
+import { LegacyRenderPipeline } from 'GPU/RenderPipeline.js';
 declare const engine: Engine;
 
 const gpu_screen_buffer_size = 16; //screen width and height and ratio
@@ -68,6 +69,10 @@ export class RenderPass<
   #getSizeOnResize: (width: number, height: number) => [number, number];
   public label: string;
   sizeBindGroup: BindGroup;
+  onDecoratePipeline?: (
+    renderpipeline: Readonly<LegacyRenderPipeline>,
+    renderPipelineDescriptor: RenderPipelineBuilderDesc,
+  ) => void;
   constructor(
     public props: RenderPassProps<U>,
     gpu: GPU,
@@ -172,45 +177,6 @@ export class RenderPass<
   }
   onRenderPipelinesChange: Set<() => void> = new Set();
 
-  public onDecoratePipeline(
-    renderpipeline: Readonly<LegacyRenderPipeline>,
-  ): Omit<GPURenderPipelineDescriptor, 'layout'> {
-    const fragmentEntry = renderpipeline.props.connections[this.entryPoint];
-    if (!fragmentEntry) {
-      throw new Error(
-        'Fragmentshader has no corresponding entry for output ' +
-          this.entryPoint,
-      );
-    }
-    const renderPipelineDescriptor: Omit<
-      GPURenderPipelineDescriptor,
-      'layout'
-    > = {
-      //@ts-expect-error
-      fragment: {
-        entryPoint: fragmentEntry,
-        targets: Object.values(this.colorRenderTargets).map((rt) => {
-          const state: GPUColorTargetState = {
-            format: rt.texture.format,
-            writeMask: rt.renderTargetOptions.writeMask,
-          };
-          if (rt.blend) {
-            state.blend = rt.blend;
-          }
-          return state;
-        }),
-      },
-      //@ts-expect-error
-      vertex: {
-        entryPoint: this.entryPoint,
-      },
-    };
-    if (this.sampleCount > 1)
-      renderPipelineDescriptor.multisample = {
-        count: this.sampleCount,
-      };
-    return renderPipelineDescriptor;
-  }
   resize(width: number, height: number) {
     if (width === 0) {
       throw new Error('Cannot resize renderpass to zero width');
