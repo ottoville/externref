@@ -1,11 +1,11 @@
 import type { GPU } from '../../GPU.js';
 import { UI_Input, diffuseOutput } from './structs/Structs.js';
-import { textureLoad } from './std_functions.js';
 import {
   FragmentShader,
   FragmentShaderFunction,
   type ShaderStage,
   type TextLayout,
+  textureLoad,
 } from '../../webgpu-ts/index.js';
 
 export function createUIFragmentShaderArray(gpu: GPU) {

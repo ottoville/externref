@@ -1,9 +1,9 @@
 import type { GPU } from '../../GPU.js';
 import { UI_Input, diffuseOutput } from './structs/Structs.js';
-import { textureLoad } from './std_functions.js';
 import {
   FragmentShader,
   FragmentShaderFunction,
+  textureLoad,
   type ShaderStage,
   type TextLayout,
 } from '../../webgpu-ts/index.js';

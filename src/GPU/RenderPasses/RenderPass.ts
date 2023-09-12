@@ -242,7 +242,48 @@ export class RenderPass<
     };
     return renderPassDescriptor;
   }
-
+  renderLayout(
+    renderBundleEncoder: RenderBundleEncoder,
+    renderPipelines: Set<RenderPipelineBuilder>,
+    bindGroupStartIndex: number,
+  ) {
+    renderPipelines.forEach((renderPipeline) => {
+      const variant = this.renderPipelines.get(renderPipeline);
+      if (variant && 'renderpipeline' in variant) {
+        var drawables = variant.rootDrawables;
+        if (!drawables || drawables.size == 0) {
+          console.warn(
+            'No drawables has been set for renderpass',
+            this.props.label,
+            ', wont draw anything',
+          );
+          return 0;
+        }
+        renderBundleEncoder.renderBundleEncoder.setPipeline(
+          variant.renderpipeline.pipeline,
+        );
+        drawables.forEach((drawable) => {
+          drawable.bindGroups.forEach((bindGroup, i) => {
+            renderBundleEncoder.renderBundleEncoder.setBindGroup(
+              i + bindGroupStartIndex,
+              bindGroup.bindGroup.getForRenderBundle(renderBundleEncoder),
+              bindGroup.offsets,
+            );
+          });
+          drawable.vertexBuffers.forEach((buffer, index) =>
+            renderBundleEncoder.renderBundleEncoder.setVertexBuffer(
+              index,
+              buffer.buffer.getVertexBinding(renderBundleEncoder),
+              buffer.offset,
+              buffer.size,
+            ),
+          );
+          drawable.render(renderBundleEncoder);
+        });
+      }
+      return 0;
+    });
+  }
   #renderCamera(
     renderBundleEncoder: RenderBundleEncoder,
     //  rootLayout: LegacyRenderPipelineLayout[],
@@ -250,80 +291,17 @@ export class RenderPass<
   ) {
     const drawedMeshes = 0;
     this.#rootLayouts.forEach((layout) => {
-      //@ts-expect-error
-      layout.renderPipeLines.forEach((renderPipeline) => {
-        const variant = this.renderPipelines.get(renderPipeline);
-        if (variant && 'renderpipeline' in variant) {
-          var drawables = variant.rootDrawables;
-          if (!drawables || drawables.size == 0) {
-            console.warn(
-              'No drawables has been set for renderpass',
-              this.props.label,
-              ', wont draw anything',
-            );
-            return 0;
-          }
-          renderBundleEncoder.renderBundleEncoder.setPipeline(
-            variant.renderpipeline.pipeline,
-          );
-
-          drawables.forEach((drawable) => {
-            drawable.bindGroups.forEach((bindGroup, i) => {
-              renderBundleEncoder.renderBundleEncoder.setBindGroup(
-                i + bindGroupStartIndex,
-                bindGroup.bindGroup.getForRenderBundle(renderBundleEncoder),
-                bindGroup.offsets,
-              );
-            });
-            drawable.vertexBuffers.forEach((buffer, index) =>
-              renderBundleEncoder.renderBundleEncoder.setVertexBuffer(
-                index,
-                buffer.buffer.getVertexBinding(renderBundleEncoder),
-                buffer.offset,
-                buffer.size,
-              ),
-            );
-            drawable.render(renderBundleEncoder);
-          });
-        }
-      });
+      this.renderLayout(
+        renderBundleEncoder,
+        layout.renderPipeLines,
+        bindGroupStartIndex,
+      );
       layout.subBindGroups.forEach((subBindGroup) => {
-        subBindGroup.renderPipeLines.forEach((renderPipeline) => {
-          const variant = this.renderPipelines.get(renderPipeline);
-          if (variant && 'renderpipeline' in variant) {
-            var drawables = variant.rootDrawables;
-            if (!drawables || drawables.size == 0) {
-              console.warn(
-                'No drawables has been set for renderpass',
-                this.props.label,
-                ', wont draw anything',
-              );
-              return 0;
-            }
-            renderBundleEncoder.renderBundleEncoder.setPipeline(
-              variant.renderpipeline.pipeline,
-            );
-            drawables.forEach((drawable) => {
-              drawable.bindGroups.forEach((bindGroup, i) => {
-                renderBundleEncoder.renderBundleEncoder.setBindGroup(
-                  i + bindGroupStartIndex,
-                  bindGroup.bindGroup.getForRenderBundle(renderBundleEncoder),
-                  bindGroup.offsets,
-                );
-              });
-              drawable.vertexBuffers.forEach((buffer, index) =>
-                renderBundleEncoder.renderBundleEncoder.setVertexBuffer(
-                  index,
-                  buffer.buffer.getVertexBinding(renderBundleEncoder),
-                  buffer.offset,
-                  buffer.size,
-                ),
-              );
-              drawable.render(renderBundleEncoder);
-            });
-          }
-          return 0;
-        });
+        this.renderLayout(
+          renderBundleEncoder,
+          subBindGroup.renderPipeLines,
+          bindGroupStartIndex,
+        );
       });
       return 0;
     });
