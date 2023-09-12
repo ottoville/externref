@@ -10,7 +10,7 @@ import {
   type VertexBufferLayout2,
   type VertexShader,
   type VertexShaderFunction,
-  Buffer2,
+  Buffer,
   BufferUsageEnums,
 } from '../../webgpu-ts/index.js';
 import { MainNodeProps } from 'MainNode.js';
@@ -18,8 +18,8 @@ declare const engine: Engine;
 
 export type SimpleIndexedMeshProps = {
   vBufferGPU?:
-    | Buffer2<BufferUsageEnums.VERTEX>
-    | Buffer2<(typeof BufferUsageEnums)['VERTEX|COPY_DST']>;
+    | Buffer<BufferUsageEnums.VERTEX>
+    | Buffer<(typeof BufferUsageEnums)['VERTEX|COPY_DST']>;
   topology?: GPUPrimitiveTopology;
   staticVertices?: boolean;
 };
@@ -71,7 +71,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         } else {
           usages = BufferUsageEnums.VERTEX;
         }
-        vBufferGPU = new Buffer2(
+        vBufferGPU = new Buffer(
           {
             gpu: engine.gpu.device,
             label: 'SimpleIndexedMeshVertex_' + this.label,

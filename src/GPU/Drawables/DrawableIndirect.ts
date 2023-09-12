@@ -5,7 +5,7 @@ import { MappedVertexBuffers } from './DrawableDirect.js';
 import {
   type INDIRECT_BUFFER,
   RenderBundleEncoder,
-  type Buffer2,
+  type Buffer,
 } from '../../webgpu-ts/index.js';
 
 export class DrawableIndirect<
@@ -17,7 +17,7 @@ export class DrawableIndirect<
       vertexBuffers: MappedVertexBuffers<R>;
       renderPipeline: R;
     },
-    public readonly buffer: Buffer2<INDIRECT_BUFFER>,
+    public readonly buffer: Buffer<INDIRECT_BUFFER>,
   ) {
     super(drawableProps);
   }

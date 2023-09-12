@@ -7,7 +7,7 @@ import type { SimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.j
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import { MainNodeProps } from 'MainNode.js';
 import {
-  Buffer2,
+  Buffer,
   BufferUsageEnums,
   type VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
@@ -25,7 +25,7 @@ export class SimpleMesh extends BoundableNodeSimple {
     },
     mainNodeProps: MainNodeProps,
     strip = false,
-    vBufferGPU?: Buffer2<VERTEX_BUFFER>,
+    vBufferGPU?: Buffer<VERTEX_BUFFER>,
   ) {
     super(
       {
@@ -40,7 +40,7 @@ export class SimpleMesh extends BoundableNodeSimple {
     );
     if (engine.gpu) {
       if (!vBufferGPU) {
-        vBufferGPU = new Buffer2(
+        vBufferGPU = new Buffer(
           {
             gpu: engine.gpu.device,
             label: 'SimpleMeshVertex_' + this.label,

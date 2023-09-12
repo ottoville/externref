@@ -31,7 +31,7 @@ import {
   Texture,
   TextureUsageEnums,
   TextureView,
-  Buffer2,
+  Buffer,
   BufferUsageEnums,
   BindGroup,
   type RenderPipelineLayout,
@@ -68,10 +68,10 @@ TODO
   } as const;
   settings = Terrain.settings;
 
-  readonly slopeArrGPUBuffer: Buffer2<BufferUsageEnums.STORAGE>;
+  readonly slopeArrGPUBuffer: Buffer<BufferUsageEnums.STORAGE>;
   //TODO: Remove copy_src
 
-  readonly facet12ArrGPUBuffer: Buffer2<
+  readonly facet12ArrGPUBuffer: Buffer<
     (typeof BufferUsageEnums)['STORAGE|COPY_SRC|COPY_DST']
   >;
 
@@ -111,7 +111,7 @@ TODO
   }
   updateSwap2(offset = 0, byteLength: number, nofaces = false) {
     if (!engine.gpu) return;
-    const b1 = new Buffer2(
+    const b1 = new Buffer(
       {
         gpu: engine.gpu.device,
         label: 'terrain_b1',
@@ -143,7 +143,7 @@ TODO
       const facesByteLength =
         this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
 
-      const b2 = new Buffer2(
+      const b2 = new Buffer(
         {
           gpu: engine.gpu.device,
           label: 'terrain_b2',
@@ -190,7 +190,7 @@ TODO
       .then(async (cachedvertices) => {
         if (cachedvertices) {
           const cachedBuffer = await Terrain.fromSave(cachedvertices);
-          var terrainPositionAndUvsAndNormalsGPU = new Buffer2(
+          var terrainPositionAndUvsAndNormalsGPU = new Buffer(
             {
               gpu: gpu.device,
               label: 'terrainPositionAndUvsAndNormalsGPU0',
@@ -240,7 +240,7 @@ TODO
           const passEncoder = commandEncoder.beginComputePass({
             label: 'loadFromTexture_encoder_pass_encoder',
           });
-          var terrainPositionAndUvsAndNormalsGPU = new Buffer2({
+          var terrainPositionAndUvsAndNormalsGPU = new Buffer({
             gpu: gpu.device,
             label: 'terrainPositionAndUvsAndNormalsGPU1',
             size: verticesBufferSize,
@@ -384,7 +384,7 @@ TODO
       calculateNormals: CalculateNormals;
       createTexture: TerrainTexture;
     },
-    private terrainPositionAndUvsAndNormalsGPU: Buffer2<
+    private terrainPositionAndUvsAndNormalsGPU: Buffer<
       (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC|COPY_DST']
     >,
     [
@@ -400,7 +400,7 @@ TODO
     ],
     positionsCount: number,
   ) {
-    this.slopeArrGPUBuffer = new Buffer2({
+    this.slopeArrGPUBuffer = new Buffer({
       gpu: gpu.device,
       label: 'slopeArrGPUBuffer',
       size:
@@ -410,7 +410,7 @@ TODO
       usages: BufferUsageEnums.STORAGE,
     });
 
-    this.facet12ArrGPUBuffer = new Buffer2({
+    this.facet12ArrGPUBuffer = new Buffer({
       gpu: gpu.device,
       label: 'facet12ArrGPUBuffer',
       size:
@@ -488,7 +488,7 @@ TODO
           this.terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
       }) as const;
     //todo: remove unneeded flags
-    const terrainIndicesGPU = new Buffer2({
+    const terrainIndicesGPU = new Buffer({
       gpu: gpu.device,
       label: 'terrainIndicesGPUBuffer',
       size: this.#terrainIndicesLength,
@@ -565,7 +565,7 @@ TODO
     this.#ready = caches
       .match(new Request('/terrainTexture.webp'))
       .then(async (cachedtexture) => {
-        const gpuReadBufferPositions = new Buffer2({
+        const gpuReadBufferPositions = new Buffer({
           gpu: gpu.device,
           label: 'terrainPositionAndUvsAndNormalsGPURead',
           size: this.terrainPositionAndUvsAndNormalsGPU.props.size,
@@ -623,7 +623,7 @@ TODO
           );
 
           // Get a GPU buffer for reading in an unmapped state.
-          const gpuReadBuffer = new Buffer2({
+          const gpuReadBuffer = new Buffer({
             gpu: gpu.device,
             label: 'terrainReaduBuffer',
             size: textureSizeBytes,

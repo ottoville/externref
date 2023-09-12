@@ -12,7 +12,7 @@ import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
 import { createGrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
 import { MainNode } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
-import { BindGroup, Buffer2, BufferUsageEnums } from '../webgpu-ts/index.js';
+import { BindGroup, Buffer, BufferUsageEnums } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
 /**
@@ -55,31 +55,31 @@ export class Plants extends MainNode {
       label: 'Plants',
     });
 
-    const indirectBuffer = new Buffer2({
+    const indirectBuffer = new Buffer({
       gpu: scene.gpu.device,
       label: 'indirectBuffer',
       size: 4 * 4,
       usages: BufferUsageEnums['INDIRECT|COPY_DST'],
     });
-    const positionGPU = new Buffer2({
+    const positionGPU = new Buffer({
       gpu: scene.gpu.device,
       label: 'positionGPU',
       size: numBlades * 4 * 4,
       usages: BufferUsageEnums['VERTEX|COPY_DST'],
     });
-    const shapeGPU = new Buffer2({
+    const shapeGPU = new Buffer({
       gpu: scene.gpu.device,
       label: 'shapeGPU',
       size: numBlades * 4 * 4,
       usages: BufferUsageEnums['VERTEX|COPY_DST'],
     });
-    const positionGPUSwap = new Buffer2({
+    const positionGPUSwap = new Buffer({
       gpu: scene.gpu.device,
       label: 'positionGPUSwap',
       size: numBlades * 4 * 4,
       usages: BufferUsageEnums['STORAGE|COPY_SRC'],
     });
-    const shapeGPUSwap = new Buffer2({
+    const shapeGPUSwap = new Buffer({
       gpu: scene.gpu.device,
       label: 'shapeGPUSwap',
       size: numBlades * 4 * 4,
@@ -169,7 +169,7 @@ export class Plants extends MainNode {
               label: 'plants_pass_encoder',
             });
             passEncoder.setPipeline(computePipeline);
-            const worldCopyGPU = new Buffer2(
+            const worldCopyGPU = new Buffer(
               {
                 gpu: scene.gpu.device,
                 label: 'worldCopyGPU',
@@ -211,7 +211,7 @@ export class Plants extends MainNode {
             );
             const data2 = new Uint32Array([7, (data.buffer.byteLength / 4) * 2])
               .buffer;
-            const swapBuffer = new Buffer2(
+            const swapBuffer = new Buffer(
               {
                 gpu: scene.gpu.device,
                 label: '_swap',

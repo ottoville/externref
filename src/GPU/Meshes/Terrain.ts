@@ -8,7 +8,7 @@ import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { GPU } from '../../GPU.js';
 import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
 import type {
-  Buffer2,
+  Buffer,
   FragmentShader,
   INDEX_BUFFER,
   TEXTURE_BINDING_TEXTURE,
@@ -37,8 +37,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
     public initialTexture: TextureView<
       Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>
     >,
-    public vBuffer: Buffer2<VERTEX_BUFFER>,
-    public iBuffer: Buffer2<INDEX_BUFFER>,
+    public vBuffer: Buffer<VERTEX_BUFFER>,
+    public iBuffer: Buffer<INDEX_BUFFER>,
     vertices: rust_vec_ptr<'f32'>,
     indicesView: rust_vec_ptr<'usize'>,
     verticesPositionStride: number,

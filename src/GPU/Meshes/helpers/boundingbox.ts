@@ -4,7 +4,7 @@ import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import type { LegacyRenderPipeline } from '../../RenderPipeline.js';
 import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
-import { Buffer2, BufferUsageEnums } from '../../../webgpu-ts/index.js';
+import { Buffer, BufferUsageEnums } from '../../../webgpu-ts/index.js';
 declare const engine: Engine;
 import { GPU } from '../../../GPU.js';
 
@@ -50,7 +50,7 @@ export class BoundingBoxMesh extends DataNode {
     );
     const positions_amount = 26;
     //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
-    const debug_render_boundingbox_vertexBuffer = new Buffer2(
+    const debug_render_boundingbox_vertexBuffer = new Buffer(
       {
         gpu: engine.gpu!.device,
         label: 'vertex_debug_bounding_box',

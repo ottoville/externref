@@ -14,7 +14,7 @@ import {
   type RENDER_TARGET_FORMAT,
   type RENDER_TARGET_TEXTURE,
   type TEXTURE_BINDING_TEXTURE,
-  Buffer2,
+  Buffer,
   BufferUsageEnums,
   BindGroup,
   type DepthRenderTarget,
@@ -39,7 +39,7 @@ export class PickableRenderPass<
   #pickBuffer: GPUBuffer;
   readonly #pickBufferRead?: GPUBuffer;
   #pickPositionPipeline?: GPUComputePipeline | Promise<GPUComputePipeline>;
-  readonly #mousePositionBuffer?: Buffer2<
+  readonly #mousePositionBuffer?: Buffer<
     (typeof BufferUsageEnums)['UNIFORM|COPY_DST']
   >;
   readonly #pickPositionBindGroup0?: BindGroup;
@@ -73,7 +73,7 @@ export class PickableRenderPass<
         size: 4 + 4, //depth + meshID (four pixel)
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
       });
-      this.#mousePositionBuffer = new Buffer2({
+      this.#mousePositionBuffer = new Buffer({
         gpu: gpu.device,
         label: 'mousePositionBuffer',
         size: 8,
@@ -157,7 +157,7 @@ export class PickableRenderPass<
       engine.gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse;
     if (gRenderTargetDiffuse instanceof MSAARenderTarget) {
       if (!this.#zAndIDPromise) {
-        const mousePositionSwapBuffer = new Buffer2(
+        const mousePositionSwapBuffer = new Buffer(
           {
             gpu: engine.gpu!.device,
             label: 'mousePositionSwapBuffer',

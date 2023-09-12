@@ -8,7 +8,7 @@ import type { Engine } from './engine.js';
 import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
 import { ClustersComp } from './GPU/Shaders/Clusters.comp.js';
-import { BindGroup, Buffer2, BufferUsageEnums } from './webgpu-ts/index.js';
+import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
 declare const engine: Engine;
 
 export type CameraControl = {
@@ -23,7 +23,7 @@ const enum VIEW_UPDATED {
 export class TerraCamera {
   readonly #childCameras: Set<CameraControl> = new Set();
 
-  #clusterArrayBuffer?: Buffer2<BufferUsageEnums.STORAGE>;
+  #clusterArrayBuffer?: Buffer<BufferUsageEnums.STORAGE>;
 
   readonly #uniformBufferSize =
     /* modelViewProjectionMatrix + view matrix */ 4 *
@@ -59,7 +59,7 @@ export class TerraCamera {
     128,
   );
 
-  #uniformBuffer?: Buffer2<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
+  #uniformBuffer?: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
   updateViewBindGroup?: BindGroup;
   uniformBindGroup?: BindGroup;
   readonly #controls: CameraControl;
@@ -93,14 +93,14 @@ export class TerraCamera {
       this.gpu = gpu;
       this.projection = projection;
 
-      this.#clusterArrayBuffer = new Buffer2({
+      this.#clusterArrayBuffer = new Buffer({
         gpu: gpu.device,
         label: 'clusterArrayBuffer',
         size: gpu.clusterSizeinBytes,
         usages: BufferUsageEnums.STORAGE,
       });
 
-      this.#uniformBuffer = new Buffer2({
+      this.#uniformBuffer = new Buffer({
         gpu: gpu.device,
         label: 'uniformBuffer',
         size: this.#uniformBufferSize,
@@ -295,7 +295,7 @@ export class TerraCamera {
     }
     this.projectionViewInvertedIsDirty = true;
     if (this.gpu) {
-      const tempBuffer = new Buffer2(
+      const tempBuffer = new Buffer(
         {
           gpu: this.gpu.device,
           label: 'camera_tempBuffer',

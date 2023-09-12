@@ -13,7 +13,7 @@ import {
   TextureUsageEnums,
   TextureView,
   BindGroup,
-  Buffer2,
+  Buffer,
   BufferUsageEnums,
 } from '../webgpu-ts/index.js';
 declare const engine: Engine;
@@ -112,7 +112,7 @@ export abstract class UIRectangle<
     top: 0,
   };
   texture?: RectangleTexture | undefined;
-  uniformBuffer: Buffer2<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
+  uniformBuffer: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
   textureView: TextureView<
     /*P extends GPU['UIPipelineArray']
       ? RectangleTexture
@@ -367,7 +367,7 @@ export abstract class UIRectangle<
       (Array.isArray(borderSize.height) && borderSize.height[0] > 0)
         ? 54
         : 6;
-    this.uniformBuffer = new Buffer2(
+    this.uniformBuffer = new Buffer(
       {
         gpu: renderPass.props.gpu,
         label: 'UI_transform',

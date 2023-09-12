@@ -2,7 +2,7 @@ import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type {
   AnyVertexStage,
   BindGroupLayoutEntry,
-  Buffer2,
+  Buffer,
   VERTEX_BUFFER,
   VertexShader,
   VertexShaderFunction,
@@ -27,7 +27,7 @@ export type MappedVertexBuffers<
     }>
     ? Readonly<{
         [Property in keyof V]: {
-          view: rust_vec_ptr<'f32'> | Buffer2<VERTEX_BUFFER>;
+          view: rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>;
           stride: number;
         };
       }>

@@ -5,7 +5,7 @@ import {
   type ColorRenderTarget,
   type RenderPipeline,
   type RenderPipelineBuilder,
-  Buffer2,
+  Buffer,
   BufferUsageEnums,
   BindGroup,
   RenderPipelineLayout,
@@ -59,7 +59,7 @@ export class RenderPass<
     RenderPipelineVariant | Promise<RenderPipelineVariant>
   > = new Map();
   readonly createSizeBindGroup: () => BindGroup;
-  #screenDimensionsBuffer: Buffer2<BufferUsageEnums.UNIFORM>;
+  #screenDimensionsBuffer: Buffer<BufferUsageEnums.UNIFORM>;
   readonly colorRenderTargets = {} as U;
   onResize: Map<object, () => void> = new Map();
   public sampleCount: 1 | 4;
@@ -150,7 +150,7 @@ export class RenderPass<
   }
   #updateSizeBindGroup(gpu: GPU, initial = false) {
     if (!initial) this.#screenDimensionsBuffer.destroy();
-    this.#screenDimensionsBuffer = new Buffer2(
+    this.#screenDimensionsBuffer = new Buffer(
       {
         gpu: this.props.gpu,
         label: 'screen_buffer',
@@ -235,18 +235,18 @@ export class RenderPass<
   }
   renderLayout(
     renderBundleEncoder: RenderBundleEncoder,
-    legacyLayout: RenderPipelineLayout,
+    layout: RenderPipelineLayout,
     bindGroupStartIndex: number,
   ): number {
     let meshesDrawn = 0;
-    legacyLayout.sharedBindgroups.forEach((sharedBindgroup) => {
+    layout.sharedBindgroups.forEach((sharedBindgroup) => {
       renderBundleEncoder.renderBundleEncoder.setBindGroup(
         bindGroupStartIndex++,
         sharedBindgroup.bindGroup.getForRenderBundle(renderBundleEncoder),
         sharedBindgroup.offsets,
       );
     });
-    legacyLayout.renderPipeLines.forEach((renderPipeline) => {
+    layout.renderPipeLines.forEach((renderPipeline) => {
       const variant = this.renderPipelines.get(renderPipeline);
       if (variant && 'renderpipeline' in variant) {
         var drawables = variant.rootDrawables;
@@ -282,7 +282,7 @@ export class RenderPass<
         });
       }
     });
-    legacyLayout.subBindGroups.forEach((subBindGroup) => {
+    layout.subBindGroups.forEach((subBindGroup) => {
       meshesDrawn += this.renderLayout(
         renderBundleEncoder,
         subBindGroup,

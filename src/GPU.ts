@@ -47,7 +47,7 @@ import {
   MSAARenderTarget,
   createRenderPipelineBuilder,
   BindGroup,
-  Buffer2,
+  Buffer,
   BufferUsageEnums,
   DepthRenderTarget,
   RenderPipelineLayout,
@@ -111,13 +111,13 @@ export class GPU {
   readonly cameras: TerraCamera[] = [];
 
   //Todo: Remove COPY_SRC
-  readonly GPUMeshes: Buffer2<
+  readonly GPUMeshes: Buffer<
     (typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']
   >;
-  readonly #GPUPointLights: Buffer2<
+  readonly #GPUPointLights: Buffer<
     (typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_DST']
   >;
-  readonly #GPUDirectionalLights: Buffer2<
+  readonly #GPUDirectionalLights: Buffer<
     (typeof BufferUsageEnums)['STORAGE|COPY_DST']
   >;
   readonly positionAndTimeBindGroup: RenderPipelineLayout<
@@ -140,7 +140,7 @@ export class GPU {
   >;
 
   readonly BindGroupPosition: BindGroup<typeof this.BindGroupLayoutPosition>;
-  readonly timeBuffer: Buffer2<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
+  readonly timeBuffer: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
 
   readonly #renderPasses: RenderPass[];
 
@@ -354,21 +354,21 @@ export class GPU {
       totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
     this.updateViewShader = createUpdateViewShader(this);
 
-    this.GPUMeshes = new Buffer2({
+    this.GPUMeshes = new Buffer({
       gpu: device,
       label: 'GPUMeshes',
       size: GPU.gpu_memory_index_size * this.#maxInstances,
       usages: BufferUsageEnums['UNIFORM|STORAGE|COPY_SRC|COPY_DST'],
     });
 
-    this.#GPUPointLights = new Buffer2({
+    this.#GPUPointLights = new Buffer({
       gpu: device,
       label: 'GPUPointLights',
       size: this.#gpu_max_point_lights * 4,
       usages: BufferUsageEnums['UNIFORM|STORAGE|COPY_DST'],
     });
 
-    this.#GPUDirectionalLights = new Buffer2({
+    this.#GPUDirectionalLights = new Buffer({
       gpu: device,
       label: 'GPUDirectionalLights',
       size: 63 * 4,
@@ -939,7 +939,7 @@ export class GPU {
     this.#DynamicBindGroups.add(this.BindGroupPosition);
     const timeAndDeltaBuffer = new ArrayBuffer(8);
 
-    this.timeBuffer = new Buffer2({
+    this.timeBuffer = new Buffer({
       gpu: this.device,
       label: 'timeBuffer',
       size: timeAndDeltaBuffer.byteLength,
@@ -1038,7 +1038,7 @@ export class GPU {
     });
     let tempOffset = 0;
 
-    new Buffer2(
+    new Buffer(
       {
         gpu: this.device,
         label: 'handle_gpu_queue',
@@ -1107,7 +1107,7 @@ export class GPU {
     });
     //TODO: Potential buffer overflow
     const byteLength = 4 + lights.byteLength;
-    const tempBuffer = new Buffer2(
+    const tempBuffer = new Buffer(
       {
         gpu: this.device,
         label: 'directional_lights_tempBuffer',
@@ -1141,7 +1141,7 @@ export class GPU {
     });
     //TODO: Potential buffer overflow
     const byteLength = 4 + lights.byteLength;
-    const tempBuffer = new Buffer2(
+    const tempBuffer = new Buffer(
       {
         gpu: this.device,
         label: 'point_lights_tempBuffer',

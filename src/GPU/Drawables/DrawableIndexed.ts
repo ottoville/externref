@@ -8,7 +8,7 @@ import type { LegacyRenderPipeline } from '../RenderPipeline.js';
 import type { DrawableProps } from './Drawable.js';
 import type { DataNode } from '../../nodes/DataNode.js';
 import {
-  Buffer2,
+  Buffer,
   BufferUsageEnums,
   RenderBundleEncoder,
   type INDEX_BUFFER,
@@ -25,7 +25,7 @@ export class DrawableIndexed<
   R extends LegacyRenderPipeline = LegacyRenderPipeline,
   N extends DataNode = DataNode,
 > extends DrawableDirect<N> {
-  #indexBuffer: Buffer2<INDEX_BUFFER> | undefined;
+  #indexBuffer: Buffer<INDEX_BUFFER> | undefined;
   #baseVertex: number;
   #firstIndex: number;
   #GPUIndexFormat: GPUIndexFormat;
@@ -64,34 +64,34 @@ export class DrawableIndexed<
   }
 
   setIndexBuffer(
-    buffer: Buffer2<INDEX_BUFFER>,
+    buffer: Buffer<INDEX_BUFFER>,
     baseVertex?: number,
     destroyOld?: boolean,
     GPUIndexFormat?: GPUIndexFormat,
-  ): Buffer2<INDEX_BUFFER>;
+  ): Buffer<INDEX_BUFFER>;
   setIndexBuffer(
     buffer: Uint16Array | Uint32Array,
     baseVertex?: number,
     destroyOld?: boolean,
-  ): Buffer2<INDEX_BUFFER>;
+  ): Buffer<INDEX_BUFFER>;
   setIndexBuffer(
-    buffer: Uint16Array | Uint32Array | Buffer2<INDEX_BUFFER>,
+    buffer: Uint16Array | Uint32Array | Buffer<INDEX_BUFFER>,
     baseVertex = 0,
     destroyOld = true,
     GPUIndexFormat?: GPUIndexFormat,
-  ): Buffer2<INDEX_BUFFER> {
+  ): Buffer<INDEX_BUFFER> {
     this.#baseVertex = baseVertex;
     if (destroyOld && this.#indexBuffer) {
       this.#indexBuffer.destroy();
     }
-    if (buffer instanceof Buffer2) {
+    if (buffer instanceof Buffer) {
       this.#indexBuffer = buffer;
       if (GPUIndexFormat) {
         this.#GPUIndexFormat = GPUIndexFormat;
       }
     } else {
       // const gpu = this.renderPipeline.props.vertexShader.props.gpu;
-      this.#indexBuffer = new Buffer2(
+      this.#indexBuffer = new Buffer(
         {
           gpu: engine.gpu!.device,
           label: 'index_' + this.node.label,
