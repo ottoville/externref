@@ -1,9 +1,8 @@
 ﻿import type { TerraCamera } from '../../TerraCamera.js';
-import type { Drawable } from '../Drawables/Drawable.js';
 import {
   RenderBundleEncoder,
   type ColorRenderTarget,
-  type RenderPipeline,
+  RenderPipeline,
   type RenderPipelineBuilder,
   Buffer,
   BufferUsageEnums,
@@ -17,20 +16,6 @@ import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 declare const engine: Engine;
 
 const gpu_screen_buffer_size = 16; //screen width and height and ratio
-
-// eslint-disable-next-line import/no-unused-modules
-export class RenderPipelineVariant {
-  constructor(
-    public renderpipeline: RenderPipeline,
-    public rootDrawables: Set<Drawable>,
-  ) {}
-  onRootDrawableChanges: Set<() => void> = new Set();
-  addRootDrawable(drawable: Drawable) {
-    this.rootDrawables.add(drawable);
-    this.onRootDrawableChanges.forEach((cb) => cb());
-    return this.rootDrawables;
-  }
-}
 
 export type RenderPassProps<U> = {
   gpu: GPUDevice;
@@ -57,7 +42,7 @@ export class RenderPass<
   readonly bundles: RenderBundleEncoder[] = [];
   readonly renderPipelines: Map<
     Readonly<RenderPipelineBuilder>,
-    RenderPipelineVariant | Promise<RenderPipelineVariant>
+    RenderPipeline | Promise<RenderPipeline>
   > = new Map();
   readonly createSizeBindGroup: () => BindGroup;
   #screenDimensionsBuffer: Buffer<BufferUsageEnums.UNIFORM>;
@@ -211,8 +196,8 @@ export class RenderPass<
     });
     layout.renderPipeLines.forEach((renderPipeline) => {
       const variant = this.renderPipelines.get(renderPipeline);
-      if (variant && 'renderpipeline' in variant) {
-        var drawables = variant.rootDrawables;
+      if (variant instanceof RenderPipeline) {
+        var drawables = variant.drawables;
         if (!drawables || drawables.size == 0) {
           console.warn(
             'No drawables has been set for renderpass',
@@ -221,9 +206,7 @@ export class RenderPass<
           );
           return;
         }
-        renderBundleEncoder.renderBundleEncoder.setPipeline(
-          variant.renderpipeline.pipeline,
-        );
+        renderBundleEncoder.renderBundleEncoder.setPipeline(variant.pipeline);
         drawables.forEach((drawable) => {
           drawable.bindGroups.forEach((bindGroup, i) => {
             renderBundleEncoder.renderBundleEncoder.setBindGroup(

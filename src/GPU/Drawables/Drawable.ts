@@ -1,7 +1,4 @@
-﻿import {
-  RenderPipelineVariant,
-  type RenderPass,
-} from '../RenderPasses/RenderPass.js';
+﻿import { type RenderPass } from '../RenderPasses/RenderPass.js';
 
 import type { Engine, rust_vec_ptr } from '../../engine.js';
 import { MainNode } from '../../MainNode.js';
@@ -14,6 +11,7 @@ import {
   type VERTEX_BUFFER,
   RenderBundleEncoder,
   type RenderPipelineBuilderDesc,
+  Drawable as GPUDrawable,
 } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -44,7 +42,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
       size: number | undefined;
     }
   > = new Map();
-  #renderList: Map<RenderPass, Set<Drawable<MainNode>>> = new Map();
+  #renderList: Map<RenderPass, Set<GPUDrawable>> = new Map();
   public renderPipeline: RenderPipelineProps;
   protected renderPasses: Set<RenderPass>;
   destroyed = false;
@@ -102,15 +100,10 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         variantPP = this.renderPipeline.builder
           .build(renderPipelineDescriptor)
           .then((variantPipeline) => {
-            variantPipeline.drawables.push(this);
-            variantPP = new RenderPipelineVariant(
-              variantPipeline,
-              new Set<Drawable>(),
-            );
             // Replace promise with real object
-            rp.renderPipelines.set(renderPipeline.builder, variantPP);
+            rp.renderPipelines.set(renderPipeline.builder, variantPipeline);
             rp.onRenderPipelinesChange.forEach((cb) => cb());
-            return variantPP;
+            return variantPipeline;
           });
         // Save promise
         rp.renderPipelines.set(renderPipeline.builder, variantPP);
@@ -120,12 +113,12 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         variantPP
           .then((variant) => {
             if (this.destroyed) return;
-            this.#renderList.set(rp, variant.addRootDrawable(this));
+            this.#renderList.set(rp, variant.addDrawable(this));
             rp.bundles.forEach((b) => b.destroy());
           })
           .catch((err) => engine.showError(err));
       } else {
-        this.#renderList.set(rp, variantPP.addRootDrawable(this));
+        this.#renderList.set(rp, variantPP.addDrawable(this));
         rp.bundles.forEach((b) => b.destroy());
       }
     });
