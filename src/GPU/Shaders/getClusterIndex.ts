@@ -1,14 +1,8 @@
 import type { BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
-import type { ProjectionStruct, Struct } from './structs/Structs.js';
+import type { ProjectionStruct, ScreenDimensions } from './structs/Structs.js';
 
 export const getClusterIndex = (
-  screen_dimensions: BufLayout<
-    number,
-    Struct<{
-      screenDimensions: readonly [string, string];
-      screendimensions_ratio: readonly [string, string];
-    }>
-  >,
+  screen_dimensions: BufLayout<number, typeof ScreenDimensions>,
   projection: BufLayout<ShaderStage.FRAGMENT, typeof ProjectionStruct>,
 ) => /* wgsl */ `
     fn linearDepth(depthSample : f32) -> f32 {

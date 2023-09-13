@@ -1,25 +1,6 @@
 /* eslint-disable sort-keys */
 
-export class Struct<
-  const T extends {
-    [index: string]: readonly [properties: string, type: string];
-  } = { [index: string]: readonly [size: string, type: string] },
-> {
-  constructor(
-    public name: string,
-    public properties: T,
-    public depedencies?: Struct[],
-  ) {}
-  getPropertiesAsString() {
-    let properties = '';
-    for (const property in this.properties) {
-      properties += `${this.properties[property]![0]} ${property}: ${
-        this.properties[property]![1]
-      },\n`;
-    }
-    return properties;
-  }
-}
+import { Struct } from '../../../webgpu-ts/index.js';
 
 export const typicalOutput = new Struct('Output', {
   fragCoord: ['@builtin(position)', 'vec4<f32>'],
@@ -120,6 +101,9 @@ const Vertice = new Struct('Vertice', {
   position: ['', 'vec3<f32>'],
   normal: ['', 'vec3<f32>'],
   uv: ['@size(16)', 'vec2<f32>'],
+});
+export const PositionOutput = new Struct('Output', {
+  Position: ['@builtin(position)', 'vec4<f32>'],
 });
 export const UI_Input = new Struct('Output', {
   Position: ['@builtin(position)', 'vec4<f32>'],

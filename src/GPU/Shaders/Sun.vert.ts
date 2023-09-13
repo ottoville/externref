@@ -6,7 +6,7 @@ import {
   type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { MeshUniforms, Scene, Struct } from './structs/Structs.js';
+import { MeshUniforms, PositionOutput, Scene } from './structs/Structs.js';
 type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createSunVertShader(
@@ -16,9 +16,7 @@ export function createSunVertShader(
     {
       entryPoints: {
         main: new VertexShaderFunction(
-          new Struct('Output', {
-            Position: ['@builtin(position)', 'vec4<f32>'],
-          }),
+          PositionOutput,
           [],
           ([
             ,

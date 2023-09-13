@@ -6,7 +6,7 @@ import {
   type ShaderStage,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import { MeshUniforms, Scene, Struct } from './structs/Structs.js';
+import { MeshUniforms, Scene, WaterInput } from './structs/Structs.js';
 import { positionAttr } from './structs/Attributes.js';
 
 export function createWaterVertShader(
@@ -16,14 +16,7 @@ export function createWaterVertShader(
   return new VertexShader({
     entryPoints: {
       main: new VertexShaderFunction(
-        new Struct('Output', {
-          Position: ['@builtin(position)', 'vec4<f32>'],
-          v_uv: ['@location(0)', 'vec4<f32>'],
-          // eslint-disable-next-line sort-keys
-          position: ['@location(1)', 'vec4<f32>'],
-          // eslint-disable-next-line sort-keys
-          id: ['@location(2) @interpolate(flat)', 'u32'],
-        }),
+        WaterInput,
         [buffers],
         (
           [
