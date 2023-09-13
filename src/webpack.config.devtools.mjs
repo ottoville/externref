@@ -6,6 +6,7 @@ export default {
     outputModule: true,
   },
   externals: {
+    '../../GPU/Drawables/Drawable.js': '../../GPU/Drawables/Drawable.js',
     '../../GPU/Drawables/DrawableDirect.js':
       '../../GPU/Drawables/DrawableDirect.js',
     '../../GPU/Drawables/DrawableIndexed.js':

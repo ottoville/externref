@@ -1,18 +1,17 @@
 import type { GPU } from '../../GPU.js';
 
-import type { RenderPipeline } from '../../GPU/RenderPipeline.js';
-import type { RenderPipelineVariant } from '../../GPU/RenderPasses/RenderPass.js';
 import type { Drawable } from '../../GPU/Drawables/Drawable.js';
 
 import { useEffect, useState } from 'react';
 import { VariantList } from './VariantList.js';
 import { NodeInfo } from './NodeInfo.js';
 import type { Engine } from '../../engine.js';
+import { RenderPipeline, RenderPipelineBuilder } from 'webgpu-ts/index.js';
 declare const engine: Engine;
 
 const getPositionBindGroupForScreen = (gpu: GPU) =>
   Array.from(gpu.renderPassScreen.renderPipelines).filter(
-    (map): map is [RenderPipeline, RenderPipelineVariant] => {
+    (map): map is [RenderPipelineBuilder, RenderPipeline] => {
       const [, renderPipelineVariant] = map;
       return !(renderPipelineVariant instanceof Promise);
     },
@@ -20,7 +19,7 @@ const getPositionBindGroupForScreen = (gpu: GPU) =>
 
 const getUIBindGroupForScreen = (gpu: GPU) =>
   Array.from(gpu.renderPassCanvas.renderPipelines).filter(
-    (map): map is [RenderPipeline, RenderPipelineVariant] => {
+    (map): map is [RenderPipelineBuilder, RenderPipeline] => {
       const [, renderPipelineVariant] = map;
       return !(renderPipelineVariant instanceof Promise);
     },
@@ -56,12 +55,12 @@ export function Meshes() {
       <fieldset id="meshes">
         <legend>Rendered meshes</legend>
         <ul>
-          {renderPipelines.map(([rp, variant]) => {
+          {renderPipelines.map(([, variant]) => {
             return (
-              <li key={rp.props.label}>
+              <li key={variant.pipeline.label}>
                 Renderpipeline
                 <br />
-                <small>{rp.props.label}</small>
+                <small>{variant.pipeline.label}</small>
                 <VariantList
                   variant={variant}
                   setSelectedDrawable={setSelectedDrawable}
@@ -74,12 +73,12 @@ export function Meshes() {
       <fieldset id="uis">
         <legend>Rendered UI</legend>
         <ul>
-          {UIrenderPipelines.map(([rp, variant]) => {
+          {UIrenderPipelines.map(([, variant]) => {
             return (
-              <li key={rp.props.label}>
+              <li key={variant.pipeline.label}>
                 Renderpipeline
                 <br />
-                <small>{rp.props.label}</small>
+                <small>{variant.pipeline.label}</small>
                 <VariantList
                   variant={variant}
                   setSelectedDrawable={setSelectedDrawable}

@@ -42,7 +42,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
       size: number | undefined;
     }
   > = new Map();
-  #renderList: Map<RenderPass, Set<GPUDrawable>> = new Map();
+  #renderList: Map<RenderPass, GPUDrawable[]> = new Map();
   public renderPipeline: RenderPipelineProps;
   protected renderPasses: Set<RenderPass>;
   destroyed = false;
@@ -126,7 +126,9 @@ export abstract class Drawable<N extends MainNode = MainNode> {
 
   //staticBindGroup?: BindGroup;
   destroy(preserveVerticeBuffers: number[] = []): void {
-    this.#renderList.forEach((Drawables) => Drawables.delete(this));
+    this.#renderList.forEach((Drawables) =>
+      Drawables.splice(Drawables.indexOf(this), 1),
+    );
     this.vertexBuffers.forEach((b, key) => {
       if (!preserveVerticeBuffers.includes(key)) b.buffer.destroy();
     });
