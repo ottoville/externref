@@ -95,7 +95,7 @@ export class PickableRenderPass<
         (bindGroup) => ({
           depth_texture: depthRenderTarget.view,
           mesh_texture:
-            gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view,
+            gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId.view,
           mouse: this.#mousePositionBuffer!.getUniformBinding(bindGroup),
         }),
       );
@@ -114,7 +114,7 @@ export class PickableRenderPass<
   }
   override resize(width: number, height: number) {
     super.resize(width, height);
-    if (this.sampleCount === 1) {
+    if (this.props.sampleCount === 1) {
       //update picking
       const oldpickBuffer = this.#pickBuffer;
       if (oldpickBuffer) {
@@ -154,7 +154,8 @@ export class PickableRenderPass<
       label: 'pickPosition_encoder',
     });
     const gRenderTargetDiffuse =
-      engine.gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse;
+      engine.gpu!.renderPassScreen.props.colorRenderTargets
+        .gRenderTargetDiffuse;
     if (gRenderTargetDiffuse instanceof MSAARenderTarget) {
       if (!this.#zAndIDPromise) {
         const mousePositionSwapBuffer = new Buffer(
@@ -248,8 +249,8 @@ export class PickableRenderPass<
               z: 0,
             },
             texture:
-              engine.gpu!.pickRenderPass.colorRenderTargets.gRenderTargetId
-                .texture,
+              engine.gpu!.pickRenderPass.props.colorRenderTargets
+                .gRenderTargetId.texture,
           },
           {
             buffer: this.#pickBuffer,

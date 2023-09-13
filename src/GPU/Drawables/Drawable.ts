@@ -77,22 +77,22 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         const renderPipelineDescriptor: RenderPipelineBuilderDesc = {
           fragment: {
             entryPoint: fragmentEntry,
-            targets: Object.values(rp.colorRenderTargets),
+            targets: Object.values(rp.props.colorRenderTargets),
           },
           label:
             'renderPipeline:' +
             renderPipeline.label +
             ' RenderPass:' +
-            rp.label,
+            rp.props.label,
           vertex: {
             entryPoint: rp.entryPoint,
           },
         };
         if (renderPipeline.primitive)
           renderPipelineDescriptor.primitive = renderPipeline.primitive;
-        if (rp.sampleCount > 1)
+        if (rp.props.sampleCount > 1)
           renderPipelineDescriptor.multisample = {
-            count: rp.sampleCount,
+            count: rp.props.sampleCount,
           };
         if (rp.onDecoratePipeline)
           rp.onDecoratePipeline(renderPipeline, renderPipelineDescriptor);

@@ -90,7 +90,8 @@ export class Sea extends BoundableNodeSimple {
               'waterTexture',
               () => ({
                 diffuseTexture:
-                  engine.gpu!.renderPassWater.colorRenderTargets.diffuse.view,
+                  engine.gpu!.renderPassWater.props.colorRenderTargets.diffuse
+                    .view,
                 mySampler: sampler,
               }),
             ),

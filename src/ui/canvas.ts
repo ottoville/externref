@@ -1,4 +1,4 @@
-﻿import { Engine } from '../engine.js';
+import { Engine } from '../engine.js';
 
 import { Plants } from '../plants/Plants.js';
 import { PlantsUI } from '../tools/plantsUI.js';
@@ -322,7 +322,7 @@ export class Canvas {
               },
             },
           },
-          gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
+          gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
         );
         this.setProgress(45);
 

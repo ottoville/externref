@@ -2,13 +2,13 @@
 import {
   RenderBundleEncoder,
   type ColorRenderTarget,
-  RenderPipeline,
-  type RenderPipelineBuilder,
   Buffer,
   BufferUsageEnums,
   BindGroup,
   RenderPipelineLayout,
   RenderPipelineBuilderDesc,
+  Renderpass,
+  type RenderpassProps,
 } from '../../webgpu-ts/index.js';
 import type { Engine } from '../../engine.js';
 import type { GPU } from '../../GPU.js';
@@ -17,17 +17,13 @@ declare const engine: Engine;
 
 const gpu_screen_buffer_size = 16; //screen width and height and ratio
 
-export type RenderPassProps<U> = {
-  gpu: GPUDevice;
-  colorRenderTargets: U;
-  sampleCount: 1 | 4;
+export interface RenderPassProps<U> extends RenderpassProps<U> {
   size: { width: number; height: number };
   getSizeOnResize: (width: number, height: number) => [number, number];
   entryPoint: string;
   rootLayouts: RenderPipelineLayout[];
-  label: string;
   GPURenderBundleEncoderDescriptor?: Partial<GPURenderBundleEncoderDescriptor>;
-};
+}
 
 export class RenderPass<
   U extends {
@@ -35,59 +31,44 @@ export class RenderPass<
   } = {
     [index: string]: ColorRenderTarget;
   },
-> {
+> extends Renderpass<U> {
   readonly perspectiveCameras: Set<TerraCamera> = new Set();
   readonly #rootLayouts: RenderPipelineLayout[];
 
-  readonly bundles: RenderBundleEncoder[] = [];
-  readonly renderPipelines: Map<
-    Readonly<RenderPipelineBuilder>,
-    RenderPipeline | Promise<RenderPipeline>
-  > = new Map();
   readonly createSizeBindGroup: () => BindGroup;
   #screenDimensionsBuffer: Buffer<BufferUsageEnums.UNIFORM>;
-  readonly colorRenderTargets = {} as U;
   onResize: Map<object, () => void> = new Map();
-  public sampleCount: 1 | 4;
   public size: { width: number; height: number };
   entryPoint: string;
   #getSizeOnResize: (width: number, height: number) => [number, number];
-  public label: string;
   sizeBindGroup: BindGroup;
   onDecoratePipeline?: (
     renderpipeline: RenderPipelineProps,
     renderPipelineDescriptor: RenderPipelineBuilderDesc,
   ) => void;
-  constructor(
-    public props: RenderPassProps<U>,
-    gpu: GPU,
-  ) {
+  constructor(props: RenderPassProps<U>, gpu: GPU) {
+    super(props);
     const {
       colorRenderTargets,
-      sampleCount,
       size,
       getSizeOnResize,
       entryPoint,
       rootLayouts: rootLayout,
-      label,
       GPURenderBundleEncoderDescriptor,
     } = props;
-    this.sampleCount = sampleCount;
     this.size = size;
     this.#getSizeOnResize = getSizeOnResize;
     this.entryPoint = entryPoint;
     this.#rootLayouts = rootLayout;
-    this.label = label;
-    this.colorRenderTargets = colorRenderTargets;
     const renderTargersArray = Object.values(colorRenderTargets);
     renderTargersArray.forEach((rt) => {
-      rt.resize(this.size, this.sampleCount);
+      rt.resize(this.size, this.props.sampleCount);
     });
     const renderBundle = new RenderBundleEncoder(
       this,
       GPURenderBundleEncoderDescriptor,
       (renderBundleEncoder) => {
-        Object.values(this.colorRenderTargets).some((rt) => {
+        Object.values(this.props.colorRenderTargets).some((rt) => {
           if (rt.texture.sampleCount === 0 && rt.view.bindGroups.size === 0) {
             console.warn(
               'Rendertarget ',
@@ -101,7 +82,7 @@ export class RenderPass<
         if (this.perspectiveCameras.size === 0) {
           // Draw UI
           this.#rootLayouts.forEach((layout) => {
-            drawedMeshes += this.renderLayout(renderBundleEncoder, layout, 0);
+            drawedMeshes += layout.render(renderBundleEncoder, this, 0);
           });
         } else {
           renderBundleEncoder.renderBundleEncoder.setBindGroup(
@@ -114,7 +95,7 @@ export class RenderPass<
               camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder),
             );
             this.#rootLayouts.forEach((layout) => {
-              drawedMeshes += this.renderLayout(renderBundleEncoder, layout, 2);
+              drawedMeshes += layout.render(renderBundleEncoder, this, 2);
             });
           });
         }
@@ -168,74 +149,18 @@ export class RenderPass<
     }
     [this.size.width, this.size.height] = this.#getSizeOnResize(width, height);
     this.#updateSizeBindGroup(engine.gpu!);
-    for (const rt of Object.values(this.colorRenderTargets)) {
-      rt.resize(this.size, this.sampleCount);
+    for (const rt of Object.values(this.props.colorRenderTargets)) {
+      rt.resize(this.size, this.props.sampleCount);
     }
   }
   //TODO: dont execute this function on every render
   get GPURenderPassDescriptor(): GPURenderPassDescriptor {
     const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: Object.values(this.colorRenderTargets).map((rt) =>
+      colorAttachments: Object.values(this.props.colorRenderTargets).map((rt) =>
         rt.createColorAttachment(),
       ),
     };
     return renderPassDescriptor;
-  }
-  renderLayout(
-    renderBundleEncoder: RenderBundleEncoder,
-    layout: RenderPipelineLayout,
-    bindGroupStartIndex: number,
-  ): number {
-    let meshesDrawn = 0;
-    layout.sharedBindgroups.forEach((sharedBindgroup) => {
-      renderBundleEncoder.renderBundleEncoder.setBindGroup(
-        bindGroupStartIndex++,
-        sharedBindgroup.bindGroup.getForRenderBundle(renderBundleEncoder),
-        sharedBindgroup.offsets,
-      );
-    });
-    layout.renderPipeLines.forEach((renderPipeline) => {
-      const variant = this.renderPipelines.get(renderPipeline);
-      if (variant instanceof RenderPipeline) {
-        var drawables = variant.drawables;
-        if (!drawables || drawables.size == 0) {
-          console.warn(
-            'No drawables has been set for renderpass',
-            this.props.label,
-            ', wont draw anything',
-          );
-          return;
-        }
-        renderBundleEncoder.renderBundleEncoder.setPipeline(variant.pipeline);
-        drawables.forEach((drawable) => {
-          drawable.bindGroups.forEach((bindGroup, i) => {
-            renderBundleEncoder.renderBundleEncoder.setBindGroup(
-              i + bindGroupStartIndex,
-              bindGroup.bindGroup.getForRenderBundle(renderBundleEncoder),
-              bindGroup.offsets,
-            );
-          });
-          drawable.vertexBuffers.forEach((buffer, index) =>
-            renderBundleEncoder.renderBundleEncoder.setVertexBuffer(
-              index,
-              buffer.buffer.getVertexBinding(renderBundleEncoder),
-              buffer.offset,
-              buffer.size,
-            ),
-          );
-          drawable.render(renderBundleEncoder);
-          meshesDrawn++;
-        });
-      }
-    });
-    layout.subBindGroups.forEach((subBindGroup) => {
-      meshesDrawn += this.renderLayout(
-        renderBundleEncoder,
-        subBindGroup,
-        bindGroupStartIndex,
-      );
-    });
-    return meshesDrawn;
   }
 
   render(renderEncoder: GPUCommandEncoder) {
