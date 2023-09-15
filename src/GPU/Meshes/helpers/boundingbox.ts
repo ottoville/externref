@@ -6,7 +6,7 @@ import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_bo
 import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
 import { Buffer, BufferUsageEnums } from '../../../webgpu-ts/index.js';
 declare const engine: Engine;
-import { GPU } from '../../../GPU.js';
+import { gpu_memory_index_size } from '../../../GPU/Shaders/ShaderBuilders.js';
 
 const indices = Uint32Array.of(
   0,
@@ -93,9 +93,7 @@ export class BoundingBoxMesh extends DataNode {
       bindGroups: [
         {
           bindGroup: engine.gpu!.BindGroupPosition,
-          offsets: [
-            engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
-          ],
+          offsets: [engine.rust.gpu_alignment(this.id) * gpu_memory_index_size],
         },
       ],
       node: this,

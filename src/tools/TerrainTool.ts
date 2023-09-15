@@ -11,7 +11,6 @@ import {
   createHelperVertShader,
 } from '../GPU/Shaders/helper.vert.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
-import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
 import { UINode } from '../ui/UINode.js';
@@ -21,6 +20,7 @@ import {
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
+import { gpu_memory_index_size } from '../GPU/Shaders/ShaderBuilders.js';
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
@@ -157,13 +157,13 @@ export class TerrainTool extends MainNode {
       }: CreateRenderPipelineProps) {
         const vertexShader = createHelperVertShader(
           terrain.settings,
-          terrain.TerrainHeightsbindGroupTreePosition,
-        );
-        const fragmentShader = createColorFragmentShader(
-          terrain.TerrainHeightsbindGroupTreePosition,
+          terrain.gpu.shaders.terrainHeightsbindGroupTreePosition,
         );
         const renderPipeline = Object.freeze({
-          builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
+          builder: createRenderPipelineBuilder(
+            vertexShader,
+            terrain.gpu.shaders.ColorShader,
+          ),
           connections: {
             main: 'main',
           },
@@ -193,7 +193,7 @@ export class TerrainTool extends MainNode {
           {
             bindGroup: engine.gpu!.BindGroupPosition,
             offsets: [
-              engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
+              engine.rust.gpu_alignment(this.id) * gpu_memory_index_size,
             ],
           },
         ],

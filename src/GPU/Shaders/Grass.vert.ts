@@ -1,10 +1,9 @@
 import {
   type VertexBufferLayout2,
-  VertexShader,
   VertexShaderFunction,
   ShaderStage,
   type BufLayout,
-  type RenderPipelineLayout,
+  ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { Scene, Time, colorPositionOutput } from './structs/Structs.js';
@@ -36,100 +35,94 @@ export const vertexPositionAttr = Object.freeze({
   },
 } as const);
 
-type BindLayouts = GPU['rootCameralayout']['bindGroupLayouts'];
 export function createGrassVertShader(
-  pipelineLayout: RenderPipelineLayout<BindLayouts>,
+  pipelineLayout: GPU['shaders']['rootCameralayout'],
   buffers: [
     VertexBufferLayout2<typeof positionAttr>,
     VertexBufferLayout2<typeof shapeAttr>,
     VertexBufferLayout2<typeof vertexPositionAttr>,
   ],
 ) {
-  return new VertexShader(
-    {
-      entryPoints: {
-        main: new VertexShaderFunction(
-          colorPositionOutput,
-          buffers,
-          (
-            [, { scene, time }],
-            [{ position }, { shape }, { vertex_position }],
-          ) => /* wgsl */ `
-                var output:Output;
-                //ambient = lights.ambient;
-                 var vertice:vec3<f32> = vec3<f32>(${vertex_position}.xy,0.0);
-                 //let windRotate:f32 = rot[VertexIndex].x;
-                 //TODO
-                 let windRotate:f32 = 0.0;
-               
-                 //How fast wind direction and intensivy change
-               
-               
-                 var windIntensivy:f32 =(cos((f32(${time.prop(
-                   'time',
-                 )})*0.01 + ${position}.x)*0.1)+1.0)*0.5;
-               //  float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
-               
-                 //var leanAndBaseCurve:f32 = ${shape}.y + vertice.y*${shape}.z;
-                     //curve
-                 var curveAmount:f32 = vertice.y*${shape}.w + windIntensivy*vertice.y;
-                 var CosCurve:f32 = cos(curveAmount);
-                 var SinCurve:f32 = sin(curveAmount);
-                  var MCurve:mat3x3<f32> = mat3x3<f32>(
-                      vec3<f32>(1.0,0.0,0.0),
-                      vec3<f32>(0.0,CosCurve,-SinCurve),
-                      vec3<f32>(0.0,SinCurve,CosCurve)
-                  );
-               
-                   //rotate
-                  var rotateAmountWind:f32 =windDirection*windRotate;
-                  var c:f32  = cos((${position}.w+rotateAmountWind)/2.0);
-                  var s:f32  = sin((${position}.w+rotateAmountWind)/2.0);
-                  var m:mat3x3<f32> = mat3x3<f32>(
-                      vec3<f32>(c,     0.0,    s),
-                      vec3<f32>(0.0,   1.0,    0.0),
-                      vec3<f32>(-s,    0.0,    c)
-                  );
-               
-                  var mulMat:mat3x3<f32> = MCurve * m;
-                  vertice = vertice * mulMat;
-                  var normal:vec3<f32> = vec3<f32>(0.0,0.0,1.0) * mulMat;
-               
-                  var scaled:vec3<f32> =${shape}.x*vertice;
-               
-                  
-                  var worldPos:vec4<f32> = vec4<f32>(${position}.xyz, 1.0) + vec4<f32>(scaled.x, scaled.y, scaled.z, 0.0);
-                 // var viewDirectionW:vec3<f32> = normalize(${scene.prop(
-                   'viewPosition',
-                 )} - worldPos.xyz);
-                  //normal = normal * sign(dot(viewDirectionW, normal));
-               
-                  //var diffuse:f32 = dot(normal, lights.sunDirection)*lights.shadow;
-               
-                  output.position = ${scene.prop(
-                    'modelViewProjection',
-                  )} * worldPos;
-               
-                  output.color = vec3<f32>(clamp(${shape}.w,0.0,1.0),1.0,0.0);//*diffuse;
-                   return output;
-               
-                `,
-        ) satisfies VertexShaderFunction<
-          [
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            {},
-            {
-              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-              time: BufLayout<ShaderStage.VERTEX, typeof Time>;
-            },
-          ]
-        >,
+  const shaderFunction = new VertexShaderFunction(
+    colorPositionOutput,
+    buffers,
+    (
+      [, { scene, time }],
+      [{ position }, { shape }, { vertex_position }],
+    ) => /* wgsl */ `
+          var output:Output;
+          //ambient = lights.ambient;
+           var vertice:vec3<f32> = vec3<f32>(${vertex_position}.xy,0.0);
+           //let windRotate:f32 = rot[VertexIndex].x;
+           //TODO
+           let windRotate:f32 = 0.0;
+         
+           //How fast wind direction and intensivy change
+         
+         
+           var windIntensivy:f32 =(cos((f32(${time.prop(
+             'time',
+           )})*0.01 + ${position}.x)*0.1)+1.0)*0.5;
+         //  float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
+         
+           //var leanAndBaseCurve:f32 = ${shape}.y + vertice.y*${shape}.z;
+               //curve
+           var curveAmount:f32 = vertice.y*${shape}.w + windIntensivy*vertice.y;
+           var CosCurve:f32 = cos(curveAmount);
+           var SinCurve:f32 = sin(curveAmount);
+            var MCurve:mat3x3<f32> = mat3x3<f32>(
+                vec3<f32>(1.0,0.0,0.0),
+                vec3<f32>(0.0,CosCurve,-SinCurve),
+                vec3<f32>(0.0,SinCurve,CosCurve)
+            );
+         
+             //rotate
+            var rotateAmountWind:f32 =windDirection*windRotate;
+            var c:f32  = cos((${position}.w+rotateAmountWind)/2.0);
+            var s:f32  = sin((${position}.w+rotateAmountWind)/2.0);
+            var m:mat3x3<f32> = mat3x3<f32>(
+                vec3<f32>(c,     0.0,    s),
+                vec3<f32>(0.0,   1.0,    0.0),
+                vec3<f32>(-s,    0.0,    c)
+            );
+         
+            var mulMat:mat3x3<f32> = MCurve * m;
+            vertice = vertice * mulMat;
+            var normal:vec3<f32> = vec3<f32>(0.0,0.0,1.0) * mulMat;
+         
+            var scaled:vec3<f32> =${shape}.x*vertice;
+         
+            
+            var worldPos:vec4<f32> = vec4<f32>(${position}.xyz, 1.0) + vec4<f32>(scaled.x, scaled.y, scaled.z, 0.0);
+           // var viewDirectionW:vec3<f32> = normalize(${scene.prop(
+             'viewPosition',
+           )} - worldPos.xyz);
+            //normal = normal * sign(dot(viewDirectionW, normal));
+         
+            //var diffuse:f32 = dot(normal, lights.sunDirection)*lights.shadow;
+         
+            output.position = ${scene.prop('modelViewProjection')} * worldPos;
+         
+            output.color = vec3<f32>(clamp(${shape}.w,0.0,1.0),1.0,0.0);//*diffuse;
+             return output;
+         
+          `,
+  ) satisfies VertexShaderFunction<
+    readonly [
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      {},
+      {
+        scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+        time: BufLayout<ShaderStage.VERTEX, typeof Time>;
       },
-      label: 'grass.vert',
-      pipelineLayouts: [pipelineLayout],
-    },
+    ]
+  >;
+  const shaderBuilder = new ShaderBuilder([pipelineLayout]);
+
+  return shaderBuilder.addFunction('main', shaderFunction).build(
+    'grass.vert',
     () => /* wgsl */ `
-    const bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
+  const bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
 const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(
 vec2<f32>(0.0,0.0),
 vec2<f32>(0.0,0.0),
@@ -167,6 +160,6 @@ vec2<f32>(0.007, 0.57),
 vec2<f32>(-0.007, 0.57),
 vec2<f32>(0.0, 1.0)
 );
-    `,
+  `,
   );
 }

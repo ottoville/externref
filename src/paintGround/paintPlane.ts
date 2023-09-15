@@ -12,11 +12,10 @@ import {
 } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import { DataNode } from '../nodes/DataNode.js';
-import { createColorFragmentShader } from '../GPU/Shaders/Color.frag.js';
 import type { CreateRenderPipelineProps } from '../GPU.js';
 import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
 declare const engine: Engine;
-import { GPU } from '../GPU.js';
+import { gpu_memory_index_size } from '../GPU/Shaders/ShaderBuilders.js';
 
 class PlaneMesh extends DataNode {
   override drawable: DrawableIndexed<
@@ -49,9 +48,7 @@ class PlaneMesh extends DataNode {
       bindGroups: [
         {
           bindGroup: engine.gpu!.BindGroupPosition,
-          offsets: [
-            engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
-          ],
+          offsets: [engine.rust.gpu_alignment(this.id) * gpu_memory_index_size],
         },
       ],
       node: this,
@@ -85,7 +82,7 @@ export class paintPlane extends paintGround {
           vertexBufferProps,
         ) => {
           const vertexShader = createPlaneAtGroundHeightVertShader(
-            ground.TerrainHeightsbindGroupTreePosition,
+            ground.gpu.shaders.terrainHeightsbindGroupTreePosition,
             {
               arrayStride: vertexBufferProps.stride * 4,
               attributes2: Object.freeze({
@@ -100,11 +97,11 @@ export class paintPlane extends paintGround {
             },
             Terrain.settings,
           );
-          const fragmentShader = createColorFragmentShader(
-            ground.TerrainHeightsbindGroupTreePosition,
-          );
           return Object.freeze({
-            builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
+            builder: createRenderPipelineBuilder(
+              vertexShader,
+              ground.gpu.shaders.ColorShader,
+            ),
             connections: {
               main: 'main',
             },

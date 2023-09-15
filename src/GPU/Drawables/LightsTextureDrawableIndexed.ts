@@ -23,7 +23,7 @@ import {
   type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import type { Engine } from 'engine.js';
-import { GPU } from '../../GPU.js';
+import { gpu_memory_index_size } from '../../GPU/Shaders/ShaderBuilders.js';
 declare const engine: Engine;
 
 /**
@@ -77,7 +77,7 @@ export class LightsTextureDrawableIndexed<
         bindGroup: engine.gpu!.BindGroupPosition,
         offsets: [
           engine.rust.gpu_alignment(drawableProps.node.id) *
-            GPU.gpu_memory_index_size,
+            gpu_memory_index_size,
         ],
       },
       {

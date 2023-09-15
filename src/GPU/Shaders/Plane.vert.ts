@@ -10,9 +10,9 @@ import { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
 
 type BindLayouts = [
-  GPU['sizeBindGroupLayout'],
-  GPU['uniformBindGroupLayoutWithTime'],
-  GPU['BindGroupLayoutPosition'],
+  GPU['shaders']['sizeBindGroupLayout'],
+  GPU['shaders']['uniformBindGroupLayoutWithTime'],
+  GPU['shaders']['BindGroupLayoutPosition'],
 ];
 // eslint-disable-next-line import/no-unused-modules
 export class Plane extends VertexShader {

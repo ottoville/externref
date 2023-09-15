@@ -7,8 +7,8 @@ import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import type { WaterVertShader } from '../GPU/Shaders/Water.vert.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
-import { GPU } from '../GPU.js';
 import { BindGroup } from '../webgpu-ts/index.js';
+import { gpu_memory_index_size } from '../GPU/Shaders/ShaderBuilders.js';
 
 export class Sea extends BoundableNodeSimple {
   override drawable:
@@ -81,7 +81,7 @@ export class Sea extends BoundableNodeSimple {
           {
             bindGroup: engine.gpu!.BindGroupPosition,
             offsets: [
-              engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
+              engine.rust.gpu_alignment(this.id) * gpu_memory_index_size,
             ],
           },
           {

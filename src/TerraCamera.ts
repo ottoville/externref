@@ -107,7 +107,7 @@ export class TerraCamera {
         usages: BufferUsageEnums['UNIFORM|COPY_DST'],
       }); //Todo: set to private
       this.uniformBindGroup = new BindGroup(
-        gpu.uniformBindGroupLayoutWithTime,
+        gpu.shaders.uniformBindGroupLayoutWithTime,
         'uniformBindGroup',
         (bindGroup) => ({
           clusters_array:

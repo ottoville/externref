@@ -5,7 +5,6 @@ import {
   shapeAttr,
   vertexPositionAttr,
 } from '../Shaders/Grass.vert.js';
-import { createColorFragmentShader } from '../Shaders/Color.frag.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
 export const PlantsRenderPipeline = [
@@ -14,7 +13,7 @@ export const PlantsRenderPipeline = [
     { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: { stride: number },
   ) {
-    const vertexShader = createGrassVertShader(gpu.rootCameralayout, [
+    const vertexShader = createGrassVertShader(gpu.shaders.rootCameralayout, [
       {
         arrayStride: vertexBufferProps.stride * 4,
         attributes2: positionAttr,
@@ -31,9 +30,11 @@ export const PlantsRenderPipeline = [
         stepMode: 'vertex',
       },
     ]);
-    const fragmentShader = createColorFragmentShader(gpu.rootCameralayout);
     return Object.freeze({
-      builder: createRenderPipelineBuilder(vertexShader, fragmentShader),
+      builder: createRenderPipelineBuilder(
+        vertexShader,
+        gpu.shaders.ColorShader,
+      ),
       connections: {
         main: 'main',
       },

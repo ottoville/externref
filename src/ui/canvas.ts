@@ -1,4 +1,4 @@
-import { Engine } from '../engine.js';
+﻿import { Engine } from '../engine.js';
 
 import { Plants } from '../plants/Plants.js';
 import { PlantsUI } from '../tools/plantsUI.js';
@@ -179,7 +179,11 @@ export class Canvas {
               }
             }
           });
-          const terrainInited = Terrain.loadFromTexture(gpu, [terrascene]);
+          const terrainInited = new Promise<Terrain>((res) => {
+            engine.getGPU((gpu2) => {
+              res(Terrain.loadFromTexture(gpu2, [terrascene]));
+            });
+          });
           terrainInited
             .then(
               (terrain) =>

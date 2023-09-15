@@ -1,9 +1,9 @@
 import {
   type VertexBufferLayout2,
-  VertexShader,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
+  ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, WaterInput } from './structs/Structs.js';
@@ -13,9 +13,10 @@ export function createWaterVertShader(
   pipelineLayout: GPU['bindGroupTextureWater'],
   buffers: VertexBufferLayout2<typeof positionAttr>,
 ) {
-  return new VertexShader({
-    entryPoints: {
-      main: new VertexShaderFunction(
+  return new ShaderBuilder([pipelineLayout])
+    .addFunction(
+      'main',
+      new VertexShaderFunction(
         WaterInput,
         [buffers],
         (
@@ -29,20 +30,20 @@ export function createWaterVertShader(
           ],
           [{ position }],
         ) => /* wgsl */ `
-                        var output:Output;
-                        output.Position = ${
-                          scene.variableName
-                        }.modelViewProjection * ${position};
-                        output.v_uv = output.Position;
-                        output.position=${position};
-                        output.id=${world.prop('id')};
-                    
-                        //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
-                        //ambient=lights.ambient;
-                        return output;
-                    `,
+            var output:Output;
+            output.Position = ${
+              scene.variableName
+            }.modelViewProjection * ${position};
+            output.v_uv = output.Position;
+            output.position=${position};
+            output.id=${world.prop('id')};
+        
+            //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
+            //ambient=lights.ambient;
+            return output;
+        `,
       ) satisfies VertexShaderFunction<
-        [
+        readonly [
           // eslint-disable-next-line @typescript-eslint/ban-types
           {},
           {
@@ -54,11 +55,11 @@ export function createWaterVertShader(
               typeof MeshUniforms
             >;
           },
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
         ]
       >,
-    },
-    label: 'water.vert',
-    pipelineLayouts: [pipelineLayout] as const,
-  });
+    )
+    .build('water.vert');
 }
 export type WaterVertShader = ReturnType<typeof createWaterVertShader>;

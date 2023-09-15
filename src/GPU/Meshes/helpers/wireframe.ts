@@ -8,7 +8,7 @@ import {
 } from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
-import { GPU } from '../../../GPU.js';
+import { gpu_memory_index_size } from '../../../GPU/Shaders/ShaderBuilders.js';
 // eslint-disable-next-line import/no-unused-modules
 export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   const indices_vec_ptr = allocate_vec_usize(targetNode.node.indices_count * 2);
@@ -57,9 +57,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       bindGroups: [
         {
           bindGroup: engine.gpu!.BindGroupPosition,
-          offsets: [
-            engine.rust.gpu_alignment(node.id) * GPU.gpu_memory_index_size,
-          ],
+          offsets: [engine.rust.gpu_alignment(node.id) * gpu_memory_index_size],
         },
       ],
       node,
@@ -95,9 +93,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       bindGroups: [
         {
           bindGroup: engine.gpu!.BindGroupPosition,
-          offsets: [
-            engine.rust.gpu_alignment(node.id) * GPU.gpu_memory_index_size,
-          ],
+          offsets: [engine.rust.gpu_alignment(node.id) * gpu_memory_index_size],
         },
       ],
       node,

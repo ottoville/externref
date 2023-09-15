@@ -11,7 +11,7 @@ import {
   BufferUsageEnums,
   type VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
-import { GPU } from '../../GPU.js';
+import { gpu_memory_index_size } from '../../GPU/Shaders/ShaderBuilders.js';
 
 declare const engine: Engine;
 
@@ -67,7 +67,7 @@ export class SimpleMesh extends BoundableNodeSimple {
           {
             bindGroup: engine.gpu!.BindGroupPosition,
             offsets: [
-              engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
+              engine.rust.gpu_alignment(this.id) * gpu_memory_index_size,
             ],
           },
         ],

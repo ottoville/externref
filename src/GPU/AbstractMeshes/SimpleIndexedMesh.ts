@@ -3,7 +3,7 @@ import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine, rust_vec_ptr } from '../../engine.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import { GPU, type CreateRenderPipelineCB } from '../../GPU.js';
+import { type CreateRenderPipelineCB } from '../../GPU.js';
 import {
   type AnyVertexStage,
   type BindGroupLayoutEntry,
@@ -14,6 +14,7 @@ import {
   BufferUsageEnums,
 } from '../../webgpu-ts/index.js';
 import { MainNodeProps } from 'MainNode.js';
+import { gpu_memory_index_size } from '../../GPU/Shaders/ShaderBuilders.js';
 declare const engine: Engine;
 
 export type SimpleIndexedMeshProps = {
@@ -102,7 +103,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
           {
             bindGroup: engine.gpu!.BindGroupPosition,
             offsets: [
-              engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
+              engine.rust.gpu_alignment(this.id) * gpu_memory_index_size,
             ],
           },
         ],

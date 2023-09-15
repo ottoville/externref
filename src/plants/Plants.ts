@@ -248,10 +248,16 @@ export class Plants extends MainNode {
           bindLayouts[0],
           'bindGroup1',
           (bindGroup1) => ({
-            facet12: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1),
+            facet12:
+              terrain.gpu.shaders.facet12ArrGPUBuffer.getStorageBinding(
+                bindGroup1,
+              ),
             positionAndRotate: positionGPUSwap.getStorageBinding(bindGroup1),
             shapes: shapeGPUSwap.getStorageBinding(bindGroup1),
-            slopes: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1),
+            slopes:
+              terrain.gpu.shaders.slopeArrGPUBuffer.getStorageBinding(
+                bindGroup1,
+              ),
           }),
         );
       })

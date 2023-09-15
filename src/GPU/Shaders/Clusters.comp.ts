@@ -27,7 +27,7 @@ export const UpdateClustersBufferLayout = new BufLayout(
 );
 
 export function createClustersCompShader(
-  sizeGroup: GPU['sizeBindGroupLayout'],
+  sizeGroup: GPU['shaders']['sizeBindGroupLayout'],
 ) {
   const bindLayouts = [
     sizeGroup,

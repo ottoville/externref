@@ -5,7 +5,7 @@ import {
   type SampLayout,
   type ShaderStage,
   type TextLayout,
-  FragmentShaderBuilder,
+  ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 
 export function createWaterFragShader(
@@ -45,7 +45,7 @@ export function createWaterFragShader(
   
           `,
   );
-  return new FragmentShaderBuilder([pipelineLayout])
+  return new ShaderBuilder([pipelineLayout])
     .addFunction('main', main)
     .build('Water.frag');
 }

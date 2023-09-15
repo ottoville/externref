@@ -7,14 +7,11 @@ import {
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
-  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
-
-type BindGroupLayouts =
-  Terrain['TerrainHeightsbindGroupTreePosition']['bindGroupLayouts'];
+import type { GPU } from '../../GPU.js';
 
 export function createPlaneAtGroundHeightVertShader(
-  pipelineLayout: RenderPipelineLayout<BindGroupLayouts>,
+  pipelineLayout: GPU['shaders']['terrainHeightsbindGroupTreePosition'],
   buffers: VertexBufferLayout2,
   settings: typeof Terrain.settings,
 ) {

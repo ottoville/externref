@@ -7,6 +7,7 @@ import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
 import { GPU } from '../GPU.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import type { SunVertShader } from '../GPU/Shaders/Sun.vert.js';
+import { gpu_memory_index_size } from '../GPU/Shaders/ShaderBuilders.js';
 declare const engine: Engine;
 
 const zAngle = Math.cos(Math.PI * 0.2);
@@ -67,9 +68,7 @@ export class Sun extends MainNode {
       bindGroups: [
         {
           bindGroup: engine.gpu!.BindGroupPosition,
-          offsets: [
-            engine.rust.gpu_alignment(this.id) * GPU.gpu_memory_index_size,
-          ],
+          offsets: [engine.rust.gpu_alignment(this.id) * gpu_memory_index_size],
         },
       ],
       node: this,
