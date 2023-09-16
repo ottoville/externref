@@ -9,11 +9,14 @@ export const DebugLinesPipeline = Object.freeze([
     vertexBufferProps: { stride: number },
   ) {
     const vertexShader = createDebugBoundingBoxVertShader(
-      gpu.positionAndTimeBindGroup,
+      gpu.shaders.positionAndTimeBindGroup,
       vertexBufferProps.stride * 4,
     );
     return Object.freeze({
-      builder: createRenderPipelineBuilder(vertexShader, gpu.colorFragShader),
+      builder: createRenderPipelineBuilder(
+        vertexShader,
+        gpu.shaders.ColorShader,
+      ),
       connections: {
         main: 'main',
       },

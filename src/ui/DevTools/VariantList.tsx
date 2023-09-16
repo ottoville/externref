@@ -3,7 +3,7 @@ import { Drawable } from '../../GPU/Drawables/Drawable.js';
 import type { Engine } from '../../engine.js';
 import { ArcRotateCamera } from '../../controllers/ArcRotateCamera.js';
 import { DrawableDirect } from '../../GPU/Drawables/DrawableDirect.js';
-import { RenderPipeline } from 'webgpu-ts/index.js';
+import { RenderPipeline } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export function VariantList(props: {

@@ -181,6 +181,10 @@ export function createShaderBuilders(gpu: GPU) {
       BindGroupLayoutPosition,
     ],
   );
+  const positionAndTimeBindGroup = rootCameralayout.appendBinds(
+    'positionBindGroupTimeWGSLLayot',
+    [BindGroupLayoutPosition],
+  );
   return {
     BindGroupLayoutPosition,
     /**
@@ -191,6 +195,7 @@ export function createShaderBuilders(gpu: GPU) {
     ColorShader: new ShaderBuilder([
       terrainHeightsbindGroupTreePosition,
       rootCameralayout,
+      positionAndTimeBindGroup,
     ] as const)
       .addFunction(
         'main',
@@ -227,6 +232,7 @@ export function createShaderBuilders(gpu: GPU) {
         IntArray,
       ),
     }),
+    positionAndTimeBindGroup,
     rootCameralayout,
     sizeBindGroupLayout,
     slopeArrGPUBuffer,

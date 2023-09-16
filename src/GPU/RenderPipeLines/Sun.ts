@@ -11,9 +11,11 @@ export const SunRenderPipeline = [
     label,
     primitive,
   }: CreateRenderPipelineProps): RenderPipelineProps {
-    const vertexShader = createSunVertShader(gpu.positionAndTimeBindGroup);
+    const vertexShader = createSunVertShader(
+      gpu.shaders.positionAndTimeBindGroup,
+    );
     const fragmentShader = createSingleColorFragShader(
-      gpu.positionAndTimeBindGroup,
+      gpu.shaders.positionAndTimeBindGroup,
     );
     return Object.freeze({
       builder: createRenderPipelineBuilder(vertexShader, fragmentShader),

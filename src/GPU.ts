@@ -13,11 +13,7 @@ import {
 } from './GPU/Shaders/UpdateView.comp.js';
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
 import type { RenderPipelineProps } from './GPU/RenderPipeline.js';
-import {
-  UIUniforms,
-  diffuseOutput,
-  colorPositionOutput,
-} from './GPU/Shaders/structs/Structs.js';
+import { UIUniforms } from './GPU/Shaders/structs/Structs.js';
 import {
   createUIVertShader,
   position_uv_attrs,
@@ -34,8 +30,6 @@ import {
   TextLayout,
   TextureUsageEnums,
   type VertexShader,
-  FragmentShader,
-  FragmentShaderFunction,
   ColorRenderTarget,
   MSAARenderTarget,
   createRenderPipelineBuilder,
@@ -44,7 +38,6 @@ import {
   BufferUsageEnums,
   DepthRenderTarget,
   RenderPipelineLayout,
-  ShaderBuilder,
 } from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,
@@ -109,13 +102,6 @@ export class GPU {
   >;
   readonly #GPUDirectionalLights: Buffer<
     (typeof BufferUsageEnums)['STORAGE|COPY_DST']
-  >;
-  readonly positionAndTimeBindGroup: RenderPipelineLayout<
-    readonly [
-      typeof this.shaders.sizeBindGroupLayout,
-      typeof this.shaders.uniformBindGroupLayoutWithTime,
-      typeof this.shaders.BindGroupLayoutPosition,
-    ]
   >;
   readonly lightsTextureBindGroup: RenderPipelineLayout<
     [
@@ -209,9 +195,6 @@ export class GPU {
   readonly BindGroupLayoutCanvasArray: BGLayout<{
     uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>;
     texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d_array<f32>'>;
-  }>;
-  colorFragShader: FragmentShader<{
-    main: FragmentShaderFunction;
   }>;
   destroyed = false;
   fps = 0;
@@ -367,12 +350,8 @@ export class GPU {
         ),
       }),
     );
-    this.positionAndTimeBindGroup = this.shaders.rootCameralayout.appendBinds(
-      'positionBindGroupTimeWGSLLayot',
-      [this.shaders.BindGroupLayoutPosition],
-    );
     this.simpleFragShader = createSimpleFragShader(
-      this.positionAndTimeBindGroup,
+      this.shaders.positionAndTimeBindGroup,
     );
     this.lightsTextureBindGroup = this.shaders.rootCameralayout.appendBinds(
       'lightsBindGroupTexture2Layout2',
@@ -718,19 +697,6 @@ export class GPU {
       },
       undefined,
     );*/
-    this.colorFragShader = new ShaderBuilder([this.positionAndTimeBindGroup])
-      .addFunction(
-        'main',
-        new FragmentShaderFunction(
-          diffuseOutput,
-          colorPositionOutput,
-          () => /* wgsl */ `
-        var output:Output;
-        output.Diffuse = vec4<f32>(color,1.0);
-        return output;`,
-        ),
-      )
-      .build('color.frag');
 
     this.renderPassCanvas = new RenderPass(
       {

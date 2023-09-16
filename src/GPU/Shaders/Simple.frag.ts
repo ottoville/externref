@@ -16,10 +16,8 @@ import {
   FragmentShader,
   FragmentShaderFunction,
   type ShaderStage,
-  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 
-type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 export function createPickOutputFragment() {
   return new FragmentShaderFunction(
     pickOutputFragment,
@@ -31,7 +29,7 @@ export function createPickOutputFragment() {
   );
 }
 export function createSimpleFragShader(
-  pipelineLayout: RenderPipelineLayout<BindLayouts>,
+  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
 ) {
   return new FragmentShader(
     {

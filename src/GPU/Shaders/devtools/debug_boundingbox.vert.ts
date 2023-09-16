@@ -3,7 +3,6 @@ import {
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
-  type RenderPipelineLayout,
 } from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
 import {
@@ -13,10 +12,8 @@ import {
 } from '../structs/Structs.js';
 import { positionAttr } from '../structs/Attributes.js';
 
-type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
-
 export function createDebugBoundingBoxVertShader(
-  pipelineLayout: RenderPipelineLayout<BindLayouts>,
+  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
   arrayStride: number,
 ) {
   return new VertexShader({

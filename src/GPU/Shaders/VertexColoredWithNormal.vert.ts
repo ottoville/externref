@@ -3,7 +3,6 @@ import {
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
-  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, typicalOutput } from './structs/Structs.js';
@@ -14,9 +13,7 @@ import { simpleAttributesWithColor } from './structs/Attributes.js';
   Shader where each vertex carries a color property
 */
 export function createVertexColorShader(
-  pipelineLayout: RenderPipelineLayout<
-    Readonly<GPU['positionAndTimeBindGroup']['bindGroupLayouts']>
-  >,
+  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
   arrayStride: number,
 ) {
   const buffers = Object.freeze([

@@ -11,7 +11,7 @@ export const SimpleRenderPipeline = [
     return Object.freeze({
       builder: createRenderPipelineBuilder(
         createSimpleVertShader(
-          gpu.positionAndTimeBindGroup,
+          gpu.shaders.positionAndTimeBindGroup,
           vertexBufferProps.stride * 4,
         ),
         gpu.simpleFragShader,

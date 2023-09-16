@@ -3,14 +3,12 @@ import {
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
-  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, PositionOutput, Scene } from './structs/Structs.js';
-type BindLayouts = GPU['positionAndTimeBindGroup']['bindGroupLayouts'];
 
 export function createSunVertShader(
-  pipelineLayout: RenderPipelineLayout<BindLayouts>,
+  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
 ) {
   return new VertexShader(
     {

@@ -11,10 +11,10 @@ export const NormalsPipeline = Object.freeze([
     return Object.freeze({
       builder: createRenderPipelineBuilder(
         createDebugNormalsVertShader(
-          gpu.positionAndTimeBindGroup,
+          gpu.shaders.positionAndTimeBindGroup,
           vertexBufferProps.stride * 4,
         ),
-        gpu.colorFragShader,
+        gpu.shaders.ColorShader,
       ),
       connections: {
         main: 'main',
