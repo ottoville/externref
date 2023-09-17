@@ -27,7 +27,7 @@ export abstract class MainNode {
   id: number;
   get label(): string {
     const label_field_pointer = engine.rust.label_field_pointer(this.id);
-    const [label_len, label_ptr] = new Uint32Array(
+    const [label_ptr, label_len] = new Uint32Array(
       engine.rust.memory.buffer,
       label_field_pointer,
       2,

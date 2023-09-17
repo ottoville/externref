@@ -1,6 +1,7 @@
 use core::panic;
 use std::num::NonZeroUsize;
 
+use crate::MULTIVALUE_USIZE;
 pub use crate::boundingbox::BoundingBox;
 pub use crate::drawable::DrawCommand;
 pub use crate::drawable::DrawType;
@@ -159,12 +160,20 @@ pub unsafe extern "C" fn apply_impulse(mesh_id: usize, x: f32, y: f32, z: f32) {
     get_mesh_by_id_mut(mesh_id).apply_impulse(x, y, z)
 }
 #[no_mangle]
-pub unsafe extern "C" fn label_field_pointer(mesh_id: usize) -> *const String {
-    std::ptr::addr_of!(get_mesh_by_id(mesh_id).label)
+pub unsafe extern "C" fn label_field_pointer(mesh_id: usize) -> *const usize {
+    let label = &get_mesh_by_id(mesh_id).label;
+    MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
+    MULTIVALUE_USIZE[1] = label.len();
+    MULTIVALUE_USIZE[2] = label.capacity();
+    MULTIVALUE_USIZE.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn indices_field_pointer(mesh_id: usize) -> *const Vec<usize> {
-    std::ptr::addr_of!(get_mesh_by_id(mesh_id).get_geometry().indices)
+pub unsafe extern "C" fn indices_field_pointer(mesh_id: usize) -> *const usize {
+    let indices = &get_mesh_by_id(mesh_id).get_geometry().indices;
+    MULTIVALUE_USIZE[0] = indices.as_ptr() as usize;
+    MULTIVALUE_USIZE[1] = indices.len();
+    MULTIVALUE_USIZE[2] = indices.capacity();
+    MULTIVALUE_USIZE.as_ptr()
 }
 #[no_mangle]
 pub unsafe extern "C" fn gpu_alignment(mesh_id: usize) -> NonZeroUsize {

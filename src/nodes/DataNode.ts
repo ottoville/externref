@@ -139,7 +139,7 @@ export class DataNode extends MainNode {
     this.onIndicesChange.forEach((cb) => cb());
   }
   get indices() {
-    const [indices_len, indices_ptr] = new Uint32Array(
+    const [indices_ptr, indices_len] = new Uint32Array(
       engine.rust.memory.buffer,
       engine.rust.indices_field_pointer(this.id),
       2,
@@ -150,8 +150,8 @@ export class DataNode extends MainNode {
     return new Uint32Array(
       engine.rust.memory.buffer,
       engine.rust.indices_field_pointer(this.id),
-      1,
-    )[0]!;
+      2,
+    )[1]!;
   }
 
   //Physic things

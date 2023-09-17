@@ -419,7 +419,7 @@ function stringFromPtr(
   if (!(memory instanceof WebAssembly.Memory)) {
     throw new Error('Webassembly module does not have memory');
   }
-  const [, /*cap*/ s_ptr, len] = new Uint32Array(memory.buffer, ptr, 3);
+  const [s_ptr, len] = new Uint32Array(memory.buffer, ptr, 2);
   return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
 }
 
