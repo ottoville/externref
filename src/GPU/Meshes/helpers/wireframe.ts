@@ -25,9 +25,10 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   }
   let node: DataNode;
 
-  //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
   const vertexBuffer = targetNode.vertexBuffers[0]?.buffer;
-
+  const vertexBufferStride =
+    targetNode.renderPipeline.builder.vertexShader.props.entryPoints['main']
+      ?.vertexBufferLayout[0]?.arrayStride ?? targetNode.node.vertices_stride;
   const mainNodeProps = {
     label: 'Wireframe_' + targetNode.node.label,
     rigid_body: false,
@@ -39,8 +40,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       topology: 'line-list',
     },
     {
-      //@ts-expect-error
-      stride: vertexBuffer?.stride ?? targetNode.node.vertices_stride,
+      stride: vertexBufferStride,
     },
   );
 
@@ -61,8 +61,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
         },
       ],
       node,
-      renderPasses: undefined,
-      renderPipeline, //@ts-expect-error
+      renderPipeline,
       vertexBuffers: [vertexBuffer],
     });
   } else if (targetNode.node instanceof DataNode) {
@@ -99,12 +98,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       node,
       renderPasses: undefined,
       renderPipeline,
-      vertexBuffers: [
-        {
-          stride,
-          view: vertices_ptr,
-        },
-      ],
+      vertexBuffers: [vertices_ptr],
     });
   } else {
     throw new Error(

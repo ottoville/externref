@@ -86,7 +86,7 @@ export class BoundingBoxMesh extends DataNode {
         topology: 'line-strip',
       },
       {
-        stride: 4,
+        stride: 16,
       },
     );
     this.drawable = new DrawableIndexed({
@@ -99,12 +99,7 @@ export class BoundingBoxMesh extends DataNode {
       node: this,
       renderPasses: undefined,
       renderPipeline,
-      vertexBuffers: [
-        {
-          stride: 4,
-          view: debug_render_boundingbox_vertexBuffer,
-        },
-      ],
+      vertexBuffers: [debug_render_boundingbox_vertexBuffer],
     });
   }
 }

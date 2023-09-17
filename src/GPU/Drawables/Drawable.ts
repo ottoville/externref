@@ -6,7 +6,6 @@ import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import {
   BindGroup,
   Buffer,
-  type BufferProps,
   BufferUsageEnums,
   type VERTEX_BUFFER,
   RenderBundleEncoder,
@@ -20,10 +19,7 @@ export type DrawableProps<N extends MainNode> = {
   renderPasses?: Set<RenderPass> | undefined;
   bindGroups?: { bindGroup: BindGroup; offsets?: number[] }[];
   vertexBuffers:
-    | readonly {
-        view: rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>;
-        stride: number;
-      }[]
+    | readonly (rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>)[]
     | undefined;
   node: N;
 };
@@ -136,7 +132,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
   }
   setVertexBuffer(
     index: number,
-    buffer: { view: rust_vec_ptr<'f32'>; stride: number },
+    buffer: rust_vec_ptr<'f32'>,
     destroyOld?: boolean,
   ): Buffer<VERTEX_BUFFER>;
   setVertexBuffer<T extends Buffer<VERTEX_BUFFER>>(
@@ -148,20 +144,14 @@ export abstract class Drawable<N extends MainNode = MainNode> {
   ): T;
   setVertexBuffer(
     index: number,
-    buffer: {
-      view: rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>;
-      stride: number;
-    },
+    buffer: Buffer<VERTEX_BUFFER> | rust_vec_ptr<'f32'>,
     destroyOld?: boolean,
     GPUoffset?: number,
     size?: number,
   ): Buffer<VERTEX_BUFFER>;
   setVertexBuffer(
     index: number,
-    buffer: {
-      view: rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>;
-      stride: number;
-    },
+    buffer: rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>,
     destroyOld = true,
     GPUoffset?: number,
     size?: number,
@@ -172,40 +162,31 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         Tbuffer.buffer?.destroy();
       }
     }
-    if (buffer.view instanceof Buffer)
-      var Tbuffer = buffer as {
-        view: Buffer<VERTEX_BUFFER>;
-        stride: number;
-      };
+    if (buffer instanceof Buffer) var Tbuffer = buffer;
     else {
-      //const gpu = this.renderPipeline.props.vertexShader.props.gpu;
-      const ptr = buffer.view[0];
+      const ptr = buffer[0];
       const len =
-        (buffer.view[1] * Float32Array.BYTES_PER_ELEMENT) /
+        (buffer[1] * Float32Array.BYTES_PER_ELEMENT) /
         Uint8Array.BYTES_PER_ELEMENT;
-      var Tbuffer = {
-        stride: buffer.stride,
-        view: new Buffer(
-          {
-            gpu: engine.gpu!.device,
-            label: 'DrawableVertex_' + this.node.label,
-            size: buffer.view[1] * Float32Array.BYTES_PER_ELEMENT,
-            usages: BufferUsageEnums.VERTEX,
-            vertexStride: buffer.stride,
-          } as BufferProps<VERTEX_BUFFER>,
-          (b) => {
-            const buff = new Uint8Array(b.getMappedRange());
-            buff.set(new Uint8Array(engine.rust.memory.buffer, ptr, len));
-          },
-        ),
-      };
+      var Tbuffer = new Buffer(
+        {
+          gpu: engine.gpu!.device,
+          label: 'DrawableVertex_' + this.node.label,
+          size: buffer[1] * Float32Array.BYTES_PER_ELEMENT,
+          usages: BufferUsageEnums.VERTEX,
+        },
+        (b) => {
+          const buff = new Uint8Array(b.getMappedRange());
+          buff.set(new Uint8Array(engine.rust.memory.buffer, ptr, len));
+        },
+      ) as Buffer<VERTEX_BUFFER>;
     }
     this.vertexBuffers[index] = {
-      buffer: Tbuffer.view,
+      buffer: Tbuffer,
       offset: GPUoffset,
       size,
     };
-    return Tbuffer.view;
+    return Tbuffer;
   }
   abstract render(
     renderEncoder: RenderBundleEncoder | GPURenderPassEncoder,

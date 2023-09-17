@@ -32,14 +32,7 @@ export class NormalsMesh extends DataNode {
     updateVertices();
     targetNode.node.onVerticesChangeListeners.push(() => {
       updateVertices();
-      this.drawable.setVertexBuffer(
-        0,
-        {
-          stride,
-          view: vertices_ptr,
-        },
-        true,
-      );
+      this.drawable.setVertexBuffer(0, vertices_ptr, true);
     });
     super(
       {
@@ -91,12 +84,7 @@ export class NormalsMesh extends DataNode {
       node: this,
       renderPasses: undefined,
       renderPipeline,
-      vertexBuffers: [
-        {
-          stride,
-          view: vertices_ptr,
-        },
-      ],
+      vertexBuffers: [vertices_ptr],
     });
   }
 }

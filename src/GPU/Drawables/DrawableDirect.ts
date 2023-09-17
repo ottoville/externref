@@ -26,10 +26,7 @@ export type MappedVertexBuffers<
       main: VertexShaderFunction<B, infer V>;
     }>
     ? Readonly<{
-        [Property in keyof V]: {
-          view: rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>;
-          stride: number;
-        };
+        [Property in keyof V]: rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>;
       }>
     : []
   : never;

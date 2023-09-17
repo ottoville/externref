@@ -144,17 +144,13 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
       <br />
       {drawable instanceof DrawableDirect ? (
         <>
-          Vertices count: {drawable.node.vertices_count}
-          <br />
-          {'indexed' in drawable.node
-            ? `Indices count: ${drawable.node.indexed.indices_count}`
-            : ''}
-          <br />
           Rigid body:{' '}
           {(drawable.node as MainNode).have_rigid_body ? 'true' : 'false'}
           <br />
           {drawable.node instanceof DataNode ? (
             <>
+              Vertices count: {drawable.node.vertices_count}
+              <br />
               <button
                 type="button"
                 onClick={() => {
@@ -172,14 +168,20 @@ export function NodeInfo({ drawable }: { drawable: Drawable }) {
                 Wireframe
               </button>
               {drawable instanceof DrawableIndexed ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    new BoundingBoxMesh(drawable);
-                  }}
-                >
-                  Bounding Box
-                </button>
+                <>
+                  <br />
+                  Indices count:
+                  {drawable.indices_count ?? drawable.node.indices_count}
+                  <br />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      new BoundingBoxMesh(drawable);
+                    }}
+                  >
+                    Bounding Box
+                  </button>
+                </>
               ) : null}
             </>
           ) : null}

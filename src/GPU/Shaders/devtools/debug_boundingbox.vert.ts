@@ -22,7 +22,7 @@ export function createDebugBoundingBoxVertShader(
         colorPositionOutput,
         [
           {
-            arrayStride: arrayStride * 4,
+            arrayStride,
             attributes2: positionAttr,
             stepMode: 'vertex',
           },

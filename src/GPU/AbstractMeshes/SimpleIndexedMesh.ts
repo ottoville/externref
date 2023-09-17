@@ -114,12 +114,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
           engine.gpu.renderPassWater,
         ]),
         renderPipeline,
-        vertexBuffers: [
-          {
-            stride: dataNodeProps.vertices.stride,
-            view: vBufferGPU,
-          },
-        ],
+        vertexBuffers: [vBufferGPU],
       });
     }
   }

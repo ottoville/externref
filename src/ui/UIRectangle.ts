@@ -129,10 +129,7 @@ export abstract class UIRectangle<
         this.texture = undefined;
         const vertices = this.#updateBoundingBoxAndVerticesSuper();
         const vertices_ptr = allocate_vec(vertices);
-        this.drawable.setVertexBuffer(0, {
-          stride: 3,
-          view: vertices_ptr,
-        });
+        this.drawable.setVertexBuffer(0, vertices_ptr);
         this.set_vertices(vertices_ptr, 3);
       }
     }
@@ -448,12 +445,7 @@ export abstract class UIRectangle<
           node: this,
           renderPasses: new Set([renderPass]),
           renderPipeline: canvaspipeline as GPU['UIPipeline'],
-          /* | GPU['UIPipelineArray']*/ vertexBuffers: [
-            {
-              stride: 3,
-              view: vertices_ptr,
-            },
-          ],
+          /* | GPU['UIPipelineArray']*/ vertexBuffers: [vertices_ptr],
         },
         {
           firstInstance: 0,
@@ -468,10 +460,7 @@ export abstract class UIRectangle<
         const newVertices = this.#updateBoundingBoxAndVerticesSuper();
         const new_vertices_ptr = allocate_vec(newVertices);
         this.set_vertices(new_vertices_ptr, 3);
-        drawable.setVertexBuffer(0, {
-          stride: 3,
-          view: new_vertices_ptr,
-        });
+        drawable.setVertexBuffer(0, new_vertices_ptr);
       });
 
       /*this.drawable.staticBindGroup = new BindGroup(

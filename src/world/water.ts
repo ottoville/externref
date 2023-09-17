@@ -100,7 +100,7 @@ export class Sea extends BoundableNodeSimple {
         node: this,
         renderPasses: undefined,
         renderPipeline,
-        vertexBuffers: [vertexBuffer],
+        vertexBuffers: [vertexBuffer.view],
       });
     }
   }

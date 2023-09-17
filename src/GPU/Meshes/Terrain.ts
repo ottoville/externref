@@ -82,12 +82,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
             engine.gpu.pickRenderPass,
           ]),
           renderPipeline,
-          vertexBuffers: [
-            {
-              stride: verticesPositionStride,
-              view: this.vBuffer,
-            },
-          ],
+          vertexBuffers: [this.vBuffer],
         },
         engine.gpu.lightsTextureBindGroup,
         initialTexture,

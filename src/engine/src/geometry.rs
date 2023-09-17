@@ -81,7 +81,14 @@ pub unsafe extern "C" fn set_vertices(
 #[no_mangle]
 pub unsafe extern "C" fn vertices_count(mesh_id: usize) -> usize {
     let mesh = get_mesh_by_id(mesh_id);
-    mesh.get_geometry().vertices.as_ref().unwrap().length()
+    match mesh.get_geometry().vertices.as_ref() {
+        Some(v) => {
+            return v.length();
+        },
+        None => {
+            return 0;
+        }
+    }
 }
 #[no_mangle]
 pub unsafe extern "C" fn have_vertices(mesh_id: usize) -> bool {
