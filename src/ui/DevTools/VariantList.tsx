@@ -7,6 +7,7 @@ import { RenderPipeline } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export function VariantList(props: {
+  selectedDrawable: Drawable | undefined;
   variant: RenderPipeline;
   setSelectedDrawable: React.Dispatch<
     React.SetStateAction<Drawable | undefined>
@@ -34,7 +35,9 @@ export function VariantList(props: {
         return (
           <li
             key={drawable.node.id}
-            className={'variant'}
+            className={`variant ${
+              props.selectedDrawable === drawable ? 'selected' : ''
+            }`}
             onClick={() => props.setSelectedDrawable(drawable)}
           >
             <div>{drawable.node.label}</div>

@@ -14,7 +14,6 @@ import {
   BufferUsageEnums,
 } from '../../webgpu-ts/index.js';
 import { MainNodeProps } from 'MainNode.js';
-import { gpu_memory_index_size } from '../../GPU/Shaders/ShaderBuilders.js';
 declare const engine: Engine;
 
 export type SimpleIndexedMeshProps = {
@@ -99,14 +98,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         },
       );
       this.drawable = new DrawableIndexed({
-        bindGroups: [
-          {
-            bindGroup: engine.gpu!.BindGroupPosition,
-            offsets: [
-              engine.rust.gpu_alignment(this.id) * gpu_memory_index_size,
-            ],
-          },
-        ],
+        bindGroups: [],
         node: this,
         renderPasses: new Set([
           engine.gpu.renderPassScreen,

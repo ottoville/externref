@@ -62,6 +62,7 @@ export function Meshes() {
                 <br />
                 <small>{variant.pipeline.label}</small>
                 <VariantList
+                  selectedDrawable={selectedDrawable}
                   variant={variant}
                   setSelectedDrawable={setSelectedDrawable}
                 ></VariantList>
@@ -80,6 +81,7 @@ export function Meshes() {
                 <br />
                 <small>{variant.pipeline.label}</small>
                 <VariantList
+                  selectedDrawable={selectedDrawable}
                   variant={variant}
                   setSelectedDrawable={setSelectedDrawable}
                 ></VariantList>

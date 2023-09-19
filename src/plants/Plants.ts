@@ -99,6 +99,7 @@ export class Plants extends MainNode {
       );
       this.drawable = new DrawableIndirect(
         {
+          bindGroups: [],
           node: this,
           renderPipeline,
           vertexBuffers: [

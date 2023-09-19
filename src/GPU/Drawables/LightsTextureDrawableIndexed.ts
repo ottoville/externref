@@ -23,7 +23,6 @@ import {
   type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import type { Engine } from 'engine.js';
-import { gpu_memory_index_size } from '../../GPU/Shaders/ShaderBuilders.js';
 declare const engine: Engine;
 
 /**
@@ -40,7 +39,7 @@ export class LightsTextureDrawableIndexed<
     }>
   >;
   constructor(
-    drawableProps: Omit<DrawableProps<N>, 'label'> & {
+    drawableProps: Omit<DrawableProps<N>, 'label' | 'bindGroups'> & {
       renderPipeline: R;
       vertexBuffers: MappedVertexBuffers<R>;
     },
@@ -72,36 +71,24 @@ export class LightsTextureDrawableIndexed<
         };
       },
     );
-    drawableProps.bindGroups = [
+    super(
       {
-        bindGroup: engine.gpu!.BindGroupPosition,
-        offsets: [
-          engine.rust.gpu_alignment(drawableProps.node.id) *
-            gpu_memory_index_size,
+        bindGroups: [
+          {
+            bindGroup: textureBindGroup,
+          },
         ],
+        ...drawableProps,
       },
-      {
-        bindGroup: textureBindGroup,
-      },
-    ];
-    super(drawableProps, drawableDirectProps, drawableIndexedProps);
+      drawableDirectProps,
+      drawableIndexedProps,
+    );
     this.textureBindGroup = textureBindGroup;
-    /*this.staticBindGroup = new BindGroup(
-      layout.bindGroupLayouts[3],
-      'LightsTextureDrawableIndexed_static',
-      () => {
-        return {
-          diffuseTexture: this.texture,
-          mySampler: this.sampler,
-        };
-      },
-    );*/
   }
   setTexture(
     texture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>>,
   ) {
     this.texture = texture;
     this.textureBindGroup.destroy();
-    //this.staticBindGroup?.destroy();
   }
 }

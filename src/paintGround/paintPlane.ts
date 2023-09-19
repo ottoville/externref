@@ -15,7 +15,6 @@ import { DataNode } from '../nodes/DataNode.js';
 import type { CreateRenderPipelineProps } from '../GPU.js';
 import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
 declare const engine: Engine;
-import { gpu_memory_index_size } from '../GPU/Shaders/ShaderBuilders.js';
 
 class PlaneMesh extends DataNode {
   override drawable: DrawableIndexed<
@@ -45,12 +44,7 @@ class PlaneMesh extends DataNode {
       false,
     );
     this.drawable = new DrawableIndexed({
-      bindGroups: [
-        {
-          bindGroup: engine.gpu!.BindGroupPosition,
-          offsets: [engine.rust.gpu_alignment(this.id) * gpu_memory_index_size],
-        },
-      ],
+      bindGroups: [],
       node: this,
       renderPipeline,
       vertexBuffers: [[pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!]],

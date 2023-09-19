@@ -17,7 +17,7 @@ declare const engine: Engine;
 export type DrawableProps<N extends MainNode> = {
   renderPipeline: RenderPipelineProps;
   renderPasses?: Set<RenderPass> | undefined;
-  bindGroups?: { bindGroup: BindGroup; offsets?: number[] }[];
+  bindGroups: { bindGroup: BindGroup; offsets?: number[] }[];
   vertexBuffers:
     | readonly (rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>)[]
     | undefined;

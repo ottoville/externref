@@ -13,6 +13,7 @@ import {
   RenderBundleEncoder,
   type INDEX_BUFFER,
 } from '../../webgpu-ts/index.js';
+import { gpu_memory_index_size } from '../../GPU/Shaders/ShaderBuilders.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {
@@ -45,7 +46,22 @@ export class DrawableIndexed<
       GPUIndexFormat = 'uint32',
     }: DrawableIndexedProps = {},
   ) {
-    super(drawableProps, drawableDirectProps);
+    super(
+      {
+        ...drawableProps,
+        bindGroups: [
+          {
+            bindGroup: engine.gpu!.BindGroupPosition,
+            offsets: [
+              engine.rust.gpu_alignment(drawableProps.node.id) *
+                gpu_memory_index_size,
+            ],
+          },
+          ...drawableProps.bindGroups,
+        ],
+      },
+      drawableDirectProps,
+    );
     const indices = this.node.indices;
     if (indices.length > 0) this.setIndexBuffer(indices);
     this.#baseVertex = baseVertex;
