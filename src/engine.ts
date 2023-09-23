@@ -908,15 +908,15 @@ export class Engine {
           gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
           //@ts-ignore
           window.printRenderTarget = () => {
-            gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId.print_bitmap();
+            gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId.renderTarget.texture.print_bitmap();
           };
           //@ts-ignore
           window.printRenderTarget2 = () => {
-            gpu.renderPassScreen.depthRenderTarget.print_bitmap();
+            gpu.renderPassScreen.depthRenderTarget.renderTarget.texture.print_bitmap();
           };
           //@ts-ignore
           window.printRenderTarget3 = () => {
-            gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.print_bitmap();
+            gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.renderTarget.texture.print_bitmap();
           };
         },
         null,

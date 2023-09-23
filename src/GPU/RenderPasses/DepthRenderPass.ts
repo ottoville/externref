@@ -21,7 +21,7 @@ export class DepthRenderPass<
     gpu: GPU,
   ) {
     renderPassProps.GPURenderBundleEncoderDescriptor = {
-      depthStencilFormat: depthRenderTarget.props.format,
+      depthStencilFormat: depthRenderTarget.renderTarget.texture.props.format,
     };
     super(renderPassProps, gpu);
     this.depthRenderTarget = depthRenderTarget;
@@ -37,7 +37,7 @@ export class DepthRenderPass<
       depthClearValue: this.depthRenderTarget.clearValue,
       depthLoadOp: 'clear',
       depthStoreOp: 'store',
-      view: this.depthRenderTarget.view.getAsRenderTarget(this),
+      view: this.depthRenderTarget.renderTarget.getAsRenderTarget(this),
     };
     return renderPassDescriptor;
   }
@@ -48,7 +48,7 @@ export class DepthRenderPass<
     renderPipelineDescriptor.depthStencil = {
       depthCompare: renderpipeline.depthBuffer?.depthCompare ?? 'greater',
       depthWriteEnabled: renderpipeline.depthBuffer?.depthWriteEnabled ?? true,
-      format: this.depthRenderTarget.props.format,
+      format: this.depthRenderTarget.renderTarget.texture.props.format,
     };
   };
 }

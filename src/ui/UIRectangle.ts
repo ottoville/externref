@@ -6,15 +6,15 @@ import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
 import { DataNode, allocate_vec } from '../nodes/DataNode.js';
 import type { GPU } from '../GPU.js';
 import {
-  RenderTarget,
   type TEXTURE_BINDING_TEXTURE,
-  type Texture,
+  Texture,
   type Texture2dSize,
   TextureUsageEnums,
   TextureView,
   BindGroup,
   Buffer,
   BufferUsageEnums,
+  type RenderTargetTexture,
 } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -93,7 +93,7 @@ export type UIRectangleProps<
 /*
     Draws rectangle.
 */
-type RectangleTexture = RenderTarget<
+type RectangleTexture = RenderTargetTexture<
   'bgra8unorm',
   (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
   { width: number; height: number; depthOrArrayLayers: number }
@@ -145,7 +145,7 @@ export abstract class UIRectangle<
           frag.props.pipelineLayouts[0]!.bindGroupLayouts[0].entries.texture
             .structName;
       }
-      this.texture = new RenderTarget({
+      this.texture = new Texture({
         format: 'bgra8unorm',
         gpu: this.props.canvaspipeline.builder.vertexShader.props
           .pipelineLayouts[0]!.gpu,

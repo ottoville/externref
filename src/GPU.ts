@@ -38,6 +38,12 @@ import {
   BufferUsageEnums,
   DepthRenderTarget,
   RenderPipelineLayout,
+  type RENDER_TARGET_TEXTURE,
+  type STORAGE_BINDING_TEXTURE,
+  type TEXTURE_BINDING_TEXTURE,
+  type RenderpassTargetTextureParams,
+  RenderpassTarget,
+  type RenderpassTargetOptions,
 } from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,
@@ -128,21 +134,34 @@ export class GPU {
   };
   readonly renderPassScreen: PickableRenderPass<{
     gRenderTargetDiffuse: MSAARenderTarget<
-      'bgra8unorm',
-      (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING']
+      RenderpassTarget<
+        RenderpassTargetOptions<
+          RenderpassTargetTextureParams<
+            RENDER_TARGET_FORMAT,
+            Exclude<RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE> &
+              TEXTURE_BINDING_TEXTURE
+          >
+        >
+      >
     >;
   }>;
 
   readonly renderPassWater: DepthRenderPass<{
     diffuse: ColorRenderTarget<
-      'bgra8unorm',
-      (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING']
+      RenderpassTargetOptions<
+        RenderpassTargetTextureParams<
+          'bgra8unorm',
+          (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING']
+        >
+      >
     >;
   }>;
   readonly renderPassCanvas: RenderPass<{
     swap: ColorRenderTarget<
-      RENDER_TARGET_FORMAT,
-      (typeof TextureUsageEnums)['RENDER_ATTACHMENT']
+      RenderpassTargetOptions<{
+        context: GPUCanvasContext;
+        format: 'rgba8unorm' | 'bgra8unorm';
+      }>
     >;
   }>;
 
@@ -162,8 +181,12 @@ export class GPU {
     | 'bgra8unorm';
   readonly pickRenderPass: RenderPass<{
     gRenderTargetId: ColorRenderTarget<
-      'r32uint',
-      (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']
+      RenderpassTargetOptions<
+        RenderpassTargetTextureParams<
+          'r32uint',
+          (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']
+        >
+      >
     >;
   }>;
 
@@ -201,8 +224,15 @@ export class GPU {
   simpleFragShader: SimpleFragShader;
   screenRenderTargets: {
     gRenderTargetDiffuse: MSAARenderTarget<
-      'bgra8unorm',
-      (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING']
+      RenderpassTarget<
+        RenderpassTargetOptions<
+          RenderpassTargetTextureParams<
+            RENDER_TARGET_FORMAT,
+            Exclude<RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE> &
+              TEXTURE_BINDING_TEXTURE
+          >
+        >
+      >
     >;
   };
   waterTextureLayot: BGLayout<{
@@ -425,18 +455,19 @@ export class GPU {
         colorRenderTargets: {
           gRenderTargetId: new ColorRenderTarget(
             {
-              format: 'r32uint',
-              gpu: this.device,
-              label: 'idTexture',
-              size: {
-                height: 300,
-                width: 300,
+              context: {
+                format: 'r32uint',
+                gpu: this.device,
+                label: 'idTexture',
+                size: {
+                  height: 300,
+                  width: 300,
+                },
+                usages:
+                  TextureUsageEnums[
+                    'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'
+                  ],
               },
-              usages:
-                TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'],
-            },
-            {
-              context: undefined,
               textureViewDescriptor: {
                 arrayLayerCount: 1,
                 baseArrayLayer: 0,
@@ -471,17 +502,16 @@ export class GPU {
     this.screenRenderTargets = {
       gRenderTargetDiffuse: new MSAARenderTarget(
         {
-          format: 'bgra8unorm',
-          gpu: this.device,
-          label: 'diffuseTexture',
-          size: {
-            height: 300,
-            width: 300,
+          context: {
+            format: 'bgra8unorm',
+            gpu: this.device,
+            label: 'diffuseTexture',
+            size: {
+              height: 300,
+              width: 300,
+            },
+            usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
           },
-          usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
-        },
-        {
-          context: undefined,
           writeMask: 0xf,
         },
         {
@@ -492,6 +522,19 @@ export class GPU {
             r: 0.53, g: 0.8, b: 0.92, a: 0.0,
           },
         },
+        new RenderpassTarget({
+          context: {
+            format: 'bgra8unorm',
+            gpu: this.device,
+            label: 'diffuseTexture',
+            size: {
+              height: 300,
+              width: 300,
+            },
+            usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
+          },
+          writeMask: 0xf,
+        }),
       ),
     };
     this.renderPassScreen = new PickableRenderPass(
@@ -510,9 +553,8 @@ export class GPU {
           width: canvas.width,
         },
       },
-      new DepthRenderTarget(
-        0,
-        {
+      new DepthRenderTarget(0, {
+        context: {
           format: 'depth32float',
           gpu: this.device,
           initialSampleCount: 4,
@@ -524,11 +566,8 @@ export class GPU {
           usages:
             TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'],
         },
-        {
-          context: undefined,
-          writeMask: 0xf,
-        },
-      ),
+        writeMask: 0xf,
+      }),
       this,
     );
     this.renderPassWater = new DepthRenderPass(
@@ -536,17 +575,16 @@ export class GPU {
         colorRenderTargets: {
           diffuse: new ColorRenderTarget(
             {
-              format: 'bgra8unorm',
-              gpu: this.device,
-              label: 'diffuseTextureWater',
-              size: {
-                height: 300,
-                width: 300,
+              context: {
+                format: 'bgra8unorm',
+                gpu: this.device,
+                label: 'diffuseTextureWater',
+                size: {
+                  height: 300,
+                  width: 300,
+                },
+                usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
               },
-              usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
-            },
-            {
-              context: undefined,
               writeMask: 0xf,
             },
             {
@@ -570,9 +608,8 @@ export class GPU {
           width: canvas.width,
         },
       },
-      new DepthRenderTarget(
-        0,
-        {
+      new DepthRenderTarget(0, {
+        context: {
           format: 'depth32float',
           gpu: this.device,
           initialSampleCount: 1,
@@ -583,11 +620,8 @@ export class GPU {
           },
           usages: TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'],
         },
-        {
-          context: undefined,
-          writeMask: 0xf,
-        },
-      ),
+        writeMask: 0xf,
+      }),
       this,
     );
 
@@ -703,17 +737,7 @@ export class GPU {
         colorRenderTargets: {
           swap: new ColorRenderTarget(
             {
-              format: this.#presentationFormat,
-              gpu: this.device,
-              label: 'canvasTexture',
-              size: {
-                height: 300,
-                width: 300,
-              },
-              usages: TextureUsageEnums.RENDER_ATTACHMENT,
-            },
-            {
-              context: context,
+              context: { context, format: this.#presentationFormat },
               writeMask: 0xf,
             },
             {

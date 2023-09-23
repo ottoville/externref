@@ -13,7 +13,8 @@ import {
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 import {
-  RenderTarget,
+  type RenderTargetTexture,
+  Texture,
   TextureUsageEnums,
   TextureView,
 } from '../webgpu-ts/index.js';
@@ -25,7 +26,10 @@ export class Zones extends UIRectangleNode<
   #PT?: paintTexture;
   #size = 5120;
   readonly #ratio: number; //texture coordinates
-  #zoneTexture?: RenderTarget<'rgba8unorm', 23>;
+  #zoneTexture?: RenderTargetTexture<
+    'rgba8unorm',
+    (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC']
+  >;
   scene: Scene;
   #wasOpen = false;
   constructor(props: UIRectangleNodeProps & TopMenuButtonProps) {
@@ -68,7 +72,7 @@ export class Zones extends UIRectangleNode<
     super.render(gpu, force);
     if (this.props.open && !this.#wasOpen) {
       this.#wasOpen = true;
-      this.#zoneTexture = new RenderTarget({
+      this.#zoneTexture = new Texture({
         format: 'rgba8unorm',
         gpu: engine.gpu!.device,
         label: 'ZoneTexture',

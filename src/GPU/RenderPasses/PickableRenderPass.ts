@@ -11,13 +11,15 @@ import {
   MSAARenderTarget,
   type ColorRenderTarget,
   type DEPTH_FORMATS,
-  type RENDER_TARGET_FORMAT,
-  type RENDER_TARGET_TEXTURE,
-  type TEXTURE_BINDING_TEXTURE,
   Buffer,
   BufferUsageEnums,
   BindGroup,
   type DepthRenderTarget,
+  type RENDER_TARGET_TEXTURE,
+  type STORAGE_BINDING_TEXTURE,
+  type TEXTURE_BINDING_TEXTURE,
+  type RenderpassTargetOptions,
+  type RenderpassTargetTextureParams,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import type { Engine } from '../../engine.js';
@@ -26,13 +28,11 @@ declare const engine: Engine;
 export class PickableRenderPass<
   T extends {
     [index: string]: ColorRenderTarget<
-      RENDER_TARGET_FORMAT,
-      RENDER_TARGET_TEXTURE
+      RenderpassTargetOptions<RenderpassTargetTextureParams>
     >;
   } = {
     [index: string]: ColorRenderTarget<
-      RENDER_TARGET_FORMAT,
-      RENDER_TARGET_TEXTURE
+      RenderpassTargetOptions<RenderpassTargetTextureParams>
     >;
   },
 > extends DepthRenderPass<T> {
@@ -49,8 +49,13 @@ export class PickableRenderPass<
   constructor(
     renderPassProps: RenderPassProps<T>,
     depthRenderTarget: DepthRenderTarget<
-      DEPTH_FORMATS,
-      RENDER_TARGET_TEXTURE & TEXTURE_BINDING_TEXTURE
+      RenderpassTargetOptions<
+        RenderpassTargetTextureParams<
+          DEPTH_FORMATS,
+          Exclude<RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE> &
+            TEXTURE_BINDING_TEXTURE
+        >
+      >
     >,
     gpu: GPU,
   ) {
@@ -93,9 +98,10 @@ export class PickableRenderPass<
         readDepthShader[0][1],
         'pickPositionBindGroup1',
         (bindGroup) => ({
-          depth_texture: depthRenderTarget.view,
+          depth_texture: depthRenderTarget.renderTarget,
           mesh_texture:
-            gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId.view,
+            gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId
+              .renderTarget,
           mouse: this.#mousePositionBuffer!.getUniformBinding(bindGroup),
         }),
       );
@@ -231,7 +237,7 @@ export class PickableRenderPass<
             y: 0,
             z: 0,
           },
-          texture: this.depthRenderTarget.texture,
+          texture: this.depthRenderTarget.renderTarget.texture.texture,
         },
         {
           buffer: this.#pickBuffer,
@@ -250,7 +256,7 @@ export class PickableRenderPass<
             },
             texture:
               engine.gpu!.pickRenderPass.props.colorRenderTargets
-                .gRenderTargetId.texture,
+                .gRenderTargetId.renderTarget.texture.texture,
           },
           {
             buffer: this.#pickBuffer,

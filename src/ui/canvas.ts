@@ -326,7 +326,7 @@ export class Canvas {
               },
             },
           },
-          gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
+          gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.renderTarget,
         );
         this.setProgress(45);
 

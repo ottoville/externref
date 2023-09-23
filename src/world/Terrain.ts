@@ -26,7 +26,6 @@ import { allocate_vec } from '../nodes/DataNode.js';
 import {
   BGLayout,
   BufLayout,
-  type RenderTarget,
   ShaderStage,
   Texture,
   TextureUsageEnums,
@@ -34,6 +33,7 @@ import {
   Buffer,
   BufferUsageEnums,
   BindGroup,
+  type RenderTargetTexture,
 } from '../webgpu-ts/index.js';
 import { TerrainSubdivisions } from '../GPU/Shaders/ShaderBuilders.js';
 declare const engine: Engine;
@@ -348,7 +348,7 @@ TODO
     }
   }
 
-  readonly texture: RenderTarget<
+  readonly texture: RenderTargetTexture<
     'rgba8unorm',
     (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'],
     { readonly width: 8192; readonly height: 8192 }
