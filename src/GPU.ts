@@ -812,6 +812,11 @@ export class GPU {
       height: 1080,
       width: 1920,
     };
+    context.configure({
+      device: this.device,
+      format: this.#presentationFormat,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
     this.#ro = new window.ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) return;
@@ -838,12 +843,7 @@ export class GPU {
 
           this.scale.x = canvas.width / entry.contentRect.width;
           this.scale.y = canvas.height / entry.contentRect.height;
-          // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
-          context.configure({
-            device: this.device,
-            format: this.#presentationFormat,
-            usage: GPUTextureUsage.RENDER_ATTACHMENT,
-          });
+
           const commandEncoder = this.device.createCommandEncoder({
             label: 'resizeEncoder',
           });
@@ -1050,8 +1050,8 @@ export class GPU {
         engine.inputManager.calculateCameraPositionAndTarget();
     }
 
-    const renderEncoder = this.device.createCommandEncoder({
-      label: 'renderloop_renderEncoder',
+    const renderloop_commandEncoder = this.device.createCommandEncoder({
+      label: 'renderloop_commandEncoder',
     });
 
     this.#timeView.set([time]);
@@ -1066,7 +1066,7 @@ export class GPU {
 
     try {
       const updatedCameras = engine.cameras.filter((camera) => {
-        return camera.updateView(renderEncoder);
+        return camera.updateView(renderloop_commandEncoder);
       });
       // Rust render loop start
       this.#GPUQueueCommandEncoder = null;
@@ -1082,7 +1082,7 @@ export class GPU {
       }
       // Rust render loop end
       if (engine.updateLights || updatedCameras.length > 0) {
-        const lightPass = renderEncoder.beginComputePass({
+        const lightPass = renderloop_commandEncoder.beginComputePass({
           label: 'lightPassEncoder',
         });
         lightPass.setPipeline(updateViewPipeline);
@@ -1103,14 +1103,14 @@ export class GPU {
 
       this.#renderPasses.forEach((renderPass) => {
         //Do the actual drawing
-        renderPass.render(renderEncoder);
+        renderPass.render(renderloop_commandEncoder);
       });
     } catch (e) {
       console.error(e);
     }
 
     this.pendingCommandBuffers.push(
-      renderEncoder.finish({
+      renderloop_commandEncoder.finish({
         label: 'renderencoder',
       }),
     );

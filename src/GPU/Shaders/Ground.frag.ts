@@ -27,6 +27,42 @@ export function createGroundFragShader(
   return new FragmentShader(
     {
       entryPoints: {
+        debug: new FragmentShaderFunction<
+          [
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+              clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
+              meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
+              projection: BufLayout<
+                ShaderStage.FRAGMENT,
+                typeof ProjectionStruct
+              >;
+            },
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            {},
+            {
+              mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
+              diffuseTexture: TextLayout<
+                ShaderStage.FRAGMENT,
+                'texture_2d<f32>'
+              >;
+            },
+          ]
+        >(
+          diffuseOutput,
+          GroundInput,
+          () => /* wgsl */ `
+          var output:Output;
+
+            //DEBUG depth slices
+            let tile : vec3<u32> = getTile(fragCoord.xyz);
+            output.Diffuse = vec4<f32>(colorSet[tile.z % 9u], 1.0);
+        
+            return output;
+        `,
+        ),
         main: new FragmentShaderFunction<
           [
             // eslint-disable-next-line @typescript-eslint/ban-types
@@ -68,19 +104,12 @@ export function createGroundFragShader(
           
             //outPositions=vec4<f32>(position.xyz, 1.0);
             output.Diffuse = textureSample(${diffuseTexture}, ${mySampler}, v_uv);
-            //output.Diffuse.w=0.0;
-          
-          
-            //DEBUG depth slices
-            //let tile : vec3<u32> = getTile(fragCoord.xyz);
-            //output.Diffuse = vec4<f32>(colorSet[tile.z % 9u], 0.0);
-          
-          
-          
+        
               let cluster_index = getClusterIndex(vec4<f32>(fragCoord.xyz, 1.0));
               let cluster_lights_count=${clusters_array.prop(
                 'lightsCount',
               )}[cluster_index];
+
               var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);
           
             var shading:f32;
