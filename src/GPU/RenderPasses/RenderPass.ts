@@ -17,7 +17,11 @@ declare const engine: Engine;
 
 const gpu_screen_buffer_size = 16; //screen width and height and ratio
 
-export interface RenderPassProps<U> extends RenderpassProps<U> {
+export interface RenderPassProps<
+  U extends {
+    [index: string]: ColorRenderTarget;
+  },
+> extends RenderpassProps<U> {
   size: { width: number; height: number };
   getSizeOnResize: (width: number, height: number) => [number, number];
   entryPoint: string;

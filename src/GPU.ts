@@ -472,10 +472,8 @@ export class GPU {
                 arrayLayerCount: 1,
                 baseArrayLayer: 0,
               },
-              writeMask: 0xf,
             },
             {
-              blend: undefined,
               // prettier-ignore
               clearValue: {
               // eslint-disable-next-line sort-keys
@@ -512,10 +510,8 @@ export class GPU {
             },
             usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
           },
-          writeMask: 0xf,
         },
         {
-          blend: undefined,
           // prettier-ignore
           clearValue: {
             // eslint-disable-next-line sort-keys
@@ -533,7 +529,6 @@ export class GPU {
             },
             usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
           },
-          writeMask: 0xf,
         }),
       ),
     };
@@ -566,7 +561,6 @@ export class GPU {
           usages:
             TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'],
         },
-        writeMask: 0xf,
       }),
       this,
     );
@@ -585,10 +579,8 @@ export class GPU {
                 },
                 usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
               },
-              writeMask: 0xf,
             },
             {
-              blend: undefined,
               // prettier-ignore
               clearValue: {
                 // eslint-disable-next-line sort-keys
@@ -620,7 +612,6 @@ export class GPU {
           },
           usages: TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'],
         },
-        writeMask: 0xf,
       }),
       this,
     );
@@ -738,7 +729,6 @@ export class GPU {
           swap: new ColorRenderTarget(
             {
               context: { context, format: this.#presentationFormat },
-              writeMask: 0xf,
             },
             {
               blend: {

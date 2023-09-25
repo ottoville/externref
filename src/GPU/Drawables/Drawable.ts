@@ -86,7 +86,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         };
         if (renderPipeline.primitive)
           renderPipelineDescriptor.primitive = renderPipeline.primitive;
-        if (rp.props.sampleCount > 1)
+        if (rp.props.sampleCount && rp.props.sampleCount > 1)
           renderPipelineDescriptor.multisample = {
             count: rp.props.sampleCount,
           };
