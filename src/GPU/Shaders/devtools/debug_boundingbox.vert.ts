@@ -3,6 +3,7 @@ import {
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
+  WGSLcode,
 } from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
 import {
@@ -36,7 +37,8 @@ export function createDebugBoundingBoxVertShader(
             { world },
           ],
           [{ position }],
-        ) => /* wgsl */ ` var output : Output;
+        ) => WGSLcode/* wgsl */ `
+                var output : Output;
                 var vertexPosition:vec4<f32> = ${world.prop(
                   'transformation',
                 )} * ${position};

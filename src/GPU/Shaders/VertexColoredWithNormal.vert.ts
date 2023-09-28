@@ -3,6 +3,7 @@ import {
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
+  WGSLcode,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, typicalOutput } from './structs/Structs.js';
@@ -37,7 +38,7 @@ export function createVertexColorShader(
             { world },
           ],
           [{ color, position, normal }],
-        ) => /* wgsl */ `
+        ) => WGSLcode/* wgsl */ `
             var output:Output;
             //output.normal=normal;
             var curPos : mat4x4<f32> = ${world.prop('transformation')};

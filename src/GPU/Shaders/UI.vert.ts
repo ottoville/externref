@@ -5,6 +5,7 @@ import {
   type BufLayout,
   type ShaderStage,
   type RenderPipelineLayout,
+  WGSLcode,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import { UIUniforms, UI_Input } from './structs/Structs.js';
@@ -33,7 +34,8 @@ export function createUIVertShader(
       main: new VertexShaderFunction(
         UI_Input,
         [buffers],
-        ([{ uniforms /*texture*/ }], [{ position, uv }]) => /* wgsl */ `
+        ([{ uniforms /*texture*/ }], [{ position, uv }]) =>
+          WGSLcode/* wgsl */ `
       var output : Output;   
       output.Position = vec4<f32>(${uniforms.prop(
         'translate',

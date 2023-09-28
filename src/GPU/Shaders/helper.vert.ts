@@ -3,6 +3,8 @@ import {
   type ShaderStage,
   VertexShaderFunction,
   ShaderBuilder,
+  VertexBuildin,
+  WGSLcode,
 } from '../../webgpu-ts/index.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
@@ -24,14 +26,16 @@ const shaderFunction = new VertexShaderFunction(
       ,
       { world },
     ] /* wgsl */,
-  ) => /* wgsl */ `var output:Output;
-
-var angle:f32 = (f32(${time.prop(
-    'time',
-  )}) * 0.001) + f32(instanceIdx) * angleStep;
+  ) => WGSLcode/* wgsl */ `
+  var output:Output;
+  var angle:f32 = (f32(${time.prop('time')}) * 0.001) + f32(${
+    VertexBuildin.instance_index
+  }) * angleStep;
 var c:f32 = cos(angle);
 var s:f32 = sin(angle);
-var position:vec3<f32> =vec3<f32>(vertices[VertexIndex].x,1.5,vertices[VertexIndex].y);
+var position:vec3<f32> =vec3<f32>(vertices[${
+    VertexBuildin.vertex_index
+  }].x,1.5,vertices[${VertexBuildin.vertex_index}].y);
 var rotated:vec2<f32> =vec2<f32>(position.x * c - position.z * s, position.x * s + position.z * c);
 var offset:vec2<f32> = rotated + vec2<f32>(10.0 * c, 10.0 * s);
 
@@ -44,8 +48,6 @@ output.position = ${scene.prop('modelViewProjection')} * worldPos;
 output.color = vec3<f32>(1.0,1.0,1.0);
 return output;
         `,
-  `@builtin(instance_index) instanceIdx : u32,
-        @builtin(vertex_index) VertexIndex : u32,`,
 ) satisfies VertexShaderFunction<
   readonly [
     // eslint-disable-next-line @typescript-eslint/ban-types

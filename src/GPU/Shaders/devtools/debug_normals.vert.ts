@@ -3,6 +3,8 @@ import {
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
+  WGSLcode,
+  VertexBuildin,
 } from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
 import {
@@ -36,12 +38,12 @@ export function createDebugNormalsVertShader(
             { world },
           ],
           [{ position, normal }],
-        ) => /* wgsl */ `
+        ) => WGSLcode/* wgsl */ `
             var output : Output;
             var vertexPosition:vec4<f32> = ${world.prop(
               'transformation',
             )} * vec4<f32>(${position}.xyz, 1.0);
-            if(gl_VertexIndex % 2u == 1u) {
+            if(${VertexBuildin.vertex_index} % 2u == 1u) {
                 /*
                     Drop translation part from matrix
                 */
@@ -59,7 +61,6 @@ export function createDebugNormalsVertShader(
             output.color=vec3<f32>(0.0,1.0,0.0);
             return output;
             `,
-        '@builtin(vertex_index) gl_VertexIndex : u32,',
       ) satisfies VertexShaderFunction<
         [
           // eslint-disable-next-line @typescript-eslint/ban-types

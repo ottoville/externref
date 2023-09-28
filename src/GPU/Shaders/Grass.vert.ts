@@ -4,6 +4,7 @@ import {
   ShaderStage,
   type BufLayout,
   ShaderBuilder,
+  WGSLcode,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { Scene, Time, colorPositionOutput } from './structs/Structs.js';
@@ -49,9 +50,9 @@ export function createGrassVertShader(
     (
       [, { scene, time }],
       [{ position }, { shape }, { vertex_position }],
-    ) => /* wgsl */ `
-          var output:Output;
-          //ambient = lights.ambient;
+    ) => WGSLcode/* wgsl */ `
+           var output:Output;
+           //ambient = lights.ambient;
            var vertice:vec3<f32> = vec3<f32>(${vertex_position}.xy,0.0);
            //let windRotate:f32 = rot[VertexIndex].x;
            //TODO

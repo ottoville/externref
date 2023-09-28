@@ -4,6 +4,7 @@ import {
   type BufLayout,
   type ShaderStage,
   ShaderBuilder,
+  WGSLcode,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, WaterInput } from './structs/Structs.js';
@@ -29,7 +30,7 @@ export function createWaterVertShader(
             /*{mySampler, diffuseTexture}*/
           ],
           [{ position }],
-        ) => /* wgsl */ `
+        ) => WGSLcode/* wgsl */ `
             var output:Output;
             output.Position = ${
               scene.variableName

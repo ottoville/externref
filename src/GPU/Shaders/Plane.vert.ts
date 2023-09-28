@@ -5,6 +5,7 @@ import {
   type ShaderStage,
   type BufLayout,
   type RenderPipelineLayout,
+  WGSLcode,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
@@ -32,7 +33,7 @@ export class Plane extends VertexShader {
             },
             ,
             { world },
-          ]) => /* wgsl */ `
+          ]) => WGSLcode/* wgsl */ `
                 var output:Output;
                 var worldPos:vec4<f32> = ${world.prop(
                   'transformation',

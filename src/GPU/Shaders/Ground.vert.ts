@@ -4,6 +4,7 @@ import {
   type BufLayout,
   ShaderStage,
   ShaderBuilder,
+  WGSLcode,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import {
@@ -27,7 +28,7 @@ export function createGroundVertShader(
           ,
           /*{uniforms}*/ { scene /*time, clusters_array, meshes, projection*/ },
           { world },
-        ]) => /* wgsl */ `
+        ]) => WGSLcode/* wgsl */ `
         var output : Output;
         output.fragCoord = ${scene.prop(
           'modelViewProjection',
@@ -72,7 +73,7 @@ export function createGroundVertShader(
           ,
           /*{uniforms}*/ { scene /*time, clusters_array, meshes, projection*/ },
           { world },
-        ]) => /* wgsl */ `
+        ]) => WGSLcode/* wgsl */ `
             var output : PickOutput;
             output.Position = ${scene.prop(
               'modelViewProjection',

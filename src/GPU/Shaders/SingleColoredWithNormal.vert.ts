@@ -4,6 +4,7 @@ import {
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
+  WGSLcode,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import {
@@ -29,7 +30,7 @@ export function createPickOutput(
         { world },
       ],
       [{ position }],
-    ) => /* wgsl */ `
+    ) => WGSLcode/* wgsl */ `
         var output: PickOutput;
         var worldPos=${world.prop('transformation')} * ${position};
         output.Position = ${scene.prop('modelViewProjection')} * worldPos;
@@ -81,7 +82,7 @@ export function createSimpleVertShader(
             { world },
           ],
           [{ position, normal }],
-        ) => /* wgsl */ `
+        ) => WGSLcode/* wgsl */ `
             var output:Output;
             var curPos : mat4x4<f32> = ${world.prop('transformation')};
             var worldPos=curPos * ${position};

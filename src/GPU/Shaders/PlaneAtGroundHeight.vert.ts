@@ -7,6 +7,7 @@ import {
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
+  WGSLcode,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 
@@ -28,7 +29,7 @@ export function createPlaneAtGroundHeightVertShader(
             },
             { world },
             /*{ _slopes, _facet12, }*/
-          ]) => /* wgsl */ `
+          ]) => WGSLcode/* wgsl */ `
                 var output:Output;
                 var worldPos:vec4<f32> = ${world.prop(
                   'transformation',

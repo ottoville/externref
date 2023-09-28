@@ -3,6 +3,8 @@ import {
   type ShaderStage,
   VertexShader,
   VertexShaderFunction,
+  WGSLcode,
+  VertexBuildin,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
 import { MeshUniforms, PositionOutput, Scene } from './structs/Structs.js';
@@ -22,7 +24,7 @@ export function createSunVertShader(
               scene /*time, clusters_array, meshes, projection*/,
             },
             { world },
-          ]) => /* wgsl */ `
+          ]) => WGSLcode/* wgsl */ `
                 var output:Output;
                 let curPos: vec3<f32> = ${world.prop('transformation')}[3].xyz;
               
@@ -39,7 +41,11 @@ export function createSunVertShader(
                 )}[2].y);
               
               
-                let transformbill : vec3<f32> =  transform  + CameraRight_worldspace * vertices[VertexIndex].x + CameraUp_worldspace * vertices[VertexIndex].y;
+                let transformbill : vec3<f32> =  transform  + CameraRight_worldspace * vertices[${
+                  VertexBuildin.vertex_index
+                }].x + CameraUp_worldspace * vertices[${
+                  VertexBuildin.vertex_index
+                }].y;
               
                 output.Position = ${scene.prop(
                   'modelViewProjection',
@@ -49,7 +55,6 @@ export function createSunVertShader(
                 return output;
             
               `,
-          '@builtin(vertex_index) VertexIndex : u32,',
         ) satisfies VertexShaderFunction<
           [
             // eslint-disable-next-line @typescript-eslint/ban-types
