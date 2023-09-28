@@ -85,7 +85,6 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     node.drawable = new DrawableIndexed({
       bindGroups: [],
       node,
-      renderPasses: undefined,
       renderPipeline,
       vertexBuffers: [vertices_ptr],
     });

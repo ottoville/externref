@@ -82,7 +82,6 @@ export class NormalsMesh extends DataNode {
         },
       ],
       node: this,
-      renderPasses: undefined,
       renderPipeline,
       vertexBuffers: [vertices_ptr],
     });

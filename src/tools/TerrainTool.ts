@@ -198,7 +198,6 @@ export class TerrainTool extends MainNode {
           },
         ],
         node: this,
-        renderPasses: undefined,
         renderPipeline,
         vertexBuffers: [] as [],
       },

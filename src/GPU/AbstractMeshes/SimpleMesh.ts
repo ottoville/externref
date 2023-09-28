@@ -72,7 +72,6 @@ export class SimpleMesh extends BoundableNodeSimple {
           },
         ],
         node: this,
-        renderPasses: undefined,
         renderPipeline,
         vertexBuffers: [vBufferGPU],
       });

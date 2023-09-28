@@ -91,7 +91,6 @@ export class BoundingBoxMesh extends DataNode {
     this.drawable = new DrawableIndexed({
       bindGroups: [],
       node: this,
-      renderPasses: undefined,
       renderPipeline,
       vertexBuffers: [debug_render_boundingbox_vertexBuffer],
     });
