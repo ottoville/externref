@@ -52,7 +52,6 @@ export function createGroundFragShader(
           ]
         >(
           diffuseOutput,
-          GroundInput,
           () => /* wgsl */ `
           var output:Output;
 
@@ -62,6 +61,7 @@ export function createGroundFragShader(
         
             return output;
         `,
+          GroundInput,
         ),
         main: new FragmentShaderFunction<
           [
@@ -88,7 +88,6 @@ export function createGroundFragShader(
           ]
         >(
           diffuseOutput,
-          GroundInput,
           ([
             ,
             /*{ uniforms, }*/ {
@@ -145,6 +144,7 @@ export function createGroundFragShader(
           
             return output;
         `,
+          GroundInput,
         ),
         pick: createPickOutputFragment(),
       },

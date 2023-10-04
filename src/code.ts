@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/extensions
 import { ApplicationInsights } from './bundled.js';
 
 /* eslint-disable indent */

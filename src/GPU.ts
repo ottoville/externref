@@ -486,7 +486,6 @@ export class GPU {
         getSizeOnResize: (w, h) => {
           return [w, h];
         },
-        gpu: this.device,
         label: 'pickRenderPass',
         rootLayouts: [this.shaders.rootCameralayout],
         sampleCount: 1,
@@ -539,7 +538,6 @@ export class GPU {
         getSizeOnResize: (w, h) => {
           return [w, h];
         },
-        gpu: this.device,
         label: 'renderPassScreen',
         rootLayouts: [this.shaders.rootCameralayout],
         sampleCount: 4,
@@ -591,7 +589,6 @@ export class GPU {
         },
         entryPoint: 'main',
         getSizeOnResize: (w, h) => [w >> 2, h >> 2],
-        gpu: this.device,
         label: 'renderPassWater',
         rootLayouts: [this.shaders.rootCameralayout],
         sampleCount: 1,
@@ -755,7 +752,6 @@ export class GPU {
         getSizeOnResize: (w, h) => {
           return [w, h];
         },
-        gpu: this.device,
         label: 'renderPassCanvas',
         rootLayouts: [this.canvasRootLayout],
         sampleCount: 1,

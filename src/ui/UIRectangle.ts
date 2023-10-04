@@ -364,9 +364,11 @@ export abstract class UIRectangle<
       (Array.isArray(borderSize.height) && borderSize.height[0] > 0)
         ? 54
         : 6;
+    const gpu =
+      canvaspipeline.builder.vertexShader.props.pipelineLayouts[0]!.gpu;
     this.uniformBuffer = new Buffer(
       {
-        gpu: renderPass.props.gpu,
+        gpu: gpu,
         label: 'UI_transform',
         size: 8,
         usages: BufferUsageEnums['UNIFORM|COPY_DST'],

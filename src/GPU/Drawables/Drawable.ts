@@ -73,13 +73,13 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         const renderPipelineDescriptor: RenderPipelineBuilderDesc = {
           fragment: {
             entryPoint: fragmentEntry,
-            targets: Object.values(rp.props.colorRenderTargets),
           },
           label:
             'renderPipeline:' +
             renderPipeline.label +
             ' RenderPass:' +
             rp.props.label,
+          renderpass: rp,
           vertex: {
             entryPoint: rp.entryPoint,
           },
@@ -96,8 +96,6 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         variantPP = this.renderPipeline.builder
           .build(renderPipelineDescriptor)
           .then((variantPipeline) => {
-            // Replace promise with real object
-            rp.renderPipelines.set(renderPipeline.builder, variantPipeline);
             rp.onRenderPipelinesChange.forEach((cb) => cb());
             return variantPipeline;
           });

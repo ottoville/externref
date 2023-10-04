@@ -21,11 +21,11 @@ import {
 export function createPickOutputFragment() {
   return new FragmentShaderFunction(
     pickOutputFragment,
-    pickOutput,
     () =>
       ` var output:PickOutput;
           output.ID = id;
           return output;`,
+    pickOutput,
   );
 }
 export function createSimpleFragShader(
@@ -45,7 +45,6 @@ export function createSimpleFragShader(
           ]
         >(
           diffuseOutput,
-          typicalOutput,
           ([
             ,
             /*{ uniforms, }*/ {
@@ -98,6 +97,7 @@ export function createSimpleFragShader(
                 let total_shading=vec3<f32>(shading,shading,shading);
                 output.Diffuse= output.Diffuse*max(vec4<f32>(total_shading,1.0),vec4<f32>(shading_rgb,0.0));
               return output;`,
+          typicalOutput,
         ),
         pick: createPickOutputFragment(),
       },

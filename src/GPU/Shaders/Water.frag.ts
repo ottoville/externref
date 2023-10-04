@@ -26,7 +26,6 @@ export function createWaterFragShader(
     ]
   >(
     diffuseOutput,
-    WaterInput,
     ([
       ,
       ,
@@ -44,6 +43,7 @@ export function createWaterFragShader(
               return output;
   
           `,
+    WaterInput,
   );
   return new ShaderBuilder([pipelineLayout])
     .addFunction('main', main)

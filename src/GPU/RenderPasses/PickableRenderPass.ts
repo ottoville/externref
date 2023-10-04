@@ -68,12 +68,12 @@ export class PickableRenderPass<
           this.#pickPositionPipeline = pickPositionPipeline;
           return pickPositionPipeline;
         });
-      this.#pickBuffer = renderPassProps.gpu.createBuffer({
+      this.#pickBuffer = gpu.device.createBuffer({
         label: 'pickBuffer',
         size: 4 * 4, //depth + meshID (four pixel)
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       });
-      this.#pickBufferRead = renderPassProps.gpu.createBuffer({
+      this.#pickBufferRead = gpu.device.createBuffer({
         label: 'pickBufferRead',
         size: 4 + 4, //depth + meshID (four pixel)
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
@@ -112,7 +112,9 @@ export class PickableRenderPass<
   #createPickBuffer() {
     const offset = this.#rowBytes % 256;
     if (offset !== 0) this.#rowBytes = this.#rowBytes - offset + 256;
-    return this.props.gpu.createBuffer({
+    const gpu = this.depthRenderTarget.renderTarget.texture.props.gpu;
+
+    return gpu.createBuffer({
       label: 'pickBuffer',
       size: this.#rowBytes * this.size.height,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
@@ -156,7 +158,8 @@ export class PickableRenderPass<
       return this.pickPromise;
     }
     const camera = [...this.perspectiveCameras][0]!;
-    const encoder = this.props.gpu.createCommandEncoder({
+    const gpu = this.depthRenderTarget.renderTarget.texture.props.gpu;
+    const encoder = gpu.createCommandEncoder({
       label: 'pickPosition_encoder',
     });
     const gRenderTargetDiffuse =
@@ -204,7 +207,7 @@ export class PickableRenderPass<
           0,
           4 + 4,
         );
-        this.props.gpu.queue.submit([encoder.finish()]);
+        gpu.queue.submit([encoder.finish()]);
 
         this.#zAndIDPromise = this.#pickBufferRead!.mapAsync(
           GPUMapMode.READ,
@@ -266,7 +269,7 @@ export class PickableRenderPass<
           [1, 1, 1],
         );
       }
-      this.props.gpu.queue.submit([encoder.finish()]);
+      gpu.queue.submit([encoder.finish()]);
       const buffer = this.#pickBuffer;
       if (!this.#zAndIDPromise) {
         this.#zAndIDPromise = this.#pickBuffer

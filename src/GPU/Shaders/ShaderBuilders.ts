@@ -201,11 +201,11 @@ export function createShaderBuilders(gpu: GPU) {
         'main',
         new FragmentShaderFunction(
           diffuseOutput,
-          colorPositionOutput,
           () => /* wgsl */ `
               var output:Output;
               output.Diffuse = vec4<f32>(color,1.0);
               return output;`,
+          colorPositionOutput,
         ),
       )
       .build('color.frag'),

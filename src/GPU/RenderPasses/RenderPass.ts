@@ -70,6 +70,7 @@ export class RenderPass<
     });
     const renderBundle = new RenderBundleEncoder(
       this,
+      gpu.device,
       GPURenderBundleEncoderDescriptor,
       (renderBundleEncoder) => {
         /*Object.values(this.props.colorRenderTargets).some((rt) => {
@@ -130,7 +131,7 @@ export class RenderPass<
     if (!initial) this.#screenDimensionsBuffer.destroy();
     this.#screenDimensionsBuffer = new Buffer(
       {
-        gpu: this.props.gpu,
+        gpu: gpu.device,
         label: 'screen_buffer',
         size: gpu_screen_buffer_size,
         usages: BufferUsageEnums.UNIFORM,
@@ -159,26 +160,5 @@ export class RenderPass<
     for (const rt of Object.values(this.props.colorRenderTargets)) {
       rt.resize(this.size, this.props.sampleCount);
     }
-  }
-  //TODO: dont execute this function on every render
-  get GPURenderPassDescriptor(): GPURenderPassDescriptor {
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: Object.values(this.props.colorRenderTargets).map((rt) =>
-        rt.createColorAttachment(),
-      ),
-    };
-    return renderPassDescriptor;
-  }
-
-  render(renderEncoder: GPUCommandEncoder) {
-    const passEncoder = renderEncoder.beginRenderPass(
-      this.GPURenderPassDescriptor,
-    );
-    passEncoder.executeBundles(
-      this.bundles.map((b) => {
-        return b.renderBundle();
-      }),
-    );
-    passEncoder.end();
   }
 }
