@@ -5,7 +5,6 @@ import { DataNode, allocate_vec_f32 } from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
-import { gpu_memory_index_size } from '../../../GPU/Shaders/ShaderBuilders.js';
 
 // eslint-disable-next-line import/no-unused-modules
 export class NormalsMesh extends DataNode {
@@ -75,12 +74,7 @@ export class NormalsMesh extends DataNode {
       },
     );
     this.drawable = new DrawableSimple({
-      bindGroups: [
-        {
-          bindGroup: engine.gpu!.BindGroupPosition,
-          offsets: [engine.rust.gpu_alignment(this.id) * gpu_memory_index_size],
-        },
-      ],
+      bindGroups: [],
       node: this,
       renderPipeline,
       vertexBuffers: [vertices_ptr],

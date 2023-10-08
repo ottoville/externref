@@ -21,6 +21,6 @@ export const NormalsPipeline = Object.freeze([
       },
       label,
       primitive,
-    });
+    } as const);
   },
 ] as const);

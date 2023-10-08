@@ -8,7 +8,6 @@ import type { WaterVertShader } from '../GPU/Shaders/Water.vert.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 import { BindGroup } from '../webgpu-ts/index.js';
-import { gpu_memory_index_size } from '../GPU/Shaders/ShaderBuilders.js';
 
 export class Sea extends BoundableNodeSimple {
   override drawable:
@@ -76,14 +75,9 @@ export class Sea extends BoundableNodeSimple {
         minFilter: 'nearest',
         mipmapFilter: 'nearest',
       });
+
       this.drawable = new DrawableSimple({
         bindGroups: [
-          {
-            bindGroup: engine.gpu!.BindGroupPosition,
-            offsets: [
-              engine.rust.gpu_alignment(this.id) * gpu_memory_index_size,
-            ],
-          },
           {
             bindGroup: new BindGroup(
               engine.gpu.waterTextureLayot,

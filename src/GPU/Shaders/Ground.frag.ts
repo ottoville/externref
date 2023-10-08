@@ -4,8 +4,6 @@ import {
   Clusters,
   GroundInput,
   MeshArray,
-  ProjectionStruct,
-  Scene,
   diffuseOutput,
 } from './structs/Structs.js';
 import { createPickOutputFragment } from './Simple.frag.js';
@@ -16,41 +14,15 @@ import {
   type SampLayout,
   type ShaderStage,
   type TextLayout,
-  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 
-type BindLayouts = GPU['lightsTextureBindGroup']['bindGroupLayouts'];
-
 export function createGroundFragShader(
-  pipelineLayout: RenderPipelineLayout<BindLayouts>,
+  pipelineLayout: GPU['lightsTextureBindGroup'],
 ) {
   return new FragmentShader(
     {
       entryPoints: {
-        debug: new FragmentShaderFunction<
-          [
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            {},
-            {
-              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-              clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
-              meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
-              projection: BufLayout<
-                ShaderStage.FRAGMENT,
-                typeof ProjectionStruct
-              >;
-            },
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            {},
-            {
-              mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
-              diffuseTexture: TextLayout<
-                ShaderStage.FRAGMENT,
-                'texture_2d<f32>'
-              >;
-            },
-          ]
-        >(
+        debug: new FragmentShaderFunction(
           diffuseOutput,
           () => /* wgsl */ `
           var output:Output;
@@ -68,13 +40,8 @@ export function createGroundFragShader(
             // eslint-disable-next-line @typescript-eslint/ban-types
             {},
             {
-              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
               clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
               meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
-              projection: BufLayout<
-                ShaderStage.FRAGMENT,
-                typeof ProjectionStruct
-              >;
             },
             // eslint-disable-next-line @typescript-eslint/ban-types
             {},

@@ -26,8 +26,9 @@ export function createWaterVertShader(
             /*{ uniforms, }*/ {
               scene /*time, clusters_array, meshes, projection*/,
             },
+            // eslint-disable-next-line no-empty-pattern
+            {},
             { world },
-            /*{mySampler, diffuseTexture}*/
           ],
           [{ position }],
         ) => WGSLcode/* wgsl */ `
@@ -50,14 +51,14 @@ export function createWaterVertShader(
           {
             scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
           },
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
           {
             world: BufLayout<
               ShaderStage.VERTEX_AND_FRAGMENT,
               typeof MeshUniforms
             >;
           },
-          // eslint-disable-next-line @typescript-eslint/ban-types
-          {},
         ]
       >,
     )

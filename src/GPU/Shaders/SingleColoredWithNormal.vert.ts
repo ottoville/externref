@@ -1,10 +1,10 @@
 import {
   type VertexBufferLayout2,
-  VertexShader,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
   WGSLcode,
+  ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import {
@@ -68,9 +68,10 @@ export function createSimpleVertShader(
       stepMode: 'vertex',
     },
   ] as const);
-  return new VertexShader({
-    entryPoints: {
-      main: new VertexShaderFunction(
+  return new ShaderBuilder([pipelineLayout])
+    .addFunction(
+      'main',
+      new VertexShaderFunction(
         typicalOutput,
         buffers,
         (
@@ -83,20 +84,20 @@ export function createSimpleVertShader(
           ],
           [{ position, normal }],
         ) => WGSLcode/* wgsl */ `
-            var output:Output;
-            var curPos : mat4x4<f32> = ${world.prop('transformation')};
-            var worldPos=curPos * ${position};
+        var output:Output;
+        var curPos : mat4x4<f32> = ${world.prop('transformation')};
+        var worldPos=curPos * ${position};
 
-            output.normal = normalize((curPos * vec4<f32>(${normal}, 0.0)).xyz);
-            output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
-            output.id=${world.prop('id')};
-            output.position=vec3<f32>(worldPos.xyz);
-            output.scenes=${world.prop('scenes')};
-            output.color = ${world.prop('color')};
+        output.normal = normalize((curPos * vec4<f32>(${normal}, 0.0)).xyz);
+        output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
+        output.id=${world.prop('id')};
+        output.position=vec3<f32>(worldPos.xyz);
+        output.scenes=${world.prop('scenes')};
+        output.color = ${world.prop('color')};
 
-            //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
-            //ambient=lights.ambient;
-            return output;`,
+        //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
+        //ambient=lights.ambient;
+        return output;`,
       ) satisfies VertexShaderFunction<
         [
           // eslint-disable-next-line @typescript-eslint/ban-types
@@ -112,10 +113,8 @@ export function createSimpleVertShader(
           },
         ]
       >,
-      pick: createPickOutput(buffers),
-    },
-    label: 'Simple.vert',
-    pipelineLayouts: [pipelineLayout],
-  });
+    )
+    .addFunction('pick', createPickOutput(buffers))
+    .build('Simple.vert');
 }
 export type SimpleVertShader = ReturnType<typeof createSimpleVertShader>;

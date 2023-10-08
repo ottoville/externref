@@ -91,8 +91,6 @@ export class GPU {
 
   readonly #gpu_max_point_lights = 63;
 
-  readonly #DynamicBindGroups: WeakSet<BindGroup> = new WeakSet();
-
   readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
   readonly tempGPUBuffers: GPUBuffer[] = [];
 
@@ -196,8 +194,8 @@ export class GPU {
     readonly [
       typeof this.shaders.sizeBindGroupLayout,
       typeof this.shaders.uniformBindGroupLayoutWithTime,
-      typeof this.shaders.BindGroupLayoutPosition,
       typeof this.waterTextureLayot,
+      typeof this.shaders.BindGroupLayoutPosition,
     ]
   >;
 
@@ -447,7 +445,7 @@ export class GPU {
     );
     this.bindGroupTextureWater = this.shaders.rootCameralayout.appendBinds(
       'lightsBindGroupTexture2PipelineLayout',
-      [this.shaders.BindGroupLayoutPosition, this.waterTextureLayot],
+      [this.waterTextureLayot, this.shaders.BindGroupLayoutPosition],
     );
 
     this.pickRenderPass = new RenderPass(
@@ -775,7 +773,6 @@ export class GPU {
       this.pickRenderPass,
     ];
 
-    this.#DynamicBindGroups.add(this.BindGroupPosition);
     const timeAndDeltaBuffer = new ArrayBuffer(8);
 
     this.timeBuffer = new Buffer({

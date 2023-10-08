@@ -1,10 +1,10 @@
 import {
-  VertexShader,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
   WGSLcode,
   VertexBuildin,
+  ShaderBuilder,
 } from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
 import {
@@ -18,9 +18,10 @@ export function createDebugNormalsVertShader(
   pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
   arrayStride: number,
 ) {
-  return new VertexShader({
-    entryPoints: {
-      main: new VertexShaderFunction(
+  return new ShaderBuilder([pipelineLayout])
+    .addFunction(
+      'main',
+      new VertexShaderFunction(
         colorPositionOutput,
         [
           {
@@ -39,28 +40,26 @@ export function createDebugNormalsVertShader(
           ],
           [{ position, normal }],
         ) => WGSLcode/* wgsl */ `
-            var output : Output;
-            var vertexPosition:vec4<f32> = ${world.prop(
-              'transformation',
-            )} * vec4<f32>(${position}.xyz, 1.0);
-            if(${VertexBuildin.vertex_index} % 2u == 1u) {
-                /*
-                    Drop translation part from matrix
-                */
-                var matt: mat3x3<f32> = mat3x3<f32>(
-                    ${world.prop('transformation')}[0].xyz,
-                    ${world.prop('transformation')}[1].xyz,
-                    ${world.prop('transformation')}[2].xyz
-                );
-                var transformed_normal = normalize(matt * ${normal});
-                vertexPosition = vertexPosition + vec4<f32>(transformed_normal*10.0, 0.0);
-            }
-            output.position = ${scene.prop(
-              'modelViewProjection',
-            )} * vertexPosition;
-            output.color=vec3<f32>(0.0,1.0,0.0);
-            return output;
-            `,
+        var output : Output;
+        var vertexPosition:vec4<f32> = ${world.prop(
+          'transformation',
+        )} * vec4<f32>(${position}.xyz, 1.0);
+        if(${VertexBuildin.vertex_index} % 2u == 1u) {
+            /*
+                Drop translation part from matrix
+            */
+            var matt: mat3x3<f32> = mat3x3<f32>(
+                ${world.prop('transformation')}[0].xyz,
+                ${world.prop('transformation')}[1].xyz,
+                ${world.prop('transformation')}[2].xyz
+            );
+            var transformed_normal = normalize(matt * ${normal});
+            vertexPosition = vertexPosition + vec4<f32>(transformed_normal*10.0, 0.0);
+        }
+        output.position = ${scene.prop('modelViewProjection')} * vertexPosition;
+        output.color=vec3<f32>(0.0,1.0,0.0);
+        return output;
+        `,
       ) satisfies VertexShaderFunction<
         [
           // eslint-disable-next-line @typescript-eslint/ban-types
@@ -76,8 +75,6 @@ export function createDebugNormalsVertShader(
           },
         ]
       >,
-    },
-    label: 'debug_normals.vert',
-    pipelineLayouts: [pipelineLayout],
-  });
+    )
+    .build('debug_normals.vert');
 }

@@ -20,7 +20,6 @@ import {
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
-import { gpu_memory_index_size } from '../GPU/Shaders/ShaderBuilders.js';
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
@@ -187,16 +186,10 @@ export class TerrainTool extends MainNode {
     this.scene = scene;
 
     this.elevator = engine.rust.create_elevator(terrain.mesh.id);
+
     this.drawable = new DrawableSimple(
       {
-        bindGroups: [
-          {
-            bindGroup: engine.gpu!.BindGroupPosition,
-            offsets: [
-              engine.rust.gpu_alignment(this.id) * gpu_memory_index_size,
-            ],
-          },
-        ],
+        bindGroups: [],
         node: this,
         renderPipeline,
         vertexBuffers: [] as [],
