@@ -47,7 +47,7 @@ aside {
     overflow-y: scroll;
     height: 100%;
 }
-#meshes {
+.meshlist {
     max-height: 200px;
-    overflow-y: scroll;
+    overflow-y: auto;
 }

@@ -210,28 +210,7 @@ export function createShaderBuilders(gpu: GPU) {
       )
       .build('color.frag'),
     facet12ArrGPUBuffer,
-    heightsLayout: new BGLayout(gpu.device, 'terrainBindGroupLayout', {
-      facet12: new BufLayout(
-        {
-          buffer: {
-            minBindingSize: 32,
-            type: 'read-only-storage',
-          },
-          visibility: ShaderStage.VERTEX,
-        },
-        PlaneArray,
-      ),
-      slopes: new BufLayout(
-        {
-          buffer: {
-            minBindingSize: 32,
-            type: 'read-only-storage',
-          },
-          visibility: ShaderStage.VERTEX,
-        },
-        IntArray,
-      ),
-    }),
+    heightsLayout,
     positionAndTimeBindGroup,
     rootCameralayout,
     sizeBindGroupLayout,

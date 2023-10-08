@@ -14,6 +14,21 @@ import {
   pickOutput,
 } from './structs/Structs.js';
 
+type GroundFunction = VertexShaderFunction<
+  readonly [
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    {},
+    {
+      scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+    },
+    {
+      world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
+    },
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    {},
+  ]
+>;
+
 export function createGroundVertShader(
   pipelineLayout: GPU['lightsTextureBindGroup'],
   buffers: VertexBufferLayout2,
@@ -46,23 +61,7 @@ export function createGroundVertShader(
         output.scenes=${world.prop('scenes')};
         return output;
         `,
-      ) satisfies VertexShaderFunction<
-        readonly [
-          // eslint-disable-next-line @typescript-eslint/ban-types
-          {},
-          {
-            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-          },
-          {
-            world: BufLayout<
-              ShaderStage.VERTEX_AND_FRAGMENT,
-              typeof MeshUniforms
-            >;
-          },
-          // eslint-disable-next-line @typescript-eslint/ban-types
-          {},
-        ]
-      >,
+      ) satisfies GroundFunction,
     )
     .addFunction(
       'pick',
@@ -81,23 +80,7 @@ export function createGroundVertShader(
             output.id=${world.prop('id')};
             return output;
         `,
-      ) satisfies VertexShaderFunction<
-        readonly [
-          // eslint-disable-next-line @typescript-eslint/ban-types
-          {},
-          {
-            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-          },
-          {
-            world: BufLayout<
-              ShaderStage.VERTEX_AND_FRAGMENT,
-              typeof MeshUniforms
-            >;
-          },
-          // eslint-disable-next-line @typescript-eslint/ban-types
-          {},
-        ]
-      >,
+      ) satisfies GroundFunction,
     )
     .build('Ground.vert');
 }

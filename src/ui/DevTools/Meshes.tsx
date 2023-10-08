@@ -7,6 +7,7 @@ import { VariantList } from './VariantList.js';
 import { NodeInfo } from './NodeInfo.js';
 import type { Engine } from '../../engine.js';
 import { RenderPipeline, RenderPipelineBuilder } from 'webgpu-ts/index.js';
+import type { MainNode } from 'MainNode.js';
 declare const engine: Engine;
 
 const getPositionBindGroupForScreen = (gpu: GPU) =>
@@ -24,6 +25,42 @@ const getUIBindGroupForScreen = (gpu: GPU) =>
       return !(renderPipelineVariant instanceof Promise);
     },
   );
+
+function MeshList({
+  renderPipelines,
+  selectedDrawable,
+  setSelectedDrawable,
+  label,
+}: {
+  renderPipelines: ReturnType<typeof getPositionBindGroupForScreen>;
+  selectedDrawable: Drawable<MainNode> | undefined;
+  setSelectedDrawable: React.Dispatch<
+    React.SetStateAction<Drawable<MainNode> | undefined>
+  >;
+  label: string;
+}) {
+  return (
+    <fieldset className={'meshlist'}>
+      <legend>{label}</legend>
+      <ul>
+        {renderPipelines.map(([, variant]) => {
+          return (
+            <li key={variant.pipeline.label}>
+              Renderpipeline
+              <br />
+              <small>{variant.pipeline.label}</small>
+              <VariantList
+                selectedDrawable={selectedDrawable}
+                variant={variant}
+                setSelectedDrawable={setSelectedDrawable}
+              ></VariantList>
+            </li>
+          );
+        })}
+      </ul>
+    </fieldset>
+  );
+}
 export function Meshes() {
   const [renderPipelines, setRenderPipelines] = useState<
     ReturnType<typeof getPositionBindGroupForScreen>
@@ -52,44 +89,18 @@ export function Meshes() {
   const [selectedDrawable, setSelectedDrawable] = useState<Drawable>();
   return (
     <>
-      <fieldset id="meshes">
-        <legend>Rendered meshes</legend>
-        <ul>
-          {renderPipelines.map(([, variant]) => {
-            return (
-              <li key={variant.pipeline.label}>
-                Renderpipeline
-                <br />
-                <small>{variant.pipeline.label}</small>
-                <VariantList
-                  selectedDrawable={selectedDrawable}
-                  variant={variant}
-                  setSelectedDrawable={setSelectedDrawable}
-                ></VariantList>
-              </li>
-            );
-          })}
-        </ul>
-      </fieldset>
-      <fieldset id="uis">
-        <legend>Rendered UI</legend>
-        <ul>
-          {UIrenderPipelines.map(([, variant]) => {
-            return (
-              <li key={variant.pipeline.label}>
-                Renderpipeline
-                <br />
-                <small>{variant.pipeline.label}</small>
-                <VariantList
-                  selectedDrawable={selectedDrawable}
-                  variant={variant}
-                  setSelectedDrawable={setSelectedDrawable}
-                ></VariantList>
-              </li>
-            );
-          })}
-        </ul>
-      </fieldset>
+      <MeshList
+        label="Rendered meshes"
+        renderPipelines={renderPipelines}
+        selectedDrawable={selectedDrawable}
+        setSelectedDrawable={setSelectedDrawable}
+      ></MeshList>
+      <MeshList
+        label="Rendered UI"
+        renderPipelines={UIrenderPipelines}
+        selectedDrawable={selectedDrawable}
+        setSelectedDrawable={setSelectedDrawable}
+      ></MeshList>
       {selectedDrawable ? (
         <NodeInfo
           key={selectedDrawable.node.id}
