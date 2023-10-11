@@ -16,20 +16,27 @@ export function createPlaneAtGroundHeightVertShader(
   buffers: VertexBufferLayout2,
   settings: typeof Terrain.settings,
 ) {
-  return new VertexShader(
-    {
-      entryPoints: {
-        main: new VertexShaderFunction(
-          colorPositionOutput,
-          [buffers],
-          ([
-            ,
-            /*{uniforms,}*/ {
-              scene /*time, clusters_array, meshes, projection*/,
-            },
-            { world },
-            /*{ _slopes, _facet12, }*/
-          ]) => WGSLcode/* wgsl */ `
+  return new VertexShader({
+    constantCode: ([
+      ,
+      ,
+      /*{ uniforms, }*/ /*{ scene,time, clusters_array, meshes, projection}*/ /*{ world, }*/ {
+        slopes,
+        facet12,
+      },
+    ]) => getHeightAtCoordinates(settings, slopes, facet12),
+    entryPoints: {
+      main: new VertexShaderFunction(
+        colorPositionOutput,
+        [buffers],
+        ([
+          ,
+          /*{uniforms,}*/ {
+            scene /*time, clusters_array, meshes, projection*/,
+          },
+          { world },
+          /*{ _slopes, _facet12, }*/
+        ]) => WGSLcode/* wgsl */ `
                 var output:Output;
                 var worldPos:vec4<f32> = ${world.prop(
                   'transformation',
@@ -41,37 +48,25 @@ export function createPlaneAtGroundHeightVertShader(
                 output.color = vec3<f32>(1.0,1.0,1.0);
                 return output;
             `,
-        ) satisfies VertexShaderFunction<
-          [
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            {},
-            {
-              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-            },
-            {
-              world: BufLayout<
-                ShaderStage.VERTEX_AND_FRAGMENT,
-                typeof MeshUniforms
-              >;
-            },
-          ]
-        >,
-      },
-      label: 'PlaneAtGroundHeight.vert',
-      pipelineLayouts: [pipelineLayout],
+      ) satisfies VertexShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+          },
+          {
+            world: BufLayout<
+              ShaderStage.VERTEX_AND_FRAGMENT,
+              typeof MeshUniforms
+            >;
+          },
+        ]
+      >,
     },
-    ([
-      ,
-      ,
-      /*{ uniforms, }*/ /*{ scene,time, clusters_array, meshes, projection}*/ /*{ world, }*/ {
-        slopes,
-        facet12,
-      },
-    ]) =>
-      `
-        ${getHeightAtCoordinates(settings, slopes, facet12)}
-    `,
-  );
+    label: 'PlaneAtGroundHeight.vert',
+    pipelineLayouts: [pipelineLayout],
+  });
 }
 export type PlaneAtGroundHeightVertShader = ReturnType<
   typeof createPlaneAtGroundHeightVertShader

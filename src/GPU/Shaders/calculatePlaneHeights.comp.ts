@@ -63,23 +63,25 @@ export function createCalculatePlaneHeights(
 
   return [
     bindLayouts,
-    new ComputeShader(
-      {
-        entryPoints: {
-          main: new ComputeShaderFunction<
-            [
-              {
-                vertices: BufLayout<ShaderStage.COMPUTE, typeof Vertices>;
-              },
-              {
-                facet12: BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>;
-                slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>;
-              },
-            ]
-          >(
-            '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-            [1],
-            ([{ vertices }, { slopes, facet12 }]) => /* wgsl */ `
+    new ComputeShader({
+      constantCode: () => /* wgsl */ `
+          const cd: f32 = -1.0;  
+      `,
+      entryPoints: {
+        main: new ComputeShaderFunction<
+          [
+            {
+              vertices: BufLayout<ShaderStage.COMPUTE, typeof Vertices>;
+            },
+            {
+              facet12: BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>;
+              slopes: BufLayout<ShaderStage.COMPUTE, typeof IntArray>;
+            },
+          ]
+        >(
+          '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
+          [1],
+          ([{ vertices }, { slopes, facet12 }]) => /* wgsl */ `
             
       let next:vec2<u32> = vec2<u32>(GlobalInvocationID.x + u32(1),GlobalInvocationID.y + u32(1));
   
@@ -138,16 +140,11 @@ export function createCalculatePlaneHeights(
   
       return;
             `,
-          ),
-        },
-        label: 'calculatePlaneHeights.comp',
-        pipelineLayouts: [pipelineLayout],
+        ),
       },
-      () =>
-        `
-        const cd: f32 = -1.0;  
-    `,
-    ),
+      label: 'calculatePlaneHeights.comp',
+      pipelineLayouts: [pipelineLayout],
+    }),
   ] as const;
 }
 export type CalculatePlaneHeights = ReturnType<

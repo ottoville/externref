@@ -31,28 +31,35 @@ export function createPickOutputFragment() {
 export function createSimpleFragShader(
   pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
 ) {
-  return new FragmentShader(
-    {
-      entryPoints: {
-        main: new FragmentShaderFunction<
-          [
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            {},
-            {
-              clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
-              meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
-            },
-          ]
-        >(
-          diffuseOutput,
-          ([
-            ,
-            /*{ uniforms, }*/ {
-              /*scene,*/ clusters_array,
-              meshes /*projection,*/,
-            },
-            /*{ world, }*/
-          ]) => /* wgsl */ `var output:Output;
+  return new FragmentShader({
+    constantCode: ([
+      { screen_dimensions },
+      { /*scene, clusters_array, meshes,*/ projection },
+      /*{ world, }*/
+    ]) =>
+      `
+        ${getClusterIndex(screen_dimensions, projection)}
+      `,
+    entryPoints: {
+      main: new FragmentShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
+            meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
+          },
+        ]
+      >(
+        diffuseOutput,
+        ([
+          ,
+          /*{ uniforms, }*/ {
+            /*scene,*/ clusters_array,
+            meshes /*projection,*/,
+          },
+          /*{ world, }*/
+        ]) => /* wgsl */ `var output:Output;
               output.Diffuse = vec4<f32>(color,1.0);
             
               //output.Diffuse.w=0.0;
@@ -97,22 +104,13 @@ export function createSimpleFragShader(
                 let total_shading=vec3<f32>(shading,shading,shading);
                 output.Diffuse= output.Diffuse*max(vec4<f32>(total_shading,1.0),vec4<f32>(shading_rgb,0.0));
               return output;`,
-          typicalOutput,
-        ),
-        pick: createPickOutputFragment(),
-      },
-      label: 'Simple.frag',
-      pipelineLayouts: [pipelineLayout],
+        typicalOutput,
+      ),
+      pick: createPickOutputFragment(),
     },
-    ([
-      { screen_dimensions },
-      { /*scene, clusters_array, meshes,*/ projection },
-      /*{ world, }*/
-    ]) =>
-      `
-      ${getClusterIndex(screen_dimensions, projection)}
-    `,
-  );
+    label: 'Simple.frag',
+    pipelineLayouts: [pipelineLayout],
+  });
 }
 
 export type SimpleFragShader = ReturnType<typeof createSimpleFragShader>;

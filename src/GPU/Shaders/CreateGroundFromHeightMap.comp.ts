@@ -45,21 +45,30 @@ export function CreateGroundFromHeightMap(
   });
   return [
     bindLayouts,
-    new ComputeShader(
-      {
-        entryPoints: {
-          main: new ComputeShaderFunction<
-            [
-              {
-                pixels: TextLayout<ShaderStage.COMPUTE, 'texture_2d<f32>'>;
-                positions: BufLayout<ShaderStage.COMPUTE, typeof Vertices>;
-              },
-            ]
-          >(
-            '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-            [1, 1],
-            ([{ positions, pixels }] /* wgsl */) =>
-              `
+    new ComputeShader({
+      constantCode: () => /* wgsl */ `
+        const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0); 
+
+        const scaled_texture_size = vec2<f32>(${
+          textureSize.width / settings.size[0]
+        }, ${textureSize.height / settings.size[1]});
+        
+        const factor_x=f32(${settings.size[0] / settings.subdivisions[0]});
+        const factor_y=f32(${settings.size[1] / settings.subdivisions[0]});
+      `,
+      entryPoints: {
+        main: new ComputeShaderFunction<
+          [
+            {
+              pixels: TextLayout<ShaderStage.COMPUTE, 'texture_2d<f32>'>;
+              positions: BufLayout<ShaderStage.COMPUTE, typeof Vertices>;
+            },
+          ]
+        >(
+          '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
+          [1, 1],
+          ([{ positions, pixels }] /* wgsl */) =>
+            `
             let coords=vec2<f32>(
                 f32(GlobalInvocationID.x) * factor_x,
                 f32(GlobalInvocationID.y) * factor_y
@@ -91,20 +100,10 @@ export function CreateGroundFromHeightMap(
            })) / vec2<f32>(${settings.size[0]}, ${settings.size[1]});
            return;
             `,
-          ),
-        },
-        label: 'CreateGroundFromHeightMap.comp',
-        pipelineLayouts: [pipelineLayout],
+        ),
       },
-      () => /* wgsl */ `
-        const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0); 
-
-        const scaled_texture_size = vec2<f32>(${
-          textureSize.width / settings.size[0]
-        }, ${textureSize.height / settings.size[1]});
-        
-        const factor_x=f32(${settings.size[0] / settings.subdivisions[0]});
-        const factor_y=f32(${settings.size[1] / settings.subdivisions[0]});`,
-    ),
+      label: 'CreateGroundFromHeightMap.comp',
+      pipelineLayouts: [pipelineLayout],
+    }),
   ] as const;
 }

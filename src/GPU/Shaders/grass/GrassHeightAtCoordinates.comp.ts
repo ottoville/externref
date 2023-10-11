@@ -90,63 +90,8 @@ export function createGrassHeightAtCoordinates(
   });
   return [
     bindLayouts,
-    new ComputeShader(
-      {
-        entryPoints: {
-          main: new ComputeShaderFunction<
-            [
-              {
-                positionAndRotate: BufLayout<
-                  ShaderStage.COMPUTE,
-                  typeof PositionAndRotateArray
-                >;
-                shapes: BufLayout<ShaderStage.COMPUTE, typeof FloatArray>;
-              },
-              {
-                positions: BufLayout<ShaderStage.COMPUTE, typeof Vec2Array>;
-              },
-            ]
-          >(
-            '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-            [1],
-            (
-              [
-                { /*slopes, facet12,*/ positionAndRotate, shapes },
-                { positions },
-              ] /* wgsl */,
-            ) =>
-              `
-            let flatpos:vec2<f32> = ${positions.prop(
-              'vectors',
-            )}[GlobalInvocationID.x]; 
-            let y:f32 = getHeightAtCoordinates(flatpos);
-            ${positionAndRotate.prop(
-              'arr',
-            )}[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
-            ${positionAndRotate.prop(
-              'arr',
-            )}[GlobalInvocationID.x].rotation = 3.145 * rand(flatpos);
-            var index:u32 = GlobalInvocationID.x * u32(4);
-            ${shapes.prop(
-              'numbers',
-            )}[index] = 0.4 + 0.6 * rand(vec2<f32>(flatpos.yx)); // x:scale
-            ${shapes.prop(
-              'numbers',
-            )}[index + u32(1)] = PI *0.2 * rand(vec2<f32>(flatpos.x, flatpos.y + f32(GlobalInvocationID.x))); // baseAngle
-            ${shapes.prop(
-              'numbers',
-            )}[index + u32(2)] = PI *0.2 * rand(vec2<f32>(flatpos.xy)); // z:curve
-            ${shapes.prop(
-              'numbers',
-            )}[index + u32(3)] = snoise(vec2<f32>(flatpos.xy)); //  w:color
-            return;
-            `,
-          ),
-        },
-        label: 'GetHeightAtCoordinates.comp',
-        pipelineLayouts: [pipelineLayout],
-      },
-      ([
+    new ComputeShader({
+      constantCode: ([
         {
           slopes,
           facet12 /* positionAndRotate, shapes, */,
@@ -235,6 +180,59 @@ export function createGrassHeightAtCoordinates(
     }
     ${getHeightAtCoordinates(settings, slopes, facet12)}
     `,
-    ),
+      entryPoints: {
+        main: new ComputeShaderFunction<
+          [
+            {
+              positionAndRotate: BufLayout<
+                ShaderStage.COMPUTE,
+                typeof PositionAndRotateArray
+              >;
+              shapes: BufLayout<ShaderStage.COMPUTE, typeof FloatArray>;
+            },
+            {
+              positions: BufLayout<ShaderStage.COMPUTE, typeof Vec2Array>;
+            },
+          ]
+        >(
+          '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
+          [1],
+          (
+            [
+              { /*slopes, facet12,*/ positionAndRotate, shapes },
+              { positions },
+            ] /* wgsl */,
+          ) =>
+            `
+            let flatpos:vec2<f32> = ${positions.prop(
+              'vectors',
+            )}[GlobalInvocationID.x]; 
+            let y:f32 = getHeightAtCoordinates(flatpos);
+            ${positionAndRotate.prop(
+              'arr',
+            )}[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
+            ${positionAndRotate.prop(
+              'arr',
+            )}[GlobalInvocationID.x].rotation = 3.145 * rand(flatpos);
+            var index:u32 = GlobalInvocationID.x * u32(4);
+            ${shapes.prop(
+              'numbers',
+            )}[index] = 0.4 + 0.6 * rand(vec2<f32>(flatpos.yx)); // x:scale
+            ${shapes.prop(
+              'numbers',
+            )}[index + u32(1)] = PI *0.2 * rand(vec2<f32>(flatpos.x, flatpos.y + f32(GlobalInvocationID.x))); // baseAngle
+            ${shapes.prop(
+              'numbers',
+            )}[index + u32(2)] = PI *0.2 * rand(vec2<f32>(flatpos.xy)); // z:curve
+            ${shapes.prop(
+              'numbers',
+            )}[index + u32(3)] = snoise(vec2<f32>(flatpos.xy)); //  w:color
+            return;
+            `,
+        ),
+      },
+      label: 'GetHeightAtCoordinates.comp',
+      pipelineLayouts: [pipelineLayout],
+    }),
   ] as const;
 }

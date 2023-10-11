@@ -117,10 +117,10 @@ export function createShaderBuilders(gpu: GPU) {
     ),
   });
   const rootCameralayout = new RenderPipelineLayout({
-    bindGroupLayouts: [sizeBindGroupLayout, uniformBindGroupLayoutWithTime] as [
-      typeof sizeBindGroupLayout,
-      typeof uniformBindGroupLayoutWithTime,
-    ],
+    bindGroupLayouts: [
+      sizeBindGroupLayout,
+      uniformBindGroupLayoutWithTime,
+    ] as const,
     label: 'rootCamera',
   });
   const facet12ArrGPUBuffer = new Buffer({

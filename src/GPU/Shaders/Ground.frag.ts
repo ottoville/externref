@@ -19,12 +19,31 @@ import {
 export function createGroundFragShader(
   pipelineLayout: GPU['lightsTextureBindGroup'],
 ) {
-  return new FragmentShader(
-    {
-      entryPoints: {
-        debug: new FragmentShaderFunction(
-          diffuseOutput,
-          () => /* wgsl */ `
+  return new FragmentShader({
+    constantCode: ([
+      { screen_dimensions },
+      { /*scene, clusters_array, meshes,*/ projection },
+      /*{ world, }
+      /*{ mySampler, myTexture, }*/
+    ]) => /* wgsl */ `
+  ${getClusterIndex(screen_dimensions, projection)}
+
+  var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
+    vec3<f32>(1.0, 0.0, 0.0),
+    vec3<f32>(1.0, 0.5, 0.0),
+    vec3<f32>(0.5, 1.0, 0.0),
+    vec3<f32>(0.0, 1.0, 0.0),
+    vec3<f32>(0.0, 1.0, 0.5),
+    vec3<f32>(0.0, 0.5, 1.0),
+    vec3<f32>(0.0, 0.0, 1.0),
+    vec3<f32>(0.5, 0.0, 1.0),
+    vec3<f32>(1.0, 0.0, 0.5)
+  );
+`,
+    entryPoints: {
+      debug: new FragmentShaderFunction(
+        diffuseOutput,
+        () => /* wgsl */ `
           var output:Output;
 
             //DEBUG depth slices
@@ -33,37 +52,34 @@ export function createGroundFragShader(
         
             return output;
         `,
-          GroundInput,
-        ),
-        main: new FragmentShaderFunction<
-          [
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            {},
-            {
-              clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
-              meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
-            },
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            {},
-            {
-              mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
-              diffuseTexture: TextLayout<
-                ShaderStage.FRAGMENT,
-                'texture_2d<f32>'
-              >;
-            },
-          ]
-        >(
-          diffuseOutput,
-          ([
-            ,
-            /*{ uniforms, }*/ {
-              /*scene,*/ clusters_array,
-              meshes /*, projection*/,
-            },
-            ,
-            /*{ world, }*/ { mySampler, diffuseTexture },
-          ]) => /* wgsl */ `
+        GroundInput,
+      ),
+      main: new FragmentShaderFunction<
+        [
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
+            meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
+          },
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
+          {
+            mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
+            diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
+          },
+        ]
+      >(
+        diffuseOutput,
+        ([
+          ,
+          /*{ uniforms, }*/ {
+            /*scene,*/ clusters_array,
+            meshes /*, projection*/,
+          },
+          ,
+          /*{ world, }*/ { mySampler, diffuseTexture },
+        ]) => /* wgsl */ `
           var output:Output;
 
           //  output.Normals=vec4<f32>(normal.xyz, bitcast<f32>(id));
@@ -111,32 +127,11 @@ export function createGroundFragShader(
           
             return output;
         `,
-          GroundInput,
-        ),
-        pick: createPickOutputFragment(),
-      },
-      label: 'Ground.frag',
-      pipelineLayouts: [pipelineLayout],
+        GroundInput,
+      ),
+      pick: createPickOutputFragment(),
     },
-    ([
-      { screen_dimensions },
-      { /*scene, clusters_array, meshes,*/ projection },
-      /*{ world, }*/
-      /*{ mySampler, myTexture, }*/
-    ]) => /* wgsl */ `
-  ${getClusterIndex(screen_dimensions, projection)}
-
-  var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
-    vec3<f32>(1.0, 0.0, 0.0),
-    vec3<f32>(1.0, 0.5, 0.0),
-    vec3<f32>(0.5, 1.0, 0.0),
-    vec3<f32>(0.0, 1.0, 0.0),
-    vec3<f32>(0.0, 1.0, 0.5),
-    vec3<f32>(0.0, 0.5, 1.0),
-    vec3<f32>(0.0, 0.0, 1.0),
-    vec3<f32>(0.5, 0.0, 1.0),
-    vec3<f32>(1.0, 0.0, 0.5)
-  );
-`,
-  );
+    label: 'Ground.frag',
+    pipelineLayouts: [pipelineLayout],
+  });
 }
