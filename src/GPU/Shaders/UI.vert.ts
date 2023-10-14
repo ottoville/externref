@@ -1,11 +1,10 @@
 import {
   type VertexBufferLayout2,
-  VertexShader,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
-  type RenderPipelineLayout,
   WGSLcode,
+  ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import { UIUniforms, UI_Input } from './structs/Structs.js';
@@ -26,23 +25,24 @@ export const position_uv_attrs = Object.freeze({
 } as const);
 
 export function createUIVertShader(
-  pipelineLayout: RenderPipelineLayout<[GPU['BindGroupLayoutCanvas']]>,
+  pipelineLayout: GPU['canvasRootLayout'],
   buffers: VertexBufferLayout2<typeof position_uv_attrs>,
 ) {
-  return new VertexShader({
-    entryPoints: {
-      main: new VertexShaderFunction(
+  return new ShaderBuilder([pipelineLayout])
+    .addFunction(
+      'main',
+      new VertexShaderFunction(
         UI_Input,
         [buffers],
         ([{ uniforms /*texture*/ }], [{ position, uv }]) =>
           WGSLcode/* wgsl */ `
-      var output : Output;   
-      output.Position = vec4<f32>(${uniforms.prop(
-        'translate',
-      )} + ${position}, 1.0, 1.0);
-      output.v_uv=${uv};
-      return output;
-    `,
+            var output : Output;   
+            output.Position = vec4<f32>(${uniforms.prop(
+              'translate',
+            )} + ${position}, 1.0, 1.0);
+            output.v_uv=${uv};
+            return output;
+`,
       ) satisfies VertexShaderFunction<
         [
           {
@@ -50,9 +50,7 @@ export function createUIVertShader(
           },
         ]
       >,
-    },
-    label: 'UI.vert',
-    pipelineLayouts: [pipelineLayout],
-  });
+    )
+    .build('UI.vert');
 }
 export type UIVertShader = ReturnType<typeof createUIVertShader>;

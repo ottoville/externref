@@ -10,7 +10,6 @@ import {
   type VERTEX_BUFFER,
   RenderBundleEncoder,
   type RenderPipelineBuilderDesc,
-  Drawable as GPUDrawable,
 } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -38,7 +37,6 @@ export abstract class Drawable<N extends MainNode = MainNode> {
       size: number | undefined;
     }
   > = new Map();
-  #renderList: Map<RenderPass, GPUDrawable[]> = new Map();
   public renderPipeline: RenderPipelineProps;
   protected renderPasses: Set<RenderPass>;
   destroyed = false;
@@ -107,12 +105,12 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         variantPP
           .then((variant) => {
             if (this.destroyed) return;
-            this.#renderList.set(rp, variant.addDrawable(this));
+            variant.addDrawable(this);
             rp.bundles.forEach((b) => b.destroy());
           })
           .catch((err) => engine.showError(err));
       } else {
-        this.#renderList.set(rp, variantPP.addDrawable(this));
+        variantPP.addDrawable(this);
         rp.bundles.forEach((b) => b.destroy());
       }
     });
@@ -120,9 +118,21 @@ export abstract class Drawable<N extends MainNode = MainNode> {
 
   //staticBindGroup?: BindGroup;
   destroy(preserveVerticeBuffers: number[] = []): void {
-    this.#renderList.forEach((Drawables) =>
-      Drawables.splice(Drawables.indexOf(this), 1),
-    );
+    this.renderPasses.forEach((rp) => {
+      rp.renderPipelines.forEach((renderPipeline) => {
+        if (renderPipeline instanceof Promise) {
+          renderPipeline
+            .then((renderPipelineNotPromise) => {
+              renderPipelineNotPromise.removeDrawable(this);
+            })
+            .catch((err) => {
+              engine.showError(err);
+            });
+        } else {
+          renderPipeline.removeDrawable(this);
+        }
+      });
+    });
     this.vertexBuffers.forEach((b, key) => {
       if (!preserveVerticeBuffers.includes(key)) b.buffer.destroy();
     });

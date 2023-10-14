@@ -1,17 +1,18 @@
 import type { GPU } from '../../GPU.js';
 import { UI_Input, diffuseOutput } from './structs/Structs.js';
 import {
-  FragmentShader,
   FragmentShaderFunction,
   textureLoad,
   type ShaderStage,
   type TextLayout,
+  ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 
 export function createUIFragmentShader(gpu: GPU) {
-  return new FragmentShader({
-    entryPoints: {
-      main: new FragmentShaderFunction<
+  return new ShaderBuilder([gpu.canvasRootLayout])
+    .addFunction(
+      'main',
+      new FragmentShaderFunction<
         [
           {
             texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
@@ -20,25 +21,19 @@ export function createUIFragmentShader(gpu: GPU) {
       >(
         diffuseOutput,
         ([{ texture }]) => /* wgsl */ `
-                    let fragCoordI=vec2<i32>(floor(v_uv));
-                    let color:vec4<f32> = ${textureLoad(
-                      texture,
-                      'fragCoordI',
-                      '0',
-                    )};
-                
-                    var output:Output;
-                
-                    //output.Color=vec4<f32>(0.5,0.5,0.5,1.0);
-                    output.Diffuse=color;
-                    return output;
-        
-                `,
+              let fragCoordI=vec2<i32>(floor(v_uv));
+              let color:vec4<f32> = ${textureLoad(texture, 'fragCoordI', '0')};
+          
+              var output:Output;
+          
+              //output.Color=vec4<f32>(0.5,0.5,0.5,1.0);
+              output.Diffuse=color;
+              return output;
+  
+          `,
         UI_Input,
       ),
-    },
-    label: 'UI.frag',
-    pipelineLayouts: [gpu.canvasRootLayout],
-  });
+    )
+    .build('UI.frag');
 }
 export type UIFragShader = ReturnType<typeof createUIFragmentShader>;
