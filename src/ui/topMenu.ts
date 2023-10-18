@@ -1,12 +1,13 @@
 import type { GPU } from '../GPU.js';
 import type { Terrain } from '../world/Terrain.js';
 import type { Engine, ListenerObj } from '../engine.js';
-import { UINode } from './UINode.js';
+import { UI, UINode } from './UINode.js';
 import { TerrainToolButton } from '../tools/TerrainTool.js';
 import { PlantsUI } from '../tools/plantsUI.js';
 import { Anchor, NumericUnit, VerticalPosition } from './UIRectangle.js';
 import { Zones } from '../tools/Zones.js';
 import { Button } from './Button.js';
+import { UIRectangleNodeProps } from './UIRectangleNode.js';
 declare const engine: Engine;
 
 type MenuState = {
@@ -62,17 +63,15 @@ export class createTopMenu extends UINode<
   render() {
     const props = this.props;
     const commonProps = {
-      gpu: props.gpu,
-      onClick: this.setActiveMenu,
       subMenuPosition: {
         anchor: Anchor.TOP,
         value: [70, NumericUnit.px],
       } as const,
       terrain: props.terrain,
-    };
+    } satisfies Partial<UIRectangleNodeProps & TopMenuButtonProps>;
     keyBoardMap.length = 0;
     const menus = [
-      UINode.createCtrProps(PlantsUI, {
+      UI(PlantsUI, {
         ...Button({
           UIRectangleProps: {
             label: 'Plants',
@@ -92,13 +91,16 @@ export class createTopMenu extends UINode<
               },
             },
           },
+          events: {
+            onClick: this.setActiveMenu,
+          },
           text: 'Plants (1)',
         }),
         ...commonProps,
         menuTree: this.menuTree,
         open: this.state.menuOpenName === 'Plants',
       }),
-      UINode.createCtrProps(TerrainToolButton, {
+      UI(TerrainToolButton, {
         ...Button({
           UIRectangleProps: {
             label: 'Terrain',
@@ -118,13 +120,16 @@ export class createTopMenu extends UINode<
               },
             },
           },
+          events: {
+            onClick: this.setActiveMenu,
+          },
           text: 'Terrain (2)',
         }),
         ...commonProps,
         menuTree: this.menuTree,
         open: this.state.menuOpenName === 'Terrain',
       }),
-      UINode.createCtrProps(Zones, {
+      UI(Zones, {
         ...Button({
           UIRectangleProps: {
             label: 'Zones',
@@ -144,6 +149,9 @@ export class createTopMenu extends UINode<
               },
             },
           },
+          events: {
+            onClick: this.setActiveMenu,
+          },
           text: 'Zones (3)',
         }),
         ...commonProps,
@@ -152,7 +160,7 @@ export class createTopMenu extends UINode<
       }),
     ];
     menus.forEach((menu) => {
-      keyBoardMap.push(menu.props.UIRectangleProps.label);
+      keyBoardMap.push(menu[1].UIRectangleProps.label);
     });
     return menus;
   }

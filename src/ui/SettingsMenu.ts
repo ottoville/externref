@@ -1,4 +1,4 @@
-import { UINode } from './UINode.js';
+import { UI, UINode } from './UINode.js';
 import { Anchor, NumericUnit } from './UIRectangle.js';
 import { Button } from './Button.js';
 import type { Engine } from '../engine.js';
@@ -31,7 +31,7 @@ export class createSettingsMenu extends UINode {
   }
   render() {
     return [
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -48,7 +48,7 @@ export class createSettingsMenu extends UINode {
           text: 'Toggle MSAA',
         }),
       ),
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -62,13 +62,15 @@ export class createSettingsMenu extends UINode {
               },
             },
           },
-          onClick: () => {
-            this.destroy();
+          events: {
+            onClick: () => {
+              this.destroy();
+            },
           },
           text: 'Close',
         }),
       ),
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -82,11 +84,13 @@ export class createSettingsMenu extends UINode {
               },
             },
           },
-          onClick: () => {
-            import('./DevTools/DevTools.js')
-              .then(({ DevTools }) => DevTools(engine.devTools!))
-              .catch((err) => engine.showError(err));
-            this.destroy();
+          events: {
+            onClick: () => {
+              import('./DevTools/DevTools.js')
+                .then(({ DevTools }) => DevTools(engine.devTools!))
+                .catch((err) => engine.showError(err));
+              this.destroy();
+            },
           },
           text: 'DevTools',
         }),

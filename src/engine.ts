@@ -38,10 +38,7 @@ globalThis.addEventListener && globalThis.addEventListener('unhandledrejection',
 })
 */
 
-export type ListenerObj<
-  K extends Events & keyof HTMLElementEventMap = Events &
-    keyof HTMLElementEventMap,
-> = {
+export type ListenerObj<K extends Events = Events> = {
   type: K;
   cb: (e: HTMLElementEventMap[K]) => void | boolean;
   options?: ListenerOptions;
@@ -407,6 +404,7 @@ type Events =
   | 'pointerdown'
   | 'pointerup'
   | 'pointermove'
+  | 'pointerenter'
   | 'pointerleave'
   | 'wheel'
   | 'keydown'
@@ -744,35 +742,30 @@ export class Engine {
     return gpu;
   }
   #inputMaps = {
-    keydown: new Set<ListenerObj>(),
-    keyup: new Set<ListenerObj>(),
-    pointerdown: new Set<ListenerObj>(),
-    pointerleave: new Set<ListenerObj>(),
-    pointermove: new Set<ListenerObj>(),
-    pointerup: new Set<ListenerObj>(),
-    wheel: new Set<ListenerObj>(),
+    keydown: new Set<ListenerObj<'keydown'>>(),
+    keyup: new Set<ListenerObj<'keyup'>>(),
+    pointerdown: new Set<ListenerObj<'pointerdown'>>(),
+    pointerenter: new Set<ListenerObj<'pointerenter'>>(),
+    pointerleave: new Set<ListenerObj<'pointerleave'>>(),
+    pointermove: new Set<ListenerObj<'pointermove'>>(),
+    pointerup: new Set<ListenerObj<'pointerup'>>(),
+    wheel: new Set<ListenerObj<'wheel'>>(),
   };
 
-  /*
-        Add listener to canvas element.
-         * type: type of listener
-         * object: The object which adds the listener, this is used to remove listener when object is destroyed
-    */
-  addInputListener<
-    K extends Events & keyof HTMLElementEventMap = Events &
-      keyof HTMLElementEventMap,
-  >(obj: ListenerObj<K>) {
+  /**
+   * Add listener to canvas element.
+   * @param obj  The object which adds the listener, this is used to remove listener when object is destroyed
+   */
+  addInputListener<K extends Events>(obj: ListenerObj<K>) {
     // To ensure that events added while processing events does not trigger in same loop
     queueMicrotask(() => {
-      if (obj.options?.priority && this.#inputMaps[obj.type]!.size > 0) {
-        //@ts-expect-error
-        this.#inputMaps[obj.type] = new Set([
-          obj,
-          ...this.#inputMaps[obj.type]!,
-        ]);
+      const set = this.#inputMaps[obj.type] as unknown as Set<ListenerObj<K>>;
+      if (obj.options?.priority && this.#inputMaps[obj.type].size > 0) {
+        (this.#inputMaps[obj.type] as unknown as Set<ListenerObj<K>>) = new Set(
+          [obj, ...set],
+        );
       } else {
-        //@ts-expect-error
-        this.#inputMaps[obj.type].add(obj);
+        set.add(obj);
       }
     });
   }
@@ -794,8 +787,9 @@ export class Engine {
   }
   clearInputListeners(object: object) {
     Object.values(this.#inputMaps).forEach((set) => {
-      Array.from(set).forEach((eventObj) => {
+      [...set].forEach((eventObj) => {
         if (eventObj.object === object) {
+          //@ts-expect-error
           set.delete(eventObj);
         }
       });
@@ -852,30 +846,30 @@ export class Engine {
             ) {
               return;
             }
-            const UIEvents = Array.from(this.#inputMaps[eventType]).filter(
-              (eventObj) => {
-                return eventObj.options?.ui;
-              },
+            const UIEvents = [...this.#inputMaps[eventType]].filter(
+              (eventObj) => eventObj.options?.ui,
             );
             let cancelled = false;
             for (let i = 0; i < UIEvents.length; i++) {
               if (!cancelled || UIEvents[i]!.options?.force) {
                 if (UIEvents[i]!.options?.once) {
+                  //@ts-expect-error
                   this.#inputMaps[eventType].delete(UIEvents[i]!);
                 }
+                //@ts-expect-error
                 cancelled = (UIEvents[i]!.cb(e) ?? false) || cancelled;
               }
             }
-            const OtherEvents = Array.from(this.#inputMaps[eventType]).filter(
-              (eventObj) => {
-                return !eventObj.options?.ui;
-              },
+            const OtherEvents = [...this.#inputMaps[eventType]].filter(
+              (eventObj) => !eventObj.options?.ui,
             );
             for (let i = 0; i < OtherEvents.length; i++) {
               if (!cancelled || OtherEvents[i]!.options?.force) {
                 if (OtherEvents[i]!.options?.once) {
+                  //@ts-expect-error
                   this.#inputMaps[eventType].delete(OtherEvents[i]!);
                 }
+                //@ts-expect-error
                 cancelled = (OtherEvents[i]!.cb(e) ?? false) || cancelled;
               }
             }

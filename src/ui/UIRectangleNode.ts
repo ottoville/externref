@@ -1,21 +1,24 @@
 import { UIRectangle, UIRectangleProps } from './UIRectangle.js';
-import { UINode } from './UINode.js';
+import { UI, UINode } from './UINode.js';
 import { UIRectangleBackground } from './UIRectangleBackground.js';
 import { UIRectangleTextOnly } from './UIRectangleTextOnly.js';
 import type { GPU } from '../GPU.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
-export type UIRectangleNodeProps = {
+type MenuEvent = (menuName?: string) => void;
+
+export type UIRectangleNodeProps = Readonly<{
   UIRectangleProps: Omit<UIRectangleProps, 'canvaspipeline' | 'renderPass'>;
   bitmap?: ImageBitmap | Promise<ImageBitmap> | undefined;
   text: string;
-  onClick?: ((menuName?: string) => void) | undefined;
-  children?:
-    | (ReturnType<(typeof UINode)['createCtrProps']> | null)[]
-    | null
-    | undefined;
-};
+  events?: {
+    onClick?: MenuEvent;
+    onPointerEnter?: MenuEvent;
+    onPointerLeave?: MenuEvent;
+  };
+  children?: (ReturnType<typeof UI> | null)[] | null | undefined;
+}>;
 export class UIRectangleNode<
   S extends object = object,
   P extends UIRectangleNodeProps = UIRectangleNodeProps,
@@ -66,22 +69,25 @@ export class UIRectangleNode<
   render(gpu: GPU, force: boolean) {
     if (force) {
       /*
-                When GPU is destroyed and switching to new GPU
-            */
+          When GPU is destroyed and switching to new GPU
+      */
       this.destroyInstance();
     }
-    const { onClick, bitmap, text, children } = this.props;
+    const { bitmap, text, children } = this.props;
     const commonProps: UIRectangleProps = {
       canvaspipeline: gpu.UIPipeline,
       renderPass: gpu.renderPassCanvas,
       ...this.props.UIRectangleProps,
     };
-    if (onClick) {
-      commonProps.events = {
-        onClick: () => {
-          onClick(this.props.UIRectangleProps.label);
-        },
-      };
+    if (this.props.events) {
+      commonProps.events = {};
+      for (const event in this.props.events) {
+        //@ts-expect-error
+        commonProps.events[event] = () => {
+          //@ts-expect-error
+          this.props.events[event](this.props.UIRectangleProps.label);
+        };
+      }
     }
     if (!this.#instance) {
       if (bitmap) {

@@ -1,5 +1,5 @@
 import type { Engine } from '../engine.js';
-import { UINode } from './UINode.js';
+import { UI, UINode } from './UINode.js';
 import { Anchor, NumericUnit } from './UIRectangle.js';
 import { Button } from './Button.js';
 import { UIRectangleNode } from './UIRectangleNode.js';
@@ -29,7 +29,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
     } as const;
 
     return [
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -53,7 +53,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
           text: 'Time of day ' + this.state.timeOfDay,
         }),
       ),
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -71,13 +71,15 @@ export class createTimeControls extends UINode<{}, MenuState> {
               y: yPos,
             },
           },
-          onClick: () => {
-            engine.physics.gameSpeed = -1;
+          events: {
+            onClick: () => {
+              engine.physics.gameSpeed = -1;
+            },
           },
           text: '⏸️',
         }),
       ),
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -95,13 +97,15 @@ export class createTimeControls extends UINode<{}, MenuState> {
               y: yPos,
             },
           },
-          onClick: () => {
-            engine.physics.gameSpeed = 1;
+          events: {
+            onClick: () => {
+              engine.physics.gameSpeed = 1;
+            },
           },
           text: '▶️',
         }),
       ),
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -119,13 +123,15 @@ export class createTimeControls extends UINode<{}, MenuState> {
               y: yPos,
             },
           },
-          onClick: () => {
-            engine.physics.gameSpeed = 2;
+          events: {
+            onClick: () => {
+              engine.physics.gameSpeed = 2;
+            },
           },
           text: '⏩',
         }),
       ),
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -143,13 +149,15 @@ export class createTimeControls extends UINode<{}, MenuState> {
               y: yPos,
             },
           },
-          onClick: () => {
-            engine.physics.gameSpeed = 4;
+          events: {
+            onClick: () => {
+              engine.physics.gameSpeed = 4;
+            },
           },
           text: '4⏩',
         }),
       ),
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -167,13 +175,15 @@ export class createTimeControls extends UINode<{}, MenuState> {
               y: yPos,
             },
           },
-          onClick: () => {
-            engine.physics.gameSpeed = 8;
+          events: {
+            onClick: () => {
+              engine.physics.gameSpeed = 8;
+            },
           },
           text: '8⏩',
         }),
       ),
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -191,13 +201,15 @@ export class createTimeControls extends UINode<{}, MenuState> {
               y: yPos,
             },
           },
-          onClick: () => {
-            engine.physics.gameSpeed = 16;
+          events: {
+            onClick: () => {
+              engine.physics.gameSpeed = 16;
+            },
           },
           text: '16⏩',
         }),
       ),
-      UINode.createCtrProps(
+      UI(
         UIRectangleNode,
         Button({
           UIRectangleProps: {
@@ -215,8 +227,10 @@ export class createTimeControls extends UINode<{}, MenuState> {
               y: yPos,
             },
           },
-          onClick: () => {
-            engine.physics.gameSpeed = 32;
+          events: {
+            onClick: () => {
+              engine.physics.gameSpeed = 32;
+            },
           },
           text: '32⏩',
         }),

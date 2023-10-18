@@ -13,7 +13,7 @@ import {
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
-import { UINode } from '../ui/UINode.js';
+import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import {
   UIRectangleNode,
@@ -73,7 +73,7 @@ export class TerrainToolButton extends UIRectangleNode<
       }
       engine.addInputListener(this.#inputListener);
       return [
-        UINode.createCtrProps(
+        UI(
           UIRectangleNode,
           Button({
             ...this.props,
@@ -92,15 +92,17 @@ export class TerrainToolButton extends UIRectangleNode<
                 y: this.props.subMenuPosition,
               },
             },
-            onClick: () => {
-              this.setState({
-                subMenu: 'lower',
-              });
+            events: {
+              onClick: () => {
+                this.setState({
+                  subMenu: 'lower',
+                });
+              },
             },
             text: 'Lower (1)',
           }),
         ),
-        UINode.createCtrProps(
+        UI(
           UIRectangleNode,
           Button({
             ...this.props,
@@ -119,10 +121,12 @@ export class TerrainToolButton extends UIRectangleNode<
                 y: this.props.subMenuPosition,
               },
             },
-            onClick: () => {
-              this.setState({
-                subMenu: 'raise',
-              });
+            events: {
+              onClick: () => {
+                this.setState({
+                  subMenu: 'raise',
+                });
+              },
             },
             text: 'Raise (2)',
           }),
@@ -288,7 +292,6 @@ export class TerrainTool extends MainNode {
     type: 'pointerup',
   };
   override destroy = (): void => {
-    this.drawable.destroy();
     engine.clearInputListeners(this);
     //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
     super.destroy();

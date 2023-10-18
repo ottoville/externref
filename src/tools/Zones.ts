@@ -6,7 +6,7 @@ import type { Scene } from '../Scene.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
-import { UINode } from '../ui/UINode.js';
+import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import {
   UIRectangleNode,
@@ -137,7 +137,7 @@ export class Zones extends UIRectangleNode<
       );
       this.props.terrain.mesh.set_scenes(staticScene.id);
       return [
-        UINode.createCtrProps(
+        UI(
           UIRectangleNode,
           Button({
             ...this.props,
@@ -156,8 +156,10 @@ export class Zones extends UIRectangleNode<
                 y: this.props.subMenuPosition,
               },
             },
-            onClick: () => {
-              this.paintZone();
+            events: {
+              onClick: () => {
+                this.paintZone();
+              },
             },
             text: 'Residental (1)',
           }),

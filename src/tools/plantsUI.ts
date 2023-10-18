@@ -3,7 +3,7 @@ import type { Plants } from '../plants/Plants.js';
 import type { GPU } from '../GPU.js';
 import type { PTDresult } from '../types/interfaces/index.js';
 import type { Engine, ListenerObj } from '../engine.js';
-import { UINode } from '../ui/UINode.js';
+import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
@@ -42,7 +42,7 @@ export class PlantsUI extends UIRectangleNode<
       this.#wasOpen = true;
       engine.addInputListener(this.#inputListener);
       return [
-        UINode.createCtrProps(
+        UI(
           UIRectangleNode,
           Button({
             ...this.props,
@@ -61,7 +61,9 @@ export class PlantsUI extends UIRectangleNode<
                 y: this.props.subMenuPosition,
               },
             },
-            onClick: () => this.activateDraw(),
+            events: {
+              onClick: () => this.activateDraw(),
+            },
             text: 'Create grass (1)',
           }),
         ),

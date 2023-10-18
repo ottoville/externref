@@ -1,5 +1,5 @@
 import { UIRectangleNode } from './UIRectangleNode.js';
-import { UINode } from './UINode.js';
+import { UI, UINode } from './UINode.js';
 import { Anchor, NumericUnit } from './UIRectangle.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
@@ -23,7 +23,7 @@ export class CreateFPSMeter extends UINode<{}, MenuState> {
   }
   render() {
     return [
-      UINode.createCtrProps(UIRectangleNode, {
+      UI(UIRectangleNode, {
         UIRectangleProps: {
           borderSize: {
             height: 'auto',

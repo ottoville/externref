@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import type { UIRectangleProps } from './UIRectangle.js';
 import type { TextUV } from './UIRectangleTextOnly.js';
 import { UIRectangleText } from './UIRectangleText.js';
@@ -202,256 +203,77 @@ export class UIRectangleBackground extends UIRectangleText {
       //Left content_size
       vertices.set(
         [
-          -outer_sizeX,
-          -content_sizeY,
-          0,
-          container_uvs.top,
-          -content_sizeX,
-          -content_sizeY,
-          container_uvs.right,
-          container_uvs.top,
-          -outer_sizeX,
-          content_sizeY,
-          0,
-          container_uvs.bottom,
-          -content_sizeX,
-          -content_sizeY,
-          container_uvs.right,
-          container_uvs.top,
-          -content_sizeX,
-          content_sizeY,
-          container_uvs.right,
-          container_uvs.bottom,
-          -outer_sizeX,
-          content_sizeY,
-          0,
-          container_uvs.bottom,
+          -outer_sizeX, -content_sizeY, 0, container_uvs.top,
+          -content_sizeX, -content_sizeY, container_uvs.right, container_uvs.top,
+          -outer_sizeX, content_sizeY, 0, container_uvs.bottom,
+          -content_sizeX, -content_sizeY, container_uvs.right, container_uvs.top,
+          -content_sizeX, content_sizeY, container_uvs.right, container_uvs.bottom,
+          -outer_sizeX, content_sizeY, 0, container_uvs.bottom,
+
 
           //right content_size
 
-          outer_sizeX,
-          -content_sizeY,
-          texture.width,
-          container_uvs.top,
-
-          content_sizeX,
-          -content_sizeY,
-          container_uvs.left,
-          container_uvs.top,
-
-          outer_sizeX,
-          content_sizeY,
-          texture.width,
-          container_uvs.bottom,
-
-          content_sizeX,
-          -content_sizeY,
-          container_uvs.left,
-          container_uvs.top,
-
-          content_sizeX,
-          content_sizeY,
-          container_uvs.left,
-          container_uvs.bottom,
-
-          outer_sizeX,
-          content_sizeY,
-          texture.width,
-          container_uvs.bottom,
+          outer_sizeX, -content_sizeY, texture.width, container_uvs.top,
+          content_sizeX, -content_sizeY, container_uvs.left, container_uvs.top,
+          outer_sizeX, content_sizeY, texture.width, container_uvs.bottom,
+          content_sizeX, -content_sizeY, container_uvs.left, container_uvs.top,
+          content_sizeX, content_sizeY, container_uvs.left, container_uvs.bottom,
+          outer_sizeX, content_sizeY, texture.width, container_uvs.bottom,
           //bottom content_size
 
-          -content_sizeX,
-          -outer_sizeY,
-          container_uvs.right,
-          texture.height,
-
-          -content_sizeX,
-          -content_sizeY,
-          container_uvs.right,
-          container_uvs.top,
-
-          content_sizeX,
-          -outer_sizeY,
-          container_uvs.left,
-          texture.height,
-
-          -content_sizeX,
-          -content_sizeY,
-          container_uvs.right,
-          container_uvs.top,
-
-          content_sizeX,
-          -outer_sizeY,
-          container_uvs.left,
-          texture.height,
-
-          content_sizeX,
-          -content_sizeY,
-          container_uvs.left,
-          container_uvs.top,
+          -content_sizeX, -outer_sizeY, container_uvs.right, texture.height,
+          -content_sizeX, -content_sizeY, container_uvs.right, container_uvs.top,
+          content_sizeX, -outer_sizeY, container_uvs.left, texture.height,
+          -content_sizeX, -content_sizeY, container_uvs.right, container_uvs.top,
+          content_sizeX, -outer_sizeY, container_uvs.left, texture.height,
+          content_sizeX, -content_sizeY, container_uvs.left, container_uvs.top,
 
           //top content_size
 
-          -content_sizeX,
-          outer_sizeY,
-          container_uvs.right,
-          0,
-
-          content_sizeX,
-          outer_sizeY,
-          container_uvs.left,
-          0,
-
-          content_sizeX,
-          content_sizeY,
-          container_uvs.left,
-          container_uvs.bottom,
-
-          -content_sizeX,
-          content_sizeY,
-          container_uvs.right,
-          container_uvs.bottom,
-
-          content_sizeX,
-          content_sizeY,
-          container_uvs.left,
-          container_uvs.bottom,
-
-          -content_sizeX,
-          outer_sizeY,
-          container_uvs.right,
-          0,
+          -content_sizeX, outer_sizeY, container_uvs.right, 0,
+          content_sizeX, outer_sizeY, container_uvs.left, 0,
+          content_sizeX, content_sizeY, container_uvs.left, container_uvs.bottom,
+          -content_sizeX, content_sizeY, container_uvs.right, container_uvs.bottom,
+          content_sizeX, content_sizeY, container_uvs.left, container_uvs.bottom,
+          -content_sizeX, outer_sizeY, container_uvs.right, 0,
 
           //top left corner
 
-          -outer_sizeX,
-          outer_sizeY,
-          0,
-          0,
-
-          -content_sizeX,
-          content_sizeY,
-          container_uvs.right,
-          container_uvs.bottom,
-
-          -content_sizeX,
-          outer_sizeY,
-          container_uvs.right,
-          0,
-
-          -outer_sizeX,
-          outer_sizeY,
-          0,
-          0,
-
-          -content_sizeX,
-          content_sizeY,
-          container_uvs.right,
-          container_uvs.bottom,
-
-          -outer_sizeX,
-          content_sizeY,
-          0,
-          container_uvs.bottom,
+          -outer_sizeX, outer_sizeY, 0, 0,
+          -content_sizeX, content_sizeY, container_uvs.right, container_uvs.bottom,
+          -content_sizeX, outer_sizeY, container_uvs.right, 0,
+          -outer_sizeX, outer_sizeY, 0, 0,
+          -content_sizeX, content_sizeY, container_uvs.right, container_uvs.bottom,
+          -outer_sizeX, content_sizeY, 0, container_uvs.bottom,
 
           //bottom left corner
 
-          -outer_sizeX,
-          -outer_sizeY,
-          0,
-          texture.height,
-
-          -content_sizeX,
-          -content_sizeY,
-          container_uvs.right,
-          container_uvs.top,
-
-          -content_sizeX,
-          -outer_sizeY,
-          container_uvs.right,
-          texture.height,
-
-          -outer_sizeX,
-          -outer_sizeY,
-          0,
-          texture.height,
-
-          -content_sizeX,
-          -content_sizeY,
-          container_uvs.right,
-          container_uvs.top,
-
-          -outer_sizeX,
-          -content_sizeY,
-          0,
-          container_uvs.top,
+          -outer_sizeX, -outer_sizeY, 0, texture.height,
+          -content_sizeX, -content_sizeY, container_uvs.right, container_uvs.top,
+          -content_sizeX, -outer_sizeY, container_uvs.right, texture.height,
+          -outer_sizeX, -outer_sizeY, 0, texture.height,
+          -content_sizeX, -content_sizeY, container_uvs.right, container_uvs.top,
+          -outer_sizeX, -content_sizeY, 0, container_uvs.top,
 
           //top right corner
 
-          outer_sizeX,
-          outer_sizeY,
-          texture.width,
-          0,
-
-          content_sizeX,
-          content_sizeY,
-          container_uvs.left,
-          container_uvs.bottom,
-
-          content_sizeX,
-          outer_sizeY,
-          container_uvs.left,
-          0,
-
-          outer_sizeX,
-          outer_sizeY,
-          texture.width,
-          0,
-
-          content_sizeX,
-          content_sizeY,
-          container_uvs.left,
-          container_uvs.bottom,
-
-          outer_sizeX,
-          content_sizeY,
-          texture.width,
-          container_uvs.bottom,
+          outer_sizeX, outer_sizeY, texture.width, 0,
+          content_sizeX, content_sizeY, container_uvs.left, container_uvs.bottom,
+          content_sizeX, outer_sizeY, container_uvs.left, 0,
+          outer_sizeX, outer_sizeY, texture.width, 0,
+          content_sizeX, content_sizeY, container_uvs.left, container_uvs.bottom,
+          outer_sizeX, content_sizeY, texture.width, container_uvs.bottom,
 
           //bottom right corner
 
-          outer_sizeX,
-          -outer_sizeY,
-          texture.width,
-          texture.height,
-
-          content_sizeX,
-          -content_sizeY,
-          container_uvs.left,
-          container_uvs.top,
-
-          content_sizeX,
-          -outer_sizeY,
-          container_uvs.left,
-          texture.height,
-
-          outer_sizeX,
-          -outer_sizeY,
-          texture.width,
-          texture.height,
-
-          content_sizeX,
-          -content_sizeY,
-          container_uvs.left,
-          container_uvs.top,
-
-          outer_sizeX,
-          -content_sizeY,
-          texture.width,
-          container_uvs.top,
-        ],
-        24,
-      );
+          outer_sizeX, -outer_sizeY, texture.width, texture.height,
+          content_sizeX, -content_sizeY, container_uvs.left, container_uvs.top,
+          content_sizeX, -outer_sizeY, container_uvs.left, texture.height,
+          outer_sizeX, -outer_sizeY, texture.width, texture.height,
+          content_sizeX, -content_sizeY, container_uvs.left, container_uvs.top,
+          outer_sizeX, -content_sizeY, texture.width, container_uvs.top
+      ],
+      24);
     }
     return vertices;
   }

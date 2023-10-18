@@ -15,7 +15,7 @@ const bitmap = fetch('/assets/button.webp')
   .then((asset) => asset.blob())
   .then(createImageBitmap);
 
-export function Button(props: ButtonProps) {
+export function Button(props: ButtonProps): UIRectangleNodeProps {
   return {
     bitmap,
     ...props,
@@ -25,6 +25,12 @@ export function Button(props: ButtonProps) {
         height: 'auto',
         width: [8, NumericUnit.px],
       } as const,
+    },
+    events: {
+      ...props.events,
+      onPointerEnter(menuName) {
+        console.log('pointerenter', menuName);
+      },
     },
   };
 }
