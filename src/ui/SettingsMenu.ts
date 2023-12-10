@@ -2,7 +2,7 @@ import { UI, UINode } from './UINode.js';
 import { Anchor, NumericUnit } from './UIRectangle.js';
 import { Button } from './Button.js';
 import type { Engine } from '../engine.js';
-import { UIRectangleNode } from './UIRectangleNode.js';
+import { UIRectangleNodeHover } from './UIRectangleNode.js';
 declare const engine: Engine;
 
 const scale = {
@@ -14,6 +14,51 @@ const x = {
   anchor: Anchor.CENTER,
   value: [0],
 } as const;
+
+const MSAAButton = Button({
+  UIRectangleProps: {
+    label: 'MSAA',
+    scale,
+    translate: {
+      x,
+      y: {
+        anchor: Anchor.CENTER,
+        value: [0],
+      },
+    },
+  },
+  text: 'Toggle MSAA',
+});
+const closeButton = Button({
+  UIRectangleProps: {
+    label: 'Close',
+    scale,
+    translate: {
+      x,
+      y: {
+        anchor: Anchor.CENTER,
+        value: [-60, NumericUnit.px],
+      },
+    },
+  },
+  text: 'Close',
+});
+
+const devToolsbutton = Button({
+  UIRectangleProps: {
+    label: 'DevTools',
+    scale,
+    translate: {
+      x,
+      y: {
+        anchor: Anchor.CENTER,
+        value: [-120, NumericUnit.px],
+      },
+    },
+  },
+  text: 'DevTools',
+});
+
 export class createSettingsMenu extends UINode {
   static addKeydownListener() {
     document.addEventListener(
@@ -31,60 +76,23 @@ export class createSettingsMenu extends UINode {
   }
   render() {
     return [
+      UI(UIRectangleNodeHover, MSAAButton),
       UI(
-        UIRectangleNode,
-        Button({
-          UIRectangleProps: {
-            label: 'MSAA',
-            scale,
-            translate: {
-              x,
-              y: {
-                anchor: Anchor.CENTER,
-                value: [0],
-              },
-            },
-          },
-          text: 'Toggle MSAA',
-        }),
-      ),
-      UI(
-        UIRectangleNode,
-        Button({
-          UIRectangleProps: {
-            label: 'Close',
-            scale,
-            translate: {
-              x,
-              y: {
-                anchor: Anchor.CENTER,
-                value: [-60, NumericUnit.px],
-              },
-            },
-          },
+        UIRectangleNodeHover,
+        Object.assign(closeButton, {
           events: {
+            ...closeButton.events,
             onClick: () => {
               this.destroy();
             },
           },
-          text: 'Close',
         }),
       ),
       UI(
-        UIRectangleNode,
-        Button({
-          UIRectangleProps: {
-            label: 'DevTools',
-            scale,
-            translate: {
-              x,
-              y: {
-                anchor: Anchor.CENTER,
-                value: [-120, NumericUnit.px],
-              },
-            },
-          },
+        UIRectangleNodeHover,
+        Object.assign(devToolsbutton, {
           events: {
+            ...devToolsbutton.events,
             onClick: () => {
               import('./DevTools/DevTools.js')
                 .then(({ DevTools }) => DevTools(engine.devTools!))
@@ -92,7 +100,6 @@ export class createSettingsMenu extends UINode {
               this.destroy();
             },
           },
-          text: 'DevTools',
         }),
       ),
     ];

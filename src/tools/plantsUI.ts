@@ -8,20 +8,41 @@ import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
 import {
-  UIRectangleNode,
+  UIRectangleNodeHover,
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 declare const engine: Engine;
 
-export class PlantsUI extends UIRectangleNode<
-  object,
-  UIRectangleNodeProps & TopMenuButtonProps
-> {
+const buttonProps = Button({
+  UIRectangleProps: {
+    label: 'createGrassButton',
+    scale: {
+      min_width: 180,
+      unit: NumericUnit.px,
+      y: 50,
+    },
+    translate: {
+      x: {
+        anchor: Anchor.LEFT,
+        value: [100, NumericUnit.px],
+      },
+      //will be overriden
+      y: {
+        anchor: Anchor.TOP,
+        value: [100, NumericUnit.px],
+      },
+    },
+  },
+  text: 'Create grass (1)',
+});
+
+export class PlantsUI extends UIRectangleNodeHover {
   static plantsMesh: Plants;
   private PT: paintPlane | null = null;
   scene = engine.scenes.get('main');
-  constructor(props: UIRectangleNodeProps & TopMenuButtonProps) {
+  constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
     super(props);
+
     if (!this.scene) {
       throw new Error('no scene');
     }
@@ -43,28 +64,19 @@ export class PlantsUI extends UIRectangleNode<
       engine.addInputListener(this.#inputListener);
       return [
         UI(
-          UIRectangleNode,
-          Button({
-            ...this.props,
+          UIRectangleNodeHover,
+          Object.assign(buttonProps, {
             UIRectangleProps: {
-              label: 'createGrassButton',
-              scale: {
-                min_width: 180,
-                unit: NumericUnit.px,
-                y: 50,
-              },
+              ...buttonProps.UIRectangleProps,
               translate: {
-                x: {
-                  anchor: Anchor.LEFT,
-                  value: [100, NumericUnit.px],
-                },
+                ...buttonProps.UIRectangleProps.translate,
                 y: this.props.subMenuPosition,
               },
             },
             events: {
+              ...buttonProps.events,
               onClick: () => this.activateDraw(),
             },
-            text: 'Create grass (1)',
           }),
         ),
       ];

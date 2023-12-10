@@ -9,10 +9,7 @@ export function UI<P extends object, C extends typeof UINode<P>>(
   ctr: C,
   props: ConstructorParameters<C>[0],
 ) {
-  return Object.freeze([
-    Object.freeze(ctr),
-    Object.freeze(props) as ConstructorParameters<C>[0],
-  ] as const);
+  return Object.freeze([Object.freeze(ctr), props] as const);
 }
 
 export abstract class UINode<
@@ -34,8 +31,12 @@ export abstract class UINode<
     gpu: GPU,
     force: boolean, // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): readonly (CtrProps<{ new (...args: any[]): UINode }> | null)[] | null;
-
+  oldProps: object = {};
   constructor(public props: Readonly<P>) {
+    for (const key in props) {
+      //@ts-expect-error
+      this.oldProps[key] = props[key];
+    }
     // Render after child constructor has been executed, to avoid error
     // "Cannot read private member #instance from an object whose class did not declare it"
     queueMicrotask(() => {
@@ -62,11 +63,28 @@ export abstract class UINode<
         const instance = this.#children[i];
         if (child) {
           const [ctr, props] = child;
+
           if (ctr) {
             if (instance) {
+              // Instance may have been rendered already, check that constructor is same
               if (instance.constructor === ctr) {
-                instance.props = props;
-                instance.#requestRender(gpu);
+                //if (instance.props.UIRectangleProps.label === 'Zones') {
+                //  debugger;
+                //}
+                for (const key in props) {
+                  //@ts-expect-error
+                  if (instance.oldProps[key] === props[key]) {
+                    continue;
+                  }
+                  instance.oldProps = {};
+                  for (const key2 in instance.props) {
+                    //@ts-expect-error
+                    instance.oldProps[key2] = instance.props[key2];
+                  }
+                  instance.props = props;
+                  instance.#requestRender(gpu);
+                  break;
+                }
                 return instance;
               }
               instance.destroy();

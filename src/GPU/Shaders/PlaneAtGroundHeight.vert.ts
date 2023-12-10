@@ -3,11 +3,11 @@ import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
 import {
   type VertexBufferLayout2,
-  VertexShader,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
   WGSLcode,
+  ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 
@@ -16,17 +16,10 @@ export function createPlaneAtGroundHeightVertShader(
   buffers: VertexBufferLayout2,
   settings: typeof Terrain.settings,
 ) {
-  return new VertexShader({
-    constantCode: ([
-      ,
-      ,
-      /*{ uniforms, }*/ /*{ scene,time, clusters_array, meshes, projection}*/ /*{ world, }*/ {
-        slopes,
-        facet12,
-      },
-    ]) => getHeightAtCoordinates(settings, slopes, facet12),
-    entryPoints: {
-      main: new VertexShaderFunction(
+  return new ShaderBuilder([pipelineLayout])
+    .addFunction(
+      'main',
+      new VertexShaderFunction(
         colorPositionOutput,
         [buffers],
         ([
@@ -34,20 +27,16 @@ export function createPlaneAtGroundHeightVertShader(
           /*{uniforms,}*/ {
             scene /*time, clusters_array, meshes, projection*/,
           },
+          ,
           { world },
-          /*{ _slopes, _facet12, }*/
         ]) => WGSLcode/* wgsl */ `
-                var output:Output;
-                var worldPos:vec4<f32> = ${world.prop(
-                  'transformation',
-                )} * position;
-                worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 1.0;
-                output.position = ${scene.prop(
-                  'modelViewProjection',
-                )} * worldPos;
-                output.color = vec3<f32>(1.0,1.0,1.0);
-                return output;
-            `,
+            var output:Output;
+            var worldPos:vec4<f32> = ${world.prop('transformation')} * position;
+            worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 1.0;
+            output.position = ${scene.prop('modelViewProjection')} * worldPos;
+            output.color = vec3<f32>(1.0,1.0,1.0);
+            return output;
+        `,
       ) satisfies VertexShaderFunction<
         [
           // eslint-disable-next-line @typescript-eslint/ban-types
@@ -55,6 +44,8 @@ export function createPlaneAtGroundHeightVertShader(
           {
             scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
           },
+          // eslint-disable-next-line @typescript-eslint/ban-types
+          {},
           {
             world: BufLayout<
               ShaderStage.VERTEX_AND_FRAGMENT,
@@ -63,10 +54,18 @@ export function createPlaneAtGroundHeightVertShader(
           },
         ]
       >,
-    },
-    label: 'PlaneAtGroundHeight.vert',
-    pipelineLayouts: [pipelineLayout],
-  });
+    )
+    .build(
+      'PlaneAtGroundHeight.vert',
+      ([
+        ,
+        ,
+        /*{ uniforms, }*/ /*{ scene,time, clusters_array, meshes, projection}*/ /*{ world, }*/ {
+          slopes,
+          facet12,
+        },
+      ]) => getHeightAtCoordinates(settings, slopes, facet12),
+    );
 }
 export type PlaneAtGroundHeightVertShader = ReturnType<
   typeof createPlaneAtGroundHeightVertShader

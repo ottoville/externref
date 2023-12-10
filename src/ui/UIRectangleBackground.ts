@@ -283,7 +283,7 @@ export class UIRectangleBackground extends UIRectangleText {
         border_width: Relative width of border in texture UV mapping, between 0 and 1
         border_height: Relative height of border in texture UV mapping, between 0 and 1
      */
-    private backgroundAsset: {
+    public backgroundAsset: {
       texture: ImageBitmap;
       readonly border_width: number;
       readonly border_height: number;

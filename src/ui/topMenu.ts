@@ -22,6 +22,68 @@ export type TopMenuButtonProps = {
   subMenuPosition: VerticalPosition;
 };
 
+const y = Object.freeze({
+  anchor: Anchor.TOP,
+  value: [25, NumericUnit['px']] as const,
+});
+
+const plantsButton = Button({
+  UIRectangleProps: {
+    label: 'Plants',
+    scale: {
+      min_width: 120,
+      unit: NumericUnit['px'],
+      y: 30,
+    },
+    translate: {
+      x: {
+        anchor: Anchor.LEFT,
+        value: [65, NumericUnit['px']],
+      },
+      y,
+    },
+  },
+  text: 'Plants (1)',
+});
+
+const zonesProps = Button({
+  UIRectangleProps: {
+    label: 'Zones',
+    scale: {
+      min_width: 110,
+      unit: NumericUnit['px'],
+      y: 30,
+    },
+    translate: {
+      x: {
+        anchor: Anchor.LEFT,
+        value: [300, NumericUnit['px']],
+      },
+      y,
+    },
+  },
+  text: 'Zones (3)',
+});
+
+const terrainButton = Button({
+  UIRectangleProps: {
+    label: 'Terrain',
+    scale: {
+      min_width: 110,
+      unit: NumericUnit['px'],
+      y: 30,
+    },
+    translate: {
+      x: {
+        anchor: Anchor.LEFT,
+        value: [185, NumericUnit['px']],
+      },
+      y,
+    },
+  },
+  text: 'Terrain (2)',
+});
+
 export class createTopMenu extends UINode<
   { gpu: GPU; terrain: Terrain },
   MenuState
@@ -63,6 +125,7 @@ export class createTopMenu extends UINode<
   render() {
     const props = this.props;
     const commonProps = {
+      menuTree: this.menuTree,
       subMenuPosition: {
         anchor: Anchor.TOP,
         value: [70, NumericUnit.px],
@@ -71,93 +134,39 @@ export class createTopMenu extends UINode<
     } satisfies Partial<UIRectangleNodeProps & TopMenuButtonProps>;
     keyBoardMap.length = 0;
     const menus = [
-      UI(PlantsUI, {
-        ...Button({
-          UIRectangleProps: {
-            label: 'Plants',
-            scale: {
-              min_width: 0.07,
-              unit: NumericUnit['%'],
-              y: 0.04,
-            },
-            translate: {
-              x: {
-                anchor: Anchor.CENTER,
-                value: [-0.9, NumericUnit['%']],
-              },
-              y: {
-                anchor: Anchor.CENTER,
-                value: [0.9, NumericUnit['%']],
-              },
-            },
-          },
+      UI(
+        PlantsUI,
+        Object.assign(plantsButton, {
+          ...commonProps,
           events: {
+            ...plantsButton.events,
             onClick: this.setActiveMenu,
           },
-          text: 'Plants (1)',
+          open: this.state.menuOpenName === 'Plants',
         }),
-        ...commonProps,
-        menuTree: this.menuTree,
-        open: this.state.menuOpenName === 'Plants',
-      }),
-      UI(TerrainToolButton, {
-        ...Button({
-          UIRectangleProps: {
-            label: 'Terrain',
-            scale: {
-              min_width: 0.07,
-              unit: NumericUnit['%'],
-              y: 0.04,
-            },
-            translate: {
-              x: {
-                anchor: Anchor.CENTER,
-                value: [-0.75, NumericUnit['%']],
-              },
-              y: {
-                anchor: Anchor.CENTER,
-                value: [0.9, NumericUnit['%']],
-              },
-            },
-          },
+      ),
+      UI(
+        TerrainToolButton,
+        Object.assign(terrainButton, {
+          ...commonProps,
           events: {
+            ...terrainButton.events,
             onClick: this.setActiveMenu,
           },
-          text: 'Terrain (2)',
+          open: this.state.menuOpenName === 'Terrain',
         }),
-        ...commonProps,
-        menuTree: this.menuTree,
-        open: this.state.menuOpenName === 'Terrain',
-      }),
-      UI(Zones, {
-        ...Button({
-          UIRectangleProps: {
-            label: 'Zones',
-            scale: {
-              min_width: 0.07,
-              unit: NumericUnit['%'],
-              y: 0.04,
-            },
-            translate: {
-              x: {
-                anchor: Anchor.CENTER,
-                value: [-0.6, NumericUnit['%']],
-              },
-              y: {
-                anchor: Anchor.CENTER,
-                value: [0.9, NumericUnit['%']],
-              },
-            },
-          },
+      ),
+      UI(
+        Zones,
+        Object.assign(zonesProps, {
+          ...commonProps,
           events: {
+            ...zonesProps.events,
             onClick: this.setActiveMenu,
           },
-          text: 'Zones (3)',
+          open: this.state.menuOpenName === 'Zones',
         }),
-        ...commonProps,
-        menuTree: this.menuTree,
-        open: this.state.menuOpenName === 'Zones',
-      }),
+      ),
     ];
     menus.forEach((menu) => {
       keyBoardMap.push(menu[1].UIRectangleProps.label);

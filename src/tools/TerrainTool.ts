@@ -16,23 +16,71 @@ import { Button } from '../ui/Button.js';
 import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import {
-  UIRectangleNode,
+  UIRectangleNodeState,
   type UIRectangleNodeProps,
+  UIRectangleNodeHover,
 } from '../ui/UIRectangleNode.js';
 import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
 
-type TerrainToolButtonState = { subMenu: 'lower' | 'raise' | undefined };
-export class TerrainToolButton extends UIRectangleNode<
-  TerrainToolButtonState,
-  UIRectangleNodeProps & TopMenuButtonProps
-> {
+interface TerrainToolButtonState extends UIRectangleNodeState {
+  subMenu: 'lower' | 'raise' | undefined;
+}
+
+const lowerButtonProps = Button({
+  UIRectangleProps: {
+    label: 'Lower',
+    scale: {
+      min_width: 0.1,
+      unit: NumericUnit['%'],
+      y: 0.07,
+    },
+    translate: {
+      x: {
+        anchor: Anchor.CENTER,
+        value: [-0.85, NumericUnit['%']],
+      },
+      // Will be overriden
+      y: {
+        anchor: Anchor.CENTER,
+        value: [-0.85, NumericUnit['%']],
+      },
+    },
+  },
+  text: 'Lower (1)',
+});
+
+const raiseButtonProps = Button({
+  UIRectangleProps: {
+    label: 'Raise',
+    scale: {
+      min_width: 0.1,
+      unit: NumericUnit['%'],
+      y: 0.07,
+    },
+    translate: {
+      x: {
+        anchor: Anchor.CENTER,
+        value: [-0.6, NumericUnit['%']],
+      },
+      // Will be overriden
+      y: {
+        anchor: Anchor.CENTER,
+        value: [-0.6, NumericUnit['%']],
+      },
+    },
+  },
+  text: 'Raise (2)',
+});
+
+export class TerrainToolButton extends UIRectangleNodeHover<TerrainToolButtonState> {
   #wasOpen = false;
-  constructor(props: UIRectangleNodeProps & TopMenuButtonProps) {
+  constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
     super(props);
     this.state = {
+      ...this.state,
       subMenu: undefined,
     };
   }
@@ -74,68 +122,49 @@ export class TerrainToolButton extends UIRectangleNode<
       engine.addInputListener(this.#inputListener);
       return [
         UI(
-          UIRectangleNode,
-          Button({
-            ...this.props,
+          UIRectangleNodeHover,
+          Object.assign(lowerButtonProps, {
             UIRectangleProps: {
-              label: 'Lower',
-              scale: {
-                min_width: 0.1,
-                unit: NumericUnit['%'],
-                y: 0.07,
-              },
+              ...lowerButtonProps.UIRectangleProps,
               translate: {
-                x: {
-                  anchor: Anchor.CENTER,
-                  value: [-0.85, NumericUnit['%']],
-                },
+                ...lowerButtonProps.UIRectangleProps.translate,
                 y: this.props.subMenuPosition,
               },
             },
             events: {
+              ...lowerButtonProps.events,
               onClick: () => {
                 this.setState({
                   subMenu: 'lower',
                 });
               },
             },
-            text: 'Lower (1)',
           }),
         ),
         UI(
-          UIRectangleNode,
-          Button({
-            ...this.props,
+          UIRectangleNodeHover,
+          Object.assign(raiseButtonProps, {
             UIRectangleProps: {
-              label: 'Raise',
-              scale: {
-                min_width: 0.1,
-                unit: NumericUnit['%'],
-                y: 0.07,
-              },
+              ...raiseButtonProps.UIRectangleProps,
               translate: {
-                x: {
-                  anchor: Anchor.CENTER,
-                  value: [-0.6, NumericUnit['%']],
-                },
+                ...raiseButtonProps.UIRectangleProps.translate,
                 y: this.props.subMenuPosition,
               },
             },
             events: {
+              ...raiseButtonProps.events,
               onClick: () => {
                 this.setState({
                   subMenu: 'raise',
                 });
               },
             },
-            text: 'Raise (2)',
           }),
         ),
       ];
     } else if (!this.props.open && this.#wasOpen) {
       this.#wasOpen = false;
       this.#tool?.destroy();
-      console.log('remove inputlistener');
       engine.removeInputListener(this.#inputListener);
     }
     return null;

@@ -88,6 +88,8 @@ export type UIRectangleProps<
   originalAspectRatio?: number | undefined;
   events?: {
     onClick?: (e: PointerEvent) => void;
+    onPointerEnter?: (e: PointerEvent) => void;
+    onPointerLeave?: (e: PointerEvent) => void;
   };
 };
 /*
@@ -328,7 +330,14 @@ export abstract class UIRectangle<
     outer_sizeX: number;
     outer_sizeY: number;
   }): Float32Array;
-
+  #checkClickArea = (e: PointerEvent) => {
+    return (
+      e.offsetX > this.boundingBox.left &&
+      e.offsetX < this.boundingBox.right &&
+      e.offsetY > this.boundingBox.top &&
+      e.offsetY < this.boundingBox.bottom
+    );
+  };
   constructor(
     protected props: UIRectangleProps<P>,
     texture:
@@ -358,7 +367,6 @@ export abstract class UIRectangle<
       },
     );
     const { canvaspipeline, renderPass, label, borderSize, events } = props;
-    //canvaspipeline.props.bindgroupdrawable.bindGroupLayouts[0].entries.texture
     this.positions_count =
       borderSize.width[0] > 0 ||
       (Array.isArray(borderSize.height) && borderSize.height[0] > 0)
@@ -377,46 +385,68 @@ export abstract class UIRectangle<
         this.updatePosition(buff.getMappedRange());
       },
     );
-    const onClick = events?.onClick;
-    if (onClick) {
-      const checkClickArea = (e: PointerEvent) => {
-        return (
-          e.offsetX > this.boundingBox.left &&
-          e.offsetX < this.boundingBox.right &&
-          e.offsetY > this.boundingBox.top &&
-          e.offsetY < this.boundingBox.bottom
-        );
-      };
-      let pointerDown = false;
-      engine.addInputListener({
-        cb: (e) => {
-          if (pointerDown && checkClickArea(e)) {
-            onClick(e);
-            return true;
-          }
-          return false;
-        },
-        object: this,
-        options: {
-          ui: true,
-        },
-        type: 'pointerup',
-      } as ListenerObj<'pointerup'>);
-      engine.addInputListener({
-        cb: (e) => {
-          if (checkClickArea(e)) {
-            pointerDown = true;
-            return true;
-          }
-          return false;
-        },
-        object: this,
-        options: {
-          ui: true,
-        },
-        type: 'pointerdown',
-      } as ListenerObj<'pointerdown'>);
+    if (events) {
+      const { onClick, onPointerEnter, onPointerLeave } = events;
+      if (onPointerEnter || onPointerLeave) {
+        let hovering = false;
+        engine.addInputListener({
+          cb: (e) => {
+            const nowHovering = this.#checkClickArea(e);
+            if (!hovering && nowHovering) {
+              hovering = nowHovering;
+              if (onPointerEnter) {
+                onPointerEnter(e);
+                return true;
+              }
+            } else if (hovering && !nowHovering) {
+              hovering = nowHovering;
+              if (onPointerLeave) {
+                onPointerLeave(e);
+                return true;
+              }
+            }
+            return false;
+          },
+          object: this,
+          options: {
+            ui: true,
+          },
+          type: 'pointermove',
+        });
+      }
+      if (onClick) {
+        let pointerDown = false;
+        engine.addInputListener({
+          cb: (e) => {
+            if (pointerDown && this.#checkClickArea(e)) {
+              onClick(e);
+              return true;
+            }
+            return false;
+          },
+          object: this,
+          options: {
+            ui: true,
+          },
+          type: 'pointerup',
+        } as ListenerObj<'pointerup'>);
+        engine.addInputListener({
+          cb: (e) => {
+            if (this.#checkClickArea(e)) {
+              pointerDown = true;
+              return true;
+            }
+            return false;
+          },
+          object: this,
+          options: {
+            ui: true,
+          },
+          type: 'pointerdown',
+        } as ListenerObj<'pointerdown'>);
+      }
     }
+
     if (!(texture instanceof TextureView)) {
       this.textureView = this.createTextureView(texture);
     } else {
@@ -482,6 +512,5 @@ export abstract class UIRectangle<
     super.destroy();
     this.props.renderPass.onResize.delete(this);
     engine.clearInputListeners(this);
-    this.drawable?.destroy();
   }
 }

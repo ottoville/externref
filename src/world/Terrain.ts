@@ -15,7 +15,7 @@ import {
   createCalculateNormals,
 } from '../GPU/Shaders/CalculateNormals.comp.js';
 import { CreateGroundFromHeightMap } from '../GPU/Shaders/CreateGroundFromHeightMap.comp.js';
-import { GPU } from '../GPU.js';
+import type { GPU } from '../GPU.js';
 import {
   TerrainTexture,
   SlopesLayout,

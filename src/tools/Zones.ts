@@ -9,7 +9,7 @@ import { Button } from '../ui/Button.js';
 import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import {
-  UIRectangleNode,
+  UIRectangleNodeHover,
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 import {
@@ -19,10 +19,31 @@ import {
   TextureView,
 } from '../webgpu-ts/index.js';
 declare const engine: Engine;
-export class Zones extends UIRectangleNode<
-  object,
-  UIRectangleNodeProps & TopMenuButtonProps
-> {
+
+const buttonProps = Button({
+  UIRectangleProps: {
+    label: 'residentalButton',
+    scale: {
+      min_width: 0.15,
+      unit: NumericUnit['%'],
+      y: 0.07,
+    },
+    translate: {
+      x: {
+        anchor: Anchor.CENTER,
+        value: [-0.8, NumericUnit['%']],
+      },
+      //Will be overridden
+      y: {
+        anchor: Anchor.CENTER,
+        value: [-0.8, NumericUnit['%']],
+      },
+    },
+  },
+  text: 'Residental (1)',
+});
+
+export class Zones extends UIRectangleNodeHover {
   #PT?: paintTexture;
   #size = 5120;
   readonly #ratio: number; //texture coordinates
@@ -32,7 +53,7 @@ export class Zones extends UIRectangleNode<
   >;
   scene: Scene;
   #wasOpen = false;
-  constructor(props: UIRectangleNodeProps & TopMenuButtonProps) {
+  constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
     super(props);
     const initialScene = props.terrain.scenes[0];
     if (!initialScene) {
@@ -136,36 +157,30 @@ export class Zones extends UIRectangleNode<
         new TextureView(this.#zoneTexture),
       );
       this.props.terrain.mesh.set_scenes(staticScene.id);
+    }
+    if (this.props.open) {
       return [
         UI(
-          UIRectangleNode,
-          Button({
-            ...this.props,
+          UIRectangleNodeHover,
+          Object.assign(buttonProps, {
             UIRectangleProps: {
-              label: 'residentalButton',
-              scale: {
-                min_width: 0.15,
-                unit: NumericUnit['%'],
-                y: 0.07,
-              },
+              ...buttonProps.UIRectangleProps,
               translate: {
-                x: {
-                  anchor: Anchor.CENTER,
-                  value: [-0.8, NumericUnit['%']],
-                },
+                ...buttonProps.UIRectangleProps.translate,
                 y: this.props.subMenuPosition,
               },
             },
             events: {
+              ...buttonProps.events,
               onClick: () => {
                 this.paintZone();
               },
             },
-            text: 'Residental (1)',
           }),
         ),
       ];
-    } else if (!this.props.open && this.#wasOpen) {
+    }
+    if (!this.props.open && this.#wasOpen) {
       this.props.terrain.mesh.set_scenes(this.scene.id);
       this.props.terrain.mesh.drawable?.setTexture(
         new TextureView(this.props.terrain.texture),

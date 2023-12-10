@@ -1,5 +1,5 @@
 import { UIRectangle, UIRectangleProps } from './UIRectangle.js';
-import { UI, UINode } from './UINode.js';
+import { UINode } from './UINode.js';
 import { UIRectangleBackground } from './UIRectangleBackground.js';
 import { UIRectangleTextOnly } from './UIRectangleTextOnly.js';
 import type { GPU } from '../GPU.js';
@@ -8,19 +8,27 @@ declare const engine: Engine;
 
 type MenuEvent = (menuName?: string) => void;
 
-export type UIRectangleNodeProps = Readonly<{
+export type UIRectangleNodeProps = {
   UIRectangleProps: Omit<UIRectangleProps, 'canvaspipeline' | 'renderPass'>;
-  bitmap?: ImageBitmap | Promise<ImageBitmap> | undefined;
+  bitmap?: ImageBitmap | undefined;
   text: string;
-  events?: {
-    onClick?: MenuEvent;
-    onPointerEnter?: MenuEvent;
-    onPointerLeave?: MenuEvent;
-  };
-  children?: (ReturnType<typeof UI> | null)[] | null | undefined;
-}>;
+  events?:
+    | {
+        onClick?: MenuEvent;
+        onPointerEnter?: MenuEvent;
+        onPointerLeave?: MenuEvent;
+      }
+    | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  children?: (readonly [any, any] | null)[] | null | undefined;
+};
+
+export type UIRectangleNodeState = {
+  bitmap?: ImageBitmap | undefined;
+};
+
 export class UIRectangleNode<
-  S extends object = object,
+  S extends UIRectangleNodeState = UIRectangleNodeState,
   P extends UIRectangleNodeProps = UIRectangleNodeProps,
 > extends UINode<P, S> {
   static instances: Map<UINode, UIRectangleNode> = new Map();
@@ -37,16 +45,13 @@ export class UIRectangleNode<
   }
   constructor(props: P) {
     super(props);
+    this.state = { ...this.state, bitmap: props.bitmap };
   }
-  #instance?: Promise<UIRectangle> | UIRectangle | undefined;
+  #instance?: UIRectangle | undefined;
   destroyInstance() {
     if (this.#instance) {
       if (this.#instance instanceof UIRectangle) {
         this.#instance.destroy();
-      } else {
-        this.#instance
-          .then((instance) => instance.destroy())
-          .catch((err) => engine.showError(err));
       }
     }
     this.#instance = undefined;
@@ -55,17 +60,6 @@ export class UIRectangleNode<
     super.destroy();
     this.destroyInstance();
   }
-  createBackgroundInstance(commonProps: UIRectangleProps, bitmap: ImageBitmap) {
-    return new UIRectangleBackground(
-      commonProps,
-      {
-        border_height: 0.2,
-        border_width: 0.2,
-        texture: bitmap,
-      },
-      this.props.text,
-    );
-  }
   render(gpu: GPU, force: boolean) {
     if (force) {
       /*
@@ -73,7 +67,8 @@ export class UIRectangleNode<
       */
       this.destroyInstance();
     }
-    const { bitmap, text, children } = this.props;
+    const { text, children } = this.props;
+    const { bitmap } = this.state;
     const commonProps: UIRectangleProps = {
       canvaspipeline: gpu.UIPipeline,
       renderPass: gpu.renderPassCanvas,
@@ -92,16 +87,15 @@ export class UIRectangleNode<
     if (!this.#instance) {
       if (bitmap) {
         if (bitmap instanceof ImageBitmap) {
-          this.#instance = this.createBackgroundInstance(commonProps, bitmap);
-        } else {
-          this.#instance = bitmap.then((bitmap2) => {
-            //Replace promise with resolved value;
-            this.#instance = this.createBackgroundInstance(
-              commonProps,
-              bitmap2,
-            );
-            return this.#instance;
-          });
+          this.#instance = new UIRectangleBackground(
+            commonProps,
+            {
+              border_height: 0.2,
+              border_width: 0.2,
+              texture: bitmap,
+            },
+            this.props.text,
+          );
         }
       } else {
         this.#instance = new UIRectangleTextOnly(commonProps, text);
@@ -110,8 +104,26 @@ export class UIRectangleNode<
       this.#instance instanceof UIRectangleBackground ||
       this.#instance instanceof UIRectangleTextOnly
     ) {
-      if (force || text !== this.#instance.text) {
+      let reRender = force;
+      if (this.#instance instanceof UIRectangleBackground) {
+        if (
+          bitmap instanceof ImageBitmap &&
+          bitmap !== this.#instance.backgroundAsset.texture
+        ) {
+          this.#instance.backgroundAsset = {
+            border_height: 0.2,
+            border_width: 0.2,
+            texture: bitmap,
+          };
+          reRender = true;
+        }
+      }
+
+      if (text !== this.#instance.text) {
         this.#instance.text = text;
+        reRender = true;
+      }
+      if (reRender) {
         this.#instance.createTexture();
       }
     }
@@ -119,5 +131,42 @@ export class UIRectangleNode<
       return children;
     }
     return null;
+  }
+}
+const buttonTexture = await fetch('/assets/button.webp')
+  .then((asset) => asset.blob())
+  .then(createImageBitmap);
+const buttonTextureHover = await fetch('/assets/button_hover.webp')
+  .then((asset) => asset.blob())
+  .then(createImageBitmap);
+
+export class UIRectangleNodeButton<
+  S extends UIRectangleNodeState = UIRectangleNodeState,
+> extends UIRectangleNode<S, UIRectangleNodeProps> {
+  constructor(props: UIRectangleNodeProps) {
+    props.bitmap = buttonTexture;
+    super(props);
+  }
+}
+export class UIRectangleNodeHover<
+  S extends UIRectangleNodeState = UIRectangleNodeState,
+> extends UIRectangleNodeButton<S> {
+  constructor(props: UIRectangleNodeProps) {
+    props.events = {
+      ...props.events,
+      onPointerEnter: () => {
+        this.setState({
+          ...this.state,
+          bitmap: buttonTextureHover,
+        });
+      },
+      onPointerLeave: () => {
+        this.setState({
+          ...this.state,
+          bitmap: buttonTexture,
+        });
+      },
+    };
+    super(props);
   }
 }

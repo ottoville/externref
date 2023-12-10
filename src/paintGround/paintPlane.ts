@@ -7,7 +7,7 @@ import { TerraVector2 } from '../Math.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import type { Engine, rust_pointer } from '../engine.js';
 import {
-  PlaneAtGroundHeightVertShader,
+  type PlaneAtGroundHeightVertShader,
   createPlaneAtGroundHeightVertShader,
 } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
