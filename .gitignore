@@ -354,3 +354,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+#cypress failed image compares
+src/cypress/screenshots
