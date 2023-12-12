@@ -331,8 +331,12 @@ TODO
       response2.headers.set('content-type', 'application/octet-stream');
 
       const cache = await cacheP;
-      cache.put(new Request('/terrain'), response);
-      cache.put(new Request('/indices'), response2);
+      cache.put(new Request('/terrain'), response).catch((err) => {
+        engine.showError(err);
+      });
+      cache.put(new Request('/indices'), response2).catch((err) => {
+        engine.showError(err);
+      });
     } else {
       /* const c = new OffscreenCanvas((Terrain.subdivisions[0] + 1) * 3, (Terrain.subdivisions[1] + 1));
              const ctx = c.getContext("2d");
@@ -569,47 +573,62 @@ TODO
           );
           const ctx = c.getContext('2d');
           if (!ctx) throw new Error('get 2d context failed');
-          gpuReadBuffer.readAndDestroy(async (arrayBuffer) => {
-            ctx.putImageData(
-              new ImageData(
-                new Uint8ClampedArray(arrayBuffer),
-                c.width,
-                c.height,
-              ),
-              0,
-              0,
-            );
-            const blob = await c.convertToBlob({
-              quality: 1,
-              type: 'image/webp',
+          gpuReadBuffer
+            .readAndDestroy(async (arrayBuffer) => {
+              ctx.putImageData(
+                new ImageData(
+                  new Uint8ClampedArray(arrayBuffer),
+                  c.width,
+                  c.height,
+                ),
+                0,
+                0,
+              );
+              const blob = await c.convertToBlob({
+                quality: 1,
+                type: 'image/webp',
+              });
+              TerrainTool.saveTexture(await blob.arrayBuffer(), [
+                Terrain.#textureSize.width,
+                Terrain.#textureSize.height,
+              ]);
+            })
+            .catch((err) => {
+              engine.showError(err);
             });
-            TerrainTool.saveTexture(await blob.arrayBuffer(), [
-              Terrain.#textureSize.width,
-              Terrain.#textureSize.height,
-            ]);
-          });
         }
 
         const commandEncoder2 = gpu.device.createCommandEncoder({
           label: 'terrain_encoder2',
         });
+
         const readBuffer2 =
           this.gpu.shaders.facet12ArrGPUBuffer.createCopy(commandEncoder2);
         gpu.device.queue.submit([commandEncoder2.finish()]);
-        readBuffer2.readAndDestroy((buff) => {
-          this.mesh.faces = new Float32Array(buff);
-        });
-        gpuReadBufferPositions.readAndDestroy((readbuff) => {
-          return gpuReadBufferIndices.readAndDestroy((buff) => {
-            this.mesh.set_indices_and_vertices(
-              new Uint32Array(buff),
-              new Float32Array(readbuff),
-              this.mesh.vertices_stride,
-            );
-            this.updateSwap2(0, readbuff.byteLength, true);
-            this.#serialize();
+        readBuffer2
+          .readAndDestroy((buff) => {
+            this.mesh.faces = new Float32Array(buff);
+          })
+          .catch((err) => {
+            engine.showError(err);
           });
-        });
+        gpuReadBufferPositions
+          .readAndDestroy((readbuff) => {
+            return gpuReadBufferIndices.readAndDestroy((buff) => {
+              this.mesh.set_indices_and_vertices(
+                new Uint32Array(buff),
+                new Float32Array(readbuff),
+                this.mesh.vertices_stride,
+              );
+              this.updateSwap2(0, readbuff.byteLength, true);
+              this.#serialize().catch((err) => {
+                engine.showError(err);
+              });
+            });
+          })
+          .catch((err) => {
+            engine.showError(err);
+          });
       })
       .catch((err) => engine.showError(err, gpu));
   }

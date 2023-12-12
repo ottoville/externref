@@ -902,14 +902,17 @@ export class Engine {
           gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
           //@ts-ignore
           window.printRenderTarget = () => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId.renderTarget.texture.print_bitmap();
           };
           //@ts-ignore
           window.printRenderTarget2 = () => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             gpu.renderPassScreen.depthRenderTarget.renderTarget.texture.print_bitmap();
           };
           //@ts-ignore
           window.printRenderTarget3 = () => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.renderTarget.texture.print_bitmap();
           };
         },

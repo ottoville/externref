@@ -1,6 +1,5 @@
 import { ApplicationInsights } from './bundled.js';
 
-/* eslint-disable indent */
 const app = document.getElementById('app');
 if (!app) throw new Error('App not found');
 const appInsights = new ApplicationInsights({

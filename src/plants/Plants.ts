@@ -38,15 +38,19 @@ export class Plants extends MainNode {
     this.#ready
       .then(() => {
         // console.log('sending grass to worker, took ', new Date().getTime() - d);
-        this.#worker.message(
-          WorkerReturn.noReturn,
-          'save',
-          {
-            angle: area.rad,
-            area: area,
-          },
-          [],
-        );
+        this.#worker
+          .message(
+            WorkerReturn.noReturn,
+            'save',
+            {
+              angle: area.rad,
+              area: area,
+            },
+            [],
+          )
+          .catch((err) => {
+            engine.showError(err);
+          });
       })
       .catch((err) => engine.showError(err));
   }

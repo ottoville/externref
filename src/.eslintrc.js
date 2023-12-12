@@ -16,6 +16,7 @@ module.exports = {
       'typescript',
       'typescriptreact',
     ],
+    project: ['tsconfig.json', 'tsconfig.workers.json', 'tsconfig.serviceworkers.json']
   },
   plugins: ['@typescript-eslint', 'promise', 'import', 'prettier'],
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
@@ -27,6 +28,7 @@ module.exports = {
     '@typescript-eslint/no-shadow': ['error'],
     '@typescript-eslint/no-explicit-any': ['error'],
     '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/no-floating-promises': 'error',
     'promise/catch-or-return': 'error',
     'no-var': 'off',
     'no-cond-assign': 'off',

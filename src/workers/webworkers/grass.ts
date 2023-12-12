@@ -176,6 +176,7 @@ const methods = {
     response.headers.set('content-type', 'application/octet-stream');
 
     const cache = await cacheP;
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     cache.put(new Request('/grass'), response);
   },
 };

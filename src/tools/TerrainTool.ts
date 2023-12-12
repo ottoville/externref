@@ -268,15 +268,19 @@ export class TerrainTool extends MainNode {
     arrayBuffer: ArrayBuffer,
     size: readonly [number, number],
   ) {
-    terrainWorker.message<ArrayBuffer>(
-      WorkerReturn.Promise,
-      'saveTexture',
-      {
-        buffer: arrayBuffer,
-        size: size,
-      },
-      [arrayBuffer],
-    );
+    terrainWorker
+      .message<ArrayBuffer>(
+        WorkerReturn.Promise,
+        'saveTexture',
+        {
+          buffer: arrayBuffer,
+          size: size,
+        },
+        [arrayBuffer],
+      )
+      .catch((err) => {
+        engine.showError(err);
+      });
   }
   private direction: 1 | 0 | -1 = 0;
   private mouseinterval = 0;

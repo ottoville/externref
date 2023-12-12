@@ -4,6 +4,8 @@ import type { subTexture, PTResultF } from '../types/interfaces/index.js';
 import type { Scene } from '../Scene.js';
 import { TerraVector2 } from '../Math.js';
 import type { Texture, Texture2dSize } from '../webgpu-ts/Texture.js';
+import type { Engine } from '../engine.js';
+declare const engine: Engine;
 
 export class paintTexture extends paintGround {
   private subTextureCache: subTexture = {
@@ -48,7 +50,9 @@ export class paintTexture extends paintGround {
     if (this.ang360.rad < 0) {
       throw new Error('onAreaDraw negative angle not supported');
     }
-    this.drawSubImage(width, this.height, this.ang360.rad);
+    this.drawSubImage(width, this.height, this.ang360.rad).catch((err) => {
+      engine.showError(err);
+    });
   }
   async drawSubImage(width: number, height: number, rad: number) {
     width /= this.ratio;

@@ -203,19 +203,12 @@ export class GPU {
   readonly canvasRootLayout: RenderPipelineLayout<
     [typeof this.BindGroupLayoutCanvas]
   >;
-  readonly canvasRootLayoutArray: RenderPipelineLayout<
-    [typeof this.BindGroupLayoutCanvasArray]
-  >;
   readonly UIPipeline: RenderPipelineProps<UIVertShader, UIFragShader>;
 
   readonly updateViewShader: UpdateView;
   readonly BindGroupLayoutCanvas: BGLayout<{
     uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>;
     texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
-  }>;
-  readonly BindGroupLayoutCanvasArray: BGLayout<{
-    uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>;
-    texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d_array<f32>'>;
   }>;
   destroyed = false;
   fps = 0;
@@ -650,36 +643,10 @@ export class GPU {
         ),
       },
     );
-    this.BindGroupLayoutCanvasArray = new BGLayout(
-      this.device,
-      'BindGroupLayoutUIArray',
-      {
-        texture: new TextLayout(
-          {
-            texture: {},
-            visibility: ShaderStage.FRAGMENT,
-          },
-          'texture_2d_array<f32>',
-        ),
-        uniforms: new BufLayout(
-          {
-            buffer: {
-              minBindingSize: 8,
-              type: 'uniform',
-            },
-            visibility: ShaderStage.VERTEX,
-          },
-          UIUniforms,
-        ),
-      },
-    );
+
     this.canvasRootLayout = new RenderPipelineLayout({
       bindGroupLayouts: [this.BindGroupLayoutCanvas],
       label: 'canvasRootLayout',
-    });
-    this.canvasRootLayoutArray = new RenderPipelineLayout({
-      bindGroupLayouts: [this.BindGroupLayoutCanvasArray],
-      label: 'canvasRootLayoutArray',
     });
     const vertexShader = createUIVertShader(this.canvasRootLayout, {
       arrayStride: 4 * 4,
@@ -687,7 +654,6 @@ export class GPU {
       stepMode: 'vertex',
     });
     const UIfragmentShader = createUIFragmentShader(this);
-    //const UIfragmentShaderArray = createUIFragmentShaderArray(this);
     this.UIPipeline = {
       builder: createRenderPipelineBuilder(vertexShader, UIfragmentShader),
       connections: {
@@ -699,24 +665,6 @@ export class GPU {
         topology: 'triangle-list',
       },
     } as RenderPipelineProps<UIVertShader, UIFragShader>;
-    /*this.UIPipelineArray = new RenderPipeline(
-      {
-        bindgroupdrawable: this.canvasRootLayoutArray,
-        connections: {
-          main: 'array',
-        },
-        descriptor: {
-          primitive: {
-            frontFace: 'ccw',
-            topology: 'triangle-list',
-          },
-        },
-        fragmentShader: UIfragmentShaderArray,
-        label: 'UIRenderPipelineArray',
-        vertexShader,
-      },
-      undefined,
-    );*/
 
     this.renderPassCanvas = new RenderPass(
       {

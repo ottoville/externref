@@ -6,6 +6,7 @@
     const response = new Response(e.data.buffer);
     response.headers.set('Content-Length', e.data.buffer.byteLength.toString());
     response.headers.set('Content-Type', 'image/webp');
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     (await caches.open('save')).put(
       new Request('/terrainTexture.webp'),
       response,
