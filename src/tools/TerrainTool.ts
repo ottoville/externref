@@ -107,17 +107,17 @@ export class TerrainToolButton extends UIRectangleNodeHover<TerrainToolButtonSta
   #tool?: TerrainTool;
   override render(gpu: GPU, force: boolean) {
     super.render(gpu, force);
-    if (this.state.subMenu === 'lower') {
-      this.#tool?.lower();
-      this.props.menuTree.level = 2;
-    } else if (this.state.subMenu === 'raise') {
-      this.#tool?.raise();
-      this.props.menuTree.level = 2;
-    }
     if (this.props.open) {
       if (!this.wasOpen) {
         this.wasOpen = true;
         this.#tool = new TerrainTool(this.props.terrain);
+      }
+      if (this.state.subMenu === 'lower') {
+        this.#tool!.direction = -1;
+        this.props.menuTree.level = 2;
+      } else if (this.state.subMenu === 'raise') {
+        this.#tool!.direction = 1;
+        this.props.menuTree.level = 2;
       }
       engine.addInputListener(this.#inputListener);
       return [
@@ -180,6 +180,7 @@ export class TerrainTool extends MainNode {
     super({
       label: 'TerrainTool',
     });
+    engine.addInputListener(this.#pointerdownf);
     this.positions_count = 4;
     const getRenderPipeline = [
       'TerrainToolRenderpipeline',
@@ -282,7 +283,7 @@ export class TerrainTool extends MainNode {
         engine.showError(err);
       });
   }
-  private direction: 1 | 0 | -1 = 0;
+  direction: 1 | 0 | -1 = 0;
   private mouseinterval = 0;
 
   #pointerdownf: ListenerObj<'pointerdown'> = {
@@ -349,13 +350,5 @@ export class TerrainTool extends MainNode {
     },
     object: this,
     type: 'pointermove',
-  };
-  raise = (): void => {
-    this.direction = 1;
-    engine.addInputListener(this.#pointerdownf);
-  };
-  lower = (): void => {
-    this.direction = -1;
-    engine.addInputListener(this.#pointerdownf);
   };
 }

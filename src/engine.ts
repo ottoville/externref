@@ -800,7 +800,9 @@ export class Engine {
       [...set].forEach((eventObj) => {
         if (eventObj.object === object) {
           //@ts-expect-error
-          set.delete(eventObj);
+          if (!set.delete(eventObj)) {
+            throw new Error('Event didnt exist in set');
+          }
         }
       });
     });
