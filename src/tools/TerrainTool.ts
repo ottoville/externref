@@ -16,9 +16,9 @@ import { Button } from '../ui/Button.js';
 import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import {
-  UIRectangleNodeState,
+  type UIRectangleNodeState,
   UIRectangleNodeHover,
-  type UIRectangleNodeHoverProps,
+  type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
 declare const engine: Engine;
@@ -77,7 +77,7 @@ const raiseButtonProps = Button({
 
 export class TerrainToolButton extends UIRectangleNodeHover<TerrainToolButtonState> {
   private wasOpen = false;
-  constructor(override props: UIRectangleNodeHoverProps & TopMenuButtonProps) {
+  constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
     super(props);
     this.state = {
       ...this.state,

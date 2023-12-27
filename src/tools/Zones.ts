@@ -10,7 +10,7 @@ import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import {
   UIRectangleNodeHover,
-  type UIRectangleNodeHoverProps,
+  type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 import {
   type RenderTargetTexture,
@@ -53,7 +53,7 @@ export class Zones extends UIRectangleNodeHover {
   >;
   scene: Scene;
   private wasOpen = false;
-  constructor(override props: UIRectangleNodeHoverProps & TopMenuButtonProps) {
+  constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
     super(props);
     const initialScene = props.terrain.scenes[0];
     if (!initialScene) {

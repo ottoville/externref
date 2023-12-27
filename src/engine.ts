@@ -15,6 +15,10 @@ import {
   Ellipsoid,
 } from './nodes/DataNode.js';
 import type { CameraController } from './controllers/CameraController.js';
+import {
+  UIRectangleNodeHover,
+  UIRectangleNodeHovers,
+} from './ui/UIRectangleNode.js';
 
 const textDecoder = new TextDecoder();
 
@@ -450,21 +454,22 @@ export class Engine {
   canvas?: HTMLCanvasElement;
   devTools?: HTMLElement;
   GPUSubscribions: Set<(gpu: GPU) => void> = new Set();
-  TabIndexSubscribions: Set<(tabIndex: number) => void> = new Set();
+  TabIndexSubscribions: Set<(element?: UIRectangleNodeHover) => void> =
+    new Set();
   GPUSubscribionsOnce: Set<(gpu: GPU) => void> = new Set();
   getGPU(cb: (gpu: GPU) => void, once = false) {
     if (once) this.GPUSubscribionsOnce.add(cb);
     else this.GPUSubscribions.add(cb);
     if (this.gpu) cb(this.gpu);
   }
-  #tabIndex = 0;
-  getTabIndex(cb: (tabIndex: number) => void) {
+  #tabElement: UIRectangleNodeHover | undefined = undefined;
+  getTabIndex(cb: (element?: UIRectangleNodeHover) => void) {
     this.TabIndexSubscribions.add(cb);
-    cb(this.#tabIndex);
+    cb(this.#tabElement);
   }
-  setTabIndex(tabIndex: number) {
-    this.#tabIndex = tabIndex;
-    this.TabIndexSubscribions.forEach((cb) => cb(tabIndex));
+  setTabIndex(element?: UIRectangleNodeHover) {
+    this.#tabElement = element;
+    this.TabIndexSubscribions.forEach((cb) => cb(element));
   }
   static async initEngine(
     nodes:
@@ -836,6 +841,47 @@ export class Engine {
     this.mainCamera = new TerraCamera('mainCamera', 'renderPassScreen');
 
     if (nodes?.canvas) {
+      nodes.canvas.ownerDocument.addEventListener('keyup', (evt) => {
+        if (this.#tabElement && this.#tabElement.instance) {
+          let vec1: [number, number] = [0, 0];
+          if (evt.key === 'ArrowDown') {
+            vec1 = [0, -1];
+          } else if (evt.key === 'ArrowUp') {
+            vec1 = [0, 1];
+          } else if (evt.key === 'ArrowLeft') {
+            vec1 = [-1, 0];
+          } else if (evt.key === 'ArrowRight') {
+            vec1 = [1, 0];
+          } else {
+            return;
+          }
+          const currentCoord = this.#tabElement.instance.screenPosition;
+          let smallestLength: [number, UIRectangleNodeHover] | undefined =
+            undefined;
+          UIRectangleNodeHovers.forEach((node) => {
+            if (node === this.#tabElement || !node.instance) return;
+            const vec2: [number, number] = [
+              node.instance.screenPosition[0]! - currentCoord[0]!,
+              node.instance.screenPosition[1]! - currentCoord[1]!,
+            ];
+            const len = Math.sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]);
+            vec2[0] = vec2[0] / len;
+            vec2[1] = vec2[1] / len;
+            const dot = vec1[0] * vec2[0] + vec1[1] * vec2[1];
+
+            if (dot < 0.5) return;
+            const weightedLen = len / dot;
+            if (smallestLength) {
+              if (weightedLen < smallestLength[0]) {
+                smallestLength = [weightedLen, node];
+              }
+            } else {
+              smallestLength = [weightedLen, node];
+            }
+          });
+          if (smallestLength) this.setTabIndex(smallestLength[1]);
+        }
+      });
       (
         [
           'pointerup',

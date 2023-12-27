@@ -204,7 +204,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
           text: 'Time of day ' + this.state.timeOfDay,
         }),
       ),
-      UI(UIRectangleNodeHover, { ...pauseProps }),
+      UI(UIRectangleNodeHover, pauseProps),
       UI(UIRectangleNodeHover, playProps),
       UI(UIRectangleNodeHover, fastForwardProps),
       UI(UIRectangleNodeHover, fastForward1Props),

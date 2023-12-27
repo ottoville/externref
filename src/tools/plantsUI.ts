@@ -9,7 +9,7 @@ import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
 import {
   UIRectangleNodeHover,
-  type UIRectangleNodeHoverProps,
+  type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 declare const engine: Engine;
 
@@ -40,7 +40,7 @@ export class PlantsUI extends UIRectangleNodeHover {
   static plantsMesh: Plants;
   private PT: paintPlane | null = null;
   scene = engine.scenes.get('main');
-  constructor(override props: UIRectangleNodeHoverProps & TopMenuButtonProps) {
+  constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
     super(props);
 
     if (!this.scene) {

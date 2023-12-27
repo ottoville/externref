@@ -31,17 +31,17 @@ export class UIRectangleNode<
   S extends UIRectangleNodeState = UIRectangleNodeState,
   P extends UIRectangleNodeProps = UIRectangleNodeProps,
 > extends UINode<P, S> {
-  #instance?: UIRectangle | undefined;
+  instance?: UIRectangle | undefined;
   constructor(props: P) {
     super(props, { bitmap: props.bitmap } as Readonly<S>);
   }
   destroyInstance() {
-    if (this.#instance) {
-      if (this.#instance instanceof UIRectangle) {
-        this.#instance.destroy();
+    if (this.instance) {
+      if (this.instance instanceof UIRectangle) {
+        this.instance.destroy();
       }
     }
-    this.#instance = undefined;
+    this.instance = undefined;
   }
   override destroy() {
     super.destroy();
@@ -71,12 +71,12 @@ export class UIRectangleNode<
         };
       }
     }
-    if (!this.#instance) {
+    if (!this.instance) {
       if (this.props.text === 'Zones (3)')
         console.log('create instance', this.props.text);
       if (bitmap) {
         if (bitmap instanceof ImageBitmap) {
-          this.#instance = new UIRectangleBackground(
+          this.instance = new UIRectangleBackground(
             commonProps,
             {
               border_height: 0.2,
@@ -87,19 +87,19 @@ export class UIRectangleNode<
           );
         }
       } else {
-        this.#instance = new UIRectangleTextOnly(commonProps, text);
+        this.instance = new UIRectangleTextOnly(commonProps, text);
       }
     } else if (
-      this.#instance instanceof UIRectangleBackground ||
-      this.#instance instanceof UIRectangleTextOnly
+      this.instance instanceof UIRectangleBackground ||
+      this.instance instanceof UIRectangleTextOnly
     ) {
       let reRender = force;
-      if (this.#instance instanceof UIRectangleBackground) {
+      if (this.instance instanceof UIRectangleBackground) {
         if (
           bitmap instanceof ImageBitmap &&
-          bitmap !== this.#instance.backgroundAsset.texture
+          bitmap !== this.instance.backgroundAsset.texture
         ) {
-          this.#instance.backgroundAsset = {
+          this.instance.backgroundAsset = {
             border_height: 0.2,
             border_width: 0.2,
             texture: bitmap,
@@ -108,12 +108,12 @@ export class UIRectangleNode<
         }
       }
 
-      if (text !== this.#instance.text) {
-        this.#instance.text = text;
+      if (text !== this.instance.text) {
+        this.instance.text = text;
         reRender = true;
       }
       if (reRender) {
-        this.#instance.createTexture();
+        this.instance.createTexture();
       }
     }
     if (children) {
@@ -140,36 +140,43 @@ export class UIRectangleNodeButton<
 }
 let currentTabIndex = 1;
 
-export type UIRectangleNodeHoverProps = UIRectangleNodeProps & {
-  tabIndex?: number;
-};
+export const UIRectangleNodeHovers = new Set<UIRectangleNodeHover>();
 
 export class UIRectangleNodeHover<
   S extends UIRectangleNodeState = UIRectangleNodeState,
-> extends UIRectangleNodeButton<S, UIRectangleNodeHoverProps> {
-  changeTabIndex = (tabIndex: number) => {
-    this.setState({
-      ...this.state,
-      bitmap:
-        this.props.tabIndex === tabIndex ? buttonTextureHover : buttonTexture,
-    });
+> extends UIRectangleNodeButton<S, UIRectangleNodeProps> {
+  changeTabIndex = (element?: UIRectangleNodeHover) => {
+    if (element !== this && this.state.bitmap === buttonTextureHover) {
+      this.setState({
+        ...this.state,
+        bitmap: buttonTexture,
+      });
+    } else if (element === this && this.state.bitmap === buttonTexture) {
+      this.setState({
+        ...this.state,
+        bitmap: buttonTextureHover,
+      });
+    }
   };
-  constructor(props: UIRectangleNodeHoverProps) {
-    props.tabIndex = props.tabIndex ?? currentTabIndex++;
+  tabIndex = currentTabIndex++;
+  constructor(props: UIRectangleNodeProps) {
     props.events = {
       ...props.events,
       onPointerEnter: () => {
-        engine.setTabIndex(props.tabIndex!);
+        engine.setTabIndex(this);
       },
       onPointerLeave: () => {
-        engine.setTabIndex(0);
+        engine.setTabIndex();
       },
     };
     super(props);
+    UIRectangleNodeHovers.add(this);
+
     engine.getTabIndex(this.changeTabIndex);
   }
   override destroy() {
     engine.TabIndexSubscribions.delete(this.changeTabIndex);
+    UIRectangleNodeHovers.delete(this);
     super.destroy();
   }
 }

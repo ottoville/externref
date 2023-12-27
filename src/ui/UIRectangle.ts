@@ -181,8 +181,8 @@ export abstract class UIRectangle<
   abstract createTexture(): TextureView<
     Texture<GPUTextureFormat, TextureUsageEnums, Texture2dSize>
   >;
-  protected updatePosition(buffer: ArrayBuffer) {
-    const b = new Float32Array(buffer);
+  screenPosition = new Float32Array(2);
+  protected updatePosition() {
     if (this.props.translate.x.value[1] === NumericUnit['%']) {
       var XPosition = this.props.translate.x.value[0];
     } else {
@@ -196,7 +196,7 @@ export abstract class UIRectangle<
     } else if (this.props.translate.x.anchor === Anchor.LEFT) {
       XPosition = XPosition - 1;
     }
-    b[0] = XPosition;
+    this.screenPosition[0] = XPosition;
     if (this.props.translate.y.value[1] === NumericUnit['%']) {
       var YPosition = this.props.translate.y.value[0];
     } else {
@@ -210,7 +210,7 @@ export abstract class UIRectangle<
     } else if (this.props.translate.y.anchor === Anchor.BOTTOM) {
       YPosition = YPosition - 1;
     }
-    b[1] = YPosition;
+    this.screenPosition[1] = YPosition;
   }
   #updateBoundingBoxAndVerticesSuper() {
     const { scale, renderPass, originalAspectRatio, translate } = this.props;
@@ -218,9 +218,8 @@ export abstract class UIRectangle<
       this.props.translate.x.value[1] === NumericUnit.px ||
       this.props.translate.y.value[1] === NumericUnit.px
     ) {
-      const buff = new ArrayBuffer(8);
-      this.updatePosition(buff);
-      this.uniformBuffer.write(0, buff);
+      this.updatePosition();
+      this.uniformBuffer.write(0, this.screenPosition);
     }
     let widthPixels: number;
     if (scale.unit === NumericUnit['%']) {
@@ -382,7 +381,8 @@ export abstract class UIRectangle<
         usages: BufferUsageEnums['UNIFORM|COPY_DST'],
       },
       (buff) => {
-        this.updatePosition(buff.getMappedRange());
+        this.updatePosition();
+        new Float32Array(buff.getMappedRange()).set(this.screenPosition);
       },
     );
     if (events) {
