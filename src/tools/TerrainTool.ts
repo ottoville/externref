@@ -17,8 +17,8 @@ import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import {
   UIRectangleNodeState,
-  type UIRectangleNodeProps,
   UIRectangleNodeHover,
+  type UIRectangleNodeHoverProps,
 } from '../ui/UIRectangleNode.js';
 import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
 declare const engine: Engine;
@@ -76,8 +76,8 @@ const raiseButtonProps = Button({
 });
 
 export class TerrainToolButton extends UIRectangleNodeHover<TerrainToolButtonState> {
-  #wasOpen = false;
-  constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
+  private wasOpen = false;
+  constructor(override props: UIRectangleNodeHoverProps & TopMenuButtonProps) {
     super(props);
     this.state = {
       ...this.state,
@@ -115,8 +115,8 @@ export class TerrainToolButton extends UIRectangleNodeHover<TerrainToolButtonSta
       this.props.menuTree.level = 2;
     }
     if (this.props.open) {
-      if (!this.#wasOpen) {
-        this.#wasOpen = true;
+      if (!this.wasOpen) {
+        this.wasOpen = true;
         this.#tool = new TerrainTool(this.props.terrain);
       }
       engine.addInputListener(this.#inputListener);
@@ -162,8 +162,8 @@ export class TerrainToolButton extends UIRectangleNodeHover<TerrainToolButtonSta
           }),
         ),
       ];
-    } else if (!this.props.open && this.#wasOpen) {
-      this.#wasOpen = false;
+    } else if (!this.props.open && this.wasOpen) {
+      this.wasOpen = false;
       this.#tool?.destroy();
       engine.removeInputListener(this.#inputListener);
     }

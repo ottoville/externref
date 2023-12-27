@@ -17,27 +17,33 @@ export abstract class UINode<
   S extends object = object,
 > {
   #children: (UINode | null)[] = [];
-  //@ts-expect-error
-  state: Readonly<S> = {};
-  #currentGPU!: GPU;
+  /**
+   * Undefined on first render
+   */
+  #currentGPU: GPU | undefined = undefined;
   protected setState(state: Partial<S>) {
     this.state = {
       ...this.state,
       ...state,
     };
-    this.#requestRender(this.#currentGPU);
+    engine.getGPU(this.#requestRender, true);
   }
   abstract render(
     gpu: GPU,
     force: boolean, // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): readonly (CtrProps<{ new (...args: any[]): UINode }> | null)[] | null;
   oldProps: object = {};
-  constructor(public props: Readonly<P>) {
+  constructor(
+    public props: Readonly<P>,
+    //@ts-expect-error
+    public state: Readonly<S> = {},
+  ) {
     for (const key in props) {
       //@ts-expect-error
       this.oldProps[key] = props[key];
     }
     // Render after child constructor has been executed, to avoid error
+    // Some properties of child class is not initialized yet because their constructor has not been run
     // "Cannot read private member #instance from an object whose class did not declare it"
     queueMicrotask(() => {
       engine.getGPU(this.#requestRender);
@@ -50,7 +56,10 @@ export abstract class UINode<
     });
   }
   #requestRender = (gpu: GPU) => {
-    const output = this.render(gpu, gpu !== this.#currentGPU);
+    const output = this.render(
+      gpu,
+      gpu !== this.#currentGPU && this.#currentGPU !== undefined,
+    );
     this.#currentGPU = gpu;
 
     if (output) {
@@ -89,6 +98,7 @@ export abstract class UINode<
               }
               instance.destroy();
             }
+            console.debug('create UINode', props.text);
             return new ctr(props);
           } else if (instance) {
             instance.destroy();

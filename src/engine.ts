@@ -450,11 +450,21 @@ export class Engine {
   canvas?: HTMLCanvasElement;
   devTools?: HTMLElement;
   GPUSubscribions: Set<(gpu: GPU) => void> = new Set();
+  TabIndexSubscribions: Set<(tabIndex: number) => void> = new Set();
   GPUSubscribionsOnce: Set<(gpu: GPU) => void> = new Set();
   getGPU(cb: (gpu: GPU) => void, once = false) {
     if (once) this.GPUSubscribionsOnce.add(cb);
     else this.GPUSubscribions.add(cb);
     if (this.gpu) cb(this.gpu);
+  }
+  #tabIndex = 0;
+  getTabIndex(cb: (tabIndex: number) => void) {
+    this.TabIndexSubscribions.add(cb);
+    cb(this.#tabIndex);
+  }
+  setTabIndex(tabIndex: number) {
+    this.#tabIndex = tabIndex;
+    this.TabIndexSubscribions.forEach((cb) => cb(tabIndex));
   }
   static async initEngine(
     nodes:

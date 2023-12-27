@@ -10,7 +10,7 @@ import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import {
   UIRectangleNodeHover,
-  type UIRectangleNodeProps,
+  type UIRectangleNodeHoverProps,
 } from '../ui/UIRectangleNode.js';
 import {
   type RenderTargetTexture,
@@ -52,8 +52,8 @@ export class Zones extends UIRectangleNodeHover {
     (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC']
   >;
   scene: Scene;
-  #wasOpen = false;
-  constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
+  private wasOpen = false;
+  constructor(override props: UIRectangleNodeHoverProps & TopMenuButtonProps) {
     super(props);
     const initialScene = props.terrain.scenes[0];
     if (!initialScene) {
@@ -91,8 +91,8 @@ export class Zones extends UIRectangleNodeHover {
   }
   override render(gpu: GPU, force: boolean) {
     super.render(gpu, force);
-    if (this.props.open && !this.#wasOpen) {
-      this.#wasOpen = true;
+    if (this.props.open && !this.wasOpen) {
+      this.wasOpen = true;
       this.#zoneTexture = new Texture({
         format: 'rgba8unorm',
         gpu: engine.gpu!.device,
@@ -180,14 +180,14 @@ export class Zones extends UIRectangleNodeHover {
         ),
       ];
     }
-    if (!this.props.open && this.#wasOpen) {
+    if (!this.props.open && this.wasOpen) {
       this.props.terrain.mesh.set_scenes(this.scene.id);
       this.props.terrain.mesh.drawable?.setTexture(
         new TextureView(this.props.terrain.texture),
       );
       this.#zoneTexture?.destroy();
       this.#PT?.destroy();
-      this.#wasOpen = false;
+      this.wasOpen = false;
       engine.clearInputListeners(this);
     }
     return null;

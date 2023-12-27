@@ -89,10 +89,9 @@ export class createTopMenu extends UINode<
   MenuState
 > {
   constructor(props: { gpu: GPU; terrain: Terrain }) {
-    super(props);
-    this.state = {
+    super(props, {
       menuOpenName: undefined,
-    };
+    });
     engine.addInputListener(this.#inputListener);
   }
   menuTree = {

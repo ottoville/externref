@@ -31,23 +31,10 @@ export class UIRectangleNode<
   S extends UIRectangleNodeState = UIRectangleNodeState,
   P extends UIRectangleNodeProps = UIRectangleNodeProps,
 > extends UINode<P, S> {
-  static instances: Map<UINode, UIRectangleNode> = new Map();
-  static getInstance<P extends UIRectangleNodeProps>(
-    host: UINode,
-    props: P,
-  ): UIRectangleNode {
-    let instance = UIRectangleNode.instances.get(host);
-    if (!instance) {
-      instance = new UIRectangleNode(props);
-      UIRectangleNode.instances.set(host, instance);
-    }
-    return instance;
-  }
-  constructor(props: P) {
-    super(props);
-    this.state = { ...this.state, bitmap: props.bitmap };
-  }
   #instance?: UIRectangle | undefined;
+  constructor(props: P) {
+    super(props, { bitmap: props.bitmap } as Readonly<S>);
+  }
   destroyInstance() {
     if (this.#instance) {
       if (this.#instance instanceof UIRectangle) {
@@ -85,6 +72,8 @@ export class UIRectangleNode<
       }
     }
     if (!this.#instance) {
+      if (this.props.text === 'Zones (3)')
+        console.log('create instance', this.props.text);
       if (bitmap) {
         if (bitmap instanceof ImageBitmap) {
           this.#instance = new UIRectangleBackground(
@@ -142,31 +131,45 @@ const buttonTextureHover = await fetch('/assets/button_hover.webp')
 
 export class UIRectangleNodeButton<
   S extends UIRectangleNodeState = UIRectangleNodeState,
-> extends UIRectangleNode<S, UIRectangleNodeProps> {
-  constructor(props: UIRectangleNodeProps) {
+  P extends UIRectangleNodeProps = UIRectangleNodeProps,
+> extends UIRectangleNode<S, P> {
+  constructor(props: P) {
     props.bitmap = buttonTexture;
     super(props);
   }
 }
+let currentTabIndex = 1;
+
+export type UIRectangleNodeHoverProps = UIRectangleNodeProps & {
+  tabIndex?: number;
+};
+
 export class UIRectangleNodeHover<
   S extends UIRectangleNodeState = UIRectangleNodeState,
-> extends UIRectangleNodeButton<S> {
-  constructor(props: UIRectangleNodeProps) {
+> extends UIRectangleNodeButton<S, UIRectangleNodeHoverProps> {
+  changeTabIndex = (tabIndex: number) => {
+    this.setState({
+      ...this.state,
+      bitmap:
+        this.props.tabIndex === tabIndex ? buttonTextureHover : buttonTexture,
+    });
+  };
+  constructor(props: UIRectangleNodeHoverProps) {
+    props.tabIndex = props.tabIndex ?? currentTabIndex++;
     props.events = {
       ...props.events,
       onPointerEnter: () => {
-        this.setState({
-          ...this.state,
-          bitmap: buttonTextureHover,
-        });
+        engine.setTabIndex(props.tabIndex!);
       },
       onPointerLeave: () => {
-        this.setState({
-          ...this.state,
-          bitmap: buttonTexture,
-        });
+        engine.setTabIndex(0);
       },
     };
     super(props);
+    engine.getTabIndex(this.changeTabIndex);
+  }
+  override destroy() {
+    engine.TabIndexSubscribions.delete(this.changeTabIndex);
+    super.destroy();
   }
 }

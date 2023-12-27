@@ -11,10 +11,12 @@ type MenuState = {
 // eslint-disable-next-line @typescript-eslint/ban-types
 export class CreateFPSMeter extends UINode<{}, MenuState> {
   constructor() {
-    super({});
-    this.state = {
-      fps: 0,
-    };
+    super(
+      {},
+      {
+        fps: 0,
+      },
+    );
     window.setInterval(() => {
       this.setState({
         fps: engine.gpu?.fps ?? 0,

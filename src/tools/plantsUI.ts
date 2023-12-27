@@ -9,7 +9,7 @@ import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
 import {
   UIRectangleNodeHover,
-  type UIRectangleNodeProps,
+  type UIRectangleNodeHoverProps,
 } from '../ui/UIRectangleNode.js';
 declare const engine: Engine;
 
@@ -40,7 +40,7 @@ export class PlantsUI extends UIRectangleNodeHover {
   static plantsMesh: Plants;
   private PT: paintPlane | null = null;
   scene = engine.scenes.get('main');
-  constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
+  constructor(override props: UIRectangleNodeHoverProps & TopMenuButtonProps) {
     super(props);
 
     if (!this.scene) {
@@ -56,11 +56,11 @@ export class PlantsUI extends UIRectangleNodeHover {
     object: this,
     type: 'keydown',
   };
-  #wasOpen = false;
+  private wasOpen = false;
   override render(gpu: GPU, force: boolean) {
     super.render(gpu, force);
     if (this.props.open) {
-      this.#wasOpen = true;
+      this.wasOpen = true;
       engine.addInputListener(this.#inputListener);
       return [
         UI(
@@ -80,8 +80,8 @@ export class PlantsUI extends UIRectangleNodeHover {
           }),
         ),
       ];
-    } else if (this.#wasOpen) {
-      this.#wasOpen = false;
+    } else if (this.wasOpen) {
+      this.wasOpen = false;
       this.PT?.destroy();
       engine.clearInputListeners(this);
     }

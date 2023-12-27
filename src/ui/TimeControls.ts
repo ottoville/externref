@@ -183,10 +183,12 @@ const fastForward4Props = Button({
 // eslint-disable-next-line @typescript-eslint/ban-types
 export class createTimeControls extends UINode<{}, MenuState> {
   constructor() {
-    super({});
-    this.state = {
-      timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString(),
-    };
+    super(
+      {},
+      {
+        timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString(),
+      },
+    );
     setInterval(() => {
       this.setState({
         timeOfDay: new Date(engine.physics.tickTime * 1000).toUTCString(),
@@ -202,7 +204,7 @@ export class createTimeControls extends UINode<{}, MenuState> {
           text: 'Time of day ' + this.state.timeOfDay,
         }),
       ),
-      UI(UIRectangleNodeHover, pauseProps),
+      UI(UIRectangleNodeHover, { ...pauseProps }),
       UI(UIRectangleNodeHover, playProps),
       UI(UIRectangleNodeHover, fastForwardProps),
       UI(UIRectangleNodeHover, fastForward1Props),
