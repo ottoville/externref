@@ -17,10 +17,10 @@ import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import {
   type UIRectangleNodeState,
-  UIRectangleNodeHover,
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
+import { UIRectangleNodeHover } from '../ui/UIRectangleNodeHover.js';
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');

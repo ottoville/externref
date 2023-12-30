@@ -15,10 +15,7 @@ import {
   Ellipsoid,
 } from './nodes/DataNode.js';
 import type { CameraController } from './controllers/CameraController.js';
-import {
-  UIRectangleNodeHover,
-  UIRectangleNodeHovers,
-} from './ui/UIRectangleNode.js';
+import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 
 const textDecoder = new TextDecoder();
 
@@ -462,13 +459,13 @@ export class Engine {
     else this.GPUSubscribions.add(cb);
     if (this.gpu) cb(this.gpu);
   }
-  #tabElement: UIRectangleNodeHover | undefined = undefined;
+  tabElement: UIRectangleNodeHover | undefined = undefined;
   getTabIndex(cb: (element?: UIRectangleNodeHover) => void) {
     this.TabIndexSubscribions.add(cb);
-    cb(this.#tabElement);
+    cb(this.tabElement);
   }
   setTabIndex(element?: UIRectangleNodeHover) {
-    this.#tabElement = element;
+    this.tabElement = element;
     this.TabIndexSubscribions.forEach((cb) => cb(element));
   }
   static async initEngine(
@@ -841,52 +838,6 @@ export class Engine {
     this.mainCamera = new TerraCamera('mainCamera', 'renderPassScreen');
 
     if (nodes?.canvas) {
-      nodes.canvas.ownerDocument.addEventListener('keyup', (evt) => {
-        if (this.#tabElement && this.#tabElement.instance) {
-          let vec1: [number, number] = [0, 0];
-          if (evt.key === 'ArrowDown') {
-            vec1 = [0, -1];
-          } else if (evt.key === 'ArrowUp') {
-            vec1 = [0, 1];
-          } else if (evt.key === 'ArrowLeft') {
-            vec1 = [-1, 0];
-          } else if (evt.key === 'ArrowRight') {
-            vec1 = [1, 0];
-          } else if (evt.key === 'Enter') {
-            if (this.#tabElement.props.events?.onClick) {
-              this.#tabElement.props.events?.onClick();
-            }
-            return;
-          } else {
-            return;
-          }
-          const currentCoord = this.#tabElement.instance.screenPosition;
-          let smallestLength: [number, UIRectangleNodeHover] | undefined =
-            undefined;
-          UIRectangleNodeHovers.forEach((node) => {
-            if (node === this.#tabElement || !node.instance) return;
-            const vec2: [number, number] = [
-              node.instance.screenPosition[0]! - currentCoord[0]!,
-              node.instance.screenPosition[1]! - currentCoord[1]!,
-            ];
-            const len = Math.sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]);
-            vec2[0] = vec2[0] / len;
-            vec2[1] = vec2[1] / len;
-            const dot = vec1[0] * vec2[0] + vec1[1] * vec2[1];
-
-            if (dot < 0.5) return;
-            const weightedLen = len / dot;
-            if (smallestLength) {
-              if (weightedLen < smallestLength[0]) {
-                smallestLength = [weightedLen, node];
-              }
-            } else {
-              smallestLength = [weightedLen, node];
-            }
-          });
-          if (smallestLength) this.setTabIndex(smallestLength[1]);
-        }
-      });
       (
         [
           'pointerup',

@@ -7,10 +7,8 @@ import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
 import type { TopMenuButtonProps } from '../ui/topMenu.js';
 import { Button } from '../ui/Button.js';
-import {
-  UIRectangleNodeHover,
-  type UIRectangleNodeProps,
-} from '../ui/UIRectangleNode.js';
+import { type UIRectangleNodeProps } from '../ui/UIRectangleNode.js';
+import { UIRectangleNodeHover } from '../ui/UIRectangleNodeHover.js';
 declare const engine: Engine;
 
 const buttonProps = Button({

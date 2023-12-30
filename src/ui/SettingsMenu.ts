@@ -2,7 +2,7 @@ import { UI, UINode } from './UINode.js';
 import { Anchor, NumericUnit } from './UIRectangle.js';
 import { Button } from './Button.js';
 import type { Engine } from '../engine.js';
-import { UIRectangleNodeHover } from './UIRectangleNode.js';
+import { UIRectangleNodeHover } from './UIRectangleNodeHover.js';
 declare const engine: Engine;
 
 const scale = {

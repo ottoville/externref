@@ -70,8 +70,6 @@ export class UIRectangleNode<
       }
     }
     if (!this.instance) {
-      if (this.props.text === 'Zones (3)')
-        console.log('create instance', this.props.text);
       if (bitmap) {
         if (bitmap instanceof ImageBitmap) {
           this.instance = new UIRectangleBackground(
@@ -120,10 +118,7 @@ export class UIRectangleNode<
     return null;
   }
 }
-const buttonTexture = await fetch('/assets/button.webp')
-  .then((asset) => asset.blob())
-  .then(createImageBitmap);
-const buttonTextureHover = await fetch('/assets/button_hover.webp')
+export const buttonTexture = await fetch('/assets/button.webp')
   .then((asset) => asset.blob())
   .then(createImageBitmap);
 
@@ -134,47 +129,5 @@ export class UIRectangleNodeButton<
   constructor(props: P) {
     props.bitmap = buttonTexture;
     super(props);
-  }
-}
-let currentTabIndex = 1;
-
-export const UIRectangleNodeHovers = new Set<UIRectangleNodeHover>();
-
-export class UIRectangleNodeHover<
-  S extends UIRectangleNodeState = UIRectangleNodeState,
-> extends UIRectangleNodeButton<S, UIRectangleNodeProps> {
-  changeTabIndex = (element?: UIRectangleNodeHover) => {
-    if (element !== this && this.state.bitmap === buttonTextureHover) {
-      this.setState({
-        ...this.state,
-        bitmap: buttonTexture,
-      });
-    } else if (element === this && this.state.bitmap === buttonTexture) {
-      this.setState({
-        ...this.state,
-        bitmap: buttonTextureHover,
-      });
-    }
-  };
-  tabIndex = currentTabIndex++;
-  constructor(props: UIRectangleNodeProps) {
-    props.events = {
-      ...props.events,
-      onPointerEnter: () => {
-        engine.setTabIndex(this);
-      },
-      onPointerLeave: () => {
-        engine.setTabIndex();
-      },
-    };
-    super(props);
-    UIRectangleNodeHovers.add(this);
-
-    engine.getTabIndex(this.changeTabIndex);
-  }
-  override destroy() {
-    engine.TabIndexSubscribions.delete(this.changeTabIndex);
-    UIRectangleNodeHovers.delete(this);
-    super.destroy();
   }
 }
