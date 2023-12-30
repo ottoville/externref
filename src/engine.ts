@@ -852,6 +852,11 @@ export class Engine {
             vec1 = [-1, 0];
           } else if (evt.key === 'ArrowRight') {
             vec1 = [1, 0];
+          } else if (evt.key === 'Enter') {
+            if (this.#tabElement.props.events?.onClick) {
+              this.#tabElement.props.events?.onClick();
+            }
+            return;
           } else {
             return;
           }
@@ -904,31 +909,22 @@ export class Engine {
             ) {
               return;
             }
-            const UIEvents = [...this.#inputMaps[eventType]].filter(
-              (eventObj) => eventObj.options?.ui,
-            );
-            let cancelled = false;
-            for (let i = 0; i < UIEvents.length; i++) {
-              if (!cancelled || UIEvents[i]!.options?.force) {
-                if (UIEvents[i]!.options?.once) {
+            /**
+             * Iterate UI events first, then other events.
+             */
+            for (let i = 0, cancelled = false; i < 2; i++) {
+              for (const eventObj of this.#inputMaps[eventType]) {
+                if (
+                  (eventObj.options?.ui ?? false === !i) &&
+                  (!cancelled || eventObj.options?.force)
+                ) {
+                  if (eventObj.options?.once) {
+                    //@ts-expect-error
+                    this.#inputMaps[eventType].delete(eventObj);
+                  }
                   //@ts-expect-error
-                  this.#inputMaps[eventType].delete(UIEvents[i]!);
+                  cancelled = (eventObj.cb(e) ?? false) || cancelled;
                 }
-                //@ts-expect-error
-                cancelled = (UIEvents[i]!.cb(e) ?? false) || cancelled;
-              }
-            }
-            const OtherEvents = [...this.#inputMaps[eventType]].filter(
-              (eventObj) => !eventObj.options?.ui,
-            );
-            for (let i = 0; i < OtherEvents.length; i++) {
-              if (!cancelled || OtherEvents[i]!.options?.force) {
-                if (OtherEvents[i]!.options?.once) {
-                  //@ts-expect-error
-                  this.#inputMaps[eventType].delete(OtherEvents[i]!);
-                }
-                //@ts-expect-error
-                cancelled = (OtherEvents[i]!.cb(e) ?? false) || cancelled;
               }
             }
           },

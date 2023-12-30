@@ -72,7 +72,11 @@ export class createSettingsMenu extends UINode {
     );
   }
   constructor() {
-    super({});
+    super({
+      onMounted: () => {
+        engine.setTabIndex(this.children[0] as UIRectangleNodeHover);
+      },
+    });
   }
   render() {
     return [

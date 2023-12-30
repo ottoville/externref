@@ -2,10 +2,16 @@ import type { GPU } from '../GPU.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
-type CtrProps<C extends typeof UINode<object> = typeof UINode<object>> =
-  readonly [ctr: C, props: ConstructorParameters<C>[0]];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type NodeProps = { [index: string]: any; onMounted?: () => void };
 
-export function UI<P extends object, C extends typeof UINode<P>>(
+type CtrProps<
+  C extends typeof UINode<NodeProps> = typeof UINode<{
+    onMounted: () => void;
+  }>,
+> = readonly [ctr: C, props: ConstructorParameters<C>[0]];
+
+export function UI<P extends NodeProps, C extends typeof UINode<P>>(
   ctr: C,
   props: ConstructorParameters<C>[0],
 ) {
@@ -13,10 +19,10 @@ export function UI<P extends object, C extends typeof UINode<P>>(
 }
 
 export abstract class UINode<
-  P extends object = object,
+  P extends NodeProps = NodeProps,
   S extends object = object,
 > {
-  #children: (UINode | null)[] = [];
+  protected children: (UINode | null)[] = [];
   /**
    * Undefined on first render
    */
@@ -51,7 +57,7 @@ export abstract class UINode<
   }
   destroy() {
     engine.GPUSubscribions.delete(this.#requestRender);
-    this.#children.forEach((c) => {
+    this.children.forEach((c) => {
       c?.destroy();
     });
   }
@@ -63,13 +69,13 @@ export abstract class UINode<
     this.#currentGPU = gpu;
 
     if (output) {
-      if (this.#children.length > output.length) {
-        for (let i = output.length; i < this.#children.length; i++) {
-          this.#children[i]?.destroy();
+      if (this.children.length > output.length) {
+        for (let i = output.length; i < this.children.length; i++) {
+          this.children[i]?.destroy();
         }
       }
-      this.#children = output.map((child, i) => {
-        const instance = this.#children[i];
+      this.children = output.map((child, i) => {
+        const instance = this.children[i];
         if (child) {
           const [ctr, props] = child;
 
@@ -107,10 +113,13 @@ export abstract class UINode<
         return null;
       });
     } else {
-      this.#children.forEach((c) => {
+      this.children.forEach((c) => {
         c?.destroy();
       });
-      this.#children.length = 0;
+      this.children.length = 0;
+    }
+    if (this.props.onMounted) {
+      this.props.onMounted();
     }
   };
 }

@@ -139,7 +139,7 @@ export class createTopMenu extends UINode<
           ...commonProps,
           events: {
             ...plantsButton.events,
-            onClick: this.setActiveMenu,
+            onClick: () => this.setActiveMenu('Plants'),
           },
           open: this.state.menuOpenName === 'Plants',
         }),
@@ -150,7 +150,7 @@ export class createTopMenu extends UINode<
           ...commonProps,
           events: {
             ...terrainButton.events,
-            onClick: this.setActiveMenu,
+            onClick: () => this.setActiveMenu('Terrain'),
           },
           open: this.state.menuOpenName === 'Terrain',
         }),
@@ -161,7 +161,7 @@ export class createTopMenu extends UINode<
           ...commonProps,
           events: {
             ...zonesProps.events,
-            onClick: this.setActiveMenu,
+            onClick: () => this.setActiveMenu('Zones'),
           },
           open: this.state.menuOpenName === 'Zones',
         }),
@@ -172,7 +172,7 @@ export class createTopMenu extends UINode<
     });
     return menus;
   }
-  setActiveMenu = (menuName?: string) => {
+  setActiveMenu = (menuName: string) => {
     this.setState({
       menuOpenName: this.state.menuOpenName === menuName ? undefined : menuName,
     });

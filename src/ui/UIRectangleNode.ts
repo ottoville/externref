@@ -6,17 +6,15 @@ import type { GPU } from '../GPU.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
-type MenuEvent = (menuName?: string) => void;
-
 export type UIRectangleNodeProps = {
   UIRectangleProps: Omit<UIRectangleProps, 'canvaspipeline' | 'renderPass'>;
   bitmap?: ImageBitmap | undefined;
   text: string;
   events?:
     | {
-        onClick?: MenuEvent;
-        onPointerEnter?: MenuEvent;
-        onPointerLeave?: MenuEvent;
+        onClick?: () => void;
+        onPointerEnter?: () => void;
+        onPointerLeave?: () => void;
       }
     | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,7 +65,7 @@ export class UIRectangleNode<
         //@ts-expect-error
         commonProps.events[event] = () => {
           //@ts-expect-error
-          this.props.events[event](this.props.UIRectangleProps.label);
+          this.props.events[event]();
         };
       }
     }
