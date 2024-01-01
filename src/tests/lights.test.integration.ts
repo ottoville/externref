@@ -66,12 +66,15 @@ describe('Lights ', function () {
         setTimeout(res, 500);
       });
       const renderTarget =
-        engine.gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse
-          .resolveTexture!;
+        engine.gpu!.renderPassScreen.props.colorRenderTargets
+          .gRenderTargetDiffuse.resolveTexture!;
 
-      const data = await renderTarget.toBitmap();
+      const data = await renderTarget.renderTarget.texture.toBitmap();
+      const bytes_per_pixel = renderTarget.renderTarget.texture.bytes_per_fixel;
+
       let bytesPerRow =
-        renderTarget.props.size.width * renderTarget.bytes_per_fixel;
+        renderTarget.renderTarget.texture.props.size.width *
+        bytes_per_pixel;
       const missAlignment = bytesPerRow % 256;
 
       if (missAlignment !== 0) {
@@ -80,12 +83,12 @@ describe('Lights ', function () {
       return [
         new Uint8ClampedArray(
           data.buffer,
-          bytesPerRow * 300 + 300 * renderTarget.bytes_per_fixel,
+          bytesPerRow * 300 + 300 * bytes_per_pixel,
           4,
         ),
         new Uint8ClampedArray(
           data.buffer,
-          bytesPerRow * 300 + 500 * renderTarget.bytes_per_fixel,
+          bytesPerRow * 300 + 500 * bytes_per_pixel,
           4,
         ),
       ] as const;
