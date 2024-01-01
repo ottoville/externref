@@ -332,10 +332,10 @@ TODO
 
       const cache = await cacheP;
       cache.put(new Request('/terrain'), response).catch((err) => {
-        engine.showError(err);
+        engine.showError(err, this.gpu);
       });
       cache.put(new Request('/indices'), response2).catch((err) => {
-        engine.showError(err);
+        engine.showError(err, this.gpu);
       });
     } else {
       /* const c = new OffscreenCanvas((Terrain.subdivisions[0] + 1) * 3, (Terrain.subdivisions[1] + 1));
@@ -594,7 +594,7 @@ TODO
               ]);
             })
             .catch((err) => {
-              engine.showError(err);
+              engine.showError(err, gpu);
             });
         }
 
@@ -610,7 +610,7 @@ TODO
             this.mesh.faces = new Float32Array(buff);
           })
           .catch((err) => {
-            engine.showError(err);
+            engine.showError(err, gpu);
           });
         gpuReadBufferPositions
           .readAndDestroy((readbuff) => {
@@ -622,12 +622,12 @@ TODO
               );
               this.updateSwap2(0, readbuff.byteLength, true);
               this.#serialize().catch((err) => {
-                engine.showError(err);
+                engine.showError(err, this.gpu);
               });
             });
           })
           .catch((err) => {
-            engine.showError(err);
+            engine.showError(err, gpu);
           });
       })
       .catch((err) => engine.showError(err, gpu));

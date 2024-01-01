@@ -651,6 +651,7 @@ export class Engine {
   showError(e: unknown, gpu?: GPU) {
     if (e instanceof Error) {
       if (
+        gpu?.destroyed ||
         (e.message.includes('Device') && e.message.includes('is lost')) ||
         (e.cause instanceof Error &&
           e.cause.message.includes('Device') &&

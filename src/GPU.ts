@@ -808,7 +808,7 @@ export class GPU {
             this.#renderLoop(time, updateViewPipeline),
           );
         } catch (e) {
-          engine.showError(e);
+          engine.showError(e, this);
         }
       }, 500);
     });

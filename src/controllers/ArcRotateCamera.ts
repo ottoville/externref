@@ -79,10 +79,12 @@ export class ArcRotateCamera extends CameraController {
    */
   #inertialBetaOffset = 0;
   #collisionTriggered = false;
+
   #target = new MutableTerraVector3([100, 0, 1000]);
   #alpha = 0;
   #beta = 0;
   #radius = 10;
+
   constructor(
     private camera: TerraCamera,
     initial = false,
@@ -92,20 +94,31 @@ export class ArcRotateCamera extends CameraController {
       engine.DB.transaction('save')
         .objectStore('save')
         .get(['camera', 'ArchRotateCamera']).onsuccess = (evt) => {
-        if ((evt.target as IDBRequest).result) {
-          const restored = (evt.target as IDBRequest).result.data as
-            | serialized
-            | undefined;
-          if (restored) {
-            this.#alpha = restored.alpha;
-            this.#beta = restored.beta;
-            this.#radius = restored.radius;
-            this.#target.set(restored.target);
-            this.cameraControl?.updatePosition((position) => {
-              position.set(restored.position);
-            });
-            this.#calculateDirection();
-          }
+        const result = (
+          evt.target as IDBRequest<{
+            data: serialized;
+            name: string;
+            type: string;
+          }>
+        ).result;
+        if (result) {
+          this.#alpha = result.data.alpha;
+          this.#beta = result.data.beta;
+          this.#radius = result.data.radius;
+          this.#target.set(result.data.target);
+          this.cameraControl?.updatePosition((position) => {
+            position.set(result.data.position);
+          });
+          this.#calculateDirection();
+        } else {
+          // Use these default values for camera when there are no existing save
+          this.#alpha = 0.4614110368395256;
+          this.#beta = 1.4816457152012938;
+          this.#radius = 457.55058783756886;
+          this.cameraControl?.updatePosition((position) => {
+            position.set([952.791, 299.464, 587.233]);
+          });
+          this.#target.set([544.716, 258.727, 384.335]);
         }
       };
     } else {
