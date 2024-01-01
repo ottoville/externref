@@ -2,7 +2,7 @@ import type { Engine } from '../../engine.js';
 
 describe('open menu', () => {
   it('tests open menu', () => {
-    cy.viewport(1280, 219);
+    cy.viewport(1280, 319);
     cy.visit('https://localhost:4280/');
     cy.get('button').click();
     cy.get('canvas', {

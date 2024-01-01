@@ -359,3 +359,4 @@ healthchecksdb
 src/cypress/screenshots
 src/cypress/e2e/__image_snapshots__/*.diff.png
 
+src/cypress/downloads
