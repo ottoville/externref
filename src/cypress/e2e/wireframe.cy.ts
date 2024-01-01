@@ -2,7 +2,7 @@ import type { Engine } from '../../engine';
 
 describe('wireframe', () => {
   it('tests wireframe', () => {
-    cy.viewport(1280, 319);
+    cy.viewport(900, 319);
     cy.visit('https://localhost:4280/');
     cy.get('button').click();
     cy.get('canvas', {
@@ -31,7 +31,7 @@ describe('wireframe', () => {
 
         cy.get('li:nth-of-type(7) li').click();
         cy.get('button:nth-of-type(2)').click();
-        cy.wait(3000).then(() => {
+        cy.wait(4000).then(() => {
           cy.get('canvas').matchImage();
         });
       });

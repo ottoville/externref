@@ -2,7 +2,7 @@ import type { Engine } from '../../engine.js';
 
 describe('open menu', () => {
   it('tests open menu', () => {
-    cy.viewport(1280, 319);
+    cy.viewport(900, 319);
     cy.visit('https://localhost:4280/');
     cy.get('button').click();
     cy.get('canvas', {
@@ -34,7 +34,7 @@ describe('open menu', () => {
         });
       });
     // eslint-disable-next-line promise/catch-or-return
-    cy.wait(4000).then(() => {
+    cy.wait(5000).then(() => {
       cy.get('canvas').matchImage();
     });
   });
