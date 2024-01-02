@@ -484,7 +484,7 @@ export class Engine {
     let DB: Promise<EarthDatabase> | undefined = undefined;
     if (typeof indexedDB === 'object') {
       DB = new Promise<EarthDatabase>(function (res) {
-        var IDB = indexedDB.open('City', 6);
+        var IDB = indexedDB.open('TerraSim', 6);
         IDB.onerror = function (e) {
           showError(createError(e));
         };
