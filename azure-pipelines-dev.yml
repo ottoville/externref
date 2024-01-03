@@ -14,7 +14,7 @@ jobs:
   displayName: Agent job 1
   timeoutInMinutes: 0
   pool:
-    vmImage: ubuntu-20.04
+    vmImage: ubuntu-22.04
   steps:
   - checkout: self
     submodules: true
@@ -31,7 +31,7 @@ jobs:
       command: custom
       workingDir: src
       verbose: false
-      customCommand: ci --omit dev
+      customCommand: ci
   - task: Rustup@1
     displayName: Rustup
     inputs:
@@ -42,7 +42,7 @@ jobs:
       command: custom
       workingDir: src
       verbose: false
-      customCommand: run build-prod
+      customCommand: run build
   - task: AzureStaticWebApp@0
     displayName: 'Static Web App: '
     inputs:
@@ -51,4 +51,57 @@ jobs:
       verbose: false
       azure_static_web_apps_api_token: 2aef2b5c97599f9114259a5b48deeca2588934fdb83cf50b591444ef8b10206e1-eb01d464-e4f3-4b9f-822c-960472154ecb00363827
       deployment_environment: $(Build.SourceBranchName)
+#  - task: Bash@3
+#    displayName: 'Install chrome unstable'
+#    inputs:
+#      targetType: 'inline'
+#      script: |
+#        wget https://dl.google.com/linux/direct/google-chrome-unstable_current_amd64.deb
+#        sudo apt install ./google-chrome-unstable_current_amd64.deb
+#        alias google-chrome='google-chrome-unstable'
+#  - task: Npm@1
+#    displayName: test
+#    inputs:
+#      command: custom
+#      workingDir: src
+#      verbose: false
+#      customCommand: run test-cypress-ci
+#  - task: PublishPipelineArtifact@1
+#    condition: failed()
+#    inputs:
+#      targetPath: '$(Pipeline.Workspace)/s/src/cypress/screenshots'
+#      artifact: 'cypress'
+#      publishLocation: 'pipeline'
+#- job: Cypress
+#  dependsOn: Phase_1
+#  displayName: Run cypress test
+#  timeoutInMinutes: 0
+#  pool:
+#    vmImage: windows-2022
+#  steps:
+#  - checkout: self
+#    submodules: true
+#  - task: Npm@1
+#    displayName: npm install
+#    inputs:
+#      command: custom
+#      workingDir: src
+#      verbose: false
+#      customCommand: ci
+#  - task: Npm@1
+#    displayName: test
+#    inputs:
+#      command: custom
+#      workingDir: src
+#      verbose: false
+#      customCommand: run test-cypress-ci
+#  - task: PublishPipelineArtifact@1
+#    condition: failed()
+#    inputs:
+#      targetPath: '$(Pipeline.Workspace)/s/src/cypress/screenshots'
+#      artifact: 'cypress'
+#      publishLocation: 'pipeline'
+
+
+
 

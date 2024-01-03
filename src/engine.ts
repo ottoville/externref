@@ -685,9 +685,11 @@ export class Engine {
     cb: (gpu: GPU) => void,
     adapter: GPUAdapter | null,
   ) {
+    const searchParams = new URL(location.href).searchParams;
     let device: GPUDevice | undefined;
-    let forceFallbackAdapter = false;
-    let forceLowPower = false;
+    let forceFallbackAdapter =
+      searchParams.get('forceFallbackAdapter') === 'true';
+    let forceLowPower = searchParams.get('forceLowPower') === 'true';
     do {
       console.log(
         'Getting adapter, low-power:',
