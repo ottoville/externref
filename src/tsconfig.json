@@ -45,7 +45,8 @@
     "**/*.test.ts",
     "tests.json",
     "cypress",
-    "cypress.config.ts"
+    "cypress.config.ts",
+    "cypress.ci.config.ts"
   ],
   "references": [
     { "path": "./tsconfig.workers.json" },

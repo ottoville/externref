@@ -3,7 +3,7 @@ import type { Engine } from '../../engine.js';
 describe('open menu', () => {
   it('tests open menu', () => {
     cy.viewport(900, 319);
-    cy.visit('https://localhost:4280/');
+    cy.visit(Cypress.env('host'));
     cy.get('button').click();
     cy.get('canvas', {
       timeout: 10000,

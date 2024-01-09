@@ -33,6 +33,8 @@ export default defineConfig({
           if (browser.family === 'chromium' && browser.name !== 'electron') {
             // Enable shared array buffer
             launchOptions.args.push('--enable-features=SharedArrayBuffer');
+            launchOptions.args.push('--force-device-scale-factor=1')
+
           }
 
           // whatever you return here becomes the launchOptions

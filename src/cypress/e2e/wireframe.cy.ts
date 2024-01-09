@@ -2,8 +2,8 @@ import type { Engine } from '../../engine';
 
 describe('wireframe', () => {
   it('tests wireframe', () => {
-    cy.viewport(900, 319);
-    cy.visit('https://localhost:4280/');
+    cy.viewport(900, 320);
+    cy.visit(Cypress.env('host'));
     cy.get('button').click();
     cy.get('canvas', {
       timeout: 10000,
