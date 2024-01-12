@@ -5,7 +5,7 @@ import type { Scene } from '../Scene.js';
 
 import { TerraVector2 } from '../Math.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
-import type { Engine, rust_pointer } from '../engine.js';
+import type { Engine } from '../engine.js';
 import {
   type PlaneAtGroundHeightVertShader,
   createPlaneAtGroundHeightVertShader,
@@ -30,9 +30,8 @@ class PlaneMesh extends DataNode {
       {
         character_can_collide_to: false,
         vertices: {
-          stride:
-            renderPipeline.builder.vertexShader.props.entryPoints.main
-              .vertexBufferLayout[0].arrayStride,
+          stride: (renderPipeline.builder.vertexShader.props.entryPoints.main
+            .vertexBufferLayout[0].arrayStride / 4) as Word<'dword'>,
           view: [pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!],
         },
       },
@@ -105,7 +104,7 @@ export class paintPlane extends paintGround {
         topology: 'triangle-list',
       },
       {
-        stride: 12,
+        stride: 12 as Word<'dword'>,
       },
     );
 

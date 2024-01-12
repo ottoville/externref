@@ -482,7 +482,7 @@ TODO
       terrainIndicesGPU,
       allocate_vec(new Float32Array(positionsCount * 12)),
       allocate_vec(new Uint32Array(this.#terrainIndicesLength / 4)),
-      12,
+      12 as Word<'dword'>,
     );
 
     this.#ready = caches

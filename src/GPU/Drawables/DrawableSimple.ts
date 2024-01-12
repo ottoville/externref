@@ -51,7 +51,14 @@ export class DrawableSimple<
       renderEncoder instanceof RenderBundleEncoder
         ? renderEncoder.renderBundleEncoder
         : renderEncoder;
-
+    console.debug(
+      'drawSimple',
+      this.node.label,
+      'positions_count',
+      this.node.positions_count,
+      'instanceCount',
+      this.instanceCount,
+    );
     encoder.draw(
       this.node.positions_count,
       this.instanceCount,

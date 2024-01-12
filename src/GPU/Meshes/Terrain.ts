@@ -1,6 +1,6 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import type { Scene } from '../../Scene.js';
-import type { Engine, rust_pointer, rust_vec_ptr } from '../../engine.js';
+import type { Engine, rust_vec_ptr } from '../../engine.js';
 import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
@@ -36,7 +36,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
     public iBuffer: Buffer<INDEX_BUFFER>,
     vertices: rust_vec_ptr<'f32'>,
     indicesView: rust_vec_ptr<'usize'>,
-    verticesPositionStride: number,
+    verticesPositionStride: Word<'dword'>,
   ) {
     super(
       {

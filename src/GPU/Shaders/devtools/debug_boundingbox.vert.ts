@@ -15,7 +15,7 @@ import { positionAttr } from '../structs/Attributes.js';
 
 export function createDebugBoundingBoxVertShader(
   pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
-  arrayStride: number,
+  arrayStride: Word<'dword'>,
 ) {
   return new VertexShader({
     entryPoints: {
@@ -23,7 +23,7 @@ export function createDebugBoundingBoxVertShader(
         colorPositionOutput,
         [
           {
-            arrayStride,
+            arrayStride: arrayStride * 4,
             attributes2: positionAttr,
             stepMode: 'vertex',
           },

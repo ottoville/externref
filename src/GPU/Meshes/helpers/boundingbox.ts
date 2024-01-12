@@ -1,5 +1,5 @@
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
-import type { Engine, rust_pointer } from '../../../engine.js';
+import type { Engine } from '../../../engine.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import type { RenderPipelineProps } from '../../RenderPipeline.js';
 import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
@@ -65,7 +65,7 @@ export class BoundingBoxMesh extends DataNode {
     super(
       {
         vertices: {
-          stride: 4,
+          stride: 4 as Word<'dword'>,
           view: [ptr as rust_pointer<'f32'>, len!, cap!],
         },
       },
@@ -85,7 +85,7 @@ export class BoundingBoxMesh extends DataNode {
         topology: 'line-strip',
       },
       {
-        stride: 16,
+        stride: 4 as Word<'dword'>,
       },
     );
     this.drawable = new DrawableIndexed({

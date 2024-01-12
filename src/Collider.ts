@@ -2,7 +2,7 @@
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
 import type { Ellipsoid } from './nodes/DataNode.js';
-import type { Engine, rustWasm, rust_pointer } from './engine.js';
+import type { Engine, rustWasm } from './engine.js';
 import {
   MutableTerraVector3,
   TerraVector3,

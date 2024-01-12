@@ -123,7 +123,7 @@ const renderPipeline = engine.gpu!.createRenderPipeline(
   SimpleRenderPipeline,
   primitiveState,
   {
-    stride: 4,
+    stride: 4 as Word<'dword'>,
   },
 );
 new DrawableIndexed({

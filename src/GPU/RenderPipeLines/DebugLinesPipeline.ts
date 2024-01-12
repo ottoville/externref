@@ -1,4 +1,7 @@
-import type { CreateRenderPipelineProps } from '../../GPU.js';
+import type {
+  CreateRenderPipelineProps,
+  VertexBufferProps,
+} from '../../GPU.js';
 import { createDebugBoundingBoxVertShader } from '../Shaders/devtools/debug_boundingbox.vert.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
@@ -6,7 +9,7 @@ export const DebugLinesPipeline = Object.freeze([
   'DebugLinesPipeline',
   function create(
     { gpu, label, primitive }: CreateRenderPipelineProps,
-    vertexBufferProps: { stride: number },
+    vertexBufferProps: VertexBufferProps,
   ) {
     const vertexShader = createDebugBoundingBoxVertShader(
       gpu.shaders.positionAndTimeBindGroup,

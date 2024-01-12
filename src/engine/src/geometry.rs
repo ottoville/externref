@@ -119,6 +119,9 @@ pub struct ColliderPlane {
 }
 pub struct Vertices {
     pub vertices: Vec<f32>,
+    /**
+     * stride as DWORD in vertices vec.
+     */
     pub vertices_stride: usize,
 }
 impl Vertices {

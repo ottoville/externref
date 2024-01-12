@@ -1,4 +1,4 @@
-import type { CreateRenderPipelineProps } from '../../GPU';
+import type { CreateRenderPipelineProps, VertexBufferProps } from '../../GPU';
 import { createGroundVertShader } from '../Shaders/Ground.vert.js';
 import { createGroundFragShader } from '../Shaders/Ground.frag.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
@@ -29,7 +29,7 @@ export const TerrainRenderPipeline = [
   'TerrainRenderPipeline',
   function create(
     { gpu, label, primitive }: CreateRenderPipelineProps,
-    vertexBufferProps: { stride: number },
+    vertexBufferProps: VertexBufferProps,
   ) {
     const vertexShader = createGroundVertShader(gpu.lightsTextureBindGroup, {
       arrayStride: vertexBufferProps.stride * 4,

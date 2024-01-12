@@ -221,7 +221,7 @@ export class IcoSphere extends IndexedSingleColoredMesh {
         can_collide,
         frontFace: 'ccw',
         vertices: {
-          stride: 8,
+          stride: 8 as Word<'dword'>,
           view: allocate_vec(verticesAndNormals),
         },
       },

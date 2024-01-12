@@ -119,7 +119,7 @@ export class Cone extends IndexedSingleColoredMesh {
       {
         can_collide,
         vertices: {
-          stride: 8,
+          stride: 8 as Word<'dword'>,
           view: allocate_vec(vertices),
         },
       },

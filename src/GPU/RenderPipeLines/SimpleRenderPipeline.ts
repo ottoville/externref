@@ -1,4 +1,7 @@
-import type { CreateRenderPipelineProps } from '../../GPU.js';
+import type {
+  CreateRenderPipelineProps,
+  VertexBufferProps,
+} from '../../GPU.js';
 import { createSimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
 
@@ -6,7 +9,7 @@ export const SimpleRenderPipeline = [
   'SimpleRenderPipeline',
   function SimpleRenderPipeline(
     { gpu, label, primitive }: CreateRenderPipelineProps,
-    vertexBufferProps: { stride: number },
+    vertexBufferProps: VertexBufferProps,
   ) {
     return Object.freeze({
       builder: createRenderPipelineBuilder(

@@ -13,7 +13,7 @@ export class NormalsMesh extends DataNode {
     //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
     const stride = 16; // 8*2;
     const vertices_ptr = allocate_vec_f32(
-      targetNode.node.positions_count * stride,
+      (targetNode.node.positions_count * stride) as Word<'dword'>,
     );
     const updateVertices = () => {
       const newVertices = new Float32Array(
@@ -37,7 +37,7 @@ export class NormalsMesh extends DataNode {
       {
         character_can_collide_to: false,
         vertices: {
-          stride: 8,
+          stride: 8 as Word<'dword'>,
           view: vertices_ptr,
         },
       },
@@ -70,7 +70,7 @@ export class NormalsMesh extends DataNode {
         topology: 'line-list',
       },
       {
-        stride: 8,
+        stride: 8 as Word<'dword'>,
       },
     );
     this.drawable = new DrawableSimple({

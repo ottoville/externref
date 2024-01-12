@@ -27,9 +27,6 @@ function createError(e: unknown) {
 }
 
 declare const engine: Engine;
-export type rust_pointer<T> = {
-  __brand: T;
-} & number;
 
 /*
 globalThis.addEventListener && globalThis.addEventListener('unhandledrejection', (e) => {
@@ -165,7 +162,7 @@ export type rustWasm = {
     ptr: rust_pointer<'f32'>,
     length: number,
     cap: number,
-    vertices_stride: number,
+    vertices_stride: Word<'dword'>,
   ): void;
   set_indices(
     mesh_id: number,
@@ -189,7 +186,7 @@ export type rustWasm = {
   vertices_count(mesh_id: number): number;
   have_vertices(mesh_id: number): boolean;
   faces_count(mesh_id: number): number;
-  alloc_vector_f32(size: number): rust_pointer<'usize'>;
+  alloc_vector_f32(size: Word<'dword'>): rust_pointer<'usize'>;
   alloc_vector_u8(size: number): rust_pointer<'usize'>;
   alloc_vector_usize(size: number): rust_pointer<'usize'>;
   update_scale(mesh_id: number, x: number, y: number, z: number): void;
@@ -227,7 +224,7 @@ export type rustWasm = {
   scale_x(mesh_id: number): number;
   scale_y(mesh_id: number): number;
   scale_z(mesh_id: number): number;
-  vertices_stride(mesh_id: number): number;
+  vertices_stride(mesh_id: number): Word<'dword'>;
   set_faces(mesh_id: number, ptr: number, length: number, cap: number): void;
   set_color(
     mesh_id: number,
