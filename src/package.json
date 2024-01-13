@@ -18,6 +18,7 @@
     "eslint-fix": "eslint --fix --ext .ts,.tsx --quiet ./",
     "swa": "swa start ../wwwroot/ --ssl --ssl-cert=\"../cert/localhost.crt\" --ssl-key=\"../cert/key.key\"",
     "test": "npm run test-unit && npm run test-integration && npm run test-wasm && npm run test-rust && npm run test-cypress",
+    "test-cypress-dev": "npx cypress open --env host=https://localhost:4280 --browser chrome",
     "test-cypress": "npx cypress run --env host=https://localhost:4280 --headed --browser chrome",
     "test-cypress-ci": "npx cypress run -C ./cypress.ci.config.ts --env host=https://nice-bush-07e6f7d03.1.azurestaticapps.net/ --browser chrome",
     "test-unit": "npm run buildRust-test && node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js --forceExit --detectOpenHandles --runInBand --silent=false",
