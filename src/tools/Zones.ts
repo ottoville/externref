@@ -18,29 +18,6 @@ import {
 import { UIRectangleNodeHover } from '../ui/UIRectangleNodeHover.js';
 declare const engine: Engine;
 
-const buttonProps = Button({
-  UIRectangleProps: {
-    label: 'residentalButton',
-    scale: {
-      min_width: 0.15,
-      unit: NumericUnit['%'],
-      y: 0.07,
-    },
-    translate: {
-      x: {
-        anchor: Anchor.CENTER,
-        value: [-0.8, NumericUnit['%']],
-      },
-      //Will be overridden
-      y: {
-        anchor: Anchor.CENTER,
-        value: [-0.8, NumericUnit['%']],
-      },
-    },
-  },
-  text: 'Residental (1)',
-});
-
 export class Zones extends UIRectangleNodeHover {
   #PT?: paintTexture;
   #size = 5120;
@@ -51,8 +28,30 @@ export class Zones extends UIRectangleNodeHover {
   >;
   scene: Scene;
   private wasOpen = false;
+  #buttonProps: UIRectangleNodeProps;
   constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
     super(props);
+    this.#buttonProps = Button({
+      UIRectangleProps: {
+        label: 'residentalButton',
+        scale: {
+          min_width: 0.15,
+          unit: NumericUnit['%'],
+          y: 0.07,
+        },
+        translate: {
+          x: {
+            anchor: Anchor.CENTER,
+            value: [-0.8, NumericUnit['%']],
+          },
+          y: props.subMenuPosition,
+        },
+      },
+      events: {
+        onClick: () => this.paintZone(),
+      },
+      text: 'Residental (1)',
+    });
     const initialScene = props.terrain.scenes[0];
     if (!initialScene) {
       throw new Error('scene not found');
@@ -157,26 +156,7 @@ export class Zones extends UIRectangleNodeHover {
       this.props.terrain.mesh.set_scenes(staticScene.id);
     }
     if (this.props.open) {
-      return [
-        UI(
-          UIRectangleNodeHover,
-          Object.assign(buttonProps, {
-            UIRectangleProps: {
-              ...buttonProps.UIRectangleProps,
-              translate: {
-                ...buttonProps.UIRectangleProps.translate,
-                y: this.props.subMenuPosition,
-              },
-            },
-            events: {
-              ...buttonProps.events,
-              onClick: () => {
-                this.paintZone();
-              },
-            },
-          }),
-        ),
-      ];
+      return [UI(UIRectangleNodeHover, this.#buttonProps)];
     }
     if (!this.props.open && this.wasOpen) {
       this.props.terrain.mesh.set_scenes(this.scene.id);

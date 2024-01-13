@@ -83,9 +83,6 @@ export abstract class UINode<
             if (instance) {
               // Instance may have been rendered already, check that constructor is same
               if (instance.constructor === ctr) {
-                //if (instance.props.UIRectangleProps.label === 'Zones') {
-                //  debugger;
-                //}
                 for (const key in props) {
                   //@ts-expect-error
                   if (instance.oldProps[key] === props[key]) {
