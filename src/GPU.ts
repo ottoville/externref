@@ -75,9 +75,16 @@ export type CreateRenderPipelineProps = {
   primitive: GPUPrimitiveState;
 };
 
+export type VertexBufferProps = {
+  /**
+   * Vertex buffer stride in DWORD
+   */
+  stride: Word<'dword'>;
+};
+
 export type CreateRenderPipelineCB<
   R extends RenderPipelineProps,
-  VP extends { stride: number } = { stride: number },
+  VP extends VertexBufferProps = VertexBufferProps,
 > = readonly [
   label: string,
   create: (props: CreateRenderPipelineProps, vertexBufferProps: VP) => R,

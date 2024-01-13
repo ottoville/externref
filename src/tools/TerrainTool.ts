@@ -4,7 +4,7 @@ import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { MainNode } from '../MainNode.js';
 import { type CreateRenderPipelineProps, GPU } from '../GPU.js';
 import { MutableTerraVector3, TerraVector3 } from '../Math.js';
-import type { Engine, ListenerObj, rust_pointer } from '../engine.js';
+import type { Engine, ListenerObj } from '../engine.js';
 import type { Scene } from '../Scene.js';
 import {
   HelperVertShader,

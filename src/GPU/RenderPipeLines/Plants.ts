@@ -1,4 +1,7 @@
-import type { CreateRenderPipelineProps } from '../../GPU.js';
+import type {
+  CreateRenderPipelineProps,
+  VertexBufferProps,
+} from '../../GPU.js';
 import {
   createGrassVertShader,
   positionAttr,
@@ -11,7 +14,7 @@ export const PlantsRenderPipeline = [
   'PlantsRenderPipeline',
   function PlantsRenderPipeline(
     { gpu, label, primitive }: CreateRenderPipelineProps,
-    vertexBufferProps: { stride: number },
+    vertexBufferProps: VertexBufferProps,
   ) {
     const vertexShader = createGrassVertShader(gpu.shaders.rootCameralayout, [
       {

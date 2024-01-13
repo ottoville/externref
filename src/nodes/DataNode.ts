@@ -8,7 +8,7 @@ import {
   Triangle,
 } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
-import type { Engine, rust_pointer, rust_vec_ptr } from '../engine.js';
+import type { Engine, rust_vec_ptr } from '../engine.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
 declare const engine: Engine;
@@ -39,7 +39,7 @@ export interface Ellipsoid {
 export type DataNodeProps = {
   vertices?: {
     view: rust_vec_ptr<'f32'>;
-    stride: number;
+    stride: Word<'dword'>;
   };
   /**
    * Setting true will create collider in rapier
@@ -54,7 +54,7 @@ export type DataNodeProps = {
     so it is always small enought for gravity to hit on next tick.
 */
 
-export function allocate_vec_f32(length: number) {
+export function allocate_vec_f32(length: Word<'dword'>) {
   const vec_ptr = engine.rust.alloc_vector_f32(length);
   return Array.from(
     new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3),
@@ -84,7 +84,7 @@ export function allocate_vec(
     throw new Error('Source buffer is already in rust');
   }
   if (array instanceof Float32Array) {
-    const ptr = allocate_vec_f32(array.length);
+    const ptr = allocate_vec_f32(array.length as Word<'dword'>);
     new Float32Array(engine.rust.memory.buffer, ptr[0], ptr[1]).set(array);
     return ptr;
   } else {
@@ -213,7 +213,7 @@ export class DataNode extends MainNode {
     return engine.rust.faces_count(this.id);
   }
   set faces(faces: Float32Array) {
-    const vec_ptr = engine.rust.alloc_vector_f32(faces.length);
+    const vec_ptr = engine.rust.alloc_vector_f32(faces.length as Word<'dword'>);
     const [ptr, len, cap] = new Uint32Array(
       engine.rust.memory.buffer,
       vec_ptr,
@@ -239,14 +239,17 @@ export class DataNode extends MainNode {
   get have_vertices() {
     return engine.rust.have_vertices(this.id);
   }
-  get vertices_stride(): number {
+  /**
+   * stride as DWORD in vertices vec
+   */
+  get vertices_stride(): Word<'dword'> {
     return engine.rust.vertices_stride(this.id);
   }
   /**
    *  Set new vertices raw array for the mesh
    * @param vec
    */
-  set_vertices(vec: rust_vec_ptr<'f32'>, stride: number) {
+  set_vertices(vec: rust_vec_ptr<'f32'>, stride: Word<'dword'>) {
     engine.rust.set_vertices(this.id, ...vec, stride);
     this.onVerticesChange();
   }

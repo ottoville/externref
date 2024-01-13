@@ -16,7 +16,7 @@ import { simpleAttributes } from '../structs/Attributes.js';
 
 export function createDebugNormalsVertShader(
   pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
-  arrayStride: number,
+  arrayStride: Word<'dword'>,
 ) {
   return new ShaderBuilder([pipelineLayout])
     .addFunction(

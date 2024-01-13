@@ -1,5 +1,5 @@
 ﻿import type { Scene } from '../../Scene.js';
-import type { Engine, rust_pointer } from '../../engine.js';
+import type { Engine } from '../../engine.js';
 import { IndexedColoredMesh } from '../AbstractMeshes/IndexedColoredMesh.js';
 declare const engine: Engine;
 
@@ -43,7 +43,7 @@ export class OctaSphere extends IndexedColoredMesh {
         can_collide,
         frontFace: 'ccw',
         vertices: {
-          stride: 12,
+          stride: 12 as Word<'dword'>,
           view: [pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!], // Must do *2*4 because data is Vec<[Vec3F32; 2]> while expected type is Vec<f32>,
         },
       },

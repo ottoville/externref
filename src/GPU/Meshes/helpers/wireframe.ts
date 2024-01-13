@@ -25,9 +25,10 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   let node: DataNode;
 
   const vertexBuffer = targetNode.vertexBuffers[0]?.buffer;
-  const vertexBufferStride =
+  const vertexBufferStrideBytes =
     targetNode.renderPipeline.builder.vertexShader.props.entryPoints['main']
-      ?.vertexBufferLayout[0]?.arrayStride ?? targetNode.node.vertices_stride;
+      ?.vertexBufferLayout[0]?.arrayStride ??
+    targetNode.node.vertices_stride * 4;
   const mainNodeProps = {
     label: 'Wireframe_' + targetNode.node.label,
     rigid_body: false,
@@ -39,7 +40,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       topology: 'line-list',
     },
     {
-      stride: vertexBufferStride,
+      stride: (vertexBufferStrideBytes / 4) as Word<'dword'>,
     },
   );
 
@@ -60,7 +61,9 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     });
   } else if (targetNode.node instanceof DataNode) {
     const stride = targetNode.node.vertices_stride;
-    const vertices_ptr = allocate_vec_f32(targetNode.node.positions_count * 4);
+    const vertices_ptr = allocate_vec_f32(
+      (targetNode.node.positions_count * 4) as Word<'dword'>,
+    );
     const newVertices = new Float32Array(
       engine.rust.memory.buffer,
       vertices_ptr[0],

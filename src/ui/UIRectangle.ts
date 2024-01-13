@@ -132,7 +132,7 @@ export abstract class UIRectangle<
         const vertices = this.#updateBoundingBoxAndVerticesSuper();
         const vertices_ptr = allocate_vec(vertices);
         this.drawable.setVertexBuffer(0, vertices_ptr);
-        this.set_vertices(vertices_ptr, 3);
+        this.set_vertices(vertices_ptr, 3 as Word<'dword'>);
       }
     }
     if (!this.texture) {
@@ -357,7 +357,7 @@ export abstract class UIRectangle<
       {
         character_can_collide_to: false,
         vertices: {
-          stride: 3,
+          stride: 3 as Word<'dword'>,
           view: allocate_vec(new Float32Array(9)),
         },
       },
@@ -455,7 +455,7 @@ export abstract class UIRectangle<
     queueMicrotask(() => {
       const vertices = this.#updateBoundingBoxAndVerticesSuper();
       const vertices_ptr = allocate_vec(vertices);
-      this.set_vertices(vertices_ptr, 3);
+      this.set_vertices(vertices_ptr, 3 as Word<'dword'>);
 
       const drawable = new DrawableSimple(
         {
@@ -491,7 +491,7 @@ export abstract class UIRectangle<
       renderPass.onResize.set(this, () => {
         const newVertices = this.#updateBoundingBoxAndVerticesSuper();
         const new_vertices_ptr = allocate_vec(newVertices);
-        this.set_vertices(new_vertices_ptr, 3);
+        this.set_vertices(new_vertices_ptr, 3 as Word<'dword'>);
         drawable.setVertexBuffer(0, new_vertices_ptr);
       });
 

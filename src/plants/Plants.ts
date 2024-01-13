@@ -98,7 +98,7 @@ export class Plants extends MainNode {
           topology: 'triangle-strip',
         },
         {
-          stride: 4,
+          stride: 4 as Word<'dword'>,
         },
       );
       this.drawable = new DrawableIndirect(

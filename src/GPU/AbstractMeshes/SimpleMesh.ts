@@ -30,7 +30,7 @@ export class SimpleMesh extends BoundableNodeSimple {
       {
         ...dataNodeProps,
         vertices: {
-          stride: 8,
+          stride: 8 as Word<'dword'>,
           view: dataNodeProps.vertices.view,
         },
       },
@@ -58,7 +58,7 @@ export class SimpleMesh extends BoundableNodeSimple {
         SimpleRenderPipeline,
         {},
         {
-          stride: 8,
+          stride: 8 as Word<'dword'>,
         },
       );
       this.drawable = new DrawableSimple({

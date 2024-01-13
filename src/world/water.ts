@@ -18,7 +18,7 @@ export class Sea extends BoundableNodeSimple {
   }
   constructor(scenes: Scene[]) {
     const vertexBuffer = {
-      stride: 4,
+      stride: 4 as Word<'dword'>,
       view: allocate_vec(
         Float32Array.of(
           -50000.0,
@@ -66,7 +66,7 @@ export class Sea extends BoundableNodeSimple {
           topology: 'triangle-strip',
         },
         {
-          stride: 4,
+          stride: 4 as Word<'dword'>,
         },
       );
       //TODO: Reuse sampler with terrain.ts?

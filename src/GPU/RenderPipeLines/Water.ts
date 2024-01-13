@@ -1,5 +1,8 @@
 import { positionAttr } from '../Shaders/structs/Attributes.js';
-import type { CreateRenderPipelineProps } from '../../GPU.js';
+import type {
+  CreateRenderPipelineProps,
+  VertexBufferProps,
+} from '../../GPU.js';
 import { createWaterVertShader } from '../../GPU/Shaders/Water.vert.js';
 import { createWaterFragShader } from '../Shaders/Water.frag.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
@@ -8,7 +11,7 @@ export const WaterRenderPipeline = [
   'WaterRenderPipeline',
   function create(
     { gpu, label, primitive }: CreateRenderPipelineProps,
-    vertexBufferProps: { stride: number },
+    vertexBufferProps: VertexBufferProps,
   ) {
     const waterVertShader = createWaterVertShader(gpu.bindGroupTextureWater, {
       arrayStride: vertexBufferProps.stride * 4,
