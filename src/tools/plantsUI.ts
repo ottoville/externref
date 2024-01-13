@@ -11,36 +11,34 @@ import { type UIRectangleNodeProps } from '../ui/UIRectangleNode.js';
 import { UIRectangleNodeHover } from '../ui/UIRectangleNodeHover.js';
 declare const engine: Engine;
 
-const buttonProps = Button({
-  UIRectangleProps: {
-    label: 'createGrassButton',
-    scale: {
-      min_width: 180,
-      unit: NumericUnit.px,
-      y: 50,
-    },
-    translate: {
-      x: {
-        anchor: Anchor.LEFT,
-        value: [100, NumericUnit.px],
-      },
-      //will be overriden
-      y: {
-        anchor: Anchor.TOP,
-        value: [100, NumericUnit.px],
-      },
-    },
-  },
-  text: 'Create grass (1)',
-});
-
 export class PlantsUI extends UIRectangleNodeHover {
   static plantsMesh: Plants;
   private PT: paintPlane | null = null;
   scene = engine.scenes.get('main');
+  #buttonProps: UIRectangleNodeProps;
   constructor(override props: UIRectangleNodeProps & TopMenuButtonProps) {
     super(props);
-
+    this.#buttonProps = Button({
+      UIRectangleProps: {
+        label: 'createGrassButton',
+        scale: {
+          min_width: 180,
+          unit: NumericUnit.px,
+          y: 50,
+        },
+        translate: {
+          x: {
+            anchor: Anchor.LEFT,
+            value: [100, NumericUnit.px],
+          },
+          y: props.subMenuPosition,
+        },
+      },
+      events: {
+        onClick: () => this.activateDraw(),
+      },
+      text: 'Create grass (1)',
+    });
     if (!this.scene) {
       throw new Error('no scene');
     }
@@ -60,24 +58,7 @@ export class PlantsUI extends UIRectangleNodeHover {
     if (this.props.open) {
       this.wasOpen = true;
       engine.addInputListener(this.#inputListener);
-      return [
-        UI(
-          UIRectangleNodeHover,
-          Object.assign(buttonProps, {
-            UIRectangleProps: {
-              ...buttonProps.UIRectangleProps,
-              translate: {
-                ...buttonProps.UIRectangleProps.translate,
-                y: this.props.subMenuPosition,
-              },
-            },
-            events: {
-              ...buttonProps.events,
-              onClick: () => this.activateDraw(),
-            },
-          }),
-        ),
-      ];
+      return [UI(UIRectangleNodeHover, this.#buttonProps)];
     } else if (this.wasOpen) {
       this.wasOpen = false;
       this.PT?.destroy();
