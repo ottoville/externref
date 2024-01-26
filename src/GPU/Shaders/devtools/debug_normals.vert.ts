@@ -43,18 +43,12 @@ export function createDebugNormalsVertShader(
         var output : Output;
         var vertexPosition:vec4<f32> = ${world.prop(
           'transformation',
-        )} * vec4<f32>(${position}.xyz, 1.0);
+        )} * ${position};
         if(${VertexBuildin.vertex_index} % 2u == 1u) {
-            /*
-                Drop translation part from matrix
-            */
-            var matt: mat3x3<f32> = mat3x3<f32>(
-                ${world.prop('transformation')}[0].xyz,
-                ${world.prop('transformation')}[1].xyz,
-                ${world.prop('transformation')}[2].xyz
-            );
-            var transformed_normal = normalize(matt * ${normal});
-            vertexPosition = vertexPosition + vec4<f32>(transformed_normal*10.0, 0.0);
+            var newpos = ${world.prop(
+              'transformation',
+            )} * (${position} + vec4<f32>(${normal}.xyz, 0.0));
+            vertexPosition = vertexPosition + normalize(newpos - vertexPosition)*5;
         }
         output.position = ${scene.prop('modelViewProjection')} * vertexPosition;
         output.color=vec3<f32>(0.0,1.0,0.0);
