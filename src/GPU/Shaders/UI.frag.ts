@@ -12,16 +12,10 @@ export function createUIFragmentShader(gpu: GPU) {
   return new ShaderBuilder([gpu.canvasRootLayout])
     .addFunction(
       'main',
-      new FragmentShaderFunction<
-        [
-          {
-            texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
-          },
-        ]
-      >(
+      new FragmentShaderFunction(
         diffuseOutput,
-        ([{ texture }]) => /* wgsl */ `
-              let fragCoordI=vec2<i32>(floor(v_uv));
+        ([{ texture }], { v_uv }) => /* wgsl */ `
+              let fragCoordI=vec2<i32>(floor(${v_uv}));
               let color:vec4<f32> = ${textureLoad(texture, 'fragCoordI', '0')};
           
               var output:Output;
@@ -32,7 +26,13 @@ export function createUIFragmentShader(gpu: GPU) {
   
           `,
         UI_Input,
-      ),
+      ) satisfies FragmentShaderFunction<
+        [
+          {
+            texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
+          },
+        ]
+      >,
     )
     .build('UI.frag');
 }
