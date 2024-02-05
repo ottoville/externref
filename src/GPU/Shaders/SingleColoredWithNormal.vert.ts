@@ -91,7 +91,7 @@ export function createSimpleVertShader(
         output.normal = normalize((curPos * vec4<f32>(${normal}, 0.0)).xyz);
         output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
         output.id=${world.prop('id')};
-        output.position=vec3<f32>(worldPos.xyz);
+        output.position=worldPos.xyz;
         output.scenes=${world.prop('scenes')};
         output.color = ${world.prop('color')};
 
