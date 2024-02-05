@@ -11,12 +11,14 @@ export const ColoredRenderPipeline = [
     { gpu, label, primitive }: CreateRenderPipelineProps,
     vertexBufferProps: VertexBufferProps,
   ) {
-    const vertexShader = createVertexColorShader(
-      gpu.shaders.positionAndTimeBindGroup,
-      vertexBufferProps.stride * 4,
-    );
     return Object.freeze({
-      builder: createRenderPipelineBuilder(vertexShader, gpu.simpleFragShader),
+      builder: createRenderPipelineBuilder(
+        createVertexColorShader(
+          gpu.shaders.positionAndTimeBindGroup,
+          vertexBufferProps.stride * 4,
+        ),
+        gpu.simpleFragShader,
+      ),
       connections: {
         main: 'main',
         pick: 'pick',
