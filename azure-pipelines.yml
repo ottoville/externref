@@ -41,6 +41,13 @@ jobs:
       workingDir: src
       verbose: false
       customCommand: run build-prod
+  - task: Cargo@1
+    displayName: Test rust
+    inputs:
+      cargoCommand: 'test'
+      cargoWorkingDir: 'src'
+      cargoCommandOptions: '--lib'
+      verbose: false
   - task: AzureStaticWebApp@0
     displayName: 'Static Web App: '
     inputs:
