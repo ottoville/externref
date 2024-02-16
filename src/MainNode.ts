@@ -15,7 +15,6 @@ const textDecoder = new TextDecoder();
 export type MainNodeProps = {
   point_light?: number;
   directional_light?: number;
-  strip?: boolean;
   label: string;
   scenes?: Scene[] | undefined;
   fixed?: boolean;
@@ -168,7 +167,6 @@ export abstract class MainNode {
   constructor({
     point_light = 0,
     directional_light = 0,
-    strip = false,
     label,
     scenes,
     fixed = false,
@@ -191,7 +189,6 @@ export abstract class MainNode {
       point_light,
       directional_light,
       sceneids,
-      strip,
       fixed,
       rigid_body,
       string_ptr!,

@@ -20,21 +20,17 @@ const enum VIEW_UPDATED {
   POSITION = 1,
   DIRECTION = 2,
 }
+const uniformBufferSize =
+  /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ +
+  4 * 4;
 export class TerraCamera {
   readonly #childCameras: Set<CameraControl> = new Set();
 
   #clusterArrayBuffer?: Buffer<BufferUsageEnums.STORAGE>;
 
-  readonly #uniformBufferSize =
-    /* modelViewProjectionMatrix + view matrix */ 4 *
-      16 *
-      2 /* viewPosition */ +
-    4 * 4;
   readonly #direction = new MutableTerraVector3([1, 0, 0]);
 
-  readonly #viewProjectionPositionBuffer = new ArrayBuffer(
-    this.#uniformBufferSize,
-  );
+  readonly #viewProjectionPositionBuffer = new ArrayBuffer(uniformBufferSize);
 
   readonly projectionViewArr = new TerraMatrix(
     this.#viewProjectionPositionBuffer,
@@ -103,7 +99,7 @@ export class TerraCamera {
       this.#uniformBuffer = new Buffer({
         gpu: gpu.device,
         label: 'uniformBuffer',
-        size: this.#uniformBufferSize,
+        size: uniformBufferSize,
         usages: BufferUsageEnums['UNIFORM|COPY_DST'],
       }); //Todo: set to private
       this.uniformBindGroup = new BindGroup(

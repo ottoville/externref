@@ -1,3 +1,5 @@
+use std::num::NonZeroUsize;
+
 pub use crate::boundingbox::BoundingBox;
 use crate::{
     create_multivalue_vector,
@@ -57,7 +59,7 @@ pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usiz
     let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
     geometry.collider_planes = Vec::with_capacity(planes.len());
     geometry.collider_planes_parallel = Vec::with_capacity(planes.len());
-    geometry.faces.planes = planes;
+    geometry.planes.planes = planes;
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_indices(mesh_id: usize, ptr: *mut usize, length: usize, cap: usize) {
@@ -133,7 +135,8 @@ pub struct Geometry {
     pub bounding_box: BoundingBox,
     pub vertices: Option<Vertices>,
     pub indices: Vec<usize>,
-    pub faces: Faces,
+    pub faces: Vec<[usize; 3]>,
+    pub planes: Faces,
     pub strip: bool,
 
     pub collider_planes: Vec<ColliderPlane>,
@@ -154,7 +157,8 @@ impl Geometry {
             bounding_box: BoundingBox::new(has_bounding),
             vertices: None,
             indices: Vec::new(),
-            faces: Faces::new(0),
+            faces: Vec::new(),
+            planes: Faces::new(0),
             collider_planes: Vec::new(),
             collider_planes_parallel: Vec::new(),
             last_collider_world_vertices: Vec::new(),
@@ -163,9 +167,42 @@ impl Geometry {
             character_can_collide_to,
         }
     }
+    pub fn create_faces(&mut self, override_positions_count: Option<NonZeroUsize>) {
+        self.faces.clear();
+        if self.indices.len() == 0 {
+            if self.strip {
+                panic!("Unindexed Trimesh collider with triangle strip is not yet supported");
+            }
+            let mut pos = 0;
+
+            let positions_count: usize;
+            if let Some(pos_count) = override_positions_count {
+                positions_count = usize::from(pos_count) 
+            } else {
+                positions_count = if let Some(vertices) = &self.vertices {
+                    vertices.length()
+                } else {
+                    panic!("Faces needs either indices or vertices");
+                };
+            }
+            self.faces.shrink_to_fit();
+            while pos < positions_count {
+                self.faces.push([pos, pos + 1, pos + 2]);
+                pos = pos + 3;
+            }
+        } else {
+            if self.strip {
+                // Length is self.indices.len() - 2
+                self.faces = self.indices.windows(3).map(|i| i.try_into().unwrap()).collect();
+            } else {
+                // Lenght is self.indices.len() / 3
+                self.faces = self.indices.chunks_exact(3).map(|i| i.try_into().unwrap()).collect();
+            }
+        }
+    }
     pub fn faces_count(&self) -> usize {
         if self.static_faces {
-            return self.faces.planes.len();
+            return self.planes.planes.len();
         } else {
             //TODO: Hand strip and indexed
             let position_count = if self.indices.len() > 0 {
@@ -191,7 +228,7 @@ impl Geometry {
                 return;
             }
             let faces_count = self.faces_count();
-            self.faces = Faces::new(faces_count);
+            self.planes = Faces::new(faces_count);
             self.collider_planes = Vec::with_capacity(faces_count);
             self.collider_planes_parallel = Vec::with_capacity(faces_count * 4usize);
         }
