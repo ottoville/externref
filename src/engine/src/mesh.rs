@@ -15,7 +15,6 @@ use crate::math::quaternion::Quaternion;
 use crate::math2::Vec3;
 use crate::math2::Vec3F32;
 use crate::math2::Vec4;
-pub use crate::terrain::elevator::Elevator;
 pub use crate::GPUMesh;
 use crate::MULTIVALUE_F32;
 use rapier3d::prelude::*;
@@ -36,7 +35,6 @@ pub struct Mesh {
      Hox: This is NOT amount of indices
     */
     pub positions_count: Option<usize>,
-    pub strip: bool,
     pub draw_command: Option<DrawCommand>,
     pub rigid_body_handle: Option<RigidBodyHandle>,
     collider_handle: Option<ColliderHandle>,
@@ -49,7 +47,6 @@ pub unsafe extern "C" fn new_mesh(
     point_light: f32,
     directional_light: f32,
     scenes: f32,
-    strip: bool,
     fixed: bool,
     rigid_body: bool,
     label_ptr: *mut u8,
@@ -61,7 +58,6 @@ pub unsafe extern "C" fn new_mesh(
         point_light,
         directional_light,
         scenes,
-        strip,
         fixed,
         rigid_body,
         label,
@@ -109,6 +105,14 @@ pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     mesh.scaling.x = x;
     mesh.scaling.y = y;
     mesh.scaling.z = z;
+
+    let geometry = mesh.get_geometry_mut();
+    if let Some(vertices) = &mut geometry.vertices {
+        for vertice in vertices.vertices.chunks(vertices.vertices_stride) {
+            
+        }
+    }
+
     mesh.on_update(true);
 }
 #[no_mangle]
@@ -202,7 +206,7 @@ pub fn get_mesh_by_id_mut<'frame>(mesh_id: usize) -> &'frame mut Mesh {
 }
 #[no_mangle]
 pub unsafe extern "C" fn strip(mesh_id: usize) -> bool {
-    get_mesh_by_id(mesh_id).strip
+    get_mesh_by_id(mesh_id).get_geometry().strip
 }
 #[no_mangle]
 pub unsafe extern "C" fn collider_planes_parallel_pointer(mesh_id: usize) -> *const [f32; 4] {
@@ -255,7 +259,7 @@ pub unsafe extern "C" fn intersect_box_aa_sphere(
 }
 #[no_mangle]
 pub unsafe extern "C" fn create_trimesh_collider(mesh_id: usize) -> *mut Collider {
-    get_mesh_by_id(mesh_id).create_trimesh_collider()
+    get_mesh_by_id_mut(mesh_id).create_trimesh_collider()
 }
 
 #[no_mangle]
@@ -349,11 +353,11 @@ pub unsafe extern "C" fn update_scale_and_rotation(
 #[no_mangle]
 pub unsafe extern "C" fn faces_pointer(mesh_id: usize) -> *const Plane {
     let geometry = get_mesh_by_id(mesh_id).get_geometry();
-    if !geometry.static_faces && geometry.faces.planes.len() == 0 {
+    if !geometry.static_faces && geometry.planes.planes.len() == 0 {
         panic!("Not implemented yet, TODO: Generate faces");
         //Remember to allocate memory for collider planes also and other collider stuff also
     }
-    return geometry.faces.planes.as_ptr();
+    return geometry.planes.planes.as_ptr();
 }
 
 impl Mesh {
@@ -385,46 +389,29 @@ impl Mesh {
         return &self.transformation;
     }
     //TODO: move to geometry
-    pub fn create_trimesh_collider(&self) -> *mut Collider {
-        let geometry = self.get_geometry();
-        let vertices = geometry.vertices.as_ref().unwrap();
-        let iterator = vertices.vertices.chunks(vertices.vertices_stride);
+    pub fn create_trimesh_collider(&mut self) -> *mut Collider {
+        let scale_x = self.scaling.x;
+        let scale_y = self.scaling.y;
+        let scale_z = self.scaling.z;
         let positions_count = self.get_positions_count();
+        let geometry = self.get_geometry_mut();
+        let vertices = geometry.vertices.as_ref().unwrap();
+        let iterator = vertices.vertices.chunks_exact(vertices.vertices_stride);
         let mut vertices: Vec<Point<Real>> = Vec::with_capacity(positions_count);
-        iterator.for_each(|i| {
+
+        for i in iterator {
             // TODO: ensure simd
             vertices.push(Point::new(
-                i[0] * self.scaling.x,
-                i[1] * self.scaling.y,
-                i[2] * self.scaling.z,
+                i[0] * scale_x,
+                i[1] * scale_y,
+                i[2] * scale_z,
             ));
-        });
-        let mut indices: Vec<[u32; 3]>;
-        if geometry.indices.len() == 0 {
-            if self.strip {
-                panic!("Unindexed Trimesh collider with triangle strip is not yet supported");
-            }
-            indices = Vec::with_capacity(positions_count);
-            let mut pos = 0;
-            while pos < positions_count {
-                indices.push([pos as u32, pos as u32 + 1, pos as u32 + 2]);
-                pos = pos + 3;
-            }
-        } else {
-            if self.strip {
-                indices = Vec::with_capacity(geometry.indices.len() - 2);
-                geometry.indices.windows(3).for_each(|i| {
-                    indices.push([i[0] as u32, i[1] as u32, i[2] as u32]);
-                });
-            } else {
-                indices = Vec::with_capacity(geometry.indices.len() / 3);
-                geometry.indices.chunks(3).into_iter().for_each(|i| {
-                    indices.push([i[0] as u32, i[1] as u32, i[2] as u32]);
-                });
-            }
         }
+
+        geometry.create_faces(NonZeroUsize::new(positions_count));
+
         let collider = Box::new(
-            ColliderBuilder::trimesh(vertices, indices)
+            ColliderBuilder::trimesh(vertices, geometry.faces.iter().map(|i| [i[0] as u32, i[1] as u32, i[2] as u32]).collect())
                 .density(2.0)
                 .restitution(0.5)
                 .build(),
@@ -468,7 +455,6 @@ impl Mesh {
         point_light: f32,
         directional_light: f32,
         scenes: f32,
-        strip: bool,
         fixed: bool,
         rigid_body: bool,
         label: String,
@@ -511,7 +497,6 @@ impl Mesh {
             },
             color: [1.0, 0.0, 0.0, 0.0],
             positions_count: Option::None,
-            strip,
             draw_command: Option::None,
             rigid_body_handle: None,
             collider_handle: None,

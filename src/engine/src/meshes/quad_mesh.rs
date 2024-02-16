@@ -162,7 +162,6 @@ pub unsafe fn create_quad_ground() -> usize {
         0.0,
         false,
         false,
-        false,
         String::from("Quad_mesh"),
     );
     return mesh_id;

@@ -133,7 +133,7 @@ impl Elevator {
 
         }
 
-        let half = geometry.faces.planes.len()/2;
+        let half = geometry.planes.planes.len()/2;
         let stride=vertices.vertices_stride;
         for face_index in self.selected_faces.iter() {
             if new_position {
@@ -154,9 +154,9 @@ impl Elevator {
             let v3v2=f32x4_sub(v3,v2);
 
             let mut plane = if (face_index & 1) == 0 {
-                &mut geometry.faces.planes[half + (face_index >> 1)]
+                &mut geometry.planes.planes[half + (face_index >> 1)]
             } else {
-                &mut geometry.faces.planes[face_index >> 1]
+                &mut geometry.planes.planes[face_index >> 1]
             };
 
             let v3v2_shuffled_yzxw=i32x4_shuffle::<1,2,0,3>(v3v2,v3v2);
@@ -183,9 +183,9 @@ impl Elevator {
             let mut norm_v = f32x4_splat(0.0);
             for face_index in faces.iter() {
                 let plane = if (face_index & 1) == 0 {
-                    &mut geometry.faces.planes[half + (face_index >> 1)]
+                    &mut geometry.planes.planes[half + (face_index >> 1)]
                 } else {
-                    &mut geometry.faces.planes[face_index >> 1]
+                    &mut geometry.planes.planes[face_index >> 1]
                 };
                 let plane_vector=v128_load(plane.norm.as_ptr() as *mut v128);
                 norm_v = f32x4_add(norm_v, plane_vector)

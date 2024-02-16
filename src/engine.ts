@@ -140,7 +140,6 @@ export type rustWasm = {
     point_light: number,
     directional_light: number,
     scenes: number,
-    strip: boolean,
     fixed: boolean,
     rigid_body: boolean,
     label_ptr: number,
@@ -415,7 +414,7 @@ function stringFromPtr(
   if (!(memory instanceof WebAssembly.Memory)) {
     throw new Error('Webassembly module does not have memory');
   }
-  const [s_ptr, len] = new Uint32Array(memory.buffer, ptr, 2);
+  const [s_ptr, _, len] = new Uint32Array(memory.buffer, ptr, 3);
   return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
 }
 

@@ -53,7 +53,6 @@ export class Sea extends BoundableNodeSimple {
         label: 'water',
         rigid_body: false,
         scenes,
-        strip: true,
       },
       true,
     ); //48
