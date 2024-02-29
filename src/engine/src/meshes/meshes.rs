@@ -36,7 +36,7 @@ pub const BOX_POSITIONS : [f32; 192] =
         -1.0, -1.0, 1.0, 1.0, 0.0, 1.0, 0.0,1.0, 
     ];
 
-pub const BOX_INDICES : [usize; 36] =
+pub const BOX_INDICES : [u32; 36] =
     [
         0, 1, 2, 0, 2, 3,    // front
         4, 5, 6, 4, 6, 7,    // back

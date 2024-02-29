@@ -1,10 +1,10 @@
 use core::panic;
+use std::num::NonZeroU32;
 use std::num::NonZeroUsize;
 
+use crate::math2::VertexKind;
 use crate::MULTIVALUE_USIZE;
-pub use crate::boundingbox::BoundingBox;
 pub use crate::drawable::DrawCommand;
-pub use crate::drawable::DrawType;
 pub use crate::engine::Engine;
 use crate::engine::Engine2;
 pub use crate::engine::ENGINE;
@@ -27,7 +27,7 @@ pub struct Mesh {
     pub translation: Vec3F32,
     pub rotation: Quaternion,
     pub scaling: Vec3<f32>,
-    pub geometry: Option<Geometry>,
+    pub geometry: Option<Geometry<VertexKind>>,
     pub color: [f32; 4],
     /**
      Force only this amount of positions to be drawn.
@@ -85,7 +85,19 @@ pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *const Collider)
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_pointer(mesh_id: usize) -> *const f32 {
-    get_mesh_by_id(mesh_id).get_geometry().vertices.as_ref().unwrap().vertices.as_ptr()
+    let vertices = &get_mesh_by_id(mesh_id).get_geometry().vertices.vertices;
+    match vertices {
+        VertexKind::PositionAndNormalAndUV(vector) => {
+            vector.as_ptr() as *const f32
+        },
+        VertexKind::PositionAndNormalAndColor(vector) => {
+            vector.as_ptr() as *const f32
+        },
+        VertexKind::F32(vector) => {
+            vector.as_ptr()
+        },
+        VertexKind::None => todo!(),
+    }
 }
 #[no_mangle]
 pub unsafe extern "C" fn last_collider_world_vertices_pointer(mesh_id: usize) -> *const f32 {
@@ -106,12 +118,27 @@ pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     mesh.scaling.y = y;
     mesh.scaling.z = z;
 
-    let geometry = mesh.get_geometry_mut();
+    /*let geometry = mesh.get_geometry_mut();
+    geometry.create_faces(None);
+    for triangle in geometry.faces.iter() {
+         let ia = triangle.v[0];
+        let ib = triangle.v[1];
+        let ic = triangle.v[2];
+
+        let vec3 e1 = vert[ia].pos - vert[ib].pos;
+        let vec3 e2 = vert[ic].pos - vert[ib].pos;
+        let vec3 no = cross( e1, e2 );
+
+        vert[ia].normal += no;
+        vert[ib].normal += no;
+        vert[ic].normal += no;
+    }
+
     if let Some(vertices) = &mut geometry.vertices {
         for vertice in vertices.vertices.chunks(vertices.vertices_stride) {
             
         }
-    }
+    }*/
 
     mesh.on_update(true);
 }
@@ -276,7 +303,7 @@ pub unsafe extern "C" fn scale_z(mesh_id: usize) -> f32 {
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_stride(mesh_id: usize) -> usize {
-    get_mesh_by_id(mesh_id).get_geometry().vertices.as_ref().unwrap().vertices_stride
+    get_mesh_by_id(mesh_id).get_geometry().vertices.vertices_stride
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_color(
@@ -377,8 +404,7 @@ impl Mesh {
                 return positions_count;
             }
             None => {
-                let vertices = self.get_geometry().vertices.as_ref().unwrap();
-                return vertices.length()
+                return self.get_geometry().vertices.length();
             }
         }
     }
@@ -389,29 +415,29 @@ impl Mesh {
         return &self.transformation;
     }
     //TODO: move to geometry
-    pub fn create_trimesh_collider(&mut self) -> *mut Collider {
+    pub fn create_trimesh_collider(&'static mut self) -> *mut Collider {
         let scale_x = self.scaling.x;
         let scale_y = self.scaling.y;
         let scale_z = self.scaling.z;
         let positions_count = self.get_positions_count();
         let geometry = self.get_geometry_mut();
-        let vertices = geometry.vertices.as_ref().unwrap();
-        let iterator = vertices.vertices.chunks_exact(vertices.vertices_stride);
-        let mut vertices: Vec<Point<Real>> = Vec::with_capacity(positions_count);
+        let mut newvertices: Vec<Point<Real>> = Vec::with_capacity(positions_count);
+        geometry.create_faces(NonZeroU32::new(positions_count as u32));
 
-        for i in iterator {
+        let positions = geometry.get_positions();
+
+        for i in positions {
             // TODO: ensure simd
-            vertices.push(Point::new(
-                i[0] * scale_x,
-                i[1] * scale_y,
-                i[2] * scale_z,
+            newvertices.push(Point::new(
+                i.x * scale_x,
+                i.y * scale_y,
+                i.z * scale_z,
             ));
         }
 
-        geometry.create_faces(NonZeroUsize::new(positions_count));
 
         let collider = Box::new(
-            ColliderBuilder::trimesh(vertices, geometry.faces.iter().map(|i| [i[0] as u32, i[1] as u32, i[2] as u32]).collect())
+            ColliderBuilder::trimesh(newvertices, geometry.faces.clone())
                 .density(2.0)
                 .restitution(0.5)
                 .build(),
@@ -532,14 +558,14 @@ impl Mesh {
         }
         return id;
     }
-    pub fn get_geometry(&self) -> &Geometry {
+    pub fn get_geometry(&self) -> &Geometry<VertexKind> {
         if let Some(g) = &self.geometry {
             g
         } else {
             panic!("Mesh has no geometry")
         }
     }
-    pub fn get_geometry_mut(&mut self) -> &mut Geometry {
+    pub fn get_geometry_mut(&mut self) -> &mut Geometry<VertexKind> {
         if let Some(g) = &mut self.geometry {
             g
         } else {

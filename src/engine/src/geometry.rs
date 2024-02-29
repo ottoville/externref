@@ -1,9 +1,9 @@
-use std::num::NonZeroUsize;
+use std::num::{NonZeroU32, NonZeroUsize};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
     create_multivalue_vector,
-    math2::Vec4,
+    math2::{PositionAndNormalAndColor, PositionAndNormalAndUV, Vec3F32, Vec4, VertexKind},
     mesh::{get_mesh_by_id, get_mesh_by_id_mut},
 };
 #[no_mangle]
@@ -62,7 +62,7 @@ pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usiz
     geometry.planes.planes = planes;
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_indices(mesh_id: usize, ptr: *mut usize, length: usize, cap: usize) {
+pub unsafe extern "C" fn set_indices(mesh_id: usize, ptr: *mut u32, length: usize, cap: usize) {
     let indices = Vec::from_raw_parts(ptr, length, cap);
     let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
     geometry.set_indices(indices);
@@ -78,30 +78,22 @@ pub unsafe extern "C" fn set_vertices(
     let vertices = Vec::from_raw_parts(ptr, length, cap);
     get_mesh_by_id_mut(mesh_id)
         .get_geometry_mut()
-        .set_vertices(vertices, vertices_stride);
+        .set_vertices(VertexKind::F32(vertices), vertices_stride);
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_count(mesh_id: usize) -> usize {
     let mesh = get_mesh_by_id(mesh_id);
-    match mesh.get_geometry().vertices.as_ref() {
-        Some(v) => {
-            return v.length();
-        },
-        None => {
-            return 0;
-        }
-    }
+    return mesh.get_geometry().vertices.length();
 }
 #[no_mangle]
 pub unsafe extern "C" fn have_vertices(mesh_id: usize) -> bool {
     let mesh = get_mesh_by_id(mesh_id);
-    mesh.get_geometry().vertices.is_some()
+    mesh.get_geometry().vertices.have_vertices()
 }
-
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices(
     mesh_id: usize,
-    indices_ptr: *mut usize,
+    indices_ptr: *mut u32,
     indices_length: usize,
     indices_cap: usize,
     vertices_ptr: *mut f32,
@@ -113,29 +105,48 @@ pub unsafe extern "C" fn set_indices_and_vertices(
     let vertices = Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_cap);
     let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
     geometry.indices = indices;
-    geometry.set_vertices(vertices, vertices_stride);
+    geometry.set_vertices(VertexKind::F32(vertices), vertices_stride);
 }
+
 pub struct ColliderPlane {
     _plane: Plane,
     _vectors: [f32; 3],
 }
-pub struct Vertices {
-    pub vertices: Vec<f32>,
+pub struct Vertices<T> {
+    pub vertices: T,
     /**
      * stride as DWORD in vertices vec.
      */
     pub vertices_stride: usize,
 }
-impl Vertices {
+
+impl Vertices<VertexKind> {
+    pub fn have_vertices(&self) -> bool {
+        match self.vertices {
+            VertexKind::None => false,
+            _ => true
+        }
+    }
     pub fn length(&self) -> usize {
-        return self.vertices.len() / self.vertices_stride;
+        return match &self.vertices {
+            VertexKind::PositionAndNormalAndUV(vector) => {
+                vector.len()
+            },
+            VertexKind::PositionAndNormalAndColor(vector) => {
+                vector.len()
+            },
+            VertexKind::F32(vector) => {
+                vector.len()/self.vertices_stride
+            },
+            VertexKind::None => 0,
+        }
     }
 }
-pub struct Geometry {
+pub struct Geometry<T> {
     pub bounding_box: BoundingBox,
-    pub vertices: Option<Vertices>,
-    pub indices: Vec<usize>,
-    pub faces: Vec<[usize; 3]>,
+    pub vertices: Vertices<T>,
+    pub indices: Vec<u32>,
+    pub faces: Vec<[u32; 3]>,
     pub planes: Faces,
     pub strip: bool,
 
@@ -146,7 +157,40 @@ pub struct Geometry {
     pub static_faces: bool, // Used for terrain
     pub character_can_collide_to: bool,
 }
-impl Geometry {
+
+impl<'vert> Geometry<VertexKind> {
+    pub fn get_positions(&'static self) -> Box<dyn Iterator<Item = &'static Vec3F32>> {
+        match &self.vertices.vertices {
+            VertexKind::PositionAndNormalAndUV(vector) => {
+                Box::new(vector.iter().map(|v| { &v.position}))
+            },
+            VertexKind::PositionAndNormalAndColor(vector) => {
+                Box::new(vector.iter().map(|v| { &v.position}))
+            },
+            VertexKind::F32(vector) => {
+                Box::new(vector.chunks_exact(self.vertices.vertices_stride).map(|v| unsafe {
+                    &(*(v.as_ptr() as *const Vec3F32))
+                }))
+            },
+            VertexKind::None => todo!(),
+        }
+    }
+    pub fn get_positions_mut(&'static mut self) -> Box<dyn Iterator<Item = &'static mut Vec3F32>> {
+        match &mut self.vertices.vertices {
+            VertexKind::PositionAndNormalAndUV(vector) => {
+                Box::new(vector.iter_mut().map(|v| { &mut v.position}))
+            },
+            VertexKind::PositionAndNormalAndColor(vector) => {
+                Box::new(vector.iter_mut().map(|v| { &mut v.position}))
+            },
+            VertexKind::F32(vector) => {
+                Box::new(vector.chunks_exact_mut(self.vertices.vertices_stride).map(|v| unsafe {
+                    &mut (*(v.as_mut_ptr() as *mut Vec3F32))
+                }))
+            },
+            VertexKind::None => todo!(),
+        }
+    }
     pub fn new(
         has_bounding: bool,
         character_can_collide_to: bool,
@@ -155,7 +199,10 @@ impl Geometry {
     ) -> Self {
         Geometry {
             bounding_box: BoundingBox::new(has_bounding),
-            vertices: None,
+            vertices: Vertices {
+                vertices: VertexKind::None,
+                vertices_stride: 0
+            },
             indices: Vec::new(),
             faces: Vec::new(),
             planes: Faces::new(0),
@@ -167,7 +214,7 @@ impl Geometry {
             character_can_collide_to,
         }
     }
-    pub fn create_faces(&mut self, override_positions_count: Option<NonZeroUsize>) {
+    pub fn create_faces(&mut self, override_positions_count: Option<NonZeroU32>) {
         self.faces.clear();
         if self.indices.len() == 0 {
             if self.strip {
@@ -175,15 +222,14 @@ impl Geometry {
             }
             let mut pos = 0;
 
-            let positions_count: usize;
+            let positions_count: u32;
             if let Some(pos_count) = override_positions_count {
-                positions_count = usize::from(pos_count) 
+                positions_count = u32::from(pos_count) 
             } else {
-                positions_count = if let Some(vertices) = &self.vertices {
-                    vertices.length()
-                } else {
+                positions_count = self.vertices.length() as u32;
+                if positions_count == 0 {
                     panic!("Faces needs either indices or vertices");
-                };
+                }
             }
             self.faces.shrink_to_fit();
             while pos < positions_count {
@@ -208,8 +254,7 @@ impl Geometry {
             let position_count = if self.indices.len() > 0 {
                 self.indices.len()
             } else {
-                let vertices = self.vertices.as_ref().unwrap();
-                vertices.length()
+                 self.vertices.length()
             };
             if position_count == 0 {
                 return 0usize;
@@ -221,9 +266,9 @@ impl Geometry {
         }
     }
     pub fn allocate_faces(&mut self) {
-        if self.vertices.is_some() {
+        if self.vertices.have_vertices() {
             self.last_collider_world_vertices =
-                Vec::with_capacity((self.vertices.as_ref().unwrap().length()) * 4);
+                Vec::with_capacity((self.vertices.length()) * 4);
             if self.static_faces {
                 return;
             }
@@ -234,24 +279,24 @@ impl Geometry {
         }
     }
     pub fn update_bounding_box(&mut self, transformation: &Vec4<Vec4<f32>>) {
-        if self.bounding_box.need_init {
-            self.bounding_box.init(self.vertices.as_ref().unwrap());
+        if self.bounding_box.need_init {            
+            self.bounding_box.init(&self.vertices);
             self.bounding_box.transform(transformation);
         } else if self.bounding_box.dirty {
             self.bounding_box.transform(transformation);
         }
     }
-    pub fn set_vertices(&mut self, vertices: Vec<f32>, vertices_stride: usize) {
-        self.vertices = Some(Vertices {
+    pub fn set_vertices(&mut self, vertices: VertexKind, vertices_stride: usize) {
+        self.vertices = Vertices {
             vertices,
             vertices_stride,
-        });
+        };
         self.bounding_box.need_init = true;
-        if self.character_can_collide_to && self.vertices.is_some() {
+        if self.character_can_collide_to {
             self.allocate_faces();
         }
     }
-    pub fn set_indices(&mut self, indices: Vec<usize>) {
+    pub fn set_indices(&mut self, indices: Vec<u32>) {
         self.indices = indices;
         self.bounding_box.need_init = true;
         if self.character_can_collide_to {

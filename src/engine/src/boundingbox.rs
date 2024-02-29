@@ -1,7 +1,6 @@
 use crate::collider::Collider;
 use crate::geometry::Vertices;
-use crate::math2::{Vec4, Vec3F32, Vec3};
-pub use crate::mesh::Mesh;
+use crate::math2::{PositionAndNormalAndColor, PositionAndNormalAndUV, Vec3, Vec3F32, Vec4, VertexKind};
 
 pub struct BoundingBox {
     pub has_bounding:bool,
@@ -18,7 +17,7 @@ pub struct BoundingBox {
 #[cfg(test)]
 #[test]
 fn test_bounding_box() {
-    use crate::{meshes::meshes::{BOX_POSITIONS, BOX_INDICES}, engine::{init_engine}, mesh::{ENGINE, get_mesh_by_id_mut}, Geometry};
+    use crate::{engine::init_engine, math2::VertexKind, mesh::{get_mesh_by_id_mut, Mesh, ENGINE}, meshes::meshes::{BOX_INDICES, BOX_POSITIONS}, Geometry};
     unsafe {
         init_engine();
         let engine2 = ENGINE.physic_engine_mut();
@@ -26,7 +25,8 @@ fn test_bounding_box() {
         Mesh::new(0.0, 0.0, 0.0, false, false, String::from("box"));
         let m = &mut engine2.meshes[len];
         let mut geometry = Geometry::new(true, false, false, false);
-        geometry.set_vertices(BOX_POSITIONS.to_vec(), 8);
+        let vertices = VertexKind::F32(BOX_POSITIONS.to_vec());
+        geometry.set_vertices(vertices, 8);
         geometry.indices = BOX_INDICES.to_vec();
         m.geometry = Some(geometry);
 
@@ -52,7 +52,7 @@ fn test_bounding_box() {
         assert_eq!(geo.bounding_box.max.x, 623.0);
         assert_eq!(geo.bounding_box.max.y, 1698.498779296875);
         assert_eq!(geo.bounding_box.max.z, 821.4988);
-        
+       
     }
 }
 
@@ -70,32 +70,48 @@ impl BoundingBox {
             need_init:true,
         }
     }
-    pub fn init(&mut self, vertices:&Vertices) {
-        self.min_original.x=vertices.vertices[0];
-        self.min_original.x=vertices.vertices[1];
-        self.min_original.x=vertices.vertices[2];
-        self.max_original.x=vertices.vertices[0];
-        self.max_original.x=vertices.vertices[1];
-        self.max_original.x=vertices.vertices[2];
+    pub fn init(&mut self, vertices:&Vertices<VertexKind>) {
+        //TODO: use macro
+        let mut positions: Box<dyn Iterator<Item = &Vec3F32>> = match &vertices.vertices {
+            VertexKind::PositionAndNormalAndUV(vector) => {
+                Box::new(vector.iter().map(|v: &PositionAndNormalAndUV| { &v.position}))
+            },
+            VertexKind::PositionAndNormalAndColor(vector) => {
+                Box::new(vector.iter().map(|v: &PositionAndNormalAndColor| { &v.position}))
+            },
+            VertexKind::F32(vector) => {
+                Box::new(vector.chunks_exact(vertices.vertices_stride).map(|v:&[f32]| unsafe {
+                    &(*(v.as_ptr() as *const Vec3F32))
+                }))
+            },
+            VertexKind::None => todo!(),
+        };
 
-        let positions=vertices.vertices.chunks(vertices.vertices_stride);
+        let first_vertice = positions.next().unwrap();
+        self.min_original.x=first_vertice.x;
+        self.min_original.y=first_vertice.y;
+        self.min_original.z=first_vertice.z;
+        self.max_original.x=first_vertice.x;
+        self.max_original.y=first_vertice.y;
+        self.max_original.z=first_vertice.z;
+
         for position in positions {
-            if position[0] < self.min_original.x {
-                self.min_original.x = position[0]
+            if position.x < self.min_original.x {
+                self.min_original.x = position.x
             }
-            else if position[0] > self.max_original.x {
-                self.max_original.x = position[0]
+            else if position.x > self.max_original.x {
+                self.max_original.x = position.x
             }
-            if position[1] < self.min_original.y {
-                self.min_original.y = position[1]
+            if position.y < self.min_original.y {
+                self.min_original.y = position.y
             }
-            else if position[1] > self.max_original.y {
-                self.max_original.y = position[1]
+            else if position.y > self.max_original.y {
+                self.max_original.y = position.y
             }
-            if position[2] < self.min_original.z {
-                self.min_original.z = position[2]
-            } else if position[2] > self.max_original.z {
-                self.max_original.z = position[2]
+            if position.z < self.min_original.z {
+                self.min_original.z = position.z
+            } else if position.z > self.max_original.z {
+                self.max_original.z = position.z
             }
         }
 
