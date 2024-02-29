@@ -9,6 +9,13 @@ pub struct Vec3<T> {
     pub y: T,
     pub z: T,
 }
+
+pub enum VertexKind {
+    None,
+    PositionAndNormalAndUV(Vec<PositionAndNormalAndUV>),
+    PositionAndNormalAndColor(Vec<PositionAndNormalAndColor>),
+    F32(Vec<f32>)
+}
 #[repr(C, align(16))]
 pub struct PositionAndNormalAndUV {
     pub position: Vec3F32,
@@ -21,6 +28,7 @@ pub struct PositionAndNormalAndColor {
     pub normal: Vec3F32,
     pub color: Vec3F32
 }
+
 #[repr(C, align(16))]
 pub struct Vec2F32 {
     pub u: f32,
