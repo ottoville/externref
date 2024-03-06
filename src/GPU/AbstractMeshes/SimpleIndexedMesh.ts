@@ -71,20 +71,29 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         } else {
           usages = BufferUsageEnums.VERTEX;
         }
+
+        let vertices_view: rust_pointer<'f32'>;
+        let vertices_len: number;
+        if (typeof dataNodeProps.vertices === 'number') {
+          vertices_view = engine.rust.vertices_pointer(dataNodeProps.vertices);
+          vertices_len =
+            this.vertices_count * engine.rust.vertices_stride(this.id);
+        } else {
+          [vertices_view, vertices_len] = dataNodeProps.vertices.view;
+        }
         vBufferGPU = new Buffer(
           {
             gpu: engine.gpu.device,
             label: 'SimpleIndexedMeshVertex_' + this.label,
-            size:
-              dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
+            size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
             usages: usages as BufferUsageEnums.VERTEX,
           },
           (b) => {
             new Float32Array(b.getMappedRange()).set(
               new Float32Array(
                 engine.rust.memory.buffer,
-                dataNodeProps.vertices!.view[0],
-                dataNodeProps.vertices!.view[1],
+                vertices_view,
+                vertices_len,
               ),
             );
           },
@@ -94,7 +103,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         createRenderPipeline,
         primitiveState,
         {
-          stride: dataNodeProps.vertices.stride,
+          stride: engine.rust.vertices_stride(this.id),
         },
       );
       this.drawable = new DrawableIndexed({

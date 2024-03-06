@@ -1,9 +1,9 @@
-use std::num::{NonZeroU32, NonZeroUsize};
+use std::num::NonZeroU32;
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
     create_multivalue_vector,
-    math2::{PositionAndNormalAndColor, PositionAndNormalAndUV, Vec3F32, Vec4, VertexKind},
+    math2::{Vec3F32, Vec4, VertexKind},
     mesh::{get_mesh_by_id, get_mesh_by_id_mut},
 };
 #[no_mangle]
@@ -135,6 +135,9 @@ impl Vertices<VertexKind> {
             VertexKind::PositionAndNormalAndColor(vector) => {
                 vector.len()
             },
+            VertexKind::PositionAndNormal(vector) => {
+                vector.len()
+            },
             VertexKind::F32(vector) => {
                 vector.len()/self.vertices_stride
             },
@@ -167,6 +170,9 @@ impl<'vert> Geometry<VertexKind> {
             VertexKind::PositionAndNormalAndColor(vector) => {
                 Box::new(vector.iter().map(|v| { &v.position}))
             },
+            VertexKind::PositionAndNormal(vector) => {
+                Box::new(vector.iter().map(|v| { &v.position}))
+            },
             VertexKind::F32(vector) => {
                 Box::new(vector.chunks_exact(self.vertices.vertices_stride).map(|v| unsafe {
                     &(*(v.as_ptr() as *const Vec3F32))
@@ -181,6 +187,9 @@ impl<'vert> Geometry<VertexKind> {
                 Box::new(vector.iter_mut().map(|v| { &mut v.position}))
             },
             VertexKind::PositionAndNormalAndColor(vector) => {
+                Box::new(vector.iter_mut().map(|v| { &mut v.position}))
+            },
+            VertexKind::PositionAndNormal(vector) => {
                 Box::new(vector.iter_mut().map(|v| { &mut v.position}))
             },
             VertexKind::F32(vector) => {
@@ -296,6 +305,9 @@ impl<'vert> Geometry<VertexKind> {
             self.allocate_faces();
         }
     }
+    /**
+     * Set indices to geometry
+     */
     pub fn set_indices(&mut self, indices: Vec<u32>) {
         self.indices = indices;
         self.bounding_box.need_init = true;

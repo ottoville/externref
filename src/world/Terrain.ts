@@ -101,7 +101,7 @@ TODO
         new Float32Array(b.getMappedRange()).set(
           new Float32Array(
             engine.memory.buffer,
-            engine.rust.vertices_pointer(this.mesh.id) + offset,
+            engine.rust.vertices_pointer(this.mesh.geometry) + offset,
             byteLength / 4,
           ),
         );

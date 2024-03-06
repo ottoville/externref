@@ -10,6 +10,7 @@ mod meshes;
 mod terrain;
 mod math;
 mod freelist;
+mod vertices;
 
 use std::num::NonZeroUsize;
 

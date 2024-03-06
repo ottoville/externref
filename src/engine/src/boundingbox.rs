@@ -1,6 +1,7 @@
 use crate::collider::Collider;
 use crate::geometry::Vertices;
-use crate::math2::{PositionAndNormalAndColor, PositionAndNormalAndUV, Vec3, Vec3F32, Vec4, VertexKind};
+use crate::math2::{Vec3, Vec3F32, Vec4, VertexKind};
+use crate::vertices::{PositionAndNormal, PositionAndNormalAndColor, PositionAndNormalAndUV};
 
 pub struct BoundingBox {
     pub has_bounding:bool,
@@ -17,7 +18,7 @@ pub struct BoundingBox {
 #[cfg(test)]
 #[test]
 fn test_bounding_box() {
-    use crate::{engine::init_engine, math2::VertexKind, mesh::{get_mesh_by_id_mut, Mesh, ENGINE}, meshes::meshes::{BOX_INDICES, BOX_POSITIONS}, Geometry};
+    use crate::{engine::init_engine, math2::VertexKind, mesh::{get_mesh_by_id_mut, Mesh, ENGINE}, meshes::r#box::{BOX_INDICES, BOX_POSITIONS2}, Geometry};
     unsafe {
         init_engine();
         let engine2 = ENGINE.physic_engine_mut();
@@ -25,10 +26,10 @@ fn test_bounding_box() {
         Mesh::new(0.0, 0.0, 0.0, false, false, String::from("box"));
         let m = &mut engine2.meshes[len];
         let mut geometry = Geometry::new(true, false, false, false);
-        let vertices = VertexKind::F32(BOX_POSITIONS.to_vec());
+        let vertices = VertexKind::PositionAndNormal(Box::new(BOX_POSITIONS2));
         geometry.set_vertices(vertices, 8);
         geometry.indices = BOX_INDICES.to_vec();
-        m.geometry = Some(geometry);
+        m.geometry = Some(Box::new(geometry));
 
         m.scaling.x = 500.0;
         m.scaling.y = 500.0;
@@ -78,6 +79,9 @@ impl BoundingBox {
             },
             VertexKind::PositionAndNormalAndColor(vector) => {
                 Box::new(vector.iter().map(|v: &PositionAndNormalAndColor| { &v.position}))
+            },
+            VertexKind::PositionAndNormal(vector) => {
+                Box::new(vector.iter().map(|v: &PositionAndNormal| { &v.position}))
             },
             VertexKind::F32(vector) => {
                 Box::new(vector.chunks_exact(vertices.vertices_stride).map(|v:&[f32]| unsafe {

@@ -153,7 +153,9 @@ export type rustWasm = {
     character_can_collide_to: boolean,
     static_faces: boolean,
     strip: boolean,
-  ): void;
+  ): rust_pointer<'geometry'>;
+  set_geometry(mesh_id: number, geometry: rust_pointer<'geometry'>): void;
+  create_box_geometry(): rust_pointer<'geometry'>;
   add_collider(mesh_id: number, collider: rust_pointer<'collider'>): void;
   memory: WebAssembly.Memory;
   set_vertices(
@@ -179,8 +181,10 @@ export type rustWasm = {
     vertices_cap: number,
     vertices_stride: number,
   ): void;
-  vertices_pointer(mesh_id: number): number;
-  indices_field_pointer(mesh_id: number): rust_pointer<'indices_indices'>;
+  vertices_pointer(geometry: rust_pointer<'geometry'>): rust_pointer<'f32'>;
+  indices_field_pointer(
+    geometry: rust_pointer<'geometry'>,
+  ): rust_pointer<'indices_indices'>;
   last_collider_world_vertices_pointer(mesh_id: number): number;
   vertices_count(mesh_id: number): number;
   have_vertices(mesh_id: number): boolean;
@@ -282,9 +286,6 @@ export type rustWasm = {
     half_height: number,
     radius: number,
   ): rust_pointer<'collider'>;
-
-  get_box_vertices(): rust_pointer<'f32'>;
-  get_box_indices(): rust_pointer<'u32'>;
 };
 
 function Dot(

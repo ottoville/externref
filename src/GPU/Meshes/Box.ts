@@ -30,30 +30,16 @@ export class Box extends IndexedSingleColoredMesh {
     color?: [number, number, number, number];
     fixed?: boolean;
   }) {
-    const boxVertices = engine.rust.get_box_vertices();
-    const [ptr_vertices, len_vertices, cap_vertices] = new Uint32Array(
+    const geometry = engine.rust.create_box_geometry();
+    const [indices_ptr, indices_len, indices_cap] = new Uint32Array(
       engine.rust.memory.buffer,
-      boxVertices,
+      engine.rust.indices_field_pointer(geometry),
       3,
     );
-    const boxIndices = engine.rust.get_box_indices();
-    const [ptr_ind, len_ind, cap_ind] = new Uint32Array(
-      engine.rust.memory.buffer,
-      boxIndices,
-      3,
-    );
-
     super(
       {
         can_collide,
-        vertices: {
-          stride: 8 as Word<'dword'>,
-          view: [
-            ptr_vertices as rust_pointer<'f32'>,
-            len_vertices!,
-            cap_vertices!,
-          ],
-        },
+        vertices: geometry,
       },
       {
         fixed,
@@ -61,7 +47,7 @@ export class Box extends IndexedSingleColoredMesh {
         point_light,
         scenes,
       },
-      [ptr_ind as rust_pointer<'usize'>, len_ind!, cap_ind!],
+      [indices_ptr as rust_pointer<'usize'>, indices_len!, indices_cap!],
     );
     this.color = color;
   }

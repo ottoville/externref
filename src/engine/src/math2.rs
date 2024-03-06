@@ -1,7 +1,7 @@
 #[cfg(target_arch = "wasm32")]
 use std::arch::wasm32::*;
 
-use crate::math::quaternion::Quaternion;
+use crate::{math::quaternion::Quaternion, vertices::{PositionAndNormal, PositionAndNormalAndColor, PositionAndNormalAndUV}};
 
 #[derive(Copy, Clone)]
 pub struct Vec3<T> {
@@ -14,19 +14,8 @@ pub enum VertexKind {
     None,
     PositionAndNormalAndUV(Vec<PositionAndNormalAndUV>),
     PositionAndNormalAndColor(Vec<PositionAndNormalAndColor>),
+    PositionAndNormal(Box<[PositionAndNormal]>),
     F32(Vec<f32>)
-}
-#[repr(C, align(16))]
-pub struct PositionAndNormalAndUV {
-    pub position: Vec3F32,
-    pub normal: Vec3F32,
-    pub uv: Vec2F32
-}
-#[repr(C, align(16))]
-pub struct PositionAndNormalAndColor {
-    pub position: Vec3F32,
-    pub normal: Vec3F32,
-    pub color: Vec3F32
 }
 
 #[repr(C, align(16))]
@@ -68,10 +57,41 @@ impl Vec3F32 {
             z: self.z,
         }
     }
-    pub fn add(&mut self, x: f32, y: f32, z: f32) {
+    /**
+     * Set all values to zero
+     */
+    pub fn clear(&mut self) {
+        self.x = 0.0;
+        self.y = 0.0;
+        self.z = 0.0;
+    }
+    /**
+     * Modify vector with given values
+     */
+    pub fn add_in_place(&mut self, x: f32, y: f32, z: f32) {
         self.x += x;
         self.y += y;
         self.z += z;
+    }
+    /**
+     * Returns new vector which is sum of two vectors
+     */
+    pub fn add(&self, vec: &Vec3F32) -> Vec3F32 {
+        Vec3F32 {
+            x: self.x + vec.x,
+            y: self.x + vec.y,
+            z: self.x + vec.z
+        }
+    }
+    /**
+     * Returns new vector which is sub of two vectors
+     */
+    pub fn sub(&self, vec: &Vec3F32) -> Vec3F32 {
+        Vec3F32 {
+            x: self.x - vec.x,
+            y: self.x - vec.y,
+            z: self.x - vec.z
+        }
     }
     pub fn dot(&self, other: &Vec3F32) -> f32 {
         self.x * other.x + self.y * other.y + self.z * other.z

@@ -166,7 +166,6 @@ export class Canvas {
             inputEnabled: false,
             scenes: [terrascene],
           });
-          // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
           human.translation = [403.4, 1000, 23];
           document.addEventListener('keydown', (e) => {
             if (e.key === 'Tab') {

@@ -37,10 +37,12 @@ export interface Ellipsoid {
 }
 
 export type DataNodeProps = {
-  vertices?: {
-    view: rust_vec_ptr<'f32'>;
-    stride: Word<'dword'>;
-  };
+  vertices?:
+    | {
+        view: rust_vec_ptr<'f32'>;
+        stride: Word<'dword'>;
+      }
+    | rust_pointer<'geometry'>;
   /**
    * Setting true will create collider in rapier
    */
@@ -141,7 +143,7 @@ export class DataNode extends MainNode {
   get indices() {
     const [indices_ptr, indices_len] = new Uint32Array(
       engine.rust.memory.buffer,
-      engine.rust.indices_field_pointer(this.id),
+      engine.rust.indices_field_pointer(this.geometry),
       2,
     );
     return new Uint32Array(engine.rust.memory.buffer, indices_ptr, indices_len);
@@ -149,7 +151,7 @@ export class DataNode extends MainNode {
   get indices_count() {
     return new Uint32Array(
       engine.rust.memory.buffer,
-      engine.rust.indices_field_pointer(this.id),
+      engine.rust.indices_field_pointer(this.geometry),
       2,
     )[1]!;
   }
@@ -229,7 +231,7 @@ export class DataNode extends MainNode {
   get vertices() {
     return new ReadOnlyFloat32Array(
       engine.memory.buffer,
-      engine.rust.vertices_pointer(this.id),
+      engine.rust.vertices_pointer(this.geometry),
       this.vertices_count * this.vertices_stride,
     );
   }
@@ -260,7 +262,7 @@ export class DataNode extends MainNode {
   update_vertices(cb: (view: Float32Array) => void) {
     const view = new Float32Array(
       engine.memory.buffer,
-      engine.rust.vertices_pointer(this.id),
+      engine.rust.vertices_pointer(this.geometry),
       this.vertices_count * this.vertices_stride,
     );
     cb(view);
@@ -283,6 +285,7 @@ export class DataNode extends MainNode {
   static CharacterCanCollideMeshes: Set<DataNode> = new Set();
   #frontFace: GPUFrontFace;
   #character_can_collide_to: boolean;
+  geometry: rust_pointer<'geometry'>;
   constructor(
     props: DataNodeProps,
     mainNodeProps: MainNodeProps,
@@ -304,19 +307,26 @@ export class DataNode extends MainNode {
     this.#character_can_collide_to = character_can_collide_to;
 
     DataNode.Meshes.set(this.id, this);
-    engine.rust.create_geometry(
-      this.id,
-      true,
-      character_can_collide_to,
-      static_faces,
-      strip,
-    );
-    if (indicesView) {
-      this.set_indices(indicesView);
+
+    if (typeof vertices === 'number') {
+      this.geometry = vertices;
+      engine.rust.set_geometry(this.id, this.geometry);
+    } else {
+      this.geometry = engine.rust.create_geometry(
+        this.id,
+        true,
+        character_can_collide_to,
+        static_faces,
+        strip,
+      );
+      if (indicesView) {
+        this.set_indices(indicesView);
+      }
     }
-    if (vertices) {
-      this.set_vertices(vertices.view, vertices?.stride);
+    if (vertices && typeof vertices !== 'number') {
+      this.set_vertices(vertices.view, vertices.stride);
     }
+
     if (can_collide) {
       const collider_ptr = this.create_collider();
       engine.rust.add_collider(this.id, collider_ptr);
@@ -363,7 +373,7 @@ export class DataNode extends MainNode {
   };
   get verticesArray() {
     const arr: Float32Array[] = [];
-    const vertices_pointer = engine.rust.vertices_pointer(this.id);
+    const vertices_pointer = engine.rust.vertices_pointer(this.geometry);
     for (let i = 0; i < this.vertices_count; i++) {
       arr.push(
         new Float32Array(
@@ -399,7 +409,7 @@ export class DataNode extends MainNode {
     this.#positionsAndCollider.length = 0;
     this.colliderVerticesV4.length = 0;
     //this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
-    const vertices_pointer = engine.rust.vertices_pointer(this.id);
+    const vertices_pointer = engine.rust.vertices_pointer(this.geometry);
     for (let i = 0; i < this.vertices_count; i++) {
       const pos =
         vertices_pointer +

@@ -27,7 +27,7 @@ pub struct Mesh {
     pub translation: Vec3F32,
     pub rotation: Quaternion,
     pub scaling: Vec3<f32>,
-    pub geometry: Option<Geometry<VertexKind>>,
+    pub geometry: Option<Box<Geometry<VertexKind>>>,
     pub color: [f32; 4],
     /**
      Force only this amount of positions to be drawn.
@@ -64,19 +64,29 @@ pub unsafe extern "C" fn new_mesh(
     );
 }
 #[no_mangle]
-pub extern "C" fn create_geometry(
+pub extern "C" fn create_geometry<'frame>(
     mesh_id: usize,
     has_bounding: bool,
     character_can_collide_to: bool,
     static_faces: bool,
     strip: bool,
-) {
-    get_mesh_by_id_mut(mesh_id).geometry = Some(Geometry::new(
+) -> &'frame Geometry<VertexKind> {
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    mesh.geometry = Some(Box::new(Geometry::new(
         has_bounding,
         character_can_collide_to,
         static_faces,
         strip,
-    ));
+    )));
+    mesh.geometry.as_ref().unwrap()
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_geometry<'frame>(
+    mesh_id: usize,
+    geometry: *mut Geometry<VertexKind>,
+) {
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    mesh.geometry = Some(Box::from_raw(geometry));
 }
 #[no_mangle]
 pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *const Collider) {
@@ -84,8 +94,8 @@ pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *const Collider)
     get_mesh_by_id_mut(mesh_id).add_collider(coll, ENGINE.physic_engine_mut());
 }
 #[no_mangle]
-pub unsafe extern "C" fn vertices_pointer(mesh_id: usize) -> *const f32 {
-    let vertices = &get_mesh_by_id(mesh_id).get_geometry().vertices.vertices;
+pub unsafe extern "C" fn vertices_pointer(geometry: *const Geometry<VertexKind>) -> *const f32 {
+    let vertices =&(*geometry).vertices.vertices;
     match vertices {
         VertexKind::PositionAndNormalAndUV(vector) => {
             vector.as_ptr() as *const f32
@@ -93,10 +103,13 @@ pub unsafe extern "C" fn vertices_pointer(mesh_id: usize) -> *const f32 {
         VertexKind::PositionAndNormalAndColor(vector) => {
             vector.as_ptr() as *const f32
         },
+        VertexKind::PositionAndNormal(vector) => {
+            vector.as_ptr() as *const f32
+        },
         VertexKind::F32(vector) => {
             vector.as_ptr()
         },
-        VertexKind::None => todo!(),
+        VertexKind::None => panic!("Asked vertices pointer but there are no vertices"),
     }
 }
 #[no_mangle]
@@ -118,28 +131,52 @@ pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     mesh.scaling.y = y;
     mesh.scaling.z = z;
 
-    /*let geometry = mesh.get_geometry_mut();
-    geometry.create_faces(None);
+    let geometry = mesh.get_geometry_mut();
+    /*geometry.create_faces(None);
+
+     let positions: Vec<_> = match &mut geometry.vertices.vertices {
+        VertexKind::PositionAndNormalAndUV(vector) => {
+            vector.iter_mut().map(|v| {
+                v.normal.clear();
+                return (&v.position, &mut v.normal);
+            }).collect()
+        },
+        VertexKind::PositionAndNormalAndColor(vector) => {
+            vector.iter_mut().map(|v| {
+                v.normal.clear();
+                return (&v.position, &mut v.normal);
+            }).collect()
+        },
+        VertexKind::PositionAndNormal(vector) => {
+            vector.iter_mut().map(|v| {
+                v.normal.clear();
+                return (&v.position, &mut v.normal);
+            }).collect()
+        },
+        VertexKind::F32(_) => {
+            todo!()
+        },
+        VertexKind::None => todo!(),
+    };
+
     for triangle in geometry.faces.iter() {
-         let ia = triangle.v[0];
-        let ib = triangle.v[1];
-        let ic = triangle.v[2];
+         let ia = &positions[triangle[0] as usize];
+        let ib = &positions[triangle[1] as usize];
+        let ic = &positions[triangle[2] as usize];
+        ia.0.sub(ib.0);
 
-        let vec3 e1 = vert[ia].pos - vert[ib].pos;
-        let vec3 e2 = vert[ic].pos - vert[ib].pos;
-        let vec3 no = cross( e1, e2 );
+        let e1 = ia.0.sub(ib.0);
+        let e2 =  ic.0.sub(ib.0);
+        
+        let no = e1.cross(&e2);
 
-        vert[ia].normal += no;
-        vert[ib].normal += no;
-        vert[ic].normal += no;
+        ia.1.add(&no);
+        ib.1.add(&no);
+        ic.1.add(&no);
     }
-
-    if let Some(vertices) = &mut geometry.vertices {
-        for vertice in vertices.vertices.chunks(vertices.vertices_stride) {
-            
-        }
+    for position in positions {
+        position.1.normalize();
     }*/
-
     mesh.on_update(true);
 }
 #[no_mangle]
@@ -199,8 +236,9 @@ pub unsafe extern "C" fn label_field_pointer(mesh_id: usize) -> *const usize {
     MULTIVALUE_USIZE.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn indices_field_pointer(mesh_id: usize) -> *const usize {
-    let indices = &get_mesh_by_id(mesh_id).get_geometry().indices;
+pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry<VertexKind>) -> *const usize {
+    let geometry = &(*geometry_ptr);
+    let indices = &geometry.indices;
     MULTIVALUE_USIZE[0] = indices.as_ptr() as usize;
     MULTIVALUE_USIZE[1] = indices.len();
     MULTIVALUE_USIZE[2] = indices.capacity();

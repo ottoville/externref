@@ -1,4 +1,4 @@
-use crate::{math2::{Vec3F32, PositionAndNormalAndUV, Vec2F32}, mesh::Mesh, MULTIVALUE_USIZE};
+use crate::{math2::{Vec2F32, Vec3F32}, mesh::Mesh, vertices::PositionAndNormalAndUV, MULTIVALUE_USIZE};
 
 #[no_mangle]
 pub unsafe extern "C" fn create_tiled_mesh_ptr(width: f32, height: f32) -> *const usize {
