@@ -1,7 +1,7 @@
 
-use std::cell::{RefCell};
+use std::cell::RefCell;
 
-use crate::{math2::{Vec3F32, PositionAndNormalAndColor}, MULTIVALUE_USIZE};
+use crate::{math2::Vec3F32, vertices::PositionAndNormalAndColor, MULTIVALUE_USIZE};
 
 struct Patch {
     patch_points_a: Vec<usize>,
@@ -206,7 +206,7 @@ pub unsafe extern "C" fn create_octasphere(
                     z: -vertices_and_normals[j].position.x,
                 };
                 vertices_and_normals[vert_index].normal = vertices_and_normals[vert_index].position.clone();
-                vertices_and_normals[vert_index].position.add(half_width, half_height, -half_depth);
+                vertices_and_normals[vert_index].position.add_in_place(half_width, half_height, -half_depth);
                 vert_index += 1;
             } else if i == 1 {
                 vertices_and_normals[vert_index].position = Vec3F32 {
@@ -215,7 +215,7 @@ pub unsafe extern "C" fn create_octasphere(
                     z: -vertices_and_normals[j].position.z,
                 };
                 vertices_and_normals[vert_index].normal = vertices_and_normals[vert_index].position.clone();
-                vertices_and_normals[vert_index].position.add(-half_width, half_height, -half_depth);
+                vertices_and_normals[vert_index].position.add_in_place(-half_width, half_height, -half_depth);
 
                 vert_index += 1;
             } else if i == 2 {
@@ -225,7 +225,7 @@ pub unsafe extern "C" fn create_octasphere(
                     z: vertices_and_normals[j].position.x,
                 };
                 vertices_and_normals[vert_index].normal = vertices_and_normals[vert_index].position.clone();
-                vertices_and_normals[vert_index].position.add(-half_width, half_height, half_depth);
+                vertices_and_normals[vert_index].position.add_in_place(-half_width, half_height, half_depth);
 
                 vert_index += 1;
             } else if i == 3 {
@@ -235,7 +235,7 @@ pub unsafe extern "C" fn create_octasphere(
                     z: vertices_and_normals[j].position.y,
                 };
                 vertices_and_normals[vert_index].normal = vertices_and_normals[vert_index].position.clone();
-                vertices_and_normals[vert_index].position.add(half_width, -half_height, half_depth);
+                vertices_and_normals[vert_index].position.add_in_place(half_width, -half_height, half_depth);
 
                 vert_index += 1;
             } else if i == 4 {
@@ -245,7 +245,7 @@ pub unsafe extern "C" fn create_octasphere(
                     z: -vertices_and_normals[j].position.x,
                 };
                 vertices_and_normals[vert_index].normal = vertices_and_normals[vert_index].position.clone();
-                vertices_and_normals[vert_index].position.add(half_width, -half_height, -half_depth);
+                vertices_and_normals[vert_index].position.add_in_place(half_width, -half_height, -half_depth);
                 vert_index += 1;
             } else if i == 5 {
                 vertices_and_normals[vert_index].position = Vec3F32 {
@@ -254,7 +254,7 @@ pub unsafe extern "C" fn create_octasphere(
                     z: -vertices_and_normals[j].position.y,
                 };
                 vertices_and_normals[vert_index].normal = vertices_and_normals[vert_index].position.clone();
-                vertices_and_normals[vert_index].position.add(-half_width, -half_height, -half_depth);
+                vertices_and_normals[vert_index].position.add_in_place(-half_width, -half_height, -half_depth);
                 vert_index += 1;
             } else if i == 6 {
                 vertices_and_normals[vert_index].position = Vec3F32 {
@@ -263,7 +263,7 @@ pub unsafe extern "C" fn create_octasphere(
                     z: vertices_and_normals[j].position.x,
                 };
                 vertices_and_normals[vert_index].normal = vertices_and_normals[vert_index].position.clone();
-                vertices_and_normals[vert_index].position.add(-half_width, -half_height, half_depth);
+                vertices_and_normals[vert_index].position.add_in_place(-half_width, -half_height, half_depth);
                 vert_index += 1;
             }
             match points_a.iter().position(|x| *x == j) {

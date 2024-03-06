@@ -126,6 +126,9 @@ impl Elevator {
             VertexKind::PositionAndNormalAndColor(vector) => {
                 vector.iter_mut().map(|v| { &mut v.position}).collect()
             },
+            VertexKind::PositionAndNormal(vector) => {
+                vector.iter_mut().map(|v| { &mut v.position}).collect()
+            },
             VertexKind::F32(vector) => {
                 vector.chunks_exact_mut(stride).map(|v| unsafe {
                     &mut (*(v.as_mut_ptr() as *mut Vec3F32))
