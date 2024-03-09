@@ -101,33 +101,30 @@ export class Plants extends MainNode {
           stride: 4 as Word<'dword'>,
         },
       );
+      const vertices = allocate_vec(
+        Float32Array.of(
+          0.02,
+          0.0,
+          -0.02,
+          0.0,
+          0.014,
+          0.29,
+          -0.014,
+          0.29,
+          0.007,
+          0.57,
+          -0.007,
+          0.57,
+          0.0,
+          1.0,
+        ),
+      );
       this.drawable = new DrawableIndirect(
         {
           bindGroups: [],
           node: this,
           renderPipeline,
-          vertexBuffers: [
-            positionGPU,
-            shapeGPU,
-            allocate_vec(
-              Float32Array.of(
-                0.02,
-                0.0,
-                -0.02,
-                0.0,
-                0.014,
-                0.29,
-                -0.014,
-                0.29,
-                0.007,
-                0.57,
-                -0.007,
-                0.57,
-                0.0,
-                1.0,
-              ),
-            ),
-          ],
+          vertexBuffers: [positionGPU, shapeGPU, [vertices[0], vertices[1]]],
         },
         indirectBuffer,
       );

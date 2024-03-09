@@ -89,7 +89,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       bindGroups: [],
       node,
       renderPipeline,
-      vertexBuffers: [vertices_ptr],
+      vertexBuffers: [[vertices_ptr[0], vertices_ptr[1]]],
     });
   } else {
     throw new Error(

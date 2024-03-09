@@ -1,6 +1,6 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
-import type { Engine, rust_vec_ptr } from '../../engine.js';
+import type { Engine } from '../../engine.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import { type CreateRenderPipelineCB } from '../../GPU.js';
@@ -77,7 +77,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         if (typeof dataNodeProps.vertices === 'number') {
           vertices_view = engine.rust.vertices_pointer(dataNodeProps.vertices);
           vertices_len =
-            this.vertices_count * engine.rust.vertices_stride(this.id);
+            this.vertices_count * engine.rust.vertices_stride(this.geometry);
         } else {
           [vertices_view, vertices_len] = dataNodeProps.vertices.view;
         }
@@ -103,7 +103,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         createRenderPipeline,
         primitiveState,
         {
-          stride: engine.rust.vertices_stride(this.id),
+          stride: engine.rust.vertices_stride(this.geometry),
         },
       );
       this.drawable = new DrawableIndexed({

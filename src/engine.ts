@@ -61,12 +61,6 @@ type ListenerOptions = {
   force?: boolean;
 };
 
-export type rust_vec_ptr<T> = readonly [
-  ptr: rust_pointer<T>,
-  len: number,
-  cap: number,
-];
-
 export type rustWasm = {
   add_drawble(mesh_id: number): void;
   set_drawble_direct(
@@ -79,10 +73,10 @@ export type rustWasm = {
   set_instance_count(mesh_id: number, instance_count: number): void;
   set_first_instance(mesh_id: number, first_instance: number): void;
 
-  create_tiled_mesh_ptr(
+  create_tiled_mesh_geometry(
     width: number,
     height: number,
-  ): rust_pointer<'*const usize'>;
+  ): rust_pointer<'geometry'>;
 
   create_octasphere(
     num_subdivisions: number,
@@ -184,9 +178,9 @@ export type rustWasm = {
   vertices_pointer(geometry: rust_pointer<'geometry'>): rust_pointer<'f32'>;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
-  ): rust_pointer<'indices_indices'>;
+  ): rust_pointer<'indices_field'>;
   last_collider_world_vertices_pointer(mesh_id: number): number;
-  vertices_count(mesh_id: number): number;
+  vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: number): boolean;
   faces_count(mesh_id: number): number;
   alloc_vector_f32(size: Word<'dword'>): rust_pointer<'usize'>;
@@ -227,7 +221,7 @@ export type rustWasm = {
   scale_x(mesh_id: number): number;
   scale_y(mesh_id: number): number;
   scale_z(mesh_id: number): number;
-  vertices_stride(mesh_id: number): Word<'dword'>;
+  vertices_stride(geometry: rust_pointer<'geometry'>): Word<'dword'>;
   set_faces(mesh_id: number, ptr: number, length: number, cap: number): void;
   set_color(
     mesh_id: number,

@@ -23,17 +23,21 @@ class PlaneMesh extends DataNode {
   constructor(
     renderPipeline: RenderPipelineProps<PlaneAtGroundHeightVertShader>,
   ) {
-    const ptrs = engine.rust.create_tiled_mesh_ptr(100, 100);
-    const [pos_ptr, pos_len, pos_cap, ind_ptr, ind_len, ind_cap] =
-      new Uint32Array(engine.rust.memory.buffer, ptrs, 6);
+    const geometry = engine.rust.create_tiled_mesh_geometry(100, 100);
+    const pos_ptr = engine.rust.vertices_pointer(geometry);
+    const pos_len =
+      engine.rust.vertices_stride(geometry) *
+      engine.rust.vertices_count(geometry);
+
+    const [ind_ptr, ind_len, ind_cap] = new Uint32Array(
+      engine.rust.memory.buffer,
+      engine.rust.indices_field_pointer(geometry),
+      3,
+    );
     super(
       {
         character_can_collide_to: false,
-        vertices: {
-          stride: (renderPipeline.builder.vertexShader.props.entryPoints.main
-            .vertexBufferLayout[0].arrayStride / 4) as Word<'dword'>,
-          view: [pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!],
-        },
+        vertices: geometry,
       },
       {
         label: 'plane',
@@ -46,7 +50,7 @@ class PlaneMesh extends DataNode {
       bindGroups: [],
       node: this,
       renderPipeline,
-      vertexBuffers: [[pos_ptr as rust_pointer<'f32'>, pos_len!, pos_cap!]],
+      vertexBuffers: [[pos_ptr as rust_pointer<'f32'>, pos_len!]],
     });
   }
 }

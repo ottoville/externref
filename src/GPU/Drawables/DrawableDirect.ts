@@ -9,7 +9,7 @@ import type {
 } from '../../webgpu-ts/index.js';
 import { Drawable, type DrawableProps } from './Drawable.js';
 import type { MainNode } from '../../MainNode.js';
-import type { Engine, rust_vec_ptr } from '../../engine.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 export type MappedVertexBuffers<
@@ -26,7 +26,7 @@ export type MappedVertexBuffers<
       main: VertexShaderFunction<B, infer V>;
     }>
     ? Readonly<{
-        [Property in keyof V]: rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>;
+        [Property in keyof V]: rust_array_ptr<'f32'> | Buffer<VERTEX_BUFFER>;
       }>
     : []
   : never;

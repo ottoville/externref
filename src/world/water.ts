@@ -92,7 +92,7 @@ export class Sea extends BoundableNodeSimple {
         ],
         node: this,
         renderPipeline,
-        vertexBuffers: [vertexBuffer.view],
+        vertexBuffers: [[vertexBuffer.view[0], vertexBuffer.view[1]]],
       });
     }
   }

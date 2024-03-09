@@ -8,7 +8,7 @@ import {
   Triangle,
 } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
-import type { Engine, rust_vec_ptr } from '../engine.js';
+import type { Engine } from '../engine.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
 declare const engine: Engine;
@@ -236,7 +236,7 @@ export class DataNode extends MainNode {
     );
   }
   get vertices_count() {
-    return engine.rust.vertices_count(this.id);
+    return engine.rust.vertices_count(this.geometry);
   }
   get have_vertices() {
     return engine.rust.have_vertices(this.id);
@@ -245,7 +245,7 @@ export class DataNode extends MainNode {
    * stride as DWORD in vertices vec
    */
   get vertices_stride(): Word<'dword'> {
-    return engine.rust.vertices_stride(this.id);
+    return engine.rust.vertices_stride(this.geometry);
   }
   /**
    *  Set new vertices raw array for the mesh

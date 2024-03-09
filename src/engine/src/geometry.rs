@@ -81,9 +81,9 @@ pub unsafe extern "C" fn set_vertices(
         .set_vertices(VertexKind::F32(vertices), vertices_stride);
 }
 #[no_mangle]
-pub unsafe extern "C" fn vertices_count(mesh_id: usize) -> usize {
-    let mesh = get_mesh_by_id(mesh_id);
-    return mesh.get_geometry().vertices.length();
+pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry<VertexKind>) -> usize {
+    let geometry = &(*geometry_ptr);
+    geometry.vertices.length()
 }
 #[no_mangle]
 pub unsafe extern "C" fn have_vertices(mesh_id: usize) -> bool {

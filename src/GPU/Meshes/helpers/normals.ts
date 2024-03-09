@@ -31,7 +31,11 @@ export class NormalsMesh extends DataNode {
     updateVertices();
     targetNode.node.onVerticesChangeListeners.push(() => {
       updateVertices();
-      this.drawable.setVertexBuffer(0, vertices_ptr, true);
+      this.drawable.setVertexBuffer(
+        0,
+        [vertices_ptr[0], vertices_ptr[1]],
+        true,
+      );
     });
     super(
       {
@@ -77,7 +81,7 @@ export class NormalsMesh extends DataNode {
       bindGroups: [],
       node: this,
       renderPipeline,
-      vertexBuffers: [vertices_ptr],
+      vertexBuffers: [[vertices_ptr[0], vertices_ptr[1]]],
     });
   }
 }
