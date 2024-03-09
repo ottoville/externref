@@ -1,32 +1,29 @@
-use crate::{math2::{Vec2F32, Vec3F32}, mesh::Mesh, vertices::PositionAndNormalAndUV, MULTIVALUE_USIZE};
+use crate::{math2::{Vec2F32, Vec3F32, VertexKind}, vertices::PositionAndNormalAndUV, Geometry};
 
 #[no_mangle]
-pub unsafe extern "C" fn create_tiled_mesh_ptr(width: f32, height: f32) -> *const usize {
-    let (positions, indices) = create_tiled_mesh(width as usize, height as usize);
-    let drop_pos = std::mem::ManuallyDrop::new(positions);
-    let drop_ind = std::mem::ManuallyDrop::new(indices);
-    MULTIVALUE_USIZE[0] = drop_pos.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = drop_pos.len() * 12;
-    MULTIVALUE_USIZE[2] = drop_pos.capacity() * 12;
-    MULTIVALUE_USIZE[3] = drop_ind.as_ptr() as usize;
-    MULTIVALUE_USIZE[4] = drop_ind.len();
-    MULTIVALUE_USIZE[5] = drop_ind.capacity();
-    return MULTIVALUE_USIZE.as_ptr();
+
+pub unsafe extern "C" fn create_tiled_mesh_geometry(width: f32, height: f32) -> *const Geometry<VertexKind> {
+    let mut geometry = Box::new(Geometry::new(true, true, false, false));
+    let (positions, indices) = create_tiled_mesh(width as u32, height as u32);
+    
+    geometry.set_indices(indices.to_vec());
+    geometry.set_vertices(VertexKind::PositionAndNormalAndUV(positions), 12);
+    Box::into_raw(geometry)
 }
 
 fn create_tiled_mesh(
-    faces_x_count: usize,
-    faces_y_count: usize,
-) -> (Vec<PositionAndNormalAndUV>, Vec<usize>) {
+    faces_x_count: u32,
+    faces_y_count: u32,
+) -> (Vec<PositionAndNormalAndUV>, Vec<u32>) {
     let width = faces_x_count as f32;
     let height = faces_y_count as f32;
     let max = width.max(height) * 0.5;
     let positions_x_count = faces_x_count + 1;
     let positions_y_count = faces_y_count + 1;
 
-    let mut indices_matrix: Vec<usize> = Vec::with_capacity(faces_x_count * faces_y_count * 6);
+    let mut indices_matrix: Vec<u32> = Vec::with_capacity((faces_x_count * faces_y_count * 6) as usize);
     let mut position_matrix: Vec<PositionAndNormalAndUV> =
-        Vec::with_capacity(positions_y_count * positions_x_count);
+        Vec::with_capacity((positions_y_count * positions_x_count) as usize);
 
     for h in 0..=faces_y_count {
         let z = (h as f32 - (height * 0.5)) / max;
@@ -155,14 +152,4 @@ fn test_quad_mesh() {
         vec![5, 4, 0, 0, 1, 5, 6, 5, 1, 1, 2, 6, 7, 6, 2, 2, 3, 7, 9, 8, 4, 4, 5, 9, 10, 9, 5, 5, 6, 10, 11, 10, 6, 6, 7, 11]
     );
 }
-pub unsafe fn create_quad_ground() -> usize {
-    let mesh_id = Mesh::new(
-        0.0,
-        0.0,
-        0.0,
-        false,
-        false,
-        String::from("Quad_mesh"),
-    );
-    return mesh_id;
-}
+

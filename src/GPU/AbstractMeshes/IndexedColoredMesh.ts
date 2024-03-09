@@ -1,5 +1,4 @@
 ﻿import { MainNodeProps } from 'MainNode.js';
-import type { rust_vec_ptr } from '../../engine.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import { ColoredRenderPipeline } from '../RenderPipeLines/ColoredRenderPipeline.js';
 import {

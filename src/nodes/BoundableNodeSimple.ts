@@ -1,5 +1,4 @@
 import { MainNodeProps } from 'MainNode.js';
-import type { rust_vec_ptr } from '../engine.js';
 import {
   type canCollideCharacter,
   DataNode,

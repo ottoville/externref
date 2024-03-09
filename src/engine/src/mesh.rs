@@ -131,51 +131,54 @@ pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     mesh.scaling.y = y;
     mesh.scaling.z = z;
 
-    let geometry = mesh.get_geometry_mut();
-    /*geometry.create_faces(None);
+    // If not equally to scale into all dimensions, re-calculate normals
+    /*if x != y || x != z {
+        let geometry = mesh.get_geometry_mut();
+        geometry.create_faces(None);
 
-     let positions: Vec<_> = match &mut geometry.vertices.vertices {
-        VertexKind::PositionAndNormalAndUV(vector) => {
-            vector.iter_mut().map(|v| {
-                v.normal.clear();
-                return (&v.position, &mut v.normal);
-            }).collect()
-        },
-        VertexKind::PositionAndNormalAndColor(vector) => {
-            vector.iter_mut().map(|v| {
-                v.normal.clear();
-                return (&v.position, &mut v.normal);
-            }).collect()
-        },
-        VertexKind::PositionAndNormal(vector) => {
-            vector.iter_mut().map(|v| {
-                v.normal.clear();
-                return (&v.position, &mut v.normal);
-            }).collect()
-        },
-        VertexKind::F32(_) => {
-            todo!()
-        },
-        VertexKind::None => todo!(),
-    };
+        let positions: Vec<_> = match &mut geometry.vertices.vertices {
+            VertexKind::PositionAndNormalAndUV(vector) => {
+                vector.iter_mut().map(|v| {
+                    v.normal.clear();
+                    return (&v.position, &mut v.normal);
+                }).collect()
+            },
+            VertexKind::PositionAndNormalAndColor(vector) => {
+                vector.iter_mut().map(|v| {
+                    v.normal.clear();
+                    return (&v.position, &mut v.normal);
+                }).collect()
+            },
+            VertexKind::PositionAndNormal(vector) => {
+                vector.iter_mut().map(|v| {
+                    v.normal.clear();
+                    return (&v.position, &mut v.normal);
+                }).collect()
+            },
+            VertexKind::F32(_) => {
+                todo!()
+            },
+            VertexKind::None => todo!(),
+        };
 
-    for triangle in geometry.faces.iter() {
-         let ia = &positions[triangle[0] as usize];
-        let ib = &positions[triangle[1] as usize];
-        let ic = &positions[triangle[2] as usize];
-        ia.0.sub(ib.0);
+        for triangle in geometry.faces.iter() {
+            let ia = &positions[triangle[0] as usize];
+            let ib = &positions[triangle[1] as usize];
+            let ic = &positions[triangle[2] as usize];
+            ia.0.sub(ib.0);
 
-        let e1 = ia.0.sub(ib.0);
-        let e2 =  ic.0.sub(ib.0);
-        
-        let no = e1.cross(&e2);
+            let e1 = ia.0.sub(ib.0);
+            let e2 =  ic.0.sub(ib.0);
+            
+            let no = e1.cross(&e2);
 
-        ia.1.add(&no);
-        ib.1.add(&no);
-        ic.1.add(&no);
-    }
-    for position in positions {
-        position.1.normalize();
+            ia.1.add(&no);
+            ib.1.add(&no);
+            ic.1.add(&no);
+        }
+        for position in positions {
+            position.1.normalize();
+        }
     }*/
     mesh.on_update(true);
 }
@@ -340,8 +343,8 @@ pub unsafe extern "C" fn scale_z(mesh_id: usize) -> f32 {
     get_mesh_by_id(mesh_id).scaling.z
 }
 #[no_mangle]
-pub unsafe extern "C" fn vertices_stride(mesh_id: usize) -> usize {
-    get_mesh_by_id(mesh_id).get_geometry().vertices.vertices_stride
+pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry<VertexKind>) -> usize {
+    (*geometry).vertices.vertices_stride
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_color(

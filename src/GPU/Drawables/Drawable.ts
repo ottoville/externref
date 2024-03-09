@@ -1,6 +1,6 @@
 ﻿import { type RenderPass } from '../RenderPasses/RenderPass.js';
 
-import type { Engine, rust_vec_ptr } from '../../engine.js';
+import type { Engine } from '../../engine.js';
 import { MainNode } from '../../MainNode.js';
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import {
@@ -18,7 +18,7 @@ export type DrawableProps<N extends MainNode> = {
   renderPasses?: Set<RenderPass>;
   bindGroups: { bindGroup: BindGroup; offsets?: number[] }[];
   vertexBuffers:
-    | readonly (rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>)[]
+    | readonly (rust_array_ptr<'f32'> | Buffer<VERTEX_BUFFER>)[]
     | undefined;
   node: N;
 };
@@ -140,7 +140,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
   }
   setVertexBuffer(
     index: number,
-    buffer: rust_vec_ptr<'f32'>,
+    buffer: rust_array_ptr<'f32'>,
     destroyOld?: boolean,
   ): Buffer<VERTEX_BUFFER>;
   setVertexBuffer<T extends Buffer<VERTEX_BUFFER>>(
@@ -152,14 +152,14 @@ export abstract class Drawable<N extends MainNode = MainNode> {
   ): T;
   setVertexBuffer(
     index: number,
-    buffer: Buffer<VERTEX_BUFFER> | rust_vec_ptr<'f32'>,
+    buffer: Buffer<VERTEX_BUFFER> | rust_array_ptr<'f32'>,
     destroyOld?: boolean,
     GPUoffset?: number,
     size?: number,
   ): Buffer<VERTEX_BUFFER>;
   setVertexBuffer(
     index: number,
-    buffer: rust_vec_ptr<'f32'> | Buffer<VERTEX_BUFFER>,
+    buffer: rust_array_ptr<'f32'> | Buffer<VERTEX_BUFFER>,
     destroyOld = true,
     GPUoffset?: number,
     size?: number,

@@ -1,6 +1,6 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import type { Scene } from '../../Scene.js';
-import type { Engine, rust_vec_ptr } from '../../engine.js';
+import type { Engine } from '../../engine.js';
 import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
