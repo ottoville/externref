@@ -92,7 +92,7 @@ export class Zones extends UIRectangleNodeHover {
       this.wasOpen = true;
       this.#zoneTexture = new Texture({
         format: 'rgba8unorm',
-        gpu: engine.gpu!.device,
+        gpu: gpu.device,
         label: 'ZoneTexture',
         size: {
           height: 5120,

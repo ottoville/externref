@@ -6,6 +6,7 @@ import {
   TerraVector3,
   TerraVector4,
   Triangle,
+  create_rust_vec_ptr,
 } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
 import type { Engine } from '../engine.js';
@@ -90,14 +91,13 @@ export function allocate_vec(
     new Float32Array(engine.rust.memory.buffer, ptr[0], ptr[1]).set(array);
     return ptr;
   } else {
-    const vec_ptr = engine.rust.alloc_vector_usize(array.length);
-    const [ptr, len, cap] = new Uint32Array(
-      engine.rust.memory.buffer,
-      vec_ptr,
-      3,
+    const vec_ptr = create_rust_vec_ptr(
+      engine.rust.alloc_vector_usize(array.length),
     );
-    new Uint32Array(engine.rust.memory.buffer, ptr, len).set(array);
-    return [ptr as rust_pointer<'usize'>, len!, cap!];
+    new Uint32Array(engine.rust.memory.buffer, vec_ptr[0], vec_ptr[1]).set(
+      array,
+    );
+    return vec_ptr;
   }
 }
 
@@ -149,11 +149,9 @@ export class DataNode extends MainNode {
     return new Uint32Array(engine.rust.memory.buffer, indices_ptr, indices_len);
   }
   get indices_count() {
-    return new Uint32Array(
-      engine.rust.memory.buffer,
+    return create_rust_vec_ptr(
       engine.rust.indices_field_pointer(this.geometry),
-      2,
-    )[1]!;
+    )[1];
   }
 
   //Physic things
@@ -215,15 +213,13 @@ export class DataNode extends MainNode {
     return engine.rust.faces_count(this.id);
   }
   set faces(faces: Float32Array) {
-    const vec_ptr = engine.rust.alloc_vector_f32(faces.length as Word<'dword'>);
-    const [ptr, len, cap] = new Uint32Array(
-      engine.rust.memory.buffer,
-      vec_ptr,
-      3,
+    const vec_ptr = create_rust_vec_ptr(
+      engine.rust.alloc_vector_f32(faces.length as Word<'dword'>),
     );
-
-    new Float32Array(engine.rust.memory.buffer, ptr, len).set(faces);
-    engine.rust.set_faces(this.id, ptr!, len!, cap!);
+    new Float32Array(engine.rust.memory.buffer, vec_ptr[0], vec_ptr[1]).set(
+      faces,
+    );
+    engine.rust.set_faces(this.id, ...vec_ptr);
   }
   /**
    * Get raw vertices data

@@ -513,7 +513,7 @@ export class Engine {
         };
         IDB.onsuccess = function () {
           this.result.onerror = function (e) {
-            console.log(e, (<IDBRequest>e.target)!.error!.message);
+            console.log(e, (<IDBRequest>e.target).error!.message);
           };
           res(this.result);
         };
@@ -912,7 +912,7 @@ export class Engine {
           //@ts-ignore
           window.printRenderTarget3 = () => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.renderTarget.texture.print_bitmap();
+            gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture.renderTarget.texture.print_bitmap();
           };
         },
         null,

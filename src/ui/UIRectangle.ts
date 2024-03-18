@@ -16,6 +16,7 @@ import {
   BufferUsageEnums,
   type RenderTargetTexture,
 } from '../webgpu-ts/index.js';
+import { TerraVector2 } from '../Math.js';
 declare const engine: Engine;
 
 export const enum NumericUnit {
@@ -140,17 +141,17 @@ export abstract class UIRectangle<
       let structName: string;
       if ('main' in frag.props.entryPoints) {
         structName =
-          frag.props.pipelineLayouts[0]!.bindGroupLayouts[0].entries.texture
+          frag.props.pipelineLayouts[0].bindGroupLayouts[0].entries.texture
             .structName;
       } else {
         structName =
-          frag.props.pipelineLayouts[0]!.bindGroupLayouts[0].entries.texture
+          frag.props.pipelineLayouts[0].bindGroupLayouts[0].entries.texture
             .structName;
       }
       this.texture = new Texture({
         format: 'bgra8unorm',
         gpu: this.props.canvaspipeline.builder.vertexShader.props
-          .pipelineLayouts[0]!.gpu,
+          .pipelineLayouts[0].gpu,
         label: 'button_' + this.props.label + '_UIRectangle_text',
         size: {
           depthOrArrayLayers: structName.includes('array') ? 2 : 1,
@@ -181,7 +182,7 @@ export abstract class UIRectangle<
   abstract createTexture(): TextureView<
     Texture<GPUTextureFormat, TextureUsageEnums, Texture2dSize>
   >;
-  screenPosition = new Float32Array(2);
+  screenPosition = new TerraVector2(2);
   protected updatePosition() {
     if (this.props.translate.x.value[1] === NumericUnit['%']) {
       var XPosition = this.props.translate.x.value[0];
@@ -372,7 +373,7 @@ export abstract class UIRectangle<
         ? 54
         : 6;
     const gpu =
-      canvaspipeline.builder.vertexShader.props.pipelineLayouts[0]!.gpu;
+      canvaspipeline.builder.vertexShader.props.pipelineLayouts[0].gpu;
     this.uniformBuffer = new Buffer(
       {
         gpu: gpu,
