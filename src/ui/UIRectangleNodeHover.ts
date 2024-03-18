@@ -37,8 +37,8 @@ document.addEventListener('keyup', (evt) => {
     UIRectangleNodeHovers.forEach((node) => {
       if (node === engine.tabElement || !node.instance) return;
       const vec2: [number, number] = [
-        node.instance.screenPosition[0]! - currentCoord[0]!,
-        node.instance.screenPosition[1]! - currentCoord[1]!,
+        node.instance.screenPosition[0] - currentCoord[0],
+        node.instance.screenPosition[1] - currentCoord[1],
       ];
       const len = Math.sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]);
       vec2[0] = vec2[0] / len;

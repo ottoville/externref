@@ -3,7 +3,7 @@ import { Terrain } from '../world/Terrain.js';
 import type { PTResultF } from '../types/interfaces/index.js';
 import type { Scene } from '../Scene.js';
 
-import { TerraVector2 } from '../Math.js';
+import { TerraVector2, create_rust_vec_ptr } from '../Math.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import type { Engine } from '../engine.js';
 import {
@@ -29,10 +29,8 @@ class PlaneMesh extends DataNode {
       engine.rust.vertices_stride(geometry) *
       engine.rust.vertices_count(geometry);
 
-    const [ind_ptr, ind_len, ind_cap] = new Uint32Array(
-      engine.rust.memory.buffer,
+    const indicesView = create_rust_vec_ptr(
       engine.rust.indices_field_pointer(geometry),
-      3,
     );
     super(
       {
@@ -43,14 +41,14 @@ class PlaneMesh extends DataNode {
         label: 'plane',
         rigid_body: false,
       },
-      [ind_ptr as rust_pointer<'usize'>, ind_len!, ind_cap!],
+      indicesView,
       false,
     );
     this.drawable = new DrawableIndexed({
       bindGroups: [],
       node: this,
       renderPipeline,
-      vertexBuffers: [[pos_ptr as rust_pointer<'f32'>, pos_len!]],
+      vertexBuffers: [[pos_ptr as rust_pointer<'f32'>, pos_len]],
     });
   }
 }
