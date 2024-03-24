@@ -65,20 +65,18 @@ pub unsafe extern "C" fn new_mesh(
 }
 #[no_mangle]
 pub extern "C" fn create_geometry<'frame>(
-    mesh_id: usize,
     has_bounding: bool,
     character_can_collide_to: bool,
     static_faces: bool,
     strip: bool,
-) -> &'frame Geometry<VertexKind> {
-    let mesh = get_mesh_by_id_mut(mesh_id);
-    mesh.geometry = Some(Box::new(Geometry::new(
+) -> *mut Geometry<VertexKind> {
+    let geometry = Box::new(Geometry::new(
         has_bounding,
         character_can_collide_to,
         static_faces,
         strip,
-    )));
-    mesh.geometry.as_ref().unwrap()
+    ));
+    Box::into_raw(geometry)
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_geometry<'frame>(
@@ -104,6 +102,9 @@ pub unsafe extern "C" fn vertices_pointer(geometry: *const Geometry<VertexKind>)
             vector.as_ptr() as *const f32
         },
         VertexKind::PositionAndNormal(vector) => {
+            vector.as_ptr() as *const f32
+        },
+        VertexKind::Position(vector) => {
             vector.as_ptr() as *const f32
         },
         VertexKind::F32(vector) => {
@@ -134,50 +135,58 @@ pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     // If not equally to scale into all dimensions, re-calculate normals
     /*if x != y || x != z {
         let geometry = mesh.get_geometry_mut();
-        geometry.create_faces(None);
+        if let VertexKind::Position(_) = &geometry.vertices.vertices {
 
-        let positions: Vec<_> = match &mut geometry.vertices.vertices {
-            VertexKind::PositionAndNormalAndUV(vector) => {
-                vector.iter_mut().map(|v| {
-                    v.normal.clear();
-                    return (&v.position, &mut v.normal);
-                }).collect()
-            },
-            VertexKind::PositionAndNormalAndColor(vector) => {
-                vector.iter_mut().map(|v| {
-                    v.normal.clear();
-                    return (&v.position, &mut v.normal);
-                }).collect()
-            },
-            VertexKind::PositionAndNormal(vector) => {
-                vector.iter_mut().map(|v| {
-                    v.normal.clear();
-                    return (&v.position, &mut v.normal);
-                }).collect()
-            },
-            VertexKind::F32(_) => {
-                todo!()
-            },
-            VertexKind::None => todo!(),
-        };
+        } else if let VertexKind::None = &geometry.vertices.vertices {
 
-        for triangle in geometry.faces.iter() {
-            let ia = &positions[triangle[0] as usize];
-            let ib = &positions[triangle[1] as usize];
-            let ic = &positions[triangle[2] as usize];
-            ia.0.sub(ib.0);
-
-            let e1 = ia.0.sub(ib.0);
-            let e2 =  ic.0.sub(ib.0);
-            
-            let no = e1.cross(&e2);
-
-            ia.1.add(&no);
-            ib.1.add(&no);
-            ic.1.add(&no);
-        }
-        for position in positions {
-            position.1.normalize();
+        } else {
+            geometry.create_faces(None);
+            let positions: Vec<_> = match &mut geometry.vertices.vertices {
+                VertexKind::PositionAndNormalAndUV(vector) => {
+                    vector.iter_mut().map(|v| {
+                        v.normal.clear();
+                        return (&v.position, &mut v.normal);
+                    }).collect()
+                },
+                VertexKind::PositionAndNormalAndColor(vector) => {
+                    vector.iter_mut().map(|v| {
+                        v.normal.clear();
+                        return (&v.position, &mut v.normal);
+                    }).collect()
+                },
+                VertexKind::PositionAndNormal(vector) => {
+                    vector.iter_mut().map(|v| {
+                        v.normal.clear();
+                        return (&v.position, &mut v.normal);
+                    }).collect()
+                },
+                VertexKind::Position(_) => {
+                    panic!("Guard should prevent executing this line")
+                },
+                VertexKind::F32(_) => {
+                    todo!()
+                },
+                VertexKind::None => panic!("Guard should prevent executing this line"),
+            };
+    
+            for triangle in geometry.faces.iter() {
+                let ia = &positions[triangle[0] as usize];
+                let ib = &positions[triangle[1] as usize];
+                let ic = &positions[triangle[2] as usize];
+                ia.0.sub(ib.0);
+    
+                let e1 = ia.0.sub(ib.0);
+                let e2 =  ic.0.sub(ib.0);
+                
+                let no = e1.cross(&e2);
+    
+                ia.1.add(&no);
+                ib.1.add(&no);
+                ic.1.add(&no);
+            }
+            for position in positions {
+                position.1.normalize();
+            }
         }
     }*/
     mesh.on_update(true);

@@ -1,7 +1,7 @@
 #[cfg(target_arch = "wasm32")]
 use std::arch::wasm32::*;
 
-use crate::{math::quaternion::Quaternion, vertices::{PositionAndNormal, PositionAndNormalAndColor, PositionAndNormalAndUV}};
+use crate::{math::quaternion::Quaternion, vertices::{Position, PositionAndNormal, PositionAndNormalAndColor, PositionAndNormalAndUV}};
 
 #[derive(Copy, Clone)]
 pub struct Vec3<T> {
@@ -15,6 +15,7 @@ pub enum VertexKind {
     PositionAndNormalAndUV(Vec<PositionAndNormalAndUV>),
     PositionAndNormalAndColor(Vec<PositionAndNormalAndColor>),
     PositionAndNormal(Box<[PositionAndNormal]>),
+    Position(Vec<Position>),
     F32(Vec<f32>)
 }
 

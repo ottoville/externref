@@ -58,17 +58,13 @@ export type DataNodeProps = {
 */
 
 export function allocate_vec_f32(length: Word<'dword'>) {
-  const vec_ptr = engine.rust.alloc_vector_f32(length);
-  return Array.from(
-    new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3),
-  ) as unknown as rust_vec_ptr<'f32'>;
+  return create_rust_vec_ptr(engine.rust.alloc_vector_f32(length));
 }
-
+export function allocate_vec_positions(length: number) {
+  return create_rust_vec_ptr(engine.rust.alloc_vector_positions(length));
+}
 export function allocate_vec_usize(length: number) {
-  const vec_ptr = engine.rust.alloc_vector_usize(length);
-  return Array.from(
-    new Uint32Array(engine.rust.memory.buffer, vec_ptr, 3),
-  ) as unknown as rust_vec_ptr<'usize'>;
+  return create_rust_vec_ptr(engine.rust.alloc_vector_usize(length));
 }
 
 export function allocate_vec(array: Uint32Array): rust_vec_ptr<'usize'>;
@@ -108,7 +104,7 @@ export class DataNode extends MainNode {
   onIndicesChange: (() => void)[] = [];
   #props: Readonly<DataNodeProps>;
   set_indices(vec: rust_vec_ptr<'usize'>) {
-    engine.rust.set_indices(this.id, ...vec);
+    engine.rust.set_indices(this.geometry, ...vec);
     if (this.drawable && !(this.drawable instanceof DrawableIndexed)) {
       throw new Error('Node is not indexed');
     }
@@ -248,7 +244,7 @@ export class DataNode extends MainNode {
    * @param vec
    */
   set_vertices(vec: rust_vec_ptr<'f32'>, stride: Word<'dword'>) {
-    engine.rust.set_vertices(this.id, ...vec, stride);
+    engine.rust.set_vertices(this.geometry, ...vec, stride);
     this.onVerticesChange();
   }
   /**
@@ -309,12 +305,12 @@ export class DataNode extends MainNode {
       engine.rust.set_geometry(this.id, this.geometry);
     } else {
       this.geometry = engine.rust.create_geometry(
-        this.id,
         true,
         character_can_collide_to,
         static_faces,
         strip,
       );
+      engine.rust.set_geometry(this.id, this.geometry);
       if (indicesView) {
         this.set_indices(indicesView);
       }

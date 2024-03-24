@@ -142,7 +142,6 @@ export type rustWasm = {
   ): number;
   have_rigid_body(mesh_id: number): boolean;
   create_geometry(
-    mesh_id: number,
     has_bounding: boolean,
     character_can_collide_to: boolean,
     static_faces: boolean,
@@ -153,14 +152,21 @@ export type rustWasm = {
   add_collider(mesh_id: number, collider: rust_pointer<'collider'>): void;
   memory: WebAssembly.Memory;
   set_vertices(
-    mesh_id: number,
+    geometry: rust_pointer<'geometry'>,
     ptr: rust_pointer<'f32'>,
     length: number,
     cap: number,
     vertices_stride: Word<'dword'>,
   ): void;
+  set_position_vertices(
+    geometry: rust_pointer<'geometry'>,
+    ptr: rust_pointer<'position'>,
+    length: number,
+    cap: number,
+    vertices_stride: Word<'dword'>,
+  ): void;
   set_indices(
-    mesh_id: number,
+    geometry: rust_pointer<'geometry'>,
     ptr: rust_pointer<'usize'>,
     length: number,
     cap: number,
@@ -178,14 +184,15 @@ export type rustWasm = {
   vertices_pointer(geometry: rust_pointer<'geometry'>): rust_pointer<'f32'>;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
-  ): rust_pointer<'indices_field'>;
+  ): rust_pointer<rust_vec_ptr<'usize'>>;
   last_collider_world_vertices_pointer(mesh_id: number): number;
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: number): boolean;
   faces_count(mesh_id: number): number;
-  alloc_vector_f32(size: Word<'dword'>): rust_pointer<'usize'>;
-  alloc_vector_u8(size: number): rust_pointer<'usize'>;
-  alloc_vector_usize(size: number): rust_pointer<'usize'>;
+  alloc_vector_f32(size: Word<'dword'>): rust_pointer<rust_vec_ptr<'f32'>>;
+  alloc_vector_u8(size: number): rust_pointer<rust_vec_ptr<'u8'>>;
+  alloc_vector_usize(size: number): rust_pointer<rust_vec_ptr<'usize'>>;
+  alloc_vector_positions(size: number): rust_pointer<rust_vec_ptr<'position'>>;
   update_scale(mesh_id: number, x: number, y: number, z: number): void;
   update_rotation(
     mesh_id: number,

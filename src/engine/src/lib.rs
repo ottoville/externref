@@ -20,6 +20,7 @@ pub use crate::terrain::elevator::Elevator;
 
 use math2::Vec4;
 use rapier3d::prelude::*;
+use vertices::Position;
 
 static mut MULTIVALUE_USIZE: [usize; 6] = [0; 6];
 static mut MULTIVALUE_F32: [f32; 6] = [0.0; 6];
@@ -35,6 +36,12 @@ unsafe fn create_multivalue_vector<T>(vector: Vec<T>) -> *const usize {
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_f32(size: usize) -> *const usize {
     let mut vec: Vec<f32> = Vec::with_capacity(size);
+    vec.set_len(size);    
+    return create_multivalue_vector(vec);
+}
+#[no_mangle]
+pub unsafe extern "C" fn alloc_vector_positions(size: usize) -> *const usize {
+    let mut vec: Vec<Position> = Vec::with_capacity(size);
     vec.set_len(size);    
     return create_multivalue_vector(vec);
 }
