@@ -75,13 +75,16 @@ impl BoundingBox {
         //TODO: use macro
         let mut positions: Box<dyn Iterator<Item = &Vec3F32>> = match &vertices.vertices {
             VertexKind::PositionAndNormalAndUV(vector) => {
-                Box::new(vector.iter().map(|v: &PositionAndNormalAndUV| { &v.position}))
+                Box::new(vector.iter().map(|v| { &v.position}))
             },
             VertexKind::PositionAndNormalAndColor(vector) => {
-                Box::new(vector.iter().map(|v: &PositionAndNormalAndColor| { &v.position}))
+                Box::new(vector.iter().map(|v| { &v.position}))
             },
             VertexKind::PositionAndNormal(vector) => {
-                Box::new(vector.iter().map(|v: &PositionAndNormal| { &v.position}))
+                Box::new(vector.iter().map(|v| { &v.position}))
+            },
+            VertexKind::Position(vector) => {
+                Box::new(vector.iter().map(|v| { &v.position}))
             },
             VertexKind::F32(vector) => {
                 Box::new(vector.chunks_exact(vertices.vertices_stride).map(|v:&[f32]| unsafe {

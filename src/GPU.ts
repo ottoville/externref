@@ -861,6 +861,8 @@ export class GPU {
         }
         for (let i = 0; i < meshes.length; i++) {
           const [mesh, offset] = meshes[i]!;
+
+          mesh.onMeshChange.forEach((cb) => cb());
           const gpumeshPointer = engine.rust.gpu_pointer(mesh.id);
           const dataLength = this.GPUDataSizeBytes / 4;
           const data = new Float32Array(
@@ -868,7 +870,6 @@ export class GPU {
             gpumeshPointer,
             dataLength,
           );
-          mesh.onMeshChange.forEach((cb) => cb());
           //Point light
           if (data[29]! > 0) {
             engine.updateLights = true;

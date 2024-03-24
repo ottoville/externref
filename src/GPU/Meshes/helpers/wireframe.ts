@@ -3,7 +3,7 @@ import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import {
   DataNode,
-  allocate_vec_f32,
+  allocate_vec_positions,
   allocate_vec_usize,
 } from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
@@ -24,7 +24,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   }
   let node: DataNode;
 
-  const vertexBuffer = targetNode.vertexBuffers[0]?.buffer;
+  const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
   const vertexBufferStrideBytes =
     targetNode.renderPipeline.builder.vertexShader.props.entryPoints['main']
       ?.vertexBufferLayout[0]?.arrayStride ??
@@ -44,7 +44,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     },
   );
 
-  if (vertexBuffer) {
+  if (gpuVertexBuffer) {
     node = new DataNode(
       {
         can_collide: false,
@@ -57,33 +57,34 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       bindGroups: [],
       node,
       renderPipeline,
-      vertexBuffers: [vertexBuffer],
+      vertexBuffers: [gpuVertexBuffer],
     });
   } else if (targetNode.node instanceof DataNode) {
     const stride = targetNode.node.vertices_stride;
-    const vertices_ptr = allocate_vec_f32(
-      (targetNode.node.positions_count * 4) as Word<'dword'>,
+    const vertices_ptr = allocate_vec_positions(
+      targetNode.node.positions_count,
     );
     const newVertices = new Float32Array(
       engine.rust.memory.buffer,
       vertices_ptr[0],
-      vertices_ptr[1],
+      vertices_ptr[1] * 4,
     );
     targetNode.node.verticesArray.forEach((v, i) => {
       const slice = v.slice(0, stride);
-      newVertices.set(slice, i * stride);
+      newVertices.set(slice, i * 4);
     });
+
+    const geometry = engine.rust.create_geometry(true, false, true, false);
+
+    engine.rust.set_position_vertices(geometry, ...vertices_ptr, stride);
+    engine.rust.set_indices(geometry, ...indices_vec_ptr);
     node = new DataNode(
       {
         can_collide: false,
         character_can_collide_to: false,
-        vertices: {
-          stride,
-          view: vertices_ptr,
-        },
+        vertices: geometry,
       },
       mainNodeProps,
-      indices_vec_ptr,
     );
     node.drawable = new DrawableIndexed({
       bindGroups: [],
@@ -100,9 +101,9 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   const updateNode = () => {
     node.translation = targetNode.node.translation;
     node.update_scale(
-      targetNode.node.scale_x + 0.1,
-      targetNode.node.scale_y + 0.1,
-      targetNode.node.scale_z + 0.1,
+      targetNode.node.scale_x + 0.05,
+      targetNode.node.scale_y + 0.05,
+      targetNode.node.scale_z + 0.05,
     );
     node.rotation = targetNode.node.rotation;
   };

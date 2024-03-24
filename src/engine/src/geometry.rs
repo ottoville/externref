@@ -4,7 +4,7 @@ pub use crate::boundingbox::BoundingBox;
 use crate::{
     create_multivalue_vector,
     math2::{Vec3F32, Vec4, VertexKind},
-    mesh::{get_mesh_by_id, get_mesh_by_id_mut},
+    mesh::{get_mesh_by_id, get_mesh_by_id_mut}, vertices::Position,
 };
 #[no_mangle]
 pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const usize {
@@ -62,23 +62,35 @@ pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usiz
     geometry.planes.planes = planes;
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_indices(mesh_id: usize, ptr: *mut u32, length: usize, cap: usize) {
+pub unsafe extern "C" fn set_indices(geometry_ptr: *mut Geometry<VertexKind>, ptr: *mut u32, length: usize, cap: usize) {
     let indices = Vec::from_raw_parts(ptr, length, cap);
-    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
+    let geometry = &mut(*geometry_ptr);
     geometry.set_indices(indices);
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_vertices(
-    mesh_id: usize,
+    geometry_ptr: *mut Geometry<VertexKind>,
     ptr: *mut f32,
     length: usize,
     cap: usize,
     vertices_stride: usize,
 ) {
-    let vertices = Vec::from_raw_parts(ptr, length, cap);
-    get_mesh_by_id_mut(mesh_id)
-        .get_geometry_mut()
-        .set_vertices(VertexKind::F32(vertices), vertices_stride);
+    let vertices: Vec<f32> = Vec::from_raw_parts(ptr, length, cap);
+    let geometry = &mut(*geometry_ptr);
+    geometry.set_vertices(VertexKind::F32(vertices), vertices_stride);
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_position_vertices(
+    geometry_ptr: *mut Geometry<VertexKind>,
+    ptr: *mut Position,
+    length: usize,
+    cap: usize,
+    vertices_stride: usize,
+) {
+
+    let vertices: Vec<Position> = Vec::from_raw_parts(ptr, length, cap);
+    let geometry = &mut(*geometry_ptr);
+    geometry.set_vertices(VertexKind::Position(vertices), vertices_stride);
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry<VertexKind>) -> usize {
@@ -138,6 +150,9 @@ impl Vertices<VertexKind> {
             VertexKind::PositionAndNormal(vector) => {
                 vector.len()
             },
+            VertexKind::Position(vector) => {
+                vector.len()
+            },
             VertexKind::F32(vector) => {
                 vector.len()/self.vertices_stride
             },
@@ -150,6 +165,7 @@ pub struct Geometry<T> {
     pub vertices: Vertices<T>,
     pub indices: Vec<u32>,
     pub faces: Vec<[u32; 3]>,
+    pub faces_dirty: bool,
     pub planes: Faces,
     pub strip: bool,
 
@@ -173,6 +189,9 @@ impl<'vert> Geometry<VertexKind> {
             VertexKind::PositionAndNormal(vector) => {
                 Box::new(vector.iter().map(|v| { &v.position}))
             },
+            VertexKind::Position(vector) => {
+                Box::new(vector.iter().map(|v| { &v.position}))
+            },
             VertexKind::F32(vector) => {
                 Box::new(vector.chunks_exact(self.vertices.vertices_stride).map(|v| unsafe {
                     &(*(v.as_ptr() as *const Vec3F32))
@@ -190,6 +209,9 @@ impl<'vert> Geometry<VertexKind> {
                 Box::new(vector.iter_mut().map(|v| { &mut v.position}))
             },
             VertexKind::PositionAndNormal(vector) => {
+                Box::new(vector.iter_mut().map(|v| { &mut v.position}))
+            },
+            VertexKind::Position(vector) => {
                 Box::new(vector.iter_mut().map(|v| { &mut v.position}))
             },
             VertexKind::F32(vector) => {
@@ -214,6 +236,7 @@ impl<'vert> Geometry<VertexKind> {
             },
             indices: Vec::new(),
             faces: Vec::new(),
+            faces_dirty: true,
             planes: Faces::new(0),
             collider_planes: Vec::new(),
             collider_planes_parallel: Vec::new(),
@@ -224,6 +247,9 @@ impl<'vert> Geometry<VertexKind> {
         }
     }
     pub fn create_faces(&mut self, override_positions_count: Option<NonZeroU32>) {
+        if !self.faces_dirty {
+            return;
+        }
         self.faces.clear();
         if self.indices.len() == 0 {
             if self.strip {
@@ -254,6 +280,7 @@ impl<'vert> Geometry<VertexKind> {
                 self.faces = self.indices.chunks_exact(3).map(|i| i.try_into().unwrap()).collect();
             }
         }
+        self.faces_dirty = false
     }
     pub fn faces_count(&self) -> usize {
         if self.static_faces {

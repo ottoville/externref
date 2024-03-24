@@ -18,7 +18,11 @@ export type DrawableProps<N extends MainNode> = {
   renderPasses?: Set<RenderPass>;
   bindGroups: { bindGroup: BindGroup; offsets?: number[] }[];
   vertexBuffers:
-    | readonly (rust_array_ptr<'f32'> | Buffer<VERTEX_BUFFER>)[]
+    | readonly (
+        | rust_array_ptr<'f32'>
+        | rust_array_ptr<'position'>
+        | Buffer<VERTEX_BUFFER>
+      )[]
     | undefined;
   node: N;
 };
@@ -152,14 +156,20 @@ export abstract class Drawable<N extends MainNode = MainNode> {
   ): T;
   setVertexBuffer(
     index: number,
-    buffer: Buffer<VERTEX_BUFFER> | rust_array_ptr<'f32'>,
+    buffer:
+      | Buffer<VERTEX_BUFFER>
+      | rust_array_ptr<'f32'>
+      | rust_array_ptr<'position'>,
     destroyOld?: boolean,
     GPUoffset?: number,
     size?: number,
   ): Buffer<VERTEX_BUFFER>;
   setVertexBuffer(
     index: number,
-    buffer: rust_array_ptr<'f32'> | Buffer<VERTEX_BUFFER>,
+    buffer:
+      | rust_array_ptr<'f32'>
+      | rust_array_ptr<'position'>
+      | Buffer<VERTEX_BUFFER>,
     destroyOld = true,
     GPUoffset?: number,
     size?: number,

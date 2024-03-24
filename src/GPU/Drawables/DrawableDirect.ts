@@ -19,17 +19,21 @@ export type MappedVertexBuffers<
   }[] = readonly {
     [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
   }[],
-> = R extends RenderPipelineProps<infer VERTEX_SHADER>
-  ? //extract VertexBuffers
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    VERTEX_SHADER extends VertexShader<{
-      main: VertexShaderFunction<B, infer V>;
-    }>
-    ? Readonly<{
-        [Property in keyof V]: rust_array_ptr<'f32'> | Buffer<VERTEX_BUFFER>;
+> =
+  R extends RenderPipelineProps<infer VERTEX_SHADER>
+    ? //extract VertexBuffers
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      VERTEX_SHADER extends VertexShader<{
+        main: VertexShaderFunction<B, infer V>;
       }>
-    : []
-  : never;
+      ? Readonly<{
+          [Property in keyof V]:
+            | rust_array_ptr<'f32'>
+            | rust_array_ptr<'position'>
+            | Buffer<VERTEX_BUFFER>;
+        }>
+      : []
+    : never;
 
 export type DrawableDirectProps = {
   instanceCount?: number;
