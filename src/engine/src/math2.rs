@@ -51,6 +51,16 @@ impl Vec3<f32> {
     }
 }
 impl Vec3F32 {
+    /**
+     * Creates new vector with zero values
+     */
+    pub fn new() -> Vec3F32 {
+        Vec3F32 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0
+        }
+    }
     pub fn clone(&self) -> Vec3F32 {
         Vec3F32 {
             x: self.x,
@@ -74,14 +84,22 @@ impl Vec3F32 {
         self.y += y;
         self.z += z;
     }
+        /**
+     * Modify vector with given vector
+     */
+    pub fn add_vec_in_place(&mut self, vec: &Vec3F32) {
+        self.x += vec.x;
+        self.y += vec.y;
+        self.z += vec.z;
+    }
     /**
      * Returns new vector which is sum of two vectors
      */
     pub fn add(&self, vec: &Vec3F32) -> Vec3F32 {
         Vec3F32 {
             x: self.x + vec.x,
-            y: self.x + vec.y,
-            z: self.x + vec.z
+            y: self.y + vec.y,
+            z: self.z + vec.z
         }
     }
     /**
@@ -90,8 +108,8 @@ impl Vec3F32 {
     pub fn sub(&self, vec: &Vec3F32) -> Vec3F32 {
         Vec3F32 {
             x: self.x - vec.x,
-            y: self.x - vec.y,
-            z: self.x - vec.z
+            y: self.y - vec.y,
+            z: self.z - vec.z
         }
     }
     pub fn dot(&self, other: &Vec3F32) -> f32 {

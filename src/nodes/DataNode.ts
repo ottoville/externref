@@ -260,6 +260,9 @@ export class DataNode extends MainNode {
     cb(view);
     this.onVerticesChange();
   }
+  calculate_normals() {
+    engine.rust.calculate_normals(this.geometry);
+  }
   override update_scale(...args: [number] | [number, number, number]): void {
     super.update_scale(...args);
     if (this.#props.can_collide) {

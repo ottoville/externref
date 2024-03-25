@@ -20,15 +20,30 @@ export function Primitives({ node }: { node: DataNode }) {
       >
         <summary>Vertices</summary>
         {node instanceof DataNode && verticesOpen ? (
-          <ol>
-            {node.verticesArray.map((vertex, i) => {
-              return (
-                <li key={i}>
-                  <Vertex vertex={vertex}></Vertex>
-                </li>
-              );
-            })}
-          </ol>
+          <table>
+            <colgroup>
+              <col
+                span={3}
+                style={{
+                  backgroundColor: 'darkgray',
+                }}
+              />
+              <col />
+            </colgroup>
+            <thead>
+              <th>x</th>
+              <th>y</th>
+              <th>z</th>
+              <th>x2</th>
+              <th>y2</th>
+              <th>z2</th>
+            </thead>
+            <tbody>
+              {node.verticesArray.map((vertex, i) => {
+                return <Vertex vertex={vertex} key={i}></Vertex>;
+              })}
+            </tbody>
+          </table>
         ) : null}
       </details>
       {node.indices_count !== 0 ? (

@@ -3,7 +3,7 @@ use crate::{math2::{Vec2F32, Vec3F32, VertexKind}, vertices::PositionAndNormalAn
 #[no_mangle]
 
 pub unsafe extern "C" fn create_tiled_mesh_geometry(width: f32, height: f32) -> *const Geometry<VertexKind> {
-    let mut geometry = Box::new(Geometry::new(true, true, false, false));
+    let mut geometry = Box::new(Geometry::new(true, true, false, false, "quad_mesh_geometry".to_string()));
     let (positions, indices) = create_tiled_mesh(width as u32, height as u32);
     
     geometry.set_indices(indices.to_vec());

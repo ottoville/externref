@@ -35,7 +35,7 @@ export class Capsule extends OctaSphere {
       return engine.rust.create_capsule_collider(
         this.scale_y - radius,
         radius,
-        0,
+        CAPSULE_ORIENTATION.x,
         false,
       );
     } else if (this.height === 0 && this.width > 0 && this.depth === 0) {
@@ -43,7 +43,7 @@ export class Capsule extends OctaSphere {
       return engine.rust.create_capsule_collider(
         this.scale_y - radius,
         radius,
-        1,
+        CAPSULE_ORIENTATION.y,
         false,
       );
     } else {
@@ -51,11 +51,14 @@ export class Capsule extends OctaSphere {
       return engine.rust.create_capsule_collider(
         this.scale_y - radius,
         radius,
-        2,
+        CAPSULE_ORIENTATION.z,
         false,
       );
     }
   }
+  /**
+   * Scale whole mesh by setting radius
+   */
   set radius(radius: number) {
     this.update_scale(radius);
     const collider_ptr = this.create_collider();
