@@ -1,8 +1,5 @@
 import { WorkerThread, WorkerReturn } from '../WorkerThread.js';
 import { Terrain } from '../world/Terrain.js';
-//import simplex from '../simplex.js'
-
-import { PTDresult } from '../types/interfaces/index.js';
 
 import type { Scene } from '../Scene.js';
 import { PlantsRenderPipeline } from '../GPU/RenderPipeLines/Plants.js';
@@ -13,6 +10,7 @@ import { createGrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeight
 import { MainNode } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import { BindGroup, Buffer, BufferUsageEnums } from '../webgpu-ts/index.js';
+import type { PTDresult } from 'paintGround/paintGround.js';
 declare const engine: Engine;
 
 /**

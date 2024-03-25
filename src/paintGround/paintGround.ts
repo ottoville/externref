@@ -2,10 +2,20 @@ const fullRad = Math.PI * 2;
 import { TerraVector2, Angle } from '../Math.js';
 
 import type { Terrain } from '../world/Terrain.js';
-import type { PTResultF } from '../types/interfaces/index.js';
+
 import type { Scene } from '../Scene.js';
 import type { Engine, ListenerObj } from '../engine.js';
 declare const engine: Engine;
+
+export type PTDresult = {
+  coord: TerraVector2;
+  rad: number; // Angle,
+  size: Readonly<{
+    width: number;
+    height: number;
+  }>;
+};
+export type PTResultF = (coords: PTDresult) => void;
 
 export abstract class paintGround {
   protected ang360: Angle = new Angle(0);

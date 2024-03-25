@@ -1,4 +1,7 @@
-import type { CreateRenderPipelineProps, VertexBufferProps } from '../../GPU';
+import type {
+  CreateRenderPipelineProps,
+  VertexBufferProps,
+} from '../../GPU.js';
 import { createGroundVertShader } from '../Shaders/Ground.vert.js';
 import { createGroundFragShader } from '../Shaders/Ground.frag.js';
 import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';

@@ -1,6 +1,5 @@
-//@ts-expect-error
-// eslint-disable-next-line import/extensions
-import sheet from '/css/DevTools.css' assert { type: 'css' };
+//@ts-expect-error https://github.com/microsoft/TypeScript/issues/46135
+import sheet from '/css/DevTools.css' with { type: 'css' };
 import { DevToolsApp } from './DevToolsApp.js';
 document.adoptedStyleSheets = [sheet];
 
