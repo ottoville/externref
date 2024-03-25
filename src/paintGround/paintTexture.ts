@@ -1,11 +1,18 @@
-﻿import { paintGround } from './paintGround.js';
+﻿import { paintGround, type PTResultF } from './paintGround.js';
 import type { Terrain } from '../world/Terrain.js';
-import type { subTexture, PTResultF } from '../types/interfaces/index.js';
 import type { Scene } from '../Scene.js';
 import { TerraVector2 } from '../Math.js';
 import type { Texture, Texture2dSize } from '../webgpu-ts/Texture.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
+
+type subTexture = {
+  x: number;
+  z: number;
+  width: number;
+  height: number;
+  imageData: GPUTexture | null;
+};
 
 export class paintTexture extends paintGround {
   private subTextureCache: subTexture = {

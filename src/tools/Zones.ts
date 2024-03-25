@@ -1,6 +1,5 @@
 import { paintTexture } from '../paintGround/paintTexture.js';
 import { Terrain } from '../world/Terrain.js';
-import { PTDresult } from '../types/interfaces/index.js';
 import type { GPU } from '../GPU.js';
 import type { Scene } from '../Scene.js';
 import type { Engine, ListenerObj } from '../engine.js';
@@ -16,6 +15,7 @@ import {
   TextureView,
 } from '../webgpu-ts/index.js';
 import { UIRectangleNodeHover } from '../ui/UIRectangleNodeHover.js';
+import type { PTDresult } from 'paintGround/paintGround.js';
 declare const engine: Engine;
 
 export class Zones extends UIRectangleNodeHover {
@@ -118,8 +118,8 @@ export class Zones extends UIRectangleNodeHover {
             ctx.strokeStyle = 'blue';
             ctx.fillStyle = 'blue';
             ctx.lineWidth = 1;
-            //@ts-ignore
-            (evt.target.result as PTDresult[]).forEach((z) => {
+
+            (evt.target as IDBRequest<PTDresult[]>).result.forEach((z) => {
               ctx.setTransform(1, 0, 0, 1, 0, 0);
               ctx.translate(
                 centerX + z.coord[0] / this.#ratio,

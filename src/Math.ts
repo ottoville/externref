@@ -1,4 +1,4 @@
-﻿import type { Engine } from './engine';
+﻿import type { Engine } from './engine.js';
 declare const engine: Engine;
 
 export class TerraMatrix extends Float32Array {

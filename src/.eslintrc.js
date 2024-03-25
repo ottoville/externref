@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 // eslint-disable-next-line no-undef
 module.exports = {
   root: true,
@@ -18,8 +17,8 @@ module.exports = {
     ],
     project: ['tsconfig.json', 'tsconfig.workers.json', 'tsconfig.serviceworkers.json']
   },
-  plugins: ['@typescript-eslint', 'promise', 'import', 'prettier'],
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+  plugins: ['@typescript-eslint', 'promise', 'import', 'prettier', 'require-extensions'],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:require-extensions/recommended'],
   rules: {
     'prettier/prettier': 'error',
     '@typescript-eslint/ban-ts-comment': 'off',
@@ -41,7 +40,6 @@ module.exports = {
     'no-throw-literal': 2,
     'valid-typeof': 2,
     'import/no-cycle': [2],
-    'import/extensions': 2,
     'import/no-unused-modules': [2, { unusedExports: true }],
     'prefer-promise-reject-errors': 2,
     'no-unused-expressions': 2,
@@ -81,6 +79,5 @@ module.exports = {
       typescript: true,
       node: true,
     },
-    'import/extensions': ['.js', '.jsx', '.ts'],
   },
 };

@@ -1,7 +1,6 @@
 import { paintPlane } from '../paintGround/paintPlane.js';
 import type { Plants } from '../plants/Plants.js';
 import type { GPU } from '../GPU.js';
-import type { PTDresult } from '../types/interfaces/index.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { UI } from '../ui/UINode.js';
 import { Anchor, NumericUnit } from '../ui/UIRectangle.js';
@@ -68,13 +67,9 @@ export class PlantsUI extends UIRectangleNodeHover {
   }
   activateDraw = () => {
     try {
-      this.PT = new paintPlane(
-        this.scene!,
-        this.props.terrain,
-        (response: PTDresult) => {
-          PlantsUI.plantsMesh.fillArea(response);
-        },
-      );
+      this.PT = new paintPlane(this.scene!, this.props.terrain, (response) => {
+        PlantsUI.plantsMesh.fillArea(response);
+      });
     } catch (e) {
       console.error(e);
     }

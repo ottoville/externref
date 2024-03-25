@@ -1,6 +1,5 @@
-﻿import { paintGround } from './paintGround.js';
+﻿import { paintGround, type PTResultF } from './paintGround.js';
 import { Terrain } from '../world/Terrain.js';
-import type { PTResultF } from '../types/interfaces/index.js';
 import type { Scene } from '../Scene.js';
 
 import { TerraVector2, create_rust_vec_ptr } from '../Math.js';

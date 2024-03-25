@@ -1,6 +1,6 @@
 import { MutableTerraVector3 } from '../Math.js';
 import type { TerraCamera } from '../TerraCamera.js';
-import type { Engine, ListenerObj } from '../engine';
+import type { Engine, ListenerObj } from '../engine.js';
 import { ARROW_KEYS, CameraController } from './CameraController.js';
 import { Anchor, NumericUnit, UIRectangle } from '../ui/UIRectangle.js';
 import { UIRectangleBackground } from '../ui/UIRectangleBackground.js';
