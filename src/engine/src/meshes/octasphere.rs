@@ -1,16 +1,16 @@
 
 use std::cell::RefCell;
 
-use crate::{math2::Vec3F32, vertices::PositionAndNormalAndColor, MULTIVALUE_USIZE};
+use crate::{math2::{Vec3F32, VertexKind}, vertices::PositionAndNormalAndColor, Geometry};
 
 struct Patch {
-    patch_points_a: Vec<usize>,
-    patch_points_b: Vec<usize>,
-    patch_points_c: Vec<usize>,
+    patch_points_a: Vec<u32>,
+    patch_points_b: Vec<u32>,
+    patch_points_c: Vec<u32>,
 }
 struct OctasphereHeap {
-    points_left_cell: RefCell<Vec<usize>>,
-    points_right_cell: RefCell<Vec<usize>>,
+    points_left_cell: RefCell<Vec<u32>>,
+    points_right_cell: RefCell<Vec<u32>>,
 }
 thread_local! {
     static OSTASPHERE_HEAP:OctasphereHeap = OctasphereHeap{
@@ -25,7 +25,7 @@ pub unsafe extern "C" fn create_octasphere(
     half_width: f32,
     half_height: f32,
     half_depth: f32,
-) -> *const usize {
+) -> *const Geometry<VertexKind> {
     let n = (2u32).pow(num_subdivisions + 1) as usize;
     // (n * ((n + 1.0) / 2.0))
     let num_faces_per_patch = if num_subdivisions == 0 {
@@ -53,21 +53,9 @@ pub unsafe extern "C" fn create_octasphere(
     let mut indices_count = indices_per_path * 8;
     vertices_and_normals.resize_with(total_vertices_count, || {
         PositionAndNormalAndColor {
-            position: Vec3F32 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            normal: Vec3F32 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            color: Vec3F32 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0
-            }
+            position: Vec3F32::new(),
+            normal: Vec3F32::new(),
+            color: Vec3F32::new()
         }
     });
 
@@ -91,13 +79,13 @@ pub unsafe extern "C" fn create_octasphere(
     {
         indices_count += 12; //2*6
     }
-    let mut indices: Vec<usize> = vec![0; indices_count];
+    let mut indices: Vec<u32> = vec![0; indices_count];
 
-    let mut vert_index = 0;
+    let mut vert_index: usize = 0;
     let mut indices_count = 0;
-    let mut points_a: Vec<usize> = vec![0; n];
-    let mut points_b: Vec<usize> = vec![0; n];
-    let mut points_c: Vec<usize> = vec![0; n];
+    let mut points_a: Vec<u32> = vec![0; n];
+    let mut points_b: Vec<u32> = vec![0; n];
+    let mut points_c: Vec<u32> = vec![0; n];
 
     for i in 0..n {
         let theta = (std::f32::consts::PI * 0.5 * (i as f32)) / (n as f32 - 1.0);
@@ -111,19 +99,19 @@ pub unsafe extern "C" fn create_octasphere(
             z: theta.cos(),
         };
 
-        points_a[i] = point_a_index;
+        points_a[i] = point_a_index as u32;
         if col > 0 {
             if i == 0 {
-                points_c[0] = point_a_index;
+                points_c[0] = point_a_index as u32;
             }
             let num_segments = n - 1 - i;
-            let point_b_index = vert_index + num_segments - 1;
+            let point_b_index = vert_index as usize + num_segments - 1;
             let point_b = Vec3F32 {
                 x: theta.cos(),
                 y: theta.sin(),
                 z: 0.0,
             };
-            points_b[i] = point_b_index;
+            points_b[i] = point_b_index as u32;
             // compute_geodesic
 
             //dot product
@@ -146,16 +134,16 @@ pub unsafe extern "C" fn create_octasphere(
                 vertices_and_normals[vert_index].normal = vertices_and_normals[vert_index].position.clone();
                 vert_index = vert_index + 1;
                 if i == 0 {
-                    points_c[point_index] = vert_index - 1
+                    points_c[point_index] = (vert_index - 1) as u32
                 }
             }
             if i == 0 {
-                points_c[n - 1] = point_b_index;
+                points_c[n - 1] = point_b_index as u32;
             }
 
             vert_index = vert_index + 1;
         } else {
-            points_b[i] = vert_index - 1;
+            points_b[i] = (vert_index - 1) as u32;
         }
         vertices_and_normals[point_a_index].normal = point_a.clone();
         vertices_and_normals[point_a_index].position = point_a;
@@ -165,26 +153,26 @@ pub unsafe extern "C" fn create_octasphere(
             let b = first_index + col + 1;
             let c = first_index + col + 2;
             for row in 0..col - 1 {
-                indices[indices_count] = first_index + row;
+                indices[indices_count] = (first_index + row) as u32;
                 indices_count += 1;
-                indices[indices_count] = a + row;
+                indices[indices_count] = (b + row) as u32;
                 indices_count += 1;
-                indices[indices_count] = b + row;
+                indices[indices_count] = (a + row) as u32;
                 indices_count += 1;
-                indices[indices_count] = b + row;
+                indices[indices_count] = (b + row) as u32;
                 indices_count += 1;
-                indices[indices_count] = a + row;
+                indices[indices_count] = (c + row) as u32;
                 indices_count += 1;
-                indices[indices_count] = c + row;
+                indices[indices_count] = (a + row) as u32;
                 indices_count += 1;
             }
 
             let row = col - 1;
-            indices[indices_count] = first_index + row;
+            indices[indices_count] = (first_index + row) as u32;
             indices_count += 1;
-            indices[indices_count] = a + row;
+            indices[indices_count] = (b + row) as u32;
             indices_count += 1;
-            indices[indices_count] = b + row;
+            indices[indices_count] = (a + row) as u32;
             indices_count += 1;
 
             first_index = b;
@@ -195,9 +183,9 @@ pub unsafe extern "C" fn create_octasphere(
     let mut patches: Vec<Patch> = Vec::with_capacity(8);
     let mut i = 0;
     patches.resize_with(7, || {
-        let mut patch_points_a: Vec<usize> = vec![0; n];
-        let mut patch_points_b: Vec<usize> = vec![0; n];
-        let mut patch_points_c: Vec<usize> = vec![0; n];
+        let mut patch_points_a: Vec<u32> = vec![0; n];
+        let mut patch_points_b: Vec<u32> = vec![0; n];
+        let mut patch_points_c: Vec<u32> = vec![0; n];
         for j in 0..num_faces_per_patch {
             if i == 0 {
                 vertices_and_normals[vert_index].position = Vec3F32 {
@@ -266,31 +254,31 @@ pub unsafe extern "C" fn create_octasphere(
                 vertices_and_normals[vert_index].position.add_in_place(-half_width, -half_height, half_depth);
                 vert_index += 1;
             }
-            match points_a.iter().position(|x| *x == j) {
+            match points_a.iter().position(|x| *x == j as u32) {
                 Some(ind) => {
-                    patch_points_a[ind] = vert_index - 1;
+                    patch_points_a[ind] = (vert_index - 1) as u32;
                 }
                 None => {}
             };
-            match points_b.iter().position(|x| *x == j) {
+            match points_b.iter().position(|x| *x == j as u32) {
                 Some(ind) => {
-                    patch_points_b[ind] = vert_index - 1;
+                    patch_points_b[ind] = (vert_index - 1) as u32;
                 }
                 None => {}
             };
-            match points_c.iter().position(|x| *x == j) {
+            match points_c.iter().position(|x| *x == j as u32) {
                 Some(ind) => {
-                    patch_points_c[ind] = vert_index - 1;
+                    patch_points_c[ind] = (vert_index - 1) as u32;
                 }
                 None => {}
             };
         }
         for j in 0..cells_per_patch {
-            indices[indices_count] = indices[j * 3] + (i + 1) * num_faces_per_patch;
+            indices[indices_count] = indices[j * 3] + ((i + 1) * num_faces_per_patch) as u32;
             indices_count = indices_count + 1;
-            indices[indices_count] = indices[j * 3 + 1] + (i + 1) * num_faces_per_patch;
+            indices[indices_count] = indices[j * 3 + 1] + ((i + 1) * num_faces_per_patch) as u32;
             indices_count = indices_count + 1;
-            indices[indices_count] = indices[j * 3 + 2] + (i + 1) * num_faces_per_patch;
+            indices[indices_count] = indices[j * 3 + 2] + ((i + 1) * num_faces_per_patch) as u32;
             indices_count = indices_count + 1;
         }
         i += 1;
@@ -429,19 +417,14 @@ pub unsafe extern "C" fn create_octasphere(
             }
         }
     }
-    let vertices_buf = std::mem::ManuallyDrop::new(vertices_and_normals);
-    let indices_buf = std::mem::ManuallyDrop::new(indices);
-    MULTIVALUE_USIZE[0] = vertices_buf.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = vertices_buf.len() * 12;
-    MULTIVALUE_USIZE[2] = vertices_buf.capacity() * 12;
-    MULTIVALUE_USIZE[3] = indices_buf.as_ptr() as usize;
-    MULTIVALUE_USIZE[4] = indices_buf.len();
-    MULTIVALUE_USIZE[5] = indices_buf.capacity();
-    return MULTIVALUE_USIZE.as_ptr();
+    let mut geometry = Geometry::new(true, false, true, false, "octasphere_geometry".to_string());
+    geometry.set_vertices(crate::math2::VertexKind::PositionAndNormalAndColor(vertices_and_normals), 12);
+    geometry.set_indices(indices);
+    Box::into_raw(Box::new(geometry))
 }
 
-fn close_circle(half_height: f32, indices_count: usize, indices: &mut Vec<usize>, points: [[&Vec<usize>; 2]; 4], points_left: &mut Vec<usize>,
-    points_right: &mut Vec<usize>,
+fn close_circle(half_height: f32, indices_count: usize, indices: &mut Vec<u32>, points: [[&Vec<u32>; 2]; 4], points_left: &mut Vec<u32>,
+    points_right: &mut Vec<u32>,
 ) -> usize {
     if half_height > 0.0 {
         points_left.push(points[0][0][0]);
@@ -456,24 +439,24 @@ fn close_circle(half_height: f32, indices_count: usize, indices: &mut Vec<usize>
 }
 
 fn draw_connection(
-    indices: &mut Vec<usize>,
+    indices: &mut Vec<u32>,
     mut indices_count: usize,
-    points_left: &mut Vec<usize>,
-    points_right: &mut Vec<usize>,
+    points_left: &mut Vec<u32>,
+    points_right: &mut Vec<u32>,
 ) -> usize {
     for index in 0..points_left.len() - 1 {
-        indices[indices_count] = points_left[index];
+        indices[indices_count] = points_left[index +1];
         indices_count += 1;
         indices[indices_count] = points_right[index];
         indices_count += 1;
-        indices[indices_count] = points_left[index + 1];
+        indices[indices_count] = points_left[index];
         indices_count += 1;
 
         indices[indices_count] = points_left[index + 1];
         indices_count += 1;
-        indices[indices_count] = points_right[index];
+        indices[indices_count] = points_right[index +1];
         indices_count += 1;
-        indices[indices_count] = points_right[index + 1];
+        indices[indices_count] = points_right[index];
         indices_count += 1;
     }
     points_left.clear();
@@ -483,7 +466,7 @@ fn draw_connection(
 #[cfg(test)]
 #[test]
 fn test_draw_connection() {
-    let mut indices = vec![0usize; 42];
+    let mut indices = vec![0u32; 42];
     let mut indices_count = 0;
     OSTASPHERE_HEAP.with(|oc| {
         let mut points_left = oc.points_left_cell.borrow_mut();
@@ -497,9 +480,9 @@ fn test_draw_connection() {
         assert_eq!(
             indices,
             vec![
-                251, 187, 249, 249, 187, 186, 249, 186, 246, 246, 186, 185, 246, 185, 242, 242, 185,
-                184, 242, 184, 237, 237, 184, 183, 237, 183, 231, 231, 183, 182, 231, 182, 224, 224,
-                182, 181, 224, 181, 216, 216, 181, 180
+                249, 187, 251, 249, 186, 187, 246, 186, 249, 246, 185, 186, 242, 185, 246, 242,
+                184, 185, 237, 184, 242, 237, 183, 184, 231, 183, 237, 231, 182, 183, 224, 182,
+                231, 224, 181, 182, 216, 181, 224, 216, 180, 181
             ]
         );
     });

@@ -83,7 +83,7 @@ export type rustWasm = {
     half_width: number,
     half_height: number,
     half_depth: number,
-  ): rust_pointer<'*const usize'>;
+  ): rust_pointer<'geometry'>;
 
   collider(): rust_pointer<'legacy_collider'>;
   intersection_point_pointer(
@@ -241,6 +241,7 @@ export type rustWasm = {
   set_shadow(mesh_id: number, shadow: number): void;
   collider_faces_pointer(mesh_id: number): rust_pointer<'collider_faces'>;
   set_scenes(mesh_id: number, scenes: number): void;
+  calculate_normals(geometry: rust_pointer<'geometry'>): void;
   update_scale_and_rotation(
     mesh_id: number,
     x: number,

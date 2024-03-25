@@ -1,4 +1,5 @@
-﻿import type { Scene } from '../../Scene.js';
+﻿import { create_rust_vec_ptr } from '../../Math.js';
+import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
 declare const engine: Engine;
@@ -31,11 +32,6 @@ export class Box extends IndexedSingleColoredMesh {
     fixed?: boolean;
   }) {
     const geometry = engine.rust.create_box_geometry();
-    const [indices_ptr, indices_len, indices_cap] = new Uint32Array(
-      engine.rust.memory.buffer,
-      engine.rust.indices_field_pointer(geometry),
-      3,
-    );
     super(
       {
         can_collide,
@@ -47,7 +43,7 @@ export class Box extends IndexedSingleColoredMesh {
         point_light,
         scenes,
       },
-      [indices_ptr as rust_pointer<'usize'>, indices_len!, indices_cap!],
+      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
     );
     this.color = color;
   }

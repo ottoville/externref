@@ -25,7 +25,7 @@ fn test_bounding_box() {
         let len = engine2.meshes.len();
         Mesh::new(0.0, 0.0, 0.0, false, false, String::from("box"));
         let m = &mut engine2.meshes[len];
-        let mut geometry = Geometry::new(true, false, false, false);
+        let mut geometry = Geometry::new(true, false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(Box::new(BOX_POSITIONS2));
         geometry.set_vertices(vertices, 8);
         geometry.indices = BOX_INDICES.to_vec();

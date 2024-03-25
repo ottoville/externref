@@ -75,6 +75,7 @@ pub extern "C" fn create_geometry<'frame>(
         character_can_collide_to,
         static_faces,
         strip,
+        "unnamed geometry".to_string()
     ));
     Box::into_raw(geometry)
 }
@@ -90,28 +91,6 @@ pub unsafe extern "C" fn set_geometry<'frame>(
 pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *const Collider) {
     let coll = std::ptr::read(collider);
     get_mesh_by_id_mut(mesh_id).add_collider(coll, ENGINE.physic_engine_mut());
-}
-#[no_mangle]
-pub unsafe extern "C" fn vertices_pointer(geometry: *const Geometry<VertexKind>) -> *const f32 {
-    let vertices =&(*geometry).vertices.vertices;
-    match vertices {
-        VertexKind::PositionAndNormalAndUV(vector) => {
-            vector.as_ptr() as *const f32
-        },
-        VertexKind::PositionAndNormalAndColor(vector) => {
-            vector.as_ptr() as *const f32
-        },
-        VertexKind::PositionAndNormal(vector) => {
-            vector.as_ptr() as *const f32
-        },
-        VertexKind::Position(vector) => {
-            vector.as_ptr() as *const f32
-        },
-        VertexKind::F32(vector) => {
-            vector.as_ptr()
-        },
-        VertexKind::None => panic!("Asked vertices pointer but there are no vertices"),
-    }
 }
 #[no_mangle]
 pub unsafe extern "C" fn last_collider_world_vertices_pointer(mesh_id: usize) -> *const f32 {
@@ -133,62 +112,9 @@ pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     mesh.scaling.z = z;
 
     // If not equally to scale into all dimensions, re-calculate normals
-    /*if x != y || x != z {
-        let geometry = mesh.get_geometry_mut();
-        if let VertexKind::Position(_) = &geometry.vertices.vertices {
-
-        } else if let VertexKind::None = &geometry.vertices.vertices {
-
-        } else {
-            geometry.create_faces(None);
-            let positions: Vec<_> = match &mut geometry.vertices.vertices {
-                VertexKind::PositionAndNormalAndUV(vector) => {
-                    vector.iter_mut().map(|v| {
-                        v.normal.clear();
-                        return (&v.position, &mut v.normal);
-                    }).collect()
-                },
-                VertexKind::PositionAndNormalAndColor(vector) => {
-                    vector.iter_mut().map(|v| {
-                        v.normal.clear();
-                        return (&v.position, &mut v.normal);
-                    }).collect()
-                },
-                VertexKind::PositionAndNormal(vector) => {
-                    vector.iter_mut().map(|v| {
-                        v.normal.clear();
-                        return (&v.position, &mut v.normal);
-                    }).collect()
-                },
-                VertexKind::Position(_) => {
-                    panic!("Guard should prevent executing this line")
-                },
-                VertexKind::F32(_) => {
-                    todo!()
-                },
-                VertexKind::None => panic!("Guard should prevent executing this line"),
-            };
-    
-            for triangle in geometry.faces.iter() {
-                let ia = &positions[triangle[0] as usize];
-                let ib = &positions[triangle[1] as usize];
-                let ic = &positions[triangle[2] as usize];
-                ia.0.sub(ib.0);
-    
-                let e1 = ia.0.sub(ib.0);
-                let e2 =  ic.0.sub(ib.0);
-                
-                let no = e1.cross(&e2);
-    
-                ia.1.add(&no);
-                ib.1.add(&no);
-                ic.1.add(&no);
-            }
-            for position in positions {
-                position.1.normalize();
-            }
-        }
-    }*/
+    if x != y || x != z {
+        mesh.get_geometry_mut().calculate_normals();
+    }
     mesh.on_update(true);
 }
 #[no_mangle]
@@ -245,15 +171,6 @@ pub unsafe extern "C" fn label_field_pointer(mesh_id: usize) -> *const usize {
     MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
     MULTIVALUE_USIZE[1] = label.len();
     MULTIVALUE_USIZE[2] = label.capacity();
-    MULTIVALUE_USIZE.as_ptr()
-}
-#[no_mangle]
-pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry<VertexKind>) -> *const usize {
-    let geometry = &(*geometry_ptr);
-    let indices = &geometry.indices;
-    MULTIVALUE_USIZE[0] = indices.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = indices.len();
-    MULTIVALUE_USIZE[2] = indices.capacity();
     MULTIVALUE_USIZE.as_ptr()
 }
 #[no_mangle]

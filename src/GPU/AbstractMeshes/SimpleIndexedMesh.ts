@@ -76,8 +76,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         let vertices_len: number;
         if (typeof dataNodeProps.vertices === 'number') {
           vertices_view = engine.rust.vertices_pointer(dataNodeProps.vertices);
-          vertices_len =
-            this.vertices_count * engine.rust.vertices_stride(this.geometry);
+          vertices_len = this.vertices_count * this.vertices_stride;
         } else {
           [vertices_view, vertices_len] = dataNodeProps.vertices.view;
         }
@@ -103,7 +102,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         createRenderPipeline,
         primitiveState,
         {
-          stride: engine.rust.vertices_stride(this.geometry),
+          stride: this.vertices_stride,
         },
       );
       this.drawable = new DrawableIndexed({
