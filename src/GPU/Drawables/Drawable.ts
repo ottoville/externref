@@ -21,6 +21,7 @@ export type DrawableProps<N extends MainNode> = {
     | readonly (
         | rust_array_ptr<'f32'>
         | rust_array_ptr<'position'>
+        | rust_array_ptr<'position_and_normal'>
         | Buffer<VERTEX_BUFFER>
       )[]
     | undefined;
@@ -159,6 +160,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     buffer:
       | Buffer<VERTEX_BUFFER>
       | rust_array_ptr<'f32'>
+      | rust_array_ptr<'position_and_normal'>
       | rust_array_ptr<'position'>,
     destroyOld?: boolean,
     GPUoffset?: number,
@@ -168,6 +170,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     index: number,
     buffer:
       | rust_array_ptr<'f32'>
+      | rust_array_ptr<'position_and_normal'>
       | rust_array_ptr<'position'>
       | Buffer<VERTEX_BUFFER>,
     destroyOld = true,

@@ -165,6 +165,13 @@ export type rustWasm = {
     cap: number,
     vertices_stride: Word<'dword'>,
   ): void;
+  set_position_and_normal_vertices(
+    geometry: rust_pointer<'geometry'>,
+    ptr: rust_pointer<'position_and_normal'>,
+    length: number,
+    cap: number,
+    vertices_stride: Word<'dword'>,
+  ): void;
   set_indices(
     geometry: rust_pointer<'geometry'>,
     ptr: rust_pointer<'usize'>,
@@ -193,6 +200,9 @@ export type rustWasm = {
   alloc_vector_u8(size: number): rust_pointer<rust_vec_ptr<'u8'>>;
   alloc_vector_usize(size: number): rust_pointer<rust_vec_ptr<'usize'>>;
   alloc_vector_positions(size: number): rust_pointer<rust_vec_ptr<'position'>>;
+  alloc_vector_positions_and_normal(
+    size: number,
+  ): rust_pointer<rust_vec_ptr<'position_and_normal'>>;
   update_scale(mesh_id: number, x: number, y: number, z: number): void;
   update_rotation(
     mesh_id: number,
