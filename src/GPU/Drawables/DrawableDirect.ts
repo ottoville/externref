@@ -30,6 +30,7 @@ export type MappedVertexBuffers<
           [Property in keyof V]:
             | rust_array_ptr<'f32'>
             | rust_array_ptr<'position'>
+            | rust_array_ptr<'position_and_normal'>
             | Buffer<VERTEX_BUFFER>;
         }>
       : []

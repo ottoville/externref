@@ -1,7 +1,10 @@
 import { NormalsPipeline } from '../../RenderPipeLines/NormalsPipeline.js';
 import { DrawableSimple } from '../../Drawables/DrawableSimple.js';
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
-import { DataNode, allocate_vec_f32 } from '../../../nodes/DataNode.js';
+import {
+  DataNode,
+  allocate_vec_positions_and_normals,
+} from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
@@ -10,22 +13,25 @@ import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 export class NormalsMesh extends DataNode {
   override drawable: DrawableSimple<RenderPipelineProps>;
   constructor(targetNode: DrawableDirect<DataNode>) {
-    //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
-    const stride = 16; // 8*2;
-    const vertices_ptr = allocate_vec_f32(
-      (targetNode.node.positions_count * stride) as Word<'dword'>,
+    const stride = 8 as Word<'dword'>; // 8*2;
+    const vertices_ptr = allocate_vec_positions_and_normals(
+      (targetNode.node.positions_count * 2) as Word<'dword'>,
     );
     const updateVertices = () => {
       const newVertices = new Float32Array(
         engine.rust.memory.buffer,
         vertices_ptr[0],
-        vertices_ptr[1],
+        vertices_ptr[1] * stride,
       );
       const vertices = targetNode.node.verticesArray;
       vertices.forEach((v, i) => {
-        const slice = v.slice(0, 8);
-        newVertices.set(slice, i * stride);
-        newVertices.copyWithin(i * stride + 8, i * stride, i * stride + 8);
+        const slice = v.slice(0, stride);
+        newVertices.set(slice, i * stride * 2);
+        newVertices.copyWithin(
+          i * stride * 2 + stride,
+          i * stride * 2,
+          i * stride * 2 + stride,
+        );
       });
     };
     updateVertices();
@@ -37,13 +43,16 @@ export class NormalsMesh extends DataNode {
         true,
       );
     });
+    const geometry = engine.rust.create_geometry(true, false, true, false);
+    engine.rust.set_position_and_normal_vertices(
+      geometry,
+      ...vertices_ptr,
+      stride,
+    );
     super(
       {
         character_can_collide_to: false,
-        vertices: {
-          stride: 8 as Word<'dword'>,
-          view: vertices_ptr,
-        },
+        vertices: geometry,
       },
       {
         label: 'NormalsDebug',
@@ -74,14 +83,14 @@ export class NormalsMesh extends DataNode {
         topology: 'line-list',
       },
       {
-        stride: 8 as Word<'dword'>,
+        stride,
       },
     );
     this.drawable = new DrawableSimple({
       bindGroups: [],
       node: this,
       renderPipeline,
-      vertexBuffers: [[vertices_ptr[0], vertices_ptr[1]]],
+      vertexBuffers: [[vertices_ptr[0], vertices_ptr[1] * stride]],
     });
   }
 }

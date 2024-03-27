@@ -63,6 +63,11 @@ export function allocate_vec_f32(length: Word<'dword'>) {
 export function allocate_vec_positions(length: number) {
   return create_rust_vec_ptr(engine.rust.alloc_vector_positions(length));
 }
+export function allocate_vec_positions_and_normals(length: number) {
+  return create_rust_vec_ptr(
+    engine.rust.alloc_vector_positions_and_normal(length),
+  );
+}
 export function allocate_vec_usize(length: number) {
   return create_rust_vec_ptr(engine.rust.alloc_vector_usize(length));
 }

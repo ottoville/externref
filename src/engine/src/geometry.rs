@@ -2,7 +2,7 @@ use std::num::NonZeroU32;
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
-    create_multivalue_vector, math2::{Vec3F32, Vec4, VertexKind}, mesh::{get_mesh_by_id, get_mesh_by_id_mut}, vertices::Position, MULTIVALUE_USIZE
+    create_multivalue_vector, math2::{Vec3F32, Vec4, VertexKind}, mesh::{get_mesh_by_id, get_mesh_by_id_mut}, vertices::{Position, PositionAndNormal}, MULTIVALUE_USIZE
 };
 #[no_mangle]
 pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry<VertexKind>) -> *const usize {
@@ -120,10 +120,21 @@ pub unsafe extern "C" fn set_position_vertices(
     cap: usize,
     vertices_stride: usize,
 ) {
-
     let vertices: Vec<Position> = Vec::from_raw_parts(ptr, length, cap);
     let geometry = &mut(*geometry_ptr);
     geometry.set_vertices(VertexKind::Position(vertices), vertices_stride);
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_position_and_normal_vertices(
+    geometry_ptr: *mut Geometry<VertexKind>,
+    ptr: *mut PositionAndNormal,
+    length: usize,
+    cap: usize,
+    vertices_stride: usize,
+) {
+    let vertices: Vec<PositionAndNormal> = Vec::from_raw_parts(ptr, length, cap);
+    let geometry = &mut(*geometry_ptr);
+    geometry.set_vertices(VertexKind::PositionAndNormal(vertices), vertices_stride);
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry<VertexKind>) -> usize {

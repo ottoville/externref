@@ -14,7 +14,7 @@ pub enum VertexKind {
     None,
     PositionAndNormalAndUV(Vec<PositionAndNormalAndUV>),
     PositionAndNormalAndColor(Vec<PositionAndNormalAndColor>),
-    PositionAndNormal(Box<[PositionAndNormal]>),
+    PositionAndNormal(Vec<PositionAndNormal>),
     Position(Vec<Position>),
     F32(Vec<f32>)
 }
