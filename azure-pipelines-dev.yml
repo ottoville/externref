@@ -1,13 +1,10 @@
-trigger:
+pr:
   branches:
     include:
     - refs/heads/*
-    exclude:
-    - refs/heads/master
   paths:
     include:
     - /
-  batch: True
 name: $(date:yyyyMMdd)$(rev:.r)
 jobs:
 - job: Phase_1
@@ -43,6 +40,13 @@ jobs:
       workingDir: src
       verbose: false
       customCommand: run build
+  - task: Cargo@1
+    displayName: Test rust
+    inputs:
+      cargoCommand: 'test'
+      cargoWorkingDir: 'src'
+      cargoCommandOptions: '--lib'
+      verbose: false
   - task: AzureStaticWebApp@0
     displayName: 'Static Web App: '
     inputs:
@@ -50,7 +54,7 @@ jobs:
       skip_app_build: false
       verbose: false
       azure_static_web_apps_api_token: 2aef2b5c97599f9114259a5b48deeca2588934fdb83cf50b591444ef8b10206e1-eb01d464-e4f3-4b9f-822c-960472154ecb00363827
-      deployment_environment: $(Build.SourceBranchName)
+      production_branch: master
 #  - task: Bash@3
 #    displayName: 'Install chrome unstable'
 #    inputs:
