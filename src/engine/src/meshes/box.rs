@@ -1,4 +1,4 @@
-use crate::{math2::{Vec3F32, VertexKind}, vertices::PositionAndNormal, Geometry};
+use crate::{math2::Vec3F32, vertices::{PositionAndNormal, VertexKind}, Geometry};
 
 pub fn create_box_vertices() -> Vec<PositionAndNormal> {
     vec![

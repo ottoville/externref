@@ -1,7 +1,6 @@
 use crate::collider::Collider;
-use crate::geometry::Vertices;
-use crate::math2::{Vec3, Vec3F32, Vec4, VertexKind};
-use crate::vertices::{PositionAndNormal, PositionAndNormalAndColor, PositionAndNormalAndUV};
+use crate::math2::{Vec3, Vec3F32, Vec4};
+use crate::vertices::{VertexKind, Vertices};
 
 pub struct BoundingBox {
     pub has_bounding:bool,
@@ -18,7 +17,7 @@ pub struct BoundingBox {
 #[cfg(test)]
 #[test]
 fn test_bounding_box() {
-    use crate::{engine::init_engine, math2::VertexKind, mesh::{get_mesh_by_id_mut, Mesh, ENGINE}, meshes::r#box::{create_box_vertices, BOX_INDICES}, Geometry};
+    use crate::{engine::init_engine, mesh::{get_mesh_by_id_mut, Mesh, ENGINE}, meshes::r#box::{create_box_vertices, BOX_INDICES}, vertices::VertexKind, Geometry};
     unsafe {
         init_engine();
         let engine2 = ENGINE.physic_engine_mut();
@@ -73,26 +72,8 @@ impl BoundingBox {
     }
     pub fn init(&mut self, vertices:&Vertices<VertexKind>) {
         //TODO: use macro
-        let mut positions: Box<dyn Iterator<Item = &Vec3F32>> = match &vertices.vertices {
-            VertexKind::PositionAndNormalAndUV(vector) => {
-                Box::new(vector.iter().map(|v| { &v.position}))
-            },
-            VertexKind::PositionAndNormalAndColor(vector) => {
-                Box::new(vector.iter().map(|v| { &v.position}))
-            },
-            VertexKind::PositionAndNormal(vector) => {
-                Box::new(vector.iter().map(|v| { &v.position}))
-            },
-            VertexKind::Position(vector) => {
-                Box::new(vector.iter().map(|v| { &v.position}))
-            },
-            VertexKind::F32(vector) => {
-                Box::new(vector.chunks_exact(vertices.vertices_stride).map(|v:&[f32]| unsafe {
-                    &(*(v.as_ptr() as *const Vec3F32))
-                }))
-            },
-            VertexKind::None => todo!(),
-        };
+        
+        let mut positions: Box<dyn Iterator<Item = &Vec3F32>> = vertices.get_positions();
 
         let first_vertice = positions.next().unwrap();
         self.min_original.x=first_vertice.x;

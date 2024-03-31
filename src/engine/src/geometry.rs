@@ -1,8 +1,10 @@
 use std::num::NonZeroU32;
 
+use rapier3d::{geometry::{Collider, ColliderBuilder}, math::Point, na::{Const, OPoint}, pipeline::ActiveEvents};
+
 pub use crate::boundingbox::BoundingBox;
 use crate::{
-    create_multivalue_vector, math2::{Vec3F32, Vec4, VertexKind}, mesh::{get_mesh_by_id, get_mesh_by_id_mut}, vertices::{Position, PositionAndNormal}, MULTIVALUE_USIZE
+    create_multivalue_vector, math2::Vec4, mesh::{get_mesh_by_id, get_mesh_by_id_mut}, vertices::{Position, PositionAndNormal, VertexKind, Vertices}, MULTIVALUE_USIZE
 };
 #[no_mangle]
 pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry<VertexKind>) -> *const usize {
@@ -164,46 +166,13 @@ pub unsafe extern "C" fn set_indices_and_vertices(
     geometry.set_vertices(VertexKind::F32(vertices), vertices_stride);
     geometry.faces_dirty = true;
 }
-
+#[no_mangle]
+pub unsafe extern "C" fn dedup_positions(geometry_ptr: *mut Geometry<VertexKind>) {
+    (*geometry_ptr).dedup_positions();
+}
 pub struct ColliderPlane {
     _plane: Plane,
     _vectors: [f32; 3],
-}
-pub struct Vertices<T> {
-    pub vertices: T,
-    /**
-     * stride as DWORD in vertices vec.
-     */
-    pub vertices_stride: usize,
-}
-
-impl Vertices<VertexKind> {
-    pub fn have_vertices(&self) -> bool {
-        match self.vertices {
-            VertexKind::None => false,
-            _ => true
-        }
-    }
-    pub fn length(&self) -> usize {
-        return match &self.vertices {
-            VertexKind::PositionAndNormalAndUV(vector) => {
-                vector.len()
-            },
-            VertexKind::PositionAndNormalAndColor(vector) => {
-                vector.len()
-            },
-            VertexKind::PositionAndNormal(vector) => {
-                vector.len()
-            },
-            VertexKind::Position(vector) => {
-                vector.len()
-            },
-            VertexKind::F32(vector) => {
-                vector.len()/self.vertices_stride
-            },
-            VertexKind::None => 0,
-        }
-    }
 }
 pub struct Geometry<T> {
     pub bounding_box: BoundingBox,
@@ -224,48 +193,47 @@ pub struct Geometry<T> {
 }
 
 impl<'vert> Geometry<VertexKind> {
-    pub fn get_positions(&'static self) -> Box<dyn Iterator<Item = &'static Vec3F32>> {
-        match &self.vertices.vertices {
-            VertexKind::PositionAndNormalAndUV(vector) => {
-                Box::new(vector.iter().map(|v| { &v.position}))
-            },
-            VertexKind::PositionAndNormalAndColor(vector) => {
-                Box::new(vector.iter().map(|v| { &v.position}))
-            },
-            VertexKind::PositionAndNormal(vector) => {
-                Box::new(vector.iter().map(|v| { &v.position}))
-            },
-            VertexKind::Position(vector) => {
-                Box::new(vector.iter().map(|v| { &v.position}))
-            },
-            VertexKind::F32(vector) => {
-                Box::new(vector.chunks_exact(self.vertices.vertices_stride).map(|v| unsafe {
-                    &(*(v.as_ptr() as *const Vec3F32))
-                }))
-            },
-            VertexKind::None => todo!(),
-        }
+    pub fn create_trimesh_collider(&mut self, scale_x: f32, scale_y: f32, scale_z: f32) -> *mut Collider {
+        let newvertices = self.vertices.get_positions().map(|position| {
+            Point::new(
+                position.x * scale_x,
+                position.y * scale_y,
+                position.z * scale_z,
+            ) 
+        }).collect();
+        let positions_count = self.vertices.length();
+        self.create_faces(NonZeroU32::new(positions_count as u32));
+        let collider = Box::new(
+            ColliderBuilder::trimesh(newvertices, self.faces.clone())
+                .density(2.0)
+                .restitution(0.5)
+                .build(),
+        );
+        Box::leak(collider)
     }
-    pub fn get_positions_mut(&'static mut self) -> Box<dyn Iterator<Item = &'static mut Vec3F32>> {
-        match &mut self.vertices.vertices {
-            VertexKind::PositionAndNormalAndUV(vector) => {
-                Box::new(vector.iter_mut().map(|v| { &mut v.position}))
-            },
-            VertexKind::PositionAndNormalAndColor(vector) => {
-                Box::new(vector.iter_mut().map(|v| { &mut v.position}))
-            },
-            VertexKind::PositionAndNormal(vector) => {
-                Box::new(vector.iter_mut().map(|v| { &mut v.position}))
-            },
-            VertexKind::Position(vector) => {
-                Box::new(vector.iter_mut().map(|v| { &mut v.position}))
-            },
-            VertexKind::F32(vector) => {
-                Box::new(vector.chunks_exact_mut(self.vertices.vertices_stride).map(|v| unsafe {
-                    &mut (*(v.as_mut_ptr() as *mut Vec3F32))
-                }))
-            },
-            VertexKind::None => todo!(),
+    pub fn create_convex_collider(&mut self, scale_x: f32, scale_y: f32, scale_z: f32, collision_events: bool) -> *mut Collider {
+        let newvertices:Vec<OPoint<f32, Const<3>>> = self.vertices.get_positions().map(|position| {
+            Point::new(
+            position.x * scale_x,
+            position.y * scale_y,
+            position.z * scale_z
+            )
+
+        }).collect();
+        let positions_count = self.vertices.length();
+        self.create_faces(NonZeroU32::new(positions_count as u32));
+
+        let colliderbuilder = ColliderBuilder::convex_mesh(newvertices, &self.faces);
+        match colliderbuilder {
+            Some(mut builder) => {
+                if collision_events {
+                    builder = builder.active_events(ActiveEvents::COLLISION_EVENTS);
+                }
+                Box::leak(Box::new(builder.build()))
+            }
+            None => {
+                panic!("Failure to create convex collider")
+            }
         }
     }
     pub fn calculate_normals(&mut self) {
@@ -320,6 +288,57 @@ impl<'vert> Geometry<VertexKind> {
             for position in positions {
                 position.1.normalize();
             }
+        }
+    }
+    /**
+        Removes duplicated positions
+     **/
+    pub fn dedup_positions(&mut self) {
+        match &mut self.vertices.vertices {
+            VertexKind::PositionAndNormalAndUV(_) => {
+                todo!()
+            },
+            VertexKind::PositionAndNormalAndColor(_) => {
+                todo!()
+            },
+            VertexKind::PositionAndNormal(vector) => {
+                let mut i = 0;
+                loop {
+                    if i == vector.len() {
+                        break;
+                    }
+                    let mut ii = i+1;
+                    loop {
+                        if ii == vector.len() {
+                            break;
+                        }
+                        let pos = &vector[i].position;
+                        let nextpos = &vector[ii].position;
+                        if pos.x == nextpos.x && pos.y == nextpos.y && pos.z == nextpos.z {
+                            vector.remove(ii);
+                            self.indices = self.indices.iter().map(|indice| {
+                                if *indice == ii as u32 {
+                                    return i as u32;
+                                }
+                                else if *indice > ii as u32 {
+                                    return *indice - 1;
+                                }
+                                return *indice;
+                            }).collect();
+                            continue;
+                        }
+                        ii = ii +1;
+                    }
+                    i = i + 1;
+                };
+            },
+            VertexKind::Position(_) => {
+                todo!()
+            },
+            VertexKind::F32(_) => {
+                todo!()
+            },
+            VertexKind::None => todo!(),
         }
     }
     pub fn new(

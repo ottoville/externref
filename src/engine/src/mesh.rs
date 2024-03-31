@@ -1,8 +1,7 @@
 use core::panic;
-use std::num::NonZeroU32;
 use std::num::NonZeroUsize;
 
-use crate::math2::VertexKind;
+use crate::vertices::VertexKind;
 use crate::MULTIVALUE_USIZE;
 pub use crate::drawable::DrawCommand;
 pub use crate::engine::Engine;
@@ -253,7 +252,19 @@ pub unsafe extern "C" fn intersect_box_aa_sphere(
 }
 #[no_mangle]
 pub unsafe extern "C" fn create_trimesh_collider(mesh_id: usize) -> *mut Collider {
-    get_mesh_by_id_mut(mesh_id).create_trimesh_collider()
+    let mesh: &mut Mesh = get_mesh_by_id_mut(mesh_id);
+    let scale_x = mesh.scaling.x;
+    let scale_y = mesh.scaling.y;
+    let scale_z = mesh.scaling.z;
+    mesh.get_geometry_mut().create_trimesh_collider(scale_x, scale_y, scale_z)
+}
+#[no_mangle]
+pub unsafe extern "C" fn create_convex_collider(mesh_id: usize, collision_events: bool) -> *mut Collider {
+    let mesh: &mut Mesh = get_mesh_by_id_mut(mesh_id);
+    let scale_x = mesh.scaling.x;
+    let scale_y = mesh.scaling.y;
+    let scale_z = mesh.scaling.z;
+    mesh.get_geometry_mut().create_convex_collider(scale_x, scale_y, scale_z, collision_events)
 }
 
 #[no_mangle]
@@ -380,36 +391,6 @@ impl Mesh {
             self.update_matrix();
         }
         return &self.transformation;
-    }
-    //TODO: move to geometry
-    pub fn create_trimesh_collider(&'static mut self) -> *mut Collider {
-        let scale_x = self.scaling.x;
-        let scale_y = self.scaling.y;
-        let scale_z = self.scaling.z;
-        let positions_count = self.get_positions_count();
-        let geometry = self.get_geometry_mut();
-        let mut newvertices: Vec<Point<Real>> = Vec::with_capacity(positions_count);
-        geometry.create_faces(NonZeroU32::new(positions_count as u32));
-
-        let positions = geometry.get_positions();
-
-        for i in positions {
-            // TODO: ensure simd
-            newvertices.push(Point::new(
-                i.x * scale_x,
-                i.y * scale_y,
-                i.z * scale_z,
-            ));
-        }
-
-
-        let collider = Box::new(
-            ColliderBuilder::trimesh(newvertices, geometry.faces.clone())
-                .density(2.0)
-                .restitution(0.5)
-                .build(),
-        );
-        Box::leak(collider)
     }
     pub unsafe fn add_collider<'a>(
         &'static mut self,
