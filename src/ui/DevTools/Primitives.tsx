@@ -19,6 +19,14 @@ export function Primitives({ node }: { node: DataNode }) {
         }}
       >
         <summary>Vertices</summary>
+        <button
+          type="button"
+          onClick={() => {
+            node.calculate_normals();
+          }}
+        >
+          Calculate normals
+        </button>
         {node instanceof DataNode && verticesOpen ? (
           <table>
             <colgroup>
@@ -31,12 +39,14 @@ export function Primitives({ node }: { node: DataNode }) {
               <col />
             </colgroup>
             <thead>
-              <th>x</th>
-              <th>y</th>
-              <th>z</th>
-              <th>x2</th>
-              <th>y2</th>
-              <th>z2</th>
+              <tr>
+                <th>x</th>
+                <th>y</th>
+                <th>z</th>
+                <th>x2</th>
+                <th>y2</th>
+                <th>z2</th>
+              </tr>
             </thead>
             <tbody>
               {node.verticesArray.map((vertex, i) => {

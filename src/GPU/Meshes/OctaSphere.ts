@@ -36,10 +36,6 @@ export class OctaSphere extends IndexedColoredMesh {
       vertices[i + 9] = Math.random();
       vertices[i + 10] = Math.random();
     }
-    const indices = create_rust_vec_ptr(
-      engine.rust.indices_field_pointer(geometry),
-    );
-
     super(
       {
         can_collide,
@@ -50,7 +46,7 @@ export class OctaSphere extends IndexedColoredMesh {
         label: 'OctaSphere' + uid++,
         ...meshProperties,
       },
-      indices,
+      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
     );
 
     this.width = width;

@@ -28,9 +28,6 @@ class PlaneMesh extends DataNode {
       engine.rust.vertices_stride(geometry) *
       engine.rust.vertices_count(geometry);
 
-    const indicesView = create_rust_vec_ptr(
-      engine.rust.indices_field_pointer(geometry),
-    );
     super(
       {
         character_can_collide_to: false,
@@ -40,7 +37,7 @@ class PlaneMesh extends DataNode {
         label: 'plane',
         rigid_body: false,
       },
-      indicesView,
+      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
       false,
     );
     this.drawable = new DrawableIndexed({

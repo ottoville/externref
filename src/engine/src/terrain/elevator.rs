@@ -52,9 +52,6 @@ impl Elevator {
     #[cfg(target_arch = "wasm32")]
     unsafe fn _elevate(&mut self, mesh:&'static mut Mesh, radius:f32, full_height:f32) {
         use std::arch::wasm32::*;
-
-        use crate::math2::{Vec3F32, VertexKind};
-
         let height_max = 500.0;
         let height_min = -500.0;
         let mut new_position=false;
@@ -118,27 +115,7 @@ impl Elevator {
         let half = geometry.planes.planes.len()/2;
         let stride=geometry.vertices.vertices_stride;
         
-        //TODO: use macro
-        let mut vertices:Vec<_> = match &mut geometry.vertices.vertices {
-            VertexKind::PositionAndNormalAndUV(vector) => {
-                vector.iter_mut().map(|v| { &mut v.position}).collect()
-            },
-            VertexKind::PositionAndNormalAndColor(vector) => {
-                vector.iter_mut().map(|v| { &mut v.position}).collect()
-            },
-            VertexKind::PositionAndNormal(vector) => {
-                vector.iter_mut().map(|v| { &mut v.position}).collect()
-            },
-            VertexKind::Position(vector) => {
-                vector.iter_mut().map(|v| { &mut v.position}).collect()
-            },
-            VertexKind::F32(vector) => {
-                vector.chunks_exact_mut(stride).map(|v| unsafe {
-                    &mut (*(v.as_mut_ptr() as *mut Vec3F32))
-                }).collect()
-            },
-            VertexKind::None => todo!(),
-        };
+        let mut vertices:Vec<_> = geometry.vertices.get_positions_mut().collect();
         
         for sv in self.selected_vertices.iter() {
             let mut positiony = vertices[sv.0].y;
@@ -226,9 +203,9 @@ impl Elevator {
         }
     }
 
-    pub fn new (mesh:&'static mut Mesh) -> Elevator {
+    pub fn new (mesh:&mut Mesh) -> Elevator {
         let geometry = mesh.get_geometry_mut();
-        let mut vertices = geometry.get_positions();
+        let mut vertices = geometry.vertices.get_positions();
         let mut vertices_horizontal: Vec<f32> = Vec::new();
         loop {
             let next: Option<&Vec3F32> = vertices.next();

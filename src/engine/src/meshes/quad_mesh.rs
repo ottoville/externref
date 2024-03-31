@@ -1,4 +1,4 @@
-use crate::{math2::{Vec2F32, Vec3F32, VertexKind}, vertices::PositionAndNormalAndUV, Geometry};
+use crate::{math2::{Vec2F32, Vec3F32}, vertices::{PositionAndNormalAndUV, VertexKind}, Geometry};
 
 #[no_mangle]
 

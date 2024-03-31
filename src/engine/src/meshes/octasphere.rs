@@ -1,7 +1,7 @@
 
 use std::cell::RefCell;
 
-use crate::{math2::{Vec3F32, VertexKind}, vertices::PositionAndNormalAndColor, Geometry};
+use crate::{math2::Vec3F32, vertices::{PositionAndNormalAndColor, VertexKind}, Geometry};
 
 struct Patch {
     patch_points_a: Vec<u32>,
@@ -418,7 +418,7 @@ pub unsafe extern "C" fn create_octasphere(
         }
     }
     let mut geometry = Geometry::new(true, false, true, false, "octasphere_geometry".to_string());
-    geometry.set_vertices(crate::math2::VertexKind::PositionAndNormalAndColor(vertices_and_normals), 12);
+    geometry.set_vertices(VertexKind::PositionAndNormalAndColor(vertices_and_normals), 12);
     geometry.set_indices(indices);
     Box::into_raw(Box::new(geometry))
 }

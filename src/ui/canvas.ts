@@ -30,6 +30,7 @@ import { createSettingsMenu } from './SettingsMenu.js';
 import { createTimeControls } from './TimeControls.js';
 import { CreateFPSMeter } from './FPS.js';
 import { UIRectangleTextureView } from './UIRectangleTextureView.js';
+import { RightTriangularPrism } from '../GPU/Meshes/right_triangular_prism.js';
 
 declare const engine: Engine;
 
@@ -167,6 +168,12 @@ export class Canvas {
             scenes: [terrascene],
           });
           human.translation = [403.4, 1000, 23];
+
+          const prism = new RightTriangularPrism({
+            can_collide: true,
+          });
+          prism.translation = [403.4, 1000, 30];
+
           document.addEventListener('keydown', (e) => {
             if (e.key === 'Tab') {
               if (engine.inputManager === human.inputManager) {

@@ -149,6 +149,7 @@ export type rustWasm = {
   ): rust_pointer<'geometry'>;
   set_geometry(mesh_id: number, geometry: rust_pointer<'geometry'>): void;
   create_box_geometry(): rust_pointer<'geometry'>;
+  create_rtp_geometry(): rust_pointer<'geometry'>;
   add_collider(mesh_id: number, collider: rust_pointer<'collider'>): void;
   memory: WebAssembly.Memory;
   set_vertices(
@@ -287,6 +288,10 @@ export type rustWasm = {
     collision_events: boolean,
   ): rust_pointer<'collider'>;
   create_trimesh_collider(mesh_id: number): rust_pointer<'collider'>;
+  create_convex_collider(
+    mesh_id: number,
+    collision_events: boolean,
+  ): rust_pointer<'collider'>;
   create_cuboid_collider(
     hx: number,
     hy: number,
@@ -298,6 +303,7 @@ export type rustWasm = {
     half_height: number,
     radius: number,
   ): rust_pointer<'collider'>;
+  dedup_positions(): void;
 };
 
 function Dot(

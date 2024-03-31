@@ -16,8 +16,14 @@ export class Physics {
   #interval: null | ReturnType<typeof setTimeout> = null;
   #timeUntillTick = 0;
   #tickDeltaWhenStateChange = 0;
-  movables: MainNode[] = []; //Stuff that moves without physic, eg. sun.
-  tickables: DataNode[] = []; //Stuff that moves and have collision check
+  /**
+   * Stuff that moves without physic, eg. sun.
+   */
+  movables: MainNode[] = [];
+  /**
+   * Stuff that moves and have collision check
+   */
+  tickables: DataNode[] = [];
   /**
    * Seconds since first day in the game
    * One real life second = One game minute
