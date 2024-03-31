@@ -5,3 +5,7 @@
 [submodule "src/webgpu-ts"]
 	path = src/webgpu-ts
 	url = https://terraSim@dev.azure.com/terraSim/terrasim/_git/webgpu-ts
+[submodule "src/parry3d"]
+	path = src/parry3d
+	url = https://terraSim@dev.azure.com/terraSim/terrasim/_git/parry3d
+	branch = terrasim
