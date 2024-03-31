@@ -66,7 +66,7 @@ pub struct Engine2 {
     pub ccd_solver: CCDSolver,
     pub meshes: Vec<Mesh>,
     pub rigid_bodies: HashMap<RigidBodyHandle, usize>,
-    pub broad_phase: BroadPhase,
+    pub broad_phase: DefaultBroadPhase,
     pub joint_set: ImpulseJointSet,
     pub gpu_queue: HashSet<usize>,
     pub gpu_meshes: FreeList<GPUMesh>
@@ -141,7 +141,7 @@ pub fn init_engine() {
         narrow_phase: NarrowPhase::new(),
         meshes: Vec::with_capacity(100),
         rigid_bodies: HashMap::new(),
-        broad_phase: BroadPhase::new(),
+        broad_phase: DefaultBroadPhase::new(),
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
         gpu_queue: HashSet::new(),
