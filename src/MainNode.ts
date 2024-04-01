@@ -12,13 +12,17 @@ import type { Drawable } from './GPU/Drawables/Drawable.js';
 declare const engine: Engine;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
+export const enum RigidBody {
+  off,
+  default,
+  fixed,
+}
 export type MainNodeProps = {
   point_light?: number;
   directional_light?: number;
   label: string;
   scenes?: Scene[] | undefined;
-  fixed?: boolean;
-  rigid_body?: boolean;
+  rigid_body?: RigidBody;
 };
 export abstract class MainNode {
   abstract drawable?: Drawable | undefined;
@@ -169,8 +173,7 @@ export abstract class MainNode {
     directional_light = 0,
     label,
     scenes,
-    fixed = false,
-    rigid_body = true,
+    rigid_body = RigidBody.default,
   }: MainNodeProps) {
     const sceneids = scenes
       ? scenes.reduce((acc, scene) => acc | scene.id, 0)
@@ -189,7 +192,6 @@ export abstract class MainNode {
       point_light,
       directional_light,
       sceneids,
-      fixed,
       rigid_body,
       string_ptr!,
       len!,

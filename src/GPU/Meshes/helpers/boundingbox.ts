@@ -5,6 +5,7 @@ import type { RenderPipelineProps } from '../../RenderPipeline.js';
 import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
 import { Buffer, BufferUsageEnums } from '../../../webgpu-ts/index.js';
+import { RigidBody } from 'MainNode.js';
 declare const engine: Engine;
 
 const indices = Uint32Array.of(
@@ -71,7 +72,7 @@ export class BoundingBoxMesh extends DataNode {
       },
       {
         label: 'BoundingBox_' + targetNode.node.label,
-        rigid_body: false,
+        rigid_body: RigidBody.off,
       },
       indicesView,
       true,

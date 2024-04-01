@@ -15,6 +15,7 @@ import type {
   TextureView,
   VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
+import { RigidBody } from 'MainNode.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;
@@ -48,9 +49,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
         },
       },
       {
-        fixed: true,
         label: 'terrain',
-        rigid_body: false,
+        rigid_body: RigidBody.off,
         scenes,
       },
       false,

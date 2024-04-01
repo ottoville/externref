@@ -16,14 +16,12 @@ export class RightTriangularPrism extends IndexedSingleColoredMesh {
     can_collide = false,
     label = 'TriangularPrism' + uid++,
     color = [1, 0, 0, 0],
-    fixed = false,
   }: {
     scenes?: Scene[];
     point_light?: number;
     can_collide?: boolean;
     label?: string;
     color?: [number, number, number, number];
-    fixed?: boolean;
   }) {
     const geometry = engine.rust.create_rtp_geometry();
     super(
@@ -32,7 +30,6 @@ export class RightTriangularPrism extends IndexedSingleColoredMesh {
         vertices: geometry,
       },
       {
-        fixed,
         label,
         point_light,
         scenes,

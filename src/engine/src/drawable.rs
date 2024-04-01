@@ -1,4 +1,4 @@
-use crate::{mesh::{get_mesh_by_id_mut, get_mesh_by_id}, engine::{js_log, js_warn}};
+use crate::{mesh::{get_mesh_by_id_mut, get_mesh_by_id}, engine::js_warn};
 
 pub struct DrawableDirect {
     instance_count: u32,
@@ -69,7 +69,7 @@ pub extern "C" fn add_drawble(mesh_id: usize) {
 #[no_mangle]
 pub extern "C" fn set_drawble_direct(mesh_id: usize, instance_count: u32, first_instance: u32) {
     if instance_count == 0 {
-        js_warn(vec!["Added drawable with 0 instances, nothing will be drawn".to_string()])
+        js_warn(["Added drawable with 0 instances, nothing will be drawn"])
     }
     let mesh = get_mesh_by_id_mut(mesh_id);
     match mesh.draw_command {

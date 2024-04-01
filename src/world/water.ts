@@ -8,6 +8,7 @@ import type { WaterVertShader } from '../GPU/Shaders/Water.vert.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 import { BindGroup } from '../webgpu-ts/index.js';
+import { RigidBody } from 'MainNode.js';
 
 export class Sea extends BoundableNodeSimple {
   override drawable:
@@ -49,9 +50,8 @@ export class Sea extends BoundableNodeSimple {
         vertices: vertexBuffer,
       },
       {
-        fixed: true,
         label: 'water',
-        rigid_body: false,
+        rigid_body: RigidBody.off,
         scenes,
       },
       true,
