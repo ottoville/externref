@@ -17,8 +17,6 @@ import { Human } from '../human.js';
 //@ts-ignore
 import { Box } from '../GPU/Meshes/Box.js';
 //@ts-ignore
-import { Triangle } from '../GPU/Meshes/Triangle.js';
-//@ts-ignore
 import { IcoSphere } from '../GPU/Meshes/IcoSphere.js';
 import { Cone } from '../GPU/Meshes/Cone.js';
 import { Capsule, CAPSULE_ORIENTATION } from '../GPU/Meshes/Capsule.js';
@@ -274,7 +272,6 @@ export class Canvas {
 
         const sphere4 = new IcoSphere({
           can_collide: true,
-          fixed: false,
           label: 'blueball3',
           order: 1,
         });

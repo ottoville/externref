@@ -13,6 +13,7 @@ import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import { DataNode } from '../nodes/DataNode.js';
 import type { CreateRenderPipelineProps } from '../GPU.js';
 import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
+import { RigidBody } from 'MainNode.js';
 declare const engine: Engine;
 
 class PlaneMesh extends DataNode {
@@ -35,7 +36,7 @@ class PlaneMesh extends DataNode {
       },
       {
         label: 'plane',
-        rigid_body: false,
+        rigid_body: RigidBody.off,
       },
       create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
       false,

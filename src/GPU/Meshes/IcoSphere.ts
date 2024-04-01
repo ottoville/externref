@@ -197,13 +197,11 @@ export class IcoSphere extends IndexedSingleColoredMesh {
     order = 0,
     label = 'sphere' + uid++,
     can_collide = false,
-    fixed = false,
     scenes,
   }: {
     order?: number;
     label?: string;
     can_collide?: boolean;
-    fixed?: boolean;
     scenes?: Scene[];
   }) {
     const [vertices, indices] = icosphere(order);
@@ -226,7 +224,6 @@ export class IcoSphere extends IndexedSingleColoredMesh {
         },
       },
       {
-        fixed,
         label,
         scenes,
       },

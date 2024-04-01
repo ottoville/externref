@@ -1,4 +1,4 @@
-import { Physics } from './physics.js';
+﻿import { Physics } from './physics.js';
 import { GPU } from './GPU.js';
 import { ColliderJS } from './Collider.js';
 import type { Scene } from './Scene.js';
@@ -16,6 +16,7 @@ import {
 } from './nodes/DataNode.js';
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
+import { RigidBody } from 'MainNode.js';
 
 const textDecoder = new TextDecoder();
 
@@ -134,8 +135,7 @@ export type rustWasm = {
     point_light: number,
     directional_light: number,
     scenes: number,
-    fixed: boolean,
-    rigid_body: boolean,
+    rigid_body: RigidBody,
     label_ptr: number,
     label_len: number,
     label_cap: number,

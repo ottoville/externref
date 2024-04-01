@@ -8,6 +8,7 @@ import {
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
+import { RigidBody } from 'MainNode.js';
 
 // eslint-disable-next-line import/no-unused-modules
 export class NormalsMesh extends DataNode {
@@ -56,7 +57,7 @@ export class NormalsMesh extends DataNode {
       },
       {
         label: 'NormalsDebug',
-        rigid_body: false,
+        rigid_body: RigidBody.off,
       },
     );
 

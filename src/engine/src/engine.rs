@@ -74,7 +74,7 @@ pub struct Engine2 {
 
 }
 static mut LOG_STRING: String = String::new();
-// TODO, remove and use "str_ptr_from_vec" syntax
+// TODO, remove and use "str_ptr_from_arr" syntax
 pub fn create_js_string(mut str: String) -> *const u8 {
     str.truncate(512);
     let log_str = format!("{: <512}", str);
@@ -82,53 +82,28 @@ pub fn create_js_string(mut str: String) -> *const u8 {
     std::mem::forget(log_str);
     return ptr;
 }
-fn str_ptr_from_vec(strings: Vec<String>) {
-    unsafe {
-        LOG_STRING.clear();
-        for str in strings.iter() {
-            LOG_STRING.push(' ');
-            LOG_STRING.push_str(str);
-        }
-    }
+unsafe fn str_ptr_from_arr<const N:usize>(strings: [&(impl ToString + ?Sized); N]) {
+    LOG_STRING.clear();
+    for str in strings.iter() {
+        LOG_STRING.push(' ');
+        LOG_STRING.push_str(&str.to_string());
+    } 
+    MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
+    MULTIVALUE_USIZE[1] = LOG_STRING.len();
+    MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
+
 }
-fn str_ptr_from_vec_usize(strings: &Vec<usize>) -> &'static String {
+
+pub fn js_log<const N:usize>(strings: [&(impl ToString + ?Sized); N]) {
     unsafe {
-        LOG_STRING.clear();
-        for str in strings.iter() {
-            LOG_STRING.push(' ');
-            LOG_STRING.push_str(&str.to_string());
-        }
-        return &LOG_STRING;
-    }
-}
-pub fn js_log(strings: Vec<String>) {
-    unsafe {
-        str_ptr_from_vec(strings);
-        MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
-        MULTIVALUE_USIZE[1] = LOG_STRING.len();
-        MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
+        str_ptr_from_arr(strings);
         #[cfg(target_arch = "wasm32")]
         log(MULTIVALUE_USIZE.as_ptr());
     }
 }
-pub fn js_log_usize(numbers: &Vec<usize>) {
+pub fn js_warn<const N:usize>(strings: [&(impl ToString + ?Sized); N]) {
     unsafe {
-        str_ptr_from_vec_usize(numbers);
-        MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
-        MULTIVALUE_USIZE[1] = LOG_STRING.len();
-        MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-
-        #[cfg(target_arch = "wasm32")]
-        log(MULTIVALUE_USIZE.as_ptr());
-    }
-}
-pub fn js_warn(strings: Vec<String>) {
-    unsafe {
-        str_ptr_from_vec(strings);
-        MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
-        MULTIVALUE_USIZE[1] = LOG_STRING.len();
-        MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-
+        str_ptr_from_arr(strings);
         #[cfg(target_arch = "wasm32")]
         warn(MULTIVALUE_USIZE.as_ptr());
     }
@@ -182,18 +157,18 @@ unsafe fn collider_to_mesh<'frame>(
                         Some(get_mesh_by_id(*id))
                     },
                     None => {
-                        js_warn(vec!["mesh_id not found".to_string()]);
+                        js_warn(["mesh_id not found"]);
                         None
                     } 
                 }
             },
             None => {
-                js_warn(vec!["rigid_body_handle not found".to_string()]);
+                js_warn(["rigid_body_handle not found"]);
                 None
             },
         },
         None => {
-            js_warn(vec!["parent collider not found".to_string()]);
+            js_warn(["parent collider not found"]);
             None
         },
     };
@@ -205,7 +180,27 @@ pub unsafe extern "C" fn physic_tick() {
 
     use rapier3d::crossbeam;
     let gravity = vector![0.0, -9.81, 0.0];
-    let integration_parameters = IntegrationParameters::default();
+    let integration_parameters = IntegrationParameters {
+        dt: 1.0 / 60.0,
+        min_ccd_dt: 1.0 / 60.0 / 100.0,
+        erp: 0.6,
+        damping_ratio: 1.0,
+        joint_erp: 1.0,
+        joint_damping_ratio: 1.0,
+        allowed_linear_error: 0.001,
+        max_penetration_correction: Real::MAX,
+        prediction_distance: 0.002,
+        num_internal_pgs_iterations: 1,
+        num_additional_friction_iterations: 4,
+        num_solver_iterations: NonZeroUsize::new(4).unwrap(),
+        // TODO: what is the optimal value for min_island_size?
+        // It should not be too big so that we don't end up with
+        // huge islands that don't fit in cache.
+        // However we don't want it to be too small and end up with
+        // tons of islands, reducing SIMD parallelism opportunities.
+        min_island_size: 128,
+        max_ccd_substeps: 2,
+    };
 
     let mut multi_joint_set = MultibodyJointSet::new();
     let physics_hooks = ();
@@ -233,16 +228,15 @@ pub unsafe extern "C" fn physic_tick() {
         &physics_hooks,
         &event_handler,
     );
-
     while let Ok(collision_event) = collision_recv.try_recv() {
         // Handle the collision event.
         match collider_to_mesh(e, collision_event.collider1()) {
             Some(m) => mesh_on_collide(m.id, collision_event.started()),
-            None => js_warn(vec!["Mesh not found for collider1".to_string()]),
+            None => js_warn(["Mesh not found for collider1"]),
         }
         match collider_to_mesh(e, collision_event.collider2()) {
             Some(m) => mesh_on_collide(m.id, collision_event.started()),
-            None => js_warn(vec!["Mesh not found for collider2".to_string()]),
+            None => js_warn(["Mesh not found for collider2"]),
         }
     }
     // Iter on each dynamic rigid-bodies that moved.
@@ -260,7 +254,7 @@ pub unsafe extern "C" fn physic_tick() {
                 let pos = rigid_body.position();
                 m.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
             }
-            None => js_log(vec!["Mesh not found for rigid body".to_string()]),
+            None => js_warn(["Mesh not found for rigid body"]),
         }
     }
 }

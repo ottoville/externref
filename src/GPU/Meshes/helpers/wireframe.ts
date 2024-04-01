@@ -7,6 +7,7 @@ import {
   allocate_vec_usize,
 } from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
+import { RigidBody } from 'MainNode.js';
 declare const engine: Engine;
 // eslint-disable-next-line import/no-unused-modules
 export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
@@ -31,7 +32,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     targetNode.node.vertices_stride * 4;
   const mainNodeProps = {
     label: 'Wireframe_' + targetNode.node.label,
-    rigid_body: false,
+    rigid_body: RigidBody.off,
   };
 
   const renderPipeline = engine.gpu!.createRenderPipeline(

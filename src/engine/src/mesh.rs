@@ -46,8 +46,7 @@ pub unsafe extern "C" fn new_mesh(
     point_light: f32,
     directional_light: f32,
     scenes: f32,
-    fixed: bool,
-    rigid_body: bool,
+    rigid_body: u32,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
@@ -57,7 +56,6 @@ pub unsafe extern "C" fn new_mesh(
         point_light,
         directional_light,
         scenes,
-        fixed,
         rigid_body,
         label,
     );
@@ -429,8 +427,7 @@ impl Mesh {
         point_light: f32,
         directional_light: f32,
         scenes: f32,
-        fixed: bool,
-        rigid_body: bool,
+        rigid_body: u32, //0: no rigid body, 1: normal rigid body, 2: fixed rigid body
         label: String,
     ) -> usize {
         let engine2 = ENGINE.physic_engine_mut();
@@ -490,9 +487,9 @@ impl Mesh {
 
         engine2.meshes.push(m);
         engine2.meshes[id].update_dynamic_buffer();
-        if rigid_body {
+        if rigid_body > 0 {
             let rigid_body_builder: RigidBodyBuilder;
-            if fixed {
+            if rigid_body == 2 {
                 rigid_body_builder = RigidBodyBuilder::fixed().ccd_enabled(true);
             } else {
                 rigid_body_builder = RigidBodyBuilder::dynamic().sleeping(true).ccd_enabled(true);
