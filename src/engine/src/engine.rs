@@ -6,13 +6,14 @@ use crate::freelist::FreeList;
 pub use crate::mesh::Mesh;
 pub use crate::GPUMesh;
 use crate::mesh::{get_mesh_by_id, get_mesh_by_id_mut};
+use crate::MULTIVALUE_USIZE;
 use rapier3d::prelude::*;
 
 #[link(wasm_import_module = "console")]
 #[cfg(target_arch = "wasm32")]
 extern "C" {
-    fn log(number: &'static String);
-    fn warn(number: &'static String);
+    fn log(number: *const usize);
+    fn warn(number: *const usize);
 }
 
 extern "C" {
@@ -81,14 +82,13 @@ pub fn create_js_string(mut str: String) -> *const u8 {
     std::mem::forget(log_str);
     return ptr;
 }
-fn str_ptr_from_vec(strings: Vec<String>) -> &'static String {
+fn str_ptr_from_vec(strings: Vec<String>) {
     unsafe {
         LOG_STRING.clear();
         for str in strings.iter() {
             LOG_STRING.push(' ');
             LOG_STRING.push_str(str);
         }
-        return &LOG_STRING;
     }
 }
 fn str_ptr_from_vec_usize(strings: &Vec<usize>) -> &'static String {
@@ -103,20 +103,34 @@ fn str_ptr_from_vec_usize(strings: &Vec<usize>) -> &'static String {
 }
 pub fn js_log(strings: Vec<String>) {
     unsafe {
+        str_ptr_from_vec(strings);
+        MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
+        MULTIVALUE_USIZE[1] = LOG_STRING.len();
+        MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
         #[cfg(target_arch = "wasm32")]
-        log(str_ptr_from_vec(strings));
+        log(MULTIVALUE_USIZE.as_ptr());
     }
 }
 pub fn js_log_usize(numbers: &Vec<usize>) {
     unsafe {
+        str_ptr_from_vec_usize(numbers);
+        MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
+        MULTIVALUE_USIZE[1] = LOG_STRING.len();
+        MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
+
         #[cfg(target_arch = "wasm32")]
-        log(str_ptr_from_vec_usize(numbers));
+        log(MULTIVALUE_USIZE.as_ptr());
     }
 }
 pub fn js_warn(strings: Vec<String>) {
     unsafe {
+        str_ptr_from_vec(strings);
+        MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
+        MULTIVALUE_USIZE[1] = LOG_STRING.len();
+        MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
+
         #[cfg(target_arch = "wasm32")]
-        warn(str_ptr_from_vec(strings));
+        warn(MULTIVALUE_USIZE.as_ptr());
     }
 }
 
@@ -155,6 +169,10 @@ unsafe fn collider_to_mesh<'frame>(
     e: &'frame Engine2,
     collider_handle: ColliderHandle,
 ) -> Option<&'frame Mesh> {
+    /*let collider = e.collider_set.get(collider_handle)?;
+    let rigid_body_handle = collider.parent()?;
+    let mesh_id = e.rigid_bodies.get(&rigid_body_handle)?;
+    return Some(get_mesh_by_id(*mesh_id));*/
     return match e.collider_set.get(collider_handle) {
         Some(collider) => match collider.parent() {
             Some(rigid_body_handle) => {
@@ -163,12 +181,21 @@ unsafe fn collider_to_mesh<'frame>(
                     Some(id) => {
                         Some(get_mesh_by_id(*id))
                     },
-                    None => None
+                    None => {
+                        js_warn(vec!["mesh_id not found".to_string()]);
+                        None
+                    } 
                 }
             },
-            None => None,
+            None => {
+                js_warn(vec!["rigid_body_handle not found".to_string()]);
+                None
+            },
         },
-        None => None,
+        None => {
+            js_warn(vec!["parent collider not found".to_string()]);
+            None
+        },
     };
 }
 #[no_mangle]
@@ -211,11 +238,11 @@ pub unsafe extern "C" fn physic_tick() {
         // Handle the collision event.
         match collider_to_mesh(e, collision_event.collider1()) {
             Some(m) => mesh_on_collide(m.id, collision_event.started()),
-            None => js_log(vec!["Mesh not found for collider1".to_string()]),
+            None => js_warn(vec!["Mesh not found for collider1".to_string()]),
         }
         match collider_to_mesh(e, collision_event.collider2()) {
             Some(m) => mesh_on_collide(m.id, collision_event.started()),
-            None => js_log(vec!["Mesh not found for collider2".to_string()]),
+            None => js_warn(vec!["Mesh not found for collider2".to_string()]),
         }
     }
     // Iter on each dynamic rigid-bodies that moved.

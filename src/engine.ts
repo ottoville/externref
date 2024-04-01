@@ -1,4 +1,4 @@
-﻿import { Physics } from './physics.js';
+import { Physics } from './physics.js';
 import { GPU } from './GPU.js';
 import { ColliderJS } from './Collider.js';
 import type { Scene } from './Scene.js';
@@ -433,7 +433,7 @@ function stringFromPtr(
   if (!(memory instanceof WebAssembly.Memory)) {
     throw new Error('Webassembly module does not have memory');
   }
-  const [s_ptr, _, len] = new Uint32Array(memory.buffer, ptr, 3);
+  const [s_ptr, len] = new Uint32Array(memory.buffer, ptr, 2);
   return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
 }
 
