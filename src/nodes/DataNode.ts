@@ -268,6 +268,9 @@ export class DataNode extends MainNode {
   calculate_normals() {
     engine.rust.calculate_normals(this.geometry);
   }
+  dedup_positions() {
+    engine.rust.dedup_positions(this.geometry);
+  }
   override update_scale(...args: [number] | [number, number, number]): void {
     super.update_scale(...args);
     if (this.#props.can_collide) {

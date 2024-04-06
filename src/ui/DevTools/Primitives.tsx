@@ -27,6 +27,15 @@ export function Primitives({ node }: { node: DataNode }) {
         >
           Calculate normals
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            node.dedup_positions();
+          }}
+        >
+          Dedup positions
+        </button>
+
         {node instanceof DataNode && verticesOpen ? (
           <table>
             <colgroup>

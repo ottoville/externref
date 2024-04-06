@@ -1,6 +1,11 @@
 use std::num::NonZeroU32;
 
-use rapier3d::{geometry::{Collider, ColliderBuilder}, math::Point, na::{Const, OPoint}, pipeline::ActiveEvents};
+use rapier3d::{
+    geometry::{
+        Collider, ColliderBuilder
+    }, math::Point, na::{
+        Const, OPoint
+    }, pipeline::ActiveEvents};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
@@ -212,18 +217,38 @@ impl<'vert> Geometry<VertexKind> {
         Box::leak(collider)
     }
     pub fn create_convex_collider(&mut self, scale_x: f32, scale_y: f32, scale_z: f32, collision_events: bool) -> *mut Collider {
-        let newvertices:Vec<OPoint<f32, Const<3>>> = self.vertices.get_positions().map(|position| {
-            Point::new(
-            position.x * scale_x,
-            position.y * scale_y,
-            position.z * scale_z
-            )
+        
+        let positions = self.vertices.get_positions();
 
-        }).collect();
-        let positions_count = self.vertices.length();
-        self.create_faces(NonZeroU32::new(positions_count as u32));
-
-        let colliderbuilder = ColliderBuilder::convex_mesh(newvertices, &self.faces);
+        let mut new_indices = self.indices.clone();
+        let mut new_vertices:Vec<OPoint<f32, Const<3>>> = Vec::new();
+        /*
+         * Scale vertices and remove remove duplicated positions
+         */
+        for position in positions {
+            let point = Point::new(
+                position.x * scale_x,
+                position.y * scale_y,
+                position.z * scale_z
+            );
+            if let Some(n) = new_vertices.iter().position(|oldpos| 
+                oldpos.eq(&point)
+            ) {
+                for indice in new_indices.iter_mut() {
+                    if *indice == new_vertices.len() as u32 {
+                        *indice = n as u32
+                    }
+                    else if *indice > new_vertices.len() as u32 {
+                        *indice = *indice - 1
+                    }
+                }
+            } else {
+                new_vertices.push(point);
+            }            
+        }
+        let indices: Vec<[u32; 3]> = new_indices.chunks_exact(3).map(|i| i.try_into().unwrap()).collect();
+        
+        let colliderbuilder = ColliderBuilder::convex_mesh(new_vertices, &indices);
         match colliderbuilder {
             Some(mut builder) => {
                 if collision_events {
@@ -316,15 +341,14 @@ impl<'vert> Geometry<VertexKind> {
                         let nextpos = &vector[ii].position;
                         if pos.x == nextpos.x && pos.y == nextpos.y && pos.z == nextpos.z {
                             vector.remove(ii);
-                            self.indices = self.indices.iter().map(|indice| {
+                            for indice in self.indices.iter_mut() {
                                 if *indice == ii as u32 {
-                                    return i as u32;
+                                    *indice = i as u32
                                 }
                                 else if *indice > ii as u32 {
-                                    return *indice - 1;
+                                    *indice = *indice - 1
                                 }
-                                return *indice;
-                            }).collect();
+                            }
                             continue;
                         }
                         ii = ii +1;
