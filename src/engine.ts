@@ -303,7 +303,7 @@ export type rustWasm = {
     half_height: number,
     radius: number,
   ): rust_pointer<'collider'>;
-  dedup_positions(): void;
+  dedup_positions(geometry: rust_pointer<'geometry'>): void;
 };
 
 function Dot(
