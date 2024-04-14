@@ -464,7 +464,6 @@ export class Engine {
   memory: WebAssembly.Memory;
   GPUReady: Promise<GPU>;
   canvas?: HTMLCanvasElement;
-  devTools?: HTMLElement;
   GPUSubscribions: Set<(gpu: GPU) => void> = new Set();
   TabIndexSubscribions: Set<(element?: UIRectangleNodeHover) => void> =
     new Set();
@@ -487,7 +486,6 @@ export class Engine {
     nodes:
       | {
           canvas: HTMLCanvasElement;
-          devTools: HTMLElement;
         }
       | undefined,
     showError: (e: Error) => void,
@@ -832,7 +830,6 @@ export class Engine {
     nodes:
       | {
           canvas: HTMLCanvasElement;
-          devTools: HTMLElement;
         }
       | undefined,
     public wasm: ColliderWasm,
@@ -842,12 +839,11 @@ export class Engine {
   ) {
     if (nodes) {
       this.canvas = nodes.canvas;
-      this.devTools = nodes.devTools;
       //@ts-expect-error Way to manually open devtools if UI is not working
       window.openDevTools = function () {
-        import('./ui/DevTools/DevTools.js')
-          .then(({ DevTools }) => DevTools(nodes.devTools))
-          .catch((err) => engine.showError(err));
+        document
+          .querySelector('game-container')!
+          .setAttribute('devtools', 'true');
       };
     }
 
@@ -867,17 +863,9 @@ export class Engine {
           'keyup',
         ] as const
       ).forEach((eventType) => {
-        // keyup and keydown wont trigger if listener is canvas
-        nodes.canvas.ownerDocument.addEventListener(
+        nodes.canvas.addEventListener(
           eventType,
           (e) => {
-            // Do not trigger on devtools
-            if (
-              !(eventType === 'keydown' || eventType === 'keyup') &&
-              e.target !== nodes.canvas
-            ) {
-              return;
-            }
             /**
              * Iterate UI events first, then other events.
              */

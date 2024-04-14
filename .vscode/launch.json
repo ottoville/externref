@@ -1,12 +1,11 @@
 {
-    // Use IntelliSense to learn about possible attributes.
+        // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
-            "type": "pwa-chrome",
+            "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
             "webRoot": "${workspaceFolder}",
@@ -30,7 +29,7 @@
                 "--remote-debugging-port=9222",
                 "--enable-features=SharedArrayBuffer"
             ],
-            "url": "https://localhost:4280", // Provide your project's url to finish configuring
+            "url": "https://localhost:4280",
             "presentation": {
                 "hidden": true
             },
@@ -44,7 +43,7 @@
                 "--headless",
                 "--remote-debugging-port=9222"
             ],
-            "url": "c:\\Users\\ottov\\.vscode\\extensions\\ms-edgedevtools.vscode-edge-devtools-1.4.7\\out\\startpage\\index.html", // Provide your project's url to finish configuring
+            "url": "c:\\Users\\ottov\\.vscode\\extensions\\ms-edgedevtools.vscode-edge-devtools-1.4.7\\out\\startpage\\index.html",
             "presentation": {
                 "hidden": true
             }
@@ -53,7 +52,7 @@
             "type": "vscode-edge-devtools.debug",
             "name": "Open Edge DevTools",
             "request": "attach",
-            "url": "c:\\Users\\ottov\\.vscode\\extensions\\ms-edgedevtools.vscode-edge-devtools-1.4.7\\out\\startpage\\index.html", // Provide your project's url to finish configuring
+            "url": "c:\\Users\\ottov\\.vscode\\extensions\\ms-edgedevtools.vscode-edge-devtools-1.4.7\\out\\startpage\\index.html",
             "presentation": {
                 "hidden": true
             }
@@ -64,14 +63,14 @@
             "runtimeExecutable": "npm",
             "request": "launch",
             "runtimeArgs": [
-              "run",
-              "test",
-              "--prefix=./src",
+                "run",
+                "test",
+                "--prefix=./src"
             ],
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
             "port": 9229
-          }
+        }
     ],
     "compounds": [
         {

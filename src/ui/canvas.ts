@@ -45,54 +45,39 @@ class Light extends MainNode {
 }
 const errors: Error[] = [];
 export class Canvas {
-  #progressBar: HTMLProgressElement = document.createElement('progress');
-  #progresElem = document.createElement('span');
-  #errorDialog = document.createElement('dialog');
-  #canvasElem = document.createElement('canvas');
   currentGameTime = 0;
   showError() {
-    if (!this.#errorDialog.open) {
+    if (!this.errorDialog.open) {
       const e = errors.shift();
       if (e) {
         console.error(e);
         if (e.cause) console.error(e.cause);
-        this.#errorDialog.textContent = e.name + ', ' + e.message;
-        this.#errorDialog.showModal();
+        this.errorDialog.textContent = e.name + ', ' + e.message;
+        this.errorDialog.showModal();
       }
     }
   }
-  constructor(container: HTMLElement) {
-    this.#canvasElem.addEventListener('contextmenu', (e) => {
+  constructor(
+    private errorDialog: HTMLDialogElement,
+    private canvasElem: HTMLCanvasElement,
+    private progresElem: HTMLSpanElement,
+    private progressBar: HTMLProgressElement,
+  ) {
+    this.canvasElem.addEventListener('contextmenu', (e) => {
       e.stopPropagation();
       e.preventDefault();
     });
-    this.#progressBar.max = 100;
+    this.progressBar.max = 100;
 
-    this.#errorDialog.addEventListener('close', () => {
+    this.errorDialog.addEventListener('close', () => {
       this.showError();
     });
-    this.setProgress(2);
     this.setProgress(6);
-
-    const mainContainer = container.appendChild(document.createElement('div'));
-    mainContainer.id = 'mainContainer';
-    mainContainer.appendChild(this.#errorDialog);
-    mainContainer.appendChild(this.#canvasElem);
-    const devTools = container.appendChild(document.createElement('aside'));
-    devTools.style.display = 'none';
-    const progressBarContainer = mainContainer.appendChild(
-      document.createElement('div'),
-    );
-    progressBarContainer.id = 'progressBarContainer';
-    progressBarContainer.appendChild(this.#progresElem);
-    progressBarContainer.appendChild(document.createElement('br'));
-    progressBarContainer.appendChild(this.#progressBar);
 
     const progressForWasmLoading = 34;
     Engine.initEngine(
       {
-        canvas: this.#canvasElem,
-        devTools,
+        canvas: this.canvasElem,
       },
       (e) => {
         errors.push(e);
@@ -110,8 +95,7 @@ export class Canvas {
             const contentLength = parseInt(contentLengthHeader);
             let receivedLength = 0; // received that many bytes at the moment
             let done = false;
-            const progressBar = this.#progressBar;
-            const progressElem = this.#progresElem;
+            const progressElem = this.progresElem;
             const reableStream = new ReadableStream({
               async start(controller) {
                 do {
@@ -362,11 +346,11 @@ export class Canvas {
       });
   }
   setProgress(value: number) {
-    this.#progressBar.value = value;
-    this.#progresElem.textContent = value.toFixed(0);
+    this.progressBar.value = value;
+    this.progresElem.textContent = value.toFixed(0);
     if (value === 100)
-      this.#progressBar.parentNode?.parentNode?.removeChild(
-        this.#progressBar.parentNode,
+      this.progressBar.parentNode?.parentNode?.removeChild(
+        this.progressBar.parentNode,
       );
   }
 }

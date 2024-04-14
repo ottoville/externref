@@ -34,7 +34,7 @@
     },
     "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "./rustwasm/*.js", "code.ts"],
+  "include": ["**/*.ts", "**/*.tsx", "./rustwasm/*.js", "game.ts"],
   "exclude": [
     "node_modules",
     "jestWorker.ts",
