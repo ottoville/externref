@@ -1,0 +1,15 @@
+{
+  "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
+  "configurations": {
+    "terrasim": {
+      "appLocation": ".",
+      "outputLocation": "../wwwroot",
+      "appBuildCommand": "npm run build",
+      "run": "",
+      "appDevserverUrl": "",
+      "ssl": true,
+      "sslCert": "../cert/localhost.crt",
+      "sslKey": "../cert/key.key"
+    }
+  }
+}

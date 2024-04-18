@@ -98,9 +98,9 @@ export class createSettingsMenu extends UINode {
           events: {
             ...devToolsbutton.events,
             onClick: () => {
-              import('./DevTools/DevTools.js')
-                .then(({ DevTools }) => DevTools(engine.devTools!))
-                .catch((err) => engine.showError(err));
+              document
+                .querySelector('game-container')!
+                .setAttribute('devtools', 'true');
               this.destroy();
             },
           },

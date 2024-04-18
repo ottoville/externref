@@ -3,15 +3,17 @@ import { Meshes } from './Meshes.js';
 import { Cameras } from './Cameras.js';
 
 export const DevToolsApp = (container: HTMLElement) => {
-  const root = createRoot(container);
-  container.style.display = 'block';
+  const root = createRoot(container.querySelector('#DevToolsAppContainer')!);
   root.render(
-    <div id="DevToolsAppContainer">
+    <>
       <button
         type="button"
         onClick={() => {
           root.unmount();
-          container.style.display = 'none';
+          (container.getRootNode() as ShadowRoot).host.setAttribute(
+            'devtools',
+            'false',
+          );
         }}
       >
         Close
@@ -19,6 +21,6 @@ export const DevToolsApp = (container: HTMLElement) => {
 
       <Meshes></Meshes>
       <Cameras></Cameras>
-    </div>,
+    </>,
   );
 };

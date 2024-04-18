@@ -6,7 +6,7 @@
         {
             "label": "start-swa",
             "type": "shell",
-            "command": "npm run swa --prefix ./src",
+            "command": "cd src; npx swa start",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"

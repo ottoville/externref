@@ -1,0 +1,55 @@
+:host {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+canvas {
+  height: 100%;
+  width: 100%;
+  order: 1;
+}
+aside {
+  order: 2;
+  width: 300px;
+  resize: horizontal;
+  overflow: auto;
+  direction: rtl;
+}
+#mainContainer {
+  height: 100%;
+  flex-grow: 1;
+  overflow-y: hidden;
+}
+#progressBarContainer {
+  position: absolute;
+  top: 30%;
+  background-color: white;
+  width: 100%;
+  text-align: center;
+}
+#mainContainer,
+#logincontainer,
+#loginmethods2 {
+  display: none;
+}
+:host(:state(loaded)) #logincontainer {
+  display: block;
+}
+:host(:state(logged)) {
+  & #loginmethods1 {
+    display: none;
+  }
+  & #loginmethods2 {
+    display: block;
+  }
+}
+
+:host(:state(play)) {
+  & #mainContainer {
+    display: block;
+  }
+  & #logincontainer {
+    display: none;
+  }
+}
