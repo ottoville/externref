@@ -1,6 +1,7 @@
 use core::panic;
 use std::num::NonZeroUsize;
 
+use crate::math2::Mat3wgslF32;
 use crate::vertices::VertexKind;
 use crate::MULTIVALUE_USIZE;
 pub use crate::drawable::DrawCommand;
@@ -102,14 +103,14 @@ pub unsafe extern "C" fn faces_count(mesh_id: usize) -> usize {
     get_mesh_by_id(mesh_id).get_geometry().faces_count()
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
+pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32, skip_normals: bool) {
     let mesh = get_mesh_by_id_mut(mesh_id);
     mesh.scaling.x = x;
     mesh.scaling.y = y;
     mesh.scaling.z = z;
 
     // If not equally to scale into all dimensions, re-calculate normals
-    if x != y || x != z {
+    if !skip_normals && (x != y || x != z) {
         mesh.get_geometry_mut().calculate_normals();
     }
     mesh.on_update(true);
@@ -434,6 +435,7 @@ impl Mesh {
         let id = engine2.meshes.len();
         let idx = engine2.gpu_meshes.add(GPUMesh {
             transformation: Vec4::identity(),
+            transformation_normals: Mat3wgslF32::identity(),
             ambient: [0.0, 0.0, 0.0],
             shadow: 0.0,
             color: [0.0, 0.0, 0.0, 0.0],

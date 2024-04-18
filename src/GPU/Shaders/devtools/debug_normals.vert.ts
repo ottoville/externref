@@ -7,11 +7,7 @@ import {
   ShaderBuilder,
 } from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
-import {
-  MeshUniforms,
-  Scene,
-  colorPositionOutput,
-} from '../structs/Structs.js';
+import { type Scene, colorPositionOutput } from '../structs/Structs.js';
 import { simpleAttributes } from '../structs/Attributes.js';
 
 export function createDebugNormalsVertShader(
@@ -64,7 +60,7 @@ export function createDebugNormalsVertShader(
           {
             world: BufLayout<
               ShaderStage.VERTEX_AND_FRAGMENT,
-              typeof MeshUniforms
+              GPU['meshUniforms']
             >;
           },
         ]

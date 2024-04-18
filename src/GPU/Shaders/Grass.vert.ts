@@ -7,7 +7,11 @@ import {
   WGSLcode,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { Scene, Time, colorPositionOutput } from './structs/Structs.js';
+import {
+  type Scene,
+  type Time,
+  colorPositionOutput,
+} from './structs/Structs.js';
 
 export const positionAttr = Object.freeze({
   position: {

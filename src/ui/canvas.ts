@@ -1,4 +1,4 @@
-﻿import { Engine } from '../engine.js';
+import { Engine } from '../engine.js';
 
 import { Plants } from '../plants/Plants.js';
 import { PlantsUI } from '../tools/plantsUI.js';
@@ -260,7 +260,7 @@ export class Canvas {
           order: 1,
         });
         sphere4.translation = [-100, 900, -70];
-        sphere4.update_scale(30);
+        sphere4.update_scale(30, 30, 30);
         sphere4.color = [1, 0, 1, 0];
 
         /*const b = new Box(

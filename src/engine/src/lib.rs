@@ -18,7 +18,7 @@ pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
 
-use math2::Vec4;
+use math2::{Mat3wgslF32, Vec4};
 use rapier3d::prelude::*;
 use vertices::{Position, PositionAndNormal};
 
@@ -119,15 +119,16 @@ pub extern "C" fn create_cone_collider(half_height: f32, radius: f32) -> *mut Co
 }
 #[repr(C)]
 pub struct GPUMesh {
-    transformation: Vec4<Vec4<f32>>, //16
-    color: [f32; 4],                 //20
-    ambient: [f32; 3],               //12
+    transformation: Vec4<Vec4<f32>>,
+    transformation_normals: Mat3wgslF32,
+    color: [f32; 4],
+    ambient: [f32; 3],
     shadow: f32,
-    spotlight: [f32; 4],      //28
-    _id: usize,               //29
-    point_light_squared: f32, //30
-    directional_light: f32,   //31
-    scenes: u32,              //bitmask           //48
+    spotlight: [f32; 4],
+    _id: usize,
+    point_light_squared: f32,
+    directional_light: f32,
+    scenes: u32,
 }
 impl GPUMesh {
     pub fn set_point_light(&mut self, engine: &'static mut Engine, range: f32, gpu_alignment: NonZeroUsize) {

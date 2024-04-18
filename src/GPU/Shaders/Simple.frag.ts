@@ -4,8 +4,7 @@
 import type { GPU } from '../../GPU.js';
 import { getClusterIndex } from './getClusterIndex.js';
 import {
-  Clusters,
-  MeshArray,
+  type Clusters,
   diffuseOutput,
   pickOutput,
   pickOutputFragment,
@@ -87,7 +86,7 @@ const mainFunction = new FragmentShaderFunction(
     {},
     {
       clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
-      meshes: BufLayout<ShaderStage.FRAGMENT, typeof MeshArray>;
+      meshes: BufLayout<ShaderStage.FRAGMENT, GPU['meshArray']>;
     },
     // eslint-disable-next-line @typescript-eslint/ban-types
     {},

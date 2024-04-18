@@ -1,5 +1,5 @@
 import type { Terrain } from '../../world/Terrain.js';
-import { PlaneArray, IntArray } from './structs/Structs.js';
+import type { PlaneArray, IntArray } from './structs/Structs.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import {
   BGLayout,

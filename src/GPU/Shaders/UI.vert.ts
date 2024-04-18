@@ -7,7 +7,7 @@ import {
   ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import { UIUniforms, UI_Input } from './structs/Structs.js';
+import { type UIUniforms, UI_Input } from './structs/Structs.js';
 
 export const position_uv_attrs = Object.freeze({
   position: {

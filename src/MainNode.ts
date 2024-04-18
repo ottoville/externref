@@ -55,19 +55,18 @@ export abstract class MainNode {
   /**
    *
    * @param x Scale for x dimension
-   * @param y Scale for y dimension, if omited, a X value is used
-   * @param z Scale for z dimension, if omited, a X value is used
+   * @param y Scale for y dimension
+   * @param z Scale for z dimension
    */
-  update_scale(...args: [number] | [number, number, number]) {
-    const [x, y, z] = args;
-    engine.rust.update_scale(this.id, x, y ?? x, z ?? x);
+  update_scale(x: number, y: number, z: number, skip_normals: boolean = false) {
+    engine.rust.update_scale(this.id, x, y, z, skip_normals);
   }
   /**
    * Get rotation quaternion
    */
   get rotation(): Quaternion {
     return new Quaternion(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.rotation_pointer(this.id),
     );
   }
@@ -124,11 +123,14 @@ export abstract class MainNode {
   static Meshes: Map<number, MainNode> = new Map();
 
   get_transformation = () =>
-    new TerraMatrix(engine.memory.buffer, engine.rust.gpu_pointer(this.id));
+    new TerraMatrix(
+      engine.rust.memory.buffer,
+      engine.rust.gpu_pointer(this.id),
+    );
 
   get translation(): ReadOnlyTerraVector3 {
     return new ReadOnlyTerraVector3(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.translation_pointer(this.id),
     );
   }
@@ -137,7 +139,7 @@ export abstract class MainNode {
   }
   get scale(): ReadOnlyTerraVector3 {
     return new ReadOnlyTerraVector3(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.scale_pointer(this.id),
     );
   }
@@ -147,13 +149,13 @@ export abstract class MainNode {
   }
   get velocity(): ReadOnlyTerraVector3 {
     return new ReadOnlyTerraVector3(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.velocity_pointer(this.id),
     );
   }
   set velocity(value: [number, number, number] | TerraVector3) {
     new MutableTerraVector3(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.velocity_pointer(this.id),
     ).set(value);
     this.update_dynamic_buffer();

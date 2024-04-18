@@ -204,7 +204,13 @@ export type rustWasm = {
   alloc_vector_positions_and_normal(
     size: number,
   ): rust_pointer<rust_vec_ptr<'position_and_normal'>>;
-  update_scale(mesh_id: number, x: number, y: number, z: number): void;
+  update_scale(
+    mesh_id: number,
+    x: number,
+    y: number,
+    z: number,
+    skip_normals: boolean,
+  ): void;
   update_rotation(
     mesh_id: number,
     x: number,
@@ -461,7 +467,6 @@ export class Engine {
   inputManager: CameraController | null = null;
 
   mainCamera: TerraCamera;
-  memory: WebAssembly.Memory;
   GPUReady: Promise<GPU>;
   canvas?: HTMLCanvasElement;
   GPUSubscribions: Set<(gpu: GPU) => void> = new Set();
@@ -940,13 +945,12 @@ export class Engine {
       });
     }
     this.physics = new Physics(this);
-    this.memory = rust.memory;
 
     this.collider = new ColliderJS(rust);
 
     //TODO: this does not work after memory grow
     this.#collidedMesh = new DataView(
-      this.memory.buffer,
+      this.rust.memory.buffer,
       engine.rust.collided_mesh_pointer(this.collider.collider_ptr),
       4,
     );

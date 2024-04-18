@@ -504,7 +504,7 @@ export class Triangle {
   get planeCollider() {
     if (this.#planeCollider.byteLength === 0) {
       this.#planeCollider = new TerraVector4(
-        engine.memory.buffer,
+        engine.rust.memory.buffer,
         this.PlanePtrToVector4,
       );
     }
@@ -520,9 +520,9 @@ export class Triangle {
   }
   #initializeVectors() {
     return [
-      new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
-      new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
-      new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
+      new TerraVector4(engine.rust.memory.buffer, this.vectorsPointers[0]),
+      new TerraVector4(engine.rust.memory.buffer, this.vectorsPointers[1]),
+      new TerraVector4(engine.rust.memory.buffer, this.vectorsPointers[2]),
     ] as const;
   }
   constructor(
@@ -535,7 +535,7 @@ export class Triangle {
   ) {
     this.#vectors = this.#initializeVectors();
     this.#planeCollider = new TerraVector4(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       this.PlanePtrToVector4,
     );
   }

@@ -238,7 +238,7 @@ export class TerrainTool extends MainNode {
     this.#pick = {
       meshId: 0,
       position: new MutableTerraVector3(
-        engine.memory.buffer,
+        engine.rust.memory.buffer,
         engine.rust.mouse_position_pointer(this.elevator),
       ),
     };

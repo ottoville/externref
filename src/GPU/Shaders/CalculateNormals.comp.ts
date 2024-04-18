@@ -1,4 +1,8 @@
-import { FloatArray, IntArray, PlaneArray } from './structs/Structs.js';
+import {
+  FloatArray,
+  type IntArray,
+  type PlaneArray,
+} from './structs/Structs.js';
 import type { Terrain } from '../../world/Terrain.js';
 import { SlopesLayout } from './CreateTerrainTexture.comp.js';
 import {

@@ -9,9 +9,8 @@ import {
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import {
-  MeshUniforms,
-  Scene,
-  Time,
+  type Scene,
+  type Time,
   colorPositionOutput,
 } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
@@ -59,7 +58,7 @@ return output;
     // eslint-disable-next-line @typescript-eslint/ban-types
     {},
     {
-      world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
+      world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, GPU['meshUniforms']>;
     },
   ]
 >;

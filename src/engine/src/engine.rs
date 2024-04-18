@@ -136,6 +136,7 @@ pub extern "C" fn init_engine2() -> usize {
         jspanic(create_js_string(panic_info.to_string()));
     }));
     init_engine();
+    debug_assert!(std::mem::size_of::<GPUMesh>() % 8 == 0, "GPUMesh offset must be multiple of 8 https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange");
     std::mem::size_of::<GPUMesh>()
 }
 pub fn init_engine() {

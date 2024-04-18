@@ -8,7 +8,7 @@ import {
   WGSLcode,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
+import { type Scene, colorPositionOutput } from './structs/Structs.js';
 
 type BindLayouts = [
   GPU['shaders']['sizeBindGroupLayout'],
@@ -56,7 +56,7 @@ export class Plane extends VertexShader {
             {
               world: BufLayout<
                 ShaderStage.VERTEX_AND_FRAGMENT,
-                typeof MeshUniforms
+                GPU['meshUniforms']
               >;
             },
           ]

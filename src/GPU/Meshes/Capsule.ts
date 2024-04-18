@@ -60,7 +60,7 @@ export class Capsule extends OctaSphere {
    * Scale whole mesh by setting radius
    */
   set radius(radius: number) {
-    this.update_scale(radius);
+    this.update_scale(radius, radius, radius);
     const collider_ptr = this.create_collider();
     engine.rust.add_collider(this.id, collider_ptr);
   }

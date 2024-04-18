@@ -25,19 +25,6 @@ export const colorPositionOutput = new Struct('Output', {
 export const diffuseOutput = new Struct('Output', {
   Diffuse: ['@location(0)', 'vec4<f32>'],
 });
-
-export const MeshUniforms = new Struct('MeshUniforms', {
-  transformation: ['', 'mat4x4<f32>'],
-  color: ['@size(16)', 'vec3<f32>'],
-  ambient: ['@size(12)', 'vec3<f32>'],
-  shadow: ['', 'f32'],
-  spot_light: ['@size(16)', 'vec3<f32>'],
-  id: ['', 'u32'],
-  point_light_squared: ['', 'f32'], //30
-  directional_light: ['', 'f32'],
-  scenes: ['', 'u32'], //bitmask
-  z: ['@size(128)', 'f32'], //padding`
-});
 export const Scene = new Struct('Scene', {
   modelViewProjection: ['', 'mat4x4<f32>'],
   view: ['', 'mat4x4<f32>'],
@@ -133,13 +120,7 @@ export const Vertices = new Struct(
 export const Indices = new Struct('Indices', {
   numbers: ['', 'array<u32>'],
 });
-export const MeshArray = new Struct(
-  'MeshArray',
-  {
-    mesh: ['', 'array<MeshUniforms>'],
-  },
-  [MeshUniforms],
-);
+
 export const Lights = new Struct('Lights', {
   length: ['', 'u32'],
   pointers: ['', 'array<u32>'],

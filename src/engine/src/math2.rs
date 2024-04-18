@@ -1,13 +1,27 @@
 #[cfg(target_arch = "wasm32")]
 use std::arch::wasm32::*;
 
-use crate::{math::quaternion::Quaternion, vertices::{Position, PositionAndNormal, PositionAndNormalAndColor, PositionAndNormalAndUV}};
+use crate::math::quaternion::Quaternion;
 
 #[derive(Copy, Clone)]
 pub struct Vec3<T> {
     pub x: T,
     pub y: T,
     pub z: T,
+}
+
+pub struct Mat3wgslF32 {
+    pub vec: Vec3<Vec3<f32>>,
+    _padding: [f32; 3]
+}
+
+impl Mat3wgslF32 {
+    pub fn identity() -> Mat3wgslF32 {
+        Mat3wgslF32 {
+            vec: Vec3::identity(),
+            _padding: [0.0,0.0,0.0]
+        }
+    }
 }
 
 
@@ -40,6 +54,25 @@ impl Vec3<f32> {
             z: Vec4 { x: 0.0, y: 0.0, z: 1.0, w: 0.0 },
             w: Vec4 { x: self.x, y: self.y, z: self.z, w: 1.0 }
         }
+    }
+    pub fn identity() -> Vec3<Vec3<f32>> {
+        Vec3 {
+            x: Vec3 {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            y: Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            z: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+            },
+        } 
     }
 }
 impl Vec3F32 {
@@ -130,13 +163,13 @@ impl Vec3F32 {
         // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
         // assumes axis is normalized
 
-        let halfAngle = angle * 0.5;
-        let s = halfAngle.sin();
+        let half_angle = angle * 0.5;
+        let s = half_angle.sin();
         Quaternion {
             i: self.x * s,
             j: self.y * s,
             k: self.z * s,
-            w: halfAngle.cos(),
+            w: half_angle.cos(),
         }
     }
     pub fn apply_rotation_quaternion_to_ref(&self, q: Quaternion, result: &mut Vec3F32) {

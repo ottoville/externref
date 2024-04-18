@@ -7,7 +7,7 @@ import {
   WGSLcode,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import { MeshUniforms, Scene, WaterInput } from './structs/Structs.js';
+import { type Scene, WaterInput } from './structs/Structs.js';
 import { positionAttr } from './structs/Attributes.js';
 
 export function createWaterVertShader(
@@ -56,7 +56,7 @@ export function createWaterVertShader(
           {
             world: BufLayout<
               ShaderStage.VERTEX_AND_FRAGMENT,
-              typeof MeshUniforms
+              GPU['meshUniforms']
             >;
           },
         ]

@@ -7,12 +7,7 @@ import {
   WGSLcode,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import {
-  GroundInput,
-  MeshUniforms,
-  Scene,
-  pickOutput,
-} from './structs/Structs.js';
+import { GroundInput, type Scene, pickOutput } from './structs/Structs.js';
 
 type GroundFunction = VertexShaderFunction<
   readonly [
@@ -22,7 +17,7 @@ type GroundFunction = VertexShaderFunction<
       scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
     },
     {
-      world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
+      world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, GPU['meshUniforms']>;
     },
     // eslint-disable-next-line @typescript-eslint/ban-types
     {},

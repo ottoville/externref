@@ -87,21 +87,21 @@ export class ColliderJS {
 
   get scaledPosition() {
     return new Float32Array(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.scaled_position_pointer(this.collider_ptr),
       4,
     ) as TerraVector3;
   }
   get scaledVelocity() {
     return new Float32Array(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.scaled_velocity_pointer(this.collider_ptr),
       4,
     ) as TerraVector3;
   }
   get intersectionPointWasm() {
     return new Float32Array(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.intersection_point_pointer(this.collider_ptr),
       4,
     ) as TerraVector3;
@@ -110,10 +110,10 @@ export class ColliderJS {
     const ptr = engine.rust.collided_point_in_triangle_pointer(
       this.collider_ptr,
     );
-    const trianglePtr = new Uint32Array(engine.memory.buffer, ptr, 1)[0];
+    const trianglePtr = new Uint32Array(engine.rust.memory.buffer, ptr, 1)[0];
     if (trianglePtr === 0) return undefined;
     return new Float32Array(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       trianglePtr,
       4,
     ) as TerraVector4;
@@ -121,13 +121,13 @@ export class ColliderJS {
   set collided_point_in_triangle(val: TerraVector4 | undefined) {
     if (!val)
       new Uint32Array(
-        engine.memory.buffer,
+        engine.rust.memory.buffer,
         engine.rust.collided_point_in_triangle_pointer(this.collider_ptr),
         1,
       )[0] = 0;
     else
       new Uint32Array(
-        engine.memory.buffer,
+        engine.rust.memory.buffer,
         engine.rust.collided_point_in_triangle_pointer(this.collider_ptr),
         1,
       )[0] = val.byteOffset;
@@ -140,14 +140,14 @@ export class ColliderJS {
   }
   set collision_resolved(val: number) {
     new Float32Array(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.collision_resolved_pointer(this.collider_ptr),
       1,
     ).set([val]);
   }
   get collision_resolved() {
     return new Float32Array(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.collision_resolved_pointer(this.collider_ptr),
       1,
     )[0]!;

@@ -7,12 +7,7 @@ import {
   ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import {
-  MeshUniforms,
-  Scene,
-  pickOutput,
-  typicalOutput,
-} from './structs/Structs.js';
+import { type Scene, pickOutput, typicalOutput } from './structs/Structs.js';
 import { simpleAttributes } from './structs/Attributes.js';
 
 export function createPickOutput(
@@ -48,7 +43,7 @@ export function createPickOutput(
         scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
       },
       {
-        world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
+        world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, GPU['meshUniforms']>;
       },
     ]
   >;
@@ -109,7 +104,7 @@ export function createSimpleVertShader(
           {
             world: BufLayout<
               ShaderStage.VERTEX_AND_FRAGMENT,
-              typeof MeshUniforms
+              GPU['meshUniforms']
             >;
           },
         ]

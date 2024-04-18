@@ -227,7 +227,7 @@ export class DataNode extends MainNode {
    */
   get vertices() {
     return new ReadOnlyFloat32Array(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.vertices_pointer(this.geometry),
       this.vertices_count * this.vertices_stride,
     );
@@ -258,7 +258,7 @@ export class DataNode extends MainNode {
    */
   update_vertices(cb: (view: Float32Array) => void) {
     const view = new Float32Array(
-      engine.memory.buffer,
+      engine.rust.memory.buffer,
       engine.rust.vertices_pointer(this.geometry),
       this.vertices_count * this.vertices_stride,
     );
@@ -271,8 +271,13 @@ export class DataNode extends MainNode {
   dedup_positions() {
     engine.rust.dedup_positions(this.geometry);
   }
-  override update_scale(...args: [number] | [number, number, number]): void {
-    super.update_scale(...args);
+  override update_scale(
+    x: number,
+    y: number,
+    z: number,
+    skip_normals: boolean = false,
+  ): void {
+    super.update_scale(x, y, z, skip_normals);
     if (this.#props.can_collide) {
       const collider_ptr = this.create_collider();
       engine.rust.add_collider(this.id, collider_ptr);
@@ -357,7 +362,7 @@ export class DataNode extends MainNode {
         ),
       ); // ColliderPlane size is 7
       new Uint32Array(
-        engine.memory.buffer,
+        engine.rust.memory.buffer,
         collider_faces_pointer +
           faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 +
           4 * Float32Array.BYTES_PER_ELEMENT,
@@ -380,7 +385,7 @@ export class DataNode extends MainNode {
     for (let i = 0; i < this.vertices_count; i++) {
       arr.push(
         new Float32Array(
-          engine.memory.buffer,
+          engine.rust.memory.buffer,
           vertices_pointer +
             i * Float32Array.BYTES_PER_ELEMENT * this.vertices_stride,
           this.vertices_stride,
@@ -432,9 +437,12 @@ export class DataNode extends MainNode {
       if (i > this.positions_count) {
         throw new Error('Tried to access vertice out of boundary');
       }
-      new MutableTerraVector3(engine.memory.buffer, posAndCol[0]).multiply2Ref(
+      new MutableTerraVector3(
+        engine.rust.memory.buffer,
+        posAndCol[0],
+      ).multiply2Ref(
         this.#myCollisionsTransformMatrix,
-        new TerraVector4(engine.memory.buffer, posAndCol[1]),
+        new TerraVector4(engine.rust.memory.buffer, posAndCol[1]),
       );
     });
     const collider_planes_parallel_pointer =
@@ -445,7 +453,7 @@ export class DataNode extends MainNode {
 
     this.#faceQuatros.forEach((quatro, i) => {
       new Float32Array(
-        engine.memory.buffer,
+        engine.rust.memory.buffer,
         collider_planes_parallel_pointer + i * 4 * 16,
         16,
       ).set([

@@ -7,7 +7,7 @@ import {
   ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { MeshUniforms, PositionOutput, Scene } from './structs/Structs.js';
+import { PositionOutput, type Scene } from './structs/Structs.js';
 
 export function createSunVertShader(
   pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
@@ -61,7 +61,7 @@ export function createSunVertShader(
           {
             world: BufLayout<
               ShaderStage.VERTEX_AND_FRAGMENT,
-              typeof MeshUniforms
+              GPU['meshUniforms']
             >;
           },
         ]

@@ -197,6 +197,17 @@ pub struct Geometry<T> {
     pub character_can_collide_to: bool,
 }
 
+fn dedup_index(old: u32, new: u32, indices: &mut Vec<u32>) {
+    for indice in indices.iter_mut() {
+        if *indice == old as u32 {
+            *indice = new as u32
+        }
+        else if *indice > old as u32 {
+            *indice = *indice - 1
+        }
+    }
+}
+
 impl<'vert> Geometry<VertexKind> {
     pub fn create_trimesh_collider(&mut self, scale_x: f32, scale_y: f32, scale_z: f32) -> *mut Collider {
         let newvertices = self.vertices.get_positions().map(|position| {
@@ -234,14 +245,7 @@ impl<'vert> Geometry<VertexKind> {
             if let Some(n) = new_vertices.iter().position(|oldpos| 
                 oldpos.eq(&point)
             ) {
-                for indice in new_indices.iter_mut() {
-                    if *indice == new_vertices.len() as u32 {
-                        *indice = n as u32
-                    }
-                    else if *indice > new_vertices.len() as u32 {
-                        *indice = *indice - 1
-                    }
-                }
+                dedup_index(new_vertices.len() as u32, n as u32, &mut new_indices);
             } else {
                 new_vertices.push(point);
             }            
@@ -341,14 +345,7 @@ impl<'vert> Geometry<VertexKind> {
                         let nextpos = &vector[ii].position;
                         if pos.x == nextpos.x && pos.y == nextpos.y && pos.z == nextpos.z {
                             vector.remove(ii);
-                            for indice in self.indices.iter_mut() {
-                                if *indice == ii as u32 {
-                                    *indice = i as u32
-                                }
-                                else if *indice > ii as u32 {
-                                    *indice = *indice - 1
-                                }
-                            }
+                            dedup_index(ii as u32, i as u32, &mut self.indices);
                             continue;
                         }
                         ii = ii +1;

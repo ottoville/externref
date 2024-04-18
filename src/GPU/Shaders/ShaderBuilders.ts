@@ -13,8 +13,6 @@ import type { GPU } from '../../GPU.js';
 import {
   Clusters,
   IntArray,
-  MeshArray,
-  MeshUniforms,
   PlaneArray,
   ProjectionStruct,
   Scene,
@@ -51,7 +49,7 @@ export function createShaderBuilders(gpu: GPU) {
           },
           visibility: ShaderStage.VERTEX_AND_FRAGMENT,
         },
-        MeshUniforms,
+        gpu.meshUniforms,
       ),
     },
   );
@@ -79,7 +77,7 @@ export function createShaderBuilders(gpu: GPU) {
           },
           visibility: ShaderStage.FRAGMENT,
         },
-        MeshArray,
+        gpu.meshArray,
       ),
       projection: new BufLayout(
         {

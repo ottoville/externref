@@ -2,7 +2,7 @@ import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
 import {
   Clusters,
   ProjectionStruct,
-  ScreenDimensions,
+  type ScreenDimensions,
 } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import {

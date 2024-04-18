@@ -6,11 +6,7 @@ import {
   WGSLcode,
 } from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
-import {
-  MeshUniforms,
-  Scene,
-  colorPositionOutput,
-} from '../structs/Structs.js';
+import { type Scene, colorPositionOutput } from '../structs/Structs.js';
 import { positionAttr } from '../structs/Attributes.js';
 
 export function createDebugBoundingBoxVertShader(
@@ -58,7 +54,7 @@ export function createDebugBoundingBoxVertShader(
           {
             world: BufLayout<
               ShaderStage.VERTEX_AND_FRAGMENT,
-              typeof MeshUniforms
+              GPU['meshUniforms']
             >;
           },
         ]

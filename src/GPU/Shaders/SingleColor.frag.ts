@@ -2,7 +2,7 @@
 // TODO: Make actual shading
 
 import type { GPU } from '../../GPU.js';
-import { MeshUniforms, diffuseOutput } from './structs/Structs.js';
+import { diffuseOutput } from './structs/Structs.js';
 import {
   type BufLayout,
   FragmentShaderFunction,
@@ -17,7 +17,7 @@ const singleColorFrag = new FragmentShaderFunction<
     // eslint-disable-next-line @typescript-eslint/ban-types
     {},
     {
-      world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof MeshUniforms>;
+      world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, GPU['meshUniforms']>;
     },
   ]
 >(

@@ -44,6 +44,7 @@ import {
   type RenderpassTargetTextureParams,
   RenderpassTarget,
   type RenderpassTargetOptions,
+  Struct,
 } from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,
@@ -238,6 +239,30 @@ export class GPU {
     mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
   }>;
   shaders: ReturnType<typeof createShaderBuilders>;
+  meshUniforms: Struct<{
+    transformation: ['', 'mat4x4<f32>'];
+    transformation_normals: ['', 'mat3x3<f32>'];
+    // eslint-disable-next-line sort-keys
+    color: ['@size(16)', 'vec3<f32>'];
+    // eslint-disable-next-line sort-keys
+    ambient: ['@size(12)', 'vec3<f32>'];
+    shadow: ['', 'f32'];
+    spot_light: ['@size(16)', 'vec3<f32>'];
+    // eslint-disable-next-line sort-keys
+    id: ['', 'u32'];
+    point_light_squared: ['', 'f32']; //30
+    // eslint-disable-next-line sort-keys
+    directional_light: ['', 'f32'];
+    /**
+     * bitmask
+     */
+    scenes: readonly ['', 'u32'];
+    /**
+     * padding
+     */
+    z: readonly [string, 'f32'];
+  }>;
+  meshArray: Struct<{ readonly mesh: readonly ['', 'array<MeshUniforms>'] }>;
   createRenderPipeline<
     D extends CreateRenderPipelineCB<RenderPipelineProps<V>>,
     V extends VertexShader,
@@ -329,6 +354,31 @@ export class GPU {
     public device: GPUDevice,
     private GPUDataSizeBytes: number,
   ) {
+    this.meshUniforms = new Struct('MeshUniforms', {
+      transformation: ['', 'mat4x4<f32>'],
+      transformation_normals: ['', 'mat3x3<f32>'],
+      // eslint-disable-next-line sort-keys
+      color: ['@size(16)', 'vec3<f32>'],
+      // eslint-disable-next-line sort-keys
+      ambient: ['@size(12)', 'vec3<f32>'],
+      shadow: ['', 'f32'],
+      spot_light: ['@size(16)', 'vec3<f32>'],
+      // eslint-disable-next-line sort-keys
+      id: ['', 'u32'],
+      point_light_squared: ['', 'f32'], //30
+      // eslint-disable-next-line sort-keys
+      directional_light: ['', 'f32'],
+      scenes: ['', 'u32'],
+      z: ['@size(' + (gpu_memory_index_size - GPUDataSizeBytes) + ')', 'f32'],
+    });
+    this.meshArray = new Struct(
+      'MeshArray',
+      {
+        mesh: ['', 'array<MeshUniforms>'],
+      },
+      [this.meshUniforms],
+    );
+
     const totalClusters =
       this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2];
     this.clusterSizeinBytes =
@@ -403,26 +453,6 @@ export class GPU {
         }),
       ],
     );
-    /*this.lightsTextureBindGroup =
-      this.positionAndTimeBindGroup.createAppendedLayout(
-        'lightsBindGroupTexture2Layout',
-        new BGLayout(this.device, 'lightsBindGroupTexture2', {
-          diffuseTexture: new TextLayout(
-            {
-              texture: {},
-              visibility: ShaderStage.FRAGMENT,
-            },
-            'texture_2d<f32>',
-          ),
-          mySampler: new SampLayout(
-            {
-              sampler: {},
-              visibility: ShaderStage.FRAGMENT,
-            },
-            'sampler',
-          ),
-        }),
-      );*/
     this.waterTextureLayot = new BGLayout(
       this.device,
       'lightsBindGroupTexture2water',
@@ -840,7 +870,7 @@ export class GPU {
       },
       (tempBuffer, swapBuffer) => {
         const pointers_to_gpumesh_and_offset = new Uint32Array(
-          engine.memory.buffer,
+          engine.rust.memory.buffer,
           pointerVec,
           length,
         );
@@ -866,12 +896,12 @@ export class GPU {
           const gpumeshPointer = engine.rust.gpu_pointer(mesh.id);
           const dataLength = this.GPUDataSizeBytes / 4;
           const data = new Float32Array(
-            engine.memory.buffer,
+            engine.rust.memory.buffer,
             gpumeshPointer,
             dataLength,
           );
           //Point light
-          if (data[29]! > 0) {
+          if (data[41]! > 0) {
             engine.updateLights = true;
           }
           new Float32Array(
@@ -893,7 +923,7 @@ export class GPU {
     );
   }
   update_directional_lights(pointer: number, length: number) {
-    const lights = new Uint32Array(engine.memory.buffer, pointer, length);
+    const lights = new Uint32Array(engine.rust.memory.buffer, pointer, length);
     const commandEncoder = this.device.createCommandEncoder({
       label: 'update_directional_lights_encoder',
     });
@@ -927,7 +957,7 @@ export class GPU {
     );
   }
   update_point_lights(pointer: number, length: number) {
-    const lights = new Uint32Array(engine.memory.buffer, pointer, length);
+    const lights = new Uint32Array(engine.rust.memory.buffer, pointer, length);
     const commandEncoder = this.device.createCommandEncoder({
       label: 'update_point_lights_encoder',
     });

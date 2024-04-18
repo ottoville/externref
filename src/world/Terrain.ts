@@ -100,7 +100,7 @@ TODO
       (b) => {
         new Float32Array(b.getMappedRange()).set(
           new Float32Array(
-            engine.memory.buffer,
+            engine.rust.memory.buffer,
             engine.rust.vertices_pointer(this.mesh.geometry) + offset,
             byteLength / 4,
           ),
@@ -132,7 +132,7 @@ TODO
         (b) => {
           new Float32Array(b.getMappedRange()).set(
             new Float32Array(
-              engine.memory.buffer,
+              engine.rust.memory.buffer,
               engine.rust.faces_pointer(this.mesh.id),
               this.mesh.faces_count * 4,
             ),

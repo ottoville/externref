@@ -6,7 +6,7 @@ import {
   WGSLcode,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { MeshUniforms, Scene, typicalOutput } from './structs/Structs.js';
+import { type Scene, typicalOutput } from './structs/Structs.js';
 import { createPickOutput } from './SingleColoredWithNormal.vert.js';
 import { simpleAttributesWithColor } from './structs/Attributes.js';
 
@@ -64,7 +64,7 @@ export function createVertexColorShader(
           {
             world: BufLayout<
               ShaderStage.VERTEX_AND_FRAGMENT,
-              typeof MeshUniforms
+              GPU['meshUniforms']
             >;
           },
         ]

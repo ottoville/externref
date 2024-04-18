@@ -1,6 +1,6 @@
 import type { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
-import { MeshUniforms, Scene, colorPositionOutput } from './structs/Structs.js';
+import { type Scene, colorPositionOutput } from './structs/Structs.js';
 import {
   type VertexBufferLayout2,
   VertexShaderFunction,
@@ -49,7 +49,7 @@ export function createPlaneAtGroundHeightVertShader(
           {
             world: BufLayout<
               ShaderStage.VERTEX_AND_FRAGMENT,
-              typeof MeshUniforms
+              GPU['meshUniforms']
             >;
           },
         ]
