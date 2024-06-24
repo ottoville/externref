@@ -56,19 +56,16 @@ customElements.define(
       const creditentials = await fetch('/.auth/me').then((response) =>
         response.json(),
       );
-      //@ts-expect-error
       this._internals.states.add('loaded');
 
       appInsights.trackPageView(); // Manually call trackPageView to establish the current user/session/pageview
       this.shadowRoot.querySelector('#loadingContainer')!.remove();
       if (creditentials.clientPrincipal) {
-        //@ts-expect-error
         this._internals.states.add('logged');
       }
       const canvasPromise = import('./ui/canvas.js');
       playBtn?.forEach((btn) =>
         btn.addEventListener('click', async () => {
-          //@ts-expect-error
           this._internals.states.add('play');
           const { Canvas } = await canvasPromise;
           new Canvas(

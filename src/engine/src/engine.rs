@@ -204,15 +204,14 @@ pub unsafe extern "C" fn physic_tick() {
     let integration_parameters = IntegrationParameters {
         dt: 1.0 / 60.0,
         min_ccd_dt: 1.0 / 60.0 / 100.0,
-        erp: 0.6,
-        damping_ratio: 1.0,
-        joint_erp: 1.0,
+        contact_natural_frequency: 30.0,
+        contact_damping_ratio: 5.0,
+        joint_natural_frequency: 1.0e6,
         joint_damping_ratio: 1.0,
-        allowed_linear_error: 0.001,
-        max_penetration_correction: Real::MAX,
-        prediction_distance: 0.002,
+        warmstart_coefficient: 1.0,
         num_internal_pgs_iterations: 1,
-        num_additional_friction_iterations: 4,
+        num_internal_stabilization_iterations: 2,
+        num_additional_friction_iterations: 0,
         num_solver_iterations: NonZeroUsize::new(4).unwrap(),
         // TODO: what is the optimal value for min_island_size?
         // It should not be too big so that we don't end up with
@@ -220,7 +219,11 @@ pub unsafe extern "C" fn physic_tick() {
         // However we don't want it to be too small and end up with
         // tons of islands, reducing SIMD parallelism opportunities.
         min_island_size: 128,
+        normalized_allowed_linear_error: 0.001,
+        normalized_max_corrective_velocity: 10.0,
+        normalized_prediction_distance: 0.002,
         max_ccd_substeps: 2,
+        length_unit: 1.0,
     };
 
     let mut multi_joint_set = MultibodyJointSet::new();
@@ -234,6 +237,7 @@ pub unsafe extern "C" fn physic_tick() {
 
     let e = ENGINE.physic_engine_mut();
     e.meshes.iter().for_each(|m| mesh_on_physic_tick(m.id));
+
     e.physic_pipeline.step(
         &gravity,
         &integration_parameters,

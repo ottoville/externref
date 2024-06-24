@@ -34,7 +34,7 @@ export default {
         test: /\.ts|tsx$/,
         use: [
           {
-            loader: 'ts-loader',
+            loader: 'swc-loader',
           },
         ],
       },
