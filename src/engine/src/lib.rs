@@ -8,7 +8,6 @@ mod math2;
 mod mesh;
 mod meshes;
 mod terrain;
-mod math;
 mod freelist;
 mod vertices;
 

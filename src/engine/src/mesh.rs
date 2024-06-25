@@ -1,9 +1,6 @@
 use core::panic;
 use std::num::NonZeroUsize;
 
-use crate::math2::Mat3wgslF32;
-use crate::vertices::VertexKind;
-use crate::MULTIVALUE_USIZE;
 pub use crate::drawable::DrawCommand;
 pub use crate::engine::Engine;
 use crate::engine::Engine2;
@@ -11,22 +8,24 @@ pub use crate::engine::ENGINE;
 pub use crate::geometry::ColliderPlane;
 pub use crate::geometry::Geometry;
 pub use crate::geometry::Plane;
-use crate::math::quaternion::Quaternion;
-use crate::math2::Vec3;
-use crate::math2::Vec3F32;
+use crate::math2::Mat3wgslF32;
+use crate::math2::Vec3wgslF32;
 use crate::math2::Vec4;
+use crate::vertices::VertexKind;
 pub use crate::GPUMesh;
 use crate::MULTIVALUE_F32;
+use crate::MULTIVALUE_USIZE;
 use rapier3d::prelude::*;
+use terramath::Quaternion;
 
 pub struct Mesh {
     pub id: usize,
     pub gpu_mesh_alignment: std::num::NonZeroUsize, //Alignment in engine.gpu_meshes2 vector,
     transformation: Vec4<Vec4<f32>>,
     pub transformation_is_dirty: bool,
-    pub translation: Vec3F32,
+    pub translation: Vec3wgslF32,
     pub rotation: Quaternion,
-    pub scaling: Vec3<f32>,
+    pub scaling: [f32; 3],
     pub geometry: Option<Box<Geometry<VertexKind>>>,
     pub color: [f32; 4],
     /**
@@ -53,13 +52,7 @@ pub unsafe extern "C" fn new_mesh(
     label_cap: usize,
 ) -> usize {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    return Mesh::new(
-        point_light,
-        directional_light,
-        scenes,
-        rigid_body,
-        label,
-    );
+    return Mesh::new(point_light, directional_light, scenes, rigid_body, label);
 }
 #[no_mangle]
 pub extern "C" fn create_geometry<'frame>(
@@ -73,15 +66,12 @@ pub extern "C" fn create_geometry<'frame>(
         character_can_collide_to,
         static_faces,
         strip,
-        "unnamed geometry".to_string()
+        "unnamed geometry".to_string(),
     ));
     Box::into_raw(geometry)
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_geometry<'frame>(
-    mesh_id: usize,
-    geometry: *mut Geometry<VertexKind>,
-) {
+pub unsafe extern "C" fn set_geometry<'frame>(mesh_id: usize, geometry: *mut Geometry<VertexKind>) {
     let mesh = get_mesh_by_id_mut(mesh_id);
     mesh.geometry = Some(Box::from_raw(geometry));
 }
@@ -105,9 +95,9 @@ pub unsafe extern "C" fn faces_count(mesh_id: usize) -> usize {
 #[no_mangle]
 pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32, skip_normals: bool) {
     let mesh = get_mesh_by_id_mut(mesh_id);
-    mesh.scaling.x = x;
-    mesh.scaling.y = y;
-    mesh.scaling.z = z;
+    mesh.scaling[0] = x;
+    mesh.scaling[1] = y;
+    mesh.scaling[2] = z;
 
     // If not equally to scale into all dimensions, re-calculate normals
     if !skip_normals && (x != y || x != z) {
@@ -125,23 +115,8 @@ pub unsafe extern "C" fn have_rigid_body(mesh_id: usize) -> bool {
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_euler_angles(mesh_id: usize, x: f32, y: f32, z: f32) {
-    // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
-    // TODO: utilize SIMD
-    let half_roll = z * 0.5;
-    let half_pitch = x * 0.5;
-    let half_yaw = y * 0.5;
-
-    let sin_roll = half_roll.sin();
-    let cos_roll = half_roll.cos();
-    let sin_pitch = half_pitch.sin();
-    let cos_pitch = half_pitch.cos();
-    let sin_yaw = half_yaw.sin();
-    let cos_yaw = half_yaw.cos();
-    let mesh = get_mesh_by_id_mut(mesh_id);
-    mesh.rotation.i = (cos_yaw * sin_pitch * cos_roll) + (sin_yaw * cos_pitch * sin_roll);
-    mesh.rotation.j = (sin_yaw * cos_pitch * cos_roll) - (cos_yaw * sin_pitch * sin_roll);
-    mesh.rotation.k = (cos_yaw * cos_pitch * sin_roll) - (sin_yaw * sin_pitch * cos_roll);
-    mesh.rotation.w = (cos_yaw * cos_pitch * cos_roll) + (sin_yaw * sin_pitch * sin_roll);
+    let mesh: &mut Mesh = get_mesh_by_id_mut(mesh_id);
+    mesh.rotation = Quaternion::from_euler(&[x, y, z]);
     mesh.on_update(true);
 }
 #[no_mangle]
@@ -213,7 +188,7 @@ pub unsafe extern "C" fn gpu_pointer(mesh_id: usize) -> *const Vec4<Vec4<f32>> {
     &engine2.gpu_meshes[get_mesh_by_id(mesh_id).gpu_mesh_alignment].transformation
 }
 #[no_mangle]
-pub unsafe extern "C" fn translation_pointer(mesh_id: usize) -> *const Vec3F32 {
+pub unsafe extern "C" fn translation_pointer(mesh_id: usize) -> *const Vec3wgslF32 {
     &get_mesh_by_id(mesh_id).translation
 }
 #[no_mangle]
@@ -221,20 +196,16 @@ pub unsafe extern "C" fn rotation_pointer(mesh_id: usize) -> *const Quaternion {
     &(get_mesh_by_id(mesh_id).rotation)
 }
 #[no_mangle]
-pub unsafe extern "C" fn scale_pointer(mesh_id: usize) -> *const Vec3<f32> {
+pub unsafe extern "C" fn scale_pointer(mesh_id: usize) -> *const [f32; 3] {
     &get_mesh_by_id(mesh_id).scaling
 }
 #[no_mangle]
 pub unsafe extern "C" fn rotation_pointer_euler(mesh_id: usize) -> *const f32 {
-    let mut euler = Vec3F32 {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
-    };
+    let mut euler = [0.0, 0.0, 0.0];
     get_mesh_by_id(mesh_id).rotation.to_euler_angles(&mut euler);
-    MULTIVALUE_F32[0] = euler.x;
-    MULTIVALUE_F32[1] = euler.y;
-    MULTIVALUE_F32[2] = euler.z;
+    MULTIVALUE_F32[0] = euler[0];
+    MULTIVALUE_F32[1] = euler[1];
+    MULTIVALUE_F32[2] = euler[2];
     return MULTIVALUE_F32.as_ptr();
 }
 #[no_mangle]
@@ -252,31 +223,36 @@ pub unsafe extern "C" fn intersect_box_aa_sphere(
 #[no_mangle]
 pub unsafe extern "C" fn create_trimesh_collider(mesh_id: usize) -> *mut Collider {
     let mesh: &mut Mesh = get_mesh_by_id_mut(mesh_id);
-    let scale_x = mesh.scaling.x;
-    let scale_y = mesh.scaling.y;
-    let scale_z = mesh.scaling.z;
-    mesh.get_geometry_mut().create_trimesh_collider(scale_x, scale_y, scale_z)
+    let scale_x = mesh.scaling[0];
+    let scale_y = mesh.scaling[1];
+    let scale_z = mesh.scaling[2];
+    mesh.get_geometry_mut()
+        .create_trimesh_collider(scale_x, scale_y, scale_z)
 }
 #[no_mangle]
-pub unsafe extern "C" fn create_convex_collider(mesh_id: usize, collision_events: bool) -> *mut Collider {
+pub unsafe extern "C" fn create_convex_collider(
+    mesh_id: usize,
+    collision_events: bool,
+) -> *mut Collider {
     let mesh: &mut Mesh = get_mesh_by_id_mut(mesh_id);
-    let scale_x = mesh.scaling.x;
-    let scale_y = mesh.scaling.y;
-    let scale_z = mesh.scaling.z;
-    mesh.get_geometry_mut().create_convex_collider(scale_x, scale_y, scale_z, collision_events)
+    let scale_x = mesh.scaling[0];
+    let scale_y = mesh.scaling[1];
+    let scale_z = mesh.scaling[2];
+    mesh.get_geometry_mut()
+        .create_convex_collider(scale_x, scale_y, scale_z, collision_events)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn scale_x(mesh_id: usize) -> f32 {
-    get_mesh_by_id(mesh_id).scaling.x
+    get_mesh_by_id(mesh_id).scaling[0]
 }
 #[no_mangle]
 pub unsafe extern "C" fn scale_y(mesh_id: usize) -> f32 {
-    get_mesh_by_id(mesh_id).scaling.y
+    get_mesh_by_id(mesh_id).scaling[1]
 }
 #[no_mangle]
 pub unsafe extern "C" fn scale_z(mesh_id: usize) -> f32 {
-    get_mesh_by_id(mesh_id).scaling.z
+    get_mesh_by_id(mesh_id).scaling[2]
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry<VertexKind>) -> usize {
@@ -345,9 +321,9 @@ pub unsafe extern "C" fn update_scale_and_rotation(
     rw: f32,
 ) {
     let mesh = get_mesh_by_id_mut(mesh_id);
-    mesh.scaling.x = x;
-    mesh.scaling.y = y;
-    mesh.scaling.z = z;
+    mesh.scaling[0] = x;
+    mesh.scaling[1] = y;
+    mesh.scaling[2] = z;
     mesh.rotation.i = rx;
     mesh.rotation.j = ry;
     mesh.rotation.k = rz;
@@ -452,22 +428,14 @@ impl Mesh {
             velocity: [0.0, 0.0, 0.0, 0.0],
             transformation: Vec4::identity(),
             transformation_is_dirty: true,
-            translation: Vec3F32 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
+            translation: Vec3wgslF32::new(),
             rotation: Quaternion {
                 i: 0.0,
                 j: 0.0,
                 k: 0.0,
                 w: 1.0,
             },
-            scaling: Vec3 {
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-            },
+            scaling: [1.0, 1.0, 1.0],
             color: [1.0, 0.0, 0.0, 0.0],
             positions_count: Option::None,
             draw_command: Option::None,
@@ -499,9 +467,7 @@ impl Mesh {
             let rigid_body = rigid_body_builder.build();
             let rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
             engine2.meshes[id].rigid_body_handle = Some(rigid_body_handle);
-            engine2
-                .rigid_bodies
-                .insert(rigid_body_handle, id);
+            engine2.rigid_bodies.insert(rigid_body_handle, id);
         }
         return id;
     }
@@ -534,9 +500,7 @@ impl Mesh {
         }
     }
     pub fn update_translation(&mut self, x: f32, y: f32, z: f32) {
-        self.translation.x = x;
-        self.translation.y = y;
-        self.translation.z = z;
+        self.translation.vec = [x, y, z];
         self.on_update(true);
     }
     pub unsafe fn apply_impulse(&mut self, x: f32, y: f32, z: f32) {
@@ -572,7 +536,7 @@ impl Mesh {
                 match rigid_body {
                     Some(rigid_body) => {
                         rigid_body.set_translation(
-                            vector![self.translation.x, self.translation.y, self.translation.z],
+                            vector![self.translation.vec[0], self.translation.vec[1], self.translation.vec[2]],
                             true,
                         );
                         rigid_body.set_rotation(
@@ -597,16 +561,16 @@ impl Mesh {
     }
 
     pub fn set_scale_x(&mut self, x: f32) {
-        self.scaling.x = x;
+        self.scaling[0] = x;
         self.on_update(true);
     }
     pub fn set_scale_y(&mut self, y: f32) {
-        self.scaling.y = y;
+        self.scaling[1] = y;
         self.on_update(true);
     }
 
     pub fn set_scale_z(&mut self, z: f32) {
-        self.scaling.z = z;
+        self.scaling[2] = z;
         self.on_update(true);
     }
     pub unsafe fn set_point_light(&mut self, engine: &'static mut Engine, range: f32) {
@@ -640,9 +604,9 @@ impl Mesh {
         let wy: f32 = w * y2;
         let wz: f32 = w * z2;
 
-        let sx = self.scaling.x;
-        let sy = self.scaling.y;
-        let sz = self.scaling.z;
+        let sx = self.scaling[0];
+        let sy = self.scaling[1];
+        let sz = self.scaling[2];
 
         self.transformation.x.x = (1.0 - (yy + zz)) * sx;
         self.transformation.x.y = (xy + wz) * sx;
@@ -656,9 +620,9 @@ impl Mesh {
         self.transformation.z.y = (yz - wx) * sz;
         self.transformation.z.z = (1.0 - (xx + yy)) * sz;
 
-        self.transformation.w.x = self.translation.x;
-        self.transformation.w.y = self.translation.y;
-        self.transformation.w.z = self.translation.z;
+        self.transformation.w.x = self.translation.vec[0];
+        self.transformation.w.y = self.translation.vec[1];
+        self.transformation.w.z = self.translation.vec[2];
         unsafe {
             let engine2 = ENGINE.physic_engine_mut();
             let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
@@ -676,7 +640,7 @@ impl Mesh {
         radius: f32,
     ) -> bool {
         let mesh = get_mesh_by_id_mut(self.id);
-        let g = self.get_geometry_mut();        
+        let g = self.get_geometry_mut();
         g.update_bounding_box(&mesh.get_transformation());
         self.get_geometry_mut()
             .bounding_box

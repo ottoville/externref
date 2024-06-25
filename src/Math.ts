@@ -229,18 +229,6 @@ export abstract class TerraVector3 extends Float32Array {
   override toString() {
     return `x: ${this[0]}, y: ${this[1]}, z: ${this[2]}`;
   }
-  toQuaternionToRef(angle: number, result: Quaternion) {
-    // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
-    // assumes axis is normalized
-
-    const halfAngle = angle * 0.5;
-    const s = Math.sin(halfAngle);
-    result[0] = this[0] * s;
-    result[1] = this[1] * s;
-    result[2] = this[2] * s;
-    result[3] = Math.cos(halfAngle);
-    return result;
-  }
   LerpToRef(
     end: TerraVector3,
     amount: number,
@@ -294,29 +282,6 @@ export abstract class TerraVector3 extends Float32Array {
     ref[1] = this[2] * vector[0] - this[0] * vector[2];
     ref[2] = this[0] * vector[1] - this[1] * vector[0];
     return ref;
-  }
-
-  applyRotationQuaternionToRef<T extends TerraVector3>(
-    q: Quaternion,
-    result: T,
-  ): T {
-    const q0 = q[0],
-      q1 = q[1],
-      q2 = q[2],
-      q3 = q[3];
-    const t0 = this[0],
-      t1 = this[1],
-      t2 = this[2];
-    const ix = q3 * t0 + q1 * t2 - q2 * t1;
-    const iy = q3 * t1 + q2 * t0 - q0 * t2;
-    const iz = q3 * t2 + q0 * t1 - q1 * t0;
-    const iw = -q0 * t0 - q1 * t1 - q2 * t2;
-
-    result[0] = ix * q3 + iw * -q0 + iy * -q2 - iz * -q1;
-    result[1] = iy * q3 + iw * -q1 + iz * -q0 - ix * -q2;
-    result[2] = iz * q3 + iw * -q2 + ix * -q1 - iy * -q0;
-
-    return result;
   }
 }
 export class ReadOnlyFloat32Array extends Float32Array {
@@ -382,36 +347,6 @@ export class TerraVector4 extends Float32Array {
 export class Quaternion extends TerraVector4 {
   static override of(i: number, j: number, k: number, w: number) {
     return super.of(i, j, k, w) as Quaternion;
-  }
-  /**
-   * Creates a new rotation from the given Euler float angles (y, x, z) and stores it in the target quaternion
-   * @param yaw defines the rotation around Y axis
-   * @param pitch defines the rotation around X axis
-   * @param roll defines the rotation around Z axis
-   * @param result defines the target quaternion
-   */
-  public static FromRotationYawPitchRoll(
-    yaw: number,
-    pitch: number,
-    roll: number,
-  ): Quaternion {
-    // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
-    const halfRoll = roll * 0.5;
-    const halfPitch = pitch * 0.5;
-    const halfYaw = yaw * 0.5;
-
-    const sinRoll = Math.sin(halfRoll);
-    const cosRoll = Math.cos(halfRoll);
-    const sinPitch = Math.sin(halfPitch);
-    const cosPitch = Math.cos(halfPitch);
-    const sinYaw = Math.sin(halfYaw);
-    const cosYaw = Math.cos(halfYaw);
-    return Quaternion.of(
-      cosYaw * sinPitch * cosRoll + sinYaw * cosPitch * sinRoll,
-      sinYaw * cosPitch * cosRoll - cosYaw * sinPitch * sinRoll,
-      cosYaw * cosPitch * sinRoll - sinYaw * sinPitch * cosRoll,
-      cosYaw * cosPitch * cosRoll + sinYaw * sinPitch * sinRoll,
-    );
   }
 }
 /**

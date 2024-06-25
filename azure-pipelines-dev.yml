@@ -45,7 +45,7 @@ jobs:
     inputs:
       cargoCommand: 'test'
       cargoWorkingDir: 'src'
-      cargoCommandOptions: '--lib'
+      cargoCommandOptions: '--lib --workspace'
       verbose: false
   - task: AzureStaticWebApp@0
     displayName: 'Static Web App: '

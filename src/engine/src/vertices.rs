@@ -1,25 +1,25 @@
-use crate::math2::{Vec2F32, Vec3F32};
+use crate::math2::{Vec2F32, Vec3wgslF32};
 
 #[repr(C, align(16))]
 pub struct Position {
-    pub position: Vec3F32,
+    pub position: Vec3wgslF32,
 }
 #[repr(C, align(16))]
 pub struct PositionAndNormal {
-    pub position: Vec3F32,
-    pub normal: Vec3F32,
+    pub position: Vec3wgslF32,
+    pub normal: Vec3wgslF32,
 }
 #[repr(C, align(16))]
 pub struct PositionAndNormalAndUV {
-    pub position: Vec3F32,
-    pub normal: Vec3F32,
+    pub position: Vec3wgslF32,
+    pub normal: Vec3wgslF32,
     pub uv: Vec2F32
 }
 #[repr(C, align(16))]
 pub struct PositionAndNormalAndColor {
-    pub position: Vec3F32,
-    pub normal: Vec3F32,
-    pub color: Vec3F32
+    pub position: Vec3wgslF32,
+    pub normal: Vec3wgslF32,
+    pub color: Vec3wgslF32
 }
 pub enum VertexKind {
     None,
@@ -38,7 +38,7 @@ pub struct Vertices<T> {
 }
 
 impl Vertices<VertexKind> {
-    pub fn get_positions(&self) -> Box<dyn Iterator<Item =&Vec3F32> + '_> {
+    pub fn get_positions(&self) -> Box<dyn Iterator<Item =&Vec3wgslF32> + '_> {
         match &self.vertices {
             VertexKind::PositionAndNormalAndUV(vector) => {
                 Box::new(vector.iter().map(|v| { &v.position}))
@@ -54,13 +54,13 @@ impl Vertices<VertexKind> {
             },
             VertexKind::F32(vector) => {
                 Box::new(vector.chunks_exact(self.vertices_stride).map(|v| unsafe {
-                    &(*(v.as_ptr() as *const Vec3F32))
+                    &(*(v.as_ptr() as *const Vec3wgslF32))
                 }))
             },
             VertexKind::None => todo!(),
         }
     }
-    pub fn get_positions_mut(&mut self) -> Box<dyn Iterator<Item = &mut Vec3F32>+ '_> {
+    pub fn get_positions_mut(&mut self) -> Box<dyn Iterator<Item = &mut Vec3wgslF32>+ '_> {
         match &mut self.vertices {
             VertexKind::PositionAndNormalAndUV(vector) => {
                 Box::new(vector.iter_mut().map(|v| { &mut v.position}))
@@ -76,7 +76,7 @@ impl Vertices<VertexKind> {
             },
             VertexKind::F32(vector) => {
                 Box::new(vector.chunks_exact_mut(self.vertices_stride).map(|v| unsafe {
-                    &mut (*(v.as_mut_ptr() as *mut Vec3F32))
+                    &mut (*(v.as_mut_ptr() as *mut Vec3wgslF32))
                 }))
             },
             VertexKind::None => todo!(),

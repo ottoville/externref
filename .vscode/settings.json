@@ -16,5 +16,8 @@
     ],
     "eslint.workingDirectories": [
         {"directory": "src"}
-    ]
+    ],
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    }
 }

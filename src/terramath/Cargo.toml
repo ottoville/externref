@@ -1,0 +1,23 @@
+[package]
+name = "terramath"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["rlib"]
+path = "src/lib.rs"
+
+[profile.dev]
+debug = true
+debug-assertions = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.42"
+
+[target.wasm32-unknown-unknown]
+runner = 'wasm-bindgen-test-runner'
+

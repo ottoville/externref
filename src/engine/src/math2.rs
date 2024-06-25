@@ -1,24 +1,39 @@
 #[cfg(target_arch = "wasm32")]
 use std::arch::wasm32::*;
 
-use crate::math::quaternion::Quaternion;
-
 #[derive(Copy, Clone)]
 pub struct Vec3<T> {
     pub x: T,
     pub y: T,
     pub z: T,
 }
-
+#[repr(C, align(16))]
 pub struct Mat3wgslF32 {
-    pub vec: Vec3<Vec3<f32>>,
+    pub vec: [[f32; 3]; 3],
     _padding: [f32; 3]
+}
+#[repr(C, align(16))]
+pub struct Vec3wgslF32 {
+    pub vec: [f32; 3]
+}
+
+impl Vec3wgslF32 {
+    pub fn new() -> Vec3wgslF32 {
+        Vec3wgslF32 {
+            vec: [0.0,0.0,0.0]
+        }
+    }
+    pub fn clone(&self) -> Vec3wgslF32 {
+        Vec3wgslF32 {
+            vec: self.vec.clone()
+        }
+    }
 }
 
 impl Mat3wgslF32 {
     pub fn identity() -> Mat3wgslF32 {
         Mat3wgslF32 {
-            vec: Vec3::identity(),
+            vec: terramath::MatrixMath::identity(),
             _padding: [0.0,0.0,0.0]
         }
     }
@@ -29,175 +44,6 @@ impl Mat3wgslF32 {
 pub struct Vec2F32 {
     pub u: f32,
     pub v: f32,
-}
-#[repr(C, align(16))]
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub struct Vec3F32 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-impl Vec3<f32> {
-    pub fn to_scaling_matrix(&self) -> Vec4<Vec4<f32>> {
-        Vec4 {
-            x: Vec4 { x: self.x, y: 0.0, z: 0.0, w: 0.0 },
-            y: Vec4 { x: 0.0, y: self.y, z: 0.0, w: 0.0 },
-            z: Vec4 { x: 0.0, y: 0.0, z: self.z, w: 0.0 },
-            w: Vec4 { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }
-        }
-    }
-    pub fn to_translation_matrix(&self) -> Vec4<Vec4<f32>> {
-        Vec4 {
-            x: Vec4 { x: 1.0, y: 0.0, z: 0.0, w: 0.0 },
-            y: Vec4 { x: 0.0, y: 1.0, z: 0.0, w: 0.0 },
-            z: Vec4 { x: 0.0, y: 0.0, z: 1.0, w: 0.0 },
-            w: Vec4 { x: self.x, y: self.y, z: self.z, w: 1.0 }
-        }
-    }
-    pub fn identity() -> Vec3<Vec3<f32>> {
-        Vec3 {
-            x: Vec3 {
-                x: 1.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            y: Vec3 {
-                x: 0.0,
-                y: 1.0,
-                z: 0.0,
-            },
-            z: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 1.0,
-            },
-        } 
-    }
-}
-impl Vec3F32 {
-    /**
-     * Creates new vector with zero values
-     */
-    pub fn new() -> Vec3F32 {
-        Vec3F32 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0
-        }
-    }
-    pub fn clone(&self) -> Vec3F32 {
-        Vec3F32 {
-            x: self.x,
-            y: self.y,
-            z: self.z,
-        }
-    }
-    /**
-     * Set all values to zero
-     */
-    pub fn clear(&mut self) {
-        self.x = 0.0;
-        self.y = 0.0;
-        self.z = 0.0;
-    }
-    /**
-     * Modify vector with given values
-     */
-    pub fn add_in_place(&mut self, x: f32, y: f32, z: f32) {
-        self.x += x;
-        self.y += y;
-        self.z += z;
-    }
-        /**
-     * Modify vector with given vector
-     */
-    pub fn add_vec_in_place(&mut self, vec: &Vec3F32) {
-        self.x += vec.x;
-        self.y += vec.y;
-        self.z += vec.z;
-    }
-    /**
-     * Returns new vector which is sum of two vectors
-     */
-    pub fn add(&self, vec: &Vec3F32) -> Vec3F32 {
-        Vec3F32 {
-            x: self.x + vec.x,
-            y: self.y + vec.y,
-            z: self.z + vec.z
-        }
-    }
-    /**
-     * Returns new vector which is sub of two vectors
-     */
-    pub fn sub(&self, vec: &Vec3F32) -> Vec3F32 {
-        Vec3F32 {
-            x: self.x - vec.x,
-            y: self.y - vec.y,
-            z: self.z - vec.z
-        }
-    }
-    pub fn dot(&self, other: &Vec3F32) -> f32 {
-        self.x * other.x + self.y * other.y + self.z * other.z
-    }
-    pub fn cross(&self, other: &Vec3F32) -> Vec3F32 {
-        //TODO utilize simd
-        Vec3F32 {
-            x: self.y * other.z - self.z * other.y,
-            y: self.z * other.x - self.x * other.z,
-            z: self.x * other.y - self.y * other.x,
-        }
-    }
-    pub fn normalize(&mut self) {
-        let len_sqrt = self.x * self.x + self.y * self.y + self.z * self.z;
-
-        if len_sqrt == 0.0 || len_sqrt == 1.0 {
-            return;
-        }
-        let scale = 1.0 / len_sqrt.sqrt();
-        self.x *= scale;
-        self.y *= scale;
-        self.z *= scale;
-    }
-    pub fn to_quaternion(&self, angle: f32) -> Quaternion {
-        // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
-        // assumes axis is normalized
-
-        let half_angle = angle * 0.5;
-        let s = half_angle.sin();
-        Quaternion {
-            i: self.x * s,
-            j: self.y * s,
-            k: self.z * s,
-            w: half_angle.cos(),
-        }
-    }
-    pub fn apply_rotation_quaternion_to_ref(&self, q: Quaternion, result: &mut Vec3F32) {
-        let q0 = q.i;
-        let q1 = q.j;
-        let q2 = q.k;
-        let q3 = q.w;
-        let t0 = self.x;
-        let t1 = self.y;
-        let t2 = self.z;
-        let ix = q3 * t0 + q1 * t2 - q2 * t1;
-        let iy = q3 * t1 + q2 * t0 - q0 * t2;
-        let iz = q3 * t2 + q0 * t1 - q1 * t0;
-        let iw = -q0 * t0 - q1 * t1 - q2 * t2;
-
-        result.x = ix * q3 + iw * -q0 + iy * -q2 - iz * -q1;
-        result.y = iy * q3 + iw * -q1 + iz * -q0 - ix * -q2;
-        result.z = iz * q3 + iw * -q2 + ix * -q1 - iy * -q0;
-    }
-    pub fn transform_to_ref(&self, m: &Vec4<Vec4<f32>>, other: &mut Vec3F32) {
-        let rx = self.x * m.x.x + self.y * m.y.x + self.z * m.z.x + m.w.x;
-        let ry = self.x * m.x.y + self.y * m.y.y + self.z * m.z.y + m.w.y;
-        let rz = self.x * m.x.z + self.y * m.y.z + self.z * m.z.z + m.w.z;
-        let rw = 1.0 / (self.x * m.x.w + self.y * m.y.w + self.z * m.y.w + m.w.w);
-        other.x = rx * rw;
-        other.y = ry * rw;
-        other.z = rz * rw;
-    }
 }
 
 impl Vec4<Vec4<f32>> {
@@ -315,6 +161,17 @@ impl Vec4<Vec4<f32>> {
         )
     }
 }
+impl Vec3<f32> {
+    pub fn cross(&self, other: &Vec3<f32>, result: &mut Vec3<f32> ) {
+        result.x = self.y * other.z - self.z * other.y;
+        result.y = self.z * other.x - self.x * other.z;
+        result.z = self.x * other.y - self.y * other.x;    
+    }
+    pub fn dot(&self, other: &Vec3<f32>) -> f32 {
+        return self.x * other.x + self.y * other.y + self.z * other.z;
+    }
+}
+
 
 #[derive(Copy, Clone)]
 pub struct Vec4<T> {

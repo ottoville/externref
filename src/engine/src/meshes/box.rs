@@ -1,203 +1,203 @@
-use crate::{math2::Vec3F32, vertices::{PositionAndNormal, VertexKind}, Geometry};
+use crate::{math2::Vec3wgslF32, vertices::{PositionAndNormal, VertexKind}, Geometry};
 
 pub fn create_box_vertices() -> Vec<PositionAndNormal> {
     vec![
         // Left face
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: 1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, 1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: -1.0, y: 0.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ -1.0, 0.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: 1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, 1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: -1.0, y: 0.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ -1.0, 0.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: -1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, -1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: -1.0, y: 0.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ -1.0, 0.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: -1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, -1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: -1.0, y: 0.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ -1.0, 0.0, 0.0]
             }
         },
         // Right face
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: -1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, -1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 1.0, y: 0.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 1.0, 0.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: 1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, 1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 1.0, y: 0.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 1.0, 0.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: 1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, 1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 1.0, y: 0.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 1.0, 0.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: -1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, -1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 1.0, y: 0.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 1.0, 0.0, 0.0]
             }
         },
         // Bottom face
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: -1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, -1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: -1.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, -1.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: -1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, -1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: -1.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, -1.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: -1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, -1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: -1.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, -1.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: -1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, -1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: -1.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, -1.0, 0.0]
             }
         },
         // Top face
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: 1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, 1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 1.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 1.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: 1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, 1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 1.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 1.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: 1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, 1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 1.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 1.0, 0.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: 1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, 1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 1.0, z: 0.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 1.0, 0.0]
             }
         },
         // Back face
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: -1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, -1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 0.0, z: -1.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 0.0, -1.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: 1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, 1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 0.0, z: -1.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 0.0, -1.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: 1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, 1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 0.0, z: -1.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 0.0, -1.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: -1.0, z: -1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, -1.0, -1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 0.0, z: -1.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 0.0, -1.0]
             }
         },
         // Last face
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: 1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, 1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 0.0, z: 1.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 0.0, 1.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: 1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, 1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 0.0, z: 1.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 0.0, 1.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: 1.0, y: -1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ 1.0, -1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 0.0, z: 1.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 0.0, 1.0]
             }
         },
         PositionAndNormal {
-            position: Vec3F32 {
-                x: -1.0, y: -1.0, z: 1.0
+            position: Vec3wgslF32 {
+                vec: [ -1.0, -1.0, 1.0]
             },
-            normal: Vec3F32 {
-                x: 0.0, y: 0.0, z: 1.0
+            normal: Vec3wgslF32 {
+                vec: [ 0.0, 0.0, 1.0]
             }
         }
     ]
@@ -232,7 +232,7 @@ fn test_calculate_normals() {
     geometry.calculate_normals();
     if let VertexKind::PositionAndNormal(vertices) = geometry.vertices.vertices {
         for n in 0..vertices.len() {
-            assert_eq!(vertices[n].normal, vertices[n].normal);
+            assert_eq!(vertices[n].normal.vec, vertices[n].normal.vec);
         }
     } else {
         panic!("Vertices are bad format")

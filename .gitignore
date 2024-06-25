@@ -15,6 +15,7 @@
 #Rust
 .rustc_info.json
 */**/CACHEDIR.TAG
+src/target
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

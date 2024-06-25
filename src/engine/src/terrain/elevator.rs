@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 pub use crate::mesh::Mesh;
-use crate::{math2::Vec3F32, mesh::get_mesh_by_id_mut};
+use crate::{math2::Vec3wgslF32, mesh::get_mesh_by_id_mut};
 
 pub struct Elevator {
     vertices_horizontal:Vec<f32>,
@@ -118,14 +118,14 @@ impl Elevator {
         let mut vertices:Vec<_> = geometry.vertices.get_positions_mut().collect();
         
         for sv in self.selected_vertices.iter() {
-            let mut positiony = vertices[sv.0].y;
+            let mut positiony = vertices[sv.0].vec[1];
             if sv.1 < radius_near {
                 positiony += full_height;
             } else {
                 positiony += full_height * (1.0 - (sv.1 - radius_near) / radius_far);
             }
             
-            vertices[sv.0].y = f32::clamp(positiony,height_min,height_max);
+            vertices[sv.0].vec[1] = f32::clamp(positiony,height_min,height_max);
             if new_position {
                 let face_of_vertices=&self.faces_of_vertices[sv.0];
                 for index in face_of_vertices {
@@ -208,19 +208,19 @@ impl Elevator {
         let mut vertices = geometry.vertices.get_positions();
         let mut vertices_horizontal: Vec<f32> = Vec::new();
         loop {
-            let next: Option<&Vec3F32> = vertices.next();
-            let next1: Option<&Vec3F32> = vertices.next();
-            let next2: Option<&Vec3F32> = vertices.next();
-            let next3: Option<&Vec3F32> = vertices.next();
+            let next: Option<&Vec3wgslF32> = vertices.next();
+            let next1: Option<&Vec3wgslF32> = vertices.next();
+            let next2: Option<&Vec3wgslF32> = vertices.next();
+            let next3: Option<&Vec3wgslF32> = vertices.next();
             match next3 {
                 Some(val3) => {
                     let val=next.unwrap();
                     let val1=next1.unwrap();
                     let val2=next2.unwrap();
                     vertices_horizontal.append(&mut vec![
-                        val.x,   val1.x,   val2.x,   val3.x,
-                        val.y,   val1.y,   val2.y,   val3.y,
-                        val.z,   val1.z,   val2.z,   val3.z,
+                        val.vec[0],   val1.vec[0],   val2.vec[0],   val3.vec[0],
+                        val.vec[1],   val1.vec[1],   val2.vec[1],   val3.vec[1],
+                        val.vec[2],   val1.vec[2],   val2.vec[2],   val3.vec[2],
                     ]);
                 },
                 None => break,

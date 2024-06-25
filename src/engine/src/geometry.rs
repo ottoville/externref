@@ -6,6 +6,7 @@ use rapier3d::{
     }, math::Point, na::{
         Const, OPoint
     }, pipeline::ActiveEvents};
+use terramath::{CrossProduct, VectorMath};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
@@ -58,37 +59,37 @@ pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const
        Convert SIMD lanes to XYZ
     */
     let vectors: Vec<f32> = vec![
-        geometry.bounding_box.vectors_simd[0].x.x,
-        geometry.bounding_box.vectors_simd[0].y.x,
-        geometry.bounding_box.vectors_simd[0].z.x,
+        geometry.bounding_box.vectors_simd[0].x[0],
+        geometry.bounding_box.vectors_simd[0].y[0],
+        geometry.bounding_box.vectors_simd[0].z[0],
         0.0,
-        geometry.bounding_box.vectors_simd[0].x.y,
-        geometry.bounding_box.vectors_simd[0].y.y,
-        geometry.bounding_box.vectors_simd[0].z.y,
+        geometry.bounding_box.vectors_simd[0].x[1],
+        geometry.bounding_box.vectors_simd[0].y[1],
+        geometry.bounding_box.vectors_simd[0].z[1],
         0.0,
-        geometry.bounding_box.vectors_simd[0].x.z,
-        geometry.bounding_box.vectors_simd[0].y.z,
-        geometry.bounding_box.vectors_simd[0].z.z,
+        geometry.bounding_box.vectors_simd[0].x[2],
+        geometry.bounding_box.vectors_simd[0].y[2],
+        geometry.bounding_box.vectors_simd[0].z[2],
         0.0,
-        geometry.bounding_box.vectors_simd[0].x.w,
-        geometry.bounding_box.vectors_simd[0].y.w,
-        geometry.bounding_box.vectors_simd[0].z.w,
+        geometry.bounding_box.vectors_simd[0].x[3],
+        geometry.bounding_box.vectors_simd[0].y[3],
+        geometry.bounding_box.vectors_simd[0].z[3],
         0.0,
-        geometry.bounding_box.vectors_simd[1].x.x,
-        geometry.bounding_box.vectors_simd[1].y.x,
-        geometry.bounding_box.vectors_simd[1].z.x,
+        geometry.bounding_box.vectors_simd[1].x[0],
+        geometry.bounding_box.vectors_simd[1].y[0],
+        geometry.bounding_box.vectors_simd[1].z[0],
         0.0,
-        geometry.bounding_box.vectors_simd[1].x.y,
-        geometry.bounding_box.vectors_simd[1].y.y,
-        geometry.bounding_box.vectors_simd[1].z.y,
+        geometry.bounding_box.vectors_simd[1].x[1],
+        geometry.bounding_box.vectors_simd[1].y[1],
+        geometry.bounding_box.vectors_simd[1].z[1],
         0.0,
-        geometry.bounding_box.vectors_simd[1].x.z,
-        geometry.bounding_box.vectors_simd[1].y.z,
-        geometry.bounding_box.vectors_simd[1].z.z,
+        geometry.bounding_box.vectors_simd[1].x[2],
+        geometry.bounding_box.vectors_simd[1].y[2],
+        geometry.bounding_box.vectors_simd[1].z[2],
         0.0,
-        geometry.bounding_box.vectors_simd[1].x.w,
-        geometry.bounding_box.vectors_simd[1].y.w,
-        geometry.bounding_box.vectors_simd[1].z.w,
+        geometry.bounding_box.vectors_simd[1].x[3],
+        geometry.bounding_box.vectors_simd[1].y[3],
+        geometry.bounding_box.vectors_simd[1].z[3],
         0.0,
     ];
     return create_multivalue_vector(vectors);
@@ -212,9 +213,9 @@ impl<'vert> Geometry<VertexKind> {
     pub fn create_trimesh_collider(&mut self, scale_x: f32, scale_y: f32, scale_z: f32) -> *mut Collider {
         let newvertices = self.vertices.get_positions().map(|position| {
             Point::new(
-                position.x * scale_x,
-                position.y * scale_y,
-                position.z * scale_z,
+                position.vec[0] * scale_x,
+                position.vec[1] * scale_y,
+                position.vec[2] * scale_z,
             ) 
         }).collect();
         let positions_count = self.vertices.length();
@@ -238,9 +239,9 @@ impl<'vert> Geometry<VertexKind> {
          */
         for position in positions {
             let point = Point::new(
-                position.x * scale_x,
-                position.y * scale_y,
-                position.z * scale_z
+                position.vec[0] * scale_x,
+                position.vec[1] * scale_y,
+                position.vec[2] * scale_z
             );
             if let Some(n) = new_vertices.iter().position(|oldpos| 
                 oldpos.eq(&point)
@@ -275,19 +276,19 @@ impl<'vert> Geometry<VertexKind> {
             let mut positions: Vec<_> = match &mut self.vertices.vertices {
                 VertexKind::PositionAndNormalAndUV(vector) => {
                     vector.iter_mut().map(|v| {
-                        v.normal.clear();
+                        v.normal.vec.clear();
                         return (&v.position, &mut v.normal);
                     }).collect()
                 },
                 VertexKind::PositionAndNormalAndColor(vector) => {
                     vector.iter_mut().map(|v| {
-                        v.normal.clear();
+                        v.normal.vec.clear();
                         return (&v.position, &mut v.normal);
                     }).collect()
                 },
                 VertexKind::PositionAndNormal(vector) => {
                     vector.iter_mut().map(|v| {
-                        v.normal.clear();
+                        v.normal.vec.clear();
                         return (&v.position, &mut v.normal);
                     }).collect()
                 },
@@ -305,17 +306,17 @@ impl<'vert> Geometry<VertexKind> {
                 let ib = &positions[triangle[1] as usize];
                 let ic = &positions[triangle[2] as usize];
 
-                let e1 = ia.0.sub(ib.0);
-                let e2 =  ic.0.sub(ib.0);
+                let e1 = ia.0.vec.sub_vec(&ib.0.vec);
+                let e2 =  ic.0.vec.sub_vec(&ib.0.vec);
 
                 let no = e1.cross(&e2);
 
-                positions[triangle[0] as usize].1.add_vec_in_place(&no);
-                positions[triangle[1] as usize].1.add_vec_in_place(&no);
-                positions[triangle[2] as usize].1.add_vec_in_place(&no);
+                positions[triangle[0] as usize].1.vec.add_vec_in_place(&no);
+                positions[triangle[1] as usize].1.vec.add_vec_in_place(&no);
+                positions[triangle[2] as usize].1.vec.add_vec_in_place(&no);
             }
             for position in positions {
-                position.1.normalize();
+                position.1.vec.normalize_in_place();
             }
         }
     }
@@ -343,7 +344,7 @@ impl<'vert> Geometry<VertexKind> {
                         }
                         let pos = &vector[i].position;
                         let nextpos = &vector[ii].position;
-                        if pos.x == nextpos.x && pos.y == nextpos.y && pos.z == nextpos.z {
+                        if pos.vec[0] == nextpos.vec[0] && pos.vec[1] == nextpos.vec[1] && pos.vec[2] == nextpos.vec[2] {
                             vector.remove(ii);
                             dedup_index(ii as u32, i as u32, &mut self.indices);
                             continue;
