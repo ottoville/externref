@@ -36,7 +36,7 @@
             "preLaunchTask": "start-swa"
         },
         {
-            "type": "pwa-msedge",
+            "type": "msedge",
             "name": "Launch Microsoft Edge in headless mode",
             "request": "launch",
             "runtimeArgs": [
@@ -52,7 +52,7 @@
             "type": "vscode-edge-devtools.debug",
             "name": "Open Edge DevTools",
             "request": "attach",
-            "url": "c:\\Users\\ottov\\.vscode\\extensions\\ms-edgedevtools.vscode-edge-devtools-1.4.7\\out\\startpage\\index.html",
+            "url": "c:\\Users\\ottov\\.vscode\\extensions\\ms-edgedevtools.vscode-edge-devtools-2.1.5\\out\\startpage\\index.html",
             "presentation": {
                 "hidden": true
             }
