@@ -43,10 +43,7 @@ pub unsafe extern "C" fn vertices_pointer(geometry: *const Geometry<VertexKind>)
         VertexKind::None => panic!("Asked vertices pointer but there are no vertices"),
     }
 }
-#[no_mangle]
-pub unsafe extern "C" fn calculate_normals(geometry: *mut Geometry<VertexKind>) {
-    (*geometry).calculate_normals();
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const usize {
     let mesh = get_mesh_by_id_mut(mesh_id);

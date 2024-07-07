@@ -26,9 +26,11 @@ extern "C" {
     #[cfg(target_arch = "wasm32")]
     fn jspanic(number: *const u8);
     #[cfg(target_arch = "wasm32")]
-    fn mesh_on_collide(number: usize, status: bool);
+    fn mesh_on_collide(mesh_id: usize, status: bool);
     #[cfg(target_arch = "wasm32")]
     fn mesh_on_physic_tick(number: usize);
+    #[cfg(target_arch = "wasm32")]
+    pub fn verticesChange(mesh_id: usize);
 }
 pub struct Engine {
     pub point_lights: Vec<NonZeroUsize>,

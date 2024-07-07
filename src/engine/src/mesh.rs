@@ -2,6 +2,8 @@ use core::panic;
 use std::num::NonZeroUsize;
 
 pub use crate::drawable::DrawCommand;
+#[cfg(target_arch = "wasm32")]
+use crate::engine::verticesChange;
 pub use crate::engine::Engine;
 use crate::engine::Engine2;
 pub use crate::engine::ENGINE;
@@ -101,9 +103,13 @@ pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32, sk
 
     // If not equally to scale into all dimensions, re-calculate normals
     if !skip_normals && (x != y || x != z) {
-        mesh.get_geometry_mut().calculate_normals();
+        mesh.calculate_normals();
     }
     mesh.on_update(true);
+}
+#[no_mangle]
+pub unsafe extern "C" fn calculate_normals(mesh_id: usize) {
+    get_mesh_by_id_mut(mesh_id).calculate_normals();
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_dynamic_buffer(mesh_id: usize) {
@@ -536,7 +542,11 @@ impl Mesh {
                 match rigid_body {
                     Some(rigid_body) => {
                         rigid_body.set_translation(
-                            vector![self.translation.vec[0], self.translation.vec[1], self.translation.vec[2]],
+                            vector![
+                                self.translation.vec[0],
+                                self.translation.vec[1],
+                                self.translation.vec[2]
+                            ],
                             true,
                         );
                         rigid_body.set_rotation(
@@ -645,6 +655,13 @@ impl Mesh {
         self.get_geometry_mut()
             .bounding_box
             .intersect_box_aa_sphere(collider, radius)
+    }
+    pub fn calculate_normals(&mut self) {
+        self.get_geometry_mut().calculate_normals();
+        #[cfg(target_arch = "wasm32")]
+        unsafe {
+            verticesChange(self.id);
+        }
     }
 }
 impl Drop for Mesh {

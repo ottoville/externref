@@ -3,6 +3,7 @@ aside {
     background-color: grey;
     color: white;
     overflow: hidden;
+    height: 100%;
     & button {
         padding:0;
         background-color: darkgrey;

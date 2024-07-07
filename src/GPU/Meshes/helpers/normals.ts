@@ -14,7 +14,7 @@ import { RigidBody } from 'MainNode.js';
 export class NormalsMesh extends DataNode {
   override drawable: DrawableSimple<RenderPipelineProps>;
   constructor(targetNode: DrawableDirect<DataNode>) {
-    const stride = 8 as Word<'dword'>; // 8*2;
+    const stride = 8 as Word<'dword'>;
     const vertices_ptr = allocate_vec_positions_and_normals(
       (targetNode.node.positions_count * 2) as Word<'dword'>,
     );
@@ -36,11 +36,11 @@ export class NormalsMesh extends DataNode {
       });
     };
     updateVertices();
-    targetNode.node.onVerticesChangeListeners.push(() => {
+    targetNode.node.onVerticesChangeListeners.add(() => {
       updateVertices();
       this.drawable.setVertexBuffer(
         0,
-        [vertices_ptr[0], vertices_ptr[1]],
+        [vertices_ptr[0], vertices_ptr[1] * stride],
         true,
       );
     });

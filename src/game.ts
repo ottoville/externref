@@ -29,7 +29,6 @@ customElements.define(
     private _internals!: ElementInternals;
     static observedAttributes = ['devtools'];
     #logincontainer: HTMLElement;
-    #devSheet?: CSSStyleSheet;
     #devTools: HTMLElement | null = null;
     constructor() {
       super();
@@ -77,47 +76,31 @@ customElements.define(
         }),
       );
     }
-    async attributeChangedCallback(
+    attributeChangedCallback(
       name: string,
       _oldValue: string,
       newValue: string,
     ) {
-      console.log('attriute change', name, newValue);
       if (name == 'devtools') {
         const devtools = newValue === 'true';
 
-        if (devtools) {
+        if (devtools && !this.#devTools) {
           this.#devTools = this.shadowRoot!.insertBefore(
-            document.createElement('aside'),
+            document.createElement('dev-tools'),
             this.#logincontainer,
           );
-          const reactContainer = this.#devTools.appendChild(
-            document.createElement('div'),
+          this.#devTools.addEventListener(
+            'close',
+            () => {
+              this.shadowRoot!.host.setAttribute('devtools', 'false');
+            },
+            {
+              once: true,
+            },
           );
-          reactContainer.id = 'DevToolsAppContainer';
-
-          if (!this.#devSheet) {
-            const { default: devSheet }: { default: CSSStyleSheet } =
-              await import(
-                //@ts-expect-error
-                '/css/DevTools.css',
-                {
-                  with: { type: 'css' },
-                }
-              );
-            this.#devSheet = devSheet;
-          }
-          this.shadowRoot!.adoptedStyleSheets.push(this.#devSheet);
-          const { DevTools } = await import('./ui/DevTools/DevTools.js');
-          DevTools(this.shadowRoot!.querySelector<HTMLElement>('aside')!);
-        } else {
+        } else if (!devtools && this.#devTools) {
           this.#devTools!.remove();
           this.#devTools = null;
-          if (this.#devSheet) {
-            this.shadowRoot!.adoptedStyleSheets.splice(
-              this.shadowRoot!.adoptedStyleSheets.indexOf(this.#devSheet),
-            );
-          }
         }
       }
     }

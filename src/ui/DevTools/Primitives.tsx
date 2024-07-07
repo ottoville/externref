@@ -1,13 +1,28 @@
 import { DataNode } from '../../nodes/DataNode.js';
 import { Vertex } from './Vertex.js';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Indices } from './Indices.js';
+import type { Engine } from '../../engine.js';
+declare const engine: Engine;
 
 export function Primitives({ node }: { node: DataNode }) {
   const indices = useRef<HTMLDetailsElement>(null);
   const [indicesOpen, setIndicesOpen] = useState(false);
   const vertices = useRef<HTMLDetailsElement>(null);
   const [verticesOpen, setVerticesOpen] = useState(false);
+  /**
+   * Force re-render when there are change in vertices.
+   */
+  const [_, forceRender] = useState({});
+  useEffect(() => {
+    const listener = () => {
+      forceRender({});
+    };
+    node.onVerticesChangeListeners.add(listener);
+    return () => {
+      node.onVerticesChangeListeners.delete(listener);
+    };
+  }, [node, engine.rust.memory.buffer]);
 
   return (
     <fieldset>

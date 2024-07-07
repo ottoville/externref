@@ -258,7 +258,7 @@ export type rustWasm = {
   set_shadow(mesh_id: number, shadow: number): void;
   collider_faces_pointer(mesh_id: number): rust_pointer<'collider_faces'>;
   set_scenes(mesh_id: number, scenes: number): void;
-  calculate_normals(geometry: rust_pointer<'geometry'>): void;
+  calculate_normals(mesh_id: number): void;
   update_scale_and_rotation(
     mesh_id: number,
     x: number,
@@ -596,6 +596,12 @@ export class Engine {
         },
         update_point_lights(pointer: number, length: number) {
           engine.gpu?.update_point_lights(pointer, length);
+        },
+        verticesChange(mesh_id: number) {
+          const mesh = DataNode.Meshes.get(mesh_id);
+          if (mesh) {
+            mesh.onVerticesChange();
+          }
         },
       },
     };

@@ -179,7 +179,7 @@ export class DataNode extends MainNode {
   impulse: [number, number, number] = [0, 0, 0];
   hasGravity = false;
 
-  onVerticesChangeListeners: (() => void)[] = [];
+  onVerticesChangeListeners: Set<() => void> = new Set();
   onVerticesChange() {
     this.onVerticesChangeListeners.forEach((cb) => {
       cb();
@@ -266,7 +266,7 @@ export class DataNode extends MainNode {
     this.onVerticesChange();
   }
   calculate_normals() {
-    engine.rust.calculate_normals(this.geometry);
+    engine.rust.calculate_normals(this.id);
   }
   dedup_positions() {
     engine.rust.dedup_positions(this.geometry);
