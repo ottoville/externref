@@ -129,7 +129,7 @@ export type rustWasm = {
   basepoint_world_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
-  renderloop(): void;
+  process_gpu_queue(commandEncoder: GPUCommandEncoder): void;
 
   new_mesh(
     point_light: number,
@@ -559,8 +559,12 @@ export class Engine {
         },
       },
       env: {
-        handle_gpu_queue(pointerVec: number, length: number) {
-          engine.gpu?.handle_gpu_queue(pointerVec, length);
+        handle_gpu_queue(
+          pointerVec: number,
+          length: number,
+          commandEncoder: GPUCommandEncoder,
+        ) {
+          engine.gpu?.handle_gpu_queue(pointerVec, length, commandEncoder);
         },
         jspanic(ptr: number) {
           if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {

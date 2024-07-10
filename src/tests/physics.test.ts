@@ -14,7 +14,7 @@ describe('Physics Has gravity and collision', function () {
         console.log('error', e.message);
       },
       {
-        collider: fs.readFileSync('../wwwroot/collider/colliderSimdO.wasm'),
+        collider: fs.readFileSync('../wwwroot/collider/colliderSimd.wasm'),
         rust: fs.readFileSync(
           '../node/wasm32-unknown-unknown/debug/engine.wasm',
         ),

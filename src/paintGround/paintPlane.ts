@@ -45,7 +45,7 @@ class PlaneMesh extends DataNode {
       bindGroups: [],
       node: this,
       renderPipeline,
-      vertexBuffers: [[pos_ptr as rust_pointer<'f32'>, pos_len]],
+      vertexBuffers: [[pos_ptr, pos_len]],
     });
   }
 }

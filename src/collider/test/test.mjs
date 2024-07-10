@@ -69,7 +69,7 @@ const importObject = {
 };
 
 const wasm = await WebAssembly.compile(
-  fs.readFileSync('../wwwroot/collider/colliderSIMDO.wasm'),
+  fs.readFileSync('../wwwroot/collider/colliderSIMD.wasm'),
 );
 const instance = await WebAssembly.instantiate(wasm, importObject);
 

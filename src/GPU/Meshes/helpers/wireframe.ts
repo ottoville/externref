@@ -25,7 +25,6 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   }
   let node: DataNode;
 
-  const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
   const vertexBufferStrideBytes =
     targetNode.renderPipeline.builder.vertexShader.props.entryPoints['main']
       ?.vertexBufferLayout[0]?.arrayStride ??
@@ -44,7 +43,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       stride: (vertexBufferStrideBytes / 4) as Word<'dword'>,
     },
   );
-
+  const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
   if (gpuVertexBuffer) {
     node = new DataNode(
       {
@@ -59,6 +58,13 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       node,
       renderPipeline,
       vertexBuffers: [gpuVertexBuffer],
+    });
+    targetNode.onVertexBufferChange.push((index) => {
+      node.drawable?.setVertexBuffer(
+        index,
+        targetNode.vertexBuffers[0]!.buffer,
+        false,
+      );
     });
   } else if (targetNode.node instanceof DataNode) {
     const stride = targetNode.node.vertices_stride;

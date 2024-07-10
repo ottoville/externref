@@ -4,9 +4,10 @@ use std::panic;
 
 use crate::freelist::FreeList;
 pub use crate::mesh::Mesh;
-pub use crate::GPUMesh;
 use crate::mesh::{get_mesh_by_id, get_mesh_by_id_mut};
+pub use crate::GPUMesh;
 use crate::MULTIVALUE_USIZE;
+use externref::{externref, Resource};
 use rapier3d::prelude::*;
 
 #[link(wasm_import_module = "console")]
@@ -15,14 +16,12 @@ extern "C" {
     fn log(number: *const usize);
     fn warn(number: *const usize);
 }
-
+pub struct GPUCommandEncoder(());
 extern "C" {
     #[cfg(feature = "webgpu")]
     fn update_point_lights(pointer: *const NonZeroUsize, length: usize);
     #[cfg(feature = "webgpu")]
     fn update_directional_lights(pointer: *const NonZeroUsize, length: usize);
-    #[cfg(feature = "webgpu")]
-    fn handle_gpu_queue(pointerVec: *const usize, length: usize);
     #[cfg(target_arch = "wasm32")]
     fn jspanic(number: *const u8);
     #[cfg(target_arch = "wasm32")]
@@ -31,6 +30,18 @@ extern "C" {
     fn mesh_on_physic_tick(number: usize);
     #[cfg(target_arch = "wasm32")]
     pub fn verticesChange(mesh_id: usize);
+}
+#[cfg(target_arch = "wasm32")]
+#[externref]
+#[link(wasm_import_module = "env")] 
+#[cfg(not(test))]
+extern "C" {
+    #[cfg(feature = "webgpu")]
+    fn handle_gpu_queue(
+        pointerVec: *const usize,
+        length: usize,
+        command_encoder: &Resource<GPUCommandEncoder>,
+    );
 }
 pub struct Engine {
     pub point_lights: Vec<NonZeroUsize>,
@@ -46,7 +57,8 @@ static mut GPU_QUEUE: Vec<usize> = vec![];
 
 #[no_mangle]
 #[cfg(feature = "webgpu")]
-pub unsafe extern "C" fn renderloop() {
+#[externref]
+pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommandEncoder>) {
     let engine2 = ENGINE.physic_engine_mut();
     if engine2.gpu_queue.len() > 0 {
         GPU_QUEUE = Vec::from_iter(engine2.gpu_queue.drain());
@@ -57,7 +69,8 @@ pub unsafe extern "C" fn renderloop() {
                 mesh.update_matrix();
             }
         }
-        handle_gpu_queue(GPU_QUEUE.as_ptr(), GPU_QUEUE.len());
+        #[cfg(not(test))]
+        handle_gpu_queue(GPU_QUEUE.as_ptr(), GPU_QUEUE.len(), command_encoder);
     }
 }
 pub struct Engine2 {
@@ -72,8 +85,7 @@ pub struct Engine2 {
     pub broad_phase: DefaultBroadPhase,
     pub joint_set: ImpulseJointSet,
     pub gpu_queue: HashSet<usize>,
-    pub gpu_meshes: FreeList<GPUMesh>
-
+    pub gpu_meshes: FreeList<GPUMesh>,
 }
 static mut LOG_STRING: String = String::new();
 // TODO, remove and use "str_ptr_from_arr" syntax
@@ -84,19 +96,18 @@ pub fn create_js_string(mut str: String) -> *const u8 {
     std::mem::forget(log_str);
     return ptr;
 }
-unsafe fn str_ptr_from_arr<const N:usize>(strings: [&(impl ToString + ?Sized); N]) {
+unsafe fn str_ptr_from_arr<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
     LOG_STRING.clear();
     for str in strings.iter() {
         LOG_STRING.push(' ');
         LOG_STRING.push_str(&str.to_string());
-    } 
+    }
     MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
     MULTIVALUE_USIZE[1] = LOG_STRING.len();
     MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-
 }
 
-pub fn js_log<const N:usize>(strings: [&(impl ToString + ?Sized); N]) {
+pub fn js_log<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
     unsafe {
         str_ptr_from_arr(strings);
         #[cfg(target_arch = "wasm32")]
@@ -117,13 +128,13 @@ impl Logger for Vec<u32> {
             MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
             MULTIVALUE_USIZE[1] = LOG_STRING.len();
             MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-    
+
             #[cfg(target_arch = "wasm32")]
-            log(MULTIVALUE_USIZE.as_ptr());    
+            log(MULTIVALUE_USIZE.as_ptr());
         }
     }
 }
-pub fn js_warn<const N:usize>(strings: [&(impl ToString + ?Sized); N]) {
+pub fn js_warn<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
     unsafe {
         str_ptr_from_arr(strings);
         #[cfg(target_arch = "wasm32")]
@@ -157,7 +168,7 @@ pub fn init_engine() {
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
         gpu_queue: HashSet::new(),
-        gpu_meshes: FreeList::new()
+        gpu_meshes: FreeList::new(),
     };
     unsafe {
         ENGINE.engine2 = Some(e);
@@ -176,24 +187,22 @@ unsafe fn collider_to_mesh<'frame>(
             Some(rigid_body_handle) => {
                 let mesh_id = e.rigid_bodies.get(&rigid_body_handle);
                 match mesh_id {
-                    Some(id) => {
-                        Some(get_mesh_by_id(*id))
-                    },
+                    Some(id) => Some(get_mesh_by_id(*id)),
                     None => {
                         js_warn(["mesh_id not found"]);
                         None
-                    } 
+                    }
                 }
-            },
+            }
             None => {
                 js_warn(["rigid_body_handle not found"]);
                 None
-            },
+            }
         },
         None => {
             js_warn(["parent collider not found"]);
             None
-        },
+        }
     };
 }
 #[no_mangle]
@@ -232,7 +241,7 @@ pub unsafe extern "C" fn physic_tick() {
     let physics_hooks = ();
     // Initialize the event collector.
     //TODO: do not create on each step.
-    let (contact_send, contact_recv) = crossbeam::channel::unbounded();
+    let (contact_send, _contact_recv) = crossbeam::channel::unbounded();
     let (collision_send, collision_recv) = crossbeam::channel::unbounded();
 
     let event_handler = ChannelEventCollector::new(collision_send, contact_send);

@@ -1,19 +1,25 @@
 use std::num::NonZeroU32;
 
 use rapier3d::{
-    geometry::{
-        Collider, ColliderBuilder
-    }, math::Point, na::{
-        Const, OPoint
-    }, pipeline::ActiveEvents};
+    geometry::{Collider, ColliderBuilder},
+    math::Point,
+    na::{Const, OPoint},
+    pipeline::ActiveEvents,
+};
 use terramath::{CrossProduct, VectorMath};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
-    create_multivalue_vector, math2::Vec4, mesh::{get_mesh_by_id, get_mesh_by_id_mut}, vertices::{Position, PositionAndNormal, VertexKind, Vertices}, MULTIVALUE_USIZE
+    create_multivalue_vector,
+    math2::Vec4,
+    mesh::{get_mesh_by_id, get_mesh_by_id_mut},
+    vertices::{Position, PositionAndNormal, VertexKind, Vertices},
+    MULTIVALUE_USIZE,
 };
 #[no_mangle]
-pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry<VertexKind>) -> *const usize {
+pub unsafe extern "C" fn indices_field_pointer(
+    geometry_ptr: *const Geometry<VertexKind>,
+) -> *const usize {
     let geometry = &(*geometry_ptr);
     let indices = &geometry.indices;
     MULTIVALUE_USIZE[0] = indices.as_ptr() as usize;
@@ -23,23 +29,13 @@ pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry<Ver
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_pointer(geometry: *const Geometry<VertexKind>) -> *const f32 {
-    let vertices =&(*geometry).vertices.vertices;
+    let vertices = &(*geometry).vertices.vertices;
     match vertices {
-        VertexKind::PositionAndNormalAndUV(vector) => {
-            vector.as_ptr() as *const f32
-        },
-        VertexKind::PositionAndNormalAndColor(vector) => {
-            vector.as_ptr() as *const f32
-        },
-        VertexKind::PositionAndNormal(vector) => {
-            vector.as_ptr() as *const f32
-        },
-        VertexKind::Position(vector) => {
-            vector.as_ptr() as *const f32
-        },
-        VertexKind::F32(vector) => {
-            vector.as_ptr()
-        },
+        VertexKind::PositionAndNormalAndUV(vector) => vector.as_ptr() as *const f32,
+        VertexKind::PositionAndNormalAndColor(vector) => vector.as_ptr() as *const f32,
+        VertexKind::PositionAndNormal(vector) => vector.as_ptr() as *const f32,
+        VertexKind::Position(vector) => vector.as_ptr() as *const f32,
+        VertexKind::F32(vector) => vector.as_ptr(),
         VertexKind::None => panic!("Asked vertices pointer but there are no vertices"),
     }
 }
@@ -100,9 +96,14 @@ pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usiz
     geometry.planes.planes = planes;
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_indices(geometry_ptr: *mut Geometry<VertexKind>, ptr: *mut u32, length: usize, cap: usize) {
+pub unsafe extern "C" fn set_indices(
+    geometry_ptr: *mut Geometry<VertexKind>,
+    ptr: *mut u32,
+    length: usize,
+    cap: usize,
+) {
     let indices = Vec::from_raw_parts(ptr, length, cap);
-    let geometry = &mut(*geometry_ptr);
+    let geometry = &mut (*geometry_ptr);
     geometry.set_indices(indices);
 }
 #[no_mangle]
@@ -114,7 +115,7 @@ pub unsafe extern "C" fn set_vertices(
     vertices_stride: usize,
 ) {
     let vertices: Vec<f32> = Vec::from_raw_parts(ptr, length, cap);
-    let geometry = &mut(*geometry_ptr);
+    let geometry = &mut (*geometry_ptr);
     geometry.set_vertices(VertexKind::F32(vertices), vertices_stride);
 }
 #[no_mangle]
@@ -126,7 +127,7 @@ pub unsafe extern "C" fn set_position_vertices(
     vertices_stride: usize,
 ) {
     let vertices: Vec<Position> = Vec::from_raw_parts(ptr, length, cap);
-    let geometry = &mut(*geometry_ptr);
+    let geometry = &mut (*geometry_ptr);
     geometry.set_vertices(VertexKind::Position(vertices), vertices_stride);
 }
 #[no_mangle]
@@ -138,7 +139,7 @@ pub unsafe extern "C" fn set_position_and_normal_vertices(
     vertices_stride: usize,
 ) {
     let vertices: Vec<PositionAndNormal> = Vec::from_raw_parts(ptr, length, cap);
-    let geometry = &mut(*geometry_ptr);
+    let geometry = &mut (*geometry_ptr);
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices), vertices_stride);
 }
 #[no_mangle]
@@ -199,22 +200,30 @@ fn dedup_index(old: u32, new: u32, indices: &mut Vec<u32>) {
     for indice in indices.iter_mut() {
         if *indice == old as u32 {
             *indice = new as u32
-        }
-        else if *indice > old as u32 {
+        } else if *indice > old as u32 {
             *indice = *indice - 1
         }
     }
 }
 
 impl<'vert> Geometry<VertexKind> {
-    pub fn create_trimesh_collider(&mut self, scale_x: f32, scale_y: f32, scale_z: f32) -> *mut Collider {
-        let newvertices = self.vertices.get_positions().map(|position| {
-            Point::new(
-                position.vec[0] * scale_x,
-                position.vec[1] * scale_y,
-                position.vec[2] * scale_z,
-            ) 
-        }).collect();
+    pub fn create_trimesh_collider(
+        &mut self,
+        scale_x: f32,
+        scale_y: f32,
+        scale_z: f32,
+    ) -> *mut Collider {
+        let newvertices = self
+            .vertices
+            .get_positions()
+            .map(|position| {
+                Point::new(
+                    position.vec[0] * scale_x,
+                    position.vec[1] * scale_y,
+                    position.vec[2] * scale_z,
+                )
+            })
+            .collect();
         let positions_count = self.vertices.length();
         self.create_faces(NonZeroU32::new(positions_count as u32));
         let collider = Box::new(
@@ -225,12 +234,17 @@ impl<'vert> Geometry<VertexKind> {
         );
         Box::leak(collider)
     }
-    pub fn create_convex_collider(&mut self, scale_x: f32, scale_y: f32, scale_z: f32, collision_events: bool) -> *mut Collider {
-        
+    pub fn create_convex_collider(
+        &mut self,
+        scale_x: f32,
+        scale_y: f32,
+        scale_z: f32,
+        collision_events: bool,
+    ) -> *mut Collider {
         let positions = self.vertices.get_positions();
 
         let mut new_indices = self.indices.clone();
-        let mut new_vertices:Vec<OPoint<f32, Const<3>>> = Vec::new();
+        let mut new_vertices: Vec<OPoint<f32, Const<3>>> = Vec::new();
         /*
          * Scale vertices and remove remove duplicated positions
          */
@@ -238,18 +252,19 @@ impl<'vert> Geometry<VertexKind> {
             let point = Point::new(
                 position.vec[0] * scale_x,
                 position.vec[1] * scale_y,
-                position.vec[2] * scale_z
+                position.vec[2] * scale_z,
             );
-            if let Some(n) = new_vertices.iter().position(|oldpos| 
-                oldpos.eq(&point)
-            ) {
+            if let Some(n) = new_vertices.iter().position(|oldpos| oldpos.eq(&point)) {
                 dedup_index(new_vertices.len() as u32, n as u32, &mut new_indices);
             } else {
                 new_vertices.push(point);
-            }            
+            }
         }
-        let indices: Vec<[u32; 3]> = new_indices.chunks_exact(3).map(|i| i.try_into().unwrap()).collect();
-        
+        let indices: Vec<[u32; 3]> = new_indices
+            .chunks_exact(3)
+            .map(|i| i.try_into().unwrap())
+            .collect();
+
         let colliderbuilder = ColliderBuilder::convex_mesh(new_vertices, &indices);
         match colliderbuilder {
             Some(mut builder) => {
@@ -265,46 +280,47 @@ impl<'vert> Geometry<VertexKind> {
     }
     pub fn calculate_normals(&mut self) {
         if let VertexKind::Position(_) = &self.vertices.vertices {
-
         } else if let VertexKind::None = &self.vertices.vertices {
-
         } else {
             self.create_faces(None);
             let mut positions: Vec<_> = match &mut self.vertices.vertices {
-                VertexKind::PositionAndNormalAndUV(vector) => {
-                    vector.iter_mut().map(|v| {
+                VertexKind::PositionAndNormalAndUV(vector) => vector
+                    .iter_mut()
+                    .map(|v| {
                         v.normal.vec.clear();
                         return (&v.position, &mut v.normal);
-                    }).collect()
-                },
-                VertexKind::PositionAndNormalAndColor(vector) => {
-                    vector.iter_mut().map(|v| {
+                    })
+                    .collect(),
+                VertexKind::PositionAndNormalAndColor(vector) => vector
+                    .iter_mut()
+                    .map(|v| {
                         v.normal.vec.clear();
                         return (&v.position, &mut v.normal);
-                    }).collect()
-                },
-                VertexKind::PositionAndNormal(vector) => {
-                    vector.iter_mut().map(|v| {
+                    })
+                    .collect(),
+                VertexKind::PositionAndNormal(vector) => vector
+                    .iter_mut()
+                    .map(|v| {
                         v.normal.vec.clear();
                         return (&v.position, &mut v.normal);
-                    }).collect()
-                },
+                    })
+                    .collect(),
                 VertexKind::Position(_) => {
                     panic!("Guard should prevent executing this line")
-                },
+                }
                 VertexKind::F32(_) => {
                     todo!()
-                },
+                }
                 VertexKind::None => panic!("Guard should prevent executing this line"),
             };
-    
+
             for triangle in self.faces.iter() {
                 let ia = &positions[triangle[0] as usize];
                 let ib = &positions[triangle[1] as usize];
                 let ic = &positions[triangle[2] as usize];
 
                 let e1 = ia.0.vec.sub_vec(&ib.0.vec);
-                let e2 =  ic.0.vec.sub_vec(&ib.0.vec);
+                let e2 = ic.0.vec.sub_vec(&ib.0.vec);
 
                 let no = e1.cross(&e2);
 
@@ -318,45 +334,48 @@ impl<'vert> Geometry<VertexKind> {
         }
     }
     /**
-        Removes duplicated positions
-     **/
+       Removes duplicated positions
+    **/
     pub fn dedup_positions(&mut self) {
         match &mut self.vertices.vertices {
             VertexKind::PositionAndNormalAndUV(_) => {
                 todo!()
-            },
+            }
             VertexKind::PositionAndNormalAndColor(_) => {
                 todo!()
-            },
+            }
             VertexKind::PositionAndNormal(vector) => {
                 let mut i = 0;
                 loop {
                     if i == vector.len() {
                         break;
                     }
-                    let mut ii = i+1;
+                    let mut ii = i + 1;
                     loop {
                         if ii == vector.len() {
                             break;
                         }
                         let pos = &vector[i].position;
                         let nextpos = &vector[ii].position;
-                        if pos.vec[0] == nextpos.vec[0] && pos.vec[1] == nextpos.vec[1] && pos.vec[2] == nextpos.vec[2] {
+                        if pos.vec[0] == nextpos.vec[0]
+                            && pos.vec[1] == nextpos.vec[1]
+                            && pos.vec[2] == nextpos.vec[2]
+                        {
                             vector.remove(ii);
                             dedup_index(ii as u32, i as u32, &mut self.indices);
                             continue;
                         }
-                        ii = ii +1;
+                        ii = ii + 1;
                     }
                     i = i + 1;
-                };
-            },
+                }
+            }
             VertexKind::Position(_) => {
                 todo!()
-            },
+            }
             VertexKind::F32(_) => {
                 todo!()
-            },
+            }
             VertexKind::None => todo!(),
         }
     }
@@ -371,7 +390,7 @@ impl<'vert> Geometry<VertexKind> {
             bounding_box: BoundingBox::new(has_bounding),
             vertices: Vertices {
                 vertices: VertexKind::None,
-                vertices_stride: 0
+                vertices_stride: 0,
             },
             indices: Vec::new(),
             faces: Vec::new(),
@@ -383,7 +402,7 @@ impl<'vert> Geometry<VertexKind> {
             static_faces,
             strip,
             character_can_collide_to,
-            label
+            label,
         }
     }
     pub fn create_faces(&mut self, override_positions_count: Option<NonZeroU32>) {
@@ -399,7 +418,7 @@ impl<'vert> Geometry<VertexKind> {
 
             let positions_count: u32;
             if let Some(pos_count) = override_positions_count {
-                positions_count = u32::from(pos_count) 
+                positions_count = u32::from(pos_count)
             } else {
                 positions_count = self.vertices.length() as u32;
                 if positions_count == 0 {
@@ -414,10 +433,18 @@ impl<'vert> Geometry<VertexKind> {
         } else {
             if self.strip {
                 // Length is self.indices.len() - 2
-                self.faces = self.indices.windows(3).map(|i| i.try_into().unwrap()).collect();
+                self.faces = self
+                    .indices
+                    .windows(3)
+                    .map(|i| i.try_into().unwrap())
+                    .collect();
             } else {
                 // Lenght is self.indices.len() / 3
-                self.faces = self.indices.chunks_exact(3).map(|i| i.try_into().unwrap()).collect();
+                self.faces = self
+                    .indices
+                    .chunks_exact(3)
+                    .map(|i| i.try_into().unwrap())
+                    .collect();
             }
         }
         self.faces_dirty = false
@@ -430,7 +457,7 @@ impl<'vert> Geometry<VertexKind> {
             let position_count = if self.indices.len() > 0 {
                 self.indices.len()
             } else {
-                 self.vertices.length()
+                self.vertices.length()
             };
             if position_count == 0 {
                 return 0usize;
@@ -443,8 +470,7 @@ impl<'vert> Geometry<VertexKind> {
     }
     pub fn allocate_faces(&mut self) {
         if self.vertices.have_vertices() {
-            self.last_collider_world_vertices =
-                Vec::with_capacity((self.vertices.length()) * 4);
+            self.last_collider_world_vertices = Vec::with_capacity((self.vertices.length()) * 4);
             if self.static_faces {
                 return;
             }
@@ -455,7 +481,7 @@ impl<'vert> Geometry<VertexKind> {
         }
     }
     pub fn update_bounding_box(&mut self, transformation: &Vec4<Vec4<f32>>) {
-        if self.bounding_box.need_init {            
+        if self.bounding_box.need_init {
             self.bounding_box.init(&self.vertices);
             self.bounding_box.transform(transformation);
         } else if self.bounding_box.dirty {

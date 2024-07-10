@@ -21,11 +21,21 @@ terramath = { path = "./terramath" }
 [dev-dependencies]
 wasm-bindgen-test = "0.3.0"
 
+[profile.release]
+opt-level = 3
+
 [profile.dev]
-debug = true
+debug = "limited"
 debug-assertions = true
 
 [profile.dev.package.parry3d]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+codegen-units = 16
+
+[profile.dev.package.terramath]
 opt-level = 3
 debug = false
 debug-assertions = false

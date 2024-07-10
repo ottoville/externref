@@ -84,7 +84,7 @@ export class Canvas {
         this.showError();
       },
       {
-        collider: fetch('../collider/colliderSimdO.wasm'),
+        collider: fetch('../collider/colliderSimd.wasm'),
         rust: fetch('/engine.wasm').then((response) => {
           if (response.body) {
             const contentLengthHeader = response.headers.get('Content-Length');

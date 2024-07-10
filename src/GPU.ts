@@ -329,7 +329,6 @@ export class GPU {
     }
     return renderPipeline as ReturnType<D['1']>;
   }
-  #GPUQueueCommandEncoder: GPUCommandEncoder | null = null;
   #renderFrame = 0;
   /**
    * Manually destroy the device.
@@ -855,10 +854,11 @@ export class GPU {
     this.#ro.observe(canvas.parentElement);
   }
 
-  handle_gpu_queue(pointerVec: number, length: number) {
-    this.#GPUQueueCommandEncoder = this.device.createCommandEncoder({
-      label: 'handle_gpu_queue_encoder',
-    });
+  handle_gpu_queue(
+    pointerVec: number,
+    length: number,
+    commandEncoder: GPUCommandEncoder,
+  ) {
     let tempOffset = 0;
 
     new Buffer(
@@ -911,7 +911,7 @@ export class GPU {
             ),
           ).set(data);
           this.GPUMeshes.copyFrom(
-            this.#GPUQueueCommandEncoder!,
+            commandEncoder,
             swapBuffer,
             tempOffset++ * this.GPUDataSizeBytes,
             offset * gpu_memory_index_size,
@@ -1038,17 +1038,17 @@ export class GPU {
         return camera.updateView(renderloop_commandEncoder);
       });
       // Rust render loop start
-      this.#GPUQueueCommandEncoder = null;
-      engine.rust.renderloop();
-      const commandBuff =
-        //@ts-expect-error bug in TS
-        this.#GPUQueueCommandEncoder?.finish({
-          label: 'renderloop',
-        }) ?? null;
-      if (commandBuff) {
-        // Insert this to begin of the array to get all changes to mesh properties affected first
-        this.pendingCommandBuffers.unshift(commandBuff);
-      }
+      const GPUQueueCommandEncoder = this.device.createCommandEncoder({
+        label: 'handle_gpu_queue_encoder',
+      });
+      engine.rust.process_gpu_queue(GPUQueueCommandEncoder);
+      const commandBuff = GPUQueueCommandEncoder.finish({
+        label: 'renderloop',
+      });
+
+      // Insert this to begin of the array to get all changes to mesh properties affected first
+      this.pendingCommandBuffers.unshift(commandBuff);
+
       // Rust render loop end
       if (engine.updateLights || updatedCameras.length > 0) {
         const lightPass = renderloop_commandEncoder.beginComputePass({

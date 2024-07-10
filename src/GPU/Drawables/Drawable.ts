@@ -10,6 +10,7 @@ import {
   type VERTEX_BUFFER,
   RenderBundleEncoder,
   type RenderPipelineBuilderDesc,
+  Drawable as DrawableType,
 } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -27,21 +28,15 @@ export type DrawableProps<N extends MainNode> = {
     | undefined;
   node: N;
 };
-export abstract class Drawable<N extends MainNode = MainNode> {
+export abstract class Drawable<N extends MainNode = MainNode>
+  implements DrawableType
+{
   node: N;
   vertexBuffers: {
     buffer: Buffer<VERTEX_BUFFER>;
     offset?: GPUSize64 | undefined;
     size?: GPUSize64 | undefined;
   }[] = [];
-  vertexBuffers_legact: Map<
-    number,
-    {
-      buffer: { stride: number; view: Buffer<VERTEX_BUFFER> };
-      offset: number | undefined;
-      size: number | undefined;
-    }
-  > = new Map();
   public renderPipeline: RenderPipelineProps;
   protected renderPasses: Set<RenderPass>;
   destroyed = false;
@@ -143,6 +138,7 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     });
     this.destroyed = true;
   }
+  onVertexBufferChange: ((index: number) => void)[] = [];
   setVertexBuffer(
     index: number,
     buffer: rust_array_ptr<'f32'>,
@@ -177,14 +173,9 @@ export abstract class Drawable<N extends MainNode = MainNode> {
     GPUoffset?: number,
     size?: number,
   ): Buffer<VERTEX_BUFFER> {
-    if (destroyOld) {
-      const Tbuffer = this.vertexBuffers[index];
-      if (Tbuffer) {
-        Tbuffer.buffer?.destroy();
-      }
-    }
-    if (buffer instanceof Buffer) var Tbuffer = buffer;
-    else {
+    if (buffer instanceof Buffer) {
+      var Tbuffer = buffer;
+    } else {
       const ptr = buffer[0];
       const len =
         (buffer[1] * Float32Array.BYTES_PER_ELEMENT) /
@@ -202,11 +193,22 @@ export abstract class Drawable<N extends MainNode = MainNode> {
         },
       ) as Buffer<VERTEX_BUFFER>;
     }
+    const oldBuffer = this.vertexBuffers[index];
+    if (oldBuffer) {
+      // Destroy renderbundles that have reference to old buffer in order for new buffer to be rendered
+      oldBuffer.buffer.renderBundles.forEach((b) => b.destroy());
+      if (destroyOld) {
+        oldBuffer.buffer?.destroy();
+      }
+    }
     this.vertexBuffers[index] = {
       buffer: Tbuffer,
       offset: GPUoffset,
       size,
     };
+    if (oldBuffer) {
+      this.onVertexBufferChange.forEach((cb) => cb(index));
+    }
     return Tbuffer;
   }
   abstract render(

@@ -228,11 +228,12 @@ fn test_calculate_normals() {
     let mut geometry: Geometry<VertexKind> = Geometry::new(true, true, false, false, "box_geometry".to_string());
     geometry.set_indices(BOX_INDICES.to_vec());
     let vertices = create_box_vertices();
+    let vertices2 = create_box_vertices();
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices), 8);
     geometry.calculate_normals();
     if let VertexKind::PositionAndNormal(vertices) = geometry.vertices.vertices {
         for n in 0..vertices.len() {
-            assert_eq!(vertices[n].normal.vec, vertices[n].normal.vec);
+            assert_eq!(vertices[n].normal.vec, vertices2[n].normal.vec);
         }
     } else {
         panic!("Vertices are bad format")
