@@ -15,6 +15,7 @@ use rapier3d::prelude::*;
 extern "C" {
     fn log(number: *const usize);
     fn warn(number: *const usize);
+    fn error(number: *const usize);
 }
 pub struct GPUCommandEncoder(());
 extern "C" {
@@ -141,7 +142,13 @@ pub fn js_warn<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
         warn(MULTIVALUE_USIZE.as_ptr());
     }
 }
-
+pub fn js_error<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
+    unsafe {
+        str_ptr_from_arr(strings);
+        #[cfg(target_arch = "wasm32")]
+        error(MULTIVALUE_USIZE.as_ptr());
+    }
+}
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub extern "C" fn init_engine2() -> usize {

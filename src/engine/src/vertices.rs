@@ -29,15 +29,15 @@ pub enum VertexKind {
     Position(Vec<Position>),
     F32(Vec<f32>)
 }
-pub struct Vertices<T> {
-    pub vertices: T,
+pub struct Vertices {
+    pub vertices: VertexKind,
     /**
      * stride as DWORD in vertices vec.
      */
     pub vertices_stride: usize,
 }
 
-impl Vertices<VertexKind> {
+impl Vertices {
     pub fn get_positions(&self) -> Box<dyn Iterator<Item =&Vec3wgslF32> + '_> {
         match &self.vertices {
             VertexKind::PositionAndNormalAndUV(vector) => {

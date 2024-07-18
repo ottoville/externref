@@ -30,7 +30,7 @@ pub unsafe extern "C" fn create_octasphere(
     half_width: f32,
     half_height: f32,
     half_depth: f32,
-) -> *const Geometry<VertexKind> {
+) -> *const Geometry {
     let n = (2u32).pow(num_subdivisions + 1) as usize;
     // (n * ((n + 1.0) / 2.0))
     let num_faces_per_patch = if num_subdivisions == 0 {

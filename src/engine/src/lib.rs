@@ -1,4 +1,4 @@
-#!cfg(target_arch = "wasm32")]
+#!cfg(target_arch = "wasm32")
 mod boundingbox;
 mod collider;
 mod drawable;
@@ -118,7 +118,7 @@ pub extern "C" fn create_cone_collider(half_height: f32, radius: f32) -> *mut Co
 }
 #[repr(C)]
 pub struct GPUMesh {
-    transformation: Vec4<Vec4<f32>>,
+    transformation: [[f32; 4]; 4],
     transformation_normals: Mat3wgslF32,
     color: [f32; 4],
     ambient: [f32; 3],

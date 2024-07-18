@@ -34,6 +34,7 @@ fn optimize(path: &str) {
     if let Err(e) = OptimizationOptions::new_opt_level_4()
         .enable_feature(wasm_opt::Feature::ReferenceTypes)
         .enable_feature(wasm_opt::Feature::Simd)
+        .fast_math(true)
         .run(path, path)
     {
         println!("Error when optimizing wasm: {e:?}")

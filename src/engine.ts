@@ -551,6 +551,9 @@ export class Engine {
     let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
     const exportObj = {
       console: {
+        error(ptr: number) {
+          console.error(stringFromPtr(rust.instance.exports.memory, ptr));
+        },
         log(ptr: number) {
           console.log(stringFromPtr(rust.instance.exports.memory, ptr));
         },

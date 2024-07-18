@@ -164,7 +164,7 @@ pub const RTP_INDICES : [u32; 24] =
     ];
 
 #[no_mangle]
-pub unsafe extern "C" fn create_rtp_geometry() -> *const Geometry<VertexKind> {
+pub unsafe extern "C" fn create_rtp_geometry() -> *const Geometry {
     let mut geometry = Box::new(Geometry::new(true, true, false, false, "rtp_geometry".to_string()));
     geometry.set_indices(RTP_INDICES.to_vec());
     geometry.set_vertices(VertexKind::PositionAndNormal(create_rtp_vertices()), 8);

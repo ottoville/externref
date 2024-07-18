@@ -9,7 +9,7 @@ use crate::{
 pub unsafe extern "C" fn create_tiled_mesh_geometry(
     width: f32,
     height: f32,
-) -> *const Geometry<VertexKind> {
+) -> *const Geometry {
     let mut geometry = Box::new(Geometry::new(
         true,
         true,

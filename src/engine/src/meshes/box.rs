@@ -214,7 +214,7 @@ pub const BOX_INDICES : [u32; 36] =
     ];
 
 #[no_mangle]
-pub unsafe extern "C" fn create_box_geometry() -> *const Geometry<VertexKind> {
+pub unsafe extern "C" fn create_box_geometry() -> *const Geometry {
     let mut geometry = Box::new(Geometry::new(true, true, false, false, "box_geometry".to_string()));
     geometry.set_indices(BOX_INDICES.to_vec());
     geometry.set_vertices(VertexKind::PositionAndNormal(create_box_vertices()), 8);
@@ -225,7 +225,7 @@ pub unsafe extern "C" fn create_box_geometry() -> *const Geometry<VertexKind> {
 #[cfg(test)]
 #[test]
 fn test_calculate_normals() {
-    let mut geometry: Geometry<VertexKind> = Geometry::new(true, true, false, false, "box_geometry".to_string());
+    let mut geometry = Geometry::new(true, true, false, false, "box_geometry".to_string());
     geometry.set_indices(BOX_INDICES.to_vec());
     let vertices = create_box_vertices();
     let vertices2 = create_box_vertices();

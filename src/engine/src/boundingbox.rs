@@ -2,7 +2,7 @@ use terramath::VectorMath;
 
 use crate::collider::Collider;
 use crate::math2::{Vec3, Vec3wgslF32, Vec4};
-use crate::vertices::{VertexKind, Vertices};
+use crate::vertices::Vertices;
 
 pub struct BoundingBox {
     pub has_bounding: bool,
@@ -36,11 +36,12 @@ fn test_bounding_box() {
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());
         geometry.set_vertices(vertices, 8);
         geometry.indices = BOX_INDICES.to_vec();
+        geometry.scaling[0] = 500.0;
+        geometry.scaling[1] = 500.0;
+        geometry.scaling[2] = 500.0;
+
         m.geometry = Some(Box::new(geometry));
 
-        m.scaling[0] = 500.0;
-        m.scaling[1] = 500.0;
-        m.scaling[2] = 500.0;
         m.set_translation(123.0, 1000.0, 123.0);
         m.rotation.i = (1.1f32).sin();
         m.rotation.j = 0.0;
@@ -99,7 +100,7 @@ impl BoundingBox {
             need_init: true,
         }
     }
-    pub fn init(&mut self, vertices: &Vertices<VertexKind>) {
+    pub fn init(&mut self, vertices: &Vertices) {
         //TODO: use macro
 
         let mut positions: Box<dyn Iterator<Item = &Vec3wgslF32>> = vertices.get_positions();
@@ -179,84 +180,84 @@ impl BoundingBox {
 
         self.need_init = false;
     }
-    pub fn transform(&mut self, transformation: &Vec4<Vec4<f32>>) {
+    pub fn transform(&mut self, transformation: &[[f32; 4]; 4]) {
         for (vector_original_simd, vector_simd) in self
             .vectors_original_simd
             .iter()
             .zip(&mut self.vectors_simd.iter_mut())
         {
             // X
-            let rx0 = vector_original_simd.x.x * transformation.x.x
-                + vector_original_simd.y.x * transformation.y.x
-                + vector_original_simd.z.x * transformation.z.x
-                + transformation.w.x;
-            let rx1 = vector_original_simd.x.y * transformation.x.x
-                + vector_original_simd.y.y * transformation.y.x
-                + vector_original_simd.z.y * transformation.z.x
-                + transformation.w.x;
-            let rx2 = vector_original_simd.x.z * transformation.x.x
-                + vector_original_simd.y.z * transformation.y.x
-                + vector_original_simd.z.z * transformation.z.x
-                + transformation.w.x;
-            let rx3 = vector_original_simd.x.w * transformation.x.x
-                + vector_original_simd.y.w * transformation.y.x
-                + vector_original_simd.z.w * transformation.z.x
-                + transformation.w.x;
+            let rx0 = vector_original_simd.x.x * transformation[0][0]
+                + vector_original_simd.y.x * transformation[1][0]
+                + vector_original_simd.z.x * transformation[2][0]
+                + transformation[3][0];
+            let rx1 = vector_original_simd.x.y * transformation[0][0]
+                + vector_original_simd.y.y * transformation[1][0]
+                + vector_original_simd.z.y * transformation[2][0]
+                + transformation[3][0];
+            let rx2 = vector_original_simd.x.z * transformation[0][0]
+                + vector_original_simd.y.z * transformation[1][0]
+                + vector_original_simd.z.z * transformation[2][0]
+                + transformation[3][0];
+            let rx3 = vector_original_simd.x.w * transformation[0][0]
+                + vector_original_simd.y.w * transformation[1][0]
+                + vector_original_simd.z.w * transformation[2][0]
+                + transformation[3][0];
             // Y
-            let ry0 = vector_original_simd.x.x * transformation.x.y
-                + vector_original_simd.y.x * transformation.y.y
-                + vector_original_simd.z.x * transformation.z.y
-                + transformation.w.y;
-            let ry1 = vector_original_simd.x.y * transformation.x.y
-                + vector_original_simd.y.y * transformation.y.y
-                + vector_original_simd.z.y * transformation.z.y
-                + transformation.w.y;
-            let ry2 = vector_original_simd.x.z * transformation.x.y
-                + vector_original_simd.y.z * transformation.y.y
-                + vector_original_simd.z.z * transformation.z.y
-                + transformation.w.y;
-            let ry3 = vector_original_simd.x.w * transformation.x.y
-                + vector_original_simd.y.w * transformation.y.y
-                + vector_original_simd.z.w * transformation.z.y
-                + transformation.w.y;
+            let ry0 = vector_original_simd.x.x * transformation[0][1]
+                + vector_original_simd.y.x * transformation[1][1]
+                + vector_original_simd.z.x * transformation[2][1]
+                + transformation[3][1];
+            let ry1 = vector_original_simd.x.y * transformation[0][1]
+                + vector_original_simd.y.y * transformation[1][1]
+                + vector_original_simd.z.y * transformation[2][1]
+                + transformation[3][1];
+            let ry2 = vector_original_simd.x.z * transformation[0][1]
+                + vector_original_simd.y.z * transformation[1][1]
+                + vector_original_simd.z.z * transformation[2][1]
+                + transformation[3][1];
+            let ry3 = vector_original_simd.x.w * transformation[0][1]
+                + vector_original_simd.y.w * transformation[1][1]
+                + vector_original_simd.z.w * transformation[2][1]
+                + transformation[3][1];
             // Z
-            let rz0 = vector_original_simd.x.x * transformation.x.z
-                + vector_original_simd.y.x * transformation.y.z
-                + vector_original_simd.z.x * transformation.z.z
-                + transformation.w.z;
-            let rz1 = vector_original_simd.x.y * transformation.x.z
-                + vector_original_simd.y.y * transformation.y.z
-                + vector_original_simd.z.y * transformation.z.z
-                + transformation.w.z;
-            let rz2 = vector_original_simd.x.z * transformation.x.z
-                + vector_original_simd.y.z * transformation.y.z
-                + vector_original_simd.z.z * transformation.z.z
-                + transformation.w.z;
-            let rz3 = vector_original_simd.x.w * transformation.x.z
-                + vector_original_simd.y.w * transformation.y.z
-                + vector_original_simd.z.w * transformation.z.z
-                + transformation.w.z;
+            let rz0 = vector_original_simd.x.x * transformation[0][2]
+                + vector_original_simd.y.x * transformation[1][2]
+                + vector_original_simd.z.x * transformation[2][2]
+                + transformation[3][2];
+            let rz1 = vector_original_simd.x.y * transformation[0][2]
+                + vector_original_simd.y.y * transformation[1][2]
+                + vector_original_simd.z.y * transformation[2][2]
+                + transformation[3][2];
+            let rz2 = vector_original_simd.x.z * transformation[0][2]
+                + vector_original_simd.y.z * transformation[1][2]
+                + vector_original_simd.z.z * transformation[2][2]
+                + transformation[3][2];
+            let rz3 = vector_original_simd.x.w * transformation[0][2]
+                + vector_original_simd.y.w * transformation[1][2]
+                + vector_original_simd.z.w * transformation[2][2]
+                + transformation[3][2];
             // W
             let rw0 = 1.0
-                / (vector_original_simd.x.x * transformation.x.w
-                    + vector_original_simd.y.x * transformation.y.w
-                    + vector_original_simd.z.x * transformation.z.w
-                    + transformation.w.w);
+                / (vector_original_simd.x.x * transformation[0][3]
+                    + vector_original_simd.y.x * transformation[1][3]
+                    + vector_original_simd.z.x * transformation[2][3]
+                    + transformation[3][3]);
             let rw1 = 1.0
-                / (vector_original_simd.x.y * transformation.x.w
-                    + vector_original_simd.y.y * transformation.y.w
-                    + vector_original_simd.z.y * transformation.z.w
-                    + transformation.w.w);
+                / (vector_original_simd.x.y * transformation[0][3]
+                    + vector_original_simd.y.y * transformation[1][3]
+                    + vector_original_simd.z.y * transformation[2][3]
+                    + transformation[3][3]);
             let rw2 = 1.0
-                / (vector_original_simd.x.z * transformation.x.w
-                    + vector_original_simd.y.z * transformation.y.w
-                    + vector_original_simd.z.z * transformation.z.w
-                    + transformation.w.w);
+                / (vector_original_simd.x.z * transformation[0][3]
+                    + vector_original_simd.y.z * transformation[1][3]
+                    + vector_original_simd.z.z * transformation[2][3]
+                    + transformation[3][3]);
             let rw3 = 1.0
-                / (vector_original_simd.x.w * transformation.x.w
-                    + vector_original_simd.y.w * transformation.y.w
-                    + vector_original_simd.z.w * transformation.z.w
-                    + transformation.w.w);
+                / (vector_original_simd.x.w * transformation[0][3]
+                    + vector_original_simd.y.w * transformation[1][3]
+                    + vector_original_simd.z.w * transformation[2][3]
+                    + transformation[3][3]);
 
             //other.x = rx * rw;
             vector_simd.x[0] = rx0 * rw0;

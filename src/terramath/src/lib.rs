@@ -156,6 +156,13 @@ pub trait VectorMath<T, const N: usize> {
      * Returns new vector which is sub of two vectors
      */
     fn sub_vec(&self, other: &Self) -> Self;
+    fn multiply_in_place(&mut self, multiplier: f32);
+
+    /**
+     * Returns new vector which is multiply of two vectors
+     */
+    fn multiply_vec(&self, other: &Self) -> Self;
+
     /**
      * Modify vector with given vector
      */
@@ -174,6 +181,7 @@ pub trait MatrixMath<T> {
     fn transpose(&mut self);
     fn adjoint(&mut self);
     fn multiply_f32(&mut self, number: T);
+    fn multiply(&self, other: &Self, result: Self);
 }
 impl CrossProduct<f32> for [f32; 3] {
     fn cross(&self, other: &[f32; 3]) -> Self {
@@ -219,6 +227,14 @@ impl VectorMath<f32, 3> for [f32; 3] {
     fn sub_vec(&self, other: &Self) -> Self {
         [self[0] - other[0], self[1] - other[1], self[2] - other[2]]
     }
+    fn multiply_in_place(&mut self, multiplier: f32) {
+        self[0] *= multiplier;
+        self[1] *= multiplier;
+        self[2] *= multiplier;
+    }
+    fn multiply_vec(&self, other: &Self) -> [f32; 3] {
+        [self[0] * other[0], self[1] * other[1], self[2] * other[2]]
+    }
     fn add_vec_in_place(&mut self, other: &Self) {
         self[0] += other[0];
         self[1] += other[1];
@@ -248,9 +264,7 @@ impl VectorMath<f32, 3> for [f32; 3] {
             return;
         }
         let scale = 1.0 / len_sqrt.sqrt();
-        self[0] *= scale;
-        self[1] *= scale;
-        self[2] *= scale;
+        self.multiply_in_place(scale);
     }
     fn to_scaling_matrix(&self) -> [[f32; 3]; 3] {
         [
@@ -320,6 +334,20 @@ impl VectorMath<f32, 4> for [f32; 4] {
             self[1] - other[1],
             self[2] - other[2],
             self[3] - other[3],
+        ]
+    }
+    fn multiply_in_place(&mut self, multiplier: f32) {
+        self[0] *= multiplier;
+        self[1] *= multiplier;
+        self[2] *= multiplier;
+        self[3] *= multiplier;
+    }
+    fn multiply_vec(&self, other: &Self) -> Self {
+        [
+            self[0] * other[0],
+            self[1] * other[1],
+            self[2] * other[2],
+            self[3] * other[3],
         ]
     }
     fn add_vec_in_place(&mut self, other: &Self) {
@@ -399,8 +427,11 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
             }
         }
     }
+    fn multiply(&self, _other: &Self, _result: Self) {
+        panic!("Not implemented");
+    }
     fn determinant(&self) -> f32 {
-        self[0][0] * self[1][1] - self[0][1] * self[1][0]
+        self[0][0].mul_add(self[1][1], self[0][1] * -self[1][0])
     }
     fn transpose(&mut self) {
         unsafe {
@@ -456,6 +487,9 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         self[2][1] = self[2][1] * number;
         self[2][2] = self[2][2] * number;
     }
+    fn multiply(&self, _other: &Self, _result: Self) {
+        panic!("not implemented");
+    }
     fn determinant(&self) -> f32 {
         let mut crossed = [0.0; 3];
         self[0].cross_to_ref(&self[1], &mut crossed);
@@ -470,19 +504,61 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         }
     }
     fn adjoint(&mut self) {
-        self.transpose();
-        // TODO use shuffle
-        let m0: [[f32; 2]; 2] = [[self[1][1], self[1][2]], [self[2][1], self[2][2]]];
-        let m1 = [[self[1][0], self[1][2]], [self[2][0], self[2][2]]];
-        let m2 = [[self[1][0], self[1][1]], [self[2][0], self[2][1]]];
-
-        let m3 = [[self[0][1], self[0][2]], [self[2][1], self[2][2]]];
-        let m4 = [[self[0][0], self[0][2]], [self[2][0], self[2][2]]];
-        let m5 = [[self[0][0], self[0][1]], [self[2][0], self[2][1]]];
-
-        let m6 = [[self[0][1], self[0][2]], [self[1][1], self[1][2]]];
-        let m7 = [[self[0][0], self[0][2]], [self[1][0], self[1][2]]];
-        let m8 = [[self[0][0], self[0][1]], [self[1][0], self[1][1]]];
+        // Submatrices of transported matrix
+        /*
+           _ _ _
+           _ x y
+           _ x y
+        */
+        let m0 = [[self[1][1], self[2][1]], [self[1][2], self[2][2]]];
+        /*
+           _ x y
+           _ _ _
+           _ x y
+        */
+        let m1 = [[self[0][1], self[2][1]], [self[0][2], self[2][2]]];
+        /*
+           _ x y
+           _ x y
+           _ _ _
+        */
+        let m2 = [[self[0][1], self[1][1]], [self[0][2], self[1][2]]];
+        /*
+           _ _ _
+           x _ y
+           x _ y
+        */
+        let m3 = [[self[1][0], self[2][0]], [self[1][2], self[2][2]]];
+        /*
+           x _ y
+           _ _ _
+           x _ y
+        */
+        let m4 = [[self[0][0], self[2][0]], [self[0][2], self[2][2]]];
+        /*
+           x _ y
+           x _ y
+           _ _ _
+        */
+        let m5 = [[self[0][0], self[1][0]], [self[0][2], self[1][2]]];
+        /*
+           _ _ _
+           x y _
+           x y _
+        */
+        let m6 = [[self[1][0], self[2][0]], [self[1][1], self[2][1]]];
+        /*
+           x y _
+           _ _ _
+           x y _
+        */
+        let m7 = [[self[0][0], self[2][0]], [self[0][1], self[2][1]]];
+        /*
+           x y _
+           x y _
+           _ _ _
+        */
+        let m8 = [[self[0][0], self[1][0]], [self[0][1], self[1][1]]];
 
         self[0][0] = m0.determinant();
         self[0][1] = -m1.determinant();
@@ -495,7 +571,8 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         self[2][2] = m8.determinant();
     }
     fn invert(&mut self) -> bool {
-        let m0 = [[self[0][1], self[2][1]], [self[1][2], self[2][2]]];
+        // Submatrices of transported matrix
+        let m0 = [[self[1][1], self[2][1]], [self[1][2], self[2][2]]];
         let m1 = [[self[0][1], self[2][1]], [self[0][2], self[2][2]]];
         let m2 = [[self[0][1], self[1][1]], [self[0][2], self[1][2]]];
 
@@ -503,13 +580,15 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         let det1 = m1.determinant();
         let det2 = m2.determinant();
 
-        let m_det = self[0][0] * det0 - self[1][0] * det1 + self[2][0] * det2;
+        //let m_det: f32 = self[0][0] * det0 - self[1][0] * det1 + self[2][0] * det2;
+        let m_det: f32 = self[2][0].mul_add(det2, self[0][0].mul_add(det0, -self[1][0] * det1));
+
         if m_det == 0.0 {
             return false;
         }
         let m3 = [[self[1][0], self[2][0]], [self[1][2], self[2][2]]];
         let m4 = [[self[0][0], self[2][0]], [self[0][2], self[2][2]]];
-        let m5 = [[self[0][0], self[1][0]], [self[2][0], self[1][2]]];
+        let m5 = [[self[0][0], self[1][0]], [self[0][2], self[1][2]]];
 
         let m6 = [[self[1][0], self[2][0]], [self[1][1], self[2][1]]];
         let m7 = [[self[0][0], self[2][0]], [self[0][1], self[2][1]]];
@@ -530,14 +609,257 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         return true;
     }
 }
+impl MatrixMath<f32> for [[f32; 4]; 4] {
+    fn identity() -> Self {
+        [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+    }
+    fn multiply_f32(&mut self, number: f32) {
+        self[0][0] = self[0][0] * number;
+        self[0][1] = self[0][1] * number;
+        self[0][2] = self[0][2] * number;
+        self[0][3] = self[0][3] * number;
+        self[1][0] = self[1][0] * number;
+        self[1][1] = self[1][1] * number;
+        self[1][2] = self[1][2] * number;
+        self[1][3] = self[1][3] * number;
+        self[2][0] = self[2][0] * number;
+        self[2][1] = self[2][1] * number;
+        self[2][2] = self[2][2] * number;
+        self[2][3] = self[2][3] * number;
+        self[3][0] = self[3][0] * number;
+        self[3][1] = self[3][1] * number;
+        self[3][2] = self[3][2] * number;
+        self[3][3] = self[3][3] * number;
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    fn multiply(&self, other: &Self, mut result: Self) {
+        result[0][0] = self[0][0] * other[0][0]
+            + self[0][1] * other[1][0]
+            + self[0][2] * other[2][0]
+            + self[0][3] * other[3][0];
+        result[0][1] = self[0][0] * other[0][1]
+            + self[0][1] * other[1][1]
+            + self[0][2] * other[2][1]
+            + self[0][3] * other[3][1];
+        result[0][2] = self[0][0] * other[0][2]
+            + self[0][1] * other[1][2]
+            + self[0][2] * other[2][2]
+            + self[0][3] * other[3][2];
+        result[0][3] = self[0][0] * other[0][3]
+            + self[0][1] * other[1][3]
+            + self[0][2] * other[2][3]
+            + self[0][3] * other[3][3];
 
+        result[1][0] = self[1][0] * other[0][0]
+            + self[1][1] * other[1][0]
+            + self[1][2] * other[2][0]
+            + self[1][3] * other[3][0];
+        result[1][1] = self[1][0] * other[0][1]
+            + self[1][1] * other[1][1]
+            + self[1][2] * other[2][1]
+            + self[1][3] * other[3][1];
+        result[1][2] = self[1][0] * other[0][2]
+            + self[1][1] * other[1][2]
+            + self[1][2] * other[2][2]
+            + self[1][3] * other[3][2];
+        result[1][3] = self[1][0] * other[0][3]
+            + self[1][1] * other[1][3]
+            + self[1][2] * other[2][3]
+            + self[1][3] * other[3][3];
+
+        result[2][0] = self[2][0] * other[0][0]
+            + self[2][1] * other[1][0]
+            + self[2][2] * other[2][0]
+            + self[2][3] * other[3][0];
+        result[2][1] = self[2][0] * other[0][1]
+            + self[2][1] * other[1][1]
+            + self[2][2] * other[2][1]
+            + self[2][3] * other[3][1];
+        result[2][2] = self[2][0] * other[0][2]
+            + self[2][1] * other[1][2]
+            + self[2][2] * other[2][2]
+            + self[2][3] * other[3][2];
+        result[2][3] = self[2][0] * other[0][3]
+            + self[2][1] * other[1][3]
+            + self[2][2] * other[2][3]
+            + self[2][3] * other[3][3];
+
+        result[3][0] = self[3][0] * other[0][0]
+            + self[3][1] * other[1][0]
+            + self[3][2] * other[2][0]
+            + self[3][3] * other[3][0];
+        result[3][1] = self[3][0] * other[0][1]
+            + self[3][1] * other[1][1]
+            + self[3][2] * other[2][1]
+            + self[3][3] * other[3][1];
+        result[3][2] = self[3][0] * other[0][2]
+            + self[3][1] * other[1][2]
+            + self[3][2] * other[2][2]
+            + self[3][3] * other[3][2];
+        result[3][3] = self[3][0] * other[0][3]
+            + self[3][1] * other[1][3]
+            + self[3][2] * other[2][3]
+            + self[3][3] * other[3][3];
+    }
+    /**
+    Multiply matrix with other matrix.
+    To multiply matrix in place, use std::ptr::addr_of! macro to give original pointer
+    */
+    #[cfg(target_arch = "wasm32")]
+    fn multiply(&self, other: &Self, mut result: Self) {
+        unsafe {
+            use std::arch::wasm32::*;
+
+            let v0 = v128_load(&result[0] as *const f32 as *const v128);
+            let v1 = v128_load(&other[1] as *const f32 as *const v128);
+            let v2 = v128_load(&other[2] as *const f32 as *const v128);
+            let v3 = v128_load(&other[3] as *const f32 as *const v128);
+
+            v128_store(
+                &mut result[0] as *mut f32 as *mut v128,
+                f32x4_add(
+                    f32x4_add(
+                        f32x4_mul(f32x4_splat(self[0][0]), v0),
+                        f32x4_mul(f32x4_splat(self[0][1]), v1),
+                    ),
+                    f32x4_add(
+                        f32x4_mul(f32x4_splat(self[0][2]), v2),
+                        f32x4_mul(f32x4_splat(self[0][3]), v3),
+                    ),
+                ),
+            );
+            v128_store(
+                &mut result[1] as *mut f32 as *mut v128,
+                f32x4_add(
+                    f32x4_add(
+                        f32x4_mul(f32x4_splat(self[1][0]), v0),
+                        f32x4_mul(f32x4_splat(self[1][1]), v1),
+                    ),
+                    f32x4_add(
+                        f32x4_mul(f32x4_splat(self[1][2]), v2),
+                        f32x4_mul(f32x4_splat(self[1][3]), v3),
+                    ),
+                ),
+            );
+            v128_store(
+                &mut result[2] as *mut f32 as *mut v128,
+                f32x4_add(
+                    f32x4_add(
+                        f32x4_mul(f32x4_splat(self[2][0]), v0),
+                        f32x4_mul(f32x4_splat(self[2][1]), v1),
+                    ),
+                    f32x4_add(
+                        f32x4_mul(f32x4_splat(self[2][2]), v2),
+                        f32x4_mul(f32x4_splat(self[2][3]), v3),
+                    ),
+                ),
+            );
+            v128_store(
+                &mut result[3] as *mut f32 as *mut v128,
+                f32x4_add(
+                    f32x4_add(
+                        f32x4_mul(f32x4_splat(self[3][0]), v0),
+                        f32x4_mul(f32x4_splat(self[3][1]), v1),
+                    ),
+                    f32x4_add(
+                        f32x4_mul(f32x4_splat(self[3][2]), v2),
+                        f32x4_mul(f32x4_splat(self[3][3]), v3),
+                    ),
+                ),
+            )
+        }
+    }
+    fn determinant(&self) -> f32 {
+        // Submatrices of transported matrix
+        /*
+         *  _ _ _ _
+         *  _ x y z
+         *  _ x y z
+         *  _ x y z
+         */
+        let m0 = [
+            [self[1][1], self[2][1], self[3][1]],
+            [self[1][2], self[2][2], self[3][2]],
+            [self[1][3], self[2][3], self[3][3]],
+        ];
+        /*
+         *  _ x y z
+         *  _ _ _ _
+         *  _ x y z
+         *  _ x y z
+         */
+        let m1 = [
+            [self[0][1], self[2][1], self[3][1]],
+            [self[0][2], self[2][2], self[3][2]],
+            [self[0][3], self[2][3], self[3][3]],
+        ];
+        /*
+         *  _ x y z
+         *  _ x y z
+         *  _ _ _ _
+         *  _ x y z
+         */
+        let m2 = [
+            [self[0][1], self[1][1], self[3][1]],
+            [self[0][2], self[1][2], self[3][2]],
+            [self[0][3], self[1][3], self[3][3]],
+        ];
+        /*
+         *  _ x y z
+         *  _ x y z
+         *  _ x y z
+         *  _ _ _ _
+         */
+        let m3 = [
+            [self[0][1], self[1][1], self[2][1]],
+            [self[0][2], self[1][2], self[2][2]],
+            [self[0][3], self[1][3], self[2][3]],
+        ];
+
+        let det0 = m0.determinant();
+        let det1 = m1.determinant();
+        let det2 = m2.determinant();
+        let det3 = m3.determinant();
+
+        //let m_det = self[0][0] * det0 - self[1][0] * det1 + self[2][0] * det2 - self[3][0] * det3;
+        let m_det = self[3][0].mul_add(
+            -det3,
+            self[2][0].mul_add(det2, self[1][0].mul_add(-det1, self[0][0] * det0)),
+        );
+        return m_det;
+    }
+    fn adjoint(&mut self) {
+        panic!("not implement");
+    }
+    fn invert(&mut self) -> bool {
+        panic!("not implemented");
+    }
+    fn transpose(&mut self) {
+        panic!("not implemented");
+    }
+}
 #[cfg(test)]
 #[test]
-fn test_determinant2() {
+fn test_determinant_3x3() {
     let mat = [[2.0, -3.0, 1.0], [2.0, 0.0, -1.0], [1.0, 4.0, 5.0]];
     assert_eq!(mat.determinant(), 49.0);
 }
-
+#[cfg(test)]
+#[test]
+fn test_determinant_4x4() {
+    let mat = [
+        [-1.1, 0.2, 1.3, 2.4],
+        [5.4, 6.5, 7.6, 8.7],
+        [1.1, 2.2, 3.3, 4.4],
+        [12.4, 3.5, 4.1, 3.5],
+    ];
+    assert_eq!(mat.determinant(), 1.1352408);
+}
 #[cfg(test)]
 #[test]
 #[wasm_bindgen_test::wasm_bindgen_test]
@@ -567,11 +889,11 @@ fn test_adjoint() {
 #[test]
 #[wasm_bindgen_test::wasm_bindgen_test]
 fn test_invert() {
-    let mut mat: [[f32; 3]; 3] = [[1.0, 2.0, 3.0], [0.0, 1.0, 4.0], [5.0, 6.0, 0.0]];
+    let mut mat: [[f32; 3]; 3] = [[4.0, 2.0, 3.0], [2.0, 3.0, 4.0], [5.0, 6.0, 8.0]];
     mat.invert();
     assert_eq!(
         mat,
-        [[-24.0, 18.0, 5.0], [20.0, -15.0, -4.0], [-5.0, 4.0, 1.0]]
+        [[-0.0, -2.0, 1.0], [-4.0, -17.0, 10.0], [3.0, 14.0, -8.0]]
     );
 }
 pub mod prelude {
