@@ -204,13 +204,7 @@ export type rustWasm = {
   alloc_vector_positions_and_normal(
     size: number,
   ): rust_pointer<rust_vec_ptr<'position_and_normal'>>;
-  update_scale(
-    mesh_id: number,
-    x: number,
-    y: number,
-    z: number,
-    skip_normals: boolean,
-  ): void;
+  update_scale(mesh_id: number, x: number, y: number, z: number): void;
   update_rotation(
     mesh_id: number,
     x: number,

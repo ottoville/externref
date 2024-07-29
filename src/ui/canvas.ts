@@ -9,7 +9,7 @@ import { Sea } from '../world/water.js';
 //import { LazyEval } from "../LazyEval.js";
 import { Sun } from '../world/sun.js';
 
-import { MainNode } from '../MainNode.js';
+import { MainNode, RigidBody } from '../MainNode.js';
 import { Scene } from '../Scene.js';
 import { Human } from '../human.js';
 //import { savedCamera } from "../types/interfaces/index.js";
@@ -258,6 +258,7 @@ export class Canvas {
           can_collide: true,
           label: 'blueball3',
           order: 1,
+          rigid_body: RigidBody.fixed,
         });
         sphere4.translation = [-100, 900, -70];
         sphere4.update_scale(30, 30, 30);

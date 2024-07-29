@@ -16,9 +16,7 @@ use crate::{
     MULTIVALUE_USIZE,
 };
 #[no_mangle]
-pub unsafe extern "C" fn indices_field_pointer(
-    geometry_ptr: *const Geometry,
-) -> *const usize {
+pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry) -> *const usize {
     let geometry = &(*geometry_ptr);
     let indices = &geometry.indices;
     MULTIVALUE_USIZE[0] = indices.as_ptr() as usize;
@@ -267,43 +265,25 @@ impl<'vert> Geometry {
         }
     }
     pub fn calculate_normals(&mut self) {
+        self.create_faces(Option::None);
         if let VertexKind::Position(_) = &self.vertices.vertices {
         } else if let VertexKind::None = &self.vertices.vertices {
         } else {
-            let faces = if self.indices.len() == 0 {
-                &mut self.faces.iter() as &mut dyn Iterator<Item=&[u32;3]>
-            } else {
-                if self.strip {
-                    // Length is self.indices.len() - 2
-                    &mut self.indices.windows(3).map(|i| i.try_into().unwrap()) as &mut dyn Iterator<Item=&[u32;3]>
-                } else {
-                    // Lenght is self.indices.len() / 3
-                    &mut self.indices.chunks_exact(3).map(|i| i.try_into().unwrap()) as &mut dyn Iterator<Item=&[u32;3]>
-                }
-            };
             //self.create_faces(None);
             match &mut self.vertices.vertices {
                 VertexKind::PositionAndNormalAndUV(positions) => {
-                    for triangle in &mut (*faces) {
-                        let ia: &[f32; 3] = &positions[triangle[0] as usize]
-                            .position
-                            .vec
-                            .multiply_vec(&self.scaling);
-                        let ib = &positions[triangle[1] as usize]
-                            .position
-                            .vec
-                            .multiply_vec(&self.scaling);
-                        let ic = &positions[triangle[2] as usize]
-                            .position
-                            .vec
-                            .multiply_vec(&self.scaling);
+                    for triangle in self.faces.iter() {
+                        //TODO: scale later
+                        let ia: &[f32; 3] = &positions[triangle[0] as usize].position.vec;
+                        let ib = &positions[triangle[1] as usize].position.vec;
+                        let ic = &positions[triangle[2] as usize].position.vec;
 
                         let e1 = ia.sub_vec(&ib);
                         let e2 = ic.sub_vec(&ib);
 
                         let no = e1.cross(&e2);
 
-                         positions[triangle[0] as usize]
+                        positions[triangle[0] as usize]
                             .normal
                             .vec
                             .add_vec_in_place(&no);
@@ -316,7 +296,7 @@ impl<'vert> Geometry {
                             .vec
                             .add_vec_in_place(&no);
                     }
-                     for position in positions {
+                    for position in positions {
                         position.normal.vec.normalize_in_place();
                     }
                 }
@@ -340,7 +320,7 @@ impl<'vert> Geometry {
 
                         let no = e1.cross(&e2);
 
-                         positions[triangle[0] as usize]
+                        positions[triangle[0] as usize]
                             .normal
                             .vec
                             .add_vec_in_place(&no);
@@ -353,7 +333,7 @@ impl<'vert> Geometry {
                             .vec
                             .add_vec_in_place(&no);
                     }
-                     for position in positions {
+                    for position in positions {
                         position.normal.vec.normalize_in_place();
                     }
                 }
@@ -377,7 +357,7 @@ impl<'vert> Geometry {
 
                         let no = e1.cross(&e2);
 
-                          positions[triangle[0] as usize]
+                        positions[triangle[0] as usize]
                             .normal
                             .vec
                             .add_vec_in_place(&no);
@@ -520,19 +500,6 @@ impl<'vert> Geometry {
             }
         }
         self.faces_dirty = false
-    }
-    pub fn iterate_faces(&self) -> Box<dyn Iterator<Item = &[u32; 3]> + '_> {
-        if self.indices.len() == 0 {
-            return Box::new(self.faces.iter());
-        } else {
-            if self.strip {
-                // Length is self.indices.len() - 2
-                return Box::new(self.indices.windows(3).map(|i| i.try_into().unwrap()));
-            } else {
-                // Lenght is self.indices.len() / 3
-                return Box::new(self.indices.chunks_exact(3).map(|i| i.try_into().unwrap()));
-            }
-        }
     }
     pub fn faces_count(&self) -> usize {
         if self.static_faces {

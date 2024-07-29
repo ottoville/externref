@@ -271,13 +271,8 @@ export class DataNode extends MainNode {
   dedup_positions() {
     engine.rust.dedup_positions(this.geometry);
   }
-  override update_scale(
-    x: number,
-    y: number,
-    z: number,
-    skip_normals: boolean = false,
-  ): void {
-    super.update_scale(x, y, z, skip_normals);
+  override update_scale(x: number, y: number, z: number): void {
+    super.update_scale(x, y, z);
     if (this.#props.can_collide) {
       const collider_ptr = this.create_collider();
       engine.rust.add_collider(this.id, collider_ptr);

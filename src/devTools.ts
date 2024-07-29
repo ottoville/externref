@@ -2,7 +2,7 @@ import type { DevTools } from './ui/DevTools/DevTools.js';
 
 const devToolsTemplate = `<link rel="stylesheet" href="/css/DevTools.css"/>
 <aside>
-      <button type="button">Close </button>
+      <button id="closebtn" type="button">Close </button>
     <div id="DevToolsAppContainer"></div>
 </aside>`;
 

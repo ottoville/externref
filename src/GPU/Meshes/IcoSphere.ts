@@ -3,6 +3,7 @@ import type { Engine } from '../../engine.js';
 import { MutableTerraVector3 } from '../../Math.js';
 import { allocate_vec } from '../../nodes/DataNode.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
+import { RigidBody } from 'MainNode.js';
 declare const engine: Engine;
 let v = 12;
 const midCache = new Map<number, number>(); // midpoint vertices cache to avoid duplicating shared vertices
@@ -198,11 +199,13 @@ export class IcoSphere extends IndexedSingleColoredMesh {
     label = 'sphere' + uid++,
     can_collide = false,
     scenes,
+    rigid_body,
   }: {
     order?: number;
     label?: string;
     can_collide?: boolean;
     scenes?: Scene[];
+    rigid_body?: RigidBody;
   }) {
     const [vertices, indices] = icosphere(order);
     const verticesAndNormals = new Float32Array(vertices.length * 2);
@@ -225,6 +228,7 @@ export class IcoSphere extends IndexedSingleColoredMesh {
       },
       {
         label,
+        rigid_body,
         scenes,
       },
       allocate_vec(indices),

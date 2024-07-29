@@ -22,7 +22,7 @@ export type MainNodeProps = {
   directional_light?: number;
   label: string;
   scenes?: Scene[] | undefined;
-  rigid_body?: RigidBody;
+  rigid_body?: RigidBody | undefined;
 };
 export abstract class MainNode {
   abstract drawable?: Drawable | undefined;
@@ -58,8 +58,8 @@ export abstract class MainNode {
    * @param y Scale for y dimension
    * @param z Scale for z dimension
    */
-  update_scale(x: number, y: number, z: number, skip_normals: boolean = false) {
-    engine.rust.update_scale(this.id, x, y, z, skip_normals);
+  update_scale(x: number, y: number, z: number) {
+    engine.rust.update_scale(this.id, x, y, z);
   }
   /**
    * Get rotation quaternion

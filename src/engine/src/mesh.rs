@@ -3,6 +3,7 @@ use std::num::NonZeroUsize;
 
 pub use crate::drawable::DrawCommand;
 use crate::engine::js_error;
+use crate::engine::js_warn;
 #[cfg(target_arch = "wasm32")]
 use crate::engine::verticesChange;
 pub use crate::engine::Engine;
@@ -94,17 +95,12 @@ pub unsafe extern "C" fn faces_count(mesh_id: usize) -> usize {
     get_mesh_by_id(mesh_id).get_geometry().faces_count()
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32, skip_normals: bool) {
+pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     let mesh = get_mesh_by_id_mut(mesh_id);
     let geometry = mesh.get_geometry_mut();
     geometry.scaling[0] = x;
     geometry.scaling[1] = y;
     geometry.scaling[2] = z;
-
-    // If not equally to scale into all dimensions, re-calculate normals
-    if !skip_normals && (x != y || x != z) {
-        mesh.calculate_normals();
-    }
     mesh.on_update(true);
 }
 #[no_mangle]
@@ -622,10 +618,15 @@ impl Mesh {
         self.transformation[2][0] = xz + wy;
         self.transformation[2][1] = yz - wx;
         self.transformation[2][2] = 1.0 - (xx + yy);
+        let mut uniform_scaling = true;
         if let Some(geometry) = &self.geometry {  
             let sx = geometry.scaling[0];
             let sy = geometry.scaling[1];
             let sz = geometry.scaling[2];
+            if sx != sy || sx != sz {
+                uniform_scaling = false;
+            }
+
             self.transformation[0][0] *= sx;
             self.transformation[0][1] *= sx;
             self.transformation[0][2] *= sx;
@@ -650,6 +651,24 @@ impl Mesh {
             gpu_mesh.color[2] = self.color[2];
             gpu_mesh.color[3] = self.color[3];
             gpu_mesh.transformation = self.transformation;
+
+            let mut sub_3x3 =
+                [
+                   [ self.transformation[0][0],self.transformation[0][1],self.transformation[0][2]],
+                   [ self.transformation[1][0],self.transformation[1][1],self.transformation[1][2]],
+                   [ self.transformation[2][0],self.transformation[2][1],self.transformation[2][2]],
+            ];
+            // If not equally to scale into all dimensions, re-calculate normals matrix
+            if !uniform_scaling {
+                sub_3x3.transpose();
+                if !sub_3x3.invert() {
+                    js_warn([&"Cannot invert normal matrix for mesh", &&self.label[..]]);
+                }
+            }
+            gpu_mesh.transformation_normals.x = sub_3x3[0];
+            gpu_mesh.transformation_normals.y = sub_3x3[1];
+            gpu_mesh.transformation_normals.z = sub_3x3[2];
+
         }
         self.transformation_is_dirty = false;
     }

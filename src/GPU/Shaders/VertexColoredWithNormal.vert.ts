@@ -41,10 +41,11 @@ export function createVertexColorShader(
         ) => WGSLcode/* wgsl */ `
             var output:Output;
             //output.normal=normal;
-            var curPos : mat4x4<f32> = ${world.prop('transformation')};
-            var worldPos=curPos * ${position};
+            var worldPos=${world.prop('transformation')} * ${position};
 
-            output.normal = normalize((curPos * vec4<f32>(${normal}, 0.0)).xyz);
+            output.normal = normalize((${world.prop(
+              'transformation_normals',
+            )} * ${normal}));
             output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
             output.id=${world.prop('id')};
             output.position=vec3<f32>(worldPos.xyz);

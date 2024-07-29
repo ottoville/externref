@@ -42,12 +42,18 @@ aside {
     & input[type="radio"] {
         display: none;
     }
+    --closebtn-height: 20px;
+    #closebtn {
+        height: var(--closebtn-height);
+    }
+    #DevToolsAppContainer {
+        direction: ltr;
+        overflow-y: scroll;
+        height: calc(100% - var(--closebtn-height));
+    }
 }
-#DevToolsAppContainer {
-    direction: ltr;
-    overflow-y: scroll;
-    height: 100%;
-}
+
+
 .meshlist {
     max-height: 200px;
     overflow-y: auto;

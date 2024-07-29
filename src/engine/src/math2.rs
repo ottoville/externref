@@ -6,8 +6,12 @@ pub struct Vec3<T> {
 }
 #[repr(C, align(16))]
 pub struct Mat3wgslF32 {
-    pub vec: [[f32; 3]; 3],
-    _padding: [f32; 3]
+    pub x: [f32; 3],
+    _padding0: f32,
+    pub y: [f32; 3],
+    _padding1: f32,
+    pub z: [f32; 3],
+    _padding2: f32
 }
 #[repr(C, align(16))]
 pub struct Vec3wgslF32 {
@@ -30,8 +34,12 @@ impl Vec3wgslF32 {
 impl Mat3wgslF32 {
     pub fn identity() -> Mat3wgslF32 {
         Mat3wgslF32 {
-            vec: terramath::MatrixMath::identity(),
-            _padding: [0.0,0.0,0.0]
+            x: [1.0,0.0,0.0],
+            _padding0: 0.0,
+            y: [0.0,1.0,0.0],
+            _padding1: 0.0,
+            z: [0.0,0.0,1.0],
+            _padding2: 0.0,
         }
     }
 }

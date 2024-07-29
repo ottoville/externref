@@ -156,6 +156,14 @@ pub trait VectorMath<T, const N: usize> {
      * Returns new vector which is sub of two vectors
      */
     fn sub_vec(&self, other: &Self) -> Self;
+    /**
+     * Returns new vector which is multiplied with scalar
+     */
+    fn multiply(&mut self, multiplier: f32) -> Self;
+
+    /**
+     * multiply vector with scalar
+     */
     fn multiply_in_place(&mut self, multiplier: f32);
 
     /**
@@ -227,12 +235,19 @@ impl VectorMath<f32, 3> for [f32; 3] {
     fn sub_vec(&self, other: &Self) -> Self {
         [self[0] - other[0], self[1] - other[1], self[2] - other[2]]
     }
+    fn multiply(&mut self, multiplier: f32) -> Self {
+        [
+            self[0] * multiplier,
+            self[1] * multiplier,
+            self[2] * multiplier,
+        ]
+    }
     fn multiply_in_place(&mut self, multiplier: f32) {
         self[0] *= multiplier;
         self[1] *= multiplier;
         self[2] *= multiplier;
     }
-    fn multiply_vec(&self, other: &Self) -> [f32; 3] {
+    fn multiply_vec(&self, other: &Self) -> Self {
         [self[0] * other[0], self[1] * other[1], self[2] * other[2]]
     }
     fn add_vec_in_place(&mut self, other: &Self) {
@@ -334,6 +349,14 @@ impl VectorMath<f32, 4> for [f32; 4] {
             self[1] - other[1],
             self[2] - other[2],
             self[3] - other[3],
+        ]
+    }
+    fn multiply(&mut self, multiplier: f32) -> Self {
+        [
+            self[0] * multiplier,
+            self[1] * multiplier,
+            self[2] * multiplier,
+            self[3] * multiplier,
         ]
     }
     fn multiply_in_place(&mut self, multiplier: f32) {
@@ -609,6 +632,7 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         return true;
     }
 }
+
 impl MatrixMath<f32> for [[f32; 4]; 4] {
     fn identity() -> Self {
         [
@@ -864,9 +888,9 @@ fn test_determinant_4x4() {
 #[test]
 #[wasm_bindgen_test::wasm_bindgen_test]
 fn test_transpose() {
-    let mut mat: [[f32; 3]; 3] = [[1.0, 2.0, 3.0], [0.0, 1.0, 4.0], [5.0, 6.0, 0.0]];
+    let mut mat: [[f32; 3]; 3] = [[1.0, 2.0, 3.0], [0.0, 1.745, 4.0], [5.0, 6.0, -43.4]];
     mat.transpose();
-    assert_eq!(mat, [[1.0, 0.0, 5.0], [2.0, 1.0, 6.0], [3.0, 4.0, 0.0]]);
+    assert_eq!(mat, [[1.0, 0.0, 5.0], [2.0, 1.745, 6.0], [3.0, 4.0, -43.4]]);
 }
 
 #[cfg(test)]
@@ -889,11 +913,15 @@ fn test_adjoint() {
 #[test]
 #[wasm_bindgen_test::wasm_bindgen_test]
 fn test_invert() {
-    let mut mat: [[f32; 3]; 3] = [[4.0, 2.0, 3.0], [2.0, 3.0, 4.0], [5.0, 6.0, 8.0]];
+    let mut mat: [[f32; 3]; 3] = [[4.0, 2.0, 3.0], [-1.354, 3.234, -34.42], [5.0, 6.0, 8.0]];
     mat.invert();
     assert_eq!(
         mat,
-        [[-0.0, -2.0, 1.0], [-4.0, -17.0, 10.0], [3.0, 14.0, -8.0]]
+        [
+            [0.43506882, 0.003744267, -0.1470411],
+            [-0.3019152, 0.03182627, 0.2501507],
+            [-0.04548161, -0.026209868, 0.029287657]
+        ]
     );
 }
 pub mod prelude {

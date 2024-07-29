@@ -83,8 +83,8 @@ export function createSimpleVertShader(
         var worldPos=${world.prop('transformation')} * ${position};
 
         output.normal = normalize((${world.prop(
-          'transformation',
-        )} * vec4<f32>(${normal}, 0.0)).xyz);
+          'transformation_normals',
+        )} * ${normal}));
         output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
         output.id=${world.prop('id')};
         output.position=worldPos.xyz;

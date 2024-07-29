@@ -41,10 +41,7 @@ export function createDebugNormalsVertShader(
           'transformation',
         )} * ${position};
         if(${VertexBuildin.vertex_index} % 2u == 1u) {
-            var newpos = ${world.prop(
-              'transformation',
-            )} * (${position} + vec4<f32>(${normal}.xyz, 0.0));
-            vertexPosition = vertexPosition + normalize(newpos - vertexPosition)*5;
+            vertexPosition = vertexPosition + vec4<f32>(normalize(${world.prop('transformation_normals')} * ${normal}.xyz)*5,0.0);
         }
         output.position = ${scene.prop('modelViewProjection')} * vertexPosition;
         output.color=vec3<f32>(0.0,1.0,0.0);

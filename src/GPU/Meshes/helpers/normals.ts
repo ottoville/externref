@@ -66,7 +66,6 @@ export class NormalsMesh extends DataNode {
       targetNode.node.scale_x,
       targetNode.node.scale_y,
       targetNode.node.scale_z,
-      true,
     );
     this.rotation = targetNode.node.rotation;
     //TODO: Share same transformation matrix instead of updating it from other
@@ -76,7 +75,6 @@ export class NormalsMesh extends DataNode {
         targetNode.node.scale_x,
         targetNode.node.scale_y,
         targetNode.node.scale_z,
-        true,
       );
       this.rotation = targetNode.node.rotation;
     });
