@@ -7,52 +7,126 @@ trigger:
     - /
   batch: True
 name: $(date:yyyyMMdd)$(rev:.r)
-jobs:
-- job: Phase_1
-  displayName: Agent job 1
-  timeoutInMinutes: 0
-  pool:
-    vmImage: ubuntu-22.04
-  steps:
-  - checkout: self
-    submodules: true
-  - task: Npm@1
-    displayName: npm audit
-    inputs:
-      command: custom
-      workingDir: src
-      verbose: false
-      customCommand: audit --omit dev
-  - task: Npm@1
-    displayName: npm install
-    inputs:
-      command: custom
-      workingDir: src
-      verbose: false
-      customCommand: ci --omit dev
-  - task: Rustup@1
-    displayName: Rustup
-    inputs:
-      rustupCommand: target add wasm32-unknown-unknown
-  - task: Npm@1
-    displayName: npm build
-    inputs:
-      command: custom
-      workingDir: src
-      verbose: false
-      customCommand: run build-prod
-  - task: Cargo@1
-    displayName: Test rust
-    inputs:
-      cargoCommand: 'test'
-      cargoWorkingDir: 'src'
-      cargoCommandOptions: '--lib'
-      verbose: false
-  - task: AzureStaticWebApp@0
-    displayName: 'Static Web App: '
-    inputs:
-      app_location: wwwroot
-      skip_app_build: false
-      verbose: false
-      azure_static_web_apps_api_token: 2aef2b5c97599f9114259a5b48deeca2588934fdb83cf50b591444ef8b10206e1-eb01d464-e4f3-4b9f-822c-960472154ecb00363827
-      production_branch: master
+stages:
+- stage: deployBicepStage
+  displayName: Deploy infrastructure
+  jobs:
+  - deployment: deployBicep
+    displayName: Deploy bicep
+    timeoutInMinutes: 0
+    pool:
+      vmImage: ubuntu-22.04
+    environment: production
+    strategy:
+      runOnce:    #rolling, canary are the other strategies that are supported
+        deploy:
+          steps:
+          - checkout: self
+            submodules: false
+          - task: AzureResourceManagerTemplateDeployment@3
+            inputs:
+              deploymentScope: 'Resource Group'
+              azureResourceManagerConnection: $(service-connection)
+              subscriptionId: $(subscription-id)
+              action: 'Create Or Update Resource Group'
+              resourceGroupName: 'terrasim-rg'
+              location: 'West Europe'
+              templateLocation: 'Linked artifact'
+              csmFile: '$(Build.SourcesDirectory)/infrastructure/main.bicep'
+              deploymentMode: 'Incremental'
+- stage: deployPrEnv
+  displayName: Deploy PR env
+  variables:
+  - group: swa
+  jobs:
+  - job: Phase_1
+    displayName: Agent job 1
+    timeoutInMinutes: 0
+    pool:
+      vmImage: ubuntu-22.04
+    steps:
+    - checkout: self
+      submodules: true
+    - task: Npm@1
+      displayName: npm audit
+      inputs:
+        command: custom
+        workingDir: src
+        verbose: false
+        customCommand: audit --omit dev
+    - task: Npm@1
+      displayName: npm install
+      inputs:
+        command: custom
+        workingDir: src
+        verbose: false
+        customCommand: ci --omit dev
+    - task: Rustup@1
+      displayName: Rustup
+      inputs:
+        rustupCommand: target add wasm32-unknown-unknown
+    - task: Npm@1
+      displayName: npm build
+      inputs:
+        command: custom
+        workingDir: src
+        verbose: false
+        customCommand: run build-prod
+    - task: Npm@1
+      displayName: Test rust
+      inputs:
+        command: custom
+        workingDir: src
+        verbose: false
+        customCommand: run test-rust
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: './wwwroot'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifact: 'build'
+        publishLocation: 'pipeline'
+  - deployment: deploySwa
+    displayName: Deploy SWA
+    environment: production
+    timeoutInMinutes: 0
+    pool:
+      vmImage: ubuntu-22.04
+    strategy:
+      runOnce:    #rolling, canary are the other strategies that are supported
+        deploy:
+          steps:
+          - checkout: none
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'current'
+              artifactName: 'build'
+              targetPath: '$(Build.BinariesDirectory)'
+          - task: AzureStaticWebApp@0
+            displayName: 'Static Web App: '
+            inputs:
+              app_location: $(Build.BinariesDirectory)
+              skip_app_build: true
+              verbose: false
+              azure_static_web_apps_api_token: $(swakey)
+              production_branch: master
+          - task: CmdLine@2
+            inputs:
+              script: |
+                echo "Build.SourceBranchName:" 
+                echo "$(Build.SourceBranchName)"
+
+                echo "Build.SourceBranch:" 
+                echo "$(Build.SourceBranch)"
+
+                echo "System.PullRequest.SourceBranch:"
+                echo "$(System.PullRequest.SourceBranch)"
+          #- task: AzureCLI@2
+          #  inputs:
+          #    azureSubscription: 'devops-connection'
+          #    scriptType: 'pscore'
+          #    scriptLocation: 'inlineScript'
+          #    inlineScript: 'az staticwebapp environment delete -n TerraSim --environment-name bicep'
