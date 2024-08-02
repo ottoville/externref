@@ -36,11 +36,9 @@ stages:
               deploymentMode: 'Incremental'
 - stage: deployPrEnv
   displayName: Deploy PR env
-  variables:
-  - group: swa
   jobs:
-  - job: Phase_1
-    displayName: Agent job 1
+  - job: build_swa
+    displayName: Build SWA
     timeoutInMinutes: 0
     pool:
       vmImage: ubuntu-22.04
@@ -90,6 +88,7 @@ stages:
         artifact: 'build'
         publishLocation: 'pipeline'
   - deployment: deploySwa
+    dependsOn: build_swa
     displayName: Deploy SWA
     environment: production
     timeoutInMinutes: 0
@@ -105,14 +104,6 @@ stages:
               buildType: 'current'
               artifactName: 'build'
               targetPath: '$(Build.BinariesDirectory)'
-          - task: AzureStaticWebApp@0
-            displayName: 'Static Web App: '
-            inputs:
-              app_location: $(Build.BinariesDirectory)
-              skip_app_build: true
-              verbose: false
-              azure_static_web_apps_api_token: $(swakey)
-              production_branch: master
           - task: CmdLine@2
             inputs:
               script: |
@@ -127,6 +118,15 @@ stages:
 
                 echo "System.PullRequest.PullRequestId:"
                 echo "$(System.PullRequest.PullRequestId)"
+          - task: AzureStaticWebApp@0
+            displayName: 'Static Web App: '
+            inputs:
+              workingDirectory: '/'
+              app_location: $(Build.BinariesDirectory)
+              skip_app_build: true
+              verbose: false
+              azure_static_web_apps_api_token: $(swakey)
+              production_branch: master
           #- task: AzureCLI@2
           #  inputs:
           #    azureSubscription: 'devops-connection'
