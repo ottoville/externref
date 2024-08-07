@@ -9,7 +9,7 @@ resource KeyVault 'Microsoft.KeyVault/vaults@2024-04-01-preview' = {
       name: 'standard'
     }
     tenantId: '6bc047bf-c784-45d9-9016-d3cdb4d08f14'
-    
+
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Allow'

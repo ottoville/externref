@@ -24,6 +24,7 @@ stages:
           - checkout: self
             submodules: false
           - task: AzureResourceManagerTemplateDeployment@3
+            displayName: Create resources
             inputs:
               deploymentScope: 'Resource Group'
               azureResourceManagerConnection: $(service-connection)
@@ -34,8 +35,17 @@ stages:
               templateLocation: 'Linked artifact'
               csmFile: '$(Build.SourcesDirectory)/infrastructure/main.bicep'
               deploymentMode: 'Incremental'
-- stage: deployPrEnv
-  displayName: Deploy PR env
+          - task: AzureCLI@2 #This tasks needs Microsoft.Web/locations/operationResults/read permission in subscription level, which can be archieved by giving contributor role
+            displayName: 'Delete PR environment'
+            inputs:
+              azureSubscription: $(service-connection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              arguments: $(Build.SourceVersionMessage)
+              inlineScript: "az staticwebapp environment delete -n TerraSim --resource-group terrasim-rg --environment-name $(echo \"$*\" | head -n 1 | cut -d':' -f1 | cut -d' ' -f3) --yes"
+              addSpnToEnvironment: true
+- stage: BuildSwa
+  displayName: Build SWA
   jobs:
   - job: build_swa
     displayName: Build SWA
@@ -87,10 +97,15 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)'
         artifact: 'build'
         publishLocation: 'pipeline'
+- stage: deployEnv
+  dependsOn: BuildSwa
+  displayName: Deploy env
+  jobs:
   - deployment: deploySwa
-    dependsOn: build_swa
     displayName: Deploy SWA
     environment: production
+    variables:
+    - group: swa
     timeoutInMinutes: 0
     pool:
       vmImage: ubuntu-22.04
@@ -104,20 +119,6 @@ stages:
               buildType: 'current'
               artifactName: 'build'
               targetPath: '$(Build.BinariesDirectory)'
-          - task: CmdLine@2
-            inputs:
-              script: |
-                echo "Build.SourceBranchName:" 
-                echo "$(Build.SourceBranchName)"
-
-                echo "Build.SourceBranch:" 
-                echo "$(Build.SourceBranch)"
-
-                echo "System.PullRequest.SourceBranch:"
-                echo "$(System.PullRequest.SourceBranch)"
-
-                echo "System.PullRequest.PullRequestId:"
-                echo "$(System.PullRequest.PullRequestId)"
           - task: AzureStaticWebApp@0
             displayName: 'Static Web App: '
             inputs:
@@ -127,9 +128,3 @@ stages:
               verbose: false
               azure_static_web_apps_api_token: $(swakey)
               production_branch: master
-          #- task: AzureCLI@2
-          #  inputs:
-          #    azureSubscription: 'devops-connection'
-          #    scriptType: 'pscore'
-          #    scriptLocation: 'inlineScript'
-          #    inlineScript: 'az staticwebapp environment delete -n TerraSim --environment-name bicep'
