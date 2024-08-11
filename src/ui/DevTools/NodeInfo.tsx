@@ -10,6 +10,9 @@ import { DrawableIndexed } from '../../GPU/Drawables/DrawableIndexed.js';
 import type { MainNode } from '../../MainNode.js';
 import { Rotation } from './Rotation.js';
 import { Primitives } from './Primitives.js';
+import { creatDepthSlices } from '../../GPU/Meshes/helpers/depthSlices.js';
+import type { Engine } from '../../engine.js';
+declare const engine: Engine;
 
 export const NodeInfo = memo(function NodeInfo({
   drawable,
@@ -170,6 +173,16 @@ export const NodeInfo = memo(function NodeInfo({
                 }}
               >
                 Wireframe
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  engine.getGPU((gpu) => {
+                    creatDepthSlices(gpu, drawable);
+                  }, true);
+                }}
+              >
+                Depth Slices
               </button>
               {drawable instanceof DrawableIndexed ? (
                 <>

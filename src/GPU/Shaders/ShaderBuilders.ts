@@ -193,6 +193,13 @@ export function createShaderBuilders(gpu: GPU) {
     'positionBindGroupTimeWGSLLayot',
     [BindGroupLayoutPosition],
   );
+  const ColorShader = new ShaderBuilder([
+    terrainHeightsbindGroupTreePosition,
+    rootCameralayout,
+    positionAndTimeBindGroup,
+  ] as const)
+    .addFunction('main', colorFragmentFunction)
+    .build('color.frag');
   return {
     BindGroupLayoutPosition,
     /**
@@ -200,13 +207,10 @@ export function createShaderBuilders(gpu: GPU) {
      See Simple.frag.ts for pickable counterpart
      See SingleColor.frag.ts for pickable shared single color for all vertices
      */
-    ColorShader: new ShaderBuilder([
-      terrainHeightsbindGroupTreePosition,
-      rootCameralayout,
-      positionAndTimeBindGroup,
-    ] as const)
-      .addFunction('main', colorFragmentFunction)
-      .build('color.frag'),
+    ColorShader: Object.freeze([
+      'ColorShader.frag',
+      () => ColorShader,
+    ] as const),
     facet12ArrGPUBuffer,
     heightsLayout,
     positionAndTimeBindGroup,

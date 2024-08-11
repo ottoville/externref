@@ -11,7 +11,8 @@ import {
   type RenderpassProps,
 } from '../../webgpu-ts/index.js';
 import type { Engine } from '../../engine.js';
-import type { GPU } from '../../GPU.js';
+import { type GPU } from '../../GPU.js';
+import { tileCount } from '../Shaders/structs/Structs.js';
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 declare const engine: Engine;
 
@@ -141,8 +142,8 @@ export class RenderPass<
         new Float32Array(uniformbuffer, 0, 4).set([
           this.size.width,
           this.size.height,
-          this.size.width / gpu.clustersInRow[0],
-          this.size.height / gpu.clustersInRow[1],
+          this.size.width / tileCount[0],
+          this.size.height / tileCount[1],
         ]);
       },
     );

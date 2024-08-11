@@ -1,5 +1,9 @@
 import type { BufLayout, ShaderStage } from '../../webgpu-ts/index.js';
-import type { ProjectionStruct, ScreenDimensions } from './structs/Structs.js';
+import {
+  tileCount,
+  type ProjectionStruct,
+  type ScreenDimensions,
+} from './structs/Structs.js';
 
 export const getClusterIndex = (
   screen_dimensions: BufLayout<number, typeof ScreenDimensions>,
@@ -13,10 +17,7 @@ export const getClusterIndex = (
         )}, ${projection.prop('zNear')});
     }
 
-    fn getTile(fragCoord : vec3<f32>) -> vec3<u32> {
-        // TODO: move to uniform
-        let tileCount : vec3<f32> = vec3<f32>(32.0, 18.0, 48.0);
-        
+    fn getTile(fragCoord : vec3<f32>) -> vec3<u32> {       
         //TODO: zTile lookup can be hardcoded for speed
         let zTile : u32 = u32(max(fma(log2(linearDepth(fragCoord.z)),${projection.prop(
           'slice_scale',
@@ -28,11 +29,9 @@ export const getClusterIndex = (
     }
 
     fn getClusterIndex(fragCoord : vec4<f32>) -> u32 {
-        let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
-      
         let tile = getTile(fragCoord.xyz);
         return tile.x +
-               tile.y * tileCount.x +
-               tile.z * tileCount.x * tileCount.y;
+               tile.y * ${tileCount[0]} +
+               tile.z * ${tileCount[0]} * ${tileCount[1]};
       }
 `;

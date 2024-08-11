@@ -12,8 +12,11 @@ import {
   UpdateView,
 } from './GPU/Shaders/UpdateView.comp.js';
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
-import type { RenderPipelineProps } from './GPU/RenderPipeline.js';
-import { UIUniforms } from './GPU/Shaders/structs/Structs.js';
+import type {
+  RenderPipelineProps,
+  RenderPipelineProps0,
+} from './GPU/RenderPipeline.js';
+import { tileCount, UIUniforms } from './GPU/Shaders/structs/Structs.js';
 import {
   createUIVertShader,
   position_uv_attrs,
@@ -45,6 +48,7 @@ import {
   RenderpassTarget,
   type RenderpassTargetOptions,
   Struct,
+  type FragmentShader,
 } from './webgpu-ts/index.js';
 import {
   createSimpleFragShader,
@@ -56,7 +60,6 @@ import {
 } from './GPU/Shaders/ShaderBuilders.js';
 
 declare const engine: Engine;
-
 let curSecond = 0;
 let framecount = 0;
 
@@ -83,12 +86,9 @@ export type VertexBufferProps = {
   stride: Word<'dword'>;
 };
 
-export type CreateRenderPipelineCB<
-  R extends RenderPipelineProps,
-  VP extends VertexBufferProps = VertexBufferProps,
-> = readonly [
+export type CreateRenderPipelineCB<R extends RenderPipelineProps0> = readonly [
   label: string,
-  create: (props: CreateRenderPipelineProps, vertexBufferProps: VP) => R,
+  create: (props: CreateRenderPipelineProps) => R,
 ];
 
 export class GPU {
@@ -172,15 +172,13 @@ export class GPU {
   }>;
 
   readonly #updateViewBindGroup: BindGroup;
-  readonly clustersInRow: [number, number, number] = [32, 18, 48];
 
   readonly clusterSizeinBytes: number;
 
   readonly #CLUSTER_WORKGROUP_SIZE: [number, number, number] = [4, 2, 4];
-  readonly CLUSTER_DISPATCH_SIZE: [number, number, number] =
-    this.clustersInRow.map((v, i) =>
-      Math.ceil(v / this.#CLUSTER_WORKGROUP_SIZE[i]!),
-    ) as [number, number, number];
+  readonly CLUSTER_DISPATCH_SIZE: [number, number, number] = tileCount.map(
+    (v, i) => Math.ceil(v / this.#CLUSTER_WORKGROUP_SIZE[i]!),
+  ) as [number, number, number];
 
   readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat() as
     | 'rgba8unorm'
@@ -263,71 +261,127 @@ export class GPU {
     z: readonly [string, 'f32'];
   }>;
   meshArray: Struct<{ readonly mesh: readonly ['', 'array<MeshUniforms>'] }>;
+  /**
+   * Create render pipeline. The function calculates hash and checks if existing render pipeline exists with same parameters.
+   * @param desc
+   * @param primitive
+   * @param vertexBufferProps
+   */
   createRenderPipeline<
-    D extends CreateRenderPipelineCB<RenderPipelineProps<V>>,
+    D extends RenderPipelineProps0<
+      V,
+      FragmentShader,
+      GPUPrimitiveState & {
+        topology: 'triangle-strip' | 'line-strip';
+        stripIndexFormat: GPUIndexFormat;
+      }
+    >,
     V extends VertexShader,
+    P,
   >(
     desc: D,
-    primitive: GPUPrimitiveState & {
-      topology: 'triangle-strip' | 'line-strip';
-      stripIndexFormat: GPUIndexFormat;
-    },
-    vertexBufferProps: Parameters<D['1']>['1'],
-  ): ReturnType<D['1']>;
+    vertexShaderBuilder: readonly [
+      label: string,
+      builder: (gpu: GPU, vertexBufferProps: P) => V,
+    ],
+    fragmentShaderBuilder: readonly [
+      label: string,
+      builder: (gpu: GPU) => FragmentShader,
+    ],
+    vertexBufferProps: P,
+  ): RenderPipelineProps<V, FragmentShader>;
   createRenderPipeline<
-    D extends CreateRenderPipelineCB<RenderPipelineProps<V>>,
+    D extends RenderPipelineProps0<
+      V,
+      FragmentShader,
+      Omit<GPUPrimitiveState, 'stripIndexFormat'> & {
+        topology: 'triangle-list' | 'line-list';
+      }
+    >,
     V extends VertexShader,
+    P,
   >(
     desc: D,
-    primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & {
-      topology: 'triangle-list' | 'line-list';
-    },
-    vertexBufferProps: Parameters<D['1']>['1'],
-  ): ReturnType<D['1']>;
+    vertexShaderBuilder: readonly [
+      label: string,
+      builder: (gpu: GPU, vertexBufferProps: P) => V,
+    ],
+    fragmentShaderBuilder: readonly [
+      label: string,
+      builder: (gpu: GPU) => FragmentShader,
+    ],
+    vertexBufferProps: P,
+  ): RenderPipelineProps<V, FragmentShader>;
   createRenderPipeline<
-    D extends CreateRenderPipelineCB<RenderPipelineProps<V>>,
+    D extends RenderPipelineProps0<
+      V,
+      FragmentShader,
+      Omit<GPUPrimitiveState, 'topology'>
+    >,
     V extends VertexShader,
+    P,
   >(
     desc: D,
-    primitive: Omit<GPUPrimitiveState, 'topology'>,
-    vertexBufferProps: Parameters<D['1']>['1'],
-  ): ReturnType<D['1']>;
+    vertexShaderBuilder: readonly [
+      label: string,
+      builder: (gpu: GPU, vertexBufferProps: P) => V,
+    ],
+    fragmentShaderBuilder: readonly [
+      label: string,
+      builder: (gpu: GPU) => FragmentShader,
+    ],
+    vertexBufferProps: P,
+  ): RenderPipelineProps<V, FragmentShader>;
   createRenderPipeline<
-    D extends CreateRenderPipelineCB<RenderPipelineProps<V>>,
+    D extends RenderPipelineProps0<V>,
     V extends VertexShader,
+    P extends VertexBufferProps | undefined,
   >(
     desc: D,
-    primitive: GPUPrimitiveState = {},
-    vertexBufferProps: Parameters<D['1']>['1'],
-  ): ReturnType<D['1']> {
+    vertexShaderBuilder: readonly [
+      label: string,
+      builder: (gpu: GPU, vertexBufferProps: P) => V,
+    ],
+    fragmentShaderBuilder: readonly [
+      label: string,
+      builder: (gpu: GPU) => FragmentShader,
+    ],
+    vertexBufferProps: P,
+  ): RenderPipelineProps<V, FragmentShader> {
     const primitiveWithDefaults: GPUPrimitiveState = {
       cullMode: 'back',
       frontFace: 'cw',
       topology: 'triangle-list',
-      ...primitive,
+      ...desc.primitive,
     };
-    const [label, createRenderPipeline] = desc;
-    const hash =
-      label +
-      [
-        ...Object.values(primitiveWithDefaults),
-        ...Object.values(vertexBufferProps ?? {}),
-      ]
-        .sort()
-        .join();
-    let renderPipeline = GPU.#renderPipelines.get(hash);
+    const hash = [
+      vertexShaderBuilder[0],
+      fragmentShaderBuilder[0],
+      ...Object.values(primitiveWithDefaults),
+      ...Object.values(vertexBufferProps ?? {}),
+    ]
+      .sort()
+      .join();
+
+    let renderPipeline = GPU.#renderPipelines.get(hash) as
+      | RenderPipelineProps<V, FragmentShader>
+      | undefined;
     if (!renderPipeline) {
-      renderPipeline = createRenderPipeline(
-        {
-          gpu: this,
-          label: hash,
-          primitive: primitiveWithDefaults,
-        },
-        vertexBufferProps,
-      );
+      renderPipeline = {
+        gpu: this,
+        label: hash,
+        primitive: primitiveWithDefaults,
+        ...desc,
+        builder: createRenderPipelineBuilder(
+          vertexShaderBuilder[1](this, vertexBufferProps),
+          fragmentShaderBuilder[1](this),
+        ),
+      };
       GPU.#renderPipelines.set(hash, renderPipeline);
+    } else {
+      console.log('existing renderpipeline', hash);
     }
-    return renderPipeline as ReturnType<D['1']>;
+    return renderPipeline!;
   }
   #renderFrame = 0;
   /**
@@ -378,8 +432,7 @@ export class GPU {
       [this.meshUniforms],
     );
 
-    const totalClusters =
-      this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2];
+    const totalClusters = tileCount[0] * tileCount[1] * tileCount[2];
     this.clusterSizeinBytes =
       totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
     this.updateViewShader = createUpdateViewShader(this);
@@ -686,7 +739,7 @@ export class GPU {
     });
     const vertexShader = createUIVertShader(this.canvasRootLayout, {
       arrayStride: 4 * 4,
-      attributes2: position_uv_attrs,
+      attributes: position_uv_attrs,
       stepMode: 'vertex',
     });
     const UIfragmentShader = createUIFragmentShader(this);

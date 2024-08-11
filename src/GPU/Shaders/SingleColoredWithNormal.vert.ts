@@ -6,7 +6,7 @@ import {
   WGSLcode,
   ShaderBuilder,
 } from '../../webgpu-ts/index.js';
-import type { GPU } from '../../GPU.js';
+import type { GPU, VertexBufferProps } from '../../GPU.js';
 import { type Scene, pickOutput, typicalOutput } from './structs/Structs.js';
 import { simpleAttributes } from './structs/Attributes.js';
 
@@ -53,13 +53,15 @@ export function createPickOutput(
   Shader where mesh is single colored
 */
 export function createSimpleVertShader(
-  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
-  arrayStride: number,
+  gpu: GPU,
+  vertexBufferProps: VertexBufferProps,
 ) {
+  const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
+  const arrayStride = vertexBufferProps.stride * 4;
   const buffers = Object.freeze([
     {
       arrayStride,
-      attributes2: simpleAttributes,
+      attributes: simpleAttributes,
       stepMode: 'vertex',
     },
   ] as const);

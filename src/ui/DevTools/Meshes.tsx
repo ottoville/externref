@@ -5,9 +5,9 @@ import type { Drawable } from '../../GPU/Drawables/Drawable.js';
 import { useEffect, useState } from 'react';
 import { VariantList } from './VariantList.js';
 import { NodeInfo } from './NodeInfo.js';
-import type { Engine } from '../../engine.js';
 import { RenderPipeline, RenderPipelineBuilder } from 'webgpu-ts/index.js';
 import type { MainNode } from 'MainNode.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 const getPositionBindGroupForScreen = (gpu: GPU) =>

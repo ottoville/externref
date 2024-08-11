@@ -1,4 +1,4 @@
-import type { Terrain } from '../../world/Terrain.js';
+import { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { type Scene, colorPositionOutput } from './structs/Structs.js';
 import {
@@ -9,13 +9,26 @@ import {
   WGSLcode,
   ShaderBuilder,
 } from '../../webgpu-ts/index.js';
-import type { GPU } from '../../GPU.js';
+import type { GPU, VertexBufferProps } from '../../GPU.js';
 
 export function createPlaneAtGroundHeightVertShader(
-  pipelineLayout: GPU['shaders']['terrainHeightsbindGroupTreePosition'],
-  buffers: VertexBufferLayout2,
-  settings: typeof Terrain.settings,
+  gpu: GPU,
+  vertexBufferProps: VertexBufferProps,
 ) {
+  const pipelineLayout = gpu.shaders.terrainHeightsbindGroupTreePosition;
+  const buffers: VertexBufferLayout2 = {
+    arrayStride: vertexBufferProps.stride * 4,
+    attributes: Object.freeze({
+      position: {
+        format: 'float32x3',
+        offset: 0,
+        shaderFormat: 'vec4<f32>',
+        shaderLocation: 0,
+      },
+    } as const),
+    stepMode: 'vertex',
+  };
+  const settings = Terrain.settings;
   return new ShaderBuilder([pipelineLayout])
     .addFunction(
       'main',

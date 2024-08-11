@@ -13,7 +13,7 @@ import {
   RenderBundleEncoder,
   type INDEX_BUFFER,
 } from '../../webgpu-ts/index.js';
-import { gpu_memory_index_size } from '../../GPU/Shaders/ShaderBuilders.js';
+import { gpu_memory_index_size } from '../Shaders/ShaderBuilders.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {
@@ -130,6 +130,7 @@ export class DrawableIndexed<
   render(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder) {
     if (this.#indexBuffer) {
       let encoder: GPURenderBundleEncoder | GPURenderPassEncoder;
+      console.debug('set inxedBuffer', this.#indexBuffer.props.label);
       if (renderEncoder instanceof RenderBundleEncoder) {
         encoder = renderEncoder.renderBundleEncoder;
         encoder.setIndexBuffer(

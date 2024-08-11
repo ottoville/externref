@@ -1,4 +1,7 @@
-import { NormalsPipeline } from '../../RenderPipeLines/NormalsPipeline.js';
+import {
+  createDebugNormalsVertShader2,
+  NormalsPipeline,
+} from '../../RenderPipeLines/NormalsPipeline.js';
 import { DrawableSimple } from '../../Drawables/DrawableSimple.js';
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import {
@@ -79,10 +82,14 @@ export class NormalsMesh extends DataNode {
       this.rotation = targetNode.node.rotation;
     });
     const renderPipeline = engine.gpu!.createRenderPipeline(
-      NormalsPipeline,
       {
-        topology: 'line-list',
+        ...NormalsPipeline,
+        primitive: {
+          topology: 'line-list',
+        },
       },
+      createDebugNormalsVertShader2,
+      engine.gpu!.shaders.ColorShader,
       {
         stride,
       },

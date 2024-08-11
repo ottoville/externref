@@ -1,4 +1,7 @@
-import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
+import {
+  createDebugLinesVertShader2,
+  DebugLinesPipeline,
+} from '../../RenderPipeLines/DebugLinesPipeline.js';
 import type { Engine } from '../../../engine.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import type { RenderPipelineProps } from '../../RenderPipeline.js';
@@ -80,15 +83,20 @@ export class BoundingBoxMesh extends DataNode {
     this.positions_count = 26;
 
     const renderPipeline = engine.gpu!.createRenderPipeline(
-      DebugLinesPipeline,
       {
-        stripIndexFormat: 'uint32',
-        topology: 'line-strip',
+        ...DebugLinesPipeline,
+        primitive: {
+          stripIndexFormat: 'uint32',
+          topology: 'line-strip',
+        },
       },
+      createDebugLinesVertShader2,
+      engine.gpu!.shaders.ColorShader,
       {
         stride: 4 as Word<'dword'>,
       },
     );
+
     this.drawable = new DrawableIndexed({
       bindGroups: [],
       node: this,

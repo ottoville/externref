@@ -1,7 +1,11 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
-import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
+import {
+  createGroundFragShader2,
+  createGroundVertShader2,
+  TerrainRenderPipeline,
+} from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
 import type { GroundVertShader } from '../Shaders/Ground.vert.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
@@ -67,12 +71,12 @@ export class TerrainMesh extends BoundableNodeIndexed {
       });
       const renderPipeline = engine.gpu.createRenderPipeline(
         TerrainRenderPipeline,
-        {},
+        createGroundVertShader2,
+        createGroundFragShader2,
         {
           stride: verticesPositionStride,
         },
       );
-
       this.drawable = new LightsTextureDrawableIndexed(
         {
           node: this,

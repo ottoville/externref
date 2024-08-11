@@ -1,26 +1,29 @@
 import {
   type BufLayout,
+  ShaderBuilder,
   type ShaderStage,
-  VertexShader,
   VertexShaderFunction,
   WGSLcode,
 } from '../../../webgpu-ts/index.js';
-import { GPU } from '../../../GPU.js';
+import { GPU, VertexBufferProps } from '../../../GPU.js';
 import { type Scene, colorPositionOutput } from '../structs/Structs.js';
 import { positionAttr } from '../structs/Attributes.js';
 
 export function createDebugBoundingBoxVertShader(
-  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
-  arrayStride: Word<'dword'>,
+  gpu: GPU,
+  vertexBufferProps: VertexBufferProps,
 ) {
-  return new VertexShader({
-    entryPoints: {
-      main: new VertexShaderFunction(
+  const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
+  const arrayStride = vertexBufferProps.stride;
+  return new ShaderBuilder([pipelineLayout])
+    .addFunction(
+      'main',
+      new VertexShaderFunction(
         colorPositionOutput,
         [
           {
             arrayStride: arrayStride * 4,
-            attributes2: positionAttr,
+            attributes: positionAttr,
             stepMode: 'vertex',
           },
         ],
@@ -34,16 +37,16 @@ export function createDebugBoundingBoxVertShader(
           ],
           [{ position }],
         ) => WGSLcode/* wgsl */ `
-                var output : Output;
-                var vertexPosition:vec4<f32> = ${world.prop(
-                  'transformation',
-                )} * ${position};
-                output.position = ${scene.prop(
-                  'modelViewProjection',
-                )} * vertexPosition;
-                output.color = vec3<f32>(0.0,1.0,0.0);
-                return output;
-            `,
+            var output : Output;
+            var vertexPosition:vec4<f32> = ${world.prop(
+              'transformation',
+            )} * ${position};
+            output.position = ${scene.prop(
+              'modelViewProjection',
+            )} * vertexPosition;
+            output.color = vec3<f32>(0.0,1.0,0.0);
+            return output;
+        `,
       ) satisfies VertexShaderFunction<
         [
           // eslint-disable-next-line @typescript-eslint/ban-types
@@ -59,10 +62,8 @@ export function createDebugBoundingBoxVertShader(
           },
         ]
       >,
-    },
-    label: 'debug_boundingBox.vert',
-    pipelineLayouts: [pipelineLayout],
-  });
+    )
+    .build('debug_boundingBox.vert');
 }
 export type DebugBoundingBoxVertShader = ReturnType<
   typeof createDebugBoundingBoxVertShader

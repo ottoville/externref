@@ -6,14 +6,20 @@ import {
   ShaderBuilder,
   WGSLcode,
 } from '../../webgpu-ts/index.js';
-import type { GPU } from '../../GPU.js';
+import type { GPU, VertexBufferProps } from '../../GPU.js';
 import { type Scene, WaterInput } from './structs/Structs.js';
 import { positionAttr } from './structs/Attributes.js';
 
 export function createWaterVertShader(
-  pipelineLayout: GPU['bindGroupTextureWater'],
-  buffers: VertexBufferLayout2<typeof positionAttr>,
+  gpu: GPU,
+  vertexBufferProps: VertexBufferProps,
 ) {
+  const pipelineLayout = gpu.bindGroupTextureWater;
+  const buffers: VertexBufferLayout2<typeof positionAttr> = {
+    arrayStride: vertexBufferProps.stride * 4,
+    attributes: positionAttr,
+    stepMode: 'vertex',
+  };
   return new ShaderBuilder([pipelineLayout])
     .addFunction(
       'main',

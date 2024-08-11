@@ -6,7 +6,7 @@ import {
   ShaderBuilder,
   WGSLcode,
 } from '../../webgpu-ts/index.js';
-import { GPU } from '../../GPU.js';
+import { GPU, VertexBufferProps } from '../../GPU.js';
 import {
   type Scene,
   type Time,
@@ -41,13 +41,31 @@ export const vertexPositionAttr = Object.freeze({
 } as const);
 
 export function createGrassVertShader(
-  pipelineLayout: GPU['shaders']['rootCameralayout'],
-  buffers: [
+  gpu: GPU,
+  vertexBufferProps: VertexBufferProps,
+) {
+  const pipelineLayout = gpu.shaders.rootCameralayout;
+  const buffers: [
     VertexBufferLayout2<typeof positionAttr>,
     VertexBufferLayout2<typeof shapeAttr>,
     VertexBufferLayout2<typeof vertexPositionAttr>,
-  ],
-) {
+  ] = [
+    {
+      arrayStride: vertexBufferProps.stride * 4,
+      attributes: positionAttr,
+      stepMode: 'instance',
+    },
+    {
+      arrayStride: 4 * 4,
+      attributes: shapeAttr,
+      stepMode: 'instance',
+    },
+    {
+      arrayStride: 8,
+      attributes: vertexPositionAttr,
+      stepMode: 'vertex',
+    },
+  ];
   const shaderFunction = new VertexShaderFunction(
     colorPositionOutput,
     buffers,

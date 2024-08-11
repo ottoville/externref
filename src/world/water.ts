@@ -4,11 +4,24 @@ import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { WaterRenderPipeline } from '../GPU/RenderPipeLines/Water.js';
 import type { Engine } from '../engine.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
-import type { WaterVertShader } from '../GPU/Shaders/Water.vert.js';
+import {
+  createWaterVertShader,
+  type WaterVertShader,
+} from '../GPU/Shaders/Water.vert.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 import { BindGroup } from '../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
+import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
+
+const createWaterVertShader2 = Object.freeze([
+  'water.vert',
+  createWaterVertShader,
+] as const);
+const createWaterFragShader2 = Object.freeze([
+  'water.frag',
+  createWaterFragShader,
+] as const);
 
 export class Sea extends BoundableNodeSimple {
   override drawable:
@@ -58,12 +71,16 @@ export class Sea extends BoundableNodeSimple {
     ); //48
     if (engine.gpu) {
       const renderPipeline = engine.gpu.createRenderPipeline(
-        WaterRenderPipeline,
         {
-          frontFace: 'cw',
-          stripIndexFormat: 'uint16',
-          topology: 'triangle-strip',
+          ...WaterRenderPipeline,
+          primitive: {
+            frontFace: 'cw',
+            stripIndexFormat: 'uint16',
+            topology: 'triangle-strip',
+          },
         },
+        createWaterVertShader2,
+        createWaterFragShader2,
         {
           stride: 4 as Word<'dword'>,
         },

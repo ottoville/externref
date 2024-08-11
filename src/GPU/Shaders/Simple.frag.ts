@@ -17,15 +17,14 @@ import {
   ShaderBuilder,
 } from '../../webgpu-ts/index.js';
 
-export function createPickOutputFragment() {
-  return new FragmentShaderFunction(
-    pickOutputFragment,
-    (_, { id }) => /* wgsl */ ` var output:PickOutput;
+export const pickOutputFragmentFunction = new FragmentShaderFunction(
+  pickOutputFragment,
+  (_, { id }) => /* wgsl */ ` var output:PickOutput;
           output.ID = ${id};
           return output;`,
-    pickOutput,
-  );
-}
+  pickOutput,
+);
+
 const mainFunction = new FragmentShaderFunction(
   diffuseOutput,
   (
@@ -38,12 +37,6 @@ const mainFunction = new FragmentShaderFunction(
   ) => /* wgsl */ `var output:Output;
         output.Diffuse = vec4<f32>(${color},1.0);
         //output.Diffuse.w=0.0;
-      
-      
-        //DEBUG depth slices
-        //let tile : vec3<u32> = getTile(fragCoord.xyz);
-        //output.Diffuse = vec4<f32>(colorSet[tile.z % 9u], 0.0);
-      
       
           let cluster_index = getClusterIndex(vec4<f32>(${fragCoord}.xyz, 1.0));
           let cluster_lights_count=${clusters_array.prop(
@@ -97,16 +90,27 @@ export function createSimpleFragShader(
 ) {
   return new ShaderBuilder([pipelineLayout])
     .addFunction('main', mainFunction)
-    .addFunction('pick', createPickOutputFragment())
+    .addFunction('pick', pickOutputFragmentFunction)
     .build(
       'Simple.frag',
       ([
         { screen_dimensions },
         { /*scene, clusters_array, meshes,*/ projection },
         /*{ world, }*/
-      ]) =>
-        `
+      ]) => /* wgsl */ `
         ${getClusterIndex(screen_dimensions, projection)}
+
+        var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
+          vec3<f32>(1.0, 0.0, 0.0),
+          vec3<f32>(1.0, 0.5, 0.0),
+          vec3<f32>(0.5, 1.0, 0.0),
+          vec3<f32>(0.0, 1.0, 0.0),
+          vec3<f32>(0.0, 1.0, 0.5),
+          vec3<f32>(0.0, 0.5, 1.0),
+          vec3<f32>(0.0, 0.0, 1.0),
+          vec3<f32>(0.5, 0.0, 1.0),
+          vec3<f32>(1.0, 0.0, 0.5)
+        );
       `,
     );
 }

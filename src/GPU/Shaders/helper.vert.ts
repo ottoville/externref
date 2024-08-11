@@ -6,7 +6,7 @@ import {
   VertexBuildin,
   WGSLcode,
 } from '../../webgpu-ts/index.js';
-import type { Terrain } from '../../world/Terrain.js';
+import { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import {
   type Scene,
@@ -63,10 +63,9 @@ return output;
   ]
 >;
 
-export function createHelperVertShader(
-  settings: typeof Terrain.settings,
-  pipelineLayout: GPU['shaders']['terrainHeightsbindGroupTreePosition'],
-) {
+export function createHelperVertShader(gpu: GPU) {
+  const pipelineLayout = gpu.shaders.terrainHeightsbindGroupTreePosition;
+  const settings = Terrain.settings;
   return new ShaderBuilder([pipelineLayout] as const)
     .addFunction('main', shaderFunction)
     .build(

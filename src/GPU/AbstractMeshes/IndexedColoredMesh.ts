@@ -1,10 +1,15 @@
 ﻿import { MainNodeProps } from 'MainNode.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import { ColoredRenderPipeline } from '../RenderPipeLines/ColoredRenderPipeline.js';
+import {
+  ColoredRenderPipeline,
+  createSimpleFragShader2,
+  createSimpleColoredVertShader2,
+} from '../RenderPipeLines/ColoredRenderPipeline.js';
 import {
   SimpleIndexedMesh,
   type SimpleIndexedMeshProps,
 } from './SimpleIndexedMesh.js';
+
 /**
  * Mesh where each vertex have a color value
  */
@@ -20,6 +25,8 @@ export class IndexedColoredMesh extends SimpleIndexedMesh {
       mainNodeProps,
       indicesView,
       ColoredRenderPipeline,
+      createSimpleColoredVertShader2,
+      createSimpleFragShader2,
       simpleIndexedMeshProps,
     );
   }

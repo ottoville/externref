@@ -38,7 +38,7 @@ export abstract class Drawable<N extends MainNode = MainNode>
     size?: GPUSize64 | undefined;
   }[] = [];
   public renderPipeline: RenderPipelineProps;
-  protected renderPasses: Set<RenderPass>;
+  renderPasses: Set<RenderPass>;
   destroyed = false;
   bindGroups: { bindGroup: BindGroup; offsets?: number[] }[];
   constructor({
@@ -90,7 +90,6 @@ export abstract class Drawable<N extends MainNode = MainNode>
           };
         if (rp.onDecoratePipeline)
           rp.onDecoratePipeline(renderPipeline, renderPipelineDescriptor);
-
         variantPP = this.renderPipeline.builder
           .build(renderPipelineDescriptor)
           .then((variantPipeline) => {
@@ -116,8 +115,7 @@ export abstract class Drawable<N extends MainNode = MainNode>
     });
   }
 
-  //staticBindGroup?: BindGroup;
-  destroy(preserveVerticeBuffers: number[] = []): void {
+  remove(): void {
     this.renderPasses.forEach((rp) => {
       rp.renderPipelines.forEach((renderPipeline) => {
         if (renderPipeline instanceof Promise) {
@@ -133,6 +131,9 @@ export abstract class Drawable<N extends MainNode = MainNode>
         }
       });
     });
+  }
+  destroy(preserveVerticeBuffers: number[] = []): void {
+    this.remove();
     this.vertexBuffers.forEach((b, key) => {
       if (!preserveVerticeBuffers.includes(key)) b.buffer.destroy();
     });

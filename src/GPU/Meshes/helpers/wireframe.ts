@@ -1,6 +1,9 @@
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
-import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
+import {
+  createDebugLinesVertShader2,
+  DebugLinesPipeline,
+} from '../../RenderPipeLines/DebugLinesPipeline.js';
 import {
   DataNode,
   allocate_vec_positions,
@@ -35,10 +38,14 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   };
 
   const renderPipeline = engine.gpu!.createRenderPipeline(
-    DebugLinesPipeline,
     {
-      topology: 'line-list',
+      ...DebugLinesPipeline,
+      primitive: {
+        topology: 'line-list',
+      },
     },
+    createDebugLinesVertShader2,
+    engine.gpu!.shaders.ColorShader,
     {
       stride: (vertexBufferStrideBytes / 4) as Word<'dword'>,
     },

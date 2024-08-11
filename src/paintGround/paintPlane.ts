@@ -11,8 +11,6 @@ import {
 } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import { DataNode } from '../nodes/DataNode.js';
-import type { CreateRenderPipelineProps } from '../GPU.js';
-import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
 declare const engine: Engine;
 
@@ -61,47 +59,23 @@ export class paintPlane extends paintGround {
       this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0);
       callback(p);
     });
+    const createPlaneAtGroundHeightVertShader2 = Object.freeze([
+      'planeAtGroundHeight.vert',
+      createPlaneAtGroundHeightVertShader,
+    ] as const);
     const renderPipeline = ground.gpu.createRenderPipeline(
-      [
-        'paintPlaneRenderpipeline',
-        (
-          { label, primitive }: CreateRenderPipelineProps,
-          vertexBufferProps,
-        ) => {
-          const vertexShader = createPlaneAtGroundHeightVertShader(
-            ground.gpu.shaders.terrainHeightsbindGroupTreePosition,
-            {
-              arrayStride: vertexBufferProps.stride * 4,
-              attributes2: Object.freeze({
-                position: {
-                  format: 'float32x3',
-                  offset: 0,
-                  shaderFormat: 'vec4<f32>',
-                  shaderLocation: 0,
-                },
-              } as const),
-              stepMode: 'vertex',
-            },
-            Terrain.settings,
-          );
-          return Object.freeze({
-            builder: createRenderPipelineBuilder(
-              vertexShader,
-              ground.gpu.shaders.ColorShader,
-            ),
-            connections: {
-              main: 'main',
-            },
-            label,
-            primitive,
-          });
-        },
-      ],
       {
-        cullMode: 'back',
-        frontFace: 'cw',
-        topology: 'triangle-list',
+        connections: {
+          main: 'main',
+        },
+        primitive: {
+          cullMode: 'back',
+          frontFace: 'cw',
+          topology: 'triangle-list',
+        },
       },
+      createPlaneAtGroundHeightVertShader2,
+      ground.gpu.shaders.ColorShader,
       {
         stride: 12 as Word<'dword'>,
       },

@@ -1,6 +1,7 @@
 /* eslint-disable sort-keys */
 
 import { Struct } from '../../../webgpu-ts/index.js';
+export const tileCount = [32, 18, 48] as const;
 
 export const typicalOutput = new Struct('Output', {
   fragCoord: ['@builtin(position)', 'vec4<f32>'],
@@ -10,7 +11,9 @@ export const typicalOutput = new Struct('Output', {
   position: ['@location(3)', 'vec3<f32>'],
   scenes: ['@location(4) @interpolate(flat)', 'u32'],
 });
-
+export const fragOutput = new Struct('Output', {
+  fragCoord: ['@builtin(position)', 'vec4<f32>'],
+});
 export const pickOutput = new Struct('PickOutput', {
   Position: ['@builtin(position)', 'vec4<f32>'],
   id: ['@location(0) @interpolate(flat)', 'u32'],
@@ -128,9 +131,15 @@ export const Lights = new Struct('Lights', {
 export const Clusters = new Struct(
   'Clusters',
   {
-    bounds: ['', 'array<ClusterBounds, 27648>'], //32 * 18 * 48 = total tiles = 27648
+    bounds: [
+      '',
+      `array<ClusterBounds, ${tileCount[0] * tileCount[1] * tileCount[2]}>`,
+    ], //32 * 18 * 48 = total tiles = 27648
     lightsCount: ['', 'array<u32, 27648>'],
-    lights: ['', 'array<u32, 1741824>'], //27648 * 63 = 1741824`,
+    lights: [
+      '',
+      `array<u32, ${tileCount[0] * tileCount[1] * tileCount[2] * 63}>`,
+    ], //27648 * 63 = 1741824`,
   },
   [ClusterBounds],
 );

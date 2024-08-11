@@ -35,9 +35,8 @@ const singleColorFrag = new FragmentShaderFunction<
   `,
 );
 
-export function createSingleColorFragShader(
-  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
-) {
+export function createSingleColorFragShader(gpu: GPU) {
+  const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
   return new ShaderBuilder([pipelineLayout])
     .addFunction('main', singleColorFrag)
     .build('SingleColor.frag');

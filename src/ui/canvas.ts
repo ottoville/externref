@@ -152,7 +152,7 @@ export class Canvas {
           human.translation = [403.4, 1000, 23];
 
           const prism = new RightTriangularPrism({
-            can_collide: true,
+            can_collide: false,
           });
           prism.translation = [403.4, 1000, 30];
 

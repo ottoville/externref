@@ -1,30 +1,18 @@
 import { createVertexColorShader } from '../Shaders/VertexColoredWithNormal.vert.js';
-import type {
-  CreateRenderPipelineProps,
-  VertexBufferProps,
-} from '../../GPU.js';
-import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
-
-export const ColoredRenderPipeline = [
-  'ColoredRenderPipeline',
-  function SimpleRenderPipeline(
-    { gpu, label, primitive }: CreateRenderPipelineProps,
-    vertexBufferProps: VertexBufferProps,
-  ) {
-    return Object.freeze({
-      builder: createRenderPipelineBuilder(
-        createVertexColorShader(
-          gpu.shaders.positionAndTimeBindGroup,
-          vertexBufferProps.stride * 4,
-        ),
-        gpu.simpleFragShader,
-      ),
-      connections: {
-        main: 'main',
-        pick: 'pick',
-      },
-      label,
-      primitive,
-    });
+import type { GPU } from '../../GPU.js';
+export const createSimpleColoredVertShader2 = Object.freeze([
+  'simpleColored.vert',
+  createVertexColorShader,
+] as const);
+export const createSimpleFragShader2 = Object.freeze([
+  'simple.frag',
+  (gpu: GPU) => {
+    return gpu.simpleFragShader;
   },
-] as const;
+] as const);
+export const ColoredRenderPipeline = Object.freeze({
+  connections: {
+    main: 'main',
+    pick: 'pick',
+  },
+});

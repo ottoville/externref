@@ -46,9 +46,8 @@ const waterFragFunction = new FragmentShaderFunction(
   ]
 >;
 
-export function createWaterFragShader(
-  pipelineLayout: GPU['bindGroupTextureWater'],
-) {
+export function createWaterFragShader(gpu: GPU) {
+  const pipelineLayout = gpu.bindGroupTextureWater;
   return new ShaderBuilder([pipelineLayout])
     .addFunction('main', waterFragFunction)
     .build('Water.frag');

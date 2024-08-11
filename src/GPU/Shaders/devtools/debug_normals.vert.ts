@@ -6,14 +6,16 @@ import {
   VertexBuildin,
   ShaderBuilder,
 } from '../../../webgpu-ts/index.js';
-import { GPU } from '../../../GPU.js';
+import { GPU, VertexBufferProps } from '../../../GPU.js';
 import { type Scene, colorPositionOutput } from '../structs/Structs.js';
 import { simpleAttributes } from '../structs/Attributes.js';
 
 export function createDebugNormalsVertShader(
-  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
-  arrayStride: Word<'dword'>,
+  gpu: GPU,
+  vertexBufferProps: VertexBufferProps,
 ) {
+  const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
+  const arrayStride = vertexBufferProps.stride;
   return new ShaderBuilder([pipelineLayout])
     .addFunction(
       'main',
@@ -22,7 +24,7 @@ export function createDebugNormalsVertShader(
         [
           {
             arrayStride: arrayStride * 4,
-            attributes2: simpleAttributes,
+            attributes: simpleAttributes,
             stepMode: 'vertex',
           },
         ],

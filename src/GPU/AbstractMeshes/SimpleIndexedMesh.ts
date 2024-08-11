@@ -1,9 +1,9 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine } from '../../engine.js';
-import type { RenderPipelineProps } from '../RenderPipeline.js';
+import type { RenderPipelineProps0 } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import { type CreateRenderPipelineCB } from '../../GPU.js';
+import type { GPU, VertexBufferProps } from '../../GPU.js';
 import {
   type AnyVertexStage,
   type BindGroupLayoutEntry,
@@ -12,6 +12,7 @@ import {
   type VertexShaderFunction,
   Buffer,
   BufferUsageEnums,
+  FragmentShader,
 } from '../../webgpu-ts/index.js';
 import { MainNodeProps } from 'MainNode.js';
 declare const engine: Engine;
@@ -28,18 +29,34 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps,
     indicesView: rust_vec_ptr<'usize'>,
-    createRenderPipeline: CreateRenderPipelineCB<
-      RenderPipelineProps<
-        VertexShader<{
-          main: VertexShaderFunction<
-            readonly {
-              [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
-            }[],
-            readonly [VertexBufferLayout2]
-          >;
-        }>
-      >
+    createRenderPipeline: RenderPipelineProps0<
+      VertexShader<{
+        main: VertexShaderFunction<
+          readonly {
+            [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
+          }[],
+          readonly [VertexBufferLayout2]
+        >;
+      }>
     >,
+    vertexShaderBuilder: readonly [
+      label: string,
+      builder: (
+        gpu: GPU,
+        vertexBufferProps: VertexBufferProps,
+      ) => VertexShader<{
+        main: VertexShaderFunction<
+          readonly {
+            [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
+          }[],
+          readonly [VertexBufferLayout2]
+        >;
+      }>,
+    ],
+    fragmentShaderBuilder: readonly [
+      label: string,
+      builder: (gpu: GPU) => FragmentShader,
+    ],
     {
       vBufferGPU,
       topology = 'triangle-list',
@@ -99,8 +116,9 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         );
       }
       const renderPipeline = engine.gpu.createRenderPipeline(
-        createRenderPipeline,
-        primitiveState,
+        { ...createRenderPipeline, primitive: primitiveState },
+        vertexShaderBuilder,
+        fragmentShaderBuilder,
         {
           stride: this.vertices_stride,
         },

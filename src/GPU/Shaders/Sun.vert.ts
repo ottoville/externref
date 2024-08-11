@@ -6,12 +6,11 @@ import {
   VertexBuildin,
   ShaderBuilder,
 } from '../../webgpu-ts/index.js';
-import { GPU } from '../../GPU.js';
+import type { GPU } from '../../GPU.js';
 import { PositionOutput, type Scene } from './structs/Structs.js';
 
-export function createSunVertShader(
-  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
-) {
+export function createSunVertShader(gpu: GPU) {
+  const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
   return new ShaderBuilder([pipelineLayout])
     .addFunction(
       'main',

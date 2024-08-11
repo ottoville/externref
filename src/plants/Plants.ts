@@ -2,7 +2,10 @@ import { WorkerThread, WorkerReturn } from '../WorkerThread.js';
 import { Terrain } from '../world/Terrain.js';
 
 import type { Scene } from '../Scene.js';
-import { PlantsRenderPipeline } from '../GPU/RenderPipeLines/Plants.js';
+import {
+  createGrassVertShader2,
+  PlantsRenderPipeline,
+} from '../GPU/RenderPipeLines/Plants.js';
 
 import type { Engine } from '../engine.js';
 import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
@@ -89,12 +92,16 @@ export class Plants extends MainNode {
     });
     if (engine.gpu) {
       const renderPipeline = engine.gpu.createRenderPipeline(
-        PlantsRenderPipeline,
         {
-          cullMode: 'none',
-          stripIndexFormat: 'uint16',
-          topology: 'triangle-strip',
+          ...PlantsRenderPipeline,
+          primitive: {
+            cullMode: 'none',
+            stripIndexFormat: 'uint16',
+            topology: 'triangle-strip',
+          },
         },
+        createGrassVertShader2,
+        scene.gpu.shaders.ColorShader,
         {
           stride: 4 as Word<'dword'>,
         },

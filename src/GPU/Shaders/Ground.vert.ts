@@ -6,7 +6,7 @@ import {
   ShaderBuilder,
   WGSLcode,
 } from '../../webgpu-ts/index.js';
-import type { GPU } from '../../GPU.js';
+import type { GPU, VertexBufferProps } from '../../GPU.js';
 import { GroundInput, type Scene, pickOutput } from './structs/Structs.js';
 
 type GroundFunction = VertexShaderFunction<
@@ -23,11 +23,37 @@ type GroundFunction = VertexShaderFunction<
     {},
   ]
 >;
+const attributes = Object.freeze({
+  normal: {
+    format: 'float32x3',
+    offset: 16,
+    shaderFormat: 'vec3<f32>',
+    shaderLocation: 1,
+  },
+  position: {
+    format: 'float32x3',
+    offset: 0,
+    shaderFormat: 'vec3<f32>',
 
+    shaderLocation: 0,
+  },
+  uv: {
+    format: 'float32x2',
+    offset: 32,
+    shaderFormat: 'vec2<f32>',
+    shaderLocation: 2,
+  },
+} as const);
 export function createGroundVertShader(
-  pipelineLayout: GPU['lightsTextureBindGroup'],
-  buffers: VertexBufferLayout2,
+  gpu: GPU,
+  vertexBufferProps: VertexBufferProps,
 ) {
+  const pipelineLayout = gpu.lightsTextureBindGroup;
+  const buffers: VertexBufferLayout2 = {
+    arrayStride: vertexBufferProps.stride * 4,
+    attributes: attributes,
+    stepMode: 'vertex',
+  };
   return new ShaderBuilder([pipelineLayout])
     .addFunction(
       'main',

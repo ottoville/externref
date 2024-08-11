@@ -1,5 +1,6 @@
 import { TerraMatrix } from '../Math.js';
-import type { GPU } from '../GPU.js';
+import { type GPU } from '../GPU.js';
+import { tileCount } from './Shaders/structs/Structs.js';
 import { Buffer, BufferUsageEnums } from '../webgpu-ts/index.js';
 export const PROJECTION_BUFFER_SIZE = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 export class Projection {
@@ -76,9 +77,9 @@ export class Projection {
           this.farPlane,
           this.nearPlane * this.farPlane,
           this.farPlane - this.nearPlane,
-          gpu.clustersInRow[2] / Math.log2(this.farPlane / this.nearPlane), //sliceScale
+          tileCount[2] / Math.log2(this.farPlane / this.nearPlane), //sliceScale
           -(
-            (gpu.clustersInRow[2] * Math.log2(this.nearPlane)) /
+            (tileCount[2] * Math.log2(this.nearPlane)) /
             Math.log2(this.farPlane / this.nearPlane)
           ), //sliceBias
         ]);

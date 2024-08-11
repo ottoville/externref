@@ -5,7 +5,7 @@ import {
   VertexShaderFunction,
   WGSLcode,
 } from '../../webgpu-ts/index.js';
-import { GPU } from '../../GPU.js';
+import { GPU, VertexBufferProps } from '../../GPU.js';
 import { type Scene, typicalOutput } from './structs/Structs.js';
 import { createPickOutput } from './SingleColoredWithNormal.vert.js';
 import { simpleAttributesWithColor } from './structs/Attributes.js';
@@ -14,13 +14,15 @@ import { simpleAttributesWithColor } from './structs/Attributes.js';
   Shader where each vertex carries a color property
 */
 export function createVertexColorShader(
-  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
-  arrayStride: number,
+  gpu: GPU,
+  vertexBufferProps: VertexBufferProps,
 ) {
+  const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
+  const arrayStride = vertexBufferProps.stride * 4;
   const buffers = Object.freeze([
     {
       arrayStride,
-      attributes2: simpleAttributesWithColor,
+      attributes: simpleAttributesWithColor,
       stepMode: 'vertex',
     },
   ] as const);

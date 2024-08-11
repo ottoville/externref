@@ -1,16 +1,20 @@
 ﻿import { BoundableNodeSimple } from '../../nodes/BoundableNodeSimple.js';
 import { DrawableSimple } from '../Drawables/DrawableSimple.js';
 import type { Engine } from '../../engine.js';
-import { SimpleRenderPipeline } from '../RenderPipeLines/SimpleRenderPipeline.js';
+import {
+  createSimpleVertShader2,
+  SimpleRenderPipeline,
+} from '../RenderPipeLines/SimpleRenderPipeline.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { SimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import { MainNodeProps } from 'MainNode.js';
+import type { MainNodeProps } from 'MainNode.js';
 import {
   Buffer,
   BufferUsageEnums,
   type VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
+import { createSimpleFragShader2 } from '../RenderPipeLines/ColoredRenderPipeline.js';
 
 declare const engine: Engine;
 
@@ -56,7 +60,8 @@ export class SimpleMesh extends BoundableNodeSimple {
       }
       const renderPipeline = engine.gpu.createRenderPipeline(
         SimpleRenderPipeline,
-        {},
+        createSimpleVertShader2,
+        createSimpleFragShader2,
         {
           stride: 8 as Word<'dword'>,
         },

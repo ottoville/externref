@@ -2,9 +2,10 @@ import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
 import {
   Clusters,
   ProjectionStruct,
+  tileCount,
   type ScreenDimensions,
 } from './structs/Structs.js';
-import type { GPU } from '../../GPU.js';
+import { type GPU } from '../../GPU.js';
 import {
   BGLayout,
   BufLayout,
@@ -91,9 +92,6 @@ export function createClustersCompShader(
           
           //Eye position is zero in view space
           const eyePos = vec3<f32>(0.0, 0.0, 0.0);
-          
-          //let tileCount : vec3<u32> = vec3<u32>(1u, 1u, 1u);
-          const tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
       `,
       entryPoints: {
         main: new ComputeShaderFunction<
@@ -114,14 +112,14 @@ export function createClustersCompShader(
           [4, 2, 4],
           ([{ screen_dimensions }, { clusters, screentoview }]) => /* wgsl */ `
             let tileIndex = global_id.x +
-            global_id.y * tileCount.x +
-            global_id.z * tileCount.x * tileCount.y;
+            global_id.y * ${tileCount[0]} +
+            global_id.z * ${tileCount[0]} * ${tileCount[1]};
 let tileSize = vec2<f32>(${screen_dimensions.prop(
             'screenDimensions',
-          )}.x / f32(tileCount.x),
+          )}.x / f32(${tileCount[0]}),
                      ${screen_dimensions.prop(
                        'screenDimensions',
-                     )}.y / f32(tileCount.y));
+                     )}.y / f32(${tileCount[1]}));
 //Calculating the min and max point in screen space
 
 let maxPoint_sS = vec4<f32>(vec2<f32>(f32(global_id.x+1u), f32(global_id.y+1u)) * tileSize, 1.0, 1.0);
@@ -132,12 +130,12 @@ let minPoint_vS = screen2View(minPoint_sS).xyz;
 //Near and far values of the cluster in view space
 let tileNear = -${screentoview.prop('zNear')} * pow(${screentoview.prop(
             'zFar',
-          )}/ ${screentoview.prop('zNear')}, f32(global_id.z)/f32(tileCount.z));
+          )}/ ${screentoview.prop('zNear')}, f32(global_id.z)/f32(${tileCount[2]}));
 let tileFar = -${screentoview.prop('zNear')} * pow(${screentoview.prop(
             'zFar',
           )}/ ${screentoview.prop(
             'zNear',
-          )}, f32(global_id.z+1u)/f32(tileCount.z));
+          )}, f32(global_id.z+1u)/f32(${tileCount[2]}));
 //Finding the 4 intersection points made from the maxPoint to the cluster near/far plane
 let minPointNear = lineIntersectionToZPlane(eyePos, minPoint_vS, tileNear);
 let minPointFar = lineIntersectionToZPlane(eyePos, minPoint_vS, tileFar);

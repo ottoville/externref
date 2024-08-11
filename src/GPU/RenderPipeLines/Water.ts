@@ -1,36 +1,5 @@
-import { positionAttr } from '../Shaders/structs/Attributes.js';
-import type {
-  CreateRenderPipelineProps,
-  VertexBufferProps,
-} from '../../GPU.js';
-import { createWaterVertShader } from '../../GPU/Shaders/Water.vert.js';
-import { createWaterFragShader } from '../Shaders/Water.frag.js';
-import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
-
-export const WaterRenderPipeline = [
-  'WaterRenderPipeline',
-  function create(
-    { gpu, label, primitive }: CreateRenderPipelineProps,
-    vertexBufferProps: VertexBufferProps,
-  ) {
-    const waterVertShader = createWaterVertShader(gpu.bindGroupTextureWater, {
-      arrayStride: vertexBufferProps.stride * 4,
-      attributes2: positionAttr,
-      stepMode: 'vertex',
-    });
-    const waterFragShader = createWaterFragShader(gpu.bindGroupTextureWater);
-
-    const builder = createRenderPipelineBuilder(
-      waterVertShader,
-      waterFragShader,
-    );
-    return Object.freeze({
-      builder,
-      connections: {
-        main: 'main',
-      },
-      label,
-      primitive,
-    });
+export const WaterRenderPipeline = Object.freeze({
+  connections: {
+    main: 'main',
   },
-] as const;
+});

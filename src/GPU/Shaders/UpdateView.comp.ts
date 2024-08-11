@@ -1,5 +1,5 @@
-import type { GPU } from '../../GPU.js';
-import { Lights, ViewUniforms } from './structs/Structs.js';
+import { type GPU } from '../../GPU.js';
+import { Lights, tileCount, ViewUniforms } from './structs/Structs.js';
 
 import { UpdateClustersBufferLayout } from './Clusters.comp.js';
 import {
@@ -84,8 +84,8 @@ export function createUpdateViewShader(gpu: GPU) {
           { clusters, viewUniforms },
         ]) => /* wgsl */ `
             let tileIndex = global_id.x +
-            global_id.y * tileCount.x +
-            global_id.z * tileCount.x * tileCount.y;
+            global_id.y * ${tileCount[0]} +
+            global_id.z * ${tileCount[0]} * ${tileCount[1]};
 
 
 var lightCount=0u;
@@ -148,7 +148,6 @@ ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
   
       return sqDist;
     }
-  const tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
   `,
     );
 

@@ -2,7 +2,7 @@
 import { WorkerReturn, WorkerThread } from '../WorkerThread.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { MainNode } from '../MainNode.js';
-import { type CreateRenderPipelineProps, GPU } from '../GPU.js';
+import type { GPU } from '../GPU.js';
 import { MutableTerraVector3, TerraVector3 } from '../Math.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import type { Scene } from '../Scene.js';
@@ -19,7 +19,6 @@ import {
   type UIRectangleNodeState,
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
-import { createRenderPipelineBuilder } from '../webgpu-ts/index.js';
 import { UIRectangleNodeHover } from '../ui/UIRectangleNodeHover.js';
 declare const engine: Engine;
 
@@ -182,37 +181,26 @@ export class TerrainTool extends MainNode {
     });
     engine.addInputListener(this.#pointerdownf);
     this.positions_count = 4;
-    const getRenderPipeline = [
-      'TerrainToolRenderpipeline',
-      function getRenderPipelinef({
-        label,
-        primitive,
-      }: CreateRenderPipelineProps) {
-        const vertexShader = createHelperVertShader(
-          terrain.settings,
-          terrain.gpu.shaders.terrainHeightsbindGroupTreePosition,
-        );
-        const renderPipeline = Object.freeze({
-          builder: createRenderPipelineBuilder(
-            vertexShader,
-            terrain.gpu.shaders.ColorShader,
-          ),
-          connections: {
-            main: 'main',
-          },
-          label,
-          primitive,
-        });
-        return renderPipeline;
+    const createTerrainToolVertShader2 = Object.freeze([
+      'TerrainTool.vert',
+      createHelperVertShader,
+    ] as const);
+    const getRenderPipeline = Object.freeze({
+      connections: {
+        main: 'main',
       },
-    ] as const;
+    });
 
     const renderPipeline = terrain.gpu.createRenderPipeline(
-      getRenderPipeline,
       {
-        cullMode: 'none',
-        topology: 'triangle-list',
+        ...getRenderPipeline,
+        primitive: {
+          cullMode: 'none',
+          topology: 'triangle-list',
+        },
       },
+      createTerrainToolVertShader2,
+      terrain.gpu.shaders.ColorShader,
       undefined,
     );
     const scene = engine.scenes.get('main');

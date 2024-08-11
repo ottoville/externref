@@ -1,48 +1,12 @@
-import type {
-  CreateRenderPipelineProps,
-  VertexBufferProps,
-} from '../../GPU.js';
-import {
-  createGrassVertShader,
-  positionAttr,
-  shapeAttr,
-  vertexPositionAttr,
-} from '../Shaders/Grass.vert.js';
-import { createRenderPipelineBuilder } from '../../webgpu-ts/index.js';
+import { createGrassVertShader } from '../Shaders/Grass.vert.js';
 
-export const PlantsRenderPipeline = [
-  'PlantsRenderPipeline',
-  function PlantsRenderPipeline(
-    { gpu, label, primitive }: CreateRenderPipelineProps,
-    vertexBufferProps: VertexBufferProps,
-  ) {
-    const vertexShader = createGrassVertShader(gpu.shaders.rootCameralayout, [
-      {
-        arrayStride: vertexBufferProps.stride * 4,
-        attributes2: positionAttr,
-        stepMode: 'instance',
-      },
-      {
-        arrayStride: 4 * 4,
-        attributes2: shapeAttr,
-        stepMode: 'instance',
-      },
-      {
-        arrayStride: 8,
-        attributes2: vertexPositionAttr,
-        stepMode: 'vertex',
-      },
-    ]);
-    return Object.freeze({
-      builder: createRenderPipelineBuilder(
-        vertexShader,
-        gpu.shaders.ColorShader,
-      ),
-      connections: {
-        main: 'main',
-      },
-      label,
-      primitive,
-    });
+export const createGrassVertShader2 = Object.freeze([
+  'Grass.vert',
+  createGrassVertShader,
+] as const);
+
+export const PlantsRenderPipeline = Object.freeze({
+  connections: {
+    main: 'main',
   },
-] as const;
+});

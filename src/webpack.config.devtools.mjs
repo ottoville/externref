@@ -17,6 +17,8 @@ export default {
       '../../GPU/Meshes/helpers/normals.js',
     '../../GPU/Meshes/helpers/wireframe.js':
       '../../GPU/Meshes/helpers/wireframe.js',
+    '../../GPU/Meshes/helpers/depthSlices.js':
+      '../../GPU/Meshes/helpers/depthSlices.js',
     '../../MainNode.js': '../../MainNode.js',
     '../../Math.js': '../../Math.js',
     '../../controllers/ArcRotateCamera.js':
@@ -26,6 +28,7 @@ export default {
     '../../nodes/BoundableNodeIndexed.js':
       '../../nodes/BoundableNodeIndexed.js',
     '../../nodes/DataNode.js': '../../nodes/DataNode.js',
+    '../../RenderPipeLines/Terrain.js': '../../RenderPipeLines/Terrain.js',
   },
   mode: 'development',
   module: {

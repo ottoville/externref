@@ -4,13 +4,20 @@
  */
 
 import type { Engine } from '../engine.js';
-import { SimpleRenderPipeline } from '../GPU/RenderPipeLines/SimpleRenderPipeline.js';
-import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
+import {
+  createSimpleVertShader2,
+  SimpleRenderPipeline,
+} from '../GPU/RenderPipeLines/SimpleRenderPipeline.js';
+import {
+  createSunFragShader2,
+  createSunVertShader2,
+  SunRenderPipeline,
+} from '../GPU/RenderPipeLines/Sun.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { createWaterVertShader } from '../GPU/Shaders/Water.vert.js';
-import { positionAttr } from '../GPU/Shaders/structs/Attributes.js';
 import { Texture, TextureUsageEnums } from '../webgpu-ts/Texture.js';
+import { createSimpleFragShader2 } from 'GPU/RenderPipeLines/ColoredRenderPipeline.js';
 declare const engine: Engine;
 
 Texture.create({
@@ -120,8 +127,9 @@ engine.gpu!.createRenderPipeline(
 );
 //Should be fine
 const renderPipeline = engine.gpu!.createRenderPipeline(
-  SimpleRenderPipeline,
-  primitiveState,
+  { ...SimpleRenderPipeline, primitive: primitiveState },
+  createSimpleVertShader2,
+  createSimpleFragShader2,
   {
     stride: 4 as Word<'dword'>,
   },
@@ -150,12 +158,16 @@ engine.gpu!.createRenderPipeline(
 
 //Should be fine
 const renderPipeline2 = engine.gpu!.createRenderPipeline(
-  SunRenderPipeline,
   {
-    cullMode: 'none',
-    stripIndexFormat: 'uint16',
-    topology: 'triangle-strip',
+    ...SunRenderPipeline,
+    primitive: {
+      cullMode: 'none',
+      stripIndexFormat: 'uint16',
+      topology: 'triangle-strip',
+    },
   },
+  createSunVertShader2,
+  createSunFragShader2,
   undefined,
 );
 
@@ -168,8 +180,6 @@ new DrawableSimple({
   vertexBuffers: [new Float32Array()],
 });
 
-createWaterVertShader(engine.gpu!.bindGroupTextureWater, {
-  arrayStride: 16,
-  attributes2: positionAttr,
-  stepMode: 'vertex',
+createWaterVertShader(engine.gpu!, {
+  stride: 4 as Word<'dword'>,
 });
