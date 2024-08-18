@@ -1,11 +1,11 @@
-import {
-  createDebugLinesVertShader2,
-  DebugLinesPipeline,
-} from '../../RenderPipeLines/DebugLinesPipeline.js';
+import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import type { Engine } from '../../../engine.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import type { RenderPipelineProps } from '../../RenderPipeline.js';
-import type { DebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
+import {
+  createDebugBoundingBoxVertShader,
+  type DebugBoundingBoxVertShader,
+} from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
 import { Buffer, BufferUsageEnums } from '../../../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
@@ -82,7 +82,7 @@ export class BoundingBoxMesh extends DataNode {
     );
     this.positions_count = 26;
 
-    const renderPipeline = engine.gpu!.createRenderPipeline(
+    const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
       {
         ...DebugLinesPipeline,
         primitive: {
@@ -90,7 +90,7 @@ export class BoundingBoxMesh extends DataNode {
           topology: 'line-strip',
         },
       },
-      createDebugLinesVertShader2,
+      createDebugBoundingBoxVertShader,
       engine.gpu!.shaders.ColorShader,
       {
         stride: 4 as Word<'dword'>,

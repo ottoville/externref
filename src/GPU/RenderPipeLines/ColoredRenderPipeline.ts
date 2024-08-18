@@ -4,12 +4,9 @@ export const createSimpleColoredVertShader2 = Object.freeze([
   'simpleColored.vert',
   createVertexColorShader,
 ] as const);
-export const createSimpleFragShader2 = Object.freeze([
-  'simple.frag',
-  (gpu: GPU) => {
-    return gpu.simpleFragShader;
-  },
-] as const);
+export const createSimpleFragShader2 = (gpu: GPU) => {
+  return gpu.simpleFragShader;
+};
 export const ColoredRenderPipeline = Object.freeze({
   connections: {
     main: 'main',

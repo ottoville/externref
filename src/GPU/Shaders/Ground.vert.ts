@@ -3,8 +3,9 @@ import {
   VertexShaderFunction,
   type BufLayout,
   ShaderStage,
-  ShaderBuilder,
   WGSLcode,
+  VertexShaderBuilder,
+  VertexShader,
 } from '../../webgpu-ts/index.js';
 import type { GPU, VertexBufferProps } from '../../GPU.js';
 import { GroundInput, type Scene, pickOutput } from './structs/Structs.js';
@@ -54,7 +55,7 @@ export function createGroundVertShader(
     attributes: attributes,
     stepMode: 'vertex',
   };
-  return new ShaderBuilder([pipelineLayout])
+  return new VertexShaderBuilder([pipelineLayout], 'Ground.vert')
     .addFunction(
       'main',
       new VertexShaderFunction(
@@ -102,8 +103,10 @@ export function createGroundVertShader(
             return output;
         `,
       ) satisfies GroundFunction,
-    )
-    .build('Ground.vert');
+    );
 }
 
-export type GroundVertShader = ReturnType<typeof createGroundVertShader>;
+export type GroundVertShader = VertexShader<
+  ReturnType<typeof createGroundVertShader>['entryPoints'],
+  ReturnType<typeof createGroundVertShader>['pipelineLayouts']
+>;

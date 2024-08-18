@@ -8,11 +8,12 @@ import {
   type AnyVertexStage,
   type BindGroupLayoutEntry,
   type VertexBufferLayout2,
-  type VertexShader,
   type VertexShaderFunction,
   Buffer,
   BufferUsageEnums,
-  FragmentShader,
+  type FragmentShaderBuilder,
+  type VertexShaderBuilder,
+  FragmentShaderFunction,
 } from '../../webgpu-ts/index.js';
 import { MainNodeProps } from 'MainNode.js';
 declare const engine: Engine;
@@ -30,33 +31,23 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
     mainNodeProps: MainNodeProps,
     indicesView: rust_vec_ptr<'usize'>,
     createRenderPipeline: RenderPipelineProps0<
-      VertexShader<{
-        main: VertexShaderFunction<
-          readonly {
-            [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
-          }[],
-          readonly [VertexBufferLayout2]
-        >;
-      }>
+      ReturnType<typeof vertexShaderBuilder>,
+      ReturnType<typeof fragmentShaderBuilder>
     >,
-    vertexShaderBuilder: readonly [
-      label: string,
-      builder: (
-        gpu: GPU,
-        vertexBufferProps: VertexBufferProps,
-      ) => VertexShader<{
-        main: VertexShaderFunction<
-          readonly {
-            [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
-          }[],
-          readonly [VertexBufferLayout2]
-        >;
-      }>,
-    ],
-    fragmentShaderBuilder: readonly [
-      label: string,
-      builder: (gpu: GPU) => FragmentShader,
-    ],
+    vertexShaderBuilder: (
+      gpu: GPU,
+      vertexBufferProps: VertexBufferProps,
+    ) => VertexShaderBuilder<{
+      main: VertexShaderFunction<
+        readonly {
+          [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
+        }[],
+        readonly [VertexBufferLayout2]
+      >;
+    }>,
+    fragmentShaderBuilder: (
+      gpu: GPU,
+    ) => FragmentShaderBuilder<{ [index: string]: FragmentShaderFunction }>,
     {
       vBufferGPU,
       topology = 'triangle-list',
@@ -115,7 +106,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
           },
         );
       }
-      const renderPipeline = engine.gpu.createRenderPipeline(
+      const renderPipeline = engine.gpu.createRenderPipelineBuilder(
         { ...createRenderPipeline, primitive: primitiveState },
         vertexShaderBuilder,
         fragmentShaderBuilder,

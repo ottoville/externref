@@ -4,26 +4,49 @@ import {
   VertexShaderFunction,
   WGSLcode,
   VertexBuildin,
-  ShaderBuilder,
+  VertexShaderBuilder,
+  VertexShader,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import { PositionOutput, type Scene } from './structs/Structs.js';
 
 export function createSunVertShader(gpu: GPU) {
-  const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
-  return new ShaderBuilder([pipelineLayout])
-    .addFunction(
-      'main',
-      new VertexShaderFunction(
-        PositionOutput,
-        [],
-        ([
-          ,
-          /*{ uniforms, }*/ {
-            scene /*time, clusters_array, meshes, projection*/,
-          },
-          { world },
-        ]) => WGSLcode/* wgsl */ `
+  const pipelineLayout = [gpu.shaders.positionAndTimeBindGroup] as const;
+
+  const builder = new VertexShaderBuilder(
+    pipelineLayout,
+    'Sun.vert',
+    () => /* wgsl */ `
+  const sunDistance: f32= 1495000.0;  //divided by 100000 correct one
+  const vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
+    vec2<f32>( -6824.0,  1557.0),
+    vec2<f32>( -6824.0, -1557.0),
+    vec2<f32>( -5472.0,  4364.0),
+    vec2<f32>( -5472.0, -4364.0),
+    vec2<f32>( -3037.0,  6306.0),
+    vec2<f32>( -3037.0, -6306.0),
+    vec2<f32>(     0.0,  7000.0),
+    vec2<f32>(     0.0, -7000.0),
+    vec2<f32>(  3037.0,  6306.0),
+    vec2<f32>(  3037.0, -6306.0),
+    vec2<f32>(  5472.0,  4364.0),
+    vec2<f32>(  5472.0, -4364.0),
+    vec2<f32>(  6824.0,  1557.0),
+    vec2<f32>(  6824.0, -1557.0)
+);
+`,
+  ).addFunction(
+    'main',
+    new VertexShaderFunction(
+      PositionOutput,
+      [],
+      ([
+        ,
+        /*{ uniforms, }*/ {
+          scene /*time, clusters_array, meshes, projection*/,
+        },
+        { world },
+      ]) => WGSLcode/* wgsl */ `
           var output:Output;
           let curPos: vec3<f32> = ${world.prop('transformation')}[3].xyz;
         
@@ -50,43 +73,25 @@ export function createSunVertShader(gpu: GPU) {
           return output;
       
         `,
-      ) satisfies VertexShaderFunction<
-        readonly [
-          // eslint-disable-next-line @typescript-eslint/ban-types
-          {},
-          {
-            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-          },
-          {
-            world: BufLayout<
-              ShaderStage.VERTEX_AND_FRAGMENT,
-              GPU['meshUniforms']
-            >;
-          },
-        ]
-      >,
-    )
-    .build(
-      'Sun.vert',
-      () => /* wgsl */ `
-  const sunDistance: f32= 1495000.0;  //divided by 100000 correct one
-  const vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
-    vec2<f32>( -6824.0,  1557.0),
-    vec2<f32>( -6824.0, -1557.0),
-    vec2<f32>( -5472.0,  4364.0),
-    vec2<f32>( -5472.0, -4364.0),
-    vec2<f32>( -3037.0,  6306.0),
-    vec2<f32>( -3037.0, -6306.0),
-    vec2<f32>(     0.0,  7000.0),
-    vec2<f32>(     0.0, -7000.0),
-    vec2<f32>(  3037.0,  6306.0),
-    vec2<f32>(  3037.0, -6306.0),
-    vec2<f32>(  5472.0,  4364.0),
-    vec2<f32>(  5472.0, -4364.0),
-    vec2<f32>(  6824.0,  1557.0),
-    vec2<f32>(  6824.0, -1557.0)
-);
-`,
-    );
+    ) satisfies VertexShaderFunction<
+      readonly [
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        {},
+        {
+          scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+        },
+        {
+          world: BufLayout<
+            ShaderStage.VERTEX_AND_FRAGMENT,
+            GPU['meshUniforms']
+          >;
+        },
+      ]
+    >,
+  );
+  return builder;
 }
-export type SunVertShader = ReturnType<typeof createSunVertShader>;
+export type SunVertShader = VertexShader<
+  ReturnType<typeof createSunVertShader>['entryPoints'],
+  ReturnType<typeof createSunVertShader>['pipelineLayouts']
+>;

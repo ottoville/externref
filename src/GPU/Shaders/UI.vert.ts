@@ -4,7 +4,7 @@ import {
   type BufLayout,
   type ShaderStage,
   WGSLcode,
-  ShaderBuilder,
+  VertexShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import { type UIUniforms, UI_Input } from './structs/Structs.js';
@@ -28,7 +28,7 @@ export function createUIVertShader(
   pipelineLayout: GPU['canvasRootLayout'],
   buffers: VertexBufferLayout2<typeof position_uv_attrs>,
 ) {
-  return new ShaderBuilder([pipelineLayout])
+  return new VertexShaderBuilder([pipelineLayout] as const, 'UI.vert')
     .addFunction(
       'main',
       new VertexShaderFunction(
@@ -51,6 +51,10 @@ export function createUIVertShader(
         ]
       >,
     )
-    .build('UI.vert');
+    .build();
 }
 export type UIVertShader = ReturnType<typeof createUIVertShader>;
+/*export type UIVertShader = VertexShader<
+  ReturnType<typeof createSimpleFragShader>['entryPoints'],
+  ReturnType<typeof createSimpleFragShader>['pipelineLayouts']
+>;*/

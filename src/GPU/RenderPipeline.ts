@@ -1,11 +1,17 @@
 ﻿import type {
   FragmentShader,
+  FragmentShaderBuilder,
   RenderPipelineBuilder,
   VertexShader,
+  VertexShaderBuilder,
 } from '../webgpu-ts/index.js';
 export type RenderPipelineProps0<
-  V extends VertexShader = VertexShader,
-  F extends FragmentShader = FragmentShader,
+  V extends VertexShaderBuilder | VertexShader =
+    | VertexShaderBuilder
+    | VertexShader,
+  F extends FragmentShaderBuilder | FragmentShader =
+    | FragmentShaderBuilder
+    | FragmentShader,
   P extends GPUPrimitiveState = GPUPrimitiveState,
 > = Readonly<{
   primitive?: P;
@@ -14,8 +20,8 @@ export type RenderPipelineProps0<
     depthCompare: GPUCompareFunction;
   };
   connections: Record<
-    keyof V['props']['entryPoints'] & string,
-    keyof F['props']['entryPoints'] & string
+    keyof V['entryPoints'] & string,
+    keyof F['entryPoints'] & string
   >;
 }>;
 export type RenderPipelineProps<

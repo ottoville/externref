@@ -3,8 +3,9 @@ import {
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
-  ShaderBuilder,
   WGSLcode,
+  VertexShaderBuilder,
+  type VertexShader,
 } from '../../webgpu-ts/index.js';
 import type { GPU, VertexBufferProps } from '../../GPU.js';
 import { type Scene, WaterInput } from './structs/Structs.js';
@@ -20,24 +21,23 @@ export function createWaterVertShader(
     attributes: positionAttr,
     stepMode: 'vertex',
   };
-  return new ShaderBuilder([pipelineLayout])
-    .addFunction(
-      'main',
-      new VertexShaderFunction(
-        WaterInput,
-        [buffers],
-        (
-          [
-            ,
-            /*{ uniforms, }*/ {
-              scene /*time, clusters_array, meshes, projection*/,
-            },
-            // eslint-disable-next-line no-empty-pattern
-            {},
-            { world },
-          ],
-          [{ position }],
-        ) => WGSLcode/* wgsl */ `
+  return new VertexShaderBuilder([pipelineLayout], 'water.vert').addFunction(
+    'main',
+    new VertexShaderFunction(
+      WaterInput,
+      [buffers],
+      (
+        [
+          ,
+          /*{ uniforms, }*/ {
+            scene /*time, clusters_array, meshes, projection*/,
+          },
+          // eslint-disable-next-line no-empty-pattern
+          {},
+          { world },
+        ],
+        [{ position }],
+      ) => WGSLcode/* wgsl */ `
             var output:Output;
             output.Position = ${
               scene.variableName
@@ -50,24 +50,26 @@ export function createWaterVertShader(
             //ambient=lights.ambient;
             return output;
         `,
-      ) satisfies VertexShaderFunction<
-        readonly [
-          // eslint-disable-next-line @typescript-eslint/ban-types
-          {},
-          {
-            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-          },
-          // eslint-disable-next-line @typescript-eslint/ban-types
-          {},
-          {
-            world: BufLayout<
-              ShaderStage.VERTEX_AND_FRAGMENT,
-              GPU['meshUniforms']
-            >;
-          },
-        ]
-      >,
-    )
-    .build('water.vert');
+    ) satisfies VertexShaderFunction<
+      readonly [
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        {},
+        {
+          scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+        },
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        {},
+        {
+          world: BufLayout<
+            ShaderStage.VERTEX_AND_FRAGMENT,
+            GPU['meshUniforms']
+          >;
+        },
+      ]
+    >,
+  );
 }
-export type WaterVertShader = ReturnType<typeof createWaterVertShader>;
+export type WaterVertShader = VertexShader<
+  ReturnType<typeof createWaterVertShader>['entryPoints'],
+  ReturnType<typeof createWaterVertShader>['pipelineLayouts']
+>;

@@ -5,9 +5,9 @@ import { UpdateClustersBufferLayout } from './Clusters.comp.js';
 import {
   BGLayout,
   BufLayout,
+  ComputeShaderBuilder,
   ComputeShaderFunction,
   PipelineLayout,
-  ShaderBuilder,
   ShaderStage,
 } from '../../webgpu-ts/index.js';
 
@@ -68,7 +68,30 @@ export function createUpdateViewShader(gpu: GPU) {
     bindGroupLayouts: bindLayouts,
     label: 'UpdateViewPipeline',
   });
-  const shader = new ShaderBuilder([pipelineLayout])
+  const shader = new ComputeShaderBuilder(
+    [pipelineLayout],
+    'UpdateView.comp',
+    () => /* wgsl */ `
+    fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
+      var sqDist = 0.0;
+      // const minAABB : vec3<f32> = clusters.bounds[tileIndex].minAABB;
+      // const maxAABB : vec3<f32> = clusters.bounds[tileIndex].maxAABB;
+  
+      // Wait, does this actually work? Just porting code, but it seems suspect?
+      for(var i = 0; i < 3; i = i + 1) {
+        let v = position[i];
+        if(v < minAABB[i]){
+          sqDist = sqDist + (minAABB[i] - v) * (minAABB[i] - v);
+        }
+        if(v > maxAABB[i]){
+          sqDist = sqDist + (v - maxAABB[i]) * (v - maxAABB[i]);
+        }
+      }
+  
+      return sqDist;
+    }
+  `,
+  )
     .addFunction(
       'main',
       new ComputeShaderFunction<
@@ -127,29 +150,7 @@ ${clusters.prop('lightsCount')}[tileIndex] = lightCount;
     `,
       ),
     )
-    .build(
-      'UpdateView.comp',
-      () => /* wgsl */ `
-    fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
-      var sqDist = 0.0;
-      // const minAABB : vec3<f32> = clusters.bounds[tileIndex].minAABB;
-      // const maxAABB : vec3<f32> = clusters.bounds[tileIndex].maxAABB;
-  
-      // Wait, does this actually work? Just porting code, but it seems suspect?
-      for(var i = 0; i < 3; i = i + 1) {
-        let v = position[i];
-        if(v < minAABB[i]){
-          sqDist = sqDist + (minAABB[i] - v) * (minAABB[i] - v);
-        }
-        if(v > maxAABB[i]){
-          sqDist = sqDist + (v - maxAABB[i]) * (v - maxAABB[i]);
-        }
-      }
-  
-      return sqDist;
-    }
-  `,
-    );
+    .build();
 
   return [bindLayouts, shader] as const;
 }

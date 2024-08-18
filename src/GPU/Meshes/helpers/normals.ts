@@ -1,7 +1,4 @@
-import {
-  createDebugNormalsVertShader2,
-  NormalsPipeline,
-} from '../../RenderPipeLines/NormalsPipeline.js';
+import { NormalsPipeline } from '../../RenderPipeLines/NormalsPipeline.js';
 import { DrawableSimple } from '../../Drawables/DrawableSimple.js';
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import {
@@ -12,6 +9,7 @@ import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import { RigidBody } from 'MainNode.js';
+import { createDebugNormalsVertShader } from '../../Shaders/devtools/debug_normals.vert.js';
 
 // eslint-disable-next-line import/no-unused-modules
 export class NormalsMesh extends DataNode {
@@ -81,14 +79,14 @@ export class NormalsMesh extends DataNode {
       );
       this.rotation = targetNode.node.rotation;
     });
-    const renderPipeline = engine.gpu!.createRenderPipeline(
+    const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
       {
         ...NormalsPipeline,
         primitive: {
           topology: 'line-list',
         },
       },
-      createDebugNormalsVertShader2,
+      createDebugNormalsVertShader,
       engine.gpu!.shaders.ColorShader,
       {
         stride,

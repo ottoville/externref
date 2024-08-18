@@ -6,8 +6,8 @@ import {
   Buffer,
   BufferUsageEnums,
   RenderPipelineLayout,
-  ShaderBuilder,
   FragmentShaderFunction,
+  FragmentShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import {
@@ -193,13 +193,14 @@ export function createShaderBuilders(gpu: GPU) {
     'positionBindGroupTimeWGSLLayot',
     [BindGroupLayoutPosition],
   );
-  const ColorShader = new ShaderBuilder([
-    terrainHeightsbindGroupTreePosition,
-    rootCameralayout,
-    positionAndTimeBindGroup,
-  ] as const)
-    .addFunction('main', colorFragmentFunction)
-    .build('color.frag');
+  const ColorShader = new FragmentShaderBuilder(
+    [
+      terrainHeightsbindGroupTreePosition,
+      rootCameralayout,
+      positionAndTimeBindGroup,
+    ] as const,
+    'color.frag',
+  ).addFunction('main', colorFragmentFunction);
   return {
     BindGroupLayoutPosition,
     /**
@@ -207,10 +208,7 @@ export function createShaderBuilders(gpu: GPU) {
      See Simple.frag.ts for pickable counterpart
      See SingleColor.frag.ts for pickable shared single color for all vertices
      */
-    ColorShader: Object.freeze([
-      'ColorShader.frag',
-      () => ColorShader,
-    ] as const),
+    ColorShader: () => ColorShader,
     facet12ArrGPUBuffer,
     heightsLayout,
     positionAndTimeBindGroup,

@@ -9,7 +9,7 @@ canvas {
   width: 100%;
   order: 1;
 }
-aside {
+dev-tools {
   order: 2;
   width: 300px;
   resize: horizontal;

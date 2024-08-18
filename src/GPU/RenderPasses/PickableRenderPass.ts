@@ -35,7 +35,8 @@ export class PickableRenderPass<
       RenderpassTargetOptions<RenderpassTargetTextureParams>
     >;
   },
-> extends DepthRenderPass<T> {
+  E extends string = string,
+> extends DepthRenderPass<T, E> {
   #pickBuffer: GPUBuffer;
   readonly #pickBufferRead?: GPUBuffer;
   #pickPositionPipeline?: GPUComputePipeline | Promise<GPUComputePipeline>;
@@ -47,7 +48,7 @@ export class PickableRenderPass<
   #rowBytes = this.size.width * 4;
 
   constructor(
-    renderPassProps: RenderPassProps<T>,
+    renderPassProps: RenderPassProps<T, E>,
     depthRenderTarget: DepthRenderTarget<
       RenderpassTargetOptions<
         RenderpassTargetTextureParams<

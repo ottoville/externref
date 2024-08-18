@@ -4,7 +4,8 @@ import {
   type BufLayout,
   type ShaderStage,
   WGSLcode,
-  ShaderBuilder,
+  VertexShaderBuilder,
+  VertexShader,
 } from '../../webgpu-ts/index.js';
 import type { GPU, VertexBufferProps } from '../../GPU.js';
 import { type Scene, pickOutput, typicalOutput } from './structs/Structs.js';
@@ -65,7 +66,7 @@ export function createSimpleVertShader(
       stepMode: 'vertex',
     },
   ] as const);
-  return new ShaderBuilder([pipelineLayout])
+  return new VertexShaderBuilder([pipelineLayout] as const, 'Simple.vert')
     .addFunction(
       'main',
       new VertexShaderFunction(
@@ -112,7 +113,10 @@ export function createSimpleVertShader(
         ]
       >,
     )
-    .addFunction('pick', createPickOutput(buffers))
-    .build('Simple.vert');
+    .addFunction('pick', createPickOutput(buffers));
 }
-export type SimpleVertShader = ReturnType<typeof createSimpleVertShader>;
+
+export type SimpleVertShader = VertexShader<
+  ReturnType<typeof createSimpleVertShader>['entryPoints'],
+  ReturnType<typeof createSimpleVertShader>['pipelineLayouts']
+>;

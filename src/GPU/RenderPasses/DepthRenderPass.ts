@@ -13,10 +13,11 @@ export class DepthRenderPass<
   } = {
     [index: string]: ColorRenderTarget;
   },
-> extends RenderPass<T> {
+  E extends string = string,
+> extends RenderPass<T, E> {
   depthRenderTarget: DepthRenderTarget;
   constructor(
-    renderPassProps: RenderPassProps<T>,
+    renderPassProps: RenderPassProps<T, E>,
     depthRenderTarget: DepthRenderTarget,
     gpu: GPU,
   ) {

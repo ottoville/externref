@@ -3,8 +3,8 @@ import {
   VertexShaderFunction,
   ShaderStage,
   type BufLayout,
-  ShaderBuilder,
   WGSLcode,
+  VertexShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import { GPU, VertexBufferProps } from '../../GPU.js';
 import {
@@ -140,9 +140,8 @@ export function createGrassVertShader(
       },
     ]
   >;
-  const shaderBuilder = new ShaderBuilder([pipelineLayout]);
-
-  return shaderBuilder.addFunction('main', shaderFunction).build(
+  const shaderBuilder = new VertexShaderBuilder(
+    [pipelineLayout],
     'grass.vert',
     () => /* wgsl */ `
   const bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
@@ -185,4 +184,6 @@ vec2<f32>(0.0, 1.0)
 );
   `,
   );
+
+  return shaderBuilder.addFunction('main', shaderFunction);
 }

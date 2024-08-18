@@ -22,10 +22,11 @@ export interface RenderPassProps<
   U extends {
     [index: string]: ColorRenderTarget;
   },
+  E extends string = string,
 > extends RenderpassProps<U> {
   size: { width: number; height: number };
   getSizeOnResize: (width: number, height: number) => [number, number];
-  entryPoint: string;
+  entryPoint: E;
   rootLayouts: RenderPipelineLayout[];
   GPURenderBundleEncoderDescriptor?: Partial<GPURenderBundleEncoderDescriptor>;
 }
@@ -36,6 +37,7 @@ export class RenderPass<
   } = {
     [index: string]: ColorRenderTarget;
   },
+  E extends string = string,
 > extends Renderpass<U> {
   readonly perspectiveCameras: Set<TerraCamera> = new Set();
   readonly #rootLayouts: RenderPipelineLayout[];
@@ -44,14 +46,14 @@ export class RenderPass<
   #screenDimensionsBuffer: Buffer<BufferUsageEnums.UNIFORM>;
   onResize: Map<object, () => void> = new Map();
   public size: { width: number; height: number };
-  entryPoint: string;
+  entryPoint: E;
   #getSizeOnResize: (width: number, height: number) => [number, number];
   sizeBindGroup: BindGroup;
   onDecoratePipeline?: (
     renderpipeline: RenderPipelineProps,
     renderPipelineDescriptor: RenderPipelineBuilderDesc,
   ) => void;
-  constructor(props: RenderPassProps<U>, gpu: GPU) {
+  constructor(props: RenderPassProps<U, E>, gpu: GPU) {
     super(props);
     const {
       colorRenderTargets,

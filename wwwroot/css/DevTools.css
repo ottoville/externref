@@ -49,6 +49,7 @@ aside {
     #DevToolsAppContainer {
         direction: ltr;
         overflow-y: scroll;
+        overflow-x: hidden;
         height: calc(100% - var(--closebtn-height));
     }
 }
@@ -57,4 +58,8 @@ aside {
 .meshlist {
     max-height: 200px;
     overflow-y: auto;
+    width: 250px;
+    & ul {
+        width: 250px;
+    }
 }

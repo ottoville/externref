@@ -181,17 +181,13 @@ export class TerrainTool extends MainNode {
     });
     engine.addInputListener(this.#pointerdownf);
     this.positions_count = 4;
-    const createTerrainToolVertShader2 = Object.freeze([
-      'TerrainTool.vert',
-      createHelperVertShader,
-    ] as const);
     const getRenderPipeline = Object.freeze({
       connections: {
         main: 'main',
       },
-    });
+    } as const);
 
-    const renderPipeline = terrain.gpu.createRenderPipeline(
+    const renderPipeline = terrain.gpu.createRenderPipelineBuilder(
       {
         ...getRenderPipeline,
         primitive: {
@@ -199,7 +195,7 @@ export class TerrainTool extends MainNode {
           topology: 'triangle-list',
         },
       },
-      createTerrainToolVertShader2,
+      createHelperVertShader,
       terrain.gpu.shaders.ColorShader,
       undefined,
     );

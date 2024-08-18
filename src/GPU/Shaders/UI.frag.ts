@@ -5,11 +5,11 @@ import {
   textureLoad,
   type ShaderStage,
   type TextLayout,
-  ShaderBuilder,
+  FragmentShaderBuilder,
 } from '../../webgpu-ts/index.js';
 
 export function createUIFragmentShader(gpu: GPU) {
-  return new ShaderBuilder([gpu.canvasRootLayout])
+  return new FragmentShaderBuilder([gpu.canvasRootLayout] as const, 'UI.frag')
     .addFunction(
       'main',
       new FragmentShaderFunction(
@@ -34,6 +34,6 @@ export function createUIFragmentShader(gpu: GPU) {
         ]
       >,
     )
-    .build('UI.frag');
+    .build();
 }
 export type UIFragShader = ReturnType<typeof createUIFragmentShader>;

@@ -3,14 +3,14 @@ import { MainNode } from '../MainNode.js';
 import { Angle } from '../Math.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import type { Engine } from '../engine.js';
-import {
-  createSunFragShader2,
-  createSunVertShader2,
-  SunRenderPipeline,
-} from '../GPU/RenderPipeLines/Sun.js';
+import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
 import type { GPU } from '../GPU.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
-import type { SunVertShader } from '../GPU/Shaders/Sun.vert.js';
+import {
+  createSunVertShader,
+  type SunVertShader,
+} from '../GPU/Shaders/Sun.vert.js';
+import { createSingleColorFragShader } from '../GPU/Shaders/SingleColor.frag.js';
 declare const engine: Engine;
 
 const zAngle = Math.cos(Math.PI * 0.2);
@@ -59,7 +59,7 @@ export class Sun extends MainNode {
     });
     this.positions_count = 14;
 
-    const renderPipeline = gpu.createRenderPipeline(
+    const renderPipeline = gpu.createRenderPipelineBuilder(
       {
         ...SunRenderPipeline,
         primitive: {
@@ -68,8 +68,8 @@ export class Sun extends MainNode {
           topology: 'triangle-strip',
         },
       },
-      createSunVertShader2,
-      createSunFragShader2,
+      createSunVertShader,
+      createSingleColorFragShader,
       undefined,
     );
     this.drawable = new DrawableSimple({

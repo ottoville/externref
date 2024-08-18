@@ -14,15 +14,6 @@ import { BindGroup } from '../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
 import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
 
-const createWaterVertShader2 = Object.freeze([
-  'water.vert',
-  createWaterVertShader,
-] as const);
-const createWaterFragShader2 = Object.freeze([
-  'water.frag',
-  createWaterFragShader,
-] as const);
-
 export class Sea extends BoundableNodeSimple {
   override drawable:
     | DrawableSimple<RenderPipelineProps<WaterVertShader>>
@@ -70,7 +61,7 @@ export class Sea extends BoundableNodeSimple {
       true,
     ); //48
     if (engine.gpu) {
-      const renderPipeline = engine.gpu.createRenderPipeline(
+      const renderPipeline = engine.gpu.createRenderPipelineBuilder(
         {
           ...WaterRenderPipeline,
           primitive: {
@@ -79,8 +70,8 @@ export class Sea extends BoundableNodeSimple {
             topology: 'triangle-strip',
           },
         },
-        createWaterVertShader2,
-        createWaterFragShader2,
+        createWaterVertShader,
+        createWaterFragShader,
         {
           stride: 4 as Word<'dword'>,
         },
@@ -91,7 +82,6 @@ export class Sea extends BoundableNodeSimple {
         minFilter: 'nearest',
         mipmapFilter: 'nearest',
       });
-
       this.drawable = new DrawableSimple({
         bindGroups: [
           {

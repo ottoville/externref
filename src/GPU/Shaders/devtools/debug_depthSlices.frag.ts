@@ -1,8 +1,8 @@
 import type { GPU } from '../../../GPU.js';
 import { getClusterIndex } from '../getClusterIndex.js';
 import {
+  FragmentShaderBuilder,
   FragmentShaderFunction,
-  ShaderBuilder,
 } from '../../../webgpu-ts/index.js';
 import { diffuseOutput, fragOutput } from '../structs/Structs.js';
 
@@ -20,19 +20,15 @@ var output:Output;
   fragOutput,
 );
 export function createDebugDepthSlicesFragShader(gpu: GPU) {
-  return new ShaderBuilder([
-    gpu.lightsTextureBindGroup,
-    gpu.shaders.positionAndTimeBindGroup,
-  ])
-    .addFunction('debug_depth_slices', depthSlicesFrag)
-    .build(
-      'DebugDepthSlicesFragShader.frag',
-      ([
-        { screen_dimensions },
-        { /*scene, clusters_array, meshes,*/ projection },
-        /*{ world, }
+  return new FragmentShaderBuilder(
+    [gpu.lightsTextureBindGroup, gpu.shaders.positionAndTimeBindGroup],
+    'DebugDepthSlicesFragShader.frag',
+    ([
+      { screen_dimensions },
+      { /*scene, clusters_array, meshes,*/ projection },
+      /*{ world, }
     /*{ mySampler, myTexture, }*/
-      ]) => /* wgsl */ `
+    ]) => /* wgsl */ `
 ${getClusterIndex(screen_dimensions, projection)}
 
 var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
@@ -47,5 +43,5 @@ var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
   vec3<f32>(1.0, 0.0, 0.5)
 );
 `,
-    );
+  ).addFunction('debug_depth_slices', depthSlicesFrag);
 }

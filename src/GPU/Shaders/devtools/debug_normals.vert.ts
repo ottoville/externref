@@ -4,7 +4,7 @@ import {
   type ShaderStage,
   WGSLcode,
   VertexBuildin,
-  ShaderBuilder,
+  VertexShaderBuilder,
 } from '../../../webgpu-ts/index.js';
 import { GPU, VertexBufferProps } from '../../../GPU.js';
 import { type Scene, colorPositionOutput } from '../structs/Structs.js';
@@ -16,28 +16,30 @@ export function createDebugNormalsVertShader(
 ) {
   const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
   const arrayStride = vertexBufferProps.stride;
-  return new ShaderBuilder([pipelineLayout])
-    .addFunction(
-      'main',
-      new VertexShaderFunction(
-        colorPositionOutput,
+  return new VertexShaderBuilder(
+    [pipelineLayout],
+    'debug_normals.vert',
+  ).addFunction(
+    'main',
+    new VertexShaderFunction(
+      colorPositionOutput,
+      [
+        {
+          arrayStride: arrayStride * 4,
+          attributes: simpleAttributes,
+          stepMode: 'vertex',
+        },
+      ],
+      (
         [
-          {
-            arrayStride: arrayStride * 4,
-            attributes: simpleAttributes,
-            stepMode: 'vertex',
+          ,
+          /*{ uniforms, }*/ {
+            scene /*time, clusters_array, meshes, projection*/,
           },
+          { world },
         ],
-        (
-          [
-            ,
-            /*{ uniforms, }*/ {
-              scene /*time, clusters_array, meshes, projection*/,
-            },
-            { world },
-          ],
-          [{ position, normal }],
-        ) => WGSLcode/* wgsl */ `
+        [{ position, normal }],
+      ) => WGSLcode/* wgsl */ `
         var output : Output;
         var vertexPosition:vec4<f32> = ${world.prop(
           'transformation',
@@ -49,21 +51,20 @@ export function createDebugNormalsVertShader(
         output.color=vec3<f32>(0.0,1.0,0.0);
         return output;
         `,
-      ) satisfies VertexShaderFunction<
-        [
-          // eslint-disable-next-line @typescript-eslint/ban-types
-          {},
-          {
-            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-          },
-          {
-            world: BufLayout<
-              ShaderStage.VERTEX_AND_FRAGMENT,
-              GPU['meshUniforms']
-            >;
-          },
-        ]
-      >,
-    )
-    .build('debug_normals.vert');
+    ) satisfies VertexShaderFunction<
+      [
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        {},
+        {
+          scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+        },
+        {
+          world: BufLayout<
+            ShaderStage.VERTEX_AND_FRAGMENT,
+            GPU['meshUniforms']
+          >;
+        },
+      ]
+    >,
+  );
 }

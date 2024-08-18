@@ -8,16 +8,39 @@ import {
 import { pickOutputFragmentFunction } from './Simple.frag.js';
 import {
   type BufLayout,
+  FragmentShaderBuilder,
   FragmentShaderFunction,
   type SampLayout,
-  ShaderBuilder,
   type ShaderStage,
   type TextLayout,
 } from '../../webgpu-ts/index.js';
 
 export function createGroundFragShader(gpu: GPU) {
   const pipelineLayout = gpu.lightsTextureBindGroup;
-  return new ShaderBuilder([pipelineLayout])
+  return new FragmentShaderBuilder(
+    [pipelineLayout],
+    'Ground.frag',
+    ([
+      { screen_dimensions },
+      { /*scene, clusters_array, meshes,*/ projection },
+      /*{ world, }
+      /*{ mySampler, myTexture, }*/
+    ]) => /* wgsl */ `
+        ${getClusterIndex(screen_dimensions, projection)}
+
+        var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
+          vec3<f32>(1.0, 0.0, 0.0),
+          vec3<f32>(1.0, 0.5, 0.0),
+          vec3<f32>(0.5, 1.0, 0.0),
+          vec3<f32>(0.0, 1.0, 0.0),
+          vec3<f32>(0.0, 1.0, 0.5),
+          vec3<f32>(0.0, 0.5, 1.0),
+          vec3<f32>(0.0, 0.0, 1.0),
+          vec3<f32>(0.5, 0.0, 1.0),
+          vec3<f32>(1.0, 0.0, 0.5)
+        );
+`,
+  )
     .addFunction(
       'main',
       new FragmentShaderFunction(
@@ -99,28 +122,5 @@ export function createGroundFragShader(gpu: GPU) {
         ]
       >,
     )
-    .addFunction('pick', pickOutputFragmentFunction)
-    .build(
-      'Ground.frag',
-      ([
-        { screen_dimensions },
-        { /*scene, clusters_array, meshes,*/ projection },
-        /*{ world, }
-      /*{ mySampler, myTexture, }*/
-      ]) => /* wgsl */ `
-        ${getClusterIndex(screen_dimensions, projection)}
-
-        var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
-          vec3<f32>(1.0, 0.0, 0.0),
-          vec3<f32>(1.0, 0.5, 0.0),
-          vec3<f32>(0.5, 1.0, 0.0),
-          vec3<f32>(0.0, 1.0, 0.0),
-          vec3<f32>(0.0, 1.0, 0.5),
-          vec3<f32>(0.0, 0.5, 1.0),
-          vec3<f32>(0.0, 0.0, 1.0),
-          vec3<f32>(0.5, 0.0, 1.0),
-          vec3<f32>(1.0, 0.0, 0.5)
-        );
-`,
-    );
+    .addFunction('pick', pickOutputFragmentFunction);
 }

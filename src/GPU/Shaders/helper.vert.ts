@@ -2,9 +2,10 @@ import {
   type BufLayout,
   type ShaderStage,
   VertexShaderFunction,
-  ShaderBuilder,
   VertexBuildin,
   WGSLcode,
+  VertexShaderBuilder,
+  VertexShader,
 } from '../../webgpu-ts/index.js';
 import { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
@@ -66,18 +67,17 @@ return output;
 export function createHelperVertShader(gpu: GPU) {
   const pipelineLayout = gpu.shaders.terrainHeightsbindGroupTreePosition;
   const settings = Terrain.settings;
-  return new ShaderBuilder([pipelineLayout] as const)
-    .addFunction('main', shaderFunction)
-    .build(
-      'helper.vert',
-      ([
-        ,
-        ,
-        /*{ uniforms, }*/ /*{ scene,time, clusters_array, meshes, projection }*/ /*{ world, }*/ {
-          slopes,
-          facet12,
-        },
-      ]) => /* wgsl */ `const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
+  return new VertexShaderBuilder(
+    [pipelineLayout] as const,
+    'helper.vert',
+    ([
+      ,
+      ,
+      /*{ uniforms, }*/ /*{ scene,time, clusters_array, meshes, projection }*/ /*{ world, }*/ {
+        slopes,
+        facet12,
+      },
+    ]) => /* wgsl */ `const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
       ${getHeightAtCoordinates(settings, slopes, facet12)}
 
       const vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
@@ -86,7 +86,10 @@ export function createHelperVertShader(gpu: GPU) {
         vec2<f32>( 0.5,  3.0),
         vec2<f32>( 0.5, -3.0)
       );`,
-    );
+  ).addFunction('main', shaderFunction);
 }
 
-export type HelperVertShader = ReturnType<typeof createHelperVertShader>;
+export type HelperVertShader = VertexShader<
+  ReturnType<typeof createHelperVertShader>['entryPoints'],
+  ReturnType<typeof createHelperVertShader>['pipelineLayouts']
+>;

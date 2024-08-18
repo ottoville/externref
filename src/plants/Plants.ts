@@ -2,10 +2,7 @@ import { WorkerThread, WorkerReturn } from '../WorkerThread.js';
 import { Terrain } from '../world/Terrain.js';
 
 import type { Scene } from '../Scene.js';
-import {
-  createGrassVertShader2,
-  PlantsRenderPipeline,
-} from '../GPU/RenderPipeLines/Plants.js';
+import { PlantsRenderPipeline } from '../GPU/RenderPipeLines/Plants.js';
 
 import type { Engine } from '../engine.js';
 import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
@@ -14,6 +11,7 @@ import { MainNode } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import { BindGroup, Buffer, BufferUsageEnums } from '../webgpu-ts/index.js';
 import type { PTDresult } from 'paintGround/paintGround.js';
+import { createGrassVertShader } from '../GPU/Shaders/Grass.vert.js';
 declare const engine: Engine;
 
 /**
@@ -91,7 +89,7 @@ export class Plants extends MainNode {
       usages: BufferUsageEnums['STORAGE|COPY_SRC'],
     });
     if (engine.gpu) {
-      const renderPipeline = engine.gpu.createRenderPipeline(
+      const renderPipeline = engine.gpu.createRenderPipelineBuilder(
         {
           ...PlantsRenderPipeline,
           primitive: {
@@ -100,7 +98,7 @@ export class Plants extends MainNode {
             topology: 'triangle-strip',
           },
         },
-        createGrassVertShader2,
+        createGrassVertShader,
         scene.gpu.shaders.ColorShader,
         {
           stride: 4 as Word<'dword'>,

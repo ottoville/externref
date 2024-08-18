@@ -19,7 +19,7 @@ rapier3d = { path = "./rapier/crates/rapier3d" }
 terramath = { path = "./terramath" }
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.42"
+wasm-bindgen-test = "0.3.43"
 
 [profile.release]
 opt-level = 3

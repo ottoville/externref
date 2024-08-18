@@ -1,13 +1,12 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
-import {
-  createGroundFragShader2,
-  createGroundVertShader2,
-  TerrainRenderPipeline,
-} from '../RenderPipeLines/Terrain.js';
+import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
-import type { GroundVertShader } from '../Shaders/Ground.vert.js';
+import {
+  createGroundVertShader,
+  type GroundVertShader,
+} from '../Shaders/Ground.vert.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawableIndexed.js';
 import type {
@@ -20,6 +19,7 @@ import type {
   VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
+import { createGroundFragShader } from '../Shaders/Ground.frag.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;
@@ -69,10 +69,10 @@ export class TerrainMesh extends BoundableNodeIndexed {
         magFilter: 'linear',
         minFilter: 'linear',
       });
-      const renderPipeline = engine.gpu.createRenderPipeline(
+      const renderPipeline = engine.gpu.createRenderPipelineBuilder(
         TerrainRenderPipeline,
-        createGroundVertShader2,
-        createGroundFragShader2,
+        createGroundVertShader,
+        createGroundFragShader,
         {
           stride: verticesPositionStride,
         },

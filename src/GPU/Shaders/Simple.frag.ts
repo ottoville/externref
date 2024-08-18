@@ -14,7 +14,7 @@ import {
   type BufLayout,
   FragmentShaderFunction,
   type ShaderStage,
-  ShaderBuilder,
+  FragmentShaderBuilder,
 } from '../../webgpu-ts/index.js';
 
 export const pickOutputFragmentFunction = new FragmentShaderFunction(
@@ -88,31 +88,34 @@ const mainFunction = new FragmentShaderFunction(
 export function createSimpleFragShader(
   pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
 ) {
-  return new ShaderBuilder([pipelineLayout])
-    .addFunction('main', mainFunction)
-    .addFunction('pick', pickOutputFragmentFunction)
-    .build(
-      'Simple.frag',
-      ([
-        { screen_dimensions },
-        { /*scene, clusters_array, meshes,*/ projection },
-        /*{ world, }*/
-      ]) => /* wgsl */ `
-        ${getClusterIndex(screen_dimensions, projection)}
+  return new FragmentShaderBuilder(
+    [pipelineLayout],
+    'Simple.frag',
+    ([
+      { screen_dimensions },
+      { /*scene, clusters_array, meshes,*/ projection },
+      /*{ world, }*/
+    ]) => /* wgsl */ `
+    ${getClusterIndex(screen_dimensions, projection)}
 
-        var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
-          vec3<f32>(1.0, 0.0, 0.0),
-          vec3<f32>(1.0, 0.5, 0.0),
-          vec3<f32>(0.5, 1.0, 0.0),
-          vec3<f32>(0.0, 1.0, 0.0),
-          vec3<f32>(0.0, 1.0, 0.5),
-          vec3<f32>(0.0, 0.5, 1.0),
-          vec3<f32>(0.0, 0.0, 1.0),
-          vec3<f32>(0.5, 0.0, 1.0),
-          vec3<f32>(1.0, 0.0, 0.5)
-        );
-      `,
+    var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
+      vec3<f32>(1.0, 0.0, 0.0),
+      vec3<f32>(1.0, 0.5, 0.0),
+      vec3<f32>(0.5, 1.0, 0.0),
+      vec3<f32>(0.0, 1.0, 0.0),
+      vec3<f32>(0.0, 1.0, 0.5),
+      vec3<f32>(0.0, 0.5, 1.0),
+      vec3<f32>(0.0, 0.0, 1.0),
+      vec3<f32>(0.5, 0.0, 1.0),
+      vec3<f32>(1.0, 0.0, 0.5)
     );
+  `,
+  )
+    .addFunction('main', mainFunction)
+    .addFunction('pick', pickOutputFragmentFunction);
 }
 
-export type SimpleFragShader = ReturnType<typeof createSimpleFragShader>;
+export type SimpleFragShader = FragmentShaderBuilder<
+  ReturnType<typeof createSimpleFragShader>['entryPoints'],
+  ReturnType<typeof createSimpleFragShader>['pipelineLayouts']
+>;

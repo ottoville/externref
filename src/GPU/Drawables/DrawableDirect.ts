@@ -1,7 +1,4 @@
-import type {
-  RenderPipelineProps,
-  RenderPipelineProps0,
-} from '../RenderPipeline.js';
+import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type {
   AnyVertexStage,
   BindGroupLayoutEntry,
@@ -16,7 +13,7 @@ import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 export type MappedVertexBuffers<
-  R extends RenderPipelineProps0,
+  R extends RenderPipelineProps,
   B extends readonly {
     [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
   }[] = readonly {

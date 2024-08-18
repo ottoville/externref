@@ -7,7 +7,7 @@ import {
   type BufLayout,
   FragmentShaderFunction,
   type ShaderStage,
-  ShaderBuilder,
+  FragmentShaderBuilder,
 } from '../../webgpu-ts/index.js';
 
 const singleColorFrag = new FragmentShaderFunction<
@@ -37,7 +37,8 @@ const singleColorFrag = new FragmentShaderFunction<
 
 export function createSingleColorFragShader(gpu: GPU) {
   const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
-  return new ShaderBuilder([pipelineLayout])
-    .addFunction('main', singleColorFrag)
-    .build('SingleColor.frag');
+  return new FragmentShaderBuilder(
+    [pipelineLayout] as const,
+    'SingleColor.frag',
+  ).addFunction('main', singleColorFrag);
 }

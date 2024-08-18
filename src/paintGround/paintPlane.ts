@@ -59,11 +59,7 @@ export class paintPlane extends paintGround {
       this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0);
       callback(p);
     });
-    const createPlaneAtGroundHeightVertShader2 = Object.freeze([
-      'planeAtGroundHeight.vert',
-      createPlaneAtGroundHeightVertShader,
-    ] as const);
-    const renderPipeline = ground.gpu.createRenderPipeline(
+    const renderPipeline = ground.gpu.createRenderPipelineBuilder(
       {
         connections: {
           main: 'main',
@@ -74,7 +70,7 @@ export class paintPlane extends paintGround {
           topology: 'triangle-list',
         },
       },
-      createPlaneAtGroundHeightVertShader2,
+      createPlaneAtGroundHeightVertShader,
       ground.gpu.shaders.ColorShader,
       {
         stride: 12 as Word<'dword'>,

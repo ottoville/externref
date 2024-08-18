@@ -49,11 +49,10 @@ import {
   type RenderpassTargetOptions,
   Struct,
   type FragmentShader,
+  VertexShaderBuilder,
+  FragmentShaderBuilder,
 } from './webgpu-ts/index.js';
-import {
-  createSimpleFragShader,
-  SimpleFragShader,
-} from './GPU/Shaders/Simple.frag.js';
+import { createSimpleFragShader } from './GPU/Shaders/Simple.frag.js';
 import {
   createShaderBuilders,
   gpu_memory_index_size,
@@ -85,11 +84,6 @@ export type VertexBufferProps = {
    */
   stride: Word<'dword'>;
 };
-
-export type CreateRenderPipelineCB<R extends RenderPipelineProps0> = readonly [
-  label: string,
-  create: (props: CreateRenderPipelineProps) => R,
-];
 
 export class GPU {
   #maxInstances = 10;
@@ -138,19 +132,22 @@ export class GPU {
     x: 1,
     y: 1,
   };
-  readonly renderPassScreen: PickableRenderPass<{
-    gRenderTargetDiffuse: MSAARenderTarget<
-      RenderpassTarget<
-        RenderpassTargetOptions<
-          RenderpassTargetTextureParams<
-            RENDER_TARGET_FORMAT,
-            Exclude<RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE> &
-              TEXTURE_BINDING_TEXTURE
+  readonly renderPassScreen: PickableRenderPass<
+    {
+      gRenderTargetDiffuse: MSAARenderTarget<
+        RenderpassTarget<
+          RenderpassTargetOptions<
+            RenderpassTargetTextureParams<
+              RENDER_TARGET_FORMAT,
+              Exclude<RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE> &
+                TEXTURE_BINDING_TEXTURE
+            >
           >
         >
-      >
-    >;
-  }>;
+      >;
+    },
+    'main'
+  >;
 
   readonly renderPassWater: DepthRenderPass<{
     diffuse: ColorRenderTarget<
@@ -218,7 +215,7 @@ export class GPU {
   }>;
   destroyed = false;
   fps = 0;
-  simpleFragShader: SimpleFragShader;
+  simpleFragShader: ReturnType<typeof createSimpleFragShader>;
   screenRenderTargets: {
     gRenderTargetDiffuse: MSAARenderTarget<
       RenderpassTarget<
@@ -267,96 +264,87 @@ export class GPU {
    * @param primitive
    * @param vertexBufferProps
    */
-  createRenderPipeline<
+  createRenderPipelineBuilder<
     D extends RenderPipelineProps0<
       V,
-      FragmentShader,
+      F,
       GPUPrimitiveState & {
         topology: 'triangle-strip' | 'line-strip';
         stripIndexFormat: GPUIndexFormat;
       }
     >,
-    V extends VertexShader,
+    V extends VertexShaderBuilder | VertexShader,
+    F extends FragmentShaderBuilder | FragmentShader,
     P,
   >(
     desc: D,
-    vertexShaderBuilder: readonly [
-      label: string,
-      builder: (gpu: GPU, vertexBufferProps: P) => V,
-    ],
-    fragmentShaderBuilder: readonly [
-      label: string,
-      builder: (gpu: GPU) => FragmentShader,
-    ],
+    vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
+    fragmentShaderBuilder: (gpu: GPU) => F,
     vertexBufferProps: P,
-  ): RenderPipelineProps<V, FragmentShader>;
-  createRenderPipeline<
+  ): RenderPipelineProps<
+    VertexShader<V['entryPoints'], V['pipelineLayouts']>,
+    FragmentShader
+  >;
+  createRenderPipelineBuilder<
     D extends RenderPipelineProps0<
       V,
-      FragmentShader,
+      F,
       Omit<GPUPrimitiveState, 'stripIndexFormat'> & {
         topology: 'triangle-list' | 'line-list';
       }
     >,
-    V extends VertexShader,
+    V extends VertexShaderBuilder | VertexShader,
+    F extends FragmentShaderBuilder | FragmentShader,
     P,
   >(
     desc: D,
-    vertexShaderBuilder: readonly [
-      label: string,
-      builder: (gpu: GPU, vertexBufferProps: P) => V,
-    ],
-    fragmentShaderBuilder: readonly [
-      label: string,
-      builder: (gpu: GPU) => FragmentShader,
-    ],
+    vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
+    fragmentShaderBuilder: (gpu: GPU) => F,
     vertexBufferProps: P,
-  ): RenderPipelineProps<V, FragmentShader>;
-  createRenderPipeline<
-    D extends RenderPipelineProps0<
-      V,
-      FragmentShader,
-      Omit<GPUPrimitiveState, 'topology'>
-    >,
-    V extends VertexShader,
+  ): RenderPipelineProps<
+    VertexShader<V['entryPoints'], V['pipelineLayouts']>,
+    FragmentShader
+  >;
+  createRenderPipelineBuilder<
+    D extends RenderPipelineProps0<V, F, Omit<GPUPrimitiveState, 'topology'>>,
+    V extends VertexShaderBuilder | VertexShader,
+    F extends FragmentShaderBuilder | FragmentShader,
     P,
   >(
     desc: D,
-    vertexShaderBuilder: readonly [
-      label: string,
-      builder: (gpu: GPU, vertexBufferProps: P) => V,
-    ],
-    fragmentShaderBuilder: readonly [
-      label: string,
-      builder: (gpu: GPU) => FragmentShader,
-    ],
+    vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
+    fragmentShaderBuilder: (gpu: GPU) => F,
     vertexBufferProps: P,
-  ): RenderPipelineProps<V, FragmentShader>;
-  createRenderPipeline<
+  ): RenderPipelineProps<
+    VertexShader<V['entryPoints'], V['pipelineLayouts']>,
+    FragmentShader
+  >;
+  createRenderPipelineBuilder<
     D extends RenderPipelineProps0<V>,
-    V extends VertexShader,
+    V extends VertexShaderBuilder | VertexShader,
+    F extends FragmentShaderBuilder | FragmentShader,
     P extends VertexBufferProps | undefined,
   >(
     desc: D,
-    vertexShaderBuilder: readonly [
-      label: string,
-      builder: (gpu: GPU, vertexBufferProps: P) => V,
-    ],
-    fragmentShaderBuilder: readonly [
-      label: string,
-      builder: (gpu: GPU) => FragmentShader,
-    ],
+    vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
+    fragmentShaderBuilder: (gpu: GPU) => F,
     vertexBufferProps: P,
-  ): RenderPipelineProps<V, FragmentShader> {
+  ): RenderPipelineProps<
+    VertexShader<V['entryPoints'], V['pipelineLayouts']>,
+    FragmentShader
+  > {
     const primitiveWithDefaults: GPUPrimitiveState = {
       cullMode: 'back',
       frontFace: 'cw',
       topology: 'triangle-list',
       ...desc.primitive,
     };
+    const vertexBuilder = vertexShaderBuilder(this, vertexBufferProps);
+    const fragmentBuilder = fragmentShaderBuilder(this);
+
     const hash = [
-      vertexShaderBuilder[0],
-      fragmentShaderBuilder[0],
+      vertexBuilder.hash,
+      fragmentBuilder.hash,
       ...Object.values(primitiveWithDefaults),
       ...Object.values(vertexBufferProps ?? {}),
     ]
@@ -364,7 +352,10 @@ export class GPU {
       .join();
 
     let renderPipeline = GPU.#renderPipelines.get(hash) as
-      | RenderPipelineProps<V, FragmentShader>
+      | RenderPipelineProps<
+          VertexShader<V['entryPoints'], V['pipelineLayouts']>,
+          FragmentShader
+        >
       | undefined;
     if (!renderPipeline) {
       renderPipeline = {
@@ -373,8 +364,12 @@ export class GPU {
         primitive: primitiveWithDefaults,
         ...desc,
         builder: createRenderPipelineBuilder(
-          vertexShaderBuilder[1](this, vertexBufferProps),
-          fragmentShaderBuilder[1](this),
+          vertexBuilder instanceof VertexShaderBuilder
+            ? vertexBuilder.build()
+            : vertexBuilder,
+          fragmentBuilder instanceof FragmentShaderBuilder
+            ? fragmentBuilder.build()
+            : fragmentBuilder,
         ),
       };
       GPU.#renderPipelines.set(hash, renderPipeline);

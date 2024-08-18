@@ -1,9 +1,6 @@
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
-import {
-  createDebugLinesVertShader2,
-  DebugLinesPipeline,
-} from '../../RenderPipeLines/DebugLinesPipeline.js';
+import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import {
   DataNode,
   allocate_vec_positions,
@@ -11,6 +8,7 @@ import {
 } from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
 import { RigidBody } from 'MainNode.js';
+import { createDebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 declare const engine: Engine;
 // eslint-disable-next-line import/no-unused-modules
 export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
@@ -37,14 +35,14 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     rigid_body: RigidBody.off,
   };
 
-  const renderPipeline = engine.gpu!.createRenderPipeline(
+  const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
     {
       ...DebugLinesPipeline,
       primitive: {
         topology: 'line-list',
       },
     },
-    createDebugLinesVertShader2,
+    createDebugBoundingBoxVertShader,
     engine.gpu!.shaders.ColorShader,
     {
       stride: (vertexBufferStrideBytes / 4) as Word<'dword'>,

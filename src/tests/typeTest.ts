@@ -4,20 +4,16 @@
  */
 
 import type { Engine } from '../engine.js';
-import {
-  createSimpleVertShader2,
-  SimpleRenderPipeline,
-} from '../GPU/RenderPipeLines/SimpleRenderPipeline.js';
-import {
-  createSunFragShader2,
-  createSunVertShader2,
-  SunRenderPipeline,
-} from '../GPU/RenderPipeLines/Sun.js';
+import { SimpleRenderPipeline } from '../GPU/RenderPipeLines/SimpleRenderPipeline.js';
+import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { createWaterVertShader } from '../GPU/Shaders/Water.vert.js';
 import { Texture, TextureUsageEnums } from '../webgpu-ts/Texture.js';
-import { createSimpleFragShader2 } from 'GPU/RenderPipeLines/ColoredRenderPipeline.js';
+import { createSimpleVertShader } from 'GPU/Shaders/SingleColoredWithNormal.vert.js';
+import type { GPU } from '../GPU.js';
+import { createSunVertShader } from 'GPU/Shaders/Sun.vert.js';
+import { createSingleColorFragShader } from 'GPU/Shaders/SingleColor.frag.js';
 declare const engine: Engine;
 
 Texture.create({
@@ -120,16 +116,18 @@ const primitiveState: GPUPrimitiveState = {
 };
 
 //@ts-expect-error Needs stride
-engine.gpu!.createRenderPipeline(
+engine.gpu!.createRenderPipelineBuilder(
   SimpleRenderPipeline,
   primitiveState,
   undefined,
 );
 //Should be fine
-const renderPipeline = engine.gpu!.createRenderPipeline(
+const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
   { ...SimpleRenderPipeline, primitive: primitiveState },
-  createSimpleVertShader2,
-  createSimpleFragShader2,
+  createSimpleVertShader,
+  (_gpu: GPU) => {
+    return engine.gpu!.simpleFragShader;
+  },
   {
     stride: 4 as Word<'dword'>,
   },
@@ -144,7 +142,7 @@ new DrawableIndexed({
 });
 
 //@ts-expect-error Cannot have stride
-engine.gpu!.createRenderPipeline(
+engine.gpu!.createRenderPipelineBuilder(
   SunRenderPipeline,
   {
     cullMode: 'none',
@@ -157,7 +155,7 @@ engine.gpu!.createRenderPipeline(
 );
 
 //Should be fine
-const renderPipeline2 = engine.gpu!.createRenderPipeline(
+const renderPipeline2 = engine.gpu!.createRenderPipelineBuilder(
   {
     ...SunRenderPipeline,
     primitive: {
@@ -166,8 +164,8 @@ const renderPipeline2 = engine.gpu!.createRenderPipeline(
       topology: 'triangle-strip',
     },
   },
-  createSunVertShader2,
-  createSunFragShader2,
+  createSunVertShader,
+  createSingleColorFragShader,
   undefined,
 );
 
