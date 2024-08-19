@@ -1,7 +1,7 @@
 use terramath::VectorMath;
 
 use crate::collider::Collider;
-use crate::math2::{Vec3, Vec3wgslF32, Vec4};
+use crate::math2::Vec3wgslF32;
 use crate::vertices::Vertices;
 
 pub struct BoundingBox {
@@ -10,8 +10,8 @@ pub struct BoundingBox {
     pub max: [f32; 3],
     pub min_original: [f32; 3],
     pub max_original: [f32; 3],
-    pub vectors_original_simd: [Vec3<Vec4<f32>>; 2],
-    pub vectors_simd: [Vec3<[f32; 4]>; 2],
+    pub vectors_original_simd: [[[f32; 4]; 3]; 2],
+    pub vectors_simd: [[[f32; 4]; 3]; 2],
     pub dirty: bool,
     pub need_init: bool,
 }
@@ -71,31 +71,8 @@ impl BoundingBox {
             max: [0.0, 0.0, 0.0],
             min_original: [0.0, 0.0, 0.0],
             max_original: [0.0, 0.0, 0.0],
-            vectors_original_simd: [Vec3 {
-                x: Vec4 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                    w: 0.0,
-                },
-                y: Vec4 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                    w: 0.0,
-                },
-                z: Vec4 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                    w: 0.0,
-                },
-            }; 2],
-            vectors_simd: [Vec3 {
-                x: [0.0, 0.0, 0.0, 0.0],
-                y: [0.0, 0.0, 0.0, 0.0],
-                z: [0.0, 0.0, 0.0, 0.0],
-            }; 2],
+            vectors_original_simd: [[[0.0; 4], [0.0; 4], [0.0; 4]]; 2],
+            vectors_simd: [[[0.0; 4], [0.0; 4], [0.0; 4]]; 2],
             dirty: true,
             need_init: true,
         }
@@ -131,52 +108,46 @@ impl BoundingBox {
             }
         }
 
-        self.vectors_original_simd[0] = Vec3 {
-            x: Vec4 {
+        self.vectors_original_simd[0] = [
+            [
                 // X-lane
-                x: self.min_original[0],
-                y: self.min_original[0],
-                z: self.min_original[0],
-                w: self.min_original[0],
-            },
-            y: Vec4 {
+                self.min_original[0];4
+            ],
+            [
                 // Y-lane
-                x: self.min_original[1],
-                y: self.min_original[1],
-                z: self.max_original[1],
-                w: self.max_original[1],
-            },
-            z: Vec4 {
+                self.min_original[1],
+                self.min_original[1],
+                self.max_original[1],
+                self.max_original[1],
+            ],
+            [
                 // Z-lane
-                x: self.min_original[2],
-                y: self.max_original[2],
-                z: self.max_original[2],
-                w: self.min_original[2],
-            },
-        };
-        self.vectors_original_simd[1] = Vec3 {
-            x: Vec4 {
+                self.min_original[2],
+                self.max_original[2],
+                self.max_original[2],
+                self.min_original[2],
+            ],
+        ];
+        self.vectors_original_simd[1] = [
+            [
                 // X-lane
-                x: self.max_original[0],
-                y: self.max_original[0],
-                z: self.max_original[0],
-                w: self.max_original[0],
-            },
-            y: Vec4 {
+                self.max_original[0];4
+            ],
+            [
                 // Y-lane
-                x: self.max_original[1],
-                y: self.max_original[1],
-                z: self.min_original[1],
-                w: self.min_original[1],
-            },
-            z: Vec4 {
+                self.max_original[1],
+                self.max_original[1],
+                self.min_original[1],
+                self.min_original[1],
+            ],
+            [
                 // Z-lane
-                x: self.min_original[2],
-                y: self.max_original[2],
-                z: self.max_original[2],
-                w: self.min_original[2],
-            },
-        };
+                self.min_original[2],
+                self.max_original[2],
+                self.max_original[2],
+                self.min_original[2],
+            ],
+        ];
 
         self.need_init = false;
     }
@@ -187,120 +158,114 @@ impl BoundingBox {
             .zip(&mut self.vectors_simd.iter_mut())
         {
             // X
-            let rx0 = vector_original_simd.x.x * transformation[0][0]
-                + vector_original_simd.y.x * transformation[1][0]
-                + vector_original_simd.z.x * transformation[2][0]
+            let rx0 = vector_original_simd[0][0] * transformation[0][0]
+                + vector_original_simd[1][0] * transformation[1][0]
+                + vector_original_simd[2][0] * transformation[2][0]
                 + transformation[3][0];
-            let rx1 = vector_original_simd.x.y * transformation[0][0]
-                + vector_original_simd.y.y * transformation[1][0]
-                + vector_original_simd.z.y * transformation[2][0]
+            let rx1 = vector_original_simd[0][1] * transformation[0][0]
+                + vector_original_simd[1][1] * transformation[1][0]
+                + vector_original_simd[2][1] * transformation[2][0]
                 + transformation[3][0];
-            let rx2 = vector_original_simd.x.z * transformation[0][0]
-                + vector_original_simd.y.z * transformation[1][0]
-                + vector_original_simd.z.z * transformation[2][0]
+            let rx2 = vector_original_simd[0][2] * transformation[0][0]
+                + vector_original_simd[1][2] * transformation[1][0]
+                + vector_original_simd[2][2] * transformation[2][0]
                 + transformation[3][0];
-            let rx3 = vector_original_simd.x.w * transformation[0][0]
-                + vector_original_simd.y.w * transformation[1][0]
-                + vector_original_simd.z.w * transformation[2][0]
+            let rx3 = vector_original_simd[0][3] * transformation[0][0]
+                + vector_original_simd[1][3] * transformation[1][0]
+                + vector_original_simd[2][3] * transformation[2][0]
                 + transformation[3][0];
             // Y
-            let ry0 = vector_original_simd.x.x * transformation[0][1]
-                + vector_original_simd.y.x * transformation[1][1]
-                + vector_original_simd.z.x * transformation[2][1]
+            let ry0 = vector_original_simd[0][0] * transformation[0][1]
+                + vector_original_simd[1][0] * transformation[1][1]
+                + vector_original_simd[2][0] * transformation[2][1]
                 + transformation[3][1];
-            let ry1 = vector_original_simd.x.y * transformation[0][1]
-                + vector_original_simd.y.y * transformation[1][1]
-                + vector_original_simd.z.y * transformation[2][1]
+            let ry1 = vector_original_simd[0][1] * transformation[0][1]
+                + vector_original_simd[1][1] * transformation[1][1]
+                + vector_original_simd[2][1] * transformation[2][1]
                 + transformation[3][1];
-            let ry2 = vector_original_simd.x.z * transformation[0][1]
-                + vector_original_simd.y.z * transformation[1][1]
-                + vector_original_simd.z.z * transformation[2][1]
+            let ry2 = vector_original_simd[0][2] * transformation[0][1]
+                + vector_original_simd[1][2] * transformation[1][1]
+                + vector_original_simd[2][2] * transformation[2][1]
                 + transformation[3][1];
-            let ry3 = vector_original_simd.x.w * transformation[0][1]
-                + vector_original_simd.y.w * transformation[1][1]
-                + vector_original_simd.z.w * transformation[2][1]
+            let ry3 = vector_original_simd[0][3] * transformation[0][1]
+                + vector_original_simd[1][3] * transformation[1][1]
+                + vector_original_simd[2][3] * transformation[2][1]
                 + transformation[3][1];
             // Z
-            let rz0 = vector_original_simd.x.x * transformation[0][2]
-                + vector_original_simd.y.x * transformation[1][2]
-                + vector_original_simd.z.x * transformation[2][2]
+            let rz0 = vector_original_simd[0][0] * transformation[0][2]
+                + vector_original_simd[1][0] * transformation[1][2]
+                + vector_original_simd[2][0] * transformation[2][2]
                 + transformation[3][2];
-            let rz1 = vector_original_simd.x.y * transformation[0][2]
-                + vector_original_simd.y.y * transformation[1][2]
-                + vector_original_simd.z.y * transformation[2][2]
+            let rz1 = vector_original_simd[0][1] * transformation[0][2]
+                + vector_original_simd[1][1] * transformation[1][2]
+                + vector_original_simd[2][1] * transformation[2][2]
                 + transformation[3][2];
-            let rz2 = vector_original_simd.x.z * transformation[0][2]
-                + vector_original_simd.y.z * transformation[1][2]
-                + vector_original_simd.z.z * transformation[2][2]
+            let rz2 = vector_original_simd[0][2] * transformation[0][2]
+                + vector_original_simd[1][2] * transformation[1][2]
+                + vector_original_simd[2][2] * transformation[2][2]
                 + transformation[3][2];
-            let rz3 = vector_original_simd.x.w * transformation[0][2]
-                + vector_original_simd.y.w * transformation[1][2]
-                + vector_original_simd.z.w * transformation[2][2]
+            let rz3 = vector_original_simd[0][3] * transformation[0][2]
+                + vector_original_simd[1][3] * transformation[1][2]
+                + vector_original_simd[2][3] * transformation[2][2]
                 + transformation[3][2];
             // W
             let rw0 = 1.0
-                / (vector_original_simd.x.x * transformation[0][3]
-                    + vector_original_simd.y.x * transformation[1][3]
-                    + vector_original_simd.z.x * transformation[2][3]
+                / (vector_original_simd[0][0] * transformation[0][3]
+                    + vector_original_simd[1][0] * transformation[1][3]
+                    + vector_original_simd[2][0] * transformation[2][3]
                     + transformation[3][3]);
             let rw1 = 1.0
-                / (vector_original_simd.x.y * transformation[0][3]
-                    + vector_original_simd.y.y * transformation[1][3]
-                    + vector_original_simd.z.y * transformation[2][3]
+                / (vector_original_simd[0][1] * transformation[0][3]
+                    + vector_original_simd[1][1] * transformation[1][3]
+                    + vector_original_simd[2][1] * transformation[2][3]
                     + transformation[3][3]);
             let rw2 = 1.0
-                / (vector_original_simd.x.z * transformation[0][3]
-                    + vector_original_simd.y.z * transformation[1][3]
-                    + vector_original_simd.z.z * transformation[2][3]
+                / (vector_original_simd[0][2] * transformation[0][3]
+                    + vector_original_simd[1][2] * transformation[1][3]
+                    + vector_original_simd[2][2] * transformation[2][3]
                     + transformation[3][3]);
             let rw3 = 1.0
-                / (vector_original_simd.x.w * transformation[0][3]
-                    + vector_original_simd.y.w * transformation[1][3]
-                    + vector_original_simd.z.w * transformation[2][3]
+                / (vector_original_simd[0][3] * transformation[0][3]
+                    + vector_original_simd[1][3] * transformation[1][3]
+                    + vector_original_simd[2][3] * transformation[2][3]
                     + transformation[3][3]);
 
             //other.x = rx * rw;
-            vector_simd.x[0] = rx0 * rw0;
-            vector_simd.x[1] = rx1 * rw1;
-            vector_simd.x[2] = rx2 * rw2;
-            vector_simd.x[3] = rx3 * rw3;
+            vector_simd[0][0] = rx0 * rw0;
+            vector_simd[0][1] = rx1 * rw1;
+            vector_simd[0][2] = rx2 * rw2;
+            vector_simd[0][3] = rx3 * rw3;
             //other.y = ry * rw;
-            vector_simd.y[0] = ry0 * rw0;
-            vector_simd.y[1] = ry1 * rw1;
-            vector_simd.y[2] = ry2 * rw2;
-            vector_simd.y[3] = ry3 * rw3;
+            vector_simd[1][0] = ry0 * rw0;
+            vector_simd[1][1] = ry1 * rw1;
+            vector_simd[1][2] = ry2 * rw2;
+            vector_simd[1][3] = ry3 * rw3;
             //other.z = rz * rw;
-            vector_simd.z[0] = rz0 * rw0;
-            vector_simd.z[1] = rz1 * rw1;
-            vector_simd.z[2] = rz2 * rw2;
-            vector_simd.z[3] = rz3 * rw3;
+            vector_simd[2][0] = rz0 * rw0;
+            vector_simd[2][1] = rz1 * rw1;
+            vector_simd[2][2] = rz2 * rw2;
+            vector_simd[2][3] = rz3 * rw3;
         }
         self.min = [
-            self.vectors_simd[0]
-                .x
-                .min(&self.vectors_simd[1].x)
+            self.vectors_simd[0][0]
+                .min(&self.vectors_simd[1][0])
                 .get_min(),
-            self.vectors_simd[0]
-                .y
-                .min(&self.vectors_simd[1].y)
+            self.vectors_simd[0][1]
+                .min(&self.vectors_simd[1][1])
                 .get_min(),
-            self.vectors_simd[0]
-                .z
-                .min(&self.vectors_simd[1].z)
+            self.vectors_simd[0][2]
+                .min(&self.vectors_simd[1][2])
                 .get_min(),
         ];
         self.max = [
-            self.vectors_simd[0]
-                .x
-                .max(&self.vectors_simd[1].x)
+            self.vectors_simd[0][0]
+                .max(&self.vectors_simd[1][0])
                 .get_max(),
-            self.vectors_simd[0]
-                .y
-                .max(&self.vectors_simd[1].y)
+            self.vectors_simd[0][1]
+                .max(&self.vectors_simd[1][1])
                 .get_max(),
-            self.vectors_simd[0]
-                .z
-                .max(&self.vectors_simd[1].z)
+            self.vectors_simd[0][2]
+                .max(&self.vectors_simd[1][2])
                 .get_max(),
         ];
 

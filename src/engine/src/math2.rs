@@ -1,9 +1,4 @@
-#[derive(Copy, Clone)]
-pub struct Vec3<T> {
-    pub x: T,
-    pub y: T,
-    pub z: T,
-}
+
 #[repr(C, align(16))]
 pub struct Mat3wgslF32 {
     pub x: [f32; 3],
@@ -51,12 +46,3 @@ pub struct Vec2F32 {
     pub v: f32,
 }
 
-
-
-#[derive(Copy, Clone)]
-pub struct Vec4<T> {
-    pub x: T,
-    pub y: T,
-    pub z: T,
-    pub w: T,
-}

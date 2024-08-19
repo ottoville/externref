@@ -3,12 +3,12 @@ mod boundingbox;
 mod collider;
 mod drawable;
 mod engine;
+mod freelist;
 mod geometry;
 mod math2;
 mod mesh;
 mod meshes;
 mod terrain;
-mod freelist;
 mod vertices;
 
 use std::num::NonZeroUsize;
@@ -17,7 +17,7 @@ pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
 
-use math2::{Mat3wgslF32, Vec4};
+use math2::Mat3wgslF32;
 use rapier3d::prelude::*;
 use vertices::{Position, PositionAndNormal};
 
@@ -35,32 +35,32 @@ unsafe fn create_multivalue_vector<T>(vector: Vec<T>) -> *const usize {
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_f32(size: usize) -> *const usize {
     let mut vec: Vec<f32> = Vec::with_capacity(size);
-    vec.set_len(size);    
+    vec.set_len(size);
     return create_multivalue_vector(vec);
 }
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_positions(size: usize) -> *const usize {
     let mut vec: Vec<Position> = Vec::with_capacity(size);
-    vec.set_len(size);    
+    vec.set_len(size);
     return create_multivalue_vector(vec);
 }
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_positions_and_normal(size: usize) -> *const usize {
     let mut vec: Vec<PositionAndNormal> = Vec::with_capacity(size);
-    vec.set_len(size);    
+    vec.set_len(size);
     return create_multivalue_vector(vec);
 }
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_usize(size: usize) -> *const usize {
     let mut vec: Vec<usize> = Vec::with_capacity(size);
-    vec.set_len(size);    
-    return create_multivalue_vector(vec)
+    vec.set_len(size);
+    return create_multivalue_vector(vec);
 }
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_u8(size: usize) -> *const usize {
     let mut vec: Vec<u8> = Vec::with_capacity(size);
     vec.set_len(size);
-    return create_multivalue_vector(vec)
+    return create_multivalue_vector(vec);
 }
 
 #[no_mangle]
@@ -130,7 +130,12 @@ pub struct GPUMesh {
     scenes: u32,
 }
 impl GPUMesh {
-    pub fn set_point_light(&mut self, engine: &'static mut Engine, range: f32, gpu_alignment: NonZeroUsize) {
+    pub fn set_point_light(
+        &mut self,
+        engine: &'static mut Engine,
+        range: f32,
+        gpu_alignment: NonZeroUsize,
+    ) {
         let old_value = self.point_light_squared;
         if range > 0.0 {
             self.point_light_squared = range * range;

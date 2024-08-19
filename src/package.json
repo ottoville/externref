@@ -24,7 +24,7 @@
     "test-integration": "npm run buildRust && start npm run swa && node --experimental-vm-modules node_modules/jest/bin/jest.js  --forceExit --detectOpenHandles --runInBand --silent=false --config=jest.integration.config.js",
     "test-rust": "cargo test --lib --workspace --manifest-path ./Cargo.toml && cargo install wasm-bindgen-cli && cd terramath && cargo test --target wasm32-unknown-unknown",
     "test-wasm": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
-    "test-duplicates": " jscpd --exitCode 1 --ignore \"./node_modules/**,./rapier,./target,./jest*,./tests/**,.eslintrc.js,*.config.ts,tsconfig.json,cypress,webgpu-ts/Tests\" ./",
+    "test-duplicates": " jscpd --exitCode 1 --ignore \"./node_modules/**,./rapier,./target,./jest*,./tests/**,.eslintrc.js,*.config.ts,tsconfig.json,cypress,webgpu-ts/Tests,parry3d\" ./",
     "clean": "pwsh -Command \"rm *.tsbuildinfo; rm -r ./node_modules;rm -r ../wwwroot/js\"; cargo clean; cargo clean --target-dir ../buildscript/target"
   },
   "author": "Otto-Ville Lamminpää",
@@ -55,7 +55,7 @@
     "eslint-plugin-promise": "7.1.0",
     "globals": "^15.9.0",
     "jest": "29.5.0",
-    "jscpd": "3.5.10",
+    "jscpd": "4.0.5",
     "prettier": "3.3.3",
     "puppeteer-core": "20.5.0",
     "source-map-loader": "4.0.1",
