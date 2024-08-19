@@ -146,7 +146,7 @@ export function CreateTerrainTexture(
       entryPoints: {
         main: new ComputeShaderFunction<
           [
-            // eslint-disable-next-line @typescript-eslint/ban-types
+            // eslint-disable-next-line @typescript-eslint/no-empty-object-type
             {},
             {
               ground_texture: StorageTextLayout<ShaderStage.COMPUTE>;

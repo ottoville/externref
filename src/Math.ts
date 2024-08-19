@@ -298,7 +298,6 @@ export class ReadOnlyTerraVector3 extends TerraVector3 {
   static override of(x: number, y: number, z: number) {
     return super.of(x, y, z) as ReadOnlyTerraVector3;
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   override set(_array: ArrayLike<number>, _offset?: number): never | void {
     throw new Error('Cannot use "set" in ReadOnly vector, use setter instead');
   }

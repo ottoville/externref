@@ -12,7 +12,6 @@
     })
 
  */
-// eslint-disable-next-line import/no-unused-modules
 export class LazyEval {
   #timerStart: number | null = null;
   #timeoutID = 0;

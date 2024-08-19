@@ -12,7 +12,7 @@ import { GroundInput, type Scene, pickOutput } from './structs/Structs.js';
 
 type GroundFunction = VertexShaderFunction<
   readonly [
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {},
     {
       scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
@@ -20,7 +20,7 @@ type GroundFunction = VertexShaderFunction<
     {
       world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, GPU['meshUniforms']>;
     },
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {},
   ]
 >;

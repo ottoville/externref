@@ -58,6 +58,13 @@ stages:
         workingDir: src
         verbose: false
         customCommand: ci
+    - task: Npm@1
+      displayName: eslint
+      inputs:
+        command: custom
+        workingDir: src
+        verbose: false
+        customCommand: run eslint
     - task: Rustup@1
       displayName: Rustup
       inputs:

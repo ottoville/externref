@@ -139,7 +139,7 @@ export class Plants extends MainNode {
     const noises = new SharedArrayBuffer(
       Float32Array.BYTES_PER_ELEMENT * numBlades,
     );
-    //@ts-ignore
+    //@ts-expect-error todo
     window.downloadGrass = () => {
       caches
         .match(new Request('/grass'))

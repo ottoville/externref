@@ -133,7 +133,7 @@ const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
   },
 );
 new DrawableIndexed({
-  //@ts-ignore
+  //@ts-expect-error todo
   node: {},
   renderPasses: new Set([]),
   renderPipeline,
@@ -170,7 +170,7 @@ const renderPipeline2 = engine.gpu!.createRenderPipelineBuilder(
 );
 
 new DrawableSimple({
-  //@ts-ignore
+  //@ts-expect-error todo
   node: {},
   renderPasses: new Set([]),
   renderPipeline: renderPipeline2,

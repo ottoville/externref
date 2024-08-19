@@ -22,7 +22,6 @@ export type MappedVertexBuffers<
 > =
   R extends RenderPipelineProps<infer VERTEX_SHADER>
     ? //extract VertexBuffers
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       VERTEX_SHADER extends VertexShader<{
         main: VertexShaderFunction<B, infer V>;
       }>

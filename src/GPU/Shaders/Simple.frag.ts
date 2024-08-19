@@ -75,13 +75,13 @@ const mainFunction = new FragmentShaderFunction(
   typicalOutput,
 ) satisfies FragmentShaderFunction<
   [
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {},
     {
       clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
       meshes: BufLayout<ShaderStage.FRAGMENT, GPU['meshArray']>;
     },
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {},
   ]
 >;

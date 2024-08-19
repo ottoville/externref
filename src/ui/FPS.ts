@@ -8,7 +8,7 @@ type MenuState = {
   fps: number;
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export class CreateFPSMeter extends UINode<{}, MenuState> {
   constructor() {
     super(

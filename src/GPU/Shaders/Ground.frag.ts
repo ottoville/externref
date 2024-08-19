@@ -107,13 +107,13 @@ export function createGroundFragShader(gpu: GPU) {
         GroundInput,
       ) satisfies FragmentShaderFunction<
         [
-          // eslint-disable-next-line @typescript-eslint/ban-types
+          // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           {},
           {
             clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
             meshes: BufLayout<ShaderStage.FRAGMENT, GPU['meshArray']>;
           },
-          // eslint-disable-next-line @typescript-eslint/ban-types
+          // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           {},
           {
             mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;

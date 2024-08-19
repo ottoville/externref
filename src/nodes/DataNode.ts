@@ -192,12 +192,10 @@ export class DataNode extends MainNode {
   colliding_character = false;
 
   #vectorsVec4: number[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   checkCollide(_velocityPerDelta: [number, number, number]): TerraVector3 {
     return this.translation;
     // TODO: Generic collision check, object shape is not known
   }
-  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
   onCollideCharacter(_started: boolean) {}
   readonly pickInfo = new pickInfo();
   protected readonly colliderVerticesV4: number[] = [];
@@ -499,8 +497,6 @@ export class DataNode extends MainNode {
         this.#myCollisionsTransformMatrix.clone();
       this.#updateColliderPlanes();
     }
-    //@ts-ignore
-    // eslint-disable-next-line no-constant-condition
 
     if (this.faces_count % 4 != 0) {
       /* const scaledPosition=collider.scaledPosition;

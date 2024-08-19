@@ -52,12 +52,12 @@ export function createWaterVertShader(
         `,
     ) satisfies VertexShaderFunction<
       readonly [
-        // eslint-disable-next-line @typescript-eslint/ban-types
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         {},
         {
           scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
         },
-        // eslint-disable-next-line @typescript-eslint/ban-types
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         {},
         {
           world: BufLayout<

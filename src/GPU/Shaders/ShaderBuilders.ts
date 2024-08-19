@@ -34,7 +34,6 @@ const colorFragmentFunction = new FragmentShaderFunction(
   colorPositionOutput,
 );
 
-// eslint-disable-next-line import/no-unused-modules
 export function createShaderBuilders(gpu: GPU) {
   const BindGroupLayoutPosition = new BGLayout(
     gpu.device,

@@ -71,7 +71,6 @@ window.resetDebugNumber = () => {
     debugNumber = 0;
 }
 */
-
 export type CreateRenderPipelineProps = {
   gpu: GPU;
   label: string;
@@ -237,16 +236,12 @@ export class GPU {
   meshUniforms: Struct<{
     transformation: ['', 'mat4x4<f32>'];
     transformation_normals: ['', 'mat3x3<f32>'];
-    // eslint-disable-next-line sort-keys
     color: ['@size(16)', 'vec3<f32>'];
-    // eslint-disable-next-line sort-keys
     ambient: ['@size(12)', 'vec3<f32>'];
     shadow: ['', 'f32'];
     spot_light: ['@size(16)', 'vec3<f32>'];
-    // eslint-disable-next-line sort-keys
     id: ['', 'u32'];
     point_light_squared: ['', 'f32']; //30
-    // eslint-disable-next-line sort-keys
     directional_light: ['', 'f32'];
     /**
      * bitmask

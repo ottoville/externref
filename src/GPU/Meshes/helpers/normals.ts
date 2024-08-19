@@ -11,7 +11,6 @@ import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import { RigidBody } from 'MainNode.js';
 import { createDebugNormalsVertShader } from '../../Shaders/devtools/debug_normals.vert.js';
 
-// eslint-disable-next-line import/no-unused-modules
 export class NormalsMesh extends DataNode {
   override drawable: DrawableSimple<RenderPipelineProps>;
   constructor(targetNode: DrawableDirect<DataNode>) {

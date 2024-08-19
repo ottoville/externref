@@ -41,11 +41,11 @@ export abstract class UINode<
   oldProps: object = {};
   constructor(
     public props: Readonly<P>,
-    //@ts-expect-error
+    //@ts-expect-error todo
     public state: Readonly<S> = {},
   ) {
     for (const key in props) {
-      //@ts-expect-error
+      //@ts-expect-error todo
       this.oldProps[key] = props[key];
     }
     // Render after child constructor has been executed, to avoid error
@@ -84,13 +84,13 @@ export abstract class UINode<
               // Instance may have been rendered already, check that constructor is same
               if (instance.constructor === ctr) {
                 for (const key in props) {
-                  //@ts-expect-error
+                  //@ts-expect-error todo
                   if (instance.oldProps[key] === props[key]) {
                     continue;
                   }
                   instance.oldProps = {};
                   for (const key2 in instance.props) {
-                    //@ts-expect-error
+                    //@ts-expect-error todo
                     instance.oldProps[key2] = instance.props[key2];
                   }
                   instance.props = props;

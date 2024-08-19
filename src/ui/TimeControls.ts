@@ -178,7 +178,7 @@ const fastForward4Props = Button({
   text: '32⏩',
 });
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export class createTimeControls extends UINode<{}, MenuState> {
   constructor() {
     super(

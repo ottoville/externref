@@ -14,9 +14,8 @@ import { Scene } from '../Scene.js';
 import { Human } from '../human.js';
 //import { savedCamera } from "../types/interfaces/index.js";
 
-//@ts-ignore
+//@ts-expect-error todo
 import { Box } from '../GPU/Meshes/Box.js';
-//@ts-ignore
 import { IcoSphere } from '../GPU/Meshes/IcoSphere.js';
 import { Cone } from '../GPU/Meshes/Cone.js';
 import { Capsule, CAPSULE_ORIENTATION } from '../GPU/Meshes/Capsule.js';

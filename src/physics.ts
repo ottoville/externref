@@ -173,7 +173,6 @@ export class Physics {
             tickable.last_velocity[0] = newVelocityDelta[0] * delta_multiplier;
             tickable.last_velocity[1] = newVelocityDelta[1] * delta_multiplier;
             tickable.last_velocity[2] = newVelocityDelta[2] * delta_multiplier;
-            // eslint-disable-next-line no-constant-condition
             /*if(friction) {
                             if(tickable.speed < tickable.grip*1.8) {
                                 console.log('stop')

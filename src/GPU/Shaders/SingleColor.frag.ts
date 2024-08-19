@@ -12,9 +12,9 @@ import {
 
 const singleColorFrag = new FragmentShaderFunction<
   [
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {},
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {},
     {
       world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, GPU['meshUniforms']>;

@@ -33,15 +33,15 @@ const waterFragFunction = new FragmentShaderFunction(
   WaterInput,
 ) satisfies FragmentShaderFunction<
   readonly [
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {},
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {},
     {
       diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
       mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
     },
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {},
   ]
 >;

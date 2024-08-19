@@ -33,7 +33,6 @@ function createTextureForTextOnly(
     textSize.width * 0.5,
     measuredSize.actualBoundingBoxAscent + verticalTextMargin * 0.5,
   );
-  // eslint-disable-next-line promise/catch-or-return
   // copySource.convertToBlob().then(b => { console.log(URL.createObjectURL(b!)) })
 
   textUV[0] = [0, 0];

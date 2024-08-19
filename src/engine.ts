@@ -4,9 +4,9 @@ import { ColliderJS } from './Collider.js';
 import type { Scene } from './Scene.js';
 import type { TerraVector3 } from './Math.js';
 import { TerraCamera } from './TerraCamera.js';
-//@ts-ignore
+//@ts-expect-error todo
 import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
-//@ts-ignore
+//@ts-expect-error todo
 import { MeshCamera } from './controllers/MeshCamera.js';
 import {
   closeDistance,
@@ -450,7 +450,7 @@ export class Engine {
   readonly physics: Physics;
   readonly scenes: Map<string, Scene> = new Map();
   // readonly collisionNotFound:DataView
-  //@ts-ignore
+  //@ts-expect-error todo
   readonly #collidedMesh: DataView;
   readonly collider: ColliderJS;
 
@@ -496,14 +496,14 @@ export class Engine {
     let DB: Promise<EarthDatabase> | undefined = undefined;
     if (typeof indexedDB === 'object') {
       DB = new Promise<EarthDatabase>(function (res) {
-        var IDB = indexedDB.open('TerraSim', 6);
+        const IDB = indexedDB.open('TerraSim', 6);
         IDB.onerror = function (e) {
           showError(createError(e));
         };
         IDB.onupgradeneeded = function (e) {
           console.log('IDBVersionChangeEvent', e);
           // Save the IDBDatabase interface
-          var db: EarthDatabase = this.result;
+          const db: EarthDatabase = this.result;
 
           (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach(
             (objstore) => {
@@ -813,7 +813,7 @@ export class Engine {
     K extends Events & keyof HTMLElementEventMap = Events &
       keyof HTMLElementEventMap,
   >(listenerObj: ListenerObj<K>) {
-    //@ts-expect-error
+    //@ts-expect-error todo
     const removed = this.#inputMaps[listenerObj.type].delete(listenerObj);
     if (!removed) {
       console.warn(
@@ -829,7 +829,7 @@ export class Engine {
     Object.values(this.#inputMaps).forEach((set) => {
       [...set].forEach((eventObj) => {
         if (eventObj.object === object) {
-          //@ts-expect-error
+          //@ts-expect-error todo
           if (!set.delete(eventObj)) {
             throw new Error('Event didnt exist in set');
           }
@@ -859,7 +859,7 @@ export class Engine {
       };
     }
 
-    //@ts-ignore
+    //@ts-expect-error todo
     globalThis.engine = this;
     this.mainCamera = new TerraCamera('mainCamera', 'renderPassScreen');
 
@@ -888,10 +888,10 @@ export class Engine {
                   (!cancelled || eventObj.options?.force)
                 ) {
                   if (eventObj.options?.once) {
-                    //@ts-expect-error
+                    //@ts-expect-error todo
                     this.#inputMaps[eventType].delete(eventObj);
                   }
-                  //@ts-expect-error
+                  //@ts-expect-error todo
                   cancelled = (eventObj.cb(e) ?? false) || cancelled;
                 }
               }
@@ -923,17 +923,17 @@ export class Engine {
           this.GPUSubscribionsOnce.clear();
 
           gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
-          //@ts-ignore
+          //@ts-expect-error todo
           window.printRenderTarget = () => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId.renderTarget.texture.print_bitmap();
           };
-          //@ts-ignore
+          //@ts-expect-error todo
           window.printRenderTarget2 = () => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             gpu.renderPassScreen.depthRenderTarget.renderTarget.texture.print_bitmap();
           };
-          //@ts-ignore
+          //@ts-expect-error todo
           window.printRenderTarget3 = () => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture.renderTarget.texture.print_bitmap();

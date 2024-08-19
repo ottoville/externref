@@ -62,9 +62,9 @@ export class UIRectangleNode<
     if (this.props.events) {
       commonProps.events = {};
       for (const event in this.props.events) {
-        //@ts-expect-error
+        //@ts-expect-error todo
         commonProps.events[event] = () => {
-          //@ts-expect-error
+          //@ts-expect-error todo
           this.props.events[event]();
         };
       }
