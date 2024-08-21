@@ -2,6 +2,7 @@ use core::panic;
 use std::num::NonZeroUsize;
 
 pub use crate::drawable::DrawCommand;
+use crate::engine::GPU_QUEUE;
 use crate::engine::js_error;
 use crate::engine::js_warn;
 #[cfg(target_arch = "wasm32")]
@@ -42,6 +43,7 @@ pub struct Mesh {
     pub label: String,
     velocity: [f32; 4],
     drawable: Option<DrawCommand>,
+    pub on_gpu_queue: bool,
 }
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh(
@@ -109,7 +111,7 @@ pub unsafe extern "C" fn calculate_normals(mesh_id: usize) {
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_dynamic_buffer(mesh_id: usize) {
-    get_mesh_by_id(mesh_id).update_dynamic_buffer();
+    get_mesh_by_id_mut(mesh_id).update_dynamic_buffer();
 }
 #[no_mangle]
 pub unsafe extern "C" fn have_rigid_body(mesh_id: usize) -> bool {
@@ -299,7 +301,7 @@ pub unsafe extern "C" fn collider_faces_pointer(mesh_id: usize) -> *const Collid
 #[no_mangle]
 pub unsafe extern "C" fn set_scenes(mesh_id: usize, scenes: u32) {
     let engine2 = ENGINE.physic_engine_mut();
-    let mesh = get_mesh_by_id(mesh_id);
+    let mesh = get_mesh_by_id_mut(mesh_id);
     let gpu_mesh = &mut engine2.gpu_meshes[mesh.gpu_mesh_alignment];
 
     gpu_mesh.scenes = scenes;
@@ -439,6 +441,7 @@ impl Mesh {
             collider_handle: None,
             label,
             drawable: Option::None,
+            on_gpu_queue: false,
         };
         if point_light > 0.0 {
             ENGINE.point_lights.push(m.gpu_mesh_alignment);
@@ -514,18 +517,18 @@ impl Mesh {
             _ => {}
         }
     }
-    pub unsafe fn update_dynamic_buffer(&self) {
-        let engine2 = ENGINE.physic_engine_mut();
-        engine2.gpu_queue.insert(self.id);
+    pub fn update_dynamic_buffer(&mut self) {
+        if !self.on_gpu_queue {
+            GPU_QUEUE.lock().unwrap().push(self.id);
+            self.on_gpu_queue = true;
+        }
     }
     /**
      * To be called when mesh property change
      *  param physics: If change affects physics, set true when translation, rotation or scale changes.
      */
     pub fn on_update(&mut self, physics: bool) {
-        unsafe {
-            self.update_dynamic_buffer();
-        }
+        self.update_dynamic_buffer();
         self.transformation_is_dirty = true;
         if physics {
             if let Some(rigid_body_handle) = self.rigid_body_handle {
@@ -606,7 +609,6 @@ impl Mesh {
         let wy: f32 = w * y2;
         let wz: f32 = w * z2;
 
-
         self.transformation[0][0] = 1.0 - (yy + zz);
         self.transformation[0][1] = xy + wz;
         self.transformation[0][2] = xz - wy;
@@ -619,7 +621,7 @@ impl Mesh {
         self.transformation[2][1] = yz - wx;
         self.transformation[2][2] = 1.0 - (xx + yy);
         let mut uniform_scaling = true;
-        if let Some(geometry) = &self.geometry {  
+        if let Some(geometry) = &self.geometry {
             let sx = geometry.scaling[0];
             let sy = geometry.scaling[1];
             let sz = geometry.scaling[2];
@@ -630,11 +632,11 @@ impl Mesh {
             self.transformation[0][0] *= sx;
             self.transformation[0][1] *= sx;
             self.transformation[0][2] *= sx;
-    
+
             self.transformation[1][0] *= sy;
             self.transformation[1][1] *= sy;
             self.transformation[1][2] *= sy;
-    
+
             self.transformation[2][0] *= sz;
             self.transformation[2][1] *= sz;
             self.transformation[2][2] *= sz;
@@ -652,11 +654,22 @@ impl Mesh {
             gpu_mesh.color[3] = self.color[3];
             gpu_mesh.transformation = self.transformation;
 
-            let mut sub_3x3 =
+            let mut sub_3x3 = [
                 [
-                   [ self.transformation[0][0],self.transformation[0][1],self.transformation[0][2]],
-                   [ self.transformation[1][0],self.transformation[1][1],self.transformation[1][2]],
-                   [ self.transformation[2][0],self.transformation[2][1],self.transformation[2][2]],
+                    self.transformation[0][0],
+                    self.transformation[0][1],
+                    self.transformation[0][2],
+                ],
+                [
+                    self.transformation[1][0],
+                    self.transformation[1][1],
+                    self.transformation[1][2],
+                ],
+                [
+                    self.transformation[2][0],
+                    self.transformation[2][1],
+                    self.transformation[2][2],
+                ],
             ];
             // If not equally to scale into all dimensions, re-calculate normals matrix
             if !uniform_scaling {
@@ -668,7 +681,6 @@ impl Mesh {
             gpu_mesh.transformation_normals.x = sub_3x3[0];
             gpu_mesh.transformation_normals.y = sub_3x3[1];
             gpu_mesh.transformation_normals.z = sub_3x3[2];
-
         }
         self.transformation_is_dirty = false;
     }

@@ -4,9 +4,9 @@
   "description": "",
   "main": "game.js",
   "scripts": {
-    "buildRust": "cargo rustc --features webgpu  --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown -- -C target-feature=+simd128 && cd ../buildscript && cargo run",
-    "buildRust-prod": "cargo rustc --features webgpu --release --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown -- -C target-feature=+simd128 && cd ../buildscript && cargo run --release",
-    "buildRust-test": "cargo rustc --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown --target-dir ../node -- -C target-feature=+simd128",
+    "buildRust": "cargo rustc --features webgpu  --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown -- -C target-feature=+simd128,+atomics,+bulk-memory,+mutable-globals && cd ../buildscript && cargo run",
+    "buildRust-prod": "cargo rustc --features webgpu --release --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown -- -C target-feature=+simd128,+atomics,+bulk-memory,+mutable-globals && cd ../buildscript && cargo run --release",
+    "buildRust-test": "cargo rustc --lib --manifest-path ./Cargo.toml --target wasm32-unknown-unknown --target-dir ../node -- -C target-feature=+simd128,+atomics,+bulk-memory,+mutable-globals",
     "buildWasm": "wat2wasm.exe collider\\collider.wat --debug-names -o ..\\wwwroot\\collider\\colliderO.wasm",
     "buildWasmSimd": "pwsh -Command ./wat2wasm collider/colliderSIMD2.wat --debug-names -o ../wwwroot/collider/colliderSimd.wasm",
     "buildWasmSimd-prod": "pwsh -Command \"./wat2wasm collider/colliderSIMD2.wat -o ../wwwroot/collider/colliderSimd.wasm\"",

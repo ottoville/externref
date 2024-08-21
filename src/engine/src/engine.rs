@@ -1,6 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 use std::num::NonZeroUsize;
 use std::panic;
+use std::sync::{LazyLock, Mutex};
 
 use crate::freelist::FreeList;
 pub use crate::mesh::Mesh;
@@ -54,24 +55,23 @@ pub static mut ENGINE: Engine = Engine {
     directional_lights: Vec::new(),
     engine2: None,
 };
-static mut GPU_QUEUE: Vec<usize> = vec![];
 
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 #[externref]
 pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommandEncoder>) {
-    let engine2 = ENGINE.physic_engine_mut();
-    if engine2.gpu_queue.len() > 0 {
-        GPU_QUEUE = Vec::from_iter(engine2.gpu_queue.drain());
-        let iter = GPU_QUEUE.iter();
-        for mesh_id in iter {
+    let mut queue = GPU_QUEUE.lock().unwrap();
+    if queue.len() > 0 {
+        for mesh_id in queue.iter() {
             let mesh = get_mesh_by_id_mut(*mesh_id);
             if mesh.transformation_is_dirty {
                 mesh.update_matrix();
             }
+            mesh.on_gpu_queue = false;
         }
         #[cfg(not(test))]
-        handle_gpu_queue(GPU_QUEUE.as_ptr(), GPU_QUEUE.len(), command_encoder);
+        handle_gpu_queue(queue.as_ptr(), queue.len(), command_encoder);
+        queue.clear();
     }
 }
 pub struct Engine2 {
@@ -85,9 +85,9 @@ pub struct Engine2 {
     pub rigid_bodies: HashMap<RigidBodyHandle, usize>,
     pub broad_phase: DefaultBroadPhase,
     pub joint_set: ImpulseJointSet,
-    pub gpu_queue: HashSet<usize>,
     pub gpu_meshes: FreeList<GPUMesh>,
 }
+pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> = LazyLock::new(||Mutex::new(Vec::with_capacity(100)));
 static mut LOG_STRING: String = String::new();
 // TODO, remove and use "str_ptr_from_arr" syntax
 pub fn create_js_string(mut str: String) -> *const u8 {
@@ -174,7 +174,6 @@ pub fn init_engine() {
         broad_phase: DefaultBroadPhase::new(),
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
-        gpu_queue: HashSet::new(),
         gpu_meshes: FreeList::new(),
     };
     unsafe {
