@@ -2,7 +2,17 @@
 // offline support. See https://aka.ms/blazor-offline-considerations
 
 ((service: ServiceWorkerGlobalScope): void => {
-  service.addEventListener('install', (event) => event.waitUntil(onInstall()));
+  service.addEventListener('install', (event) => {
+    //@ts-expect-error todo
+    event.addRoutes({
+      condition: {
+        urlPattern:
+          'https://northeurope-0.in.applicationinsights.azure.com/v2/track',
+      },
+      source: 'network',
+    });
+    event.waitUntil(onInstall());
+  });
   service.addEventListener('activate', (event) =>
     event.waitUntil(onActivate()),
   );

@@ -273,8 +273,7 @@ impl<'vert> Geometry {
             match &mut self.vertices.vertices {
                 VertexKind::PositionAndNormalAndUV(positions) => {
                     for triangle in self.faces.iter() {
-                        //TODO: scale later
-                        let ia: &[f32; 3] = &positions[triangle[0] as usize].position.vec;
+                        let ia = &positions[triangle[0] as usize].position.vec;
                         let ib = &positions[triangle[1] as usize].position.vec;
                         let ic = &positions[triangle[2] as usize].position.vec;
 
@@ -302,18 +301,9 @@ impl<'vert> Geometry {
                 }
                 VertexKind::PositionAndNormalAndColor(positions) => {
                     for triangle in self.faces.iter() {
-                        let ia: &[f32; 3] = &positions[triangle[0] as usize]
-                            .position
-                            .vec
-                            .multiply_vec(&self.scaling);
-                        let ib = &positions[triangle[1] as usize]
-                            .position
-                            .vec
-                            .multiply_vec(&self.scaling);
-                        let ic = &positions[triangle[2] as usize]
-                            .position
-                            .vec
-                            .multiply_vec(&self.scaling);
+                        let ia = &positions[triangle[0] as usize].position.vec;
+                        let ib = &positions[triangle[1] as usize].position.vec;
+                        let ic = &positions[triangle[2] as usize].position.vec;
 
                         let e1 = ia.sub_vec(&ib);
                         let e2 = ic.sub_vec(&ib);
@@ -339,18 +329,9 @@ impl<'vert> Geometry {
                 }
                 VertexKind::PositionAndNormal(positions) => {
                     for triangle in self.faces.iter() {
-                        let ia: &[f32; 3] = &positions[triangle[0] as usize]
-                            .position
-                            .vec
-                            .multiply_vec(&self.scaling);
-                        let ib = &positions[triangle[1] as usize]
-                            .position
-                            .vec
-                            .multiply_vec(&self.scaling);
-                        let ic = &positions[triangle[2] as usize]
-                            .position
-                            .vec
-                            .multiply_vec(&self.scaling);
+                        let ia = &positions[triangle[0] as usize].position.vec;
+                        let ib = &positions[triangle[1] as usize].position.vec;
+                        let ic = &positions[triangle[2] as usize].position.vec;
 
                         let e1 = ia.sub_vec(&ib);
                         let e2 = ic.sub_vec(&ib);

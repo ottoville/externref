@@ -368,10 +368,8 @@ export class GPU {
         ),
       };
       GPU.#renderPipelines.set(hash, renderPipeline);
-    } else {
-      console.log('existing renderpipeline', hash);
     }
-    return renderPipeline!;
+    return renderPipeline;
   }
   #renderFrame = 0;
   /**
