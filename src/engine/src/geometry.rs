@@ -272,6 +272,9 @@ impl<'vert> Geometry {
             //self.create_faces(None);
             match &mut self.vertices.vertices {
                 VertexKind::PositionAndNormalAndUV(positions) => {
+                    for position in &mut *positions {
+                        position.normal.vec.clear();
+                    }
                     for triangle in self.faces.iter() {
                         let ia = &positions[triangle[0] as usize].position.vec;
                         let ib = &positions[triangle[1] as usize].position.vec;
@@ -300,6 +303,9 @@ impl<'vert> Geometry {
                     }
                 }
                 VertexKind::PositionAndNormalAndColor(positions) => {
+                    for position in &mut *positions {
+                        position.normal.vec.clear();
+                    }
                     for triangle in self.faces.iter() {
                         let ia = &positions[triangle[0] as usize].position.vec;
                         let ib = &positions[triangle[1] as usize].position.vec;
@@ -328,6 +334,9 @@ impl<'vert> Geometry {
                     }
                 }
                 VertexKind::PositionAndNormal(positions) => {
+                    for position in &mut *positions {
+                        position.normal.vec.clear();
+                    }
                     for triangle in self.faces.iter() {
                         let ia = &positions[triangle[0] as usize].position.vec;
                         let ib = &positions[triangle[1] as usize].position.vec;
