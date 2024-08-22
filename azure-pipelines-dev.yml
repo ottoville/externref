@@ -35,6 +35,8 @@ stages:
               deploymentMode: 'Incremental'
 - stage: buildPrEnv
   displayName: Build PR env
+  variables:
+    npm_config_cache: $(Pipeline.Workspace)/.npm
   jobs:
   - job: build_swa
     displayName: Build SWA
@@ -51,6 +53,13 @@ stages:
         workingDir: src
         verbose: false
         customCommand: audit --omit dev
+    - task: Cache@2
+      displayName: Restore npm cache
+      inputs:
+        key: 'npm | "$(Agent.OS)" | ./src/package-lock.json'
+        restoreKeys: |
+          npm | "$(Agent.OS)"
+        path: $(npm_config_cache)
     - task: Npm@1
       displayName: npm install
       inputs:
@@ -65,6 +74,16 @@ stages:
         workingDir: src
         verbose: false
         customCommand: run eslint
+    - task: Cache@2
+      displayName: Restore rust cache
+      inputs:
+        key: 'rust'
+        path: './src/target'
+    - task: Cache@2
+      displayName: Restore rust buildscript cache
+      inputs:
+        key: 'rustbuildscript'
+        path: './buildscript/target'
     - task: Rustup@1
       displayName: Rustup
       inputs:
