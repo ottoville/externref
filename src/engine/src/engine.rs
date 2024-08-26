@@ -1,9 +1,11 @@
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::panic;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{LazyLock, Mutex};
 
-use crate::freelist::FreeList;
+use crate::allocators::freelist::FreeList;
+use crate::allocators::stack_allocator::StackAllocator;
 pub use crate::mesh::Mesh;
 use crate::mesh::{get_mesh_by_id, get_mesh_by_id_mut};
 pub use crate::GPUMesh;
@@ -19,6 +21,8 @@ extern "C" {
     fn error(number: *const usize);
 }
 pub struct GPUCommandEncoder(());
+pub struct JSBuffer(());
+
 extern "C" {
     #[cfg(feature = "webgpu")]
     fn update_point_lights(pointer: *const NonZeroUsize, length: usize);
@@ -27,23 +31,49 @@ extern "C" {
     #[cfg(target_arch = "wasm32")]
     fn jspanic(number: *const u8);
     #[cfg(target_arch = "wasm32")]
+    fn mesh_on_change(mesh_id: usize);
+    #[cfg(target_arch = "wasm32")]
     fn mesh_on_collide(mesh_id: usize, status: bool);
     #[cfg(target_arch = "wasm32")]
     fn mesh_on_physic_tick(number: usize);
     #[cfg(target_arch = "wasm32")]
     pub fn verticesChange(mesh_id: usize);
 }
+#[no_mangle]
+pub unsafe extern "C" fn get_update_lights() -> bool {
+    UPDATE_LIGHTS.load(Ordering::Relaxed)
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_update_lights(value: bool) {
+    UPDATE_LIGHTS.store(value, Ordering::Relaxed);
+}
+#[externref]
+#[no_mangle]
+pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Resource<JSBuffer>) {
+    TEMP_GPU_BUFFERS.lock().unwrap().push(buffer);
+}
+#[no_mangle]
+pub unsafe extern "C" fn clear_temp_gpu_buffers() {
+    TEMP_GPU_BUFFERS.lock().unwrap().clear();
+}
+
 #[cfg(target_arch = "wasm32")]
 #[externref]
-#[link(wasm_import_module = "env")] 
-#[cfg(not(test))]
+#[link(wasm_import_module = "env")]
+#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     #[cfg(feature = "webgpu")]
     fn handle_gpu_queue(
         pointerVec: *const usize,
         length: usize,
         command_encoder: &Resource<GPUCommandEncoder>,
+        buffer: &Resource<JSBuffer>,
     );
+    #[cfg(feature = "webgpu")]
+    fn create_temp_gpu_buffer(length: usize) -> Resource<JSBuffer>;
+    #[cfg(feature = "webgpu")]
+    fn destroy_buffer(buffer: &Resource<JSBuffer>);
+
 }
 pub struct Engine {
     pub point_lights: Vec<NonZeroUsize>,
@@ -58,20 +88,27 @@ pub static mut ENGINE: Engine = Engine {
 
 #[no_mangle]
 #[cfg(feature = "webgpu")]
+#[cfg(any(not(test), rust_analyzer))]
 #[externref]
 pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommandEncoder>) {
     let mut queue = GPU_QUEUE.lock().unwrap();
     if queue.len() > 0 {
+        let buffer = create_temp_gpu_buffer(queue.len());
         for mesh_id in queue.iter() {
             let mesh = get_mesh_by_id_mut(*mesh_id);
             if mesh.transformation_is_dirty {
                 mesh.update_matrix();
             }
             mesh.on_gpu_queue = false;
+            let engine2 = ENGINE.physic_engine_mut();
+            if engine2.gpu_meshes[mesh.gpu_mesh_alignment].point_light_squared > 0.0 {
+                UPDATE_LIGHTS.store(true, Ordering::Relaxed)
+            }
+            mesh_on_change(*mesh_id);
         }
-        #[cfg(not(test))]
-        handle_gpu_queue(queue.as_ptr(), queue.len(), command_encoder);
+        handle_gpu_queue(queue.as_ptr(), queue.len(), command_encoder, &buffer);
         queue.clear();
+        TEMP_GPU_BUFFERS.lock().unwrap().push(buffer);
     }
 }
 pub struct Engine2 {
@@ -87,8 +124,15 @@ pub struct Engine2 {
     pub joint_set: ImpulseJointSet,
     pub gpu_meshes: FreeList<GPUMesh>,
 }
-pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> = LazyLock::new(||Mutex::new(Vec::with_capacity(100)));
+pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> =
+    LazyLock::new(|| Mutex::new(Vec::with_capacity(128)));
+static UPDATE_LIGHTS: AtomicBool = AtomicBool::new(false);
+
+static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Resource<JSBuffer>, 16>> = Mutex::new(StackAllocator::new());
+
+
 static mut LOG_STRING: String = String::new();
+
 // TODO, remove and use "str_ptr_from_arr" syntax
 pub fn create_js_string(mut str: String) -> *const u8 {
     str.truncate(512);

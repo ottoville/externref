@@ -15,6 +15,9 @@ path = "engine/src/lib.rs"
 
 [workspace.lints]
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(rust_analyzer)'] }
+
 
 [dependencies]
 externref = "0.2.0"

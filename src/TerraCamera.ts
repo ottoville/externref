@@ -299,7 +299,10 @@ export class TerraCamera {
           usages: BufferUsageEnums.COPY_SRC,
         },
         (b) => {
-          this.gpu!.tempGPUBuffers.push(b);
+          engine.rust.push_to_temp_gpu_buffers({
+            externref: b,
+            reference: false,
+          });
           new Float32Array(b.getMappedRange()).set(this.#viewAndProjection);
         },
       );

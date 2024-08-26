@@ -16,7 +16,8 @@ import {
 } from './nodes/DataNode.js';
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
-import { RigidBody } from 'MainNode.js';
+import { MainNode, type RigidBody } from './MainNode.js';
+import { Buffer, BufferUsageEnums, Bindable } from './webgpu-ts/index.js';
 
 const textDecoder = new TextDecoder();
 
@@ -129,7 +130,10 @@ export type rustWasm = {
   basepoint_world_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
-  process_gpu_queue(commandEncoder: GPUCommandEncoder): void;
+  process_gpu_queue(commandEncoder: {
+    externref: GPUCommandEncoder;
+    reference: true;
+  }): void;
 
   new_mesh(
     point_light: number,
@@ -304,6 +308,13 @@ export type rustWasm = {
     radius: number,
   ): rust_pointer<'collider'>;
   dedup_positions(geometry: rust_pointer<'geometry'>): void;
+  get_update_lights(): boolean;
+  set_update_lights(value: boolean): void;
+  push_to_temp_gpu_buffers(buffer: {
+    reference: false;
+    externref: Buffer<BufferUsageEnums.COPY_SRC>;
+  }): void;
+  clear_temp_gpu_buffers(): void;
 };
 
 function Dot(
@@ -457,7 +468,6 @@ export class Engine {
   readonly #destinationPoint: [number, number, number] = [0, 0, 0];
   readonly #displacementVector: [number, number, number] = [0, 0, 0];
 
-  updateLights = false;
   inputManager: CameraController | null = null;
 
   mainCamera: TerraCamera;
@@ -543,7 +553,7 @@ export class Engine {
 
     let rust: WebAssembly.WebAssemblyInstantiatedSource;
     let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
-    const exportObj = {
+    const exportObj: WebAssembly.Imports = {
       console: {
         error(ptr: number) {
           console.error(stringFromPtr(rust.instance.exports.memory, ptr));
@@ -556,12 +566,42 @@ export class Engine {
         },
       },
       env: {
+        create_temp_gpu_buffer(length: number) {
+          return {
+            externref: new Buffer({
+              gpu: engine.gpu!.device,
+              label: 'handle_gpu_queue',
+              mapped: true,
+              size: GPUDataSize * length,
+              usages: BufferUsageEnums.COPY_SRC,
+            }),
+            reference: false,
+          } as const;
+        },
+        drop_ref(ref: { reference: boolean; externref: unknown }) {
+          /**
+           * wasm externref module does not separate dropping references or ownership from externref table,
+           * so we need to track if dropped externref was owned by rust or was it a reference
+           */
+          if (!ref.reference && ref.externref instanceof Bindable) {
+            ref.externref.destroy();
+          }
+        },
         handle_gpu_queue(
           pointerVec: number,
           length: number,
-          commandEncoder: GPUCommandEncoder,
+          commandEncoder: { externref: GPUCommandEncoder; reference: true },
+          buffer: {
+            reference: false;
+            externref: Buffer<BufferUsageEnums.COPY_SRC, true>;
+          },
         ) {
-          engine.gpu?.handle_gpu_queue(pointerVec, length, commandEncoder);
+          engine.gpu?.handle_gpu_queue(
+            pointerVec,
+            length,
+            commandEncoder.externref,
+            buffer.externref,
+          );
         },
         jspanic(ptr: number) {
           if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
@@ -575,11 +615,21 @@ export class Engine {
               .trimEnd(),
           );
         },
+        mesh_on_change(mesh_id: number) {
+          const mesh = MainNode.Meshes.get(mesh_id);
+          if (mesh) {
+            mesh.onMeshChange.forEach((cb) => cb());
+          } else {
+            console.warn('mesh_on_change on non-existing mesh', mesh_id);
+          }
+        },
         mesh_on_collide(mesh_id: number, started: boolean) {
           const mesh = DataNode.Meshes.get(mesh_id);
           if (mesh) {
-            DataNode.Meshes.get(mesh_id)?.onCollideCharacter(started);
+            mesh.onCollideCharacter(started);
             mesh.colliding_physics = started;
+          } else {
+            console.warn('mesh_on_collide on non-existing mesh', mesh_id);
           }
         },
         mesh_on_physic_tick(mesh_id: number) {

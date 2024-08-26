@@ -8,7 +8,9 @@ fn main() {
     let module: Result<Vec<u8>, std::io::Error> = std::fs::read(input);
     match module {
         Ok(v) => {
-            let processed = Processor::default().process_bytes(&v);
+            let processed = Processor::default()
+                .set_drop_fn("env", "drop_ref")
+                .process_bytes(&v);
             match processed {
                 Ok(v) => {
                     let writed = std::fs::write("../wwwroot/engine.wasm", v);
@@ -20,13 +22,13 @@ fn main() {
                                 optimize("../wwwroot/collider/colliderSimd.wasm");
                             }
                         }
-                        Err(e) => println!("Error when writing output: {e:?}"),
+                        Err(e) => panic!("Error when writing output: {e:?}"),
                     }
                 }
-                Err(e) => println!("error processing externref: {e:?}"),
+                Err(e) => panic!("error processing externref: {e:?}"),
             }
         }
-        Err(e) => println!("error loading wasm module: {e:?}"),
+        Err(e) => panic!("error loading wasm module: {e:?}"),
     }
 }
 fn optimize(path: &str) {

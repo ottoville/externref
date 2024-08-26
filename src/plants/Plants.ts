@@ -221,7 +221,10 @@ export class Plants extends MainNode {
                 usages: BufferUsageEnums.COPY_SRC,
               },
               (tempBuffer) => {
-                scene.gpu.tempGPUBuffers.push(tempBuffer);
+                engine.rust.push_to_temp_gpu_buffers({
+                  externref: tempBuffer,
+                  reference: false,
+                });
                 const srcOffset = 0;
                 new Int8Array(tempBuffer.getMappedRange()).set(
                   new Int8Array(

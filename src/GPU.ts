@@ -93,7 +93,6 @@ export class GPU {
   readonly #gpu_max_point_lights = 63;
 
   readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
-  readonly tempGPUBuffers: GPUBuffer[] = [];
 
   readonly projections: Set<Projection> = new Set();
   readonly cameras: TerraCamera[] = [];
@@ -899,69 +898,53 @@ export class GPU {
     pointerVec: number,
     length: number,
     commandEncoder: GPUCommandEncoder,
+    tempBuffer: Buffer<BufferUsageEnums.COPY_SRC, true>,
   ) {
     let tempOffset = 0;
-
-    new Buffer(
-      {
-        gpu: this.device,
-        label: 'handle_gpu_queue',
-        size: this.GPUDataSizeBytes * length,
-        usages: BufferUsageEnums.COPY_SRC,
-      },
-      (tempBuffer, swapBuffer) => {
-        const pointers_to_gpumesh_and_offset = new Uint32Array(
-          engine.rust.memory.buffer,
-          pointerVec,
-          length,
-        );
-        const meshes: [mesh: MainNode, gpu_alignment: number][] = [];
-        for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i++) {
-          const meshID = pointers_to_gpumesh_and_offset[i]!;
-          const mesh = MainNode.Meshes.get(meshID);
-          if (!mesh) {
-            console.warn('Tried to update non exist mesh with id ', meshID);
-            continue;
-          }
-          const offset = engine.rust.gpu_alignment(meshID);
-          meshes.push([mesh, offset]);
-          if (offset >= this.#maxInstances) {
-            this.#maxInstances = offset + 10;
-            this.GPUMeshes.resize(gpu_memory_index_size * this.#maxInstances);
-          }
-        }
-        for (let i = 0; i < meshes.length; i++) {
-          const [mesh, offset] = meshes[i]!;
-
-          mesh.onMeshChange.forEach((cb) => cb());
-          const gpumeshPointer = engine.rust.gpu_pointer(mesh.id);
-          const dataLength = this.GPUDataSizeBytes / 4;
-          const data = new Float32Array(
-            engine.rust.memory.buffer,
-            gpumeshPointer,
-            dataLength,
-          );
-          //Point light
-          if (data[41]! > 0) {
-            engine.updateLights = true;
-          }
-          new Float32Array(
-            tempBuffer.getMappedRange(
-              tempOffset * this.GPUDataSizeBytes,
-              this.GPUDataSizeBytes,
-            ),
-          ).set(data);
-          this.GPUMeshes.copyFrom(
-            commandEncoder,
-            swapBuffer,
-            tempOffset++ * this.GPUDataSizeBytes,
-            offset * gpu_memory_index_size,
-            this.GPUDataSizeBytes,
-          );
-        }
-        this.tempGPUBuffers.push(tempBuffer);
-      },
+    const pointers_to_gpumesh_and_offset = new Uint32Array(
+      engine.rust.memory.buffer,
+      pointerVec,
+      length,
     );
+    const meshes: [mesh: MainNode, gpu_alignment: number][] = [];
+    for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i++) {
+      const meshID = pointers_to_gpumesh_and_offset[i]!;
+      const mesh = MainNode.Meshes.get(meshID);
+      if (!mesh) {
+        console.warn('Tried to update non exist mesh with id ', meshID);
+        continue;
+      }
+      const offset = engine.rust.gpu_alignment(meshID);
+      meshes.push([mesh, offset]);
+      if (offset >= this.#maxInstances) {
+        this.#maxInstances = offset + 10;
+        this.GPUMeshes.resize(gpu_memory_index_size * this.#maxInstances);
+      }
+    }
+    for (let i = 0; i < meshes.length; i++) {
+      const [mesh, offset] = meshes[i]!;
+      const gpumeshPointer = engine.rust.gpu_pointer(mesh.id);
+      const dataLength = this.GPUDataSizeBytes / 4;
+      const data = new Float32Array(
+        engine.rust.memory.buffer,
+        gpumeshPointer,
+        dataLength,
+      );
+      new Float32Array(
+        tempBuffer.getMappedRange(
+          tempOffset * this.GPUDataSizeBytes,
+          this.GPUDataSizeBytes,
+        ),
+      ).set(data);
+      this.GPUMeshes.copyFrom(
+        commandEncoder,
+        tempBuffer,
+        tempOffset++ * this.GPUDataSizeBytes,
+        offset * gpu_memory_index_size,
+        this.GPUDataSizeBytes,
+      );
+    }
+    tempBuffer.unmap();
   }
   update_directional_lights(pointer: number, length: number) {
     const lights = new Uint32Array(engine.rust.memory.buffer, pointer, length);
@@ -1082,7 +1065,10 @@ export class GPU {
       const GPUQueueCommandEncoder = this.device.createCommandEncoder({
         label: 'handle_gpu_queue_encoder',
       });
-      engine.rust.process_gpu_queue(GPUQueueCommandEncoder);
+      engine.rust.process_gpu_queue({
+        externref: GPUQueueCommandEncoder,
+        reference: true,
+      });
       const commandBuff = GPUQueueCommandEncoder.finish({
         label: 'renderloop',
       });
@@ -1090,17 +1076,16 @@ export class GPU {
       // Insert this to begin of the array to get all changes to mesh properties affected first
       this.pendingCommandBuffers.unshift(commandBuff);
 
+      const updateLights = engine.rust.get_update_lights();
       // Rust render loop end
-      if (engine.updateLights || updatedCameras.length > 0) {
+      if (updateLights || updatedCameras.length > 0) {
         const lightPass = renderloop_commandEncoder.beginComputePass({
           label: 'lightPassEncoder',
         });
         lightPass.setPipeline(updateViewPipeline);
         lightPass.setBindGroup(0, this.#updateViewBindGroup.bindGroup);
         //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
-        const camerasToUpdate = engine.updateLights
-          ? engine.cameras
-          : updatedCameras;
+        const camerasToUpdate = updateLights ? engine.cameras : updatedCameras;
         camerasToUpdate.forEach((camera) => {
           lightPass.setBindGroup(1, camera.updateViewBindGroup!.bindGroup);
           lightPass.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
@@ -1108,7 +1093,7 @@ export class GPU {
         lightPass.end();
         // Cluster debug
         //var readBuffer = engine.mainCamera.clusterArrayBuffer?.createReadCopy(renderEncoder)
-        engine.updateLights = false;
+        engine.rust.set_update_lights(false);
       }
 
       this.#renderPasses.forEach((renderPass) => {
@@ -1134,8 +1119,7 @@ export class GPU {
             debugNumber=debugNumber+1;
         }*/
     this.pendingCommandBuffers.length = 0;
-    this.tempGPUBuffers.forEach((buff) => buff.destroy());
-    this.tempGPUBuffers.length = 0;
+    engine.rust.clear_temp_gpu_buffers();
     this.onceAfterRender.forEach((cb) => cb());
     this.onceAfterRender.length = 0;
 
