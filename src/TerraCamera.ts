@@ -301,7 +301,7 @@ export class TerraCamera {
         (b) => {
           engine.rust.push_to_temp_gpu_buffers({
             externref: b,
-            reference: false,
+            ownedByJS: false,
           });
           new Float32Array(b.getMappedRange()).set(this.#viewAndProjection);
         },

@@ -4,7 +4,7 @@ use std::panic;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{LazyLock, Mutex};
 
-use crate::allocators::freelist::FreeList;
+use crate::allocators::freeindex::{FreeIndex, FreeIndexIndex};
 use crate::allocators::stack_allocator::StackAllocator;
 pub use crate::mesh::Mesh;
 use crate::mesh::{get_mesh_by_id, get_mesh_by_id_mut};
@@ -25,13 +25,11 @@ pub struct JSBuffer(());
 
 extern "C" {
     #[cfg(feature = "webgpu")]
-    fn update_point_lights(pointer: *const NonZeroUsize, length: usize);
+    fn update_point_lights(pointer: *const FreeIndexIndex, length: usize);
     #[cfg(feature = "webgpu")]
-    fn update_directional_lights(pointer: *const NonZeroUsize, length: usize);
+    fn update_directional_lights(pointer: *const FreeIndexIndex, length: usize);
     #[cfg(target_arch = "wasm32")]
     fn jspanic(number: *const u8);
-    #[cfg(target_arch = "wasm32")]
-    fn mesh_on_change(mesh_id: usize);
     #[cfg(target_arch = "wasm32")]
     fn mesh_on_collide(mesh_id: usize, status: bool);
     #[cfg(target_arch = "wasm32")]
@@ -73,11 +71,11 @@ extern "C" {
     fn create_temp_gpu_buffer(length: usize) -> Resource<JSBuffer>;
     #[cfg(feature = "webgpu")]
     fn destroy_buffer(buffer: &Resource<JSBuffer>);
-
+    fn mesh_on_change(mesh: Option<&Resource<crate::mesh::JSMesh>>);
 }
 pub struct Engine {
-    pub point_lights: Vec<NonZeroUsize>,
-    pub directional_lights: Vec<NonZeroUsize>,
+    pub point_lights: Vec<FreeIndexIndex>,
+    pub directional_lights: Vec<FreeIndexIndex>,
     pub engine2: Option<Engine2>,
 }
 pub static mut ENGINE: Engine = Engine {
@@ -96,15 +94,20 @@ pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommand
         let buffer = create_temp_gpu_buffer(queue.len());
         for mesh_id in queue.iter() {
             let mesh = get_mesh_by_id_mut(*mesh_id);
-            if mesh.transformation_is_dirty {
-                mesh.update_matrix();
+            let mut mesh_property = mesh.mesh_property.lock().unwrap();
+            for (_,cb) in mesh_property.on_change.iter() {
+                cb(&mesh_property);
+            }
+            if mesh_property.transformation_is_dirty {
+                mesh_property.update_matrix();
             }
             mesh.on_gpu_queue = false;
-            let engine2 = ENGINE.physic_engine_mut();
-            if engine2.gpu_meshes[mesh.gpu_mesh_alignment].point_light_squared > 0.0 {
+            if mesh_property.gpu_memory.point_light_squared > 0.0 {
                 UPDATE_LIGHTS.store(true, Ordering::Relaxed)
             }
-            mesh_on_change(*mesh_id);
+            if mesh.externref.is_some() {
+                mesh_on_change(mesh.externref.as_ref());
+            }
         }
         handle_gpu_queue(queue.as_ptr(), queue.len(), command_encoder, &buffer);
         queue.clear();
@@ -122,14 +125,14 @@ pub struct Engine2 {
     pub rigid_bodies: HashMap<RigidBodyHandle, usize>,
     pub broad_phase: DefaultBroadPhase,
     pub joint_set: ImpulseJointSet,
-    pub gpu_meshes: FreeList<GPUMesh>,
+    pub gpu_allocated: FreeIndex,
 }
 pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> =
     LazyLock::new(|| Mutex::new(Vec::with_capacity(128)));
 static UPDATE_LIGHTS: AtomicBool = AtomicBool::new(false);
 
-static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Resource<JSBuffer>, 16>> = Mutex::new(StackAllocator::new());
-
+static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Resource<JSBuffer>, 16>> =
+    Mutex::new(StackAllocator::new());
 
 static mut LOG_STRING: String = String::new();
 
@@ -218,7 +221,7 @@ pub fn init_engine() {
         broad_phase: DefaultBroadPhase::new(),
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
-        gpu_meshes: FreeList::new(),
+        gpu_allocated: FreeIndex::new(),
     };
     unsafe {
         ENGINE.engine2 = Some(e);
@@ -259,7 +262,6 @@ unsafe fn collider_to_mesh<'frame>(
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn physic_tick() {
     //  jslog_number(&(ENGINE.physic_engine().meshes[0]) as *const Mesh as u32);
-
     use rapier3d::crossbeam;
     let gravity = vector![0.0, -9.81, 0.0];
     let integration_parameters = IntegrationParameters {
@@ -332,13 +334,16 @@ pub unsafe extern "C" fn physic_tick() {
             Some(m_id) => {
                 let rigid_body = &e.rigid_body_set[*rigid_body_handle];
                 let newrot = rigid_body.rotation().as_vector();
-                let m: &mut Mesh = get_mesh_by_id_mut(*m_id);
-                m.rotation.i = newrot.x;
-                m.rotation.j = newrot.y;
-                m.rotation.k = newrot.z;
-                m.rotation.w = newrot.w;
+                let mesh: &mut Mesh = get_mesh_by_id_mut(*m_id);
+                {
+                    let mut mesh_property = mesh.mesh_property.lock().unwrap();
+                    mesh_property.rotation.i = newrot.x;
+                    mesh_property.rotation.j = newrot.y;
+                    mesh_property.rotation.k = newrot.z;
+                    mesh_property.rotation.w = newrot.w;
+                }
                 let pos = rigid_body.position();
-                m.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
+                mesh.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
             }
             None => js_warn(["Mesh not found for rigid body"]),
         }

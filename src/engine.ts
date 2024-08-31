@@ -17,7 +17,7 @@ import {
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
-import { Buffer, BufferUsageEnums, Bindable } from './webgpu-ts/index.js';
+import { Buffer, BufferUsageEnums, Destroyable } from './webgpu-ts/index.js';
 
 const textDecoder = new TextDecoder();
 
@@ -132,14 +132,21 @@ export type rustWasm = {
   ): number;
   process_gpu_queue(commandEncoder: {
     externref: GPUCommandEncoder;
-    reference: true;
+    ownedByJS: true;
   }): void;
 
-  new_mesh(
+  new_mesh_from_js(
     point_light: number,
     directional_light: number,
     scenes: number,
     rigid_body: RigidBody,
+    label_ptr: number,
+    label_len: number,
+    label_cap: number,
+    externref: { ownedByJS: false; externref: MainNode },
+  ): number;
+  create_debug_mesh(
+    target_mesh_id: number,
     label_ptr: number,
     label_len: number,
     label_cap: number,
@@ -223,7 +230,10 @@ export type rustWasm = {
   gpu_alignment(mesh_id: number): number;
   positions_count(mesh_id: number): number;
   set_positions_count(mesh_id: number, positions_count: number): number;
-  get_mesh_by_id(id: number): rust_pointer<'mesh'>;
+  get_mesh_externref_by_id(id: number): {
+    ownedByJS: false;
+    externref: MainNode;
+  } | null;
   strip(mesh_id: number): number;
   collider_planes_parallel_pointer(
     mesh_id: number,
@@ -268,7 +278,9 @@ export type rustWasm = {
     rw: number,
   ): void;
   faces_pointer(mesh_id: number): number;
-  bounding_vectors_pointer_simd(mesh_id: number): rust_pointer<'*const usize'>;
+  bounding_vectors_pointer_simd(
+    mesh_id: number,
+  ): rust_pointer<rust_vec_ptr<'f32'>>;
 
   create_elevator(mesh_id: number): rust_pointer<'elevator'>;
   mouse_position_pointer(elevator_ptr: rust_pointer<'elevator'>): number;
@@ -311,10 +323,13 @@ export type rustWasm = {
   get_update_lights(): boolean;
   set_update_lights(value: boolean): void;
   push_to_temp_gpu_buffers(buffer: {
-    reference: false;
+    ownedByJS: false;
     externref: Buffer<BufferUsageEnums.COPY_SRC>;
   }): void;
   clear_temp_gpu_buffers(): void;
+  devtools_pointer(): rust_pointer<'devtools'>;
+  add_onchange_callback(mesh_id: number): number;
+  remove_onchange_callback(mesh_id: number, cb: number): void;
 };
 
 function Dot(
@@ -575,24 +590,24 @@ export class Engine {
               size: GPUDataSize * length,
               usages: BufferUsageEnums.COPY_SRC,
             }),
-            reference: false,
+            ownedByJS: false,
           } as const;
         },
-        drop_ref(ref: { reference: boolean; externref: unknown }) {
+        drop_ref(ref: { ownedByJS: boolean; externref: object }) {
           /**
            * wasm externref module does not separate dropping references or ownership from externref table,
            * so we need to track if dropped externref was owned by rust or was it a reference
            */
-          if (!ref.reference && ref.externref instanceof Bindable) {
+          if (!ref.ownedByJS && Destroyable.isDestroyable(ref.externref)) {
             ref.externref.destroy();
           }
         },
         handle_gpu_queue(
           pointerVec: number,
           length: number,
-          commandEncoder: { externref: GPUCommandEncoder; reference: true },
+          commandEncoder: { externref: GPUCommandEncoder; ownedByJS: true },
           buffer: {
-            reference: false;
+            ownedByJS: false;
             externref: Buffer<BufferUsageEnums.COPY_SRC, true>;
           },
         ) {
@@ -615,13 +630,8 @@ export class Engine {
               .trimEnd(),
           );
         },
-        mesh_on_change(mesh_id: number) {
-          const mesh = MainNode.Meshes.get(mesh_id);
-          if (mesh) {
-            mesh.onMeshChange.forEach((cb) => cb());
-          } else {
-            console.warn('mesh_on_change on non-existing mesh', mesh_id);
-          }
+        mesh_on_change(mesh: { externref: MainNode; ownedByJS: false }) {
+          mesh.externref.onMeshChange.forEach((cb) => cb());
         },
         mesh_on_collide(mesh_id: number, started: boolean) {
           const mesh = DataNode.Meshes.get(mesh_id);

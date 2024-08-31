@@ -7,7 +7,7 @@ import {
   allocate_vec_usize,
 } from '../../../nodes/DataNode.js';
 import type { Engine } from '../../../engine.js';
-import { RigidBody } from 'MainNode.js';
+import { create_rust_label, RigidBody } from '../../../MainNode.js';
 import { createDebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 declare const engine: Engine;
 export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
@@ -29,10 +29,6 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     targetNode.renderPipeline.builder.vertexShader.props.entryPoints['main']
       ?.vertexBufferLayout[0]?.arrayStride ??
     targetNode.node.vertices_stride * 4;
-  const mainNodeProps = {
-    label: 'Wireframe_' + targetNode.node.label,
-    rigid_body: RigidBody.off,
-  };
 
   const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
     {
@@ -54,7 +50,10 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
         can_collide: false,
         character_can_collide_to: false,
       },
-      mainNodeProps,
+      engine.rust.create_debug_mesh(
+        targetNode.node.id,
+        ...create_rust_label('wireframe_' + targetNode.node.label),
+      ),
       indices_vec_ptr,
     );
     node.drawable = new DrawableIndexed({
@@ -71,6 +70,10 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       );
     });
   } else if (targetNode.node instanceof DataNode) {
+    const mainNodeProps = {
+      label: 'Wireframe_' + targetNode.node.label,
+      rigid_body: RigidBody.off,
+    };
     const stride = targetNode.node.vertices_stride;
     const vertices_ptr = allocate_vec_positions(
       targetNode.node.positions_count,
@@ -103,23 +106,21 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
       renderPipeline,
       vertexBuffers: [[vertices_ptr[0], vertices_ptr[1]]],
     });
+    const updateNode = () => {
+      node.translation = targetNode.node.translation;
+      node.update_scale(
+        targetNode.node.scale_x + 0.05,
+        targetNode.node.scale_y + 0.05,
+        targetNode.node.scale_z + 0.05,
+      );
+      node.rotation = targetNode.node.rotation;
+    };
+    updateNode();
+    //TODO: Share same transformation matrix instead of updating it from other
+    targetNode.node.onMeshChange.add(updateNode);
   } else {
     throw new Error(
       'Node has no vertexbuffer and no vertices data, cannot draw wireframe',
     );
   }
-
-  const updateNode = () => {
-    node.translation = targetNode.node.translation;
-    node.update_scale(
-      targetNode.node.scale_x + 0.05,
-      targetNode.node.scale_y + 0.05,
-      targetNode.node.scale_z + 0.05,
-    );
-    node.rotation = targetNode.node.rotation;
-  };
-  updateNode();
-
-  //TODO: Share same transformation matrix instead of updating it from other
-  targetNode.node.onMeshChange.add(updateNode);
 }

@@ -1,4 +1,5 @@
 #!cfg(target_arch = "wasm32")
+mod allocators;
 mod boundingbox;
 mod collider;
 mod drawable;
@@ -9,14 +10,14 @@ mod mesh;
 mod meshes;
 mod terrain;
 mod vertices;
-mod allocators;
-
-use std::num::NonZeroUsize;
+mod mesh_property;
+mod devtools;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
 
+use allocators::freeindex::FreeIndexIndex;
 use math2::Mat3wgslF32;
 use rapier3d::prelude::*;
 use vertices::{Position, PositionAndNormal};
@@ -134,7 +135,7 @@ impl GPUMesh {
         &mut self,
         engine: &'static mut Engine,
         range: f32,
-        gpu_alignment: NonZeroUsize,
+        gpu_alignment: FreeIndexIndex,
     ) {
         let old_value = self.point_light_squared;
         if range > 0.0 {
@@ -150,7 +151,7 @@ impl GPUMesh {
                 let index = engine
                     .point_lights
                     .iter()
-                    .position(|x| *x == gpu_alignment)
+                    .position(|x| x.0 == gpu_alignment.0)
                     .unwrap();
                 engine.point_lights.swap_remove(index);
                 #[cfg(feature = "webgpu")]
@@ -162,7 +163,7 @@ impl GPUMesh {
         &mut self,
         engine: &'static mut Engine,
         range: f32,
-        gpu_alignment: NonZeroUsize,
+        gpu_alignment: FreeIndexIndex,
     ) {
         let old_value = self.directional_light;
         if range > 0.0 {
@@ -178,7 +179,7 @@ impl GPUMesh {
                 let index = engine
                     .directional_lights
                     .iter()
-                    .position(|x| *x == gpu_alignment)
+                    .position(|x| x.0 == gpu_alignment.0)
                     .unwrap();
                 engine.directional_lights.swap_remove(index);
                 #[cfg(feature = "webgpu")]

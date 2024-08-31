@@ -29,6 +29,7 @@ export default {
       '../../nodes/BoundableNodeIndexed.js',
     '../../nodes/DataNode.js': '../../nodes/DataNode.js',
     '../../RenderPipeLines/Terrain.js': '../../RenderPipeLines/Terrain.js',
+    './Slider.js': './Slider.js',
   },
   mode: 'development',
   module: {

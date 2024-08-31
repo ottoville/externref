@@ -8,7 +8,8 @@ import {
 } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
 import { Buffer, BufferUsageEnums } from '../../../webgpu-ts/index.js';
-import { RigidBody } from 'MainNode.js';
+import { RigidBody } from '../../../MainNode.js';
+import { create_rust_vec_ptr } from '../../../Math.js';
 declare const engine: Engine;
 
 const indices = Uint32Array.of(
@@ -45,23 +46,19 @@ export class BoundingBoxMesh extends DataNode {
     | DrawableIndexed<RenderPipelineProps<DebugBoundingBoxVertShader>>
     | undefined;
   constructor(targetNode: DrawableIndexed) {
-    const [ptr, len, cap] = new Uint32Array(
-      engine.rust.memory.buffer,
+    const vec = create_rust_vec_ptr(
       engine.rust.bounding_vectors_pointer_simd(targetNode.node.id),
-      3,
     );
-    const positions_amount = 26;
-    //const gpu = targetNode.renderPipeline.props.vertexShader.props.gpu;
     const debug_render_boundingbox_vertexBuffer = new Buffer(
       {
         gpu: engine.gpu!.device,
         label: 'vertex_debug_bounding_box',
-        size: positions_amount * 4 * Float32Array.BYTES_PER_ELEMENT,
+        size: vec[1] * Float32Array.BYTES_PER_ELEMENT,
         usages: BufferUsageEnums.VERTEX,
       },
       (b) => {
         const view = new Float32Array(b.getMappedRange());
-        view.set(new Float32Array(engine.rust.memory.buffer, ptr, len));
+        view.set(new Float32Array(engine.rust.memory.buffer, vec[0], vec[1]));
       },
     );
     const indicesView = allocate_vec(indices);
@@ -69,7 +66,7 @@ export class BoundingBoxMesh extends DataNode {
       {
         vertices: {
           stride: 4 as Word<'dword'>,
-          view: [ptr as rust_pointer<'f32'>, len!, cap!],
+          view: vec,
         },
       },
       {

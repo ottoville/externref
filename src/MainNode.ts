@@ -9,6 +9,7 @@ import type { Scene } from './Scene.js';
 import type { Engine } from './engine.js';
 import type { ColliderJS } from './Collider.js';
 import type { Drawable } from './GPU/Drawables/Drawable.js';
+import { Destroyable } from 'webgpu-ts/index.js';
 declare const engine: Engine;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -24,10 +25,23 @@ export type MainNodeProps = {
   scenes?: Scene[] | undefined;
   rigid_body?: RigidBody | undefined;
 };
-export abstract class MainNode {
+export function create_rust_label(label: string) {
+  const vec_ptr = engine.rust.alloc_vector_u8(label.length);
+  const [string_ptr, len, cap] = new Uint32Array(
+    engine.rust.memory.buffer,
+    vec_ptr,
+    3,
+  );
+  textEncoder.encodeInto(
+    label,
+    new Uint8Array(engine.rust.memory.buffer, string_ptr, len),
+  );
+  return [string_ptr!, len!, cap!] as const;
+}
+export abstract class MainNode implements Destroyable {
   abstract drawable?: Drawable | undefined;
 
-  id: number;
+  readonly id: number;
   get label(): string {
     const label_field_pointer = engine.rust.label_field_pointer(this.id);
     const [label_ptr, label_len] = new Uint32Array(
@@ -48,9 +62,6 @@ export abstract class MainNode {
   }
   set shadow(shadow: number) {
     engine.rust.set_shadow(this.id, shadow);
-  }
-  get ptr() {
-    return engine.rust.get_mesh_by_id(this.id);
   }
   /**
    *
@@ -120,7 +131,6 @@ export abstract class MainNode {
   }
   onMeshChange: Set<() => void> = new Set();
   onPhysicTick?: (time: number) => void;
-  static Meshes: Map<number, MainNode> = new Map();
 
   get_transformation = () =>
     new TerraMatrix(
@@ -170,39 +180,31 @@ export abstract class MainNode {
   get have_rigid_body() {
     return engine.rust.have_rigid_body(this.id);
   }
-  constructor({
-    point_light = 0,
-    directional_light = 0,
-    label,
-    scenes,
-    rigid_body = RigidBody.default,
-  }: MainNodeProps) {
-    const sceneids = scenes
-      ? scenes.reduce((acc, scene) => acc | scene.id, 0)
-      : 1;
-    const vec_ptr = engine.rust.alloc_vector_u8(label.length);
-    const [string_ptr, len, cap] = new Uint32Array(
-      engine.rust.memory.buffer,
-      vec_ptr,
-      3,
-    );
-    textEncoder.encodeInto(
-      label,
-      new Uint8Array(engine.rust.memory.buffer, string_ptr, len),
-    );
-    this.id = engine.rust.new_mesh(
-      point_light,
-      directional_light,
-      sceneids,
-      rigid_body,
-      string_ptr!,
-      len!,
-      cap!,
-    );
-    MainNode.Meshes.set(this.id, this);
+  constructor(props: MainNodeProps | number) {
+    if (typeof props === 'number') {
+      this.id = props;
+    } else {
+      const {
+        point_light = 0,
+        directional_light = 0,
+        label,
+        scenes,
+        rigid_body = RigidBody.default,
+      } = props;
+      const sceneids = scenes
+        ? scenes.reduce((acc, scene) => acc | scene.id, 0)
+        : 1;
+      this.id = engine.rust.new_mesh_from_js(
+        point_light,
+        directional_light,
+        sceneids,
+        rigid_body,
+        ...create_rust_label(label),
+        { externref: this, ownedByJS: false },
+      );
+    }
   }
   destroy() {
-    MainNode.Meshes.delete(this.id);
     this.drawable?.destroy();
   }
 }

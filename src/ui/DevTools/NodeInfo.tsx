@@ -22,15 +22,19 @@ export const NodeInfo = memo(function NodeInfo({
   const [translation, setTranslation] = useState(new ReadOnlyTerraVector3());
   const [scale, setScale] = useState(new ReadOnlyTerraVector3());
   useEffect(() => {
-    setTranslation(drawable.node.translation);
+    const ptr = engine.rust.devtools_pointer();
+    const CB_ID = engine.rust.add_onchange_callback(drawable.node.id);
     const listener = () => {
-      setTranslation(new ReadOnlyTerraVector3(drawable.node.translation));
-      setScale(new ReadOnlyTerraVector3(drawable.node.scale));
+      setTranslation(
+        new ReadOnlyTerraVector3(engine.rust.memory.buffer, ptr + 12),
+      );
+      setScale(new ReadOnlyTerraVector3(engine.rust.memory.buffer, ptr + 24));
     };
     drawable.node.onMeshChange.add(listener);
     listener();
     return () => {
       drawable.node.onMeshChange.delete(listener);
+      engine.rust.remove_onchange_callback(drawable.node.id, CB_ID);
     };
   }, [drawable]);
   return (

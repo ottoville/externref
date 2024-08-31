@@ -282,14 +282,14 @@ export class DataNode extends MainNode {
   create_collider() {
     return engine.rust.create_trimesh_collider(this.id);
   }
-  static override Meshes: Map<number, DataNode> = new Map();
+  static Meshes: Map<number, DataNode> = new Map();
   static CharacterCanCollideMeshes: Set<DataNode> = new Set();
   #frontFace: GPUFrontFace;
   #character_can_collide_to: boolean;
   geometry: rust_pointer<'geometry'>;
   constructor(
     props: DataNodeProps,
-    mainNodeProps: MainNodeProps,
+    mainNodeProps: MainNodeProps | number,
     indicesView?: rust_vec_ptr<'usize'>,
     strip = false,
   ) {

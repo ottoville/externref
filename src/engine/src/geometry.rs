@@ -41,7 +41,9 @@ pub unsafe extern "C" fn vertices_pointer(geometry: *const Geometry) -> *const f
 pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_id: usize) -> *const usize {
     let mesh = get_mesh_by_id_mut(mesh_id);
     let mesh2 = get_mesh_by_id_mut(mesh_id);
-    let transformation = mesh.get_transformation();
+    let mut mesh_property = mesh.mesh_property.lock().unwrap();
+    let transformation = mesh_property.get_transformation();
+
     let geometry = mesh2.get_geometry_mut();
     geometry.update_bounding_box(transformation);
 
@@ -184,7 +186,6 @@ pub struct Geometry {
     pub planes: Faces,
     pub strip: bool,
     pub label: String,
-    pub scaling: [f32; 3],
     pub collider_planes: Vec<ColliderPlane>,
     pub collider_planes_parallel: Vec<[f32; 4]>, //lanes for x,y,z,d
     pub last_collider_world_vertices: Vec<f32>,
@@ -204,15 +205,15 @@ fn dedup_index(old: u32, new: u32, indices: &mut Vec<u32>) {
 }
 
 impl<'vert> Geometry {
-    pub fn create_trimesh_collider(&mut self) -> *mut Collider {
+    pub fn create_trimesh_collider(&mut self, scaling: [f32; 3]) -> *mut Collider {
         let newvertices = self
             .vertices
             .get_positions()
             .map(|position| {
                 Point::new(
-                    position.vec[0] * self.scaling[0],
-                    position.vec[1] * self.scaling[1],
-                    position.vec[2] * self.scaling[2],
+                    position.vec[0] * scaling[0],
+                    position.vec[1] * scaling[1],
+                    position.vec[2] * scaling[2],
                 )
             })
             .collect();
@@ -226,7 +227,11 @@ impl<'vert> Geometry {
         );
         Box::leak(collider)
     }
-    pub fn create_convex_collider(&mut self, collision_events: bool) -> *mut Collider {
+    pub fn create_convex_collider(
+        &mut self,
+        collision_events: bool,
+        scaling: [f32; 3],
+    ) -> *mut Collider {
         let positions = self.vertices.get_positions();
 
         let mut new_indices = self.indices.clone();
@@ -236,9 +241,9 @@ impl<'vert> Geometry {
          */
         for position in positions {
             let point = Point::new(
-                position.vec[0] * self.scaling[0],
-                position.vec[1] * self.scaling[1],
-                position.vec[2] * self.scaling[2],
+                position.vec[0] * scaling[0],
+                position.vec[1] * scaling[1],
+                position.vec[2] * scaling[2],
             );
             if let Some(n) = new_vertices.iter().position(|oldpos| oldpos.eq(&point)) {
                 dedup_index(new_vertices.len() as u32, n as u32, &mut new_indices);
@@ -444,7 +449,6 @@ impl<'vert> Geometry {
             strip,
             character_can_collide_to,
             label,
-            scaling: [1.0, 1.0, 1.0],
         }
     }
     pub fn create_faces(&mut self, override_positions_count: Option<NonZeroU32>) {

@@ -8,8 +8,8 @@ import {
 import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
-import { RigidBody } from 'MainNode.js';
 import { createDebugNormalsVertShader } from '../../Shaders/devtools/debug_normals.vert.js';
+import { create_rust_label } from '../../../MainNode.js';
 
 export class NormalsMesh extends DataNode {
   override drawable: DrawableSimple<RenderPipelineProps>;
@@ -55,29 +55,11 @@ export class NormalsMesh extends DataNode {
         character_can_collide_to: false,
         vertices: geometry,
       },
-      {
-        label: 'NormalsDebug',
-        rigid_body: RigidBody.off,
-      },
+      engine.rust.create_debug_mesh(
+        targetNode.node.id,
+        ...create_rust_label('wireframe_' + targetNode.node.label),
+      ),
     );
-
-    this.translation = targetNode.node.translation;
-    this.update_scale(
-      targetNode.node.scale_x,
-      targetNode.node.scale_y,
-      targetNode.node.scale_z,
-    );
-    this.rotation = targetNode.node.rotation;
-    //TODO: Share same transformation matrix instead of updating it from other
-    targetNode.node.onMeshChange.add(() => {
-      this.translation = targetNode.node.translation;
-      this.update_scale(
-        targetNode.node.scale_x,
-        targetNode.node.scale_y,
-        targetNode.node.scale_z,
-      );
-      this.rotation = targetNode.node.rotation;
-    });
     const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
       {
         ...NormalsPipeline,

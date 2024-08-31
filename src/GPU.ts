@@ -23,7 +23,6 @@ import {
   UIVertShader,
 } from './GPU/Shaders/UI.vert.js';
 import { createUIFragmentShader, UIFragShader } from './GPU/Shaders/UI.frag.js';
-import { MainNode } from './MainNode.js';
 import {
   BGLayout,
   BufLayout,
@@ -906,24 +905,23 @@ export class GPU {
       pointerVec,
       length,
     );
-    const meshes: [mesh: MainNode, gpu_alignment: number][] = [];
+    const meshes: [mesh_id: number, gpu_alignment: number][] = [];
+    let needResizeTo = this.#maxInstances;
     for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i++) {
       const meshID = pointers_to_gpumesh_and_offset[i]!;
-      const mesh = MainNode.Meshes.get(meshID);
-      if (!mesh) {
-        console.warn('Tried to update non exist mesh with id ', meshID);
-        continue;
-      }
       const offset = engine.rust.gpu_alignment(meshID);
-      meshes.push([mesh, offset]);
-      if (offset >= this.#maxInstances) {
-        this.#maxInstances = offset + 10;
-        this.GPUMeshes.resize(gpu_memory_index_size * this.#maxInstances);
+      meshes.push([meshID, offset]);
+      if (offset >= needResizeTo) {
+        needResizeTo = offset;
       }
     }
+    if (needResizeTo > this.#maxInstances) {
+      this.#maxInstances = needResizeTo + 16;
+      this.GPUMeshes.resize(gpu_memory_index_size * this.#maxInstances);
+    }
     for (let i = 0; i < meshes.length; i++) {
-      const [mesh, offset] = meshes[i]!;
-      const gpumeshPointer = engine.rust.gpu_pointer(mesh.id);
+      const [meshID, offset] = meshes[i]!;
+      const gpumeshPointer = engine.rust.gpu_pointer(meshID);
       const dataLength = this.GPUDataSizeBytes / 4;
       const data = new Float32Array(
         engine.rust.memory.buffer,
@@ -1067,7 +1065,7 @@ export class GPU {
       });
       engine.rust.process_gpu_queue({
         externref: GPUQueueCommandEncoder,
-        reference: true,
+        ownedByJS: true,
       });
       const commandBuff = GPUQueueCommandEncoder.finish({
         label: 'renderloop',

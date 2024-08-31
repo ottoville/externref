@@ -338,15 +338,15 @@ export class PickableRenderPass<
     if (!pickInfo || (wantedMeshIds && !wantedMeshIds.has(pickInfo.meshId))) {
       return null;
     } else {
-      const mesh = MainNode.Meshes.get(pickInfo.meshId);
+      const mesh = engine.rust.get_mesh_externref_by_id(pickInfo.meshId);
       if (!mesh) {
         throw new Error('Mesh, ' + pickInfo.meshId + ' not found');
       }
-      if (predicate && !predicate(mesh)) {
+      if (predicate && !predicate(mesh.externref)) {
         return null;
       } else {
         return {
-          mesh,
+          mesh: mesh.externref,
           position: pickInfo.position,
         };
       }

@@ -2,3 +2,4 @@ pub mod r#box;
 pub mod quad_mesh;
 pub mod octasphere;
 pub mod right_triangular_prism;
+mod debug_mesh;

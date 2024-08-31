@@ -1,11 +1,16 @@
 import { MainNode } from '../../MainNode.js';
 import { ReadOnlyTerraVector3 } from '../../Math.js';
 import { useEffect, useRef } from 'react';
+import type { Engine } from '../../engine.js';
+// Import side effects
+import './Slider.js';
+import type { SliderElement } from './Slider.js';
+declare const engine: Engine;
 
 export function Rotation({ node }: { node: MainNode }) {
-  const rotationX = useRef<HTMLInputElement>(null);
-  const rotationY = useRef<HTMLInputElement>(null);
-  const rotationZ = useRef<HTMLInputElement>(null);
+  const rotationX = useRef<SliderElement>(null);
+  const rotationY = useRef<SliderElement>(null);
+  const rotationZ = useRef<SliderElement>(null);
   /**
    * Rotation that is not set manually in devtools
    */
@@ -14,6 +19,7 @@ export function Rotation({ node }: { node: MainNode }) {
 
   const changeRotation = () => {
     if (rotationX.current && rotationY.current && rotationZ.current) {
+      console.log('set rotatedManually true');
       rotatedManually.current = true;
       node.euler_angles = [
         rotationX.current.valueAsNumber,
@@ -24,88 +30,47 @@ export function Rotation({ node }: { node: MainNode }) {
   };
 
   useEffect(() => {
+    const ptr = engine.rust.devtools_pointer();
     const listener = () => {
       if (!rotatedManually.current) {
-        rotation.current = node.euler_angles;
-        if (rotationX.current)
-          rotationX.current.value = rotation.current[0].toString();
+        rotation.current = new ReadOnlyTerraVector3(
+          engine.rust.memory.buffer,
+          ptr,
+        );
+        if (rotationX.current) {
+          rotationX.current.valueAsNumber = rotation.current[0];
+        }
         if (rotationY.current)
-          rotationY.current.value = rotation.current[1].toString();
+          rotationY.current.valueAsNumber = rotation.current[1];
         if (rotationZ.current)
-          rotationZ.current.value = rotation.current[2].toString();
+          rotationZ.current.valueAsNumber = rotation.current[2];
       } else {
         rotatedManually.current = false;
       }
     };
+    const inputListener = () => {
+      changeRotation();
+    };
+    rotationX.current?.addEventListener('input', inputListener);
+    rotationY.current?.addEventListener('input', inputListener);
+    rotationZ.current?.addEventListener('input', inputListener);
     node.onMeshChange.add(listener);
     listener();
     return () => {
       node.onMeshChange.delete(listener);
+      rotationX.current?.removeEventListener('input', inputListener);
+      rotationY.current?.removeEventListener('input', inputListener);
+      rotationZ.current?.removeEventListener('input', inputListener);
     };
   }, [node]);
   return (
     <fieldset>
       <legend>Rotation</legend>
-      <label>
-        {' '}
-        X:
-        <input
-          style={{
-            verticalAlign: 'middle',
-          }}
-          ref={rotationX}
-          onChange={() => {
-            changeRotation();
-          }}
-          title="rotation X"
-          type="range"
-          min="-3.14"
-          max="3.14"
-          step="0.01"
-        />
-      </label>{' '}
-      {rotationX.current &&
-        ((180 / Math.PI) * rotationX.current?.valueAsNumber).toFixed(2)}
+      <slider-label ref={rotationX}></slider-label>
       <br />
-      <label>
-        Y:
-        <input
-          style={{
-            verticalAlign: 'middle',
-          }}
-          ref={rotationY}
-          onChange={() => {
-            changeRotation();
-          }}
-          title="rotation Y"
-          type="range"
-          min="-3.14"
-          max="3.14"
-          step="0.01"
-        />
-        {rotationY.current &&
-          ((180 / Math.PI) * rotationY.current.valueAsNumber).toFixed(2)}
-      </label>
+      <slider-label ref={rotationY}></slider-label>
       <br />
-      <label>
-        Z:
-        <input
-          style={{
-            verticalAlign: 'middle',
-          }}
-          ref={rotationZ}
-          onChange={() => {
-            changeRotation();
-          }}
-          title="rotation Z"
-          type="range"
-          min="-3.14"
-          max="3.14"
-          step="0.01"
-        />
-        {rotationZ.current &&
-          ((180 / Math.PI) * rotationZ.current.valueAsNumber).toFixed(2)}
-      </label>
+      <slider-label ref={rotationZ}></slider-label>
     </fieldset>
   );
 }

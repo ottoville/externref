@@ -24,12 +24,18 @@ impl<T, const N: usize> StackAllocator<T, N> {
             return Option::None;
         }
         self.next_free -= 1;
-        unsafe { Option::Some(self.entries[self.next_free].assume_init_read()) }
+        unsafe {
+            let value = self.entries.get_unchecked(self.next_free);
+            let assumed = Option::Some(value.assume_init_read());
+            return assumed;
+        }
     }
     pub fn clear(&mut self) {
         let mut n = 0;
         while n < self.next_free {
-            unsafe { self.entries[n].assume_init_drop() }
+            unsafe { 
+                let value = self.entries.get_unchecked_mut(n);
+                value.assume_init_drop() }
             n += 1;
         }
         self.next_free = 0;

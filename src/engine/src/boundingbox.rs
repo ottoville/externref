@@ -22,6 +22,7 @@ fn test_bounding_box() {
     use crate::{
         engine::init_engine,
         mesh::{get_mesh_by_id_mut, Mesh, ENGINE},
+        mesh_property,
         meshes::r#box::{create_box_vertices, BOX_INDICES},
         vertices::VertexKind,
         Geometry,
@@ -30,28 +31,32 @@ fn test_bounding_box() {
         init_engine();
         let engine2 = ENGINE.physic_engine_mut();
         let len = engine2.meshes.len();
-        Mesh::new(0.0, 0.0, 0.0, 0, String::from("box"));
+        Mesh::new(0.0, 0.0, 0.0, 0, String::from("box"), None, None);
         let m = &mut engine2.meshes[len];
         let mut geometry = Geometry::new(true, false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());
         geometry.set_vertices(vertices, 8);
         geometry.indices = BOX_INDICES.to_vec();
-        geometry.scaling[0] = 500.0;
-        geometry.scaling[1] = 500.0;
-        geometry.scaling[2] = 500.0;
+        {
+            let mut mesh_property = m.mesh_property.lock().unwrap();
+            mesh_property.scaling[0] = 500.0;
+            mesh_property.scaling[1] = 500.0;
+            mesh_property.scaling[2] = 500.0;
 
+            mesh_property.rotation.i = (1.1f32).sin();
+            mesh_property.rotation.j = 0.0;
+            mesh_property.rotation.k = 0.0;
+            mesh_property.rotation.w = (1.1f32).cos();
+        }
         m.geometry = Some(Box::new(geometry));
 
         m.set_translation(123.0, 1000.0, 123.0);
-        m.rotation.i = (1.1f32).sin();
-        m.rotation.j = 0.0;
-        m.rotation.k = 0.0;
-        m.rotation.w = (1.1f32).cos();
-        let m2 = get_mesh_by_id_mut(m.id);
 
+        let m2 = get_mesh_by_id_mut(m.id);
+        let mut mesh_property2 = m2.mesh_property.lock().unwrap();
         let geo = m.get_geometry_mut();
 
-        geo.update_bounding_box(m2.get_transformation());
+        geo.update_bounding_box(mesh_property2.get_transformation());
 
         assert_eq!(geo.bounding_box.min[0], -377.0);
         assert_eq!(geo.bounding_box.min[1], 301.50122);
