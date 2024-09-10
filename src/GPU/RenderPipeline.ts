@@ -30,10 +30,12 @@ export type RenderPipelineProps<
 > = Readonly<{
   label: string;
   primitive?: GPUPrimitiveState;
-  depthBuffer?: {
-    depthWriteEnabled: boolean;
-    depthCompare: GPUCompareFunction;
-  };
+  depthBuffer?:
+    | {
+        depthWriteEnabled: boolean;
+        depthCompare: GPUCompareFunction;
+      }
+    | undefined;
   connections: Record<
     keyof V['props']['entryPoints'] & string,
     keyof F['props']['entryPoints'] & string

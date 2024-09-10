@@ -8,6 +8,7 @@ pub struct Mat3wgslF32 {
     pub z: [f32; 3],
     _padding2: f32
 }
+#[derive(Debug, Copy, Clone)]
 #[repr(C, align(16))]
 pub struct Vec3wgslF32 {
     pub vec: [f32; 3]

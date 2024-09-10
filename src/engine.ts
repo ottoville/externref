@@ -161,6 +161,7 @@ export type rustWasm = {
   set_geometry(mesh_id: number, geometry: rust_pointer<'geometry'>): void;
   create_box_geometry(): rust_pointer<'geometry'>;
   create_rtp_geometry(): rust_pointer<'geometry'>;
+  create_cone_geometry(faces: number): rust_pointer<'geometry'>;
   add_collider(mesh_id: number, collider: rust_pointer<'collider'>): void;
   memory: WebAssembly.Memory;
   set_vertices(

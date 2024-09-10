@@ -4,10 +4,19 @@ use crate::math2::{Vec2F32, Vec3wgslF32};
 pub struct Position {
     pub position: Vec3wgslF32,
 }
+#[derive(Debug, Copy, Clone)]
 #[repr(C, align(16))]
 pub struct PositionAndNormal {
     pub position: Vec3wgslF32,
     pub normal: Vec3wgslF32,
+}
+impl PositionAndNormal {
+    pub fn new() -> PositionAndNormal {
+        PositionAndNormal {
+            position: Vec3wgslF32::new(),
+            normal: Vec3wgslF32::new()
+        }
+    }
 }
 #[repr(C, align(16))]
 pub struct PositionAndNormalAndUV {

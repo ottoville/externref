@@ -352,10 +352,6 @@ export class GPU {
       | undefined;
     if (!renderPipeline) {
       renderPipeline = {
-        gpu: this,
-        label: hash,
-        primitive: primitiveWithDefaults,
-        ...desc,
         builder: createRenderPipelineBuilder(
           vertexBuilder instanceof VertexShaderBuilder
             ? vertexBuilder.build()
@@ -364,6 +360,10 @@ export class GPU {
             ? fragmentBuilder.build()
             : fragmentBuilder,
         ),
+        connections: desc.connections,
+        depthBuffer: desc.depthBuffer,
+        label: hash,
+        primitive: primitiveWithDefaults,
       };
       GPU.#renderPipelines.set(hash, renderPipeline);
     }

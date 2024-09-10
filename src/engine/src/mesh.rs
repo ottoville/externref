@@ -1,6 +1,5 @@
 pub use crate::drawable::DrawCommand;
 use crate::engine::js_error;
-use crate::engine::js_warn;
 #[cfg(target_arch = "wasm32")]
 use crate::engine::verticesChange;
 pub use crate::engine::Engine;

@@ -285,6 +285,7 @@ impl<'vert> Geometry {
                         let ib = &positions[triangle[1] as usize].position.vec;
                         let ic = &positions[triangle[2] as usize].position.vec;
 
+                        //TODO: check if frontface is cw or ccw
                         let e1 = ia.sub_vec(&ib);
                         let e2 = ic.sub_vec(&ib);
 
@@ -316,6 +317,7 @@ impl<'vert> Geometry {
                         let ib = &positions[triangle[1] as usize].position.vec;
                         let ic = &positions[triangle[2] as usize].position.vec;
 
+                        //TODO: check if frontface is cw or ccw
                         let e1 = ia.sub_vec(&ib);
                         let e2 = ic.sub_vec(&ib);
 
@@ -347,6 +349,7 @@ impl<'vert> Geometry {
                         let ib = &positions[triangle[1] as usize].position.vec;
                         let ic = &positions[triangle[2] as usize].position.vec;
 
+                        //TODO: check if frontface is cw or ccw
                         let e1 = ia.sub_vec(&ib);
                         let e2 = ic.sub_vec(&ib);
 

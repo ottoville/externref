@@ -1,7 +1,6 @@
 ﻿import { BoundableNodeSimple } from '../nodes/BoundableNodeSimple.js';
 import type { Scene } from '../Scene.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import { WaterRenderPipeline } from '../GPU/RenderPipeLines/Water.js';
 import type { Engine } from '../engine.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import {
@@ -13,6 +12,11 @@ declare const engine: Engine;
 import { BindGroup } from '../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
 import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
+const WaterRenderPipeline = Object.freeze({
+  connections: {
+    main: 'main',
+  },
+} as const);
 
 export class Sea extends BoundableNodeSimple {
   override drawable:
