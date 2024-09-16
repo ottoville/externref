@@ -23,8 +23,8 @@ export class Zones extends UIRectangleNodeHover {
   #size = 5120;
   readonly #ratio: number; //texture coordinates
   #zoneTexture?: RenderTargetTexture<
-    'rgba8unorm',
-    (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC']
+    (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'],
+    'rgba8unorm'
   >;
   scene: Scene;
   private wasOpen = false;
@@ -151,7 +151,7 @@ export class Zones extends UIRectangleNodeHover {
         throw new Error('staticScene not found');
       }
       this.props.terrain.mesh.drawable?.setTexture(
-        new TextureView(this.#zoneTexture),
+        new TextureView(this.#zoneTexture, this.#zoneTexture.props.format),
       );
       this.props.terrain.mesh.set_scenes(staticScene.id);
     }
@@ -161,7 +161,10 @@ export class Zones extends UIRectangleNodeHover {
     if (!this.props.open && this.wasOpen) {
       this.props.terrain.mesh.set_scenes(this.scene.id);
       this.props.terrain.mesh.drawable?.setTexture(
-        new TextureView(this.props.terrain.texture),
+        new TextureView(
+          this.props.terrain.texture,
+          this.props.terrain.texture.props.format,
+        ),
       );
       this.#zoneTexture?.destroy();
       this.#PT?.destroy();

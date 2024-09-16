@@ -2,7 +2,11 @@
 import type { Terrain } from '../world/Terrain.js';
 import type { Scene } from '../Scene.js';
 import { TerraVector2 } from '../Math.js';
-import type { Texture, Texture2dSize } from '../webgpu-ts/Texture.js';
+import type {
+  Texture,
+  Texture2dSize,
+  TextureUsageEnums,
+} from '../webgpu-ts/Texture.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
@@ -42,7 +46,11 @@ export class paintTexture extends paintGround {
   constructor(
     scene: Scene,
     ground: Terrain,
-    protected readonly zonedt: Texture<'rgba8unorm', 23, Texture2dSize>,
+    protected readonly zonedt: Texture<
+      (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC'],
+      'rgba8unorm',
+      Texture2dSize
+    >,
     private textureWidth: number,
     private textureHeight: number,
     private ratio: number,

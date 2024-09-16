@@ -134,7 +134,7 @@ function createTexture(
 */
 export class UIRectangleBackground extends UIRectangleText {
   createTexture(): TextureView<
-    Texture<GPUTextureFormat, TextureUsageEnums, Texture2dSize>
+    Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>
   > {
     const copySource = createTexture(
       this.backgroundAsset,

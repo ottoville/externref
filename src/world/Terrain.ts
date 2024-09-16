@@ -191,7 +191,7 @@ TODO
           const CreateGroundFromHeightMapPipelineP =
             GroundFromHeightMapShader.createComputePipeline('main');
 
-          const texture = Texture.create({
+          const texture = new Texture({
             format: 'rgba8unorm',
             gpu: gpu.device,
             label: 'TerrainTexture',
@@ -225,7 +225,7 @@ TODO
             size: verticesBufferSize,
             usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
           });
-          const view = new TextureView(texture);
+          const view = new TextureView(texture, texture.props.format);
           const sourceBindGroup = new BindGroup(
             bindLayouts[0],
             'sourceBindGroup',
@@ -353,8 +353,8 @@ TODO
   }
 
   readonly texture: RenderTargetTexture<
-    'rgba8unorm',
     (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'],
+    'rgba8unorm',
     { readonly width: 8192; readonly height: 8192 }
   >;
   constructor(
@@ -383,7 +383,7 @@ TODO
     ],
     positionsCount: number,
   ) {
-    this.texture = Texture.create({
+    this.texture = new Texture({
       format: 'rgba8unorm',
       gpu: gpu.device,
       label: 'Terrain',
@@ -474,7 +474,10 @@ TODO
       TerrainSubdivisions[0] + 1,
       TerrainSubdivisions[1] + 1,
     );
-    const textureView = new TextureView(this.texture);
+    const textureView = new TextureView(
+      this.texture,
+      this.texture.props.format,
+    );
     this.mesh = new TerrainMesh(
       scenes,
       textureView,

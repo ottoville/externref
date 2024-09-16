@@ -97,8 +97,8 @@ export type UIRectangleProps<
     Draws rectangle.
 */
 type RectangleTexture = RenderTargetTexture<
-  'bgra8unorm',
   (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
+  'bgra8unorm',
   { width: number; height: number; depthOrArrayLayers: number }
 >;
 export abstract class UIRectangle<
@@ -117,9 +117,7 @@ export abstract class UIRectangle<
   texture?: RectangleTexture | undefined;
   uniformBuffer: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
   textureView: TextureView<
-    /*P extends GPU['UIPipelineArray']
-      ? RectangleTexture
-      :*/ Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE, Texture2dSize>
+    Texture<TEXTURE_BINDING_TEXTURE, GPUTextureFormat, Texture2dSize>
   >;
 
   protected createTextureView(copySource: ImageBitmap | OffscreenCanvas) {
@@ -176,11 +174,11 @@ export abstract class UIRectangle<
         width: copySource.width,
       },
     );
-    this.textureView = new TextureView(this.texture);
+    this.textureView = new TextureView(this.texture, this.texture.props.format);
     return this.textureView;
   }
   abstract createTexture(): TextureView<
-    Texture<GPUTextureFormat, TextureUsageEnums, Texture2dSize>
+    Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>
   >;
   screenPosition = new TerraVector2(2);
   protected updatePosition() {
@@ -342,13 +340,7 @@ export abstract class UIRectangle<
     protected props: UIRectangleProps<P>,
     texture:
       | TextureView<
-          /* P extends GPU['UIPipelineArray']
-            ? RectangleTexture
-            :*/ Texture<
-            GPUTextureFormat,
-            TEXTURE_BINDING_TEXTURE,
-            Texture2dSize
-          >
+          Texture<TEXTURE_BINDING_TEXTURE, GPUTextureFormat, Texture2dSize>
         >
       | ImageBitmap
       | OffscreenCanvas,

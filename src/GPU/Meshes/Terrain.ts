@@ -34,9 +34,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
   }
   constructor(
     scenes: Scene[],
-    public initialTexture: TextureView<
-      Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>
-    >,
+    public initialTexture: TextureView<Texture<TEXTURE_BINDING_TEXTURE>>,
     public vBuffer: Buffer<VERTEX_BUFFER>,
     public iBuffer: Buffer<INDEX_BUFFER>,
     vertices: rust_vec_ptr<'f32'>,

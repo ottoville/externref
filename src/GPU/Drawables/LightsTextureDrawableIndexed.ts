@@ -54,9 +54,7 @@ export class LightsTextureDrawableIndexed<
         }>,
       ]
     >,
-    private texture: TextureView<
-      Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>
-    >,
+    private texture: TextureView<Texture<TEXTURE_BINDING_TEXTURE>>,
     private sampler: GPUSampler,
     drawableDirectProps?: DrawableDirectProps,
     drawableIndexedProps: DrawableIndexedProps = {},
@@ -85,9 +83,7 @@ export class LightsTextureDrawableIndexed<
     );
     this.textureBindGroup = textureBindGroup;
   }
-  setTexture(
-    texture: TextureView<Texture<GPUTextureFormat, TEXTURE_BINDING_TEXTURE>>,
-  ) {
+  setTexture(texture: TextureView<Texture<TEXTURE_BINDING_TEXTURE>>) {
     this.texture = texture;
     this.textureBindGroup.destroy();
   }

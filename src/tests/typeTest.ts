@@ -14,9 +14,10 @@ import { createSimpleVertShader } from 'GPU/Shaders/SingleColoredWithNormal.vert
 import type { GPU } from '../GPU.js';
 import { createSunVertShader } from 'GPU/Shaders/Sun.vert.js';
 import { createSingleColorFragShader } from 'GPU/Shaders/SingleColor.frag.js';
+import { TextureView } from 'webgpu-ts/TextureView.js';
 declare const engine: Engine;
 
-Texture.create({
+new Texture({
   format: 'r8unorm',
   gpu: engine.gpu!.device,
   label: 'normalsTexture',
@@ -28,7 +29,7 @@ Texture.create({
   //@ts-expect-error format "r8unorm" is not allowed with STORAGE_BINDING
   usages: TextureUsageEnums['STORAGE_BINDING'],
 });
-Texture.create({
+new Texture({
   format: 'r8unorm',
   gpu: engine.gpu!.device,
   label: 'normalsTexture',
@@ -41,7 +42,7 @@ Texture.create({
   usages: TextureUsageEnums['STORAGE_BINDING|COPY_SRC'],
 });
 //This should be fine
-const text1 = Texture.create({
+const text1 = new Texture({
   format: 'rgba8unorm',
   gpu: engine.gpu!.device,
   label: 'normalsTexture',
@@ -51,9 +52,18 @@ const text1 = Texture.create({
     width: 100,
   },
   usages: TextureUsageEnums['STORAGE_BINDING'],
+  viewFormats: ['r32float', 'rg32float'],
 });
+
+// Should be ok
+new TextureView(text1, 'rgba8unorm');
+// Should be ok
+new TextureView(text1, 'r32float');
+//@ts-expect-error format is not listed in texture viewformats
+new TextureView(text1, 'astc-10x10-unorm');
+
 //This should be fine
-const text2 = Texture.create({
+const text2 =  new Texture({
   format: 'astc-10x10-unorm',
   gpu: engine.gpu!.device,
   label: 'test',
@@ -77,7 +87,7 @@ text2.copyFrom(
   {},
   [2, 2],
 );
-Texture.create({
+new Texture({
   format: 'astc-10x10-unorm',
   gpu: engine.gpu!.device,
   label: 'test',
@@ -88,7 +98,7 @@ Texture.create({
   usages: TextureUsageEnums['RENDER_ATTACHMENT'],
 });
 //This should be fine
-const text3 = Texture.create({
+const text3 = new Texture({
   format: 'astc-10x10-unorm',
   gpu: engine.gpu!.device,
   label: 'test',

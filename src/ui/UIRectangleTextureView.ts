@@ -8,7 +8,7 @@ import { UIRectangle } from './UIRectangle.js';
 
 export class UIRectangleTextureView extends UIRectangle {
   createTexture(): TextureView<
-    Texture<GPUTextureFormat, TextureUsageEnums, Texture2dSize>
+    Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>
   > {
     return this.textureView;
   }

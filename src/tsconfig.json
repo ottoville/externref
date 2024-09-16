@@ -7,6 +7,7 @@
     "strictBindCallApply": true,
     "strictFunctionTypes": true,
     "strictPropertyInitialization": true,
+    "strictBuiltinIteratorReturn": true,
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
