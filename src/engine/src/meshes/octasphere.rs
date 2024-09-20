@@ -9,13 +9,13 @@ use crate::{
 };
 
 struct Patch {
-    patch_points_a: Vec<u32>,
-    patch_points_b: Vec<u32>,
-    patch_points_c: Vec<u32>,
+    patch_points_a: Vec<usize>,
+    patch_points_b: Vec<usize>,
+    patch_points_c: Vec<usize>,
 }
 struct OctasphereHeap {
-    points_left_cell: RefCell<Vec<u32>>,
-    points_right_cell: RefCell<Vec<u32>>,
+    points_left_cell: RefCell<Vec<usize>>,
+    points_right_cell: RefCell<Vec<usize>>,
 }
 thread_local! {
     static OSTASPHERE_HEAP:OctasphereHeap = OctasphereHeap{
@@ -83,13 +83,13 @@ pub unsafe extern "C" fn create_octasphere(
     {
         indices_count += 12; //2*6
     }
-    let mut indices: Vec<u32> = vec![0; indices_count];
+    let mut indices: Vec<usize> = vec![0; indices_count];
 
     let mut vert_index: usize = 0;
     let mut indices_count = 0;
-    let mut points_a: Vec<u32> = vec![0; n];
-    let mut points_b: Vec<u32> = vec![0; n];
-    let mut points_c: Vec<u32> = vec![0; n];
+    let mut points_a: Vec<usize> = vec![0; n];
+    let mut points_b: Vec<usize> = vec![0; n];
+    let mut points_c: Vec<usize> = vec![0; n];
 
     for i in 0..n {
         let theta = (std::f32::consts::PI * 0.5 * (i as f32)) / (n as f32 - 1.0);
@@ -101,17 +101,17 @@ pub unsafe extern "C" fn create_octasphere(
             vec: [0.0, theta.sin(), theta.cos()],
         };
 
-        points_a[i] = point_a_index as u32;
+        points_a[i] = point_a_index;
         if col > 0 {
             if i == 0 {
-                points_c[0] = point_a_index as u32;
+                points_c[0] = point_a_index;
             }
             let num_segments = n - 1 - i;
-            let point_b_index = vert_index as usize + num_segments - 1;
+            let point_b_index = vert_index + num_segments - 1;
             let point_b = Vec3wgslF32 {
                 vec: [theta.cos(), theta.sin(), 0.0],
             };
-            points_b[i] = point_b_index as u32;
+            points_b[i] = point_b_index;
             // compute_geodesic
 
             //dot product
@@ -135,16 +135,16 @@ pub unsafe extern "C" fn create_octasphere(
                     vertices_and_normals[vert_index].position.clone();
                 vert_index = vert_index + 1;
                 if i == 0 {
-                    points_c[point_index] = (vert_index - 1) as u32
+                    points_c[point_index] = vert_index - 1
                 }
             }
             if i == 0 {
-                points_c[n - 1] = point_b_index as u32;
+                points_c[n - 1] = point_b_index;
             }
 
             vert_index = vert_index + 1;
         } else {
-            points_b[i] = (vert_index - 1) as u32;
+            points_b[i] = vert_index - 1;
         }
         vertices_and_normals[point_a_index].normal = point_a.clone();
         vertices_and_normals[point_a_index].position = point_a;
@@ -154,26 +154,26 @@ pub unsafe extern "C" fn create_octasphere(
             let b = first_index + col + 1;
             let c = first_index + col + 2;
             for row in 0..col - 1 {
-                indices[indices_count] = (first_index + row) as u32;
+                indices[indices_count] = first_index + row;
                 indices_count += 1;
-                indices[indices_count] = (b + row) as u32;
+                indices[indices_count] = b + row;
                 indices_count += 1;
-                indices[indices_count] = (a + row) as u32;
+                indices[indices_count] = a + row;
                 indices_count += 1;
-                indices[indices_count] = (b + row) as u32;
+                indices[indices_count] = b + row;
                 indices_count += 1;
-                indices[indices_count] = (c + row) as u32;
+                indices[indices_count] = c + row;
                 indices_count += 1;
-                indices[indices_count] = (a + row) as u32;
+                indices[indices_count] = a + row;
                 indices_count += 1;
             }
 
             let row = col - 1;
-            indices[indices_count] = (first_index + row) as u32;
+            indices[indices_count] = first_index + row;
             indices_count += 1;
-            indices[indices_count] = (b + row) as u32;
+            indices[indices_count] = b + row;
             indices_count += 1;
-            indices[indices_count] = (a + row) as u32;
+            indices[indices_count] = a + row;
             indices_count += 1;
 
             first_index = b;
@@ -184,9 +184,9 @@ pub unsafe extern "C" fn create_octasphere(
     let mut patches: Vec<Patch> = Vec::with_capacity(8);
     let mut i = 0;
     patches.resize_with(7, || {
-        let mut patch_points_a: Vec<u32> = vec![0; n];
-        let mut patch_points_b: Vec<u32> = vec![0; n];
-        let mut patch_points_c: Vec<u32> = vec![0; n];
+        let mut patch_points_a: Vec<usize> = vec![0; n];
+        let mut patch_points_b: Vec<usize> = vec![0; n];
+        let mut patch_points_c: Vec<usize> = vec![0; n];
         for j in 0..num_faces_per_patch {
             if i == 0 {
                 vertices_and_normals[vert_index].normal = Vec3wgslF32 {
@@ -275,31 +275,31 @@ pub unsafe extern "C" fn create_octasphere(
             }
             vert_index += 1;
 
-            match points_a.iter().position(|x| *x == j as u32) {
+            match points_a.iter().position(|x| *x == j) {
                 Some(ind) => {
-                    patch_points_a[ind] = (vert_index - 1) as u32;
+                    patch_points_a[ind] = vert_index - 1;
                 }
                 None => {}
             };
-            match points_b.iter().position(|x| *x == j as u32) {
+            match points_b.iter().position(|x| *x == j) {
                 Some(ind) => {
-                    patch_points_b[ind] = (vert_index - 1) as u32;
+                    patch_points_b[ind] = vert_index - 1;
                 }
                 None => {}
             };
-            match points_c.iter().position(|x| *x == j as u32) {
+            match points_c.iter().position(|x| *x == j) {
                 Some(ind) => {
-                    patch_points_c[ind] = (vert_index - 1) as u32;
+                    patch_points_c[ind] = vert_index - 1;
                 }
                 None => {}
             };
         }
         for j in 0..cells_per_patch {
-            indices[indices_count] = indices[j * 3] + ((i + 1) * num_faces_per_patch) as u32;
+            indices[indices_count] = indices[j * 3] + (i + 1) * num_faces_per_patch;
             indices_count = indices_count + 1;
-            indices[indices_count] = indices[j * 3 + 1] + ((i + 1) * num_faces_per_patch) as u32;
+            indices[indices_count] = indices[j * 3 + 1] + (i + 1) * num_faces_per_patch;
             indices_count = indices_count + 1;
-            indices[indices_count] = indices[j * 3 + 2] + ((i + 1) * num_faces_per_patch) as u32;
+            indices[indices_count] = indices[j * 3 + 2] + (i + 1) * num_faces_per_patch;
             indices_count = indices_count + 1;
         }
         i += 1;
@@ -460,10 +460,10 @@ pub unsafe extern "C" fn create_octasphere(
 fn close_circle(
     half_height: f32,
     indices_count: usize,
-    indices: &mut Vec<u32>,
-    points: [[&Vec<u32>; 2]; 4],
-    points_left: &mut Vec<u32>,
-    points_right: &mut Vec<u32>,
+    indices: &mut Vec<usize>,
+    points: [[&Vec<usize>; 2]; 4],
+    points_left: &mut Vec<usize>,
+    points_right: &mut Vec<usize>,
 ) -> usize {
     if half_height > 0.0 {
         points_left.push(points[0][0][0]);
@@ -473,10 +473,10 @@ fn close_circle(
 }
 
 fn draw_connection(
-    indices: &mut Vec<u32>,
+    indices: &mut Vec<usize>,
     mut indices_count: usize,
-    points_left: &mut Vec<u32>,
-    points_right: &mut Vec<u32>,
+    points_left: &mut Vec<usize>,
+    points_right: &mut Vec<usize>,
 ) -> usize {
     for index in 0..points_left.len() - 1 {
         indices[indices_count] = points_left[index + 1];
@@ -500,7 +500,7 @@ fn draw_connection(
 #[cfg(test)]
 #[test]
 fn test_draw_connection() {
-    let mut indices = vec![0u32; 42];
+    let mut indices = vec![0usize; 42];
     let mut indices_count = 0;
     OSTASPHERE_HEAP.with(|oc| {
         let mut points_left = oc.points_left_cell.borrow_mut();

@@ -203,7 +203,7 @@ pub fn create_box_vertices() -> Vec<PositionAndNormal> {
     ]
 }
 
-pub const BOX_INDICES : [u32; 36] =
+pub const BOX_INDICES : [usize; 36] =
     [
         0, 1, 2, 0, 2, 3,    // front
         4, 5, 6, 4, 6, 7,    // back

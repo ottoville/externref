@@ -4,3 +4,4 @@ pub mod octasphere;
 pub mod right_triangular_prism;
 mod debug_mesh;
 mod cone;
+mod icosphere;

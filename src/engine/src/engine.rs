@@ -95,7 +95,7 @@ pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommand
         for mesh_id in queue.iter() {
             let mesh = get_mesh_by_id_mut(*mesh_id);
             let mut mesh_property = mesh.mesh_property.lock().unwrap();
-            for (_,cb) in mesh_property.on_change.iter() {
+            for (_, cb) in mesh_property.on_change.iter() {
                 cb(&mesh_property);
             }
             if mesh_property.transformation_is_dirty {
@@ -164,6 +164,20 @@ pub fn js_log<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
 }
 pub trait Logger {
     fn log(&self);
+}
+impl Logger for usize {
+    fn log(&self) {
+        unsafe {
+            LOG_STRING.clear();
+            LOG_STRING = self.to_string();
+            MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
+            MULTIVALUE_USIZE[1] = LOG_STRING.len();
+            MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
+
+            #[cfg(target_arch = "wasm32")]
+            log(MULTIVALUE_USIZE.as_ptr());
+        }
+    }
 }
 impl Logger for Vec<u32> {
     fn log(&self) {

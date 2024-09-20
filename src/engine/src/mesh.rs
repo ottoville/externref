@@ -507,7 +507,7 @@ impl Mesh {
                 },
                 scaling: [1.0; 3],
                 color: [1.0, 0.0, 0.0, 0.0],
-                on_change: HashMap::new()
+                on_change: HashMap::new(),
             }));
         });
         let m = Mesh {

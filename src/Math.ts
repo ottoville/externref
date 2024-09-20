@@ -247,20 +247,6 @@ export abstract class TerraVector3 extends Float32Array {
     ref[1] = ry * rw;
     ref[2] = rz * rw;
   }
-  len() {
-    return Math.hypot(this[0], this[1], this[2]);
-  }
-  normalize() {
-    const len = Math.hypot(this[0], this[1], this[2]);
-    if (len == 0 || len == 1.0) {
-      return this;
-    }
-    const scale = 1.0 / len;
-    this[0] *= scale;
-    this[1] *= scale;
-    this[2] *= scale;
-    return this;
-  }
   override set(
     arr:
       | [number, number, number]
@@ -270,18 +256,6 @@ export abstract class TerraVector3 extends Float32Array {
     this[0] = arr[0];
     this[1] = arr[1];
     this[2] = arr[2];
-  }
-  dot(vector: TerraVector3 | [number, number, number]) {
-    return this[0] * vector[0] + this[1] * vector[1] + this[2] * vector[2];
-  }
-  CrossToRef(
-    vector: TerraVector3 | [number, number, number],
-    ref: TerraVector3,
-  ) {
-    ref[0] = this[1] * vector[2] - this[2] * vector[1];
-    ref[1] = this[2] * vector[0] - this[0] * vector[2];
-    ref[2] = this[0] * vector[1] - this[1] * vector[0];
-    return ref;
   }
 }
 export class ReadOnlyFloat32Array extends Float32Array {

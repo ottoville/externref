@@ -154,7 +154,7 @@ pub fn create_rtp_vertices() -> Vec<PositionAndNormal> {
     ]
 }
 // 0, 1, 2,     3, 4, 5
-pub const RTP_INDICES : [u32; 24] =
+pub const RTP_INDICES : [usize; 24] =
     [
         0, 1, 2,    // front
         3, 4, 5,    // back

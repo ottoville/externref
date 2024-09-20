@@ -7,8 +7,8 @@ use crate::{
 #[no_mangle]
 
 pub unsafe extern "C" fn create_tiled_mesh_geometry(
-    width: f32,
-    height: f32,
+    width: usize,
+    height: usize,
 ) -> *const Geometry {
     let mut geometry = Box::new(Geometry::new(
         true,
@@ -17,7 +17,7 @@ pub unsafe extern "C" fn create_tiled_mesh_geometry(
         false,
         "quad_mesh_geometry".to_string(),
     ));
-    let (positions, indices) = create_tiled_mesh(width as u32, height as u32);
+    let (positions, indices) = create_tiled_mesh(width, height);
 
     geometry.set_indices(indices.to_vec());
     geometry.set_vertices(VertexKind::PositionAndNormalAndUV(positions), 12);
@@ -25,19 +25,18 @@ pub unsafe extern "C" fn create_tiled_mesh_geometry(
 }
 
 fn create_tiled_mesh(
-    faces_x_count: u32,
-    faces_y_count: u32,
-) -> (Vec<PositionAndNormalAndUV>, Vec<u32>) {
+    faces_x_count: usize,
+    faces_y_count: usize,
+) -> (Vec<PositionAndNormalAndUV>, Vec<usize>) {
     let width = faces_x_count as f32;
     let height = faces_y_count as f32;
     let max = width.max(height) * 0.5;
     let positions_x_count = faces_x_count + 1;
     let positions_y_count = faces_y_count + 1;
 
-    let mut indices_matrix: Vec<u32> =
-        Vec::with_capacity((faces_x_count * faces_y_count * 6) as usize);
+    let mut indices_matrix: Vec<usize> = Vec::with_capacity(faces_x_count * faces_y_count * 6);
     let mut position_matrix: Vec<PositionAndNormalAndUV> =
-        Vec::with_capacity((positions_y_count * positions_x_count) as usize);
+        Vec::with_capacity(positions_y_count * positions_x_count);
 
     for h in 0..=faces_y_count {
         let z = (h as f32 - (height * 0.5)) / max;

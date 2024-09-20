@@ -1,4 +1,4 @@
-use std::num::NonZeroU32;
+use std::num::{NonZeroU32, NonZeroUsize};
 
 use rapier3d::{
     geometry::{Collider, ColliderBuilder},
@@ -97,7 +97,7 @@ pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usiz
 #[no_mangle]
 pub unsafe extern "C" fn set_indices(
     geometry_ptr: *mut Geometry,
-    ptr: *mut u32,
+    ptr: *mut usize,
     length: usize,
     cap: usize,
 ) {
@@ -154,7 +154,7 @@ pub unsafe extern "C" fn have_vertices(mesh_id: usize) -> bool {
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices(
     mesh_id: usize,
-    indices_ptr: *mut u32,
+    indices_ptr: *mut usize,
     indices_length: usize,
     indices_cap: usize,
     vertices_ptr: *mut f32,
@@ -180,8 +180,8 @@ pub struct ColliderPlane {
 pub struct Geometry {
     pub bounding_box: BoundingBox,
     pub vertices: Vertices,
-    pub indices: Vec<u32>,
-    pub faces: Vec<[u32; 3]>,
+    pub indices: Vec<usize>,
+    pub faces: Vec<[usize; 3]>,
     pub faces_dirty: bool,
     pub planes: Faces,
     pub strip: bool,
@@ -194,11 +194,11 @@ pub struct Geometry {
     pub character_can_collide_to: bool,
 }
 
-fn dedup_index(old: u32, new: u32, indices: &mut Vec<u32>) {
+fn dedup_index(old: usize, new: usize, indices: &mut Vec<usize>) {
     for indice in indices.iter_mut() {
-        if *indice == old as u32 {
-            *indice = new as u32
-        } else if *indice > old as u32 {
+        if *indice == old {
+            *indice = new
+        } else if *indice > old {
             *indice = *indice - 1
         }
     }
@@ -218,12 +218,18 @@ impl<'vert> Geometry {
             })
             .collect();
         let positions_count = self.vertices.length();
-        self.create_faces(NonZeroU32::new(positions_count as u32));
+        self.create_faces(NonZeroUsize::new(positions_count));
         let collider = Box::new(
-            ColliderBuilder::trimesh(newvertices, self.faces.clone())
-                .density(2.0)
-                .restitution(0.5)
-                .build(),
+            ColliderBuilder::trimesh(
+                newvertices,
+                self.faces
+                    .iter()
+                    .map(|v| [v[0] as u32, v[1] as u32, v[2] as u32])
+                    .collect(),
+            )
+            .density(2.0)
+            .restitution(0.5)
+            .build(),
         );
         Box::leak(collider)
     }
@@ -246,14 +252,14 @@ impl<'vert> Geometry {
                 position.vec[2] * scaling[2],
             );
             if let Some(n) = new_vertices.iter().position(|oldpos| oldpos.eq(&point)) {
-                dedup_index(new_vertices.len() as u32, n as u32, &mut new_indices);
+                dedup_index(new_vertices.len(), n, &mut new_indices);
             } else {
                 new_vertices.push(point);
             }
         }
         let indices: Vec<[u32; 3]> = new_indices
             .chunks_exact(3)
-            .map(|i| i.try_into().unwrap())
+            .map(|i| [i[0] as u32, i[1] as u32, i[2] as u32])
             .collect();
 
         let colliderbuilder = ColliderBuilder::convex_mesh(new_vertices, &indices);
@@ -281,9 +287,9 @@ impl<'vert> Geometry {
                         position.normal.vec.clear();
                     }
                     for triangle in self.faces.iter() {
-                        let ia = &positions[triangle[0] as usize].position.vec;
-                        let ib = &positions[triangle[1] as usize].position.vec;
-                        let ic = &positions[triangle[2] as usize].position.vec;
+                        let ia = &positions[triangle[0]].position.vec;
+                        let ib = &positions[triangle[1]].position.vec;
+                        let ic = &positions[triangle[2]].position.vec;
 
                         //TODO: check if frontface is cw or ccw
                         let e1 = ia.sub_vec(&ib);
@@ -291,18 +297,9 @@ impl<'vert> Geometry {
 
                         let no = e1.cross(&e2);
 
-                        positions[triangle[0] as usize]
-                            .normal
-                            .vec
-                            .add_vec_in_place(&no);
-                        positions[triangle[1] as usize]
-                            .normal
-                            .vec
-                            .add_vec_in_place(&no);
-                        positions[triangle[2] as usize]
-                            .normal
-                            .vec
-                            .add_vec_in_place(&no);
+                        positions[triangle[0]].normal.vec.add_vec_in_place(&no);
+                        positions[triangle[1]].normal.vec.add_vec_in_place(&no);
+                        positions[triangle[2]].normal.vec.add_vec_in_place(&no);
                     }
                     for position in positions {
                         position.normal.vec.normalize_in_place();
@@ -313,9 +310,9 @@ impl<'vert> Geometry {
                         position.normal.vec.clear();
                     }
                     for triangle in self.faces.iter() {
-                        let ia = &positions[triangle[0] as usize].position.vec;
-                        let ib = &positions[triangle[1] as usize].position.vec;
-                        let ic = &positions[triangle[2] as usize].position.vec;
+                        let ia = &positions[triangle[0]].position.vec;
+                        let ib = &positions[triangle[1]].position.vec;
+                        let ic = &positions[triangle[2]].position.vec;
 
                         //TODO: check if frontface is cw or ccw
                         let e1 = ia.sub_vec(&ib);
@@ -323,18 +320,9 @@ impl<'vert> Geometry {
 
                         let no = e1.cross(&e2);
 
-                        positions[triangle[0] as usize]
-                            .normal
-                            .vec
-                            .add_vec_in_place(&no);
-                        positions[triangle[1] as usize]
-                            .normal
-                            .vec
-                            .add_vec_in_place(&no);
-                        positions[triangle[2] as usize]
-                            .normal
-                            .vec
-                            .add_vec_in_place(&no);
+                        positions[triangle[0]].normal.vec.add_vec_in_place(&no);
+                        positions[triangle[1]].normal.vec.add_vec_in_place(&no);
+                        positions[triangle[2]].normal.vec.add_vec_in_place(&no);
                     }
                     for position in positions {
                         position.normal.vec.normalize_in_place();
@@ -345,9 +333,9 @@ impl<'vert> Geometry {
                         position.normal.vec.clear();
                     }
                     for triangle in self.faces.iter() {
-                        let ia = &positions[triangle[0] as usize].position.vec;
-                        let ib = &positions[triangle[1] as usize].position.vec;
-                        let ic = &positions[triangle[2] as usize].position.vec;
+                        let ia = &positions[triangle[0]].position.vec;
+                        let ib = &positions[triangle[1]].position.vec;
+                        let ic = &positions[triangle[2]].position.vec;
 
                         //TODO: check if frontface is cw or ccw
                         let e1 = ia.sub_vec(&ib);
@@ -355,18 +343,9 @@ impl<'vert> Geometry {
 
                         let no = e1.cross(&e2);
 
-                        positions[triangle[0] as usize]
-                            .normal
-                            .vec
-                            .add_vec_in_place(&no);
-                        positions[triangle[1] as usize]
-                            .normal
-                            .vec
-                            .add_vec_in_place(&no);
-                        positions[triangle[2] as usize]
-                            .normal
-                            .vec
-                            .add_vec_in_place(&no);
+                        positions[triangle[0]].normal.vec.add_vec_in_place(&no);
+                        positions[triangle[1]].normal.vec.add_vec_in_place(&no);
+                        positions[triangle[2]].normal.vec.add_vec_in_place(&no);
                     }
                     for position in positions {
                         position.normal.vec.normalize_in_place();
@@ -411,7 +390,7 @@ impl<'vert> Geometry {
                             && pos.vec[2] == nextpos.vec[2]
                         {
                             vector.remove(ii);
-                            dedup_index(ii as u32, i as u32, &mut self.indices);
+                            dedup_index(ii, i, &mut self.indices);
                             continue;
                         }
                         ii = ii + 1;
@@ -454,7 +433,7 @@ impl<'vert> Geometry {
             label,
         }
     }
-    pub fn create_faces(&mut self, override_positions_count: Option<NonZeroU32>) {
+    pub fn create_faces(&mut self, override_positions_count: Option<NonZeroUsize>) {
         if !self.faces_dirty {
             return;
         }
@@ -463,13 +442,13 @@ impl<'vert> Geometry {
             if self.strip {
                 panic!("Unindexed Trimesh collider with triangle strip is not yet supported");
             }
-            let mut pos = 0;
+            let mut pos = 0usize;
 
-            let positions_count: u32;
+            let positions_count: usize;
             if let Some(pos_count) = override_positions_count {
-                positions_count = u32::from(pos_count)
+                positions_count = usize::from(pos_count)
             } else {
-                positions_count = self.vertices.length() as u32;
+                positions_count = self.vertices.length();
                 if positions_count == 0 {
                     panic!("Faces needs either indices or vertices");
                 }
@@ -550,7 +529,7 @@ impl<'vert> Geometry {
     /**
      * Set indices to geometry
      */
-    pub fn set_indices(&mut self, indices: Vec<u32>) {
+    pub fn set_indices(&mut self, indices: Vec<usize>) {
         self.indices = indices;
         self.bounding_box.need_init = true;
         if self.character_can_collide_to {

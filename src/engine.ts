@@ -86,7 +86,7 @@ export type rustWasm = {
     half_height: number,
     half_depth: number,
   ): rust_pointer<'geometry'>;
-
+  create_icosphere_geometry(order: number): rust_pointer<'geometry'>;
   collider(): rust_pointer<'legacy_collider'>;
   intersection_point_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
