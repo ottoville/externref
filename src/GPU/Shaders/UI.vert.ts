@@ -1,5 +1,5 @@
 import {
-  type VertexBufferLayout2,
+  type VertexBufferLayout,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
@@ -26,7 +26,7 @@ export const position_uv_attrs = Object.freeze({
 
 export function createUIVertShader(
   pipelineLayout: GPU['canvasRootLayout'],
-  buffers: VertexBufferLayout2<typeof position_uv_attrs>,
+  buffers: VertexBufferLayout<typeof position_uv_attrs>,
 ) {
   return new VertexShaderBuilder([pipelineLayout] as const, 'UI.vert')
     .addFunction(
@@ -54,7 +54,3 @@ export function createUIVertShader(
     .build();
 }
 export type UIVertShader = ReturnType<typeof createUIVertShader>;
-/*export type UIVertShader = VertexShader<
-  ReturnType<typeof createSimpleFragShader>['entryPoints'],
-  ReturnType<typeof createSimpleFragShader>['pipelineLayouts']
->;*/

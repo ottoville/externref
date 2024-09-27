@@ -58,9 +58,9 @@ pub unsafe extern "C" fn create_octasphere(
     let indices_per_path = cells_per_patch * 3;
     let mut indices_count = indices_per_path * 8;
     vertices_and_normals.resize_with(total_vertices_count, || PositionAndNormalAndColor {
-        position: Vec3wgslF32::new(),
-        normal: Vec3wgslF32::new(),
-        color: Vec3wgslF32::new(),
+        position: Vec3wgslF32::new_zero(),
+        normal: Vec3wgslF32::new_zero(),
+        color: Vec3wgslF32::new_zero(),
     });
 
     // First patch tessellation
@@ -97,9 +97,7 @@ pub unsafe extern "C" fn create_octasphere(
         let point_a_index = vert_index;
         vert_index = vert_index + 1;
 
-        let point_a = Vec3wgslF32 {
-            vec: [0.0, theta.sin(), theta.cos()],
-        };
+        let point_a = Vec3wgslF32([0.0, theta.sin(), theta.cos()]);
 
         points_a[i] = point_a_index;
         if col > 0 {
@@ -108,28 +106,24 @@ pub unsafe extern "C" fn create_octasphere(
             }
             let num_segments = n - 1 - i;
             let point_b_index = vert_index + num_segments - 1;
-            let point_b = Vec3wgslF32 {
-                vec: [theta.cos(), theta.sin(), 0.0],
-            };
+            let point_b = Vec3wgslF32([theta.cos(), theta.sin(), 0.0]);
             points_b[i] = point_b_index;
             // compute_geodesic
 
             //dot product
-            let dot = point_a.vec.dot(&point_b.vec);
+            let dot = point_a.0.dot(&point_b.0);
 
             let angle_between_endpoints = dot.acos();
 
-            let mut rotation_axis = point_a.vec.cross(&point_b.vec);
+            let mut rotation_axis = point_a.0.cross(&point_b.0);
             vertices_and_normals[point_b_index].normal = point_b.clone();
             vertices_and_normals[point_b_index].position = point_b;
 
             rotation_axis.normalize_in_place();
             let dtheta = angle_between_endpoints / num_segments as f32;
             for point_index in 1..num_segments {
-                Quaternion::from_axis_angle(&rotation_axis, point_index as f32 * dtheta).apply_to_ref(
-                    point_a.vec,
-                    &mut vertices_and_normals[vert_index].position.vec,
-                );
+                Quaternion::from_axis_angle(&rotation_axis, point_index as f32 * dtheta)
+                    .apply_to_ref(point_a.0, &mut vertices_and_normals[vert_index].position.0);
                 //Copy position to normal
                 vertices_and_normals[vert_index].normal =
                     vertices_and_normals[vert_index].position.clone();
@@ -189,88 +183,74 @@ pub unsafe extern "C" fn create_octasphere(
         let mut patch_points_c: Vec<usize> = vec![0; n];
         for j in 0..num_faces_per_patch {
             if i == 0 {
-                vertices_and_normals[vert_index].normal = Vec3wgslF32 {
-                    vec: [
-                        vertices_and_normals[j].position.vec[2],
-                        vertices_and_normals[j].position.vec[1],
-                        -vertices_and_normals[j].position.vec[0],
-                    ],
-                };
-                vertices_and_normals[vert_index].position.vec = vertices_and_normals[vert_index]
+                vertices_and_normals[vert_index].normal = Vec3wgslF32([
+                    vertices_and_normals[j].position.0[2],
+                    vertices_and_normals[j].position.0[1],
+                    -vertices_and_normals[j].position.0[0],
+                ]);
+                vertices_and_normals[vert_index].position.0 = vertices_and_normals[vert_index]
                     .normal
-                    .vec
+                    .0
                     .add_vec(&[half_width, half_height, -half_depth]);
             } else if i == 1 {
-                vertices_and_normals[vert_index].normal = Vec3wgslF32 {
-                    vec: [
-                        -vertices_and_normals[j].position.vec[0],
-                        vertices_and_normals[j].position.vec[1],
-                        -vertices_and_normals[j].position.vec[2],
-                    ],
-                };
-                vertices_and_normals[vert_index].position.vec = vertices_and_normals[vert_index]
+                vertices_and_normals[vert_index].normal = Vec3wgslF32([
+                    -vertices_and_normals[j].position.0[0],
+                    vertices_and_normals[j].position.0[1],
+                    -vertices_and_normals[j].position.0[2],
+                ]);
+                vertices_and_normals[vert_index].position.0 = vertices_and_normals[vert_index]
                     .normal
-                    .vec
+                    .0
                     .add_vec(&[-half_width, half_height, -half_depth]);
             } else if i == 2 {
-                vertices_and_normals[vert_index].normal = Vec3wgslF32 {
-                    vec: [
-                        -vertices_and_normals[j].position.vec[2],
-                        vertices_and_normals[j].position.vec[1],
-                        vertices_and_normals[j].position.vec[0],
-                    ],
-                };
-                vertices_and_normals[vert_index].position.vec = vertices_and_normals[vert_index]
+                vertices_and_normals[vert_index].normal = Vec3wgslF32([
+                    -vertices_and_normals[j].position.0[2],
+                    vertices_and_normals[j].position.0[1],
+                    vertices_and_normals[j].position.0[0],
+                ]);
+                vertices_and_normals[vert_index].position.0 = vertices_and_normals[vert_index]
                     .normal
-                    .vec
+                    .0
                     .add_vec(&[-half_width, half_height, half_depth]);
             } else if i == 3 {
-                vertices_and_normals[vert_index].normal = Vec3wgslF32 {
-                    vec: [
-                        vertices_and_normals[j].position.vec[0],
-                        -vertices_and_normals[j].position.vec[2],
-                        vertices_and_normals[j].position.vec[1],
-                    ],
-                };
-                vertices_and_normals[vert_index].position.vec = vertices_and_normals[vert_index]
+                vertices_and_normals[vert_index].normal = Vec3wgslF32([
+                    vertices_and_normals[j].position.0[0],
+                    -vertices_and_normals[j].position.0[2],
+                    vertices_and_normals[j].position.0[1],
+                ]);
+                vertices_and_normals[vert_index].position.0 = vertices_and_normals[vert_index]
                     .normal
-                    .vec
+                    .0
                     .add_vec(&[half_width, -half_height, half_depth]);
             } else if i == 4 {
-                vertices_and_normals[vert_index].normal = Vec3wgslF32 {
-                    vec: [
-                        vertices_and_normals[j].position.vec[1],
-                        -vertices_and_normals[j].position.vec[2],
-                        -vertices_and_normals[j].position.vec[0],
-                    ],
-                };
-                vertices_and_normals[vert_index].position.vec = vertices_and_normals[vert_index]
+                vertices_and_normals[vert_index].normal = Vec3wgslF32([
+                    vertices_and_normals[j].position.0[1],
+                    -vertices_and_normals[j].position.0[2],
+                    -vertices_and_normals[j].position.0[0],
+                ]);
+                vertices_and_normals[vert_index].position.0 = vertices_and_normals[vert_index]
                     .normal
-                    .vec
+                    .0
                     .add_vec(&[half_width, -half_height, -half_depth]);
             } else if i == 5 {
-                vertices_and_normals[vert_index].normal = Vec3wgslF32 {
-                    vec: [
-                        -vertices_and_normals[j].position.vec[0],
-                        -vertices_and_normals[j].position.vec[2],
-                        -vertices_and_normals[j].position.vec[1],
-                    ],
-                };
-                vertices_and_normals[vert_index].position.vec = vertices_and_normals[vert_index]
+                vertices_and_normals[vert_index].normal = Vec3wgslF32([
+                    -vertices_and_normals[j].position.0[0],
+                    -vertices_and_normals[j].position.0[2],
+                    -vertices_and_normals[j].position.0[1],
+                ]);
+                vertices_and_normals[vert_index].position.0 = vertices_and_normals[vert_index]
                     .normal
-                    .vec
+                    .0
                     .add_vec(&[-half_width, -half_height, -half_depth]);
             } else if i == 6 {
-                vertices_and_normals[vert_index].normal = Vec3wgslF32 {
-                    vec: [
-                        -vertices_and_normals[j].position.vec[1],
-                        -vertices_and_normals[j].position.vec[2],
-                        vertices_and_normals[j].position.vec[0],
-                    ],
-                };
-                vertices_and_normals[vert_index].position.vec = vertices_and_normals[vert_index]
+                vertices_and_normals[vert_index].normal = Vec3wgslF32([
+                    -vertices_and_normals[j].position.0[1],
+                    -vertices_and_normals[j].position.0[2],
+                    vertices_and_normals[j].position.0[0],
+                ]);
+                vertices_and_normals[vert_index].position.0 = vertices_and_normals[vert_index]
                     .normal
-                    .vec
+                    .0
                     .add_vec(&[-half_width, -half_height, half_depth]);
             }
             vert_index += 1;
@@ -321,7 +301,7 @@ pub unsafe extern "C" fn create_octasphere(
     if half_width > 0.0 || half_height > 0.0 || half_depth > 0.0 {
         let half = [half_width, half_height, half_depth];
         for j in 0..num_faces_per_patch {
-            vertices_and_normals[j].position.vec.add_vec_in_place(&half);
+            vertices_and_normals[j].position.0.add_vec_in_place(&half);
         }
     }
     OSTASPHERE_HEAP.with(|oc| {
@@ -444,15 +424,12 @@ pub unsafe extern "C" fn create_octasphere(
         let max = 1.0 + half_width.max(half_height.max(half_depth));
         if max != 1.0 {
             for vert in vertices_and_normals.iter_mut() {
-                vert.position.vec.divide_in_place(max);
+                vert.position.0.divide_in_place(max);
             }
         }
     }
     let mut geometry = Geometry::new(true, false, true, false, "octasphere_geometry".to_string());
-    geometry.set_vertices(
-        VertexKind::PositionAndNormalAndColor(vertices_and_normals),
-        12,
-    );
+    geometry.set_vertices(VertexKind::PositionAndNormalAndColor(vertices_and_normals));
     geometry.set_indices(indices);
     Box::into_raw(Box::new(geometry))
 }

@@ -1,5 +1,5 @@
 import {
-  type VertexBufferLayout2,
+  type VertexBufferLayout,
   VertexShaderFunction,
   type BufLayout,
   ShaderStage,
@@ -50,7 +50,7 @@ export function createGroundVertShader(
   vertexBufferProps: VertexBufferProps,
 ) {
   const pipelineLayout = gpu.lightsTextureBindGroup;
-  const buffers: VertexBufferLayout2 = {
+  const buffers: VertexBufferLayout = {
     arrayStride: vertexBufferProps.stride * 4,
     attributes: attributes,
     stepMode: 'vertex',

@@ -38,16 +38,16 @@ pub unsafe extern "C" fn create_cone_geometry(bottom_faces: usize) -> *mut Geome
     let seqment_interval = seqment_len * 2.0;
     let cull_ccw = true;
 
-    bottom_vertices[0].position.vec = [0.0, -1.0, 1.0];
-    bottom_vertices[0].normal.vec = [0.0, -1.0, 0.0];
-    bottom_vertices[half_side].position.vec = [0.0, -1.0, -1.0];
-    bottom_vertices[half_side].normal.vec = [0.0, -1.0, -0.0];
+    bottom_vertices[0].position.0 = [0.0, -1.0, 1.0];
+    bottom_vertices[0].normal.0 = [0.0, -1.0, 0.0];
+    bottom_vertices[half_side].position.0 = [0.0, -1.0, -1.0];
+    bottom_vertices[half_side].normal.0 = [0.0, -1.0, -0.0];
 
-    side_bottom_vertices[0].position.vec = [0.0, -1.0, 1.0];
-    side_bottom_vertices[0].normal.vec = [0.0, SIDE_NORM_COS, SIDE_NORM_SIN];
+    side_bottom_vertices[0].position.0 = [0.0, -1.0, 1.0];
+    side_bottom_vertices[0].normal.0 = [0.0, SIDE_NORM_COS, SIDE_NORM_SIN];
 
-    side_bottom_vertices[half_side].position.vec = [0.0, -1.0, -1.0];
-    side_bottom_vertices[half_side].normal.vec = [0.0, SIDE_NORM_COS, -SIDE_NORM_SIN];
+    side_bottom_vertices[half_side].position.0 = [0.0, -1.0, -1.0];
+    side_bottom_vertices[half_side].normal.0 = [0.0, SIDE_NORM_COS, -SIDE_NORM_SIN];
 
     let (bottom_indices, side_indices) = indices.split_at_mut(bottom_faces * 3);
 
@@ -65,15 +65,15 @@ pub unsafe extern "C" fn create_cone_geometry(bottom_faces: usize) -> *mut Geome
         let z = progress.cos();
         // Increase progress by double seqment len because every other seqment is used for top vertices;
         progress += seqment_interval;
-        bottom_vertices[i + 1].position.vec = [x, -1.0, z];
-        bottom_vertices[i + 1].normal.vec = [0.0, -1.0, 0.0];
-        bottom_vertices[half_side + i + 1].position.vec = [-x, -1.0, -z];
-        bottom_vertices[half_side + i + 1].normal.vec = [0.0, -1.0, 0.0];
-        side_bottom_vertices[i + 1].position.vec = [x, -1.0, z];
-        side_bottom_vertices[i + 1].normal.vec =
+        bottom_vertices[i + 1].position.0 = [x, -1.0, z];
+        bottom_vertices[i + 1].normal.0 = [0.0, -1.0, 0.0];
+        bottom_vertices[half_side + i + 1].position.0 = [-x, -1.0, -z];
+        bottom_vertices[half_side + i + 1].normal.0 = [0.0, -1.0, 0.0];
+        side_bottom_vertices[i + 1].position.0 = [x, -1.0, z];
+        side_bottom_vertices[i + 1].normal.0 =
             [x * SIDE_NORM_SIN, SIDE_NORM_COS, z * SIDE_NORM_SIN];
-        side_bottom_vertices[half_side + i + 1].position.vec = [-x, -1.0, -z];
-        side_bottom_vertices[half_side + i + 1].normal.vec =
+        side_bottom_vertices[half_side + i + 1].position.0 = [-x, -1.0, -z];
+        side_bottom_vertices[half_side + i + 1].normal.0 =
             [-x * SIDE_NORM_SIN, SIDE_NORM_COS, -z * SIDE_NORM_SIN];
     }
     for i in 0..(bottom_faces / 2) - 1 {
@@ -94,10 +94,10 @@ pub unsafe extern "C" fn create_cone_geometry(bottom_faces: usize) -> *mut Geome
         }
         let z = progress.cos();
         progress += seqment_interval;
-        top_vertices[i].position.vec = [0.0, 1.0, 0.0];
-        top_vertices[i].normal.vec = [x * SIDE_NORM_SIN, SIDE_NORM_COS, z * SIDE_NORM_SIN];
-        top_vertices[half_side + i].position.vec = [0.0, 1.0, 0.0];
-        top_vertices[half_side + i].normal.vec =
+        top_vertices[i].position.0 = [0.0, 1.0, 0.0];
+        top_vertices[i].normal.0 = [x * SIDE_NORM_SIN, SIDE_NORM_COS, z * SIDE_NORM_SIN];
+        top_vertices[half_side + i].position.0 = [0.0, 1.0, 0.0];
+        top_vertices[half_side + i].normal.0 =
             [-x * SIDE_NORM_SIN, SIDE_NORM_COS, -z * SIDE_NORM_SIN];
     }
     bottom_indices[(bottom_faces - 1) * 3] = bottom_faces / 2;
@@ -113,7 +113,7 @@ pub unsafe extern "C" fn create_cone_geometry(bottom_faces: usize) -> *mut Geome
     side_indices[side_faces * 3 - 1] = side_faces;
 
     let mut geometry = Box::new(Geometry::new(true, false, false, false, "Cone".to_string()));
-    geometry.set_vertices(VertexKind::PositionAndNormal(vertices), 8);
+    geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     geometry.set_indices(indices);
     return Box::into_raw(geometry);
 }

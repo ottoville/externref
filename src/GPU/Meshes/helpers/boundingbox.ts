@@ -6,74 +6,50 @@ import {
   createDebugBoundingBoxVertShader,
   type DebugBoundingBoxVertShader,
 } from '../../Shaders/devtools/debug_boundingbox.vert.js';
-import { DataNode, allocate_vec } from '../../../nodes/DataNode.js';
+import { DataNode } from '../../../nodes/DataNode.js';
 import { Buffer, BufferUsageEnums } from '../../../webgpu-ts/index.js';
 import { RigidBody } from '../../../MainNode.js';
 import { create_rust_vec_ptr } from '../../../Math.js';
 declare const engine: Engine;
-
-const indices = Uint32Array.of(
-  0,
-  1,
-  2,
-  3,
-  4,
-  5,
-  6,
-  7,
-  4,
-  6,
-  1,
-  5,
-  2,
-  0,
-  3,
-  7,
-  0,
-  6,
-  2,
-  4,
-  0,
-  7,
-  1,
-  3,
-  5,
-  7,
-);
 
 export class BoundingBoxMesh extends DataNode {
   override drawable:
     | DrawableIndexed<RenderPipelineProps<DebugBoundingBoxVertShader>>
     | undefined;
   constructor(targetNode: DrawableIndexed) {
-    const vec = create_rust_vec_ptr(
-      engine.rust.bounding_vectors_pointer_simd(targetNode.node.id),
+    const geometry = engine.rust.create_bounding_box_geometry(
+      targetNode.node.id,
     );
+    const vertices_view = engine.rust.vertices_pointer(geometry);
+    const vertices_len = engine.rust.vertices_count(geometry) * 4;
+
     const debug_render_boundingbox_vertexBuffer = new Buffer(
       {
         gpu: engine.gpu!.device,
         label: 'vertex_debug_bounding_box',
-        size: vec[1] * Float32Array.BYTES_PER_ELEMENT,
+        size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
         usages: BufferUsageEnums.VERTEX,
       },
       (b) => {
         const view = new Float32Array(b.getMappedRange());
-        view.set(new Float32Array(engine.rust.memory.buffer, vec[0], vec[1]));
+        view.set(
+          new Float32Array(
+            engine.rust.memory.buffer,
+            vertices_view,
+            vertices_len,
+          ),
+        );
       },
     );
-    const indicesView = allocate_vec(indices);
     super(
       {
-        vertices: {
-          stride: 4 as Word<'dword'>,
-          view: vec,
-        },
+        vertices: geometry,
       },
       {
         label: 'BoundingBox_' + targetNode.node.label,
         rigid_body: RigidBody.off,
       },
-      indicesView,
+      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
       true,
     );
     this.positions_count = 26;

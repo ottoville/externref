@@ -22,37 +22,36 @@ export class SimpleMesh extends BoundableNodeSimple {
     | DrawableSimple<RenderPipelineProps<SimpleVertShader>>
     | undefined = undefined;
   constructor(
-    dataNodeProps: Omit<DataNodeProps, 'vertices'> & {
-      vertices: { view: rust_vec_ptr<'f32'> };
-    },
+    dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps,
     strip = false,
     vBufferGPU?: Buffer<VERTEX_BUFFER>,
   ) {
-    super(
-      {
-        ...dataNodeProps,
-        vertices: {
-          stride: 8 as Word<'dword'>,
-          view: dataNodeProps.vertices.view,
-        },
-      },
-      mainNodeProps,
-      strip,
-    );
+    super(dataNodeProps, mainNodeProps, strip);
     if (engine.gpu) {
       if (!vBufferGPU) {
+        if (!dataNodeProps.vertices) {
+          throw new Error('SimpleMesh without vertices is not yet supported');
+        }
+        const vertices_view = engine.rust.vertices_pointer(
+          dataNodeProps.vertices,
+        );
+        const vertices_len = this.vertices_count * this.vertices_stride;
+
         vBufferGPU = new Buffer(
           {
             gpu: engine.gpu.device,
             label: 'SimpleMeshVertex_' + this.label,
-            size:
-              dataNodeProps.vertices.view[1] * Float32Array.BYTES_PER_ELEMENT,
+            size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
             usages: BufferUsageEnums.VERTEX,
           },
           (b) => {
             new Float32Array(b.getMappedRange()).set(
-              dataNodeProps.vertices.view,
+              new Float32Array(
+                engine.rust.memory.buffer,
+                vertices_view,
+                vertices_len,
+              ),
             );
           },
         );

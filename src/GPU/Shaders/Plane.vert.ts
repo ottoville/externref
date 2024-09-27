@@ -1,5 +1,5 @@
 import {
-  type VertexBufferLayout2,
+  type VertexBufferLayout,
   VertexShader,
   VertexShaderFunction,
   type ShaderStage,
@@ -18,7 +18,7 @@ type BindLayouts = [
 export class Plane extends VertexShader {
   constructor(
     pipelineLayout: RenderPipelineLayout<BindLayouts>,
-    buffers: VertexBufferLayout2,
+    buffers: VertexBufferLayout,
   ) {
     super({
       entryPoints: {

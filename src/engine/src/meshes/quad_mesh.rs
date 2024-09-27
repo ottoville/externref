@@ -1,5 +1,5 @@
 use crate::{
-    math2::{Vec2F32, Vec3wgslF32},
+    math2::{Vec2wgslF32, Vec3wgslF32},
     vertices::{PositionAndNormalAndUV, VertexKind},
     Geometry,
 };
@@ -20,7 +20,7 @@ pub unsafe extern "C" fn create_tiled_mesh_geometry(
     let (positions, indices) = create_tiled_mesh(width, height);
 
     geometry.set_indices(indices.to_vec());
-    geometry.set_vertices(VertexKind::PositionAndNormalAndUV(positions), 12);
+    geometry.set_vertices(VertexKind::PositionAndNormalAndUV(positions));
     Box::into_raw(geometry)
 }
 
@@ -43,13 +43,9 @@ fn create_tiled_mesh(
         for w in 0..=faces_x_count {
             let x = w as f32;
             position_matrix.push(PositionAndNormalAndUV {
-                position: Vec3wgslF32 {
-                    vec: [(x - (width * 0.5)) / max, 0.0, z],
-                },
-                normal: Vec3wgslF32 {
-                    vec: [0.0, 1.0, 0.0],
-                },
-                uv: Vec2F32 { u: 0.0, v: 1.0 },
+                position: Vec3wgslF32([(x - (width * 0.5)) / max, 0.0, z]),
+                normal: Vec3wgslF32([0.0, 1.0, 0.0]),
+                uv: Vec2wgslF32 { vec: [0.0, 1.0] },
             });
             if w != 0 && h != 0 {
                 indices_matrix.push((h * positions_x_count) + (w));
@@ -74,12 +70,12 @@ fn test_quad_mesh() {
     let mut i: usize = 0;
     positions.resize_with(vertices.len(), || {
         let position = &vertices[i].position;
-        max = max.max(position.vec[0]).max(position.vec[2]);
-        min = min.min(position.vec[0]).min(position.vec[2]);
+        max = max.max(position.0[0]).max(position.0[2]);
+        min = min.min(position.0[0]).min(position.0[2]);
 
-        assert_eq!(vertices[i].normal.vec[0], 0.0);
-        assert_eq!(vertices[i].normal.vec[1], 1.0);
-        assert_eq!(vertices[i].normal.vec[2], 0.0);
+        assert_eq!(vertices[i].normal.0[0], 0.0);
+        assert_eq!(vertices[i].normal.0[1], 1.0);
+        assert_eq!(vertices[i].normal.0[2], 0.0);
 
         i += 1;
         return position.clone();
@@ -88,45 +84,21 @@ fn test_quad_mesh() {
     assert_eq!(max, 1.0);
     assert_eq!(min, -1.0);
     let vec = vec![
-        Vec3wgslF32 {
-            vec: [-1.0, 0.0, -0.6666667],
-        },
-        Vec3wgslF32 {
-            vec: [-0.33333334, 0.0, -0.6666667],
-        },
-        Vec3wgslF32 {
-            vec: [0.33333334, 0.0, -0.6666667],
-        },
-        Vec3wgslF32 {
-            vec: [1.0, 0.0, -0.6666667],
-        },
-        Vec3wgslF32 {
-            vec: [-1.0, 0.0, 0.0],
-        },
-        Vec3wgslF32 {
-            vec: [-0.33333334, 0.0, 0.0],
-        },
-        Vec3wgslF32 {
-            vec: [0.33333334, 0.0, 0.0],
-        },
-        Vec3wgslF32 {
-            vec: [1.0, 0.0, 0.0],
-        },
-        Vec3wgslF32 {
-            vec: [-1.0, 0.0, 0.6666667],
-        },
-        Vec3wgslF32 {
-            vec: [-0.33333334, 0.0, 0.6666667],
-        },
-        Vec3wgslF32 {
-            vec: [0.33333334, 0.0, 0.6666667],
-        },
-        Vec3wgslF32 {
-            vec: [1.0, 0.0, 0.6666667],
-        },
+        Vec3wgslF32([-1.0, 0.0, -0.6666667]),
+        Vec3wgslF32([-0.33333334, 0.0, -0.6666667]),
+        Vec3wgslF32([0.33333334, 0.0, -0.6666667]),
+        Vec3wgslF32([1.0, 0.0, -0.6666667]),
+        Vec3wgslF32([-1.0, 0.0, 0.0]),
+        Vec3wgslF32([-0.33333334, 0.0, 0.0]),
+        Vec3wgslF32([0.33333334, 0.0, 0.0]),
+        Vec3wgslF32([1.0, 0.0, 0.0]),
+        Vec3wgslF32([-1.0, 0.0, 0.6666667]),
+        Vec3wgslF32([-0.33333334, 0.0, 0.6666667]),
+        Vec3wgslF32([0.33333334, 0.0, 0.6666667]),
+        Vec3wgslF32([1.0, 0.0, 0.6666667]),
     ];
     for n in 0..positions.len() {
-        assert_eq!(positions[n].vec, vec[n].vec);
+        assert_eq!(positions[n].0, vec[n].0);
     }
     assert_eq!(
         indices,

@@ -7,7 +7,6 @@ import {
   createWaterVertShader,
   type WaterVertShader,
 } from '../GPU/Shaders/Water.vert.js';
-import { allocate_vec } from '../nodes/DataNode.js';
 declare const engine: Engine;
 import { BindGroup } from '../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
@@ -26,36 +25,11 @@ export class Sea extends BoundableNodeSimple {
     return engine.rust.create_cuboid_collider(50000, 3, 50000, 0, false);
   }
   constructor(scenes: Scene[]) {
-    const vertexBuffer = {
-      stride: 4 as Word<'dword'>,
-      view: allocate_vec(
-        Float32Array.of(
-          -50000.0,
-          3.0,
-          -50000.0,
-          0,
-
-          50000.0,
-          3.0,
-          -50000.0,
-          0,
-
-          -50000.0,
-          3.0,
-          50000.0,
-          0,
-
-          50000.0,
-          3.0,
-          50000.0,
-          0,
-        ),
-      ),
-    };
+    const geometry = engine.rust.create_water_geometry();
     super(
       {
         can_collide: false,
-        vertices: vertexBuffer,
+        vertices: geometry,
       },
       {
         label: 'water',
@@ -103,7 +77,12 @@ export class Sea extends BoundableNodeSimple {
         ],
         node: this,
         renderPipeline,
-        vertexBuffers: [[vertexBuffer.view[0], vertexBuffer.view[1]]],
+        vertexBuffers: [
+          [
+            engine.rust.vertices_pointer(this.geometry),
+            this.vertices_count * this.vertices_stride,
+          ],
+        ],
       });
     }
   }

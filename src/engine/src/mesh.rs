@@ -16,10 +16,10 @@ pub use crate::GPUMesh;
 use crate::MULTIVALUE_F32;
 use crate::MULTIVALUE_USIZE;
 use core::panic;
-use std::collections::HashMap;
 use externref::externref;
 use externref::Resource;
 use rapier3d::prelude::*;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Mutex;
 use terramath::MatrixMath;
@@ -71,26 +71,15 @@ pub unsafe extern "C" fn new_mesh_from_js(
         None,
     );
 }
+
 #[no_mangle]
-pub extern "C" fn create_geometry<'frame>(
-    has_bounding: bool,
-    character_can_collide_to: bool,
-    static_faces: bool,
-    strip: bool,
+pub unsafe extern "C" fn set_geometry<'frame>(
+    mesh_id: usize,
+    geometry: *mut Geometry,
 ) -> *mut Geometry {
-    let geometry = Box::new(Geometry::new(
-        has_bounding,
-        character_can_collide_to,
-        static_faces,
-        strip,
-        "unnamed geometry".to_string(),
-    ));
-    Box::into_raw(geometry)
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_geometry<'frame>(mesh_id: usize, geometry: *mut Geometry) {
     let mesh = get_mesh_by_id_mut(mesh_id);
     mesh.geometry = Some(Box::from_raw(geometry));
+    mesh.geometry.as_mut().unwrap().as_mut() as *mut Geometry
 }
 
 #[no_mangle]
@@ -325,10 +314,6 @@ pub unsafe extern "C" fn scale_z(mesh_id: usize) -> f32 {
         .scaling[2]
 }
 #[no_mangle]
-pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry) -> usize {
-    (*geometry).vertices.vertices_stride
-}
-#[no_mangle]
 pub unsafe extern "C" fn set_color(
     mesh_id: usize,
     data_0: f32,
@@ -498,7 +483,7 @@ impl Mesh {
                 gpu_mesh_alignment: idx,
                 transformation: MatrixMath::identity(),
                 transformation_is_dirty: true,
-                translation: Vec3wgslF32::new(),
+                translation: Vec3wgslF32::new_zero(),
                 rotation: Quaternion {
                     i: 0.0,
                     j: 0.0,
@@ -588,7 +573,7 @@ impl Mesh {
     pub fn update_translation(&mut self, x: f32, y: f32, z: f32) {
         {
             let mut mesh_property = self.mesh_property.lock().unwrap();
-            mesh_property.translation.vec = [x, y, z];
+            mesh_property.translation.0 = [x, y, z];
         }
         self.on_update(true);
     }
@@ -627,9 +612,9 @@ impl Mesh {
                     Some(rigid_body) => {
                         rigid_body.set_translation(
                             vector![
-                                mesh_property.translation.vec[0],
-                                mesh_property.translation.vec[1],
-                                mesh_property.translation.vec[2]
+                                mesh_property.translation.0[0],
+                                mesh_property.translation.0[1],
+                                mesh_property.translation.0[2]
                             ],
                             true,
                         );

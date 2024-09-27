@@ -28,8 +28,10 @@ pub unsafe extern "C" fn add_onchange_callback(mesh_id: usize) -> usize {
         id,
         Box::new(|mesh_property| {
             let mut devtools = DEVTOOLS.write().unwrap();
-            mesh_property.rotation.to_euler_angles(&mut devtools.euler_angles);
-            devtools.translation = mesh_property.translation.vec.clone();
+            mesh_property
+                .rotation
+                .to_euler_angles(&mut devtools.euler_angles);
+            devtools.translation = mesh_property.translation.0.clone();
             devtools.scale = mesh_property.scaling.clone();
         }),
     );
@@ -87,9 +89,9 @@ impl MeshProperty {
         self.transformation[2][1] = (yz - wx) * self.scaling[2];
         self.transformation[2][2] = (1.0 - (xx + yy)) * self.scaling[2];
 
-        self.transformation[3][0] = self.translation.vec[0];
-        self.transformation[3][1] = self.translation.vec[1];
-        self.transformation[3][2] = self.translation.vec[2];
+        self.transformation[3][0] = self.translation.0[0];
+        self.transformation[3][1] = self.translation.0[1];
+        self.transformation[3][2] = self.translation.0[2];
 
         let gpu_mesh = &mut self.gpu_memory;
         gpu_mesh.color[0] = self.color[0];

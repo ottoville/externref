@@ -2,7 +2,7 @@ import { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import { type Scene, colorPositionOutput } from './structs/Structs.js';
 import {
-  type VertexBufferLayout2,
+  type VertexBufferLayout,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
@@ -17,7 +17,7 @@ export function createPlaneAtGroundHeightVertShader(
   vertexBufferProps: VertexBufferProps,
 ) {
   const pipelineLayout = gpu.shaders.terrainHeightsbindGroupTreePosition;
-  const buffers: VertexBufferLayout2 = {
+  const buffers: VertexBufferLayout = {
     arrayStride: vertexBufferProps.stride * 4,
     attributes: Object.freeze({
       position: {

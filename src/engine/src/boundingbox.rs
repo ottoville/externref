@@ -1,8 +1,11 @@
 use terramath::VectorMath;
 
 use crate::collider::Collider;
+use crate::engine::js_error;
 use crate::math2::Vec3wgslF32;
-use crate::vertices::Vertices;
+use crate::mesh::get_mesh_by_id_mut;
+use crate::vertices::{Position, VertexKind};
+use crate::Geometry;
 
 pub struct BoundingBox {
     pub has_bounding: bool,
@@ -14,6 +17,75 @@ pub struct BoundingBox {
     pub vectors_simd: [[[f32; 4]; 3]; 2],
     pub dirty: bool,
     pub need_init: bool,
+}
+pub const BOUNDING_BOX_INDICES: [usize; 26] = [
+    0, 1, 2, 3, 4, 5, 6, 7, 4, 6, 1, 5, 2, 0, 3, 7, 0, 6, 2, 4, 0, 7, 1, 3, 5, 7,
+];
+#[no_mangle]
+pub unsafe extern "C" fn create_bounding_box_geometry(mesh_id: usize) -> *mut Geometry {
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mut mesh_property = mesh.mesh_property.lock().unwrap();
+    if let Some(geometry) = &mut mesh.geometry {
+        geometry.update_bounding_box(&mesh_property.get_transformation());
+        /*
+           Convert SIMD lanes to XYZ
+        */
+        let vectors: Vec<Position> = vec![
+            Position::new([
+                geometry.bounding_box.vectors_simd[0][0][0],
+                geometry.bounding_box.vectors_simd[0][1][0],
+                geometry.bounding_box.vectors_simd[0][2][0],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[0][0][1],
+                geometry.bounding_box.vectors_simd[0][1][1],
+                geometry.bounding_box.vectors_simd[0][2][1],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[0][0][2],
+                geometry.bounding_box.vectors_simd[0][1][2],
+                geometry.bounding_box.vectors_simd[0][2][2],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[0][0][3],
+                geometry.bounding_box.vectors_simd[0][1][3],
+                geometry.bounding_box.vectors_simd[0][2][3],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[1][0][0],
+                geometry.bounding_box.vectors_simd[1][1][0],
+                geometry.bounding_box.vectors_simd[1][2][0],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[1][0][1],
+                geometry.bounding_box.vectors_simd[1][1][1],
+                geometry.bounding_box.vectors_simd[1][2][1],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[1][0][2],
+                geometry.bounding_box.vectors_simd[1][1][2],
+                geometry.bounding_box.vectors_simd[1][2][2],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[1][0][3],
+                geometry.bounding_box.vectors_simd[1][1][3],
+                geometry.bounding_box.vectors_simd[1][2][3],
+            ]),
+        ];
+        let mut bb_geometry = Box::new(Geometry::new(
+            false,
+            false,
+            false,
+            true,
+            "boundingbox".to_string(),
+        ));
+        bb_geometry.set_vertices(VertexKind::Position(vectors));
+        bb_geometry.set_indices(BOUNDING_BOX_INDICES.to_vec());
+        return Box::into_raw(bb_geometry);
+    } else {
+        js_error([&format!("Mesh {} has no geometry", mesh.label)]);
+        panic!("Mesh has no geometry")
+    }
 }
 
 #[cfg(test)]
@@ -35,7 +107,7 @@ fn test_bounding_box() {
         let m = &mut engine2.meshes[len];
         let mut geometry = Geometry::new(true, false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());
-        geometry.set_vertices(vertices, 8);
+        geometry.set_vertices(vertices);
         geometry.indices = BOX_INDICES.to_vec();
         {
             let mut mesh_property = m.mesh_property.lock().unwrap();
@@ -82,34 +154,34 @@ impl BoundingBox {
             need_init: true,
         }
     }
-    pub fn init(&mut self, vertices: &Vertices) {
+    pub fn init(&mut self, vertices: &VertexKind) {
         //TODO: use macro
 
         let mut positions: Box<dyn Iterator<Item = &Vec3wgslF32>> = vertices.get_positions();
 
         let first_vertice = positions.next().unwrap();
-        self.min_original[0] = first_vertice.vec[0];
-        self.min_original[1] = first_vertice.vec[1];
-        self.min_original[2] = first_vertice.vec[2];
-        self.max_original[0] = first_vertice.vec[0];
-        self.max_original[1] = first_vertice.vec[1];
-        self.max_original[2] = first_vertice.vec[2];
+        self.min_original[0] = first_vertice.0[0];
+        self.min_original[1] = first_vertice.0[1];
+        self.min_original[2] = first_vertice.0[2];
+        self.max_original[0] = first_vertice.0[0];
+        self.max_original[1] = first_vertice.0[1];
+        self.max_original[2] = first_vertice.0[2];
 
         for position in positions {
-            if position.vec[0] < self.min_original[0] {
-                self.min_original[0] = position.vec[0]
-            } else if position.vec[0] > self.max_original[0] {
-                self.max_original[0] = position.vec[0]
+            if position.0[0] < self.min_original[0] {
+                self.min_original[0] = position.0[0]
+            } else if position.0[0] > self.max_original[0] {
+                self.max_original[0] = position.0[0]
             }
-            if position.vec[1] < self.min_original[1] {
-                self.min_original[1] = position.vec[1]
-            } else if position.vec[1] > self.max_original[1] {
-                self.max_original[1] = position.vec[1]
+            if position.0[1] < self.min_original[1] {
+                self.min_original[1] = position.0[1]
+            } else if position.0[1] > self.max_original[1] {
+                self.max_original[1] = position.0[1]
             }
-            if position.vec[2] < self.min_original[2] {
-                self.min_original[2] = position.vec[2]
-            } else if position.vec[2] > self.max_original[2] {
-                self.max_original[2] = position.vec[2]
+            if position.0[2] < self.min_original[2] {
+                self.min_original[2] = position.0[2]
+            } else if position.0[2] > self.max_original[2] {
+                self.max_original[2] = position.0[2]
             }
         }
 

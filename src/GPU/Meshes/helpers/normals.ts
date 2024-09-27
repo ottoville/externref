@@ -45,11 +45,7 @@ export class NormalsMesh extends DataNode {
       );
     });
     const geometry = engine.rust.create_geometry(true, false, true, false);
-    engine.rust.set_position_and_normal_vertices(
-      geometry,
-      ...vertices_ptr,
-      stride,
-    );
+    engine.rust.set_position_and_normal_vertices(geometry, ...vertices_ptr);
     super(
       {
         character_can_collide_to: false,

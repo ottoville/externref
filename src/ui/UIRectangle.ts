@@ -1,9 +1,7 @@
 import type { RenderPass } from '../GPU/RenderPasses/RenderPass.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
-import type { UIVertShader } from '../GPU/Shaders/UI.vert.js';
-import { DataNode, allocate_vec } from '../nodes/DataNode.js';
+import { DataNode } from '../nodes/DataNode.js';
 import type { GPU } from '../GPU.js';
 import {
   type TEXTURE_BINDING_TEXTURE,
@@ -58,41 +56,39 @@ type ButtonPosition = {
   y: VerticalPosition;
 };
 
-export type UIRectangleProps<
-  P extends GPU['UIPipeline'] /* | GPU['UIPipelineArray']*/ = GPU['UIPipeline'],
-  /*| GPU['UIPipelineArray']*/
-> = {
-  canvaspipeline: P;
-  renderPass: RenderPass;
-  label: string;
-  /**
+export type UIRectangleProps<P extends GPU['UIPipeline'] = GPU['UIPipeline']> =
+  {
+    canvaspipeline: P;
+    renderPass: RenderPass;
+    label: string;
+    /**
         width: Relative width of borders to viewport, value between 0 and 1
         height: Relative height of borders to viewport, value between 0 and 1
                 If "auto", it is calculated to be same than width
     */
-  borderSize: {
-    width: ValueUnit;
-    height: ValueUnit | 'auto';
-  };
-  /**
+    borderSize: {
+      width: ValueUnit;
+      height: ValueUnit | 'auto';
+    };
+    /**
         Size of the button.
         Border size is taken account to scale.
         Y is Ignored if originalAspectRatio is set.
     */
-  scale: ButtonSize;
-  /**
-   * Values between -1 and 1
-   * Origin 0,0 is at center of the viewport,
-   *  -1, 1 is left top
-   */
-  translate: ButtonPosition;
-  originalAspectRatio?: number | undefined;
-  events?: {
-    onClick?: (e: PointerEvent) => void;
-    onPointerEnter?: (e: PointerEvent) => void;
-    onPointerLeave?: (e: PointerEvent) => void;
+    scale: ButtonSize;
+    /**
+     * Values between -1 and 1
+     * Origin 0,0 is at center of the viewport,
+     *  -1, 1 is left top
+     */
+    translate: ButtonPosition;
+    originalAspectRatio?: number | undefined;
+    events?: {
+      onClick?: (e: PointerEvent) => void;
+      onPointerEnter?: (e: PointerEvent) => void;
+      onPointerLeave?: (e: PointerEvent) => void;
+    };
   };
-};
 /*
     Draws rectangle.
 */
@@ -102,39 +98,33 @@ type RectangleTexture = RenderTargetTexture<
   { width: number; height: number; depthOrArrayLayers: number }
 >;
 export abstract class UIRectangle<
-  P extends GPU['UIPipeline'] /*| GPU['UIPipelineArray']*/ = GPU['UIPipeline'],
-  /*| GPU['UIPipelineArray']*/
-> extends DataNode {
-  override drawable?:
-    | DrawableSimple<RenderPipelineProps<UIVertShader>>
-    | undefined = undefined;
+  P extends GPU['UIPipeline'] = GPU['UIPipeline'],
+> {
+  #node: DataNode;
   boundingBox = {
     bottom: 0,
     left: 0,
     right: 0,
     top: 0,
   };
-  texture?: RectangleTexture | undefined;
+  #texture?: RectangleTexture | undefined;
   uniformBuffer: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
   textureView: TextureView<
     Texture<TEXTURE_BINDING_TEXTURE, GPUTextureFormat, Texture2dSize>
   >;
 
   protected createTextureView(copySource: ImageBitmap | OffscreenCanvas) {
-    if (this.drawable && this.texture) {
+    if (this.#texture && this.#node.drawable) {
       if (
-        copySource.width > this.texture.props.size.width ||
-        copySource.height > this.texture.props.size.height
+        copySource.width > this.#texture.props.size.width ||
+        copySource.height > this.#texture.props.size.height
       ) {
-        this.texture.destroy();
-        this.texture = undefined;
-        const vertices = this.#updateBoundingBoxAndVerticesSuper();
-        const vertices_ptr = allocate_vec(vertices);
-        this.drawable.setVertexBuffer(0, [vertices_ptr[0], vertices_ptr[1]]);
-        this.set_vertices(vertices_ptr, 3 as Word<'dword'>);
+        this.#texture.destroy();
+        this.#texture = undefined;
+        this.#updateBoundingBoxAndVerticesSuper();
       }
     }
-    if (!this.texture) {
+    if (!this.#texture) {
       const frag = this.props.canvaspipeline.builder.fragmentShader;
       let structName: string;
       if ('main' in frag.props.entryPoints) {
@@ -146,7 +136,7 @@ export abstract class UIRectangle<
           frag.props.pipelineLayouts[0].bindGroupLayouts[0].entries.texture
             .structName;
       }
-      this.texture = new Texture({
+      this.#texture = new Texture({
         format: 'bgra8unorm',
         gpu: this.props.canvaspipeline.builder.vertexShader.props
           .pipelineLayouts[0].gpu,
@@ -159,7 +149,7 @@ export abstract class UIRectangle<
         usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
       });
     }
-    this.texture.copyFromExternalImage(
+    this.#texture.copyFromExternalImage(
       {
         source: copySource,
       },
@@ -174,7 +164,10 @@ export abstract class UIRectangle<
         width: copySource.width,
       },
     );
-    this.textureView = new TextureView(this.texture, this.texture.props.format);
+    this.textureView = new TextureView(
+      this.#texture,
+      this.#texture.props.format,
+    );
     return this.textureView;
   }
   abstract createTexture(): TextureView<
@@ -307,12 +300,18 @@ export abstract class UIRectangle<
     if (content_sizeX <= 0 || content_sizeY <= 0) {
       console.warn('UI', label, 'element content size is 0 or below');
     }
-    const positionsCount =
-      borderSize.width[0] > 0 ||
-      (Array.isArray(borderSize.height) && borderSize.height[0] > 0)
-        ? 54
-        : 6;
-    const vertices = new Float32Array(positionsCount * 4);
+    const vertices_ptr: rust_array_ptr<'position2d_and_uv'> = [
+      engine.rust.vertices_pointer(
+        this.#node.geometry,
+      ) as unknown as rust_pointer<'position2d_and_uv'>,
+      this.#node.vertices_count,
+    ];
+    const stride = 4;
+    const vertices = new Float32Array(
+      engine.rust.memory.buffer,
+      vertices_ptr[0],
+      vertices_ptr[1] * stride,
+    );
     return this.updateBoundingBoxAndVertices({
       content_sizeX,
       content_sizeY,
@@ -327,7 +326,7 @@ export abstract class UIRectangle<
     content_sizeY: number;
     outer_sizeX: number;
     outer_sizeY: number;
-  }): Float32Array;
+  }): void;
   #checkClickArea = (e: PointerEvent) => {
     return (
       e.offsetX > this.boundingBox.left &&
@@ -346,24 +345,8 @@ export abstract class UIRectangle<
       | OffscreenCanvas,
   ) {
     props.label = props.label + '_UIRectangle';
-    super(
-      {
-        character_can_collide_to: false,
-        vertices: {
-          stride: 3 as Word<'dword'>,
-          view: allocate_vec(new Float32Array(9)),
-        },
-      },
-      {
-        label: props.label,
-      },
-    );
     const { canvaspipeline, renderPass, label, borderSize, events } = props;
-    this.positions_count =
-      borderSize.width[0] > 0 ||
-      (Array.isArray(borderSize.height) && borderSize.height[0] > 0)
-        ? 54
-        : 6;
+
     const gpu =
       canvaspipeline.builder.vertexShader.props.pipelineLayouts[0].gpu;
     this.uniformBuffer = new Buffer(
@@ -445,10 +428,27 @@ export abstract class UIRectangle<
     } else {
       this.textureView = texture;
     }
+    const positionsCount =
+      borderSize.width[0] > 0 ||
+      (Array.isArray(borderSize.height) && borderSize.height[0] > 0)
+        ? 54
+        : 6;
+    const geometry = engine.rust.create_ui_geometry(positionsCount);
+
+    this.#node = new DataNode(
+      {
+        character_can_collide_to: false,
+        vertices: geometry,
+      },
+      {
+        label: props.label,
+      },
+    );
+    this.#node.positions_count = positionsCount;
+
     queueMicrotask(() => {
-      const vertices = this.#updateBoundingBoxAndVerticesSuper();
-      const vertices_ptr = allocate_vec(vertices);
-      this.set_vertices(vertices_ptr, 3 as Word<'dword'>);
+      this.#updateBoundingBoxAndVerticesSuper();
+      const stride = 4;
 
       const drawable = new DrawableSimple(
         {
@@ -467,11 +467,11 @@ export abstract class UIRectangle<
               offsets: [],
             },
           ],
-          node: this,
+          node: this.#node,
           renderPasses: new Set([renderPass]),
           renderPipeline: canvaspipeline as GPU['UIPipeline'],
-          /* | GPU['UIPipelineArray']*/ vertexBuffers: [
-            [vertices_ptr[0], vertices_ptr[1]],
+          vertexBuffers: [
+            [engine.rust.vertices_pointer(geometry), positionsCount * stride],
           ],
         },
         {
@@ -482,29 +482,18 @@ export abstract class UIRectangle<
           firstVertex: 0,
         },
       );
-      this.drawable = drawable;
+      this.#node.drawable = drawable;
       renderPass.onResize.set(this, () => {
-        const newVertices = this.#updateBoundingBoxAndVerticesSuper();
-        const new_vertices_ptr = allocate_vec(newVertices);
-        this.set_vertices(new_vertices_ptr, 3 as Word<'dword'>);
-        drawable.setVertexBuffer(0, [new_vertices_ptr[0], new_vertices_ptr[1]]);
+        this.#updateBoundingBoxAndVerticesSuper();
+        drawable.setVertexBuffer(0, [
+          engine.rust.vertices_pointer(this.#node.geometry),
+          this.#node.vertices_count * this.#node.vertices_stride,
+        ]);
       });
-
-      /*this.drawable.staticBindGroup = new BindGroup(
-        canvaspipeline.props.vertexShader.props.pipelineLayouts[0]!.bindGroupLayouts[0]!,
-        //canvaspipeline.props.vertexShader.props.entryPoints.main.pipelineLayout.bindGroupLayouts[0],
-        'UI_bindgroup_' + label,
-        (bindGroup) => {
-          return {
-            texture: this.textureView,
-            uniforms: this.uniformBuffer.getUniformBinding(bindGroup),
-          };
-        },
-      );*/
     });
   }
-  override destroy() {
-    super.destroy();
+  destroy() {
+    this.#node.destroy();
     this.props.renderPass.onResize.delete(this);
     engine.clearInputListeners(this);
   }

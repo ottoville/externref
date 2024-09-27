@@ -1,5 +1,5 @@
 import {
-  type VertexBufferLayout2,
+  type VertexBufferLayout,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
@@ -16,7 +16,7 @@ export function createWaterVertShader(
   vertexBufferProps: VertexBufferProps,
 ) {
   const pipelineLayout = gpu.bindGroupTextureWater;
-  const buffers: VertexBufferLayout2<typeof positionAttr> = {
+  const buffers: VertexBufferLayout<typeof positionAttr> = {
     arrayStride: vertexBufferProps.stride * 4,
     attributes: positionAttr,
     stepMode: 'vertex',

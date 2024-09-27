@@ -38,12 +38,7 @@ export interface Ellipsoid {
 }
 
 export type DataNodeProps = {
-  vertices?:
-    | {
-        view: rust_vec_ptr<'f32'>;
-        stride: Word<'dword'>;
-      }
-    | rust_pointer<'geometry'>;
+  vertices?: rust_pointer<'geometry'>;
   /**
    * Setting true will create collider in rapier
    */
@@ -66,6 +61,16 @@ export function allocate_vec_positions(length: number) {
 export function allocate_vec_positions_and_normals(length: number) {
   return create_rust_vec_ptr(
     engine.rust.alloc_vector_positions_and_normal(length),
+  );
+}
+export function allocate_vec_positions_and_normals_and_uv(length: number) {
+  return create_rust_vec_ptr(
+    engine.rust.alloc_vector_position_and_normal_and_UV(length),
+  );
+}
+export function allocate_vec_positions2d_and_uv(length: number) {
+  return create_rust_vec_ptr(
+    engine.rust.alloc_vector_positions2d_and_uv(length),
   );
 }
 export function allocate_vec_usize(length: number) {
@@ -118,14 +123,20 @@ export class DataNode extends MainNode {
     );
     this.onIndicesChange.forEach((cb) => cb());
   }
-  set_indices_and_vertices(
+  set_indices_and_vertices_PositionAndNormalAndUV(
     indices: Uint32Array,
     vertices: Float32Array,
-    vertices_stride: number,
   ) {
     const [ptr_ind, len_ind, cap_ind] = allocate_vec(indices);
-    const [ptr_vertices, len_vertices, cap_vertices] = allocate_vec(vertices);
-    engine.rust.set_indices_and_vertices(
+    const [ptr_vertices, len_vertices, cap_vertices] =
+      allocate_vec_positions_and_normals_and_uv(vertices.length / 12);
+    new Float32Array(
+      engine.rust.memory.buffer,
+      ptr_vertices,
+      len_vertices * 12,
+    ).set(vertices);
+
+    engine.rust.set_indices_and_vertices_PositionAndNormalAndUV(
       this.id,
       ptr_ind,
       len_ind,
@@ -133,7 +144,6 @@ export class DataNode extends MainNode {
       ptr_vertices,
       len_vertices,
       cap_vertices,
-      vertices_stride,
     );
     if (this.drawable && !(this.drawable instanceof DrawableIndexed)) {
       throw new Error('Node is not indexed');
@@ -243,14 +253,6 @@ export class DataNode extends MainNode {
     return engine.rust.vertices_stride(this.geometry);
   }
   /**
-   *  Set new vertices raw array for the mesh
-   * @param vec
-   */
-  set_vertices(vec: rust_vec_ptr<'f32'>, stride: Word<'dword'>) {
-    engine.rust.set_vertices(this.geometry, ...vec, stride);
-    this.onVerticesChange();
-  }
-  /**
    * Update existing vertices
    * @param cb Callback which gets the vertices array as argument
    */
@@ -310,8 +312,7 @@ export class DataNode extends MainNode {
     DataNode.Meshes.set(this.id, this);
 
     if (typeof vertices === 'number') {
-      this.geometry = vertices;
-      engine.rust.set_geometry(this.id, this.geometry);
+      this.geometry = engine.rust.set_geometry(this.id, vertices);
     } else {
       this.geometry = engine.rust.create_geometry(
         true,
@@ -323,9 +324,6 @@ export class DataNode extends MainNode {
       if (indicesView) {
         this.set_indices(indicesView);
       }
-    }
-    if (vertices && typeof vertices !== 'number') {
-      this.set_vertices(vertices.view, vertices.stride);
     }
 
     if (can_collide) {

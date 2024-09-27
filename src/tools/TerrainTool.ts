@@ -170,7 +170,7 @@ export class TerrainToolButton extends UIRectangleNodeHover<TerrainToolButtonSta
   }
 }
 export class TerrainTool extends MainNode {
-  elevator: rust_pointer<'elevator'>;
+  #elevator: rust_pointer<'elevator'>;
   drawable: DrawableSimple<RenderPipelineProps<HelperVertShader>>;
   readonly #pick: { readonly position: TerraVector3; meshId: number };
   scene: Scene;
@@ -203,8 +203,7 @@ export class TerrainTool extends MainNode {
     if (!scene) throw new Error('no scene');
     this.scene = scene;
 
-    this.elevator = engine.rust.create_elevator(terrain.mesh.id);
-
+    this.#elevator = engine.rust.create_elevator(terrain.mesh.id);
     this.drawable = new DrawableSimple(
       {
         bindGroups: [],
@@ -223,30 +222,9 @@ export class TerrainTool extends MainNode {
       meshId: 0,
       position: new MutableTerraVector3(
         engine.rust.memory.buffer,
-        engine.rust.mouse_position_pointer(this.elevator),
+        engine.rust.mouse_position_pointer(this.#elevator),
       ),
     };
-    //scene.TerraCameras[0].subscribePickingRay();
-    //TERRAIN EDITING DISABLED
-    /*
-        terrainWorker.message(WorkerReturn.Promise, 'init',
-            {
-                positionsAndNormals: terrain.mesh.verticesPositionBuffer,
-                indices: terrain.indicesBuffer,
-                subdivisionsX: Terrain.subdivisionsX,
-                subdivisionsY: Terrain.subdivisionsY,
-                //boundingBox: terrain.mesh.boundingBox.buffer,
-                slopeArr: terrain.slopeArrBuffer,
-                pickInfo: terrain.mesh.pickInfo.buffer,
-                _groundFacesNormalsBuffer: terrain.mesh.facesBuffer,
-                byteStride: 48,
-                width:terrain.width,
-                height:terrain.height
-            });
-*/
-
-    // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
-
     engine.addInputListener(this.#mouseListener);
   }
   static saveTexture(
@@ -280,17 +258,16 @@ export class TerrainTool extends MainNode {
 
       this.mouseinterval = setInterval(() => {
         engine.rust.elevate(
-          this.elevator,
+          this.#elevator,
           this.terrain.mesh.id,
           200,
           5 * this.direction,
         );
-        const elevator_length = engine.rust.get_length(this.elevator);
+        const elevator_length = engine.rust.get_length(this.#elevator);
         if (elevator_length > 0) {
           this.terrain.updateSwap2(
-            engine.rust.get_offset(this.elevator) *
-              Float32Array.BYTES_PER_ELEMENT,
-            elevator_length * Float32Array.BYTES_PER_ELEMENT,
+            engine.rust.get_offset(this.#elevator),
+            elevator_length,
           );
         }
       }, 17);
@@ -310,6 +287,7 @@ export class TerrainTool extends MainNode {
     type: 'pointerup',
   };
   override destroy = (): void => {
+    engine.rust.destroy_elevator(this.#elevator);
     engine.clearInputListeners(this);
     //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
     super.destroy();

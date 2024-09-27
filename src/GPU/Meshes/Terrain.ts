@@ -20,6 +20,7 @@ import type {
 } from '../../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
 import { createGroundFragShader } from '../Shaders/Ground.frag.js';
+import { create_rust_vec_ptr } from '../../Math.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;
@@ -37,18 +38,19 @@ export class TerrainMesh extends BoundableNodeIndexed {
     public initialTexture: TextureView<Texture<TEXTURE_BINDING_TEXTURE>>,
     public vBuffer: Buffer<VERTEX_BUFFER>,
     public iBuffer: Buffer<INDEX_BUFFER>,
-    vertices: rust_vec_ptr<'f32'>,
-    indicesView: rust_vec_ptr<'usize'>,
     verticesPositionStride: Word<'dword'>,
   ) {
+    const geometry = engine.rust.create_legacy_terrain_geometry(
+      true,
+      true,
+      true,
+      false,
+    );
     super(
       {
         can_collide: true,
         static_faces: true,
-        vertices: {
-          stride: verticesPositionStride,
-          view: vertices,
-        },
+        vertices: geometry,
       },
       {
         label: 'terrain',
@@ -56,7 +58,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
         scenes,
       },
       false,
-      indicesView,
+      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
       () => {
         const collider_ptr = this.create_collider();
         engine.rust.add_collider(this.id, collider_ptr);

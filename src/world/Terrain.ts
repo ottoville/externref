@@ -22,7 +22,6 @@ import {
   CreateTerrainTexture,
 } from '../GPU/Shaders/CreateTerrainTexture.comp.js';
 import { IntArray, PlaneArray } from '../GPU/Shaders/structs/Structs.js';
-import { allocate_vec } from '../nodes/DataNode.js';
 import {
   BGLayout,
   BufLayout,
@@ -303,7 +302,6 @@ TODO
           shaders,
           terrainPositionAndUvsAndNormalsGPU,
           pipelines,
-          positionsCount,
         );
         await terrain.#ready;
         return terrain;
@@ -381,7 +379,6 @@ TODO
       Normals: GPUComputePipeline,
       Texture: GPUComputePipeline,
     ],
-    positionsCount: number,
   ) {
     this.texture = new Texture({
       format: 'rgba8unorm',
@@ -483,8 +480,6 @@ TODO
       textureView,
       this.terrainPositionAndUvsAndNormalsGPU,
       terrainIndicesGPU,
-      allocate_vec(new Float32Array(positionsCount * 12)),
-      allocate_vec(new Uint32Array(this.#terrainIndicesLength / 4)),
       12 as Word<'dword'>,
     );
 
@@ -618,10 +613,9 @@ TODO
         gpuReadBufferPositions
           .readAndDestroy((readbuff) => {
             return gpuReadBufferIndices.readAndDestroy((buff) => {
-              this.mesh.set_indices_and_vertices(
+              this.mesh.set_indices_and_vertices_PositionAndNormalAndUV(
                 new Uint32Array(buff),
                 new Float32Array(readbuff),
-                this.mesh.vertices_stride,
               );
               this.updateSwap2(0, readbuff.byteLength, true);
               this.#serialize().catch((err) => {

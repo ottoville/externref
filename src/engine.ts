@@ -158,7 +158,18 @@ export type rustWasm = {
     static_faces: boolean,
     strip: boolean,
   ): rust_pointer<'geometry'>;
-  set_geometry(mesh_id: number, geometry: rust_pointer<'geometry'>): void;
+  create_legacy_terrain_geometry(
+    has_bounding: boolean,
+    character_can_collide_to: boolean,
+    static_faces: boolean,
+    strip: boolean,
+  ): rust_pointer<'geometry'>;
+  create_ui_geometry(positions_count: number): rust_pointer<'geometry'>;
+  create_water_geometry(): rust_pointer<'geometry'>;
+  set_geometry(
+    mesh_id: number,
+    geometry: rust_pointer<'geometry'>,
+  ): rust_pointer<'geometry'>;
   create_box_geometry(): rust_pointer<'geometry'>;
   create_rtp_geometry(): rust_pointer<'geometry'>;
   create_cone_geometry(faces: number): rust_pointer<'geometry'>;
@@ -176,14 +187,12 @@ export type rustWasm = {
     ptr: rust_pointer<'position'>,
     length: number,
     cap: number,
-    vertices_stride: Word<'dword'>,
   ): void;
   set_position_and_normal_vertices(
     geometry: rust_pointer<'geometry'>,
     ptr: rust_pointer<'position_and_normal'>,
     length: number,
     cap: number,
-    vertices_stride: Word<'dword'>,
   ): void;
   set_indices(
     geometry: rust_pointer<'geometry'>,
@@ -191,15 +200,14 @@ export type rustWasm = {
     length: number,
     cap: number,
   ): void;
-  set_indices_and_vertices(
+  set_indices_and_vertices_PositionAndNormalAndUV(
     mesh_id: number,
     indices: rust_pointer<'usize'>,
     indices_length: number,
     indices_cap: number,
-    vertices: rust_pointer<'f32'>,
+    vertices: rust_pointer<'position_and_normal_and_uv'>,
     vertices_length: number,
     vertices_cap: number,
-    vertices_stride: number,
   ): void;
   vertices_pointer(geometry: rust_pointer<'geometry'>): rust_pointer<'f32'>;
   indices_field_pointer(
@@ -216,6 +224,12 @@ export type rustWasm = {
   alloc_vector_positions_and_normal(
     size: number,
   ): rust_pointer<rust_vec_ptr<'position_and_normal'>>;
+  alloc_vector_position_and_normal_and_UV(
+    size: number,
+  ): rust_pointer<rust_vec_ptr<'position_and_normal_and_uv'>>;
+  alloc_vector_positions2d_and_uv(
+    size: number,
+  ): rust_pointer<rust_vec_ptr<'position2d_and_uv'>>;
   update_scale(mesh_id: number, x: number, y: number, z: number): void;
   update_rotation(
     mesh_id: number,
@@ -279,11 +293,10 @@ export type rustWasm = {
     rw: number,
   ): void;
   faces_pointer(mesh_id: number): number;
-  bounding_vectors_pointer_simd(
-    mesh_id: number,
-  ): rust_pointer<rust_vec_ptr<'f32'>>;
+  create_bounding_box_geometry(mesh_id: number): rust_pointer<'geometry'>;
 
   create_elevator(mesh_id: number): rust_pointer<'elevator'>;
+  destroy_elevator(elevator_ptr: rust_pointer<'elevator'>): void;
   mouse_position_pointer(elevator_ptr: rust_pointer<'elevator'>): number;
   elevate(
     elevator_ptr: rust_pointer<'elevator'>,

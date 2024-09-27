@@ -90,7 +90,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
 
     const geometry = engine.rust.create_geometry(true, false, true, false);
 
-    engine.rust.set_position_vertices(geometry, ...vertices_ptr, stride);
+    engine.rust.set_position_vertices(geometry, ...vertices_ptr);
     engine.rust.set_indices(geometry, ...indices_vec_ptr);
     node = new DataNode(
       {

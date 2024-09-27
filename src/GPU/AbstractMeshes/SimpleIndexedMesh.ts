@@ -7,7 +7,7 @@ import type { GPU, VertexBufferProps } from '../../GPU.js';
 import {
   type AnyVertexStage,
   type BindGroupLayoutEntry,
-  type VertexBufferLayout2,
+  type VertexBufferLayout,
   type VertexShaderFunction,
   Buffer,
   BufferUsageEnums,
@@ -42,7 +42,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         readonly {
           [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
         }[],
-        readonly [VertexBufferLayout2]
+        readonly [VertexBufferLayout]
       >;
     }>,
     fragmentShaderBuilder: (
@@ -80,14 +80,11 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
           usages = BufferUsageEnums.VERTEX;
         }
 
-        let vertices_view: rust_pointer<'f32'>;
-        let vertices_len: number;
-        if (typeof dataNodeProps.vertices === 'number') {
-          vertices_view = engine.rust.vertices_pointer(dataNodeProps.vertices);
-          vertices_len = this.vertices_count * this.vertices_stride;
-        } else {
-          [vertices_view, vertices_len] = dataNodeProps.vertices.view;
-        }
+        const vertices_view = engine.rust.vertices_pointer(
+          dataNodeProps.vertices,
+        );
+        const vertices_len = this.vertices_count * this.vertices_stride;
+
         vBufferGPU = new Buffer(
           {
             gpu: engine.gpu.device,

@@ -1,5 +1,5 @@
 pub use crate::mesh::Mesh;
-use crate::{math2::Vec3wgslF32, mesh::get_mesh_by_id_mut};
+use crate::{math2::Vec3wgslF32, mesh::get_mesh_by_id_mut, Geometry};
 use std::collections::HashSet;
 
 pub struct Elevator {
@@ -16,9 +16,14 @@ pub struct Elevator {
 
 #[no_mangle]
 pub unsafe extern "C" fn create_elevator(mesh_id: usize) -> *mut Elevator {
-    Box::leak(Box::new(Elevator::new(get_mesh_by_id_mut(mesh_id))))
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    Box::into_raw(Box::new(Elevator::new(&mut mesh.get_geometry_mut())))
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn destroy_elevator(elevator_ptr: *mut Elevator) {
+    drop(Box::from_raw(elevator_ptr));
+}
 #[no_mangle]
 pub unsafe extern "C" fn mouse_position_pointer(elevator_ptr: *const Elevator) -> *const f32 {
     (*elevator_ptr).mouse_position.as_ptr()
@@ -123,19 +128,18 @@ impl Elevator {
             panic!("Elevator needs indices")
         }
         let half = geometry.planes.planes.len() / 2;
-        let stride = geometry.vertices.vertices_stride;
 
         let mut vertices: Vec<_> = geometry.vertices.get_positions_mut().collect();
 
         for sv in self.selected_vertices.iter() {
-            let mut positiony = vertices[sv.0].vec[1];
+            let mut positiony = vertices[sv.0].0[1];
             if sv.1 < radius_near {
                 positiony += full_height;
             } else {
                 positiony += full_height * (1.0 - (sv.1 - radius_near) / radius_far);
             }
 
-            vertices[sv.0].vec[1] = f32::clamp(positiony, height_min, height_max);
+            vertices[sv.0].0[1] = f32::clamp(positiony, height_min, height_max);
             if new_position {
                 let face_of_vertices = &self.faces_of_vertices[sv.0];
                 for index in face_of_vertices {
@@ -211,27 +215,27 @@ impl Elevator {
             v128_store(norm_ptr, normalized);
         }
         if new_position && self.selected_vertices.len() > 0 {
+            let stride = geometry.vertices.vertices_stride();
             self.offset = self
-                .selected_vertices
-                .iter()
-                .min_by(|x, y| x.0.cmp(&y.0))
-                .unwrap()
-                .0
-                * stride;
-            let max = self
-                .selected_vertices
-                .iter()
-                .max_by(|x, y| x.0.cmp(&y.0))
-                .unwrap()
-                .0
-                * stride
-                + stride;
+            .selected_vertices
+            .iter()
+            .min_by(|x, y| x.0.cmp(&y.0))
+            .unwrap()
+            .0
+            * stride;
+        let max = (self
+            .selected_vertices
+            .iter()
+            .max_by(|x, y| x.0.cmp(&y.0))
+            .unwrap()
+            .0
+            +1)
+            * stride;
             self.length = max - self.offset;
         }
     }
 
-    pub fn new(mesh: &mut Mesh) -> Elevator {
-        let geometry = mesh.get_geometry_mut();
+    pub fn new(geometry: &mut Geometry) -> Elevator {
         let mut vertices = geometry.vertices.get_positions();
         let mut vertices_horizontal: Vec<f32> = Vec::new();
         loop {
@@ -245,18 +249,8 @@ impl Elevator {
                     let val1 = next1.unwrap();
                     let val2 = next2.unwrap();
                     vertices_horizontal.append(&mut vec![
-                        val.vec[0],
-                        val1.vec[0],
-                        val2.vec[0],
-                        val3.vec[0],
-                        val.vec[1],
-                        val1.vec[1],
-                        val2.vec[1],
-                        val3.vec[1],
-                        val.vec[2],
-                        val1.vec[2],
-                        val2.vec[2],
-                        val3.vec[2],
+                        val.0[0], val1.0[0], val2.0[0], val3.0[0], val.0[1], val1.0[1], val2.0[1],
+                        val3.0[1], val.0[2], val1.0[2], val2.0[2], val3.0[2],
                     ]);
                 }
                 None => break,

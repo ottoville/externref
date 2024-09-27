@@ -20,7 +20,7 @@ pub use crate::terrain::elevator::Elevator;
 use allocators::freeindex::FreeIndexIndex;
 use math2::Mat3wgslF32;
 use rapier3d::prelude::*;
-use vertices::{Position, PositionAndNormal};
+use vertices::{Position, Position2DAndUV, PositionAndNormal, PositionAndNormalAndUV};
 
 static mut MULTIVALUE_USIZE: [usize; 6] = [0; 6];
 static mut MULTIVALUE_F32: [f32; 6] = [0.0; 6];
@@ -48,6 +48,18 @@ pub unsafe extern "C" fn alloc_vector_positions(size: usize) -> *const usize {
 #[no_mangle]
 pub unsafe extern "C" fn alloc_vector_positions_and_normal(size: usize) -> *const usize {
     let mut vec: Vec<PositionAndNormal> = Vec::with_capacity(size);
+    vec.set_len(size);
+    return create_multivalue_vector(vec);
+}
+#[no_mangle]
+pub unsafe extern "C" fn alloc_vector_positions2d_and_uv(size: usize) -> *const usize {
+    let mut vec: Vec<Position2DAndUV> = Vec::with_capacity(size);
+    vec.set_len(size);
+    return create_multivalue_vector(vec);
+}
+#[no_mangle]
+pub unsafe extern "C" fn alloc_vector_position_and_normal_and_UV(size: usize) -> *const usize {
+    let mut vec: Vec<PositionAndNormalAndUV> = Vec::with_capacity(size);
     vec.set_len(size);
     return create_multivalue_vector(vec);
 }

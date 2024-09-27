@@ -23,10 +23,6 @@ export abstract class BoundableNodeIndexed
     });
     this.rebuildTrianglePlanes();
   }
-  override set_vertices(vertices: rust_vec_ptr<'f32'>, stride: Word<'dword'>) {
-    super.set_vertices(vertices, stride);
-    this.rebuildTrianglePlanes();
-  }
   rebuildTrianglePlanes() {
     if (
       !this.initCollider() ||

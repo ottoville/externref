@@ -24,9 +24,9 @@ fn add_mid_point(
     }
 
     mid_cache.insert(cantor_pairing, v);
-    vertices[v].position.vec[0] = (vertices[a].position.vec[0] + vertices[b].position.vec[0]) / 2.0;
-    vertices[v].position.vec[1] = (vertices[a].position.vec[1] + vertices[b].position.vec[1]) / 2.0;
-    vertices[v].position.vec[2] = (vertices[a].position.vec[2] + vertices[b].position.vec[2]) / 2.0;
+    vertices[v].position.0[0] = (vertices[a].position.0[0] + vertices[b].position.0[0]) / 2.0;
+    vertices[v].position.0[1] = (vertices[a].position.0[1] + vertices[b].position.0[1]) / 2.0;
+    vertices[v].position.0[2] = (vertices[a].position.0[2] + vertices[b].position.0[2]) / 2.0;
     return (v, true);
 }
 
@@ -37,18 +37,18 @@ pub unsafe extern "C" fn create_icosphere_geometry(order: usize) -> *mut Geometr
     let t: usize = 4usize.pow(order as u32);
     let mut vertices: Vec<PositionAndNormal> = vec![PositionAndNormal::new(); 10 * t + 2];
 
-    vertices[0].position.vec = [-1.0, f, 0.0];
-    vertices[1].position.vec = [1.0, f, 0.0];
-    vertices[2].position.vec = [-1.0, -f, 0.0];
-    vertices[3].position.vec = [1.0, -f, 0.0];
-    vertices[4].position.vec = [0.0, -1.0, f];
-    vertices[5].position.vec = [0.0, 1.0, f];
-    vertices[6].position.vec = [0.0, -1.0, -f];
-    vertices[7].position.vec = [0.0, 1.0, -f];
-    vertices[8].position.vec = [f, 0.0, -1.0];
-    vertices[9].position.vec = [f, 0.0, 1.0];
-    vertices[10].position.vec = [-f, 0.0, -1.0];
-    vertices[11].position.vec = [-f, 0.0, 1.0];
+    vertices[0].position.0 = [-1.0, f, 0.0];
+    vertices[1].position.0 = [1.0, f, 0.0];
+    vertices[2].position.0 = [-1.0, -f, 0.0];
+    vertices[3].position.0 = [1.0, -f, 0.0];
+    vertices[4].position.0 = [0.0, -1.0, f];
+    vertices[5].position.0 = [0.0, 1.0, f];
+    vertices[6].position.0 = [0.0, -1.0, -f];
+    vertices[7].position.0 = [0.0, 1.0, -f];
+    vertices[8].position.0 = [f, 0.0, -1.0];
+    vertices[9].position.0 = [f, 0.0, 1.0];
+    vertices[10].position.0 = [-f, 0.0, -1.0];
+    vertices[11].position.0 = [-f, 0.0, 1.0];
 
     let mut indices: Vec<[usize; 3]> = vec![
         [0, 11, 5],
@@ -102,8 +102,8 @@ pub unsafe extern "C" fn create_icosphere_geometry(order: usize) -> *mut Geometr
         }
     }
     for vertice in &mut vertices {
-        vertice.position.vec.normalize_in_place();
-        vertice.normal.vec = vertice.position.vec.clone();
+        vertice.position.0.normalize_in_place();
+        vertice.normal.0 = vertice.position.0.clone();
     }
     let mut geometry = Box::new(Geometry::new(
         true,
@@ -112,7 +112,7 @@ pub unsafe extern "C" fn create_icosphere_geometry(order: usize) -> *mut Geometr
         false,
         "Icosphere".to_string(),
     ));
-    geometry.set_vertices(VertexKind::PositionAndNormal(vertices), 8);
+    geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     let flattened = indices.as_flattened_mut().to_vec();
     geometry.set_indices(flattened);
     return Box::into_raw(geometry);

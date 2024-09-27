@@ -1,5 +1,5 @@
 import {
-  type VertexBufferLayout2,
+  type VertexBufferLayout,
   VertexShaderFunction,
   ShaderStage,
   type BufLayout,
@@ -46,9 +46,9 @@ export function createGrassVertShader(
 ) {
   const pipelineLayout = gpu.shaders.rootCameralayout;
   const buffers: [
-    VertexBufferLayout2<typeof positionAttr>,
-    VertexBufferLayout2<typeof shapeAttr>,
-    VertexBufferLayout2<typeof vertexPositionAttr>,
+    VertexBufferLayout<typeof positionAttr>,
+    VertexBufferLayout<typeof shapeAttr>,
+    VertexBufferLayout<typeof vertexPositionAttr>,
   ] = [
     {
       arrayStride: vertexBufferProps.stride * 4,

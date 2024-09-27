@@ -16,10 +16,6 @@ export abstract class BoundableNodeSimple
   ) {
     super(dataNodeProps, mainNodeProps, undefined, strip);
   }
-  override set_vertices(vec: rust_vec_ptr<'f32'>, stride: Word<'dword'>) {
-    super.set_vertices(vec, stride);
-    this.rebuildTrianglePlanes();
-  }
   rebuildTrianglePlanes() {
     if (!this.initCollider()) return;
     this.colliderVerticesV4.forEach(this.pushVertice);

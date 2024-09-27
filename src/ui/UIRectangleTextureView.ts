@@ -5,6 +5,8 @@ import type {
   TextureView,
 } from '../webgpu-ts/index.js';
 import { UIRectangle } from './UIRectangle.js';
+import type { Engine } from '../engine.js';
+declare const engine: Engine;
 
 export class UIRectangleTextureView extends UIRectangle {
   createTexture(): TextureView<
@@ -284,6 +286,5 @@ export class UIRectangleTextureView extends UIRectangle {
         24,
       );
     }
-    return vertices;
   }
 }

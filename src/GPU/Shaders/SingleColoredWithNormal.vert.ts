@@ -1,5 +1,5 @@
 import {
-  type VertexBufferLayout2,
+  type VertexBufferLayout,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
@@ -12,7 +12,7 @@ import { type Scene, pickOutput, typicalOutput } from './structs/Structs.js';
 import { simpleAttributes } from './structs/Attributes.js';
 
 export function createPickOutput(
-  buffers: readonly [VertexBufferLayout2<typeof simpleAttributes>],
+  buffers: readonly [VertexBufferLayout<typeof simpleAttributes>],
 ) {
   return new VertexShaderFunction(
     pickOutput,

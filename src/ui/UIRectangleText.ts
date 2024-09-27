@@ -1,4 +1,6 @@
 import { UIRectangle } from './UIRectangle.js';
+import type { Engine } from '../engine.js';
+declare const engine: Engine;
 
 export abstract class UIRectangleText extends UIRectangle {
   protected textUV: [
@@ -51,6 +53,5 @@ export abstract class UIRectangleText extends UIRectangle {
       content_sizeY,
       ...this.textUV[1],
     ]);
-    return vertices;
   }
 }

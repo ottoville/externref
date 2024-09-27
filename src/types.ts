@@ -13,7 +13,7 @@ type rust_pointer<T> = {
 } & Word<'dword'>;
 
 /**
- * Pointer to vector with ptr, len and cap
+ * Pointer to array with ptr and len
  */
 type rust_array_ptr<T> = readonly [ptr: rust_pointer<T>, len: number];
 
