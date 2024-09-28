@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { DataNode } from '../../nodes/DataNode.js';
+import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 
-export function Indices({ node }: { node: DataNode }) {
+export function Indices({ node }: { node: IndexedDataNode }) {
   const [start, setStart] = useState(0);
   const verticesArray = node.verticesArray;
   return (

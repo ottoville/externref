@@ -6,7 +6,6 @@ import {
 } from './DrawableDirect.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { DrawableProps } from './Drawable.js';
-import type { DataNode } from '../../nodes/DataNode.js';
 import {
   Buffer,
   BufferUsageEnums,
@@ -14,6 +13,7 @@ import {
   type INDEX_BUFFER,
 } from '../../webgpu-ts/index.js';
 import { gpu_memory_index_size } from '../Shaders/ShaderBuilders.js';
+import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {
@@ -24,7 +24,7 @@ export type DrawableIndexedProps = {
 
 export class DrawableIndexed<
   R extends RenderPipelineProps = RenderPipelineProps,
-  N extends DataNode = DataNode,
+  N extends IndexedDataNode = IndexedDataNode,
 > extends DrawableDirect<N> {
   #indexBuffer: Buffer<INDEX_BUFFER> | undefined;
   #baseVertex: number;

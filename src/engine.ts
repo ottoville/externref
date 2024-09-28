@@ -590,6 +590,9 @@ export class Engine {
         log(ptr: number) {
           console.log(stringFromPtr(rust.instance.exports.memory, ptr));
         },
+        log_u32(n: number) {
+          console.log(n);
+        },
         warn(ptr: number) {
           console.warn(stringFromPtr(rust.instance.exports.memory, ptr));
         },

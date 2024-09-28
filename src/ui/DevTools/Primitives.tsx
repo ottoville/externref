@@ -3,6 +3,7 @@ import { Vertex } from './Vertex.js';
 import { useEffect, useRef, useState } from 'react';
 import { Indices } from './Indices.js';
 import type { Engine } from '../../engine.js';
+import { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 declare const engine: Engine;
 
 export function Primitives({ node }: { node: DataNode }) {
@@ -80,7 +81,7 @@ export function Primitives({ node }: { node: DataNode }) {
           </table>
         ) : null}
       </details>
-      {node.indices_count !== 0 ? (
+      {node instanceof IndexedDataNode && node.indices_count !== 0 ? (
         <details
           ref={indices}
           onToggle={() => {

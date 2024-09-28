@@ -1,12 +1,11 @@
-import {
-  type canCollideCharacter,
-  DataNodeProps,
-  DataNode,
-} from './DataNode.js';
+import { type canCollideCharacter, DataNodeProps } from './DataNode.js';
 import { MainNodeProps } from 'MainNode.js';
+import { IndexedDataNode } from './IndexedDataNode.js';
+import type { Engine } from '../engine.js';
+declare const engine: Engine;
 
 export abstract class BoundableNodeIndexed
-  extends DataNode
+  extends IndexedDataNode
   implements canCollideCharacter
 {
   constructor(

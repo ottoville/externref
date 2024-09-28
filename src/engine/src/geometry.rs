@@ -58,8 +58,8 @@ pub unsafe extern "C" fn set_indices(
     length: usize,
     cap: usize,
 ) {
-    let indices = Vec::from_raw_parts(ptr, length, cap);
     let geometry = &mut (*geometry_ptr);
+    let indices = Vec::from_raw_parts(ptr, length, cap);
     geometry.set_indices(indices);
 }
 #[no_mangle]

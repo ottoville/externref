@@ -9,8 +9,11 @@ import {
 import type { Engine } from '../../../engine.js';
 import { create_rust_label, RigidBody } from '../../../MainNode.js';
 import { createDebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
+import { IndexedDataNode } from '../../../nodes/IndexedDataNode.js';
 declare const engine: Engine;
-export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
+export function createWireFrameMesh(
+  targetNode: DrawableDirect<IndexedDataNode>,
+) {
   const indices_vec_ptr = allocate_vec_usize(targetNode.node.indices_count * 2);
   const [ind_ptr, ind_len] = indices_vec_ptr;
   const indices = new Uint32Array(engine.rust.memory.buffer, ind_ptr, ind_len);
@@ -23,7 +26,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
     indices[i * 6 + 4] = targetIndices[i * 3 + 2]!;
     indices[i * 6 + 5] = targetIndices[i * 3]!;
   }
-  let node: DataNode;
+  let node: IndexedDataNode;
 
   const vertexBufferStrideBytes =
     targetNode.renderPipeline.builder.vertexShader.props.entryPoints['main']
@@ -45,7 +48,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
   );
   const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
   if (gpuVertexBuffer) {
-    node = new DataNode(
+    node = new IndexedDataNode(
       {
         can_collide: false,
         character_can_collide_to: false,
@@ -92,7 +95,7 @@ export function createWireFrameMesh(targetNode: DrawableDirect<DataNode>) {
 
     engine.rust.set_position_vertices(geometry, ...vertices_ptr);
     engine.rust.set_indices(geometry, ...indices_vec_ptr);
-    node = new DataNode(
+    node = new IndexedDataNode(
       {
         can_collide: false,
         character_can_collide_to: false,

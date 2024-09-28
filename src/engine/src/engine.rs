@@ -17,6 +17,7 @@ use rapier3d::prelude::*;
 #[cfg(target_arch = "wasm32")]
 extern "C" {
     fn log(number: *const usize);
+    pub fn log_u32(number: u32);
     fn warn(number: *const usize);
     fn error(number: *const usize);
 }

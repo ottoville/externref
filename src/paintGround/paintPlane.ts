@@ -10,11 +10,11 @@ import {
   createPlaneAtGroundHeightVertShader,
 } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
-import { DataNode } from '../nodes/DataNode.js';
 import { RigidBody } from 'MainNode.js';
+import { IndexedDataNode } from '../nodes/IndexedDataNode.js';
 declare const engine: Engine;
 
-class PlaneMesh extends DataNode {
+class PlaneMesh extends IndexedDataNode {
   override drawable: DrawableIndexed<
     RenderPipelineProps<PlaneAtGroundHeightVertShader>
   >;

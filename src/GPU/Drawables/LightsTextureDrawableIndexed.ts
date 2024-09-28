@@ -3,7 +3,6 @@ import type {
   MappedVertexBuffers,
 } from './DrawableDirect.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
-import type { DataNode } from '../../nodes/DataNode.js';
 import {
   DrawableIndexed,
   type DrawableIndexedProps,
@@ -23,6 +22,7 @@ import {
   type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import type { Engine } from 'engine.js';
+import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 declare const engine: Engine;
 
 /**
@@ -30,7 +30,7 @@ declare const engine: Engine;
  */
 export class LightsTextureDrawableIndexed<
   R extends RenderPipelineProps<VertexShader, FragmentShader>,
-  N extends DataNode = DataNode,
+  N extends IndexedDataNode = IndexedDataNode,
 > extends DrawableIndexed<R, N> {
   textureBindGroup: BindGroup<
     BGLayout<{

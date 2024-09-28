@@ -10,7 +10,6 @@ import {
 } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
 import type { Engine } from '../engine.js';
-import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
 declare const engine: Engine;
 
@@ -111,59 +110,7 @@ export const closeDistance = 0.0022;
 export const closeDistanceSquared = closeDistance * closeDistance;
 export class DataNode extends MainNode {
   override drawable?: Drawable<MainNode> | undefined;
-  onIndicesChange: (() => void)[] = [];
   #props: Readonly<DataNodeProps>;
-  set_indices(vec: rust_vec_ptr<'usize'>) {
-    engine.rust.set_indices(this.geometry, ...vec);
-    if (this.drawable && !(this.drawable instanceof DrawableIndexed)) {
-      throw new Error('Node is not indexed');
-    }
-    this.drawable?.setIndexBuffer(
-      new Uint32Array(engine.rust.memory.buffer, vec[0], vec[1]),
-    );
-    this.onIndicesChange.forEach((cb) => cb());
-  }
-  set_indices_and_vertices_PositionAndNormalAndUV(
-    indices: Uint32Array,
-    vertices: Float32Array,
-  ) {
-    const [ptr_ind, len_ind, cap_ind] = allocate_vec(indices);
-    const [ptr_vertices, len_vertices, cap_vertices] =
-      allocate_vec_positions_and_normals_and_uv(vertices.length / 12);
-    new Float32Array(
-      engine.rust.memory.buffer,
-      ptr_vertices,
-      len_vertices * 12,
-    ).set(vertices);
-
-    engine.rust.set_indices_and_vertices_PositionAndNormalAndUV(
-      this.id,
-      ptr_ind,
-      len_ind,
-      cap_ind,
-      ptr_vertices,
-      len_vertices,
-      cap_vertices,
-    );
-    if (this.drawable && !(this.drawable instanceof DrawableIndexed)) {
-      throw new Error('Node is not indexed');
-    }
-    this.drawable?.setIndexBuffer(indices);
-    this.onIndicesChange.forEach((cb) => cb());
-  }
-  get indices() {
-    const [indices_ptr, indices_len] = new Uint32Array(
-      engine.rust.memory.buffer,
-      engine.rust.indices_field_pointer(this.geometry),
-      2,
-    );
-    return new Uint32Array(engine.rust.memory.buffer, indices_ptr, indices_len);
-  }
-  get indices_count() {
-    return create_rust_vec_ptr(
-      engine.rust.indices_field_pointer(this.geometry),
-    )[1];
-  }
 
   //Physic things
   acceleration2: [number, number, number] = [0, 0, 0];
@@ -292,7 +239,6 @@ export class DataNode extends MainNode {
   constructor(
     props: DataNodeProps,
     mainNodeProps: MainNodeProps | number,
-    indicesView?: rust_vec_ptr<'usize'>,
     strip = false,
   ) {
     super(mainNodeProps);
@@ -321,9 +267,6 @@ export class DataNode extends MainNode {
         strip,
       );
       engine.rust.set_geometry(this.id, this.geometry);
-      if (indicesView) {
-        this.set_indices(indicesView);
-      }
     }
 
     if (can_collide) {

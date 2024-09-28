@@ -5,6 +5,7 @@ import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import type { GPU } from '../../../GPU.js';
 import { createDebugDepthSlicesFragShader } from '../../Shaders/devtools/debug_depthSlices.frag.js';
 import { VertexShader, VertexShaderFunction } from 'webgpu-ts/index.js';
+import { DrawableSimple } from '../../Drawables/DrawableSimple.js';
 
 export function creatDepthSlices(
   gpu: GPU,
@@ -34,11 +35,21 @@ export function creatDepthSlices(
     },
   );
   const vertexBuffer = targetNode.vertexBuffers[0]!.buffer;
-  targetNode.node.drawable = new DrawableIndexed({
-    bindGroups: targetNode.bindGroups.slice(1),
-    node: targetNode.node,
-    renderPasses: new Set([gpu.renderPassScreen]),
-    renderPipeline,
-    vertexBuffers: [vertexBuffer],
-  });
+  if (targetNode instanceof DrawableIndexed) {
+    targetNode.node.drawable = new DrawableIndexed({
+      bindGroups: targetNode.bindGroups.slice(1),
+      node: targetNode.node,
+      renderPasses: new Set([gpu.renderPassScreen]),
+      renderPipeline,
+      vertexBuffers: [vertexBuffer],
+    });
+  } else {
+    targetNode.node.drawable = new DrawableSimple({
+      bindGroups: targetNode.bindGroups.slice(1),
+      node: targetNode.node,
+      renderPasses: new Set([gpu.renderPassScreen]),
+      renderPipeline,
+      vertexBuffers: [vertexBuffer],
+    });
+  }
 }

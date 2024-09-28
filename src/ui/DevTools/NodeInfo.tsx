@@ -12,6 +12,7 @@ import { Rotation } from './Rotation.js';
 import { Primitives } from './Primitives.js';
 import { creatDepthSlices } from '../../GPU/Meshes/helpers/depthSlices.js';
 import type { Engine } from '../../engine.js';
+import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 declare const engine: Engine;
 
 export const NodeInfo = memo(function NodeInfo({
@@ -192,7 +193,8 @@ export const NodeInfo = memo(function NodeInfo({
                 <>
                   <br />
                   Indices count:
-                  {drawable.indices_count ?? drawable.node.indices_count}
+                  {drawable.indices_count ??
+                    (drawable.node as IndexedDataNode).indices_count}
                   <br />
                   <button
                     type="button"

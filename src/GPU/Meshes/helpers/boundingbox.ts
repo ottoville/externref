@@ -6,13 +6,13 @@ import {
   createDebugBoundingBoxVertShader,
   type DebugBoundingBoxVertShader,
 } from '../../Shaders/devtools/debug_boundingbox.vert.js';
-import { DataNode } from '../../../nodes/DataNode.js';
 import { Buffer, BufferUsageEnums } from '../../../webgpu-ts/index.js';
 import { RigidBody } from '../../../MainNode.js';
 import { create_rust_vec_ptr } from '../../../Math.js';
+import { IndexedDataNode } from '../../../nodes/IndexedDataNode.js';
 declare const engine: Engine;
 
-export class BoundingBoxMesh extends DataNode {
+export class BoundingBoxMesh extends IndexedDataNode {
   override drawable:
     | DrawableIndexed<RenderPipelineProps<DebugBoundingBoxVertShader>>
     | undefined;

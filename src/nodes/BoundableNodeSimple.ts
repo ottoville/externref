@@ -14,7 +14,7 @@ export abstract class BoundableNodeSimple
     mainNodeProps: MainNodeProps,
     strip = false,
   ) {
-    super(dataNodeProps, mainNodeProps, undefined, strip);
+    super(dataNodeProps, mainNodeProps, strip);
   }
   rebuildTrianglePlanes() {
     if (!this.initCollider()) return;
