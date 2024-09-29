@@ -145,6 +145,12 @@ export type rustWasm = {
     label_cap: number,
     externref: { ownedByJS: false; externref: MainNode },
   ): number;
+  create_debug_mesh_wireframe(
+    target_mesh_id: number,
+    label_ptr: number,
+    label_len: number,
+    label_cap: number,
+  ): number;
   create_debug_mesh(
     target_mesh_id: number,
     label_ptr: number,
@@ -170,6 +176,7 @@ export type rustWasm = {
     mesh_id: number,
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<'geometry'>;
+  get_geometry(mesh_id: number): rust_pointer<'geometry'>;
   create_box_geometry(): rust_pointer<'geometry'>;
   create_rtp_geometry(): rust_pointer<'geometry'>;
   create_cone_geometry(faces: number): rust_pointer<'geometry'>;

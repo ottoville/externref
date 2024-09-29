@@ -71,7 +71,13 @@ pub unsafe extern "C" fn new_mesh_from_js(
         None,
     );
 }
-
+#[no_mangle]
+pub unsafe extern "C" fn get_geometry<'frame>(
+    mesh_id: usize
+) -> *mut Geometry {
+    let mesh = get_mesh_by_id_mut(mesh_id);
+    mesh.geometry.as_mut().unwrap().as_mut() as *mut Geometry
+}
 #[no_mangle]
 pub unsafe extern "C" fn set_geometry<'frame>(
     mesh_id: usize,

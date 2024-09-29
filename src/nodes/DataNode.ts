@@ -37,7 +37,7 @@ export interface Ellipsoid {
 }
 
 export type DataNodeProps = {
-  vertices?: rust_pointer<'geometry'>;
+  vertices: rust_pointer<'geometry'>;
   /**
    * Setting true will create collider in rapier
    */
@@ -256,17 +256,20 @@ export class DataNode extends MainNode {
     this.#character_can_collide_to = character_can_collide_to;
 
     DataNode.Meshes.set(this.id, this);
-
-    if (typeof vertices === 'number') {
-      this.geometry = engine.rust.set_geometry(this.id, vertices);
+    if (typeof mainNodeProps !== 'number') {
+      if (typeof vertices === 'number') {
+        this.geometry = engine.rust.set_geometry(this.id, vertices);
+      } else {
+        this.geometry = engine.rust.create_geometry(
+          true,
+          character_can_collide_to,
+          static_faces,
+          strip,
+        );
+        engine.rust.set_geometry(this.id, this.geometry);
+      }
     } else {
-      this.geometry = engine.rust.create_geometry(
-        true,
-        character_can_collide_to,
-        static_faces,
-        strip,
-      );
-      engine.rust.set_geometry(this.id, this.geometry);
+      this.geometry = engine.rust.get_geometry(this.id);
     }
 
     if (can_collide) {

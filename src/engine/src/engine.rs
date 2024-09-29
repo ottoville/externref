@@ -197,6 +197,23 @@ impl Logger for Vec<u32> {
         }
     }
 }
+impl Logger for Vec<usize> {
+    fn log(&self) {
+        unsafe {
+            LOG_STRING.clear();
+            for str in self.iter() {
+                LOG_STRING.push(' ');
+                LOG_STRING.push_str(&str.to_string());
+            }
+            MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
+            MULTIVALUE_USIZE[1] = LOG_STRING.len();
+            MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
+
+            #[cfg(target_arch = "wasm32")]
+            log(MULTIVALUE_USIZE.as_ptr());
+        }
+    }
+}
 pub fn js_warn<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
     unsafe {
         str_ptr_from_arr(strings);
