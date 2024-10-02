@@ -36,7 +36,6 @@ export class Sea extends BoundableNodeSimple {
         rigid_body: RigidBody.off,
         scenes,
       },
-      true,
     ); //48
     if (engine.gpu) {
       const renderPipeline = engine.gpu.createRenderPipelineBuilder(

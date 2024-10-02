@@ -12,7 +12,6 @@ import { LightsTextureDrawableIndexed } from '../Drawables/LightsTextureDrawable
 import type {
   Buffer,
   FragmentShader,
-  INDEX_BUFFER,
   TEXTURE_BINDING_TEXTURE,
   Texture,
   TextureView,
@@ -36,7 +35,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
     scenes: Scene[],
     public initialTexture: TextureView<Texture<TEXTURE_BINDING_TEXTURE>>,
     public vBuffer: Buffer<VERTEX_BUFFER>,
-    public iBuffer: Buffer<INDEX_BUFFER>,
     verticesPositionStride: Word<'dword'>,
   ) {
     const geometry = engine.rust.create_legacy_terrain_geometry(
@@ -48,7 +46,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
     super(
       {
         can_collide: true,
-        static_faces: true,
         vertices: geometry,
       },
       {
@@ -56,7 +53,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
         rigid_body: RigidBody.off,
         scenes,
       },
-      false,
       () => {
         const collider_ptr = this.create_collider();
         engine.rust.add_collider(this.id, collider_ptr);
@@ -90,7 +86,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
         initialTexture,
         this.sampler!,
       );
-      this.drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
     }
   }
 }

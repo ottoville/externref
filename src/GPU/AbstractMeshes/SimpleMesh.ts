@@ -24,10 +24,9 @@ export class SimpleMesh extends BoundableNodeSimple {
   constructor(
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps,
-    strip = false,
     vBufferGPU?: Buffer<VERTEX_BUFFER>,
   ) {
-    super(dataNodeProps, mainNodeProps, strip);
+    super(dataNodeProps, mainNodeProps);
     if (engine.gpu) {
       if (!vBufferGPU) {
         if (!dataNodeProps.vertices) {

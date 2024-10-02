@@ -479,10 +479,8 @@ TODO
       scenes,
       textureView,
       this.terrainPositionAndUvsAndNormalsGPU,
-      terrainIndicesGPU,
       12 as Word<'dword'>,
     );
-
     this.#ready = caches
       .match(new Request('/terrainTexture.webp'))
       .then(async (cachedtexture) => {

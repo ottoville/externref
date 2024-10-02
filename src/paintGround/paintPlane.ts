@@ -36,7 +36,6 @@ class PlaneMesh extends IndexedDataNode {
         label: 'plane',
         rigid_body: RigidBody.off,
       },
-      false,
     );
     this.drawable = new DrawableIndexed({
       bindGroups: [],

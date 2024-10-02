@@ -48,7 +48,6 @@ export class BoundingBoxMesh extends IndexedDataNode {
         label: 'BoundingBox_' + targetNode.node.label,
         rigid_body: RigidBody.off,
       },
-      true,
     );
     this.positions_count = 26;
 

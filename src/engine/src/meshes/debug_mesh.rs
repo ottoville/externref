@@ -31,9 +31,9 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
         String::from("debugmesh_geometry_wireframe"),
     );
     let target_indices = &target.get_geometry().indices;
-    let mut indices: Vec<usize> = vec![0; target_indices.len() * 2];
+    let mut indices: Vec<usize> = vec![0; target_indices.indices.len() * 2];
 
-    for (i, target_triangle) in target_indices.chunks_exact(3).enumerate() {
+    for (i, target_triangle) in target_indices.indices.chunks_exact(3).enumerate() {
         indices[i * 6] = target_triangle[0];
         indices[i * 6 + 1] = target_triangle[1];
         indices[i * 6 + 2] = target_triangle[1];
@@ -85,7 +85,7 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
                 vertices.push(pos.clone());
                 vertices.push(pos.clone());
             }
-        },
+        }
         VertexKind::PositionAndNormal(vector) => {
             for position in vector {
                 let pos = PositionAndNormal {
@@ -95,7 +95,7 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
                 vertices.push(pos.clone());
                 vertices.push(pos.clone());
             }
-        },
+        }
         VertexKind::PositionAndNormalAndColor(vector) => {
             for position in vector {
                 let pos = PositionAndNormal {

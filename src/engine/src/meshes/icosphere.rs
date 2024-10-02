@@ -124,7 +124,7 @@ fn test_icosphere() {
         let geometry_ptr = create_icosphere_geometry(1);
         let geometry: Box<Geometry> = Box::from_raw(geometry_ptr);
         assert_eq!(
-            geometry.indices,
+            geometry.indices.indices,
             vec![
                 0, 12, 14, 11, 13, 12, 5, 14, 13, 12, 13, 14, 0, 14, 16, 5, 15, 14, 1, 16, 15, 14,
                 15, 16, 0, 16, 18, 1, 17, 16, 7, 18, 17, 16, 17, 18, 0, 18, 20, 7, 19, 18, 10, 20,

@@ -61,13 +61,13 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         'SimpleIndexedMesh without vertices is not yet supported',
       );
     }
-    const strip = topology === 'triangle-strip' || topology === 'line-strip';
-    super(dataNodeProps, mainNodeProps, strip);
+    super(dataNodeProps, mainNodeProps);
     const primitiveState: GPUPrimitiveState = {
       frontFace: dataNodeProps.frontFace ?? 'cw',
       topology,
     };
-    if (strip) primitiveState.stripIndexFormat = 'uint32';
+    if (topology === 'triangle-strip' || topology === 'line-strip')
+      primitiveState.stripIndexFormat = 'uint32';
     if (engine.gpu) {
       if (!vBufferGPU) {
         let usages:

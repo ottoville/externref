@@ -108,7 +108,7 @@ fn test_bounding_box() {
         let mut geometry = Geometry::new(true, false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());
         geometry.set_vertices(vertices);
-        geometry.indices = BOX_INDICES.to_vec();
+        geometry.indices.indices = BOX_INDICES.to_vec();
         {
             let mut mesh_property = m.mesh_property.lock().unwrap();
             mesh_property.scaling[0] = 500.0;

@@ -11,10 +11,9 @@ export abstract class BoundableNodeIndexed
   constructor(
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps,
-    strip = false,
     onIndicesChange?: () => void,
   ) {
-    super(dataNodeProps, mainNodeProps, strip);
+    super(dataNodeProps, mainNodeProps);
     this.onIndicesChange.push(() => {
       if (onIndicesChange) onIndicesChange();
       this.rebuildTrianglePlanes();

@@ -42,7 +42,6 @@ export type DataNodeProps = {
    * Setting true will create collider in rapier
    */
   can_collide?: boolean;
-  static_faces?: boolean;
   frontFace?: GPUFrontFace;
   character_can_collide_to?: boolean;
 };
@@ -236,18 +235,13 @@ export class DataNode extends MainNode {
   #frontFace: GPUFrontFace;
   #character_can_collide_to: boolean;
   geometry: rust_pointer<'geometry'>;
-  constructor(
-    props: DataNodeProps,
-    mainNodeProps: MainNodeProps | number,
-    strip = false,
-  ) {
+  constructor(props: DataNodeProps, mainNodeProps: MainNodeProps | number) {
     super(mainNodeProps);
     this.#props = Object.freeze(props);
 
     const {
       vertices,
       can_collide = false,
-      static_faces = false,
       frontFace = 'cw',
       character_can_collide_to = true,
     } = props;
@@ -257,17 +251,7 @@ export class DataNode extends MainNode {
 
     DataNode.Meshes.set(this.id, this);
     if (typeof mainNodeProps !== 'number') {
-      if (typeof vertices === 'number') {
-        this.geometry = engine.rust.set_geometry(this.id, vertices);
-      } else {
-        this.geometry = engine.rust.create_geometry(
-          true,
-          character_can_collide_to,
-          static_faces,
-          strip,
-        );
-        engine.rust.set_geometry(this.id, this.geometry);
-      }
+      this.geometry = engine.rust.set_geometry(this.id, vertices);
     } else {
       this.geometry = engine.rust.get_geometry(this.id);
     }

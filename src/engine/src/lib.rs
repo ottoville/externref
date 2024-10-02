@@ -12,6 +12,7 @@ mod terrain;
 mod vertices;
 mod mesh_property;
 mod devtools;
+mod indices;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;

@@ -17,7 +17,12 @@ import {
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
-import { Buffer, BufferUsageEnums, Destroyable } from './webgpu-ts/index.js';
+import {
+  Buffer,
+  BufferUsageEnums,
+  Destroyable,
+  INDEX_BUFFER,
+} from './webgpu-ts/index.js';
 
 const textDecoder = new TextDecoder();
 
@@ -198,12 +203,7 @@ export type rustWasm = {
     length: number,
     cap: number,
   ): void;
-  set_indices(
-    geometry: rust_pointer<'geometry'>,
-    ptr: rust_pointer<'usize'>,
-    length: number,
-    cap: number,
-  ): void;
+  vertices_pointer(geometry: rust_pointer<'geometry'>): rust_pointer<'f32'>;
   set_indices_and_vertices_PositionAndNormalAndUV(
     mesh_id: number,
     indices: rust_pointer<'usize'>,
@@ -213,10 +213,23 @@ export type rustWasm = {
     vertices_length: number,
     vertices_cap: number,
   ): void;
-  vertices_pointer(geometry: rust_pointer<'geometry'>): rust_pointer<'f32'>;
+  indices_pointer_from_geometry(
+    geometry: rust_pointer<'geometry'>,
+  ): rust_pointer<'indices'>;
+  set_indices_gpu_buffer(
+    indices: rust_pointer<'indices'>,
+    buffer: externref<false, Buffer<INDEX_BUFFER>>,
+  ): void;
+  get_indices_gpu_buffer(
+    indices: rust_pointer<'indices'>,
+  ): externref<false, Buffer<INDEX_BUFFER>> | null;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<rust_vec_ptr<'usize'>>;
+  get_indices_pointer(
+    indices: rust_pointer<'indices'>,
+  ): rust_pointer<rust_vec_ptr<'usize'>>;
+
   last_collider_world_vertices_pointer(mesh_id: number): number;
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: number): boolean;

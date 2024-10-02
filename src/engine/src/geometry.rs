@@ -10,18 +10,24 @@ use terramath::{CrossProduct, VectorMath};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
+    indices::Indices,
     math2::{Vec2wgslF32, Vec3wgslF32},
     mesh::{get_mesh_by_id, get_mesh_by_id_mut},
     vertices::{Position, Position2DAndUV, PositionAndNormal, PositionAndNormalAndUV, VertexKind},
     MULTIVALUE_USIZE,
 };
 #[no_mangle]
+pub unsafe extern "C" fn indices_pointer_from_geometry(geometry_ptr: *mut Geometry) -> *mut Indices {
+    let geometry = &mut (*geometry_ptr);
+    &mut geometry.indices as *mut Indices
+}
+#[no_mangle]
 pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry) -> *const usize {
     let geometry = &(*geometry_ptr);
     let indices = &geometry.indices;
-    MULTIVALUE_USIZE[0] = indices.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = indices.len();
-    MULTIVALUE_USIZE[2] = indices.capacity();
+    MULTIVALUE_USIZE[0] = indices.indices.as_ptr() as usize;
+    MULTIVALUE_USIZE[1] = indices.indices.len();
+    MULTIVALUE_USIZE[2] = indices.indices.capacity();
     MULTIVALUE_USIZE.as_ptr()
 }
 #[no_mangle]
@@ -50,17 +56,6 @@ pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usiz
     geometry.collider_planes = Vec::with_capacity(planes.len());
     geometry.collider_planes_parallel = Vec::with_capacity(planes.len());
     geometry.planes.planes = planes;
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_indices(
-    geometry_ptr: *mut Geometry,
-    ptr: *mut usize,
-    length: usize,
-    cap: usize,
-) {
-    let geometry = &mut (*geometry_ptr);
-    let indices = Vec::from_raw_parts(ptr, length, cap);
-    geometry.set_indices(indices);
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_position_vertices(
@@ -107,7 +102,10 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
     let indices = Vec::from_raw_parts(indices_ptr, indices_length, indices_cap);
     let vertices = Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_cap);
     let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
-    geometry.indices = indices;
+    geometry.indices = Indices {
+        indices,
+        gpu_buffer: None,
+    };
     geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
     geometry.faces_dirty = true;
 }
@@ -171,7 +169,7 @@ pub struct ColliderPlane {
 pub struct Geometry {
     pub bounding_box: BoundingBox,
     pub vertices: VertexKind,
-    pub indices: Vec<usize>,
+    pub indices: Indices,
     pub faces: Vec<[usize; 3]>,
     pub faces_dirty: bool,
     pub planes: Faces,
@@ -231,7 +229,7 @@ impl<'vert> Geometry {
     ) -> *mut Collider {
         let positions = self.vertices.get_positions();
 
-        let mut new_indices = self.indices.clone();
+        let mut new_indices = self.indices.indices.clone();
         let mut new_vertices: Vec<OPoint<f32, Const<3>>> = Vec::new();
         /*
          * Scale vertices and remove remove duplicated positions
@@ -379,7 +377,7 @@ impl<'vert> Geometry {
                             && pos.0[2] == nextpos.0[2]
                         {
                             vector.remove(ii);
-                            dedup_index(ii, i, &mut self.indices);
+                            dedup_index(ii, i, &mut self.indices.indices);
                             continue;
                         }
                         ii = ii + 1;
@@ -404,7 +402,10 @@ impl<'vert> Geometry {
         Geometry {
             bounding_box: BoundingBox::new(has_bounding),
             vertices: VertexKind::None,
-            indices: Vec::new(),
+            indices: Indices {
+                indices: Vec::new(),
+                gpu_buffer: None,
+            },
             faces: Vec::new(),
             faces_dirty: true,
             planes: Faces::new(0),
@@ -422,7 +423,7 @@ impl<'vert> Geometry {
             return;
         }
         self.faces.clear();
-        if self.indices.len() == 0 {
+        if self.indices.indices.len() == 0 {
             if self.strip {
                 panic!("Unindexed Trimesh collider with triangle strip is not yet supported");
             }
@@ -447,12 +448,14 @@ impl<'vert> Geometry {
                 // Length is self.indices.len() - 2
                 self.faces = self
                     .indices
+                    .indices
                     .windows(3)
                     .map(|i| i.try_into().unwrap())
                     .collect();
             } else {
                 // Lenght is self.indices.len() / 3
                 self.faces = self
+                    .indices
                     .indices
                     .chunks_exact(3)
                     .map(|i| i.try_into().unwrap())
@@ -466,8 +469,8 @@ impl<'vert> Geometry {
             return self.planes.planes.len();
         } else {
             //TODO: Hand strip and indexed
-            let position_count = if self.indices.len() > 0 {
-                self.indices.len()
+            let position_count = if self.indices.indices.len() > 0 {
+                self.indices.indices.len()
             } else {
                 self.vertices.length()
             };
@@ -511,7 +514,10 @@ impl<'vert> Geometry {
      * Set indices to geometry
      */
     pub fn set_indices(&mut self, indices: Vec<usize>) {
-        self.indices = indices;
+        self.indices = Indices {
+            indices,
+            gpu_buffer: None,
+        };
         self.bounding_box.need_init = true;
         if self.character_can_collide_to {
             self.allocate_collider_planes();

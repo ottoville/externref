@@ -124,7 +124,7 @@ fn test_cone() {
         let geometry_ptr = create_cone_geometry(4);
         let geometry: Box<Geometry> = Box::from_raw(geometry_ptr);
         assert_eq!(
-            geometry.indices,
+            geometry.indices.indices,
             vec![
                 0, 1, 5, 1, 2, 5, 4, 5, 2, 2, 3, 4, 6, 12, 7, 7, 13, 8, 8, 14, 9, 9, 15, 10, 10,
                 16, 11, 11, 17, 6

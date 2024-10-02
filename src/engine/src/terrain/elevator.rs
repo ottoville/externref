@@ -124,7 +124,7 @@ impl Elevator {
         let radius_near = radius * 0.3;
         let radius_far = radius * 0.7;
         let geometry = mesh.get_geometry_mut();
-        if geometry.indices.len() == 0 {
+        if geometry.indices.indices.len() == 0 {
             panic!("Elevator needs indices")
         }
         let half = geometry.planes.planes.len() / 2;
@@ -151,22 +151,24 @@ impl Elevator {
         for face_index in self.selected_faces.iter() {
             if new_position {
                 self.selected_indices
-                    .insert(geometry.indices[face_index * 3]);
+                    .insert(geometry.indices.indices[face_index * 3]);
                 self.selected_indices
-                    .insert(geometry.indices[face_index * 3 + 1]);
+                    .insert(geometry.indices.indices[face_index * 3 + 1]);
                 self.selected_indices
-                    .insert(geometry.indices[face_index * 3 + 2]);
+                    .insert(geometry.indices.indices[face_index * 3 + 2]);
             }
-            let v1_ptr = std::slice::from_ref(&vertices[geometry.indices[face_index * 3]]).as_ptr()
-                as *mut v128;
+            let v1_ptr = std::slice::from_ref(&vertices[geometry.indices.indices[face_index * 3]])
+                .as_ptr() as *mut v128;
             let v1 = v128_load(v1_ptr);
 
-            let v2_ptr = std::slice::from_ref(&vertices[geometry.indices[face_index * 3 + 1]])
-                .as_ptr() as *mut v128;
+            let v2_ptr =
+                std::slice::from_ref(&vertices[geometry.indices.indices[face_index * 3 + 1]])
+                    .as_ptr() as *mut v128;
             let v2 = v128_load(v2_ptr);
 
-            let v3_ptr = std::slice::from_ref(&vertices[geometry.indices[face_index * 3 + 2]])
-                .as_ptr() as *mut v128;
+            let v3_ptr =
+                std::slice::from_ref(&vertices[geometry.indices.indices[face_index * 3 + 2]])
+                    .as_ptr() as *mut v128;
             let v3 = v128_load(v3_ptr);
 
             let v1v2 = f32x4_sub(v1, v2);
@@ -217,20 +219,20 @@ impl Elevator {
         if new_position && self.selected_vertices.len() > 0 {
             let stride = geometry.vertices.vertices_stride();
             self.offset = self
-            .selected_vertices
-            .iter()
-            .min_by(|x, y| x.0.cmp(&y.0))
-            .unwrap()
-            .0
-            * stride;
-        let max = (self
-            .selected_vertices
-            .iter()
-            .max_by(|x, y| x.0.cmp(&y.0))
-            .unwrap()
-            .0
-            +1)
-            * stride;
+                .selected_vertices
+                .iter()
+                .min_by(|x, y| x.0.cmp(&y.0))
+                .unwrap()
+                .0
+                * stride;
+            let max = (self
+                .selected_vertices
+                .iter()
+                .max_by(|x, y| x.0.cmp(&y.0))
+                .unwrap()
+                .0
+                + 1)
+                * stride;
             self.length = max - self.offset;
         }
     }
@@ -264,16 +266,16 @@ impl Elevator {
                 val[0].z,   val[1].z,   val[2].z,   val[3].z,
             ]
         }).collect();*/
-        let positions_count = if geometry.indices.len() > 0 {
-            geometry.indices.len()
+        let positions_count = if geometry.indices.indices.len() > 0 {
+            geometry.indices.indices.len()
         } else {
             geometry.vertices.length()
         };
         let mut faces_of_vertices: Vec<Vec<usize>> = vec![Vec::with_capacity(6); positions_count];
-        if geometry.indices.len() == 0usize {
+        if geometry.indices.indices.len() == 0usize {
             panic!("Elevator needs indices")
         }
-        for (i, indice) in geometry.indices.iter().enumerate() {
+        for (i, indice) in geometry.indices.indices.iter().enumerate() {
             faces_of_vertices[*indice].push(i / 3);
         }
         Elevator {

@@ -14,6 +14,7 @@ import {
 } from '../../webgpu-ts/index.js';
 import { gpu_memory_index_size } from '../Shaders/ShaderBuilders.js';
 import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
+import { create_rust_vec_ptr } from '../../Math.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {
@@ -62,8 +63,10 @@ export class DrawableIndexed<
       },
       drawableDirectProps,
     );
-    const indices = this.node.indices;
-    if (indices.length > 0) this.setIndexBuffer(indices);
+    this.setIndexBuffer(
+      engine.rust.indices_pointer_from_geometry(this.node.geometry),
+    );
+
     this.#baseVertex = baseVertex;
     this.#firstIndex = firstIndex;
     this.#GPUIndexFormat = GPUIndexFormat;
@@ -78,54 +81,39 @@ export class DrawableIndexed<
       this.#indexBuffer.destroy();
     }
   }
-
-  setIndexBuffer(
-    buffer: Buffer<INDEX_BUFFER>,
-    baseVertex?: number,
-    destroyOld?: boolean,
-    GPUIndexFormat?: GPUIndexFormat,
-  ): Buffer<INDEX_BUFFER>;
-  setIndexBuffer(
-    buffer: Uint16Array | Uint32Array,
-    baseVertex?: number,
-    destroyOld?: boolean,
-  ): Buffer<INDEX_BUFFER>;
-  setIndexBuffer(
-    buffer: Uint16Array | Uint32Array | Buffer<INDEX_BUFFER>,
-    baseVertex = 0,
-    destroyOld = true,
-    GPUIndexFormat?: GPUIndexFormat,
-  ): Buffer<INDEX_BUFFER> {
+  setIndexBuffer(buffer: rust_pointer<'indices'>, baseVertex = 0) {
     this.#baseVertex = baseVertex;
-    if (destroyOld && this.#indexBuffer) {
-      this.#indexBuffer.destroy();
-    }
-    if (buffer instanceof Buffer) {
-      this.#indexBuffer = buffer;
-      if (GPUIndexFormat) {
-        this.#GPUIndexFormat = GPUIndexFormat;
-      }
+    const gpubuffer = engine.rust.get_indices_gpu_buffer(buffer);
+    if (gpubuffer) {
+      this.#indexBuffer = gpubuffer.externref;
     } else {
-      // const gpu = this.renderPipeline.props.vertexShader.props.gpu;
-      this.#indexBuffer = new Buffer(
-        {
-          gpu: engine.gpu!.device,
-          label: 'index_' + this.node.label,
-          size: buffer.byteLength,
-          usages: BufferUsageEnums.INDEX,
-        },
-        (b) => {
-          if (buffer.BYTES_PER_ELEMENT == 4) {
-            new Uint32Array(b.getMappedRange()).set(buffer);
+      const indices_ptr = engine.rust.get_indices_pointer(buffer);
+      const indices = create_rust_vec_ptr(indices_ptr);
+      if (indices[1] > 0) {
+        this.#indexBuffer = new Buffer(
+          {
+            gpu: engine.gpu!.device,
+            label: 'index_' + this.node.label,
+            size: indices[1] * Uint32Array.BYTES_PER_ELEMENT,
+            usages: BufferUsageEnums.INDEX,
+          },
+          (b) => {
+            new Uint32Array(b.getMappedRange()).set(
+              new Uint32Array(
+                engine.rust.memory.buffer,
+                indices[0],
+                indices[1],
+              ),
+            );
             this.#GPUIndexFormat = 'uint32';
-          } else {
-            new Uint16Array(b.getMappedRange()).set(buffer);
-            this.#GPUIndexFormat = 'uint16';
-          }
-        },
-      );
+          },
+        );
+        engine.rust.set_indices_gpu_buffer(buffer, {
+          externref: this.#indexBuffer,
+          ownedByJS: false,
+        });
+      }
     }
-    return this.#indexBuffer;
   }
   render(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder) {
     if (this.#indexBuffer) {
