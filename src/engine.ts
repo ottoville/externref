@@ -1,4 +1,4 @@
-﻿import { Physics } from './physics.js';
+import { Physics } from './physics.js';
 import { GPU } from './GPU.js';
 import { ColliderJS } from './Collider.js';
 import type { Scene } from './Scene.js';
@@ -130,10 +130,7 @@ export type rustWasm = {
   basepoint_world_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
-  process_gpu_queue(commandEncoder: {
-    externref: GPUCommandEncoder;
-    ownedByJS: true;
-  }): void;
+  process_gpu_queue(commandEncoder: externref<true, GPUCommandEncoder>): void;
 
   new_mesh_from_js(
     point_light: number,
@@ -143,7 +140,7 @@ export type rustWasm = {
     label_ptr: number,
     label_len: number,
     label_cap: number,
-    externref: { ownedByJS: false; externref: MainNode },
+    externref: externref<false, MainNode>,
   ): number;
   create_debug_mesh_wireframe(
     target_mesh_id: number,
@@ -252,10 +249,7 @@ export type rustWasm = {
   gpu_alignment(mesh_id: number): number;
   positions_count(mesh_id: number): number;
   set_positions_count(mesh_id: number, positions_count: number): number;
-  get_mesh_externref_by_id(id: number): {
-    ownedByJS: false;
-    externref: MainNode;
-  } | null;
+  get_mesh_externref_by_id(id: number): externref<false, MainNode> | null;
   strip(mesh_id: number): number;
   collider_planes_parallel_pointer(
     mesh_id: number,
@@ -343,10 +337,9 @@ export type rustWasm = {
   dedup_positions(geometry: rust_pointer<'geometry'>): void;
   get_update_lights(): boolean;
   set_update_lights(value: boolean): void;
-  push_to_temp_gpu_buffers(buffer: {
-    ownedByJS: false;
-    externref: Buffer<BufferUsageEnums.COPY_SRC>;
-  }): void;
+  push_to_temp_gpu_buffers(
+    buffer: externref<false, Buffer<BufferUsageEnums.COPY_SRC>>,
+  ): void;
   clear_temp_gpu_buffers(): void;
   devtools_pointer(): rust_pointer<'devtools'>;
   add_onchange_callback(mesh_id: number): number;
@@ -617,7 +610,7 @@ export class Engine {
             ownedByJS: false,
           } as const;
         },
-        drop_ref(ref: { ownedByJS: boolean; externref: object }) {
+        drop_ref(ref: externref) {
           /**
            * wasm externref module does not separate dropping references or ownership from externref table,
            * so we need to track if dropped externref was owned by rust or was it a reference
@@ -629,11 +622,8 @@ export class Engine {
         handle_gpu_queue(
           pointerVec: number,
           length: number,
-          commandEncoder: { externref: GPUCommandEncoder; ownedByJS: true },
-          buffer: {
-            ownedByJS: false;
-            externref: Buffer<BufferUsageEnums.COPY_SRC, true>;
-          },
+          commandEncoder: externref<true, GPUCommandEncoder>,
+          buffer: externref<false, Buffer<BufferUsageEnums.COPY_SRC, true>>,
         ) {
           engine.gpu?.handle_gpu_queue(
             pointerVec,
@@ -654,7 +644,7 @@ export class Engine {
               .trimEnd(),
           );
         },
-        mesh_on_change(mesh: { externref: MainNode; ownedByJS: false }) {
+        mesh_on_change(mesh: externref<false, MainNode>) {
           mesh.externref.onMeshChange.forEach((cb) => cb());
         },
         mesh_on_collide(mesh_id: number, started: boolean) {

@@ -176,18 +176,18 @@ dependencies = [
 
 [[package]]
 name = "externref"
-version = "0.2.0"
+version = "0.3.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b078507c9badc1c2304de402f373950b30ef80b793096cd2a8c0312c8c676cad"
+checksum = "8018c56bcc62fc4d0d732489a0d399cae2158db04c40e6969a9fad02bb456a79"
 dependencies = [
  "externref-macro",
 ]
 
 [[package]]
 name = "externref-macro"
-version = "0.2.0"
+version = "0.3.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77107325d07454a4de518e92b1e061ded5af8aa32d52edb1fde60c813d1eff1b"
+checksum = "756cabe9a20e9db3727abeb7ce42c8659a1acceb351c6f8dcc75473475116bf3"
 dependencies = [
  "proc-macro2",
  "quote",
