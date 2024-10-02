@@ -16,13 +16,11 @@ export class IndexedColoredMesh extends SimpleIndexedMesh {
   constructor(
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps,
-    indicesView: rust_vec_ptr<'usize'>,
     simpleIndexedMeshProps?: SimpleIndexedMeshProps,
   ) {
     super(
       dataNodeProps,
       mainNodeProps,
-      indicesView,
       ColoredRenderPipeline,
       createVertexColorShader,
       createSimpleFragShader2,

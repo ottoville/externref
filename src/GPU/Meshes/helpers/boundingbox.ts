@@ -8,7 +8,6 @@ import {
 } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { Buffer, BufferUsageEnums } from '../../../webgpu-ts/index.js';
 import { RigidBody } from '../../../MainNode.js';
-import { create_rust_vec_ptr } from '../../../Math.js';
 import { IndexedDataNode } from '../../../nodes/IndexedDataNode.js';
 declare const engine: Engine;
 
@@ -49,7 +48,6 @@ export class BoundingBoxMesh extends IndexedDataNode {
         label: 'BoundingBox_' + targetNode.node.label,
         rigid_body: RigidBody.off,
       },
-      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
       true,
     );
     this.positions_count = 26;

@@ -2,7 +2,7 @@
 import { Terrain } from '../world/Terrain.js';
 import type { Scene } from '../Scene.js';
 
-import { TerraVector2, create_rust_vec_ptr } from '../Math.js';
+import { TerraVector2 } from '../Math.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import type { Engine } from '../engine.js';
 import {
@@ -36,7 +36,6 @@ class PlaneMesh extends IndexedDataNode {
         label: 'plane',
         rigid_body: RigidBody.off,
       },
-      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
       false,
     );
     this.drawable = new DrawableIndexed({

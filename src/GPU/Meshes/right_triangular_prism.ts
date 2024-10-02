@@ -1,5 +1,4 @@
-﻿import { create_rust_vec_ptr } from '../../Math.js';
-import type { Scene } from '../../Scene.js';
+﻿import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
 declare const engine: Engine;
@@ -34,7 +33,6 @@ export class RightTriangularPrism extends IndexedSingleColoredMesh {
         point_light,
         scenes,
       },
-      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
     );
     this.color = color;
   }

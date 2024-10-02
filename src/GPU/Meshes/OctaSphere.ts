@@ -1,5 +1,4 @@
-﻿import { create_rust_vec_ptr } from '../../Math.js';
-import type { Scene } from '../../Scene.js';
+﻿import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
 import { IndexedColoredMesh } from '../AbstractMeshes/IndexedColoredMesh.js';
 declare const engine: Engine;
@@ -46,7 +45,6 @@ export class OctaSphere extends IndexedColoredMesh {
         label: 'OctaSphere' + uid++,
         ...meshProperties,
       },
-      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
     );
 
     this.width = width;

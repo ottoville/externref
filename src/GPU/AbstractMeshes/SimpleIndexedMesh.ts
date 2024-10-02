@@ -29,7 +29,6 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
   constructor(
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps,
-    indicesView: rust_vec_ptr<'usize'>,
     createRenderPipeline: RenderPipelineProps0<
       ReturnType<typeof vertexShaderBuilder>,
       ReturnType<typeof fragmentShaderBuilder>
@@ -63,7 +62,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
       );
     }
     const strip = topology === 'triangle-strip' || topology === 'line-strip';
-    super(dataNodeProps, mainNodeProps, strip, indicesView);
+    super(dataNodeProps, mainNodeProps, strip);
     const primitiveState: GPUPrimitiveState = {
       frontFace: dataNodeProps.frontFace ?? 'cw',
       topology,

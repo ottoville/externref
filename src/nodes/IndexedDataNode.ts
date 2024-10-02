@@ -18,9 +18,6 @@ export class IndexedDataNode extends DataNode {
   onIndicesChange: (() => void)[] = [];
   set_indices(vec: rust_vec_ptr<'usize'>) {
     engine.rust.set_indices(this.geometry, ...vec);
-    if (this.drawable && !(this.drawable instanceof DrawableIndexed)) {
-      throw new Error('Node is not indexed');
-    }
     this.drawable?.setIndexBuffer(
       new Uint32Array(engine.rust.memory.buffer, vec[0], vec[1]),
     );
@@ -48,9 +45,6 @@ export class IndexedDataNode extends DataNode {
       len_vertices,
       cap_vertices,
     );
-    if (this.drawable && !(this.drawable instanceof DrawableIndexed)) {
-      throw new Error('Node is not indexed');
-    }
     this.drawable?.setIndexBuffer(indices);
     this.onIndicesChange.forEach((cb) => cb());
   }
@@ -70,12 +64,23 @@ export class IndexedDataNode extends DataNode {
   constructor(
     props: DataNodeProps,
     mainNodeProps: MainNodeProps | number,
-    indicesView?: rust_vec_ptr<'usize'>,
     strip = false,
   ) {
     super(props, mainNodeProps, strip);
-    if (typeof props.vertices !== 'number' && indicesView) {
-      this.set_indices(indicesView);
+    if (typeof props.vertices !== 'number') {
+      const indices_ptr = create_rust_vec_ptr(
+        engine.rust.indices_field_pointer(this.geometry),
+      );
+      if (indices_ptr[1] > 0) {
+        this.drawable?.setIndexBuffer(
+          new Uint32Array(
+            engine.rust.memory.buffer,
+            indices_ptr[0],
+            indices_ptr[1],
+          ),
+        );
+        this.onIndicesChange.forEach((cb) => cb());
+      }
     }
   }
 }

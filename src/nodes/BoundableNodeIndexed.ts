@@ -12,10 +12,9 @@ export abstract class BoundableNodeIndexed
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps,
     strip = false,
-    indicesView: rust_vec_ptr<'usize'>,
     onIndicesChange?: () => void,
   ) {
-    super(dataNodeProps, mainNodeProps, indicesView, strip);
+    super(dataNodeProps, mainNodeProps, strip);
     this.onIndicesChange.push(() => {
       if (onIndicesChange) onIndicesChange();
       this.rebuildTrianglePlanes();

@@ -151,7 +151,7 @@ export type rustWasm = {
     label_len: number,
     label_cap: number,
   ): number;
-  create_debug_mesh(
+  create_debug_mesh_normals(
     target_mesh_id: number,
     label_ptr: number,
     label_len: number,

@@ -20,7 +20,6 @@ import type {
 } from '../../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
 import { createGroundFragShader } from '../Shaders/Ground.frag.js';
-import { create_rust_vec_ptr } from '../../Math.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;
@@ -58,7 +57,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
         scenes,
       },
       false,
-      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
       () => {
         const collider_ptr = this.create_collider();
         engine.rust.add_collider(this.id, collider_ptr);

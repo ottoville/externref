@@ -14,13 +14,11 @@ export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
   constructor(
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps,
-    indicesView: rust_vec_ptr<'usize'>,
     simpleIndexedMeshProps?: SimpleIndexedMeshProps,
   ) {
     super(
       dataNodeProps,
       mainNodeProps,
-      indicesView,
       SimpleRenderPipeline,
       createSimpleVertShader,
       createSimpleFragShader2,

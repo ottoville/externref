@@ -1,5 +1,6 @@
 use crate::{
     mesh::{get_mesh_by_id, get_mesh_by_id_mut, Mesh},
+    vertices::{PositionAndNormal, VertexKind},
     Geometry,
 };
 
@@ -46,7 +47,7 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_debug_mesh(
+pub unsafe extern "C" fn create_debug_mesh_normals(
     target_mesh_id: usize,
     label_ptr: *mut u8,
     label_len: usize,
@@ -54,7 +55,7 @@ pub unsafe extern "C" fn create_debug_mesh(
 ) -> usize {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     let target = get_mesh_by_id(target_mesh_id);
-    Mesh::new(
+    let mesh_id = Mesh::new(
         0.0,
         0.0,
         1.0,
@@ -62,5 +63,52 @@ pub unsafe extern "C" fn create_debug_mesh(
         label,
         None,
         Some(target.mesh_property.clone()),
-    )
+    );
+    let mesh = get_mesh_by_id_mut(mesh_id);
+
+    let mut geometry = Geometry::new(
+        false,
+        false,
+        false,
+        false,
+        String::from("debugmesh_geometry_normals"),
+    );
+    let target_vertices = &target.get_geometry().vertices;
+    let mut vertices: Vec<PositionAndNormal> = Vec::with_capacity(target_vertices.length() * 2);
+    match &target_vertices {
+        VertexKind::PositionAndNormalAndUV(vector) => {
+            for position in vector {
+                let pos = PositionAndNormal {
+                    position: position.position.clone(),
+                    normal: position.normal.clone(),
+                };
+                vertices.push(pos.clone());
+                vertices.push(pos.clone());
+            }
+        },
+        VertexKind::PositionAndNormal(vector) => {
+            for position in vector {
+                let pos = PositionAndNormal {
+                    position: position.position.clone(),
+                    normal: position.normal.clone(),
+                };
+                vertices.push(pos.clone());
+                vertices.push(pos.clone());
+            }
+        },
+        VertexKind::PositionAndNormalAndColor(vector) => {
+            for position in vector {
+                let pos = PositionAndNormal {
+                    position: position.position.clone(),
+                    normal: position.normal.clone(),
+                };
+                vertices.push(pos.clone());
+                vertices.push(pos.clone());
+            }
+        }
+        _ => panic!("Vertices has no normals"),
+    };
+    geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
+    mesh.geometry = Some(Box::new(geometry));
+    return mesh_id;
 }

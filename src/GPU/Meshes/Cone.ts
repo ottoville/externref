@@ -1,5 +1,4 @@
-﻿import { create_rust_vec_ptr } from '../../Math.js';
-import type { Engine } from '../../engine.js';
+﻿import type { Engine } from '../../engine.js';
 import { MainNodeProps } from '../../MainNode.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
 declare const engine: Engine;
@@ -18,7 +17,6 @@ export class Cone extends IndexedSingleColoredMesh {
         vertices: geometry,
       },
       mainNodeProps,
-      create_rust_vec_ptr(engine.rust.indices_field_pointer(geometry)),
     );
     this.color = color;
   }
