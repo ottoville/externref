@@ -45,7 +45,7 @@ export class NormalsMesh extends DataNode {
       vertexBuffers: [
         [
           engine.rust.vertices_pointer(this.geometry),
-          engine.rust.vertices_count(geometry) * stride * 2,
+          engine.rust.vertices_count(geometry) * stride,
         ],
       ],
     });
