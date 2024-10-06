@@ -65,10 +65,9 @@ return output;
 >;
 
 export function createHelperVertShader(gpu: GPU) {
-  const pipelineLayout = gpu.shaders.terrainHeightsbindGroupTreePosition;
   const settings = Terrain.settings;
   return new VertexShaderBuilder(
-    [pipelineLayout] as const,
+    [gpu.shaders.terrainHeightsbindGroupTreePosition] as const,
     'helper.vert',
     ([
       ,

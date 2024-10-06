@@ -2,7 +2,6 @@ import { WorkerThread, WorkerReturn } from '../WorkerThread.js';
 import { Terrain } from '../world/Terrain.js';
 
 import type { Scene } from '../Scene.js';
-import { PlantsRenderPipeline } from '../GPU/RenderPipeLines/Plants.js';
 
 import type { Engine } from '../engine.js';
 import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
@@ -91,7 +90,9 @@ export class Plants extends MainNode {
     if (engine.gpu) {
       const renderPipeline = engine.gpu.createRenderPipelineBuilder(
         {
-          ...PlantsRenderPipeline,
+          connections: {
+            main: 'main',
+          },
           primitive: {
             cullMode: 'none',
             stripIndexFormat: 'uint16',

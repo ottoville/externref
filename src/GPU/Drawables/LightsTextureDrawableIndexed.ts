@@ -32,7 +32,7 @@ export class LightsTextureDrawableIndexed<
   R extends RenderPipelineProps<VertexShader, FragmentShader>,
   N extends IndexedDataNode = IndexedDataNode,
 > extends DrawableIndexed<R, N> {
-  textureBindGroup: BindGroup<
+  #textureBindGroup: BindGroup<
     BGLayout<{
       mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
       diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
@@ -81,10 +81,10 @@ export class LightsTextureDrawableIndexed<
       drawableDirectProps,
       drawableIndexedProps,
     );
-    this.textureBindGroup = textureBindGroup;
+    this.#textureBindGroup = textureBindGroup;
   }
   setTexture(texture: TextureView<Texture<TEXTURE_BINDING_TEXTURE>>) {
     this.texture = texture;
-    this.textureBindGroup.destroy();
+    this.#textureBindGroup.destroy();
   }
 }

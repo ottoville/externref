@@ -11,11 +11,6 @@ declare const engine: Engine;
 import { BindGroup } from '../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
 import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
-const WaterRenderPipeline = Object.freeze({
-  connections: {
-    main: 'main',
-  },
-} as const);
 
 export class Sea extends BoundableNodeSimple {
   override drawable:
@@ -40,7 +35,9 @@ export class Sea extends BoundableNodeSimple {
     if (engine.gpu) {
       const renderPipeline = engine.gpu.createRenderPipelineBuilder(
         {
-          ...WaterRenderPipeline,
+          connections: {
+            main: 'main',
+          },
           primitive: {
             frontFace: 'cw',
             stripIndexFormat: 'uint16',

@@ -15,13 +15,15 @@ export function createWaterVertShader(
   gpu: GPU,
   vertexBufferProps: VertexBufferProps,
 ) {
-  const pipelineLayout = gpu.bindGroupTextureWater;
   const buffers: VertexBufferLayout<typeof positionAttr> = {
     arrayStride: vertexBufferProps.stride * 4,
     attributes: positionAttr,
     stepMode: 'vertex',
   };
-  return new VertexShaderBuilder([pipelineLayout], 'water.vert').addFunction(
+  return new VertexShaderBuilder(
+    [gpu.bindGroupTextureWater],
+    'water.vert',
+  ).addFunction(
     'main',
     new VertexShaderFunction(
       WaterInput,

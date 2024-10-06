@@ -1,4 +1,3 @@
-import type { Engine } from '../../engine.js';
 import {
   DrawableDirect,
   DrawableDirectProps,
@@ -8,8 +7,6 @@ import { MainNode } from '../../MainNode.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import { DrawableProps } from './Drawable.js';
 import { RenderBundleEncoder } from '../../webgpu-ts/index.js';
-import { gpu_memory_index_size } from '../Shaders/ShaderBuilders.js';
-declare const engine: Engine;
 
 export class DrawableSimple<
   const R extends RenderPipelineProps,
@@ -27,22 +24,6 @@ export class DrawableSimple<
       firstVertex?: number;
     } = {},
   ) {
-    const firstPipelinelayout =
-      drawableProps.renderPipeline.builder.vertexShader.props
-        .pipelineLayouts[0];
-    if (firstPipelinelayout) {
-      const lastBindgroupLayout = firstPipelinelayout.bindGroupLayouts.at(-1);
-      if (lastBindgroupLayout === engine.gpu!.shaders.BindGroupLayoutPosition) {
-        drawableProps.bindGroups.push({
-          bindGroup: engine.gpu!.BindGroupPosition,
-          offsets: [
-            engine.rust.gpu_alignment(drawableProps.node.id) *
-              gpu_memory_index_size,
-          ],
-        });
-      }
-    }
-
     super(drawableProps, drawableDirectProps);
     this.#firstVertex = firstVertex;
   }

@@ -12,7 +12,6 @@ import {
   RenderBundleEncoder,
   type INDEX_BUFFER,
 } from '../../webgpu-ts/index.js';
-import { gpu_memory_index_size } from '../Shaders/ShaderBuilders.js';
 import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 import { create_rust_vec_ptr } from '../../Math.js';
 declare const engine: Engine;
@@ -47,22 +46,7 @@ export class DrawableIndexed<
       GPUIndexFormat = 'uint32',
     }: DrawableIndexedProps = {},
   ) {
-    super(
-      {
-        ...drawableProps,
-        bindGroups: [
-          {
-            bindGroup: engine.gpu!.BindGroupPosition,
-            offsets: [
-              engine.rust.gpu_alignment(drawableProps.node.id) *
-                gpu_memory_index_size,
-            ],
-          },
-          ...drawableProps.bindGroups,
-        ],
-      },
-      drawableDirectProps,
-    );
+    super(drawableProps, drawableDirectProps);
     this.setIndexBuffer(
       engine.rust.indices_pointer_from_geometry(this.node.geometry),
     );

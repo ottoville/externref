@@ -1,4 +1,4 @@
-﻿import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
+import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
 import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 
 import { Projection } from './GPU/Projection.js';
@@ -50,6 +50,7 @@ import {
   type FragmentShader,
   VertexShaderBuilder,
   FragmentShaderBuilder,
+  PipelineIntersection,
 } from './webgpu-ts/index.js';
 import { createSimpleFragShader } from './GPU/Shaders/Simple.frag.js';
 import {
@@ -274,10 +275,15 @@ export class GPU {
     vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
     fragmentShaderBuilder: (gpu: GPU) => F,
     vertexBufferProps: P,
-  ): RenderPipelineProps<
-    VertexShader<V['entryPoints'], V['pipelineLayouts']>,
-    FragmentShader
-  >;
+  ): PipelineIntersection<
+    V['pipelineLayouts'],
+    F['pipelineLayouts']
+  > extends never
+    ? never
+    : RenderPipelineProps<
+        VertexShader<V['entryPoints'], V['pipelineLayouts']>,
+        FragmentShader
+      >;
   createRenderPipelineBuilder<
     D extends RenderPipelineProps0<
       V,
@@ -294,10 +300,15 @@ export class GPU {
     vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
     fragmentShaderBuilder: (gpu: GPU) => F,
     vertexBufferProps: P,
-  ): RenderPipelineProps<
-    VertexShader<V['entryPoints'], V['pipelineLayouts']>,
-    FragmentShader
-  >;
+  ): PipelineIntersection<
+    V['pipelineLayouts'],
+    F['pipelineLayouts']
+  > extends never
+    ? never
+    : RenderPipelineProps<
+        VertexShader<V['entryPoints'], V['pipelineLayouts']>,
+        FragmentShader
+      >;
   createRenderPipelineBuilder<
     D extends RenderPipelineProps0<V, F, Omit<GPUPrimitiveState, 'topology'>>,
     V extends VertexShaderBuilder | VertexShader,
@@ -308,10 +319,15 @@ export class GPU {
     vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
     fragmentShaderBuilder: (gpu: GPU) => F,
     vertexBufferProps: P,
-  ): RenderPipelineProps<
-    VertexShader<V['entryPoints'], V['pipelineLayouts']>,
-    FragmentShader
-  >;
+  ): PipelineIntersection<
+    V['pipelineLayouts'],
+    F['pipelineLayouts']
+  > extends never
+    ? never
+    : RenderPipelineProps<
+        VertexShader<V['entryPoints'], V['pipelineLayouts']>,
+        FragmentShader
+      >;
   createRenderPipelineBuilder<
     D extends RenderPipelineProps0<V>,
     V extends VertexShaderBuilder | VertexShader,

@@ -16,18 +16,21 @@ export function creatDepthSlices(
     _gpu: GPU,
     _vertexBufferProps: VertexBufferProps,
   ) => {
-    return targetNode.renderPipeline.builder.vertexShader as VertexShader<{
-      main: VertexShaderFunction;
-    }>;
+    return targetNode.renderPipeline.builder.vertexShader as VertexShader<
+      {
+        // Need to assume main function.
+        main: VertexShaderFunction;
+      },
+      // Need to assume some same layout than createDebugDepthSlicesFragShader
+      [typeof gpu.shaders.positionAndTimeBindGroup]
+    >;
   };
-  const depthSlicesPipeline = Object.freeze({
-    connections: {
-      [gpu.renderPassScreen.entryPoint]: 'debug_depth_slices',
-    },
-  } as const);
   const renderPipeline = gpu.createRenderPipelineBuilder(
-    depthSlicesPipeline,
-
+    {
+      connections: {
+        [gpu.renderPassScreen.entryPoint]: 'debug_depth_slices',
+      },
+    },
     createDepthSlicesVertShader2,
     createDebugDepthSlicesFragShader,
     {

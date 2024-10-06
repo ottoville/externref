@@ -1,4 +1,3 @@
-import { NormalsPipeline } from '../../RenderPipeLines/NormalsPipeline.js';
 import { DrawableSimple } from '../../Drawables/DrawableSimple.js';
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DataNode } from '../../../nodes/DataNode.js';
@@ -14,7 +13,7 @@ export class NormalsMesh extends DataNode {
     const stride = 8 as Word<'dword'>;
     const mesh = engine.rust.create_debug_mesh_normals(
       targetNode.node.id,
-      ...create_rust_label('wireframe_' + targetNode.node.label),
+      ...create_rust_label('normals_' + targetNode.node.label),
     );
     const geometry = engine.rust.get_geometry(mesh);
 
@@ -27,7 +26,9 @@ export class NormalsMesh extends DataNode {
     );
     const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
       {
-        ...NormalsPipeline,
+        connections: {
+          main: 'main',
+        },
         primitive: {
           topology: 'line-list',
         },
