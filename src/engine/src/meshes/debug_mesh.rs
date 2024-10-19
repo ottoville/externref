@@ -1,6 +1,5 @@
 use crate::{
     mesh::{get_mesh_by_id, get_mesh_by_id_mut, Mesh},
-    vertices::{PositionAndNormal, VertexKind},
     Geometry,
 };
 
@@ -65,50 +64,16 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
         Some(target.mesh_property.clone()),
     );
     let mesh = get_mesh_by_id_mut(mesh_id);
+    let target_vertices = &target.get_geometry().vertices;
 
-    let mut geometry = Geometry::new(
+    mesh.positions_count = Some(target_vertices.length() * 2);
+    let geometry = Geometry::new(
         false,
         false,
         false,
         false,
         String::from("debugmesh_geometry_normals"),
     );
-    let target_vertices = &target.get_geometry().vertices;
-    let mut vertices: Vec<PositionAndNormal> = Vec::with_capacity(target_vertices.length() * 2);
-    match &target_vertices {
-        VertexKind::PositionAndNormalAndUV(vector) => {
-            for position in vector {
-                let pos = PositionAndNormal {
-                    position: position.position.clone(),
-                    normal: position.normal.clone(),
-                };
-                vertices.push(pos.clone());
-                vertices.push(pos.clone());
-            }
-        }
-        VertexKind::PositionAndNormal(vector) => {
-            for position in vector {
-                let pos = PositionAndNormal {
-                    position: position.position.clone(),
-                    normal: position.normal.clone(),
-                };
-                vertices.push(pos.clone());
-                vertices.push(pos.clone());
-            }
-        }
-        VertexKind::PositionAndNormalAndColor(vector) => {
-            for position in vector {
-                let pos = PositionAndNormal {
-                    position: position.position.clone(),
-                    normal: position.normal.clone(),
-                };
-                vertices.push(pos.clone());
-                vertices.push(pos.clone());
-            }
-        }
-        _ => panic!("Vertices has no normals"),
-    };
-    geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     mesh.geometry = Some(Box::new(geometry));
     return mesh_id;
 }

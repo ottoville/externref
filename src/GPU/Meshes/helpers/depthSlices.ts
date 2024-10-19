@@ -1,6 +1,5 @@
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import type { DataNode } from '../../../nodes/DataNode.js';
-import type { VertexBufferProps } from 'GPU.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import type { GPU } from '../../../GPU.js';
 import { createDebugDepthSlicesFragShader } from '../../Shaders/devtools/debug_depthSlices.frag.js';
@@ -12,10 +11,7 @@ export function creatDepthSlices(
   targetNode: DrawableDirect<DataNode>,
 ) {
   targetNode.remove();
-  const createDepthSlicesVertShader2 = (
-    _gpu: GPU,
-    _vertexBufferProps: VertexBufferProps,
-  ) => {
+  const createDepthSlicesVertShader2 = () => {
     return targetNode.renderPipeline.builder.vertexShader as VertexShader<
       {
         // Need to assume main function.
@@ -33,18 +29,18 @@ export function creatDepthSlices(
     },
     createDepthSlicesVertShader2,
     createDebugDepthSlicesFragShader,
-    {
-      stride: targetNode.node.vertices_stride,
-    },
   );
-  const vertexBuffer = targetNode.vertexBuffers[0]!.buffer;
+  const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
+  if (!gpuVertexBuffer) {
+    throw new Error('mesh does not have vertexbuffer');
+  }
   if (targetNode instanceof DrawableIndexed) {
     targetNode.node.drawable = new DrawableIndexed({
       bindGroups: targetNode.bindGroups.slice(1),
       node: targetNode.node,
       renderPasses: new Set([gpu.renderPassScreen]),
       renderPipeline,
-      vertexBuffers: [vertexBuffer],
+      vertexBuffers: [gpuVertexBuffer],
     });
   } else {
     targetNode.node.drawable = new DrawableSimple({
@@ -52,7 +48,7 @@ export function creatDepthSlices(
       node: targetNode.node,
       renderPasses: new Set([gpu.renderPassScreen]),
       renderPipeline,
-      vertexBuffers: [vertexBuffer],
+      vertexBuffers: [gpuVertexBuffer],
     });
   }
 }

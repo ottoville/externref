@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "env.prod.ts",
+    "node_modules",
+    "jestWorker.ts",
+    "workers",
+    "service-worker.ts",
+    "**/*.test.integration.ts",
+    "**/*.test.ts",
+    "cypress",
+    "cypress.config.ts",
+    "cypress.ci.config.ts"
+  ]
+}

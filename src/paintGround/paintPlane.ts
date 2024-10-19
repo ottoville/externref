@@ -70,9 +70,6 @@ export class paintPlane extends paintGround {
       },
       createPlaneAtGroundHeightVertShader,
       ground.gpu.shaders.ColorShader,
-      {
-        stride: 12 as Word<'dword'>,
-      },
     );
 
     this.#mesh = new PlaneMesh(renderPipeline);

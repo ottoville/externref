@@ -3,7 +3,7 @@ import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine } from '../../engine.js';
 import type { RenderPipelineProps0 } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import type { GPU, VertexBufferProps } from '../../GPU.js';
+import type { GPU } from '../../GPU.js';
 import {
   type AnyVertexStage,
   type BindGroupLayoutEntry,
@@ -33,10 +33,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
       ReturnType<typeof vertexShaderBuilder>,
       ReturnType<typeof fragmentShaderBuilder>
     >,
-    vertexShaderBuilder: (
-      gpu: GPU,
-      vertexBufferProps: VertexBufferProps,
-    ) => VertexShaderBuilder<{
+    vertexShaderBuilder: (gpu: GPU) => VertexShaderBuilder<{
       main: VertexShaderFunction<
         readonly {
           [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
@@ -83,7 +80,10 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
           dataNodeProps.vertices,
         );
         const vertices_len = this.vertices_count * this.vertices_stride;
-
+        // Add storage bit in order to pull vertices for debugging normals
+        if ((globals.env as string) === 'debug') {
+          usages |= BufferUsageEnums.STORAGE;
+        }
         vBufferGPU = new Buffer(
           {
             gpu: engine.gpu.device,
@@ -106,9 +106,6 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         { ...createRenderPipeline, primitive: primitiveState },
         vertexShaderBuilder,
         fragmentShaderBuilder,
-        {
-          stride: this.vertices_stride,
-        },
       );
       this.drawable = new DrawableIndexed({
         bindGroups: [],

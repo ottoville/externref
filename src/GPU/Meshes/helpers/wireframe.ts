@@ -1,33 +1,44 @@
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
-import { DebugLinesPipeline } from '../../RenderPipeLines/DebugLinesPipeline.js';
 import type { Engine } from '../../../engine.js';
 import { create_rust_label } from '../../../MainNode.js';
 import { createDebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { IndexedDataNode } from '../../../nodes/IndexedDataNode.js';
+import {
+  Struct,
+  StructProperty,
+  VertexBufferLayouts,
+} from 'webgpu-ts/index.js';
 declare const engine: Engine;
 export function createWireFrameMesh(
   targetNode: DrawableDirect<IndexedDataNode>,
 ) {
+  const buffer = targetNode.renderPipeline.builder.vertexShader.entryPoints[
+    'main'
+  ]!.vertexBufferLayouts as VertexBufferLayouts<
+    readonly [
+      {
+        readonly stepMode: 'vertex';
+        readonly struct: Struct<{
+          readonly position: StructProperty<'vec3<f32>'>;
+        }>;
+      },
+    ]
+  >;
+
   const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
   if (gpuVertexBuffer) {
-    const vertexBufferStrideBytes =
-      targetNode.renderPipeline.builder.vertexShader.props.entryPoints['main']
-        ?.vertexBufferLayout[0]?.arrayStride ??
-      targetNode.node.vertices_stride * 4;
-
     const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
       {
-        ...DebugLinesPipeline,
+        connections: {
+          main: 'main',
+        },
         primitive: {
           topology: 'line-list',
         },
       },
-      createDebugBoundingBoxVertShader,
+      createDebugBoundingBoxVertShader(buffer),
       engine.gpu!.shaders.ColorShader,
-      {
-        stride: (vertexBufferStrideBytes / 4) as Word<'dword'>,
-      },
     );
     const mesh = engine.rust.create_debug_mesh_wireframe(
       targetNode.node.id,

@@ -6,6 +6,7 @@ import {
   WGSLcode,
   VertexShaderBuilder,
   VertexShader,
+  VertexBufferLayouts,
 } from '../../webgpu-ts/index.js';
 import { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
@@ -18,7 +19,7 @@ import type { GPU } from '../../GPU.js';
 
 const shaderFunction = new VertexShaderFunction(
   colorPositionOutput,
-  [],
+  new VertexBufferLayouts([]),
   (
     [
       ,

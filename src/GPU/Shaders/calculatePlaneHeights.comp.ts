@@ -1,4 +1,8 @@
-import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
+import {
+  IntArray,
+  PlaneArray,
+  PositionNormalUvVertices,
+} from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import {
@@ -25,7 +29,7 @@ export function createCalculatePlaneHeights(
           },
           visibility: ShaderStage.COMPUTE,
         },
-        Vertices,
+        PositionNormalUvVertices,
       ),
     }),
     new BGLayout(gpu.device, 'slopesAndFacesBindGroupLayout', {
@@ -75,7 +79,10 @@ export function createCalculatePlaneHeights(
         new ComputeShaderFunction<
           readonly [
             {
-              vertices: BufLayout<ShaderStage.COMPUTE, typeof Vertices>;
+              vertices: BufLayout<
+                ShaderStage.COMPUTE,
+                typeof PositionNormalUvVertices
+              >;
             },
             {
               facet12: BufLayout<ShaderStage.COMPUTE, typeof PlaneArray>;

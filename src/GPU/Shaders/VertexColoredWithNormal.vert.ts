@@ -1,31 +1,31 @@
 import {
   type BufLayout,
   type ShaderStage,
+  VertexBufferLayouts,
   VertexShaderBuilder,
   VertexShaderFunction,
   WGSLcode,
 } from '../../webgpu-ts/index.js';
-import { GPU, VertexBufferProps } from '../../GPU.js';
-import { type Scene, typicalOutput } from './structs/Structs.js';
+import type { GPU } from '../../GPU.js';
+import {
+  PositionNormalColorVertice,
+  type Scene,
+  typicalOutput,
+} from './structs/Structs.js';
 import { createPickOutput } from './SingleColoredWithNormal.vert.js';
-import { simpleAttributesWithColor } from './structs/Attributes.js';
 
 /**
   Shader where each vertex carries a color property
 */
-export function createVertexColorShader(
-  gpu: GPU,
-  vertexBufferProps: VertexBufferProps,
-) {
+const buffers = new VertexBufferLayouts([
+  {
+    stepMode: 'vertex',
+    struct: PositionNormalColorVertice,
+  },
+]);
+export function createVertexColorShader(gpu: GPU) {
   const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
-  const arrayStride = vertexBufferProps.stride * 4;
-  const buffers = Object.freeze([
-    {
-      arrayStride,
-      attributes: simpleAttributesWithColor,
-      stepMode: 'vertex',
-    },
-  ] as const);
+
   return new VertexShaderBuilder([pipelineLayout] as const, 'VertexColor.vert')
     .addFunction(
       'main',

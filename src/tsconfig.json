@@ -37,14 +37,13 @@
   },
   "include": ["**/*.ts", "**/*.tsx", "./rustwasm/*.js", "game.ts"],
   "exclude": [
+    "env.dev.ts",
     "node_modules",
     "jestWorker.ts",
     "workers",
-    "lib",
     "service-worker.ts",
     "**/*.test.integration.ts",
     "**/*.test.ts",
-    "tests.json",
     "cypress",
     "cypress.config.ts",
     "cypress.ci.config.ts"

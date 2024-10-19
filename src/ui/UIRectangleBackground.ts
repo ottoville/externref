@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import type { UIRectangleProps } from './UIRectangle.js';
 import type { TextUV } from './UIRectangleTextOnly.js';
 import { UIRectangleText } from './UIRectangleText.js';

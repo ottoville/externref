@@ -59,9 +59,6 @@ export class SimpleMesh extends BoundableNodeSimple {
         SimpleRenderPipeline,
         createSimpleVertShader,
         createSimpleFragShader2,
-        {
-          stride: 8 as Word<'dword'>,
-        },
       );
       this.drawable = new DrawableSimple({
         bindGroups: [],

@@ -6,6 +6,7 @@ import {
   VertexBuildin,
   VertexShaderBuilder,
   VertexShader,
+  VertexBufferLayouts,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import { PositionOutput, type Scene } from './structs/Structs.js';
@@ -39,7 +40,7 @@ export function createSunVertShader(gpu: GPU) {
     'main',
     new VertexShaderFunction(
       PositionOutput,
-      [],
+      new VertexBufferLayouts([]),
       ([
         ,
         /*{ uniforms, }*/ {

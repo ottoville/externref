@@ -70,7 +70,6 @@ export class Sun extends MainNode {
       },
       createSunVertShader,
       createSingleColorFragShader,
-      undefined,
     );
     this.drawable = new DrawableSimple({
       bindGroups: [],

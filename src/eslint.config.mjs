@@ -1,11 +1,12 @@
-import globals from "globals";
-import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
-import  eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import pluginPromise from 'eslint-plugin-promise'
+import globals from 'globals';
+import pluginJs from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import pluginPromise from 'eslint-plugin-promise';
+
 export default [
-  {files: ["**/*.{cjs,ts,tsx}"]},
-  {languageOptions: { globals: globals.browser }},
+  { files: ['**/*.{cjs,ts,tsx}'] },
+  { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   eslintPluginPrettierRecommended,
@@ -18,19 +19,34 @@ export default [
     },
   },
   {
-    ignores: ["webpack.config*", "webgpu-ts/dist", "workers", "**/*.cjs",
-      "tests", "target", "teardown.js", "setup.js", "puppeteer_environment.js","jest.integration.config.js",
-    "jest.config.js", "eslint.config.mjs", "cypress", "cypress.config.ts", "cypress.ci.config.ts",
-  "**/*.test.ts", "**/*test.mjs"]
+    ignores: [
+      'webpack.config*',
+      'webgpu-ts/dist',
+      'workers',
+      '**/*.cjs',
+      'tests',
+      'target',
+      'teardown.js',
+      'setup.js',
+      'puppeteer_environment.js',
+      'jest.integration.config.js',
+      'jest.config.js',
+      'eslint.config.mjs',
+      'cypress',
+      'cypress.config.ts',
+      'cypress.ci.config.ts',
+      '**/*.test.ts',
+      '**/*test.mjs',
+      'env.dev.ts',
+    ],
   },
   {
-    "plugins": {
+    plugins: {
       promise: pluginPromise,
-  }
+    },
   },
   {
     rules: {
-
       'no-cond-assign': 'off',
       'no-this-alias': 'off',
       'require-atomic-updates': 2,
@@ -49,13 +65,12 @@ export default [
       '@typescript-eslint/no-explicit-any': ['error'],
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-useless-constructor': 'error',  
-      "no-unused-vars": "off",
+      '@typescript-eslint/no-useless-constructor': 'error',
+      'no-unused-vars': 'off',
       'promise/catch-or-return': 'error',
-      "no-unused-private-class-members": "off",
-      "no-var": "off",
+      'no-unused-private-class-members': 'off',
+      'no-var': 'off',
       'require-await': 2,
-
 
       // Style rules
       'object-curly-spacing': [2, 'always'],
@@ -85,6 +100,6 @@ export default [
       'block-spacing': ['error'],
       'comma-spacing': ['error'],
       semi: ['error', 'always'],
-    }
-},
+    },
+  },
 ];

@@ -1,4 +1,4 @@
-import { Vertices } from './structs/Structs.js';
+import { PositionNormalUvVertices } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import {
@@ -34,7 +34,7 @@ export function CreateGroundFromHeightMap(
           },
           visibility: ShaderStage.COMPUTE,
         },
-        Vertices,
+        PositionNormalUvVertices,
       ),
     }),
   ] as const;
@@ -61,7 +61,10 @@ export function CreateGroundFromHeightMap(
           [
             {
               pixels: TextLayout<ShaderStage.COMPUTE, 'texture_2d<f32>'>;
-              positions: BufLayout<ShaderStage.COMPUTE, typeof Vertices>;
+              positions: BufLayout<
+                ShaderStage.COMPUTE,
+                typeof PositionNormalUvVertices
+              >;
             },
           ]
         >(

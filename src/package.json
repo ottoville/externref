@@ -10,7 +10,7 @@
     "buildWasm": "wat2wasm.exe collider\\collider.wat --debug-names -o ..\\wwwroot\\collider\\colliderO.wasm",
     "buildWasmSimd": "pwsh -Command ./wat2wasm collider/colliderSIMD2.wat --debug-names -o ../wwwroot/collider/colliderSimd.wasm",
     "buildWasmSimd-prod": "pwsh -Command \"./wat2wasm collider/colliderSIMD2.wat -o ../wwwroot/collider/colliderSimd.wasm\"",
-    "build": "tsc -b && npm run buildWasmSimd && npm run buildRust && npm run build-webpack-debug",
+    "build": "tsc --project tsconfig.debug.json && npm run buildWasmSimd && npm run buildRust && npm run build-webpack-debug",
     "build-prod": "tsc -b  && npm run buildWasmSimd-prod && npm run buildRust-prod && npm run build-webpack-prod",
     "build-webpack-debug": "webpack --config webpack.config.canvas.debug.mjs && webpack --config webpack.config.devtools.debug.mjs",
     "build-webpack-prod": "webpack --config webpack.config.canvas.mjs && webpack --config webpack.config.devtools.mjs",
@@ -46,10 +46,10 @@
   },
   "devDependencies": {
     "@azure/static-web-apps-cli": "2.0.1",
-    "@eslint/js": "9.9.0",
+    "@eslint/js": "9.13.0",
     "@frsource/cypress-plugin-visual-regression-diff": "3.3.10",
     "cypress": "13.6.2",
-    "eslint": "9.9.0",
+    "eslint": "9.13.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-prettier": "5.2.1",
     "eslint-plugin-promise": "7.1.0",
@@ -60,6 +60,6 @@
     "puppeteer-core": "20.5.0",
     "source-map-loader": "4.0.1",
     "ts-jest": "29.1.5",
-    "typescript-eslint": "8.1.0"
+    "typescript-eslint": "8.10.0"
   }
 }

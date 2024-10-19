@@ -9,7 +9,7 @@ import {
 } from '../../webgpu-ts/index.js';
 
 export function createUIFragmentShader(gpu: GPU) {
-  return new FragmentShaderBuilder([gpu.canvasRootLayout] as const, 'UI.frag')
+  return new FragmentShaderBuilder([gpu.canvasRootLayout], 'UI.frag')
     .addFunction(
       'main',
       new FragmentShaderFunction(

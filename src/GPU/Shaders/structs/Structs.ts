@@ -1,161 +1,196 @@
 /* eslint-disable sort-keys */
 
-import { Struct } from '../../../webgpu-ts/index.js';
+import { Struct, StructProperty } from '../../../webgpu-ts/index.js';
 export const tileCount = [32, 18, 48] as const;
 
 export const typicalOutput = new Struct('Output', {
-  fragCoord: ['@builtin(position)', 'vec4<f32>'],
-  normal: ['@location(0)', 'vec3<f32>'],
-  id: ['@location(1) @interpolate(flat)', 'u32'],
-  color: ['@location(2)', 'vec3<f32>'],
-  position: ['@location(3)', 'vec3<f32>'],
-  scenes: ['@location(4) @interpolate(flat)', 'u32'],
+  fragCoord: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  normal: new StructProperty('@location(0)', 'vec3<f32>'),
+  id: new StructProperty('@location(1) @interpolate(flat)', 'u32'),
+  color: new StructProperty('@location(2)', 'vec3<f32>'),
+  position: new StructProperty('@location(3)', 'vec3<f32>'),
+  scenes: new StructProperty('@location(4) @interpolate(flat)', 'u32'),
 });
 export const fragOutput = new Struct('Output', {
-  fragCoord: ['@builtin(position)', 'vec4<f32>'],
+  fragCoord: new StructProperty('@builtin(position)', 'vec4<f32>'),
 });
 export const pickOutput = new Struct('PickOutput', {
-  Position: ['@builtin(position)', 'vec4<f32>'],
-  id: ['@location(0) @interpolate(flat)', 'u32'],
+  Position: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  id: new StructProperty('@location(0) @interpolate(flat)', 'u32'),
 });
 export const pickOutputFragment = new Struct('PickOutput', {
-  ID: ['@location(0)', 'u32'],
+  ID: new StructProperty('@location(0)', 'u32'),
 });
 export const colorPositionOutput = new Struct('Output', {
-  position: ['@builtin(position)', 'vec4<f32>'],
-  color: ['@location(0)', 'vec3<f32>'],
+  position: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  color: new StructProperty('@location(0)', 'vec3<f32>'),
 });
 export const diffuseOutput = new Struct('Output', {
-  Diffuse: ['@location(0)', 'vec4<f32>'],
+  Diffuse: new StructProperty('@location(0)', 'vec4<f32>'),
 });
 export const Scene = new Struct('Scene', {
-  modelViewProjection: ['', 'mat4x4<f32>'],
-  view: ['', 'mat4x4<f32>'],
-  viewPosition: ['', 'vec3<f32>'],
+  modelViewProjection: new StructProperty('', 'mat4x4<f32>'),
+  view: new StructProperty('', 'mat4x4<f32>'),
+  viewPosition: new StructProperty('', 'vec3<f32>'),
 });
 export const Time = new Struct('Time', {
-  time: ['', 'u32'],
-  delta: ['', 'f32'],
+  time: new StructProperty('', 'u32'),
+  delta: new StructProperty('', 'f32'),
 });
+
+const vec2f32 = new StructProperty('', 'vec2<f32>');
+
 export const ScreenDimensions = new Struct('Screen_Dimensions', {
-  screenDimensions: ['', 'vec2<f32>'],
-  screendimensions_ratio: ['', 'vec2<f32>'],
+  screenDimensions: vec2f32,
+  screendimensions_ratio: vec2f32,
 });
 const ClusterBounds = new Struct('ClusterBounds', {
-  minAABB: ['', 'vec4<f32>'],
-  maxAABB: ['', 'vec4<f32>'],
+  minAABB: new StructProperty('', 'vec4<f32>'),
+  maxAABB: new StructProperty('', 'vec4<f32>'),
 });
 export const ProjectionStruct = new Struct('Projection', {
-  inversed_projection: ['', 'mat4x4<f32>'],
-  reversed_projection: ['', 'mat4x4<f32>'],
-  projectionFarPlane: ['', 'mat4x4<f32>'],
-  zNear: ['', 'f32'],
-  zFar: ['', 'f32'],
-  z_near_multiplied_far: ['', 'f32'],
-  z_near_substracted_far: ['', 'f32'],
-  slice_scale: ['', 'f32'],
-  slice_bias: ['', 'f32'],
+  inversed_projection: new StructProperty('', 'mat4x4<f32>'),
+  reversed_projection: new StructProperty('', 'mat4x4<f32>'),
+  projectionFarPlane: new StructProperty('', 'mat4x4<f32>'),
+  zNear: new StructProperty('', 'f32'),
+  zFar: new StructProperty('', 'f32'),
+  z_near_multiplied_far: new StructProperty('', 'f32'),
+  z_near_substracted_far: new StructProperty('', 'f32'),
+  slice_scale: new StructProperty('', 'f32'),
+  slice_bias: new StructProperty('', 'f32'),
 });
 export const IntArray = new Struct('IntArray', {
-  numbers: ['', 'array<i32>'],
+  numbers: new StructProperty('', 'array<i32>'),
 });
 const Plane = new Struct('Plane', {
-  norm: ['', 'vec3<f32>'],
-  d: ['', 'f32'],
+  norm: new StructProperty('', 'vec3<f32>'),
+  d: new StructProperty('', 'f32'),
 });
 export const PlaneArray = new Struct(
   'PlaneArray',
   {
-    plane: ['', 'array<Plane>'],
+    plane: new StructProperty('', 'array<Plane>'),
   },
   [Plane],
 );
-const PositionAndRotate = new Struct('PositionAndRotate', {
-  position: ['', 'vec3<f32>'],
-  rotation: ['', 'f32'],
+export const PositionAndRotate = new Struct('PositionAndRotate', {
+  position: new StructProperty('', 'vec3<f32>'),
+  rotation: new StructProperty('', 'f32'),
 });
 export const PositionAndRotateArray = new Struct(
   'PositionAndRotateArray',
   {
-    arr: ['', 'array<PositionAndRotate>'],
+    arr: new StructProperty('', 'array<PositionAndRotate>'),
   },
   [PositionAndRotate],
 );
 export const FloatArray = new Struct('FloatArray', {
-  numbers: ['', 'array<f32>'],
+  numbers: new StructProperty('', 'array<f32>'),
+});
+export const float2f32 = new Struct('float2f32', {
+  numbers: vec2f32,
+});
+export const float4f32 = new Struct('FloatArray', {
+  numbers: new StructProperty('', 'vec4<f32>'),
 });
 export const Vec2Array = new Struct('Vec2Array', {
-  vectors: ['', 'array<vec2<f32>>'],
+  vectors: new StructProperty('', 'array<vec2<f32>>'),
 });
-const Vertice = new Struct('Vertice', {
-  position: ['', 'vec3<f32>'],
-  normal: ['', 'vec3<f32>'],
-  uv: ['@size(16)', 'vec2<f32>'],
+
+export const Vec4Array = new Struct('Vec4Array', {
+  vectors: new StructProperty('', 'array<vec4<f32>>'),
 });
 export const PositionOutput = new Struct('Output', {
-  Position: ['@builtin(position)', 'vec4<f32>'],
+  Position: new StructProperty('@builtin(position)', 'vec4<f32>'),
 });
 export const UI_Input = new Struct('Output', {
-  Position: ['@builtin(position)', 'vec4<f32>'],
-  v_uv: ['@location(0)', 'vec2<f32>'],
+  Position: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  v_uv: new StructProperty('@location(0)', 'vec2<f32>'),
 });
 export const WaterInput = new Struct('Output', {
-  Position: ['@builtin(position)', 'vec4<f32>'],
-  v_uv: ['@location(0)', 'vec4<f32>'],
-  position: ['@location(1)', 'vec4<f32>'],
-  id: ['@location(2) @interpolate(flat)', 'u32'],
+  Position: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  v_uv: new StructProperty('@location(0)', 'vec4<f32>'),
+  position: new StructProperty('@location(1)', 'vec4<f32>'),
+  id: new StructProperty('@location(2) @interpolate(flat)', 'u32'),
 });
 export const GroundInput = new Struct('Output', {
-  fragCoord: ['@builtin(position)', 'vec4<f32>'],
-  v_uv: ['@location(0)', 'vec2<f32>'],
-  normal: ['@location(1)', 'vec3<f32>'],
-  position: ['@location(2)', 'vec3<f32>'],
-  id: ['@location(3) @interpolate(flat)', 'u32'],
-  scenes: ['@location(4) @interpolate(flat)', 'u32'],
+  fragCoord: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  v_uv: new StructProperty('@location(0)', 'vec2<f32>'),
+  normal: new StructProperty('@location(1)', 'vec3<f32>'),
+  position: new StructProperty('@location(2)', 'vec3<f32>'),
+  id: new StructProperty('@location(3) @interpolate(flat)', 'u32'),
+  scenes: new StructProperty('@location(4) @interpolate(flat)', 'u32'),
 });
-export const Vertices = new Struct(
-  'Vertices',
+const vertexPosition = new StructProperty(
+  '@size(16)',
+  'vec3<f32>',
+  'vec4<f32>',
+);
+const vertexNormal = new StructProperty('@size(16)', 'vec3<f32>');
+export const PositionVertice = new Struct('Vertice', {
+  position: vertexPosition,
+});
+export const PositionNormalVertice = new Struct('PositionNormalVertice', {
+  position: vertexPosition,
+  normal: vertexNormal,
+});
+export const PositionUvVertice = new Struct('PositionUvVertice', {
+  position: vec2f32,
+  uv: vec2f32,
+});
+export const PositionNormalUvVertice = new Struct('PositionNormalUvVertice', {
+  position: vertexPosition,
+  normal: vertexNormal,
+  uv: new StructProperty('@size(16)', 'vec2<f32>'),
+});
+export const PositionNormalColorVertice = new Struct(
+  'PositionNormalColorVertice',
   {
-    vert: ['', 'array<Vertice>'],
+    position: vertexPosition,
+    normal: vertexNormal,
+    color: new StructProperty('@size(16)', 'vec3<f32>'),
   },
-  [Vertice],
+);
+export const PositionNormalUvVertices = new Struct(
+  'PositionNormalUvVertices',
+  {
+    vert: new StructProperty('', 'array<PositionNormalUvVertice>'),
+  },
+  [PositionNormalUvVertice],
 );
 export const Indices = new Struct('Indices', {
-  numbers: ['', 'array<u32>'],
+  numbers: new StructProperty('', 'array<u32>'),
 });
 
 export const Lights = new Struct('Lights', {
-  length: ['', 'u32'],
-  pointers: ['', 'array<u32>'],
+  length: new StructProperty('', 'u32'),
+  pointers: new StructProperty('', 'array<u32>'),
 });
 export const Clusters = new Struct(
   'Clusters',
   {
-    bounds: [
+    bounds: new StructProperty(
       '',
       `array<ClusterBounds, ${tileCount[0] * tileCount[1] * tileCount[2]}>`,
-    ], //32 * 18 * 48 = total tiles = 27648
-    lightsCount: ['', 'array<u32, 27648>'],
-    lights: [
+    ), //32 * 18 * 48 = total tiles = 27648
+    lightsCount: new StructProperty('', 'array<u32, 27648>'),
+    lights: new StructProperty(
       '',
       `array<u32, ${tileCount[0] * tileCount[1] * tileCount[2] * 63}>`,
-    ], //27648 * 63 = 1741824`,
+    ), //27648 * 63 = 1741824`,
   },
   [ClusterBounds],
 );
 
 export const ViewUniforms = new Struct('ViewUniforms', {
-  modelViewProjectionMatrix: ['', 'mat4x4<f32>'],
-  view: ['', 'mat4x4<f32>'],
-  viewPosition: ['', 'vec3<f32>'],
+  modelViewProjectionMatrix: new StructProperty('', 'mat4x4<f32>'),
+  view: new StructProperty('', 'mat4x4<f32>'),
+  viewPosition: new StructProperty('', 'vec3<f32>'),
 });
 export const Depth_And_Mesh = new Struct('Depth_And_Mesh', {
-  depth: ['', 'f32'],
-  mesh: ['', 'u32'],
+  depth: new StructProperty('', 'f32'),
+  mesh: new StructProperty('', 'u32'),
 });
 export const Mouse = new Struct('Mouse', {
-  position: ['', 'vec2<i32>'],
-});
-export const UIUniforms = new Struct('UIUniforms', {
-  translate: ['', 'vec2<f32>'],
+  position: new StructProperty('', 'vec2<i32>'),
 });

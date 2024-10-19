@@ -1,42 +1,53 @@
 import {
-  type VertexBufferLayout,
   VertexShader,
   VertexShaderFunction,
   type ShaderStage,
   type BufLayout,
   type RenderPipelineLayout,
   WGSLcode,
+  VertexBufferLayouts,
 } from '../../webgpu-ts/index.js';
 import { GPU } from '../../GPU.js';
-import { type Scene, colorPositionOutput } from './structs/Structs.js';
+import {
+  PositionVertice,
+  type Scene,
+  colorPositionOutput,
+} from './structs/Structs.js';
 
 type BindLayouts = [
   GPU['shaders']['sizeBindGroupLayout'],
   GPU['shaders']['uniformBindGroupLayoutWithTime'],
   GPU['shaders']['BindGroupLayoutPosition'],
 ];
+const buffers = new VertexBufferLayouts([
+  {
+    stepMode: 'vertex',
+    struct: PositionVertice,
+  },
+]);
+
 export class Plane extends VertexShader {
-  constructor(
-    pipelineLayout: RenderPipelineLayout<BindLayouts>,
-    buffers: VertexBufferLayout,
-  ) {
+  constructor(pipelineLayout: RenderPipelineLayout<BindLayouts>) {
     super({
       entryPoints: {
         main: new VertexShaderFunction(
           colorPositionOutput,
-          [buffers],
-          ([
-            ,
-            /*{uniforms,}*/ {
-              scene /*time, clusters_array, meshes, projection*/,
-            },
-            ,
-            { world },
-          ]) => WGSLcode/* wgsl */ `
+          buffers,
+          (
+            [
+              ,
+              /*{uniforms,}*/ {
+                scene /*time, clusters_array, meshes, projection*/,
+              },
+              ,
+              { world },
+            ],
+            [{ position }],
+          ) => WGSLcode/* wgsl */ `
                 var output:Output;
                 var worldPos:vec4<f32> = ${world.prop(
                   'transformation',
-                )} * vec4<f32>(position.xyz, 1.0);
+                )} * ${position};
                 output.Position = ${scene.prop(
                   'modelViewProjection',
                 )} * worldPos;

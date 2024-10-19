@@ -936,6 +936,7 @@ export class Engine {
     public showErrorError: (e: Error) => void,
     GPUDataSize: number,
   ) {
+    console.log('environment:', globals.env);
     if (nodes) {
       this.canvas = nodes.canvas;
       //@ts-expect-error Way to manually open devtools if UI is not working

@@ -1,77 +1,49 @@
 import {
-  type VertexBufferLayout,
   VertexShaderFunction,
   ShaderStage,
   type BufLayout,
   WGSLcode,
   VertexShaderBuilder,
+  VertexBufferLayouts,
 } from '../../webgpu-ts/index.js';
-import { GPU, VertexBufferProps } from '../../GPU.js';
+import { GPU } from '../../GPU.js';
 import {
+  PositionAndRotate,
   type Scene,
   type Time,
   colorPositionOutput,
+  float2f32,
+  float4f32,
 } from './structs/Structs.js';
 
-export const positionAttr = Object.freeze({
-  position: {
-    format: 'float32x4',
-    offset: 0,
-    shaderFormat: 'vec4<f32>',
-    shaderLocation: 0,
+const buffers = new VertexBufferLayouts([
+  {
+    stepMode: 'instance',
+    struct: PositionAndRotate,
   },
-} as const);
-
-export const shapeAttr = Object.freeze({
-  shape: {
-    format: 'float32x4',
-    offset: 0,
-    shaderFormat: 'vec4<f32>',
-    shaderLocation: 1,
+  {
+    stepMode: 'instance',
+    struct: float4f32,
   },
-} as const);
-
-export const vertexPositionAttr = Object.freeze({
-  vertex_position: {
-    format: 'float32x2',
-    offset: 0,
-    shaderFormat: 'vec2<f32>',
-    shaderLocation: 2,
+  {
+    stepMode: 'vertex',
+    struct: float2f32,
   },
-} as const);
+]);
 
-export function createGrassVertShader(
-  gpu: GPU,
-  vertexBufferProps: VertexBufferProps,
-) {
+export function createGrassVertShader(gpu: GPU) {
   const pipelineLayout = gpu.shaders.rootCameralayout;
-  const buffers: [
-    VertexBufferLayout<typeof positionAttr>,
-    VertexBufferLayout<typeof shapeAttr>,
-    VertexBufferLayout<typeof vertexPositionAttr>,
-  ] = [
-    {
-      arrayStride: vertexBufferProps.stride * 4,
-      attributes: positionAttr,
-      stepMode: 'instance',
-    },
-    {
-      arrayStride: 4 * 4,
-      attributes: shapeAttr,
-      stepMode: 'instance',
-    },
-    {
-      arrayStride: 8,
-      attributes: vertexPositionAttr,
-      stepMode: 'vertex',
-    },
-  ];
+
   const shaderFunction = new VertexShaderFunction(
     colorPositionOutput,
     buffers,
     (
       [, { scene, time }],
-      [{ position }, { shape }, { vertex_position }],
+      [
+        { position, rotation },
+        { numbers: shape },
+        { numbers: vertex_position },
+      ],
     ) => WGSLcode/* wgsl */ `
            var output:Output;
            //ambient = lights.ambient;
@@ -101,8 +73,8 @@ export function createGrassVertShader(
          
              //rotate
             var rotateAmountWind:f32 =windDirection*windRotate;
-            var c:f32  = cos((${position}.w+rotateAmountWind)/2.0);
-            var s:f32  = sin((${position}.w+rotateAmountWind)/2.0);
+            var c:f32  = cos((${rotation}+rotateAmountWind)/2.0);
+            var s:f32  = sin((${rotation}+rotateAmountWind)/2.0);
             var m:mat3x3<f32> = mat3x3<f32>(
                 vec3<f32>(c,     0.0,    s),
                 vec3<f32>(0.0,   1.0,    0.0),
@@ -116,7 +88,7 @@ export function createGrassVertShader(
             var scaled:vec3<f32> =${shape}.x*vertice;
          
             
-            var worldPos:vec4<f32> = vec4<f32>(${position}.xyz, 1.0) + vec4<f32>(scaled.x, scaled.y, scaled.z, 0.0);
+            var worldPos:vec4<f32> = vec4<f32>(${position}, 1.0) + vec4<f32>(scaled.x, scaled.y, scaled.z, 0.0);
            // var viewDirectionW:vec3<f32> = normalize(${scene.prop(
              'viewPosition',
            )} - worldPos.xyz);

@@ -1,4 +1,4 @@
-import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
+﻿import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
 import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 
 import { Projection } from './GPU/Projection.js';
@@ -16,12 +16,8 @@ import type {
   RenderPipelineProps,
   RenderPipelineProps0,
 } from './GPU/RenderPipeline.js';
-import { tileCount, UIUniforms } from './GPU/Shaders/structs/Structs.js';
-import {
-  createUIVertShader,
-  position_uv_attrs,
-  UIVertShader,
-} from './GPU/Shaders/UI.vert.js';
+import { tileCount, float2f32 } from './GPU/Shaders/structs/Structs.js';
+import { createUIVertShader, UIVertShader } from './GPU/Shaders/UI.vert.js';
 import { createUIFragmentShader, UIFragShader } from './GPU/Shaders/UI.frag.js';
 import {
   BGLayout,
@@ -57,6 +53,7 @@ import {
   createShaderBuilders,
   gpu_memory_index_size,
 } from './GPU/Shaders/ShaderBuilders.js';
+import { StructProperty } from './webgpu-ts/index.js';
 
 declare const engine: Engine;
 let curSecond = 0;
@@ -208,7 +205,7 @@ export class GPU {
 
   readonly updateViewShader: UpdateView;
   readonly BindGroupLayoutCanvas: BGLayout<{
-    uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>;
+    uniforms: BufLayout<ShaderStage.VERTEX, typeof float2f32>;
     texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
   }>;
   destroyed = false;
@@ -233,25 +230,35 @@ export class GPU {
   }>;
   shaders: ReturnType<typeof createShaderBuilders>;
   meshUniforms: Struct<{
-    transformation: ['', 'mat4x4<f32>'];
-    transformation_normals: ['', 'mat3x3<f32>'];
-    color: ['@size(16)', 'vec3<f32>'];
-    ambient: ['@size(12)', 'vec3<f32>'];
-    shadow: ['', 'f32'];
-    spot_light: ['@size(16)', 'vec3<f32>'];
-    id: ['', 'u32'];
-    point_light_squared: ['', 'f32']; //30
-    directional_light: ['', 'f32'];
+    readonly transformation: StructProperty<'mat4x4<f32>'>;
+    readonly transformation_normals: StructProperty<'mat3x3<f32>'>;
+    readonly color: StructProperty<'vec3<f32>'>;
+    readonly ambient: StructProperty<'vec3<f32>'>;
+    readonly shadow: StructProperty<'f32'>;
+    readonly spot_light: StructProperty<'vec3<f32>'>;
+    readonly id: StructProperty<'u32'>;
+    readonly point_light_squared: StructProperty<'f32'>; //30
+    readonly directional_light: StructProperty<'f32'>;
     /**
      * bitmask
      */
-    scenes: readonly ['', 'u32'];
+    readonly scenes: StructProperty<'u32'>;
     /**
      * padding
      */
-    z: readonly [string, 'f32'];
+    readonly z: StructProperty<'f32'>;
   }>;
-  meshArray: Struct<{ readonly mesh: readonly ['', 'array<MeshUniforms>'] }>;
+  simpleAttributesWithUv: Struct<{
+    readonly position: StructProperty<'vec3<f32>'>;
+    readonly normal: StructProperty<'vec3<f32>'>;
+    readonly uv: StructProperty<'vec2<f32>'>;
+  }>;
+  simpleAttributesWithUvArr: Struct<{
+    readonly vertices: StructProperty<'array<simpleAttributesWithUv>'>;
+  }>;
+  meshArray: Struct<{
+    readonly mesh: StructProperty<'array<MeshUniforms>'>;
+  }>;
   /**
    * Create render pipeline. The function calculates hash and checks if existing render pipeline exists with same parameters.
    * @param desc
@@ -269,12 +276,10 @@ export class GPU {
     >,
     V extends VertexShaderBuilder | VertexShader,
     F extends FragmentShaderBuilder | FragmentShader,
-    P,
   >(
     desc: D,
-    vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
+    vertexShaderBuilder: (gpu: GPU) => V,
     fragmentShaderBuilder: (gpu: GPU) => F,
-    vertexBufferProps: P,
   ): PipelineIntersection<
     V['pipelineLayouts'],
     F['pipelineLayouts']
@@ -294,12 +299,10 @@ export class GPU {
     >,
     V extends VertexShaderBuilder | VertexShader,
     F extends FragmentShaderBuilder | FragmentShader,
-    P,
   >(
     desc: D,
-    vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
+    vertexShaderBuilder: (gpu: GPU) => V,
     fragmentShaderBuilder: (gpu: GPU) => F,
-    vertexBufferProps: P,
   ): PipelineIntersection<
     V['pipelineLayouts'],
     F['pipelineLayouts']
@@ -313,12 +316,10 @@ export class GPU {
     D extends RenderPipelineProps0<V, F, Omit<GPUPrimitiveState, 'topology'>>,
     V extends VertexShaderBuilder | VertexShader,
     F extends FragmentShaderBuilder | FragmentShader,
-    P,
   >(
     desc: D,
-    vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
+    vertexShaderBuilder: (gpu: GPU) => V,
     fragmentShaderBuilder: (gpu: GPU) => F,
-    vertexBufferProps: P,
   ): PipelineIntersection<
     V['pipelineLayouts'],
     F['pipelineLayouts']
@@ -332,12 +333,10 @@ export class GPU {
     D extends RenderPipelineProps0<V>,
     V extends VertexShaderBuilder | VertexShader,
     F extends FragmentShaderBuilder | FragmentShader,
-    P extends VertexBufferProps | undefined,
   >(
     desc: D,
-    vertexShaderBuilder: (gpu: GPU, vertexBufferProps: P) => V,
+    vertexShaderBuilder: (gpu: GPU) => V,
     fragmentShaderBuilder: (gpu: GPU) => F,
-    vertexBufferProps: P,
   ): RenderPipelineProps<
     VertexShader<V['entryPoints'], V['pipelineLayouts']>,
     FragmentShader
@@ -348,14 +347,13 @@ export class GPU {
       topology: 'triangle-list',
       ...desc.primitive,
     };
-    const vertexBuilder = vertexShaderBuilder(this, vertexBufferProps);
+    const vertexBuilder = vertexShaderBuilder(this);
     const fragmentBuilder = fragmentShaderBuilder(this);
 
     const hash = [
       vertexBuilder.hash,
       fragmentBuilder.hash,
       ...Object.values(primitiveWithDefaults),
-      ...Object.values(vertexBufferProps ?? {}),
     ]
       .sort()
       .join();
@@ -410,26 +408,47 @@ export class GPU {
     private GPUDataSizeBytes: number,
   ) {
     this.meshUniforms = new Struct('MeshUniforms', {
-      transformation: ['', 'mat4x4<f32>'],
-      transformation_normals: ['', 'mat3x3<f32>'],
+      transformation: new StructProperty('', 'mat4x4<f32>'),
+      transformation_normals: new StructProperty('', 'mat3x3<f32>'),
       // eslint-disable-next-line sort-keys
-      color: ['@size(16)', 'vec3<f32>'],
+      color: new StructProperty('@size(16)', 'vec3<f32>'),
       // eslint-disable-next-line sort-keys
-      ambient: ['@size(12)', 'vec3<f32>'],
-      shadow: ['', 'f32'],
-      spot_light: ['@size(16)', 'vec3<f32>'],
+      ambient: new StructProperty('@size(12)', 'vec3<f32>'),
+      shadow: new StructProperty('', 'f32'),
+      spot_light: new StructProperty('@size(16)', 'vec3<f32>'),
       // eslint-disable-next-line sort-keys
-      id: ['', 'u32'],
-      point_light_squared: ['', 'f32'], //30
+      id: new StructProperty('', 'u32'),
+      point_light_squared: new StructProperty('', 'f32'), //30
       // eslint-disable-next-line sort-keys
-      directional_light: ['', 'f32'],
-      scenes: ['', 'u32'],
-      z: ['@size(' + (gpu_memory_index_size - GPUDataSizeBytes) + ')', 'f32'],
+      directional_light: new StructProperty('', 'f32'),
+      scenes: new StructProperty('', 'u32'),
+      z: new StructProperty(
+        '@size(' + (gpu_memory_index_size - GPUDataSizeBytes) + ')',
+        'f32',
+      ),
     });
+    // TODO: merge with attributes.ts
+    this.simpleAttributesWithUv = new Struct(
+      'simpleAttributesWithUv',
+      {
+        position: new StructProperty('@size(16)', 'vec3<f32>'),
+        // eslint-disable-next-line sort-keys
+        normal: new StructProperty('@size(16)', 'vec3<f32>'),
+        uv: new StructProperty('@size(8)', 'vec2<f32>'),
+      },
+      [this.meshUniforms],
+    );
+    this.simpleAttributesWithUvArr = new Struct(
+      'simpleAttributesWithUvArr',
+      {
+        vertices: new StructProperty('', 'array<simpleAttributesWithUv>'),
+      },
+      [this.simpleAttributesWithUv],
+    );
     this.meshArray = new Struct(
       'MeshArray',
       {
-        mesh: ['', 'array<MeshUniforms>'],
+        mesh: new StructProperty('', 'array<MeshUniforms>'),
       },
       [this.meshUniforms],
     );
@@ -730,7 +749,7 @@ export class GPU {
             },
             visibility: ShaderStage.VERTEX,
           },
-          UIUniforms,
+          float2f32,
         ),
       },
     );
@@ -739,11 +758,7 @@ export class GPU {
       bindGroupLayouts: [this.BindGroupLayoutCanvas],
       label: 'canvasRootLayout',
     });
-    const vertexShader = createUIVertShader(this.canvasRootLayout, {
-      arrayStride: 4 * 4,
-      attributes: position_uv_attrs,
-      stepMode: 'vertex',
-    });
+    const vertexShader = createUIVertShader(this.canvasRootLayout);
     const UIfragmentShader = createUIFragmentShader(this);
     this.UIPipeline = {
       builder: createRenderPipelineBuilder(vertexShader, UIfragmentShader),

@@ -101,9 +101,6 @@ export class Plants extends MainNode {
         },
         createGrassVertShader,
         scene.gpu.shaders.ColorShader,
-        {
-          stride: 4 as Word<'dword'>,
-        },
       );
       const vertices = allocate_vec(
         Float32Array.of(

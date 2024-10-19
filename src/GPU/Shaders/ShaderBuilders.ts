@@ -25,7 +25,7 @@ import { PROJECTION_BUFFER_SIZE } from '../../GPU/Projection.js';
 export const TerrainSubdivisions = [64, 64] as const;
 export const gpu_memory_index_size = 256;
 
-const colorFragmentFunction = new FragmentShaderFunction(
+export const colorFragmentFunction = new FragmentShaderFunction(
   diffuseOutput,
   (_, { color }) => /* wgsl */ `
       var output:Output;
@@ -197,7 +197,7 @@ export function createShaderBuilders(gpu: GPU) {
       terrainHeightsbindGroupTreePosition,
       rootCameralayout,
       positionAndTimeBindGroup,
-    ] as const,
+    ],
     'color.frag',
   ).addFunction('main', colorFragmentFunction);
   return {
@@ -209,7 +209,6 @@ export function createShaderBuilders(gpu: GPU) {
      */
     ColorShader: () => ColorShader,
     facet12ArrGPUBuffer,
-    heightsLayout,
     positionAndTimeBindGroup,
     rootCameralayout,
     sizeBindGroupLayout,

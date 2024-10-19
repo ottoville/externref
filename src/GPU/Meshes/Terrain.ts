@@ -35,7 +35,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
     scenes: Scene[],
     public initialTexture: TextureView<Texture<TEXTURE_BINDING_TEXTURE>>,
     public vBuffer: Buffer<VERTEX_BUFFER>,
-    verticesPositionStride: Word<'dword'>,
   ) {
     const geometry = engine.rust.create_legacy_terrain_geometry(
       true,
@@ -67,9 +66,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
         TerrainRenderPipeline,
         createGroundVertShader,
         createGroundFragShader,
-        {
-          stride: verticesPositionStride,
-        },
       );
       this.drawable = new LightsTextureDrawableIndexed(
         {

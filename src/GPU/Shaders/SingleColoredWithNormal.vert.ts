@@ -6,13 +6,20 @@ import {
   WGSLcode,
   VertexShaderBuilder,
   VertexShader,
+  VertexBufferLayouts,
 } from '../../webgpu-ts/index.js';
-import type { GPU, VertexBufferProps } from '../../GPU.js';
-import { type Scene, pickOutput, typicalOutput } from './structs/Structs.js';
-import { simpleAttributes } from './structs/Attributes.js';
+import type { GPU } from '../../GPU.js';
+import {
+  PositionNormalVertice,
+  type Scene,
+  pickOutput,
+  typicalOutput,
+} from './structs/Structs.js';
 
 export function createPickOutput(
-  buffers: readonly [VertexBufferLayout<typeof simpleAttributes>],
+  buffers: VertexBufferLayouts<
+    readonly [VertexBufferLayout<typeof PositionNormalVertice>]
+  >,
 ) {
   return new VertexShaderFunction(
     pickOutput,
@@ -53,19 +60,15 @@ export function createPickOutput(
 /**
   Shader where mesh is single colored
 */
-export function createSimpleVertShader(
-  gpu: GPU,
-  vertexBufferProps: VertexBufferProps,
-) {
+const buffers = new VertexBufferLayouts([
+  {
+    stepMode: 'vertex',
+    struct: PositionNormalVertice,
+  },
+]);
+export function createSimpleVertShader(gpu: GPU) {
   const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
-  const arrayStride = vertexBufferProps.stride * 4;
-  const buffers = Object.freeze([
-    {
-      arrayStride,
-      attributes: simpleAttributes,
-      stepMode: 'vertex',
-    },
-  ] as const);
+
   return new VertexShaderBuilder([pipelineLayout] as const, 'Simple.vert')
     .addFunction(
       'main',

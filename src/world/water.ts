@@ -46,9 +46,6 @@ export class Sea extends BoundableNodeSimple {
         },
         createWaterVertShader,
         createWaterFragShader,
-        {
-          stride: 4 as Word<'dword'>,
-        },
       );
       //TODO: Reuse sampler with terrain.ts?
       const sampler = engine.gpu.device.createSampler({

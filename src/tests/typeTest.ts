@@ -63,7 +63,7 @@ new TextureView(text1, 'r32float');
 new TextureView(text1, 'astc-10x10-unorm');
 
 //This should be fine
-const text2 =  new Texture({
+const text2 = new Texture({
   format: 'astc-10x10-unorm',
   gpu: engine.gpu!.device,
   label: 'test',
@@ -126,20 +126,13 @@ const primitiveState: GPUPrimitiveState = {
 };
 
 //@ts-expect-error Needs stride
-engine.gpu!.createRenderPipelineBuilder(
-  SimpleRenderPipeline,
-  primitiveState,
-  undefined,
-);
+engine.gpu!.createRenderPipelineBuilder(SimpleRenderPipeline, primitiveState);
 //Should be fine
 const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
   { ...SimpleRenderPipeline, primitive: primitiveState },
   createSimpleVertShader,
   (_gpu: GPU) => {
     return engine.gpu!.simpleFragShader;
-  },
-  {
-    stride: 4 as Word<'dword'>,
   },
 );
 new DrawableIndexed({
@@ -152,17 +145,11 @@ new DrawableIndexed({
 });
 
 //@ts-expect-error Cannot have stride
-engine.gpu!.createRenderPipelineBuilder(
-  SunRenderPipeline,
-  {
-    cullMode: 'none',
-    stripIndexFormat: 'uint16',
-    topology: 'triangle-strip',
-  },
-  {
-    stride: 8,
-  },
-);
+engine.gpu!.createRenderPipelineBuilder(SunRenderPipeline, {
+  cullMode: 'none',
+  stripIndexFormat: 'uint16',
+  topology: 'triangle-strip',
+});
 
 //Should be fine
 const renderPipeline2 = engine.gpu!.createRenderPipelineBuilder(
@@ -176,7 +163,6 @@ const renderPipeline2 = engine.gpu!.createRenderPipelineBuilder(
   },
   createSunVertShader,
   createSingleColorFragShader,
-  undefined,
 );
 
 new DrawableSimple({
@@ -188,6 +174,4 @@ new DrawableSimple({
   vertexBuffers: [new Float32Array()],
 });
 
-createWaterVertShader(engine.gpu!, {
-  stride: 4 as Word<'dword'>,
-});
+createWaterVertShader(engine.gpu!);

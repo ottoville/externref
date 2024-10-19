@@ -1,52 +1,43 @@
 import {
-  type VertexBufferLayout,
   VertexShaderFunction,
   type BufLayout,
   type ShaderStage,
   WGSLcode,
   VertexShaderBuilder,
+  VertexBufferLayouts,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import { type UIUniforms, UI_Input } from './structs/Structs.js';
+import {
+  PositionUvVertice,
+  type float2f32,
+  UI_Input,
+} from './structs/Structs.js';
 
-export const position_uv_attrs = Object.freeze({
-  position: {
-    format: 'float32x2',
-    offset: 0,
-    shaderFormat: 'vec2<f32>',
-    shaderLocation: 0,
+const buffers = new VertexBufferLayouts([
+  {
+    stepMode: 'vertex',
+    struct: PositionUvVertice,
   },
-  uv: {
-    format: 'float32x2',
-    offset: 8,
-    shaderFormat: 'vec2<f32>',
-    shaderLocation: 1,
-  },
-} as const);
+]);
 
-export function createUIVertShader(
-  pipelineLayout: GPU['canvasRootLayout'],
-  buffers: VertexBufferLayout<typeof position_uv_attrs>,
-) {
+export function createUIVertShader(pipelineLayout: GPU['canvasRootLayout']) {
   return new VertexShaderBuilder([pipelineLayout] as const, 'UI.vert')
     .addFunction(
       'main',
       new VertexShaderFunction(
         UI_Input,
-        [buffers],
+        buffers,
         ([{ uniforms /*texture*/ }], [{ position, uv }]) =>
           WGSLcode/* wgsl */ `
             var output : Output;   
-            output.Position = vec4<f32>(${uniforms.prop(
-              'translate',
-            )} + ${position}, 1.0, 1.0);
+            output.Position = vec4<f32>(${uniforms.prop('numbers')} + ${position}, 1.0, 1.0);
             output.v_uv=${uv};
             return output;
 `,
       ) satisfies VertexShaderFunction<
         [
           {
-            uniforms: BufLayout<ShaderStage.VERTEX, typeof UIUniforms>;
+            uniforms: BufLayout<ShaderStage.VERTEX, typeof float2f32>;
           },
         ]
       >,
