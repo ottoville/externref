@@ -76,7 +76,7 @@ export function createShaderBuilders(gpu: GPU) {
           },
           visibility: ShaderStage.FRAGMENT,
         },
-        gpu.meshArray,
+        gpu.meshUniforms.asArray,
       ),
       projection: new BufLayout(
         {

@@ -169,7 +169,7 @@ pub unsafe extern "C" fn label_field_pointer(mesh_id: usize) -> *const usize {
     MULTIVALUE_USIZE.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn gpu_alignment(mesh_id: usize) -> usize {
+pub extern "C" fn gpu_alignment(mesh_id: usize) -> usize {
     get_mesh_by_id(mesh_id)
         .mesh_property
         .lock()
@@ -178,11 +178,11 @@ pub unsafe extern "C" fn gpu_alignment(mesh_id: usize) -> usize {
         .0
 }
 #[no_mangle]
-pub unsafe extern "C" fn positions_count(mesh_id: usize) -> usize {
+pub extern "C" fn positions_count(mesh_id: usize) -> usize {
     get_mesh_by_id(mesh_id).get_positions_count()
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_positions_count(mesh_id: usize, positions_count: usize) {
+pub extern "C" fn set_positions_count(mesh_id: usize, positions_count: usize) {
     get_mesh_by_id_mut(mesh_id).positions_count = Some(positions_count);
 }
 #[externref]

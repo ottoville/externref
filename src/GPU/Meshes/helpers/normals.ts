@@ -56,16 +56,6 @@ export class NormalsMesh extends DataNode {
         },
       ]
     >;
-    const arr_struct = new Struct(
-      'vertex_arr',
-      {
-        vertices: new StructProperty(
-          '',
-          `array<${layout.vertexBufferLayout[0].struct.name}>`,
-        ),
-      },
-      [layout.vertexBufferLayout[0].struct],
-    );
     const vertex_normals_layout = new BGLayout(
       engine.gpu!.device,
       'vertex_normals_layout',
@@ -79,7 +69,7 @@ export class NormalsMesh extends DataNode {
             },
             visibility: ShaderStage.VERTEX,
           },
-          arr_struct,
+          layout.vertexBufferLayout[0].struct.asArray,
         ),
       },
     );

@@ -1,7 +1,7 @@
 import { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import {
-  PositionVertice,
+  PositionNormalUvVertice,
   type Scene,
   colorPositionOutput,
 } from './structs/Structs.js';
@@ -19,7 +19,7 @@ import type { GPU } from '../../GPU.js';
 const buffers = new VertexBufferLayouts([
   {
     stepMode: 'vertex',
-    struct: PositionVertice,
+    struct: PositionNormalUvVertice,
   },
 ]);
 

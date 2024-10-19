@@ -12,6 +12,8 @@ import {
   FragmentShaderFunction,
   type SampLayout,
   type ShaderStage,
+  type Struct,
+  type StructProperty,
   type TextLayout,
 } from '../../webgpu-ts/index.js';
 
@@ -79,7 +81,7 @@ export function createGroundFragShader(gpu: GPU) {
                 let light_index:u32 = ${clusters_array.prop(
                   'lights',
                 )}[cluster_index*63u + light_pointer_index];
-                let light = ${meshes.prop('mesh')}[light_index];
+                let light = ${meshes.prop('values')}[light_index];
                 if((${scenes} & light.scenes) != 0u) {
                   let light_position:vec3<f32> = light.transformation[3].xyz;
                   if(light.point_light_squared > 0.0) {
@@ -111,7 +113,12 @@ export function createGroundFragShader(gpu: GPU) {
           {},
           {
             clusters_array: BufLayout<ShaderStage.FRAGMENT, typeof Clusters>;
-            meshes: BufLayout<ShaderStage.FRAGMENT, GPU['meshArray']>;
+            meshes: BufLayout<
+              ShaderStage.FRAGMENT,
+              Struct<{
+                values: StructProperty<`array<${string}>`>;
+              }>
+            >;
           },
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           {},

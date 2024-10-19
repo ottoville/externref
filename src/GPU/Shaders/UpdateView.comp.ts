@@ -34,7 +34,7 @@ export function createUpdateViewShader(gpu: GPU) {
           },
           visibility: ShaderStage.COMPUTE,
         },
-        gpu.meshArray,
+        gpu.meshUniforms.asArray,
       ),
       point_lights: new BufLayout(
         {
@@ -116,7 +116,7 @@ for(var pointerIndex:u32 = 0u; pointerIndex < ${directional_lights.prop(
           'length',
         )}; pointerIndex = pointerIndex + 1u) {
   let meshIndex = ${directional_lights.prop('pointers')}[pointerIndex];
-  let mesh=${meshes.prop('mesh')}[meshIndex];
+  let mesh=${meshes.prop('values')}[meshIndex];
   ${clusters.prop('lights')}[tileIndex*63u + lightCount] = meshIndex;
   lightCount=lightCount+1u;
   if(lightCount==63u) {
@@ -128,7 +128,7 @@ for(var pointerIndex:u32 = 0u; pointerIndex < ${point_lights.prop(
           'length',
         )}; pointerIndex = pointerIndex + 1u) {
 let meshIndex = ${point_lights.prop('pointers')}[pointerIndex];
-let mesh=${meshes.prop('mesh')}[meshIndex];
+let mesh=${meshes.prop('values')}[meshIndex];
 // TODO: Preselect lights with CPU
 let lightViewPos = ${viewUniforms.prop(
           'view',

@@ -1,4 +1,4 @@
-import { Indices } from './structs/Structs.js';
+import { U32Arr } from './structs/Structs.js';
 import type { GPU } from '../../GPU.js';
 import type { Terrain } from '../../world/Terrain.js';
 import {
@@ -25,7 +25,7 @@ export function createCalculatePlaneIndices(
           },
           visibility: ShaderStage.COMPUTE,
         },
-        Indices,
+        U32Arr,
       ),
     }),
   ] as const;
@@ -41,7 +41,7 @@ export function createCalculatePlaneIndices(
         main: new ComputeShaderFunction<
           [
             {
-              indices: BufLayout<ShaderStage.COMPUTE, typeof Indices>;
+              indices: BufLayout<ShaderStage.COMPUTE, typeof U32Arr>;
             },
           ]
         >(

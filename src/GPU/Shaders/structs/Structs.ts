@@ -77,13 +77,6 @@ export const PositionAndRotate = new Struct('PositionAndRotate', {
   position: new StructProperty('', 'vec3<f32>'),
   rotation: new StructProperty('', 'f32'),
 });
-export const PositionAndRotateArray = new Struct(
-  'PositionAndRotateArray',
-  {
-    arr: new StructProperty('', 'array<PositionAndRotate>'),
-  },
-  [PositionAndRotate],
-);
 export const FloatArray = new Struct('FloatArray', {
   numbers: new StructProperty('', 'array<f32>'),
 });
@@ -158,13 +151,14 @@ export const PositionNormalUvVertices = new Struct(
   },
   [PositionNormalUvVertice],
 );
-export const Indices = new Struct('Indices', {
-  numbers: new StructProperty('', 'array<u32>'),
+const arr_u32 = new StructProperty('', 'array<u32>');
+export const U32Arr = new Struct('u32arr', {
+  numbers: arr_u32,
 });
 
 export const Lights = new Struct('Lights', {
   length: new StructProperty('', 'u32'),
-  pointers: new StructProperty('', 'array<u32>'),
+  pointers: arr_u32,
 });
 export const Clusters = new Struct(
   'Clusters',

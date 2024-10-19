@@ -14,18 +14,20 @@ import {
 import type { GPU } from '../../../GPU.js';
 import { type Scene, colorPositionOutput } from '../structs/Structs.js';
 
+type vertices_array = {
+  vertices: BufLayout<
+    ShaderStage.VERTEX,
+    Struct<{
+      readonly values: StructProperty<`array<${string}>`>;
+    }>
+  >;
+};
+
 export const createDebugNormalsVertShader = (
   bindGroup: RenderPipelineLayout<
     [
       ...GPU['shaders']['positionAndTimeBindGroup']['bindGroupLayouts'],
-      BGLayout<{
-        vertices: BufLayout<
-          ShaderStage.VERTEX,
-          Struct<{
-            readonly vertices: StructProperty<`array<${string}>`>;
-          }>
-        >;
-      }>,
+      BGLayout<vertices_array>,
     ]
   >,
 ) =>
@@ -47,7 +49,7 @@ export const createDebugNormalsVertShader = (
           { vertices },
         ]) => WGSLcode/* wgsl */ `
         var real_idx = f32(${VertexBuildin.vertex_index}) / 2.0;
-        var vertice = ${vertices.prop('vertices')}[u32(floor(real_idx))];
+        var vertice = ${vertices.prop('values')}[u32(floor(real_idx))];
 
         var output : Output;
         var vertexPosition:vec4<f32> = ${world.prop(
@@ -73,14 +75,7 @@ export const createDebugNormalsVertShader = (
               GPU['meshUniforms']
             >;
           },
-          {
-            vertices: BufLayout<
-              ShaderStage.VERTEX,
-              Struct<{
-                readonly vertices: StructProperty<`array<${string}>`>;
-              }>
-            >;
-          },
+          vertices_array,
         ]
       >,
     );

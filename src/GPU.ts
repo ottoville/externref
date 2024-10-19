@@ -248,17 +248,6 @@ export class GPU {
      */
     readonly z: StructProperty<'f32'>;
   }>;
-  simpleAttributesWithUv: Struct<{
-    readonly position: StructProperty<'vec3<f32>'>;
-    readonly normal: StructProperty<'vec3<f32>'>;
-    readonly uv: StructProperty<'vec2<f32>'>;
-  }>;
-  simpleAttributesWithUvArr: Struct<{
-    readonly vertices: StructProperty<'array<simpleAttributesWithUv>'>;
-  }>;
-  meshArray: Struct<{
-    readonly mesh: StructProperty<'array<MeshUniforms>'>;
-  }>;
   /**
    * Create render pipeline. The function calculates hash and checks if existing render pipeline exists with same parameters.
    * @param desc
@@ -427,31 +416,6 @@ export class GPU {
         'f32',
       ),
     });
-    // TODO: merge with attributes.ts
-    this.simpleAttributesWithUv = new Struct(
-      'simpleAttributesWithUv',
-      {
-        position: new StructProperty('@size(16)', 'vec3<f32>'),
-        // eslint-disable-next-line sort-keys
-        normal: new StructProperty('@size(16)', 'vec3<f32>'),
-        uv: new StructProperty('@size(8)', 'vec2<f32>'),
-      },
-      [this.meshUniforms],
-    );
-    this.simpleAttributesWithUvArr = new Struct(
-      'simpleAttributesWithUvArr',
-      {
-        vertices: new StructProperty('', 'array<simpleAttributesWithUv>'),
-      },
-      [this.simpleAttributesWithUv],
-    );
-    this.meshArray = new Struct(
-      'MeshArray',
-      {
-        mesh: new StructProperty('', 'array<MeshUniforms>'),
-      },
-      [this.meshUniforms],
-    );
 
     const totalClusters = tileCount[0] * tileCount[1] * tileCount[2];
     this.clusterSizeinBytes =
