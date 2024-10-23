@@ -17,9 +17,12 @@ import { type Scene, colorPositionOutput } from '../structs/Structs.js';
 type vertices_array = {
   vertices: BufLayout<
     ShaderStage.VERTEX,
-    Struct<{
-      readonly values: StructProperty<`array<${string}>`>;
-    }>
+    Struct<
+      {
+        readonly values: StructProperty<`array<${string}>`>;
+      },
+      `${string}_arr`
+    >
   >;
 };
 

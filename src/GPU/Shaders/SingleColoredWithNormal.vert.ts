@@ -7,6 +7,8 @@ import {
   VertexShaderBuilder,
   VertexShader,
   VertexBufferLayouts,
+  StructProperty,
+  Struct,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import {
@@ -18,7 +20,14 @@ import {
 
 export function createPickOutput(
   buffers: VertexBufferLayouts<
-    readonly [VertexBufferLayout<typeof PositionNormalVertice>]
+    readonly [
+      VertexBufferLayout<
+        Struct<{
+          readonly position: StructProperty<'vec3<f32>'>;
+          readonly normal: StructProperty<'vec3<f32>'>;
+        }>
+      >,
+    ]
   >,
 ) {
   return new VertexShaderFunction(
