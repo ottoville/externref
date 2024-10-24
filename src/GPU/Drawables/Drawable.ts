@@ -41,7 +41,7 @@ export abstract class Drawable<N extends MainNode = MainNode>
   public renderPipeline: RenderPipelineProps;
   renderPasses: Set<RenderPass>;
   destroyed = false;
-  bindGroups: { bindGroup: BindGroup; offsets?: number[] }[];
+  readonly bindGroups: readonly { bindGroup: BindGroup; offsets?: number[] }[];
   constructor({
     renderPipeline,
     renderPasses = new Set([engine.gpu!.renderPassScreen]),
@@ -49,7 +49,7 @@ export abstract class Drawable<N extends MainNode = MainNode>
     vertexBuffers = [],
     node,
   }: Readonly<DrawableProps<N>>) {
-    this.bindGroups = bindGroups ?? [];
+    this.bindGroups = Object.freeze(bindGroups ?? []);
     this.node = node;
     engine.rust.add_drawble(this.node.id);
 

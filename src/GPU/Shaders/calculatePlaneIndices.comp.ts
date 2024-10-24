@@ -54,13 +54,13 @@ export function createCalculatePlaneIndices(
             let idx3: u32 = (GlobalInvocationID.x + GlobalInvocationID.y * (${settings.subdivisions[0]} + u32(1)));
             let idx4: u32 = (GlobalInvocationID.x + (GlobalInvocationID.y + u32(1)) * (${settings.subdivisions[1]} + u32(1)));
             let index:u32 = GlobalInvocationID.y*${settings.subdivisions[0]}*u32(6) + GlobalInvocationID.x*u32(6);
-            ${indices.variableName}.numbers[index] = idx1;
-            ${indices.variableName}.numbers[index+u32(1)]=idx2;
-            ${indices.variableName}.numbers[index+u32(2)]=idx3;
+            ${indices.prop('numbers')}[index] = idx1;
+            ${indices.prop('numbers')}[index+u32(1)]=idx2;
+            ${indices.prop('numbers')}[index+u32(2)]=idx3;
           
-            ${indices.variableName}.numbers[index+u32(3)]=idx4;
-            ${indices.variableName}.numbers[index+u32(4)]=idx1;
-            ${indices.variableName}.numbers[index+u32(5)]=idx3;
+            ${indices.prop('numbers')}[index+u32(3)]=idx4;
+            ${indices.prop('numbers')}[index+u32(4)]=idx1;
+            ${indices.prop('numbers')}[index+u32(5)]=idx3;
     
             `,
         ),

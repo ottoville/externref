@@ -30,12 +30,10 @@ export class NormalsMesh extends DataNode {
       targetNode.node.id,
       ...create_rust_label('normals_' + targetNode.node.label),
     );
-    const geometry = engine.rust.get_geometry(mesh);
-
     super(
       {
         character_can_collide_to: false,
-        vertices: geometry,
+        vertices: engine.rust.get_geometry(mesh),
       },
       mesh,
     );
