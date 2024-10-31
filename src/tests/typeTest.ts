@@ -4,7 +4,6 @@
  */
 
 import type { Engine } from '../engine.js';
-import { SimpleRenderPipeline } from '../GPU/RenderPipeLines/SimpleRenderPipeline.js';
 import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
@@ -120,20 +119,45 @@ text3.copyTo(
   [2, 2],
 );
 
-const primitiveState: GPUPrimitiveState = {
+const primitiveState = {
   frontFace: 'cw',
   topology: 'triangle-strip',
-};
+  stripIndexFormat: 'uint32',
+} satisfies GPUPrimitiveState;
 
-//@ts-expect-error Needs stride
-engine.gpu!.createRenderPipelineBuilder(SimpleRenderPipeline, primitiveState);
-//Should be fine
-const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
-  { ...SimpleRenderPipeline, primitive: primitiveState },
-  createSimpleVertShader,
-  (_gpu: GPU) => {
+engine.gpu!.createRenderPipelineBuilder({
+  desc: {
+    connections: {
+      main: 'main',
+      pick: 'pick',
+    },
+    primitive: {
+      frontFace: 'cw',
+      //@ts-expect-error needs stripIndexFormat
+      topology: 'triangle-strip',
+    },
+  },
+  vertexShaderBuilder: createSimpleVertShader,
+  fragmentShaderBuilder: (_gpu: GPU) => {
     return engine.gpu!.simpleFragShader;
   },
+});
+//Should be fine
+const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
+  {
+    desc: {
+      connections: {
+        main: 'main',
+        pick: 'pick',
+      },
+      primitive: primitiveState,
+    },
+    vertexShaderBuilder: createSimpleVertShader,
+    fragmentShaderBuilder: (_gpu: GPU) => {
+      return engine.gpu!.simpleFragShader;
+    },
+  },
+  'uint32',
 );
 new DrawableIndexed({
   //@ts-expect-error todo
@@ -144,25 +168,46 @@ new DrawableIndexed({
   vertexBuffers: [] as [],
 });
 
-//@ts-expect-error Cannot have stride
-engine.gpu!.createRenderPipelineBuilder(SunRenderPipeline, {
-  cullMode: 'none',
-  stripIndexFormat: 'uint16',
-  topology: 'triangle-strip',
-});
-
-//Should be fine
-const renderPipeline2 = engine.gpu!.createRenderPipelineBuilder(
+engine.gpu!.createRenderPipelineBuilder(
   {
+    desc: {
+      ...SunRenderPipeline,
+      primitive: {
+        cullMode: 'none',
+        //@ts-expect-error Cannot have stripIndexFormat
+        topology: 'triangle-list',
+      },
+    },
+    vertexShaderBuilder: createSunVertShader,
+    fragmentShaderBuilder: createSingleColorFragShader,
+  },
+  'uint32',
+);
+engine.gpu!.createRenderPipelineBuilder({
+  desc: {
     ...SunRenderPipeline,
     primitive: {
       cullMode: 'none',
-      stripIndexFormat: 'uint16',
-      topology: 'triangle-strip',
+      topology: 'triangle-list',
     },
   },
-  createSunVertShader,
-  createSingleColorFragShader,
+  vertexShaderBuilder: createSunVertShader,
+  fragmentShaderBuilder: createSingleColorFragShader,
+});
+//Should be fine
+const renderPipeline2 = engine.gpu!.createRenderPipelineBuilder(
+  {
+    desc: {
+      ...SunRenderPipeline,
+      primitive: {
+        cullMode: 'none',
+        topology: 'triangle-strip',
+      },
+    },
+    vertexShaderBuilder: createSunVertShader,
+    fragmentShaderBuilder: createSingleColorFragShader,
+  },
+  'uint32',
 );
 
 new DrawableSimple({

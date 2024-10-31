@@ -24,7 +24,7 @@ export type MappedVertexBuffers<
   R extends RenderPipelineProps<infer VERTEX_SHADER>
     ? //extract VertexBuffers
       VERTEX_SHADER extends VertexShader<{
-        main: VertexShaderFunction<B, infer V>;
+        [index: string]: VertexShaderFunction<B, infer V>;
       }>
       ? Readonly<{
           [Property in keyof V]:

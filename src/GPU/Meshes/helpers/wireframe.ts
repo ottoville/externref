@@ -28,8 +28,8 @@ export function createWireFrameMesh(
 
   const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
   if (gpuVertexBuffer) {
-    const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
-      {
+    const renderPipeline = engine.gpu!.createRenderPipelineBuilder({
+      desc: {
         connections: {
           main: 'main',
         },
@@ -37,9 +37,9 @@ export function createWireFrameMesh(
           topology: 'line-list',
         },
       },
-      createDebugBoundingBoxVertShader(buffer),
-      engine.gpu!.shaders.ColorShader,
-    );
+      fragmentShaderBuilder: engine.gpu!.shaders.ColorShader,
+      vertexShaderBuilder: createDebugBoundingBoxVertShader(buffer),
+    });
     const mesh = engine.rust.create_debug_mesh_wireframe(
       targetNode.node.id,
       ...create_rust_label('wireframe_' + targetNode.node.label),

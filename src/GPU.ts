@@ -13,6 +13,8 @@ import {
 } from './GPU/Shaders/UpdateView.comp.js';
 import { createClustersCompShader } from './GPU/Shaders/Clusters.comp.js';
 import type {
+  PrimitiveState,
+  PrimitiveStateStrip,
   RenderPipelineProps,
   RenderPipelineProps0,
 } from './GPU/RenderPipeline.js';
@@ -59,27 +61,15 @@ declare const engine: Engine;
 let curSecond = 0;
 let framecount = 0;
 
-// Cluster debug
-/*
-
-let debugNumber=0;
-//@ts-ignore
-window.resetDebugNumber = () => {
-    debugNumber = 0;
+interface createRenderPipelineProps<
+  P extends PrimitiveState | PrimitiveStateStrip,
+  V extends VertexShaderBuilder | VertexShader,
+  F extends FragmentShaderBuilder | FragmentShader,
+> {
+  desc: RenderPipelineProps0<V, F, P>;
+  vertexShaderBuilder: (gpu: GPU) => V;
+  fragmentShaderBuilder: (gpu: GPU) => F;
 }
-*/
-export type CreateRenderPipelineProps = {
-  gpu: GPU;
-  label: string;
-  primitive: GPUPrimitiveState;
-};
-
-export type VertexBufferProps = {
-  /**
-   * Vertex buffer stride in DWORD
-   */
-  stride: Word<'dword'>;
-};
 
 export class GPU {
   #maxInstances = 10;
@@ -255,20 +245,11 @@ export class GPU {
    * @param vertexBufferProps
    */
   createRenderPipelineBuilder<
-    D extends RenderPipelineProps0<
-      V,
-      F,
-      GPUPrimitiveState & {
-        topology: 'triangle-strip' | 'line-strip';
-        stripIndexFormat: GPUIndexFormat;
-      }
-    >,
     V extends VertexShaderBuilder | VertexShader,
     F extends FragmentShaderBuilder | FragmentShader,
+    P extends PrimitiveState,
   >(
-    desc: D,
-    vertexShaderBuilder: (gpu: GPU) => V,
-    fragmentShaderBuilder: (gpu: GPU) => F,
+    props: createRenderPipelineProps<P, V, F>,
   ): PipelineIntersection<
     V['pipelineLayouts'],
     F['pipelineLayouts']
@@ -279,19 +260,12 @@ export class GPU {
         FragmentShader
       >;
   createRenderPipelineBuilder<
-    D extends RenderPipelineProps0<
-      V,
-      F,
-      Omit<GPUPrimitiveState, 'stripIndexFormat'> & {
-        topology: 'triangle-list' | 'line-list';
-      }
-    >,
     V extends VertexShaderBuilder | VertexShader,
     F extends FragmentShaderBuilder | FragmentShader,
+    P extends PrimitiveStateStrip,
   >(
-    desc: D,
-    vertexShaderBuilder: (gpu: GPU) => V,
-    fragmentShaderBuilder: (gpu: GPU) => F,
+    props: createRenderPipelineProps<P, V, F>,
+    stripIndexFormat: GPUIndexFormat,
   ): PipelineIntersection<
     V['pipelineLayouts'],
     F['pipelineLayouts']
@@ -302,13 +276,12 @@ export class GPU {
         FragmentShader
       >;
   createRenderPipelineBuilder<
-    D extends RenderPipelineProps0<V, F, Omit<GPUPrimitiveState, 'topology'>>,
     V extends VertexShaderBuilder | VertexShader,
     F extends FragmentShaderBuilder | FragmentShader,
+    P extends PrimitiveState | PrimitiveStateStrip,
   >(
-    desc: D,
-    vertexShaderBuilder: (gpu: GPU) => V,
-    fragmentShaderBuilder: (gpu: GPU) => F,
+    props: createRenderPipelineProps<P, V, F>,
+    stripIndexFormat?: GPUIndexFormat,
   ): PipelineIntersection<
     V['pipelineLayouts'],
     F['pipelineLayouts']
@@ -317,27 +290,18 @@ export class GPU {
     : RenderPipelineProps<
         VertexShader<V['entryPoints'], V['pipelineLayouts']>,
         FragmentShader
-      >;
-  createRenderPipelineBuilder<
-    D extends RenderPipelineProps0<V>,
-    V extends VertexShaderBuilder | VertexShader,
-    F extends FragmentShaderBuilder | FragmentShader,
-  >(
-    desc: D,
-    vertexShaderBuilder: (gpu: GPU) => V,
-    fragmentShaderBuilder: (gpu: GPU) => F,
-  ): RenderPipelineProps<
-    VertexShader<V['entryPoints'], V['pipelineLayouts']>,
-    FragmentShader
-  > {
+      > {
     const primitiveWithDefaults: GPUPrimitiveState = {
       cullMode: 'back',
       frontFace: 'cw',
       topology: 'triangle-list',
-      ...desc.primitive,
+      ...props.desc.primitive,
     };
-    const vertexBuilder = vertexShaderBuilder(this);
-    const fragmentBuilder = fragmentShaderBuilder(this);
+    if (props.desc.primitive?.topology.endsWith('strip')) {
+      primitiveWithDefaults.stripIndexFormat = stripIndexFormat!;
+    }
+    const vertexBuilder = props.vertexShaderBuilder(this);
+    const fragmentBuilder = props.fragmentShaderBuilder(this);
 
     const hash = [
       vertexBuilder.hash,
@@ -363,13 +327,14 @@ export class GPU {
             ? fragmentBuilder.build()
             : fragmentBuilder,
         ),
-        connections: desc.connections,
-        depthBuffer: desc.depthBuffer,
+        connections: props.desc.connections,
+        depthBuffer: props.desc.depthBuffer,
         label: hash,
         primitive: primitiveWithDefaults,
       };
       GPU.#renderPipelines.set(hash, renderPipeline);
     }
+    //@ts-expect-error todo
     return renderPipeline;
   }
   #renderFrame = 0;

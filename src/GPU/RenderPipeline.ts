@@ -5,6 +5,16 @@
   VertexShader,
   VertexShaderBuilder,
 } from '../webgpu-ts/index.js';
+
+export type PrimitiveState = Omit<GPUPrimitiveState, 'stripIndexFormat'> & {
+  topology: 'triangle-list' | 'line-list' | 'point-list';
+};
+export type PrimitiveStateStrip = Omit<
+  GPUPrimitiveState,
+  'stripIndexFormat'
+> & {
+  topology: 'triangle-strip' | 'line-strip';
+};
 export type RenderPipelineProps0<
   V extends VertexShaderBuilder | VertexShader =
     | VertexShaderBuilder
@@ -12,7 +22,9 @@ export type RenderPipelineProps0<
   F extends FragmentShaderBuilder | FragmentShader =
     | FragmentShaderBuilder
     | FragmentShader,
-  P extends GPUPrimitiveState = GPUPrimitiveState,
+  P extends PrimitiveState | PrimitiveStateStrip =
+    | PrimitiveState
+    | PrimitiveStateStrip,
 > = Readonly<{
   primitive?: P;
   depthBuffer?: {

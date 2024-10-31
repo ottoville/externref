@@ -61,15 +61,18 @@ export class Sun extends MainNode {
 
     const renderPipeline = gpu.createRenderPipelineBuilder(
       {
-        ...SunRenderPipeline,
-        primitive: {
-          cullMode: 'none',
-          stripIndexFormat: 'uint16',
-          topology: 'triangle-strip',
+        desc: {
+          ...SunRenderPipeline,
+          primitive: {
+            cullMode: 'none',
+            topology: 'triangle-strip',
+          },
         },
+        fragmentShaderBuilder: createSingleColorFragShader,
+
+        vertexShaderBuilder: createSunVertShader,
       },
-      createSunVertShader,
-      createSingleColorFragShader,
+      'uint16',
     );
     this.drawable = new DrawableSimple({
       bindGroups: [],

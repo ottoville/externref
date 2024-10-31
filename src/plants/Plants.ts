@@ -90,17 +90,19 @@ export class Plants extends MainNode {
     if (engine.gpu) {
       const renderPipeline = engine.gpu.createRenderPipelineBuilder(
         {
-          connections: {
-            main: 'main',
+          desc: {
+            connections: {
+              main: 'main',
+            },
+            primitive: {
+              cullMode: 'none',
+              topology: 'triangle-strip',
+            },
           },
-          primitive: {
-            cullMode: 'none',
-            stripIndexFormat: 'uint16',
-            topology: 'triangle-strip',
-          },
+          fragmentShaderBuilder: scene.gpu.shaders.ColorShader,
+          vertexShaderBuilder: createGrassVertShader,
         },
-        createGrassVertShader,
-        scene.gpu.shaders.ColorShader,
+        'uint16',
       );
       const vertices = allocate_vec(
         Float32Array.of(

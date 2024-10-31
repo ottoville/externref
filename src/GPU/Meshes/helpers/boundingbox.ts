@@ -62,16 +62,18 @@ export class BoundingBoxMesh extends IndexedDataNode {
 
     const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
       {
-        connections: {
-          main: 'main',
+        desc: {
+          connections: {
+            main: 'main',
+          },
+          primitive: {
+            topology: 'line-strip',
+          },
         },
-        primitive: {
-          stripIndexFormat: 'uint32',
-          topology: 'line-strip',
-        },
+        fragmentShaderBuilder: engine.gpu!.shaders.ColorShader,
+        vertexShaderBuilder: createDebugBoundingBoxVertShader(buffer),
       },
-      createDebugBoundingBoxVertShader(buffer),
-      engine.gpu!.shaders.ColorShader,
+      'uint32',
     );
 
     this.drawable = new DrawableIndexed({

@@ -1,7 +1,6 @@
 ﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
 import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
-import { TerrainRenderPipeline } from '../RenderPipeLines/Terrain.js';
 declare const engine: Engine;
 import {
   createGroundVertShader,
@@ -62,11 +61,16 @@ export class TerrainMesh extends BoundableNodeIndexed {
         magFilter: 'linear',
         minFilter: 'linear',
       });
-      const renderPipeline = engine.gpu.createRenderPipelineBuilder(
-        TerrainRenderPipeline,
-        createGroundVertShader,
-        createGroundFragShader,
-      );
+      const renderPipeline = engine.gpu.createRenderPipelineBuilder({
+        desc: {
+          connections: {
+            main: 'main',
+            pick: 'pick',
+          },
+        },
+        fragmentShaderBuilder: createGroundFragShader,
+        vertexShaderBuilder: createGroundVertShader,
+      });
       this.drawable = new LightsTextureDrawableIndexed(
         {
           node: this,

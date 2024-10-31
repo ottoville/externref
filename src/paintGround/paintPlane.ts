@@ -57,8 +57,8 @@ export class paintPlane extends paintGround {
       this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0);
       callback(p);
     });
-    const renderPipeline = ground.gpu.createRenderPipelineBuilder(
-      {
+    const renderPipeline = ground.gpu.createRenderPipelineBuilder({
+      desc: {
         connections: {
           main: 'main',
         },
@@ -68,9 +68,9 @@ export class paintPlane extends paintGround {
           topology: 'triangle-list',
         },
       },
-      createPlaneAtGroundHeightVertShader,
-      ground.gpu.shaders.ColorShader,
-    );
+      fragmentShaderBuilder: ground.gpu.shaders.ColorShader,
+      vertexShaderBuilder: createPlaneAtGroundHeightVertShader,
+    });
 
     this.#mesh = new PlaneMesh(renderPipeline);
   }

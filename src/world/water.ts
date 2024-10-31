@@ -35,17 +35,19 @@ export class Sea extends BoundableNodeSimple {
     if (engine.gpu) {
       const renderPipeline = engine.gpu.createRenderPipelineBuilder(
         {
-          connections: {
-            main: 'main',
+          desc: {
+            connections: {
+              main: 'main',
+            },
+            primitive: {
+              frontFace: 'cw',
+              topology: 'triangle-strip',
+            },
           },
-          primitive: {
-            frontFace: 'cw',
-            stripIndexFormat: 'uint16',
-            topology: 'triangle-strip',
-          },
+          fragmentShaderBuilder: createWaterFragShader,
+          vertexShaderBuilder: createWaterVertShader,
         },
-        createWaterVertShader,
-        createWaterFragShader,
+        'uint16',
       );
       //TODO: Reuse sampler with terrain.ts?
       const sampler = engine.gpu.device.createSampler({

@@ -187,17 +187,17 @@ export class TerrainTool extends MainNode {
       },
     } as const);
 
-    const renderPipeline = terrain.gpu.createRenderPipelineBuilder(
-      {
+    const renderPipeline = terrain.gpu.createRenderPipelineBuilder({
+      desc: {
         ...getRenderPipeline,
         primitive: {
           cullMode: 'none',
           topology: 'triangle-list',
         },
       },
-      createHelperVertShader,
-      terrain.gpu.shaders.ColorShader,
-    );
+      fragmentShaderBuilder: terrain.gpu.shaders.ColorShader,
+      vertexShaderBuilder: createHelperVertShader,
+    });
     const scene = engine.scenes.get('main');
     if (!scene) throw new Error('no scene');
     this.scene = scene;

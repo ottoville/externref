@@ -1,7 +1,6 @@
 ﻿import { BoundableNodeSimple } from '../../nodes/BoundableNodeSimple.js';
 import { DrawableSimple } from '../Drawables/DrawableSimple.js';
 import type { Engine } from '../../engine.js';
-import { SimpleRenderPipeline } from '../RenderPipeLines/SimpleRenderPipeline.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import {
   createSimpleVertShader,
@@ -55,11 +54,16 @@ export class SimpleMesh extends BoundableNodeSimple {
           },
         );
       }
-      const renderPipeline = engine.gpu.createRenderPipelineBuilder(
-        SimpleRenderPipeline,
-        createSimpleVertShader,
-        createSimpleFragShader2,
-      );
+      const renderPipeline = engine.gpu.createRenderPipelineBuilder({
+        desc: {
+          connections: {
+            main: 'main',
+            pick: 'pick',
+          },
+        },
+        fragmentShaderBuilder: createSimpleFragShader2,
+        vertexShaderBuilder: createSimpleVertShader,
+      });
       this.drawable = new DrawableSimple({
         bindGroups: [],
         node: this,

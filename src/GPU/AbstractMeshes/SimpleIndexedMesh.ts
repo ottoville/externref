@@ -5,9 +5,6 @@ import type { RenderPipelineProps0 } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import type { GPU } from '../../GPU.js';
 import {
-  type AnyVertexStage,
-  type BindGroupLayoutEntry,
-  type VertexBufferLayout,
   type VertexShaderFunction,
   Buffer,
   BufferUsageEnums,
@@ -33,14 +30,9 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
       ReturnType<typeof vertexShaderBuilder>,
       ReturnType<typeof fragmentShaderBuilder>
     >,
-    vertexShaderBuilder: (gpu: GPU) => VertexShaderBuilder<{
-      main: VertexShaderFunction<
-        readonly {
-          [index: string]: BindGroupLayoutEntry<AnyVertexStage>;
-        }[],
-        readonly [VertexBufferLayout]
-      >;
-    }>,
+    vertexShaderBuilder: (
+      gpu: GPU,
+    ) => VertexShaderBuilder<{ [index: string]: VertexShaderFunction }>,
     fragmentShaderBuilder: (
       gpu: GPU,
     ) => FragmentShaderBuilder<{ [index: string]: FragmentShaderFunction }>,
@@ -59,12 +51,6 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
       );
     }
     super(dataNodeProps, mainNodeProps);
-    const primitiveState: GPUPrimitiveState = {
-      frontFace: dataNodeProps.frontFace ?? 'cw',
-      topology,
-    };
-    if (topology === 'triangle-strip' || topology === 'line-strip')
-      primitiveState.stripIndexFormat = 'uint32';
     if (engine.gpu) {
       if (!vBufferGPU) {
         let usages:
@@ -102,11 +88,35 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
           },
         );
       }
-      const renderPipeline = engine.gpu.createRenderPipelineBuilder(
-        { ...createRenderPipeline, primitive: primitiveState },
-        vertexShaderBuilder,
-        fragmentShaderBuilder,
-      );
+      if (topology === 'triangle-strip' || topology === 'line-strip') {
+        var renderPipeline = engine.gpu.createRenderPipelineBuilder(
+          {
+            desc: {
+              ...createRenderPipeline,
+              primitive: {
+                frontFace: dataNodeProps.frontFace ?? 'cw',
+                topology,
+              },
+            },
+            fragmentShaderBuilder: fragmentShaderBuilder,
+            vertexShaderBuilder: vertexShaderBuilder,
+          },
+          'uint32',
+        );
+      } else {
+        var renderPipeline = engine.gpu.createRenderPipelineBuilder({
+          desc: {
+            ...createRenderPipeline,
+            primitive: {
+              frontFace: dataNodeProps.frontFace ?? 'cw',
+              topology,
+            },
+          },
+          fragmentShaderBuilder: fragmentShaderBuilder,
+          vertexShaderBuilder: vertexShaderBuilder,
+        });
+      }
+
       this.drawable = new DrawableIndexed({
         bindGroups: [],
         node: this,

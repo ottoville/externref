@@ -94,8 +94,8 @@ export class NormalsMesh extends DataNode {
       [vertex_normals_bgroup],
       'color.frag',
     ).addFunction('main', colorFragmentFunction);
-    const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
-      {
+    const renderPipeline = engine.gpu!.createRenderPipelineBuilder({
+      desc: {
         connections: {
           main: 'main',
         },
@@ -103,9 +103,9 @@ export class NormalsMesh extends DataNode {
           topology: 'line-list',
         },
       },
-      createDebugNormalsVertShader(vertex_normals_bgroup),
-      () => ColorShader,
-    );
+      fragmentShaderBuilder: () => ColorShader,
+      vertexShaderBuilder: createDebugNormalsVertShader(vertex_normals_bgroup),
+    });
 
     this.drawable = new DrawableSimple({
       bindGroups: [

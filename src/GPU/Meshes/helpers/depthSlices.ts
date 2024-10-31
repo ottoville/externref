@@ -21,15 +21,15 @@ export function creatDepthSlices(
       [typeof gpu.shaders.positionAndTimeBindGroup]
     >;
   };
-  const renderPipeline = gpu.createRenderPipelineBuilder(
-    {
+  const renderPipeline = gpu.createRenderPipelineBuilder({
+    desc: {
       connections: {
         [gpu.renderPassScreen.entryPoint]: 'debug_depth_slices',
       },
     },
-    createDepthSlicesVertShader2,
-    createDebugDepthSlicesFragShader,
-  );
+    fragmentShaderBuilder: createDebugDepthSlicesFragShader,
+    vertexShaderBuilder: createDepthSlicesVertShader2,
+  });
   const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
   if (!gpuVertexBuffer) {
     throw new Error('mesh does not have vertexbuffer');

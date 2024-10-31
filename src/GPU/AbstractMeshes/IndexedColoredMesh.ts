@@ -1,9 +1,6 @@
 ﻿import { MainNodeProps } from 'MainNode.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import {
-  ColoredRenderPipeline,
-  createSimpleFragShader2,
-} from '../RenderPipeLines/ColoredRenderPipeline.js';
+import { createSimpleFragShader2 } from '../RenderPipeLines/ColoredRenderPipeline.js';
 import {
   SimpleIndexedMesh,
   type SimpleIndexedMeshProps,
@@ -21,7 +18,12 @@ export class IndexedColoredMesh extends SimpleIndexedMesh {
     super(
       dataNodeProps,
       mainNodeProps,
-      ColoredRenderPipeline,
+      {
+        connections: {
+          main: 'main',
+          pick: 'pick',
+        },
+      },
       createVertexColorShader,
       createSimpleFragShader2,
       simpleIndexedMeshProps,
