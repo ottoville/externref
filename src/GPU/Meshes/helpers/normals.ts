@@ -86,7 +86,7 @@ export class NormalsMesh extends DataNode {
       },
     );
     const vertex_normals_bgroup =
-      engine.gpu!.shaders.positionAndTimeBindGroup.appendBinds(
+      engine.gpu!.pipelineLayouts.positionAndTimeBindGroup.appendBinds(
         'vertex_normals_bgroup',
         [vertex_normals_layout],
       );
@@ -103,7 +103,7 @@ export class NormalsMesh extends DataNode {
           topology: 'line-list',
         },
       },
-      fragmentShaderBuilder: () => ColorShader,
+      fragmentShaderBuilder: ColorShader,
       vertexShaderBuilder: createDebugNormalsVertShader(vertex_normals_bgroup),
     });
 

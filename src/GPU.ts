@@ -18,16 +18,11 @@ import type {
   RenderPipelineProps,
   RenderPipelineProps0,
 } from './GPU/RenderPipeline.js';
-import { tileCount, float2f32 } from './GPU/Shaders/structs/Structs.js';
-import { createUIVertShader, UIVertShader } from './GPU/Shaders/UI.vert.js';
-import { createUIFragmentShader, UIFragShader } from './GPU/Shaders/UI.frag.js';
+import { tileCount } from './GPU/Shaders/structs/Structs.js';
+import { UIVertShader } from './GPU/Shaders/UI.vert.js';
+import { UIFragShader } from './GPU/Shaders/UI.frag.js';
 import {
-  BGLayout,
-  BufLayout,
   type RENDER_TARGET_FORMAT,
-  SampLayout,
-  ShaderStage,
-  TextLayout,
   TextureUsageEnums,
   type VertexShader,
   ColorRenderTarget,
@@ -50,12 +45,13 @@ import {
   FragmentShaderBuilder,
   PipelineIntersection,
 } from './webgpu-ts/index.js';
-import { createSimpleFragShader } from './GPU/Shaders/Simple.frag.js';
 import {
   createShaderBuilders,
   gpu_memory_index_size,
 } from './GPU/Shaders/ShaderBuilders.js';
 import { StructProperty } from './webgpu-ts/index.js';
+import { createPipelineLayouts } from './GPU/Shaders/Pipelinelayouts.js';
+import { createUI } from './GPU/UI.js';
 
 declare const engine: Engine;
 let curSecond = 0;
@@ -67,8 +63,8 @@ interface createRenderPipelineProps<
   F extends FragmentShaderBuilder | FragmentShader,
 > {
   desc: RenderPipelineProps0<V, F, P>;
-  vertexShaderBuilder: (gpu: GPU) => V;
-  fragmentShaderBuilder: (gpu: GPU) => F;
+  vertexShaderBuilder: V;
+  fragmentShaderBuilder: F;
 }
 
 export class GPU {
@@ -94,20 +90,9 @@ export class GPU {
   readonly #GPUDirectionalLights: Buffer<
     (typeof BufferUsageEnums)['STORAGE|COPY_DST']
   >;
-  readonly lightsTextureBindGroup: RenderPipelineLayout<
-    [
-      typeof this.shaders.sizeBindGroupLayout,
-      typeof this.shaders.uniformBindGroupLayoutWithTime,
-      typeof this.shaders.BindGroupLayoutPosition,
-      BGLayout<{
-        mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
-        diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
-      }>,
-    ]
-  >;
 
   readonly BindGroupPosition: BindGroup<
-    typeof this.shaders.BindGroupLayoutPosition
+    typeof this.pipelineLayouts.BindGroupLayoutPosition
   >;
   readonly timeBuffer: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
 
@@ -180,27 +165,19 @@ export class GPU {
     new Map();
   readonly bindGroupTextureWater: RenderPipelineLayout<
     readonly [
-      typeof this.shaders.sizeBindGroupLayout,
-      typeof this.shaders.uniformBindGroupLayoutWithTime,
-      typeof this.waterTextureLayot,
-      typeof this.shaders.BindGroupLayoutPosition,
+      typeof this.pipelineLayouts.sizeBindGroupLayout,
+      typeof this.pipelineLayouts.uniformBindGroupLayoutWithTime,
+      typeof this.pipelineLayouts.waterTextureLayot,
+      typeof this.pipelineLayouts.BindGroupLayoutPosition,
     ]
   >;
 
   readonly #ro: ResizeObserver;
-  readonly canvasRootLayout: RenderPipelineLayout<
-    [typeof this.BindGroupLayoutCanvas]
-  >;
   readonly UIPipeline: RenderPipelineProps<UIVertShader, UIFragShader>;
 
   readonly updateViewShader: UpdateView;
-  readonly BindGroupLayoutCanvas: BGLayout<{
-    uniforms: BufLayout<ShaderStage.VERTEX, typeof float2f32>;
-    texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
-  }>;
   destroyed = false;
   fps = 0;
-  simpleFragShader: ReturnType<typeof createSimpleFragShader>;
   screenRenderTargets: {
     gRenderTargetDiffuse: MSAARenderTarget<
       RenderpassTarget<
@@ -214,11 +191,8 @@ export class GPU {
       >
     >;
   };
-  waterTextureLayot: BGLayout<{
-    diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
-    mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
-  }>;
   shaders: ReturnType<typeof createShaderBuilders>;
+  pipelineLayouts: ReturnType<typeof createPipelineLayouts>;
   meshUniforms: Struct<{
     readonly transformation: StructProperty<'mat4x4<f32>'>;
     readonly transformation_normals: StructProperty<'mat3x3<f32>'>;
@@ -300,12 +274,10 @@ export class GPU {
     if (props.desc.primitive?.topology.endsWith('strip')) {
       primitiveWithDefaults.stripIndexFormat = stripIndexFormat!;
     }
-    const vertexBuilder = props.vertexShaderBuilder(this);
-    const fragmentBuilder = props.fragmentShaderBuilder(this);
 
     const hash = [
-      vertexBuilder.hash,
-      fragmentBuilder.hash,
+      props.vertexShaderBuilder.hash,
+      props.fragmentShaderBuilder.hash,
       ...Object.values(primitiveWithDefaults),
     ]
       .sort()
@@ -320,12 +292,12 @@ export class GPU {
     if (!renderPipeline) {
       renderPipeline = {
         builder: createRenderPipelineBuilder(
-          vertexBuilder instanceof VertexShaderBuilder
-            ? vertexBuilder.build()
-            : vertexBuilder,
-          fragmentBuilder instanceof FragmentShaderBuilder
-            ? fragmentBuilder.build()
-            : fragmentBuilder,
+          props.vertexShaderBuilder instanceof VertexShaderBuilder
+            ? props.vertexShaderBuilder.build()
+            : props.vertexShaderBuilder,
+          props.fragmentShaderBuilder instanceof FragmentShaderBuilder
+            ? props.fragmentShaderBuilder.build()
+            : props.fragmentShaderBuilder,
         ),
         connections: props.desc.connections,
         depthBuffer: props.desc.depthBuffer,
@@ -393,6 +365,7 @@ export class GPU {
       size: gpu_memory_index_size * this.#maxInstances,
       usages: BufferUsageEnums['UNIFORM|STORAGE|COPY_SRC|COPY_DST'],
     });
+    this.pipelineLayouts = createPipelineLayouts(this);
     this.shaders = createShaderBuilders(this);
 
     this.#GPUPointLights = new Buffer({
@@ -420,7 +393,7 @@ export class GPU {
       }),
     );
     this.BindGroupPosition = new BindGroup(
-      this.shaders.BindGroupLayoutPosition,
+      this.pipelineLayouts.BindGroupLayoutPosition,
       'BindGroupPosition',
       (bindGroup) => ({
         world: this.GPUMeshes.getUniformBinding(
@@ -430,55 +403,15 @@ export class GPU {
         ),
       }),
     );
-    this.simpleFragShader = createSimpleFragShader(
-      this.shaders.positionAndTimeBindGroup,
-    );
-    this.lightsTextureBindGroup = this.shaders.rootCameralayout.appendBinds(
-      'lightsBindGroupTexture2Layout2',
-      [
-        this.shaders.BindGroupLayoutPosition,
-        new BGLayout(this.device, 'lightsBindGroupTexture2', {
-          diffuseTexture: new TextLayout(
-            {
-              texture: {},
-              visibility: ShaderStage.FRAGMENT,
-            },
-            'texture_2d<f32>',
-          ),
-          mySampler: new SampLayout(
-            {
-              sampler: {},
-              visibility: ShaderStage.FRAGMENT,
-            },
-            'sampler',
-          ),
-        }),
-      ],
-    );
-    this.waterTextureLayot = new BGLayout(
-      this.device,
-      'lightsBindGroupTexture2water',
-      {
-        diffuseTexture: new TextLayout(
-          {
-            texture: {},
-            visibility: ShaderStage.FRAGMENT,
-          },
-          'texture_2d<f32>',
-        ),
-        mySampler: new SampLayout(
-          {
-            sampler: {},
-            visibility: ShaderStage.FRAGMENT,
-          },
-          'sampler',
-        ),
-      },
-    );
-    this.bindGroupTextureWater = this.shaders.rootCameralayout.appendBinds(
-      'lightsBindGroupTexture2PipelineLayout',
-      [this.waterTextureLayot, this.shaders.BindGroupLayoutPosition],
-    );
+
+    this.bindGroupTextureWater =
+      this.pipelineLayouts.rootCameralayout.appendBinds(
+        'lightsBindGroupTexture2PipelineLayout',
+        [
+          this.pipelineLayouts.waterTextureLayot,
+          this.pipelineLayouts.BindGroupLayoutPosition,
+        ],
+      );
 
     this.pickRenderPass = new RenderPass(
       {
@@ -517,7 +450,7 @@ export class GPU {
           return [w, h];
         },
         label: 'pickRenderPass',
-        rootLayouts: [this.shaders.rootCameralayout],
+        rootLayouts: [this.pipelineLayouts.rootCameralayout],
         sampleCount: 1,
         size: {
           height: canvas.height,
@@ -569,7 +502,7 @@ export class GPU {
           return [w, h];
         },
         label: 'renderPassScreen',
-        rootLayouts: [this.shaders.rootCameralayout],
+        rootLayouts: [this.pipelineLayouts.rootCameralayout],
         sampleCount: 4,
         size: {
           height: canvas.height,
@@ -620,7 +553,7 @@ export class GPU {
         entryPoint: 'main',
         getSizeOnResize: (w, h) => [w >> 2, h >> 2],
         label: 'renderPassWater',
-        rootLayouts: [this.shaders.rootCameralayout],
+        rootLayouts: [this.pipelineLayouts.rootCameralayout],
         sampleCount: 1,
         size: {
           height: canvas.height,
@@ -659,47 +592,7 @@ export class GPU {
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    this.BindGroupLayoutCanvas = new BGLayout(
-      this.device,
-      'BindGroupLayoutUI',
-      {
-        texture: new TextLayout(
-          {
-            texture: {},
-            visibility: ShaderStage.FRAGMENT,
-          },
-          'texture_2d<f32>',
-        ),
-        uniforms: new BufLayout(
-          {
-            buffer: {
-              minBindingSize: 8,
-              type: 'uniform',
-            },
-            visibility: ShaderStage.VERTEX,
-          },
-          float2f32,
-        ),
-      },
-    );
-
-    this.canvasRootLayout = new RenderPipelineLayout({
-      bindGroupLayouts: [this.BindGroupLayoutCanvas],
-      label: 'canvasRootLayout',
-    });
-    const vertexShader = createUIVertShader(this.canvasRootLayout);
-    const UIfragmentShader = createUIFragmentShader(this);
-    this.UIPipeline = {
-      builder: createRenderPipelineBuilder(vertexShader, UIfragmentShader),
-      connections: {
-        main: 'main',
-      },
-      label: 'UIRenderPipeline',
-      primitive: {
-        frontFace: 'ccw',
-        topology: 'triangle-list',
-      },
-    } as RenderPipelineProps<UIVertShader, UIFragShader>;
+    this.UIPipeline = createUI(this);
 
     this.renderPassCanvas = new RenderPass(
       {
@@ -734,7 +627,7 @@ export class GPU {
           return [w, h];
         },
         label: 'renderPassCanvas',
-        rootLayouts: [this.canvasRootLayout],
+        rootLayouts: [this.pipelineLayouts.canvasRootLayout],
         sampleCount: 1,
         size: {
           height: canvas.height,
@@ -766,7 +659,7 @@ export class GPU {
     });
 
     const ClustersShader = createClustersCompShader(
-      this.shaders.sizeBindGroupLayout,
+      this.pipelineLayouts.sizeBindGroupLayout,
     );
     const computePipelineClustersP =
       ClustersShader[1].createComputePipeline('main');

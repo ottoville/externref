@@ -36,7 +36,7 @@ const buffers = new VertexBufferLayouts([
   },
 ]);
 export function createGroundVertShader(gpu: GPU) {
-  const pipelineLayout = gpu.lightsTextureBindGroup;
+  const pipelineLayout = gpu.pipelineLayouts.lightsTextureBindGroup;
 
   return new VertexShaderBuilder([pipelineLayout], 'Ground.vert')
     .addFunction(

@@ -38,7 +38,10 @@ export function createWireFrameMesh(
         },
       },
       fragmentShaderBuilder: engine.gpu!.shaders.ColorShader,
-      vertexShaderBuilder: createDebugBoundingBoxVertShader(buffer),
+      vertexShaderBuilder: createDebugBoundingBoxVertShader(
+        engine.gpu!,
+        buffer,
+      ),
     });
     const mesh = engine.rust.create_debug_mesh_wireframe(
       targetNode.node.id,

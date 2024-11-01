@@ -24,7 +24,7 @@ const buffers = new VertexBufferLayouts([
   },
 ]);
 export function createVertexColorShader(gpu: GPU) {
-  const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
+  const pipelineLayout = gpu.pipelineLayouts.positionAndTimeBindGroup;
 
   return new VertexShaderBuilder([pipelineLayout] as const, 'VertexColor.vert')
     .addFunction(

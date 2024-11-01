@@ -68,9 +68,9 @@ export class Sun extends MainNode {
             topology: 'triangle-strip',
           },
         },
-        fragmentShaderBuilder: createSingleColorFragShader,
+        fragmentShaderBuilder: createSingleColorFragShader(gpu),
 
-        vertexShaderBuilder: createSunVertShader,
+        vertexShaderBuilder: createSunVertShader(gpu),
       },
       'uint16',
     );

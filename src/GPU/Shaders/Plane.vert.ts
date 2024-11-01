@@ -15,9 +15,9 @@ import {
 } from './structs/Structs.js';
 
 type BindLayouts = [
-  GPU['shaders']['sizeBindGroupLayout'],
-  GPU['shaders']['uniformBindGroupLayoutWithTime'],
-  GPU['shaders']['BindGroupLayoutPosition'],
+  GPU['pipelineLayouts']['sizeBindGroupLayout'],
+  GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
+  GPU['pipelineLayouts']['BindGroupLayoutPosition'],
 ];
 const buffers = new VertexBufferLayouts([
   {

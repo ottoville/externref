@@ -71,7 +71,10 @@ export class BoundingBoxMesh extends IndexedDataNode {
           },
         },
         fragmentShaderBuilder: engine.gpu!.shaders.ColorShader,
-        vertexShaderBuilder: createDebugBoundingBoxVertShader(buffer),
+        vertexShaderBuilder: createDebugBoundingBoxVertShader(
+          engine.gpu!,
+          buffer,
+        ),
       },
       'uint32',
     );

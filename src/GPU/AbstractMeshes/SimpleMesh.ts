@@ -2,10 +2,7 @@
 import { DrawableSimple } from '../Drawables/DrawableSimple.js';
 import type { Engine } from '../../engine.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
-import {
-  createSimpleVertShader,
-  type SimpleVertShader,
-} from '../Shaders/SingleColoredWithNormal.vert.js';
+import { type SimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
 import type { MainNodeProps } from 'MainNode.js';
 import {
@@ -13,7 +10,6 @@ import {
   BufferUsageEnums,
   type VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
-import { createSimpleFragShader2 } from 'GPU/RenderPipeLines/ColoredRenderPipeline.js';
 declare const engine: Engine;
 
 export class SimpleMesh extends BoundableNodeSimple {
@@ -61,8 +57,8 @@ export class SimpleMesh extends BoundableNodeSimple {
             pick: 'pick',
           },
         },
-        fragmentShaderBuilder: createSimpleFragShader2,
-        vertexShaderBuilder: createSimpleVertShader,
+        fragmentShaderBuilder: engine.gpu.shaders.simpleFragShader,
+        vertexShaderBuilder: engine.gpu!.shaders.simpleVertShader,
       });
       this.drawable = new DrawableSimple({
         bindGroups: [],

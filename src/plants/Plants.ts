@@ -100,7 +100,7 @@ export class Plants extends MainNode {
             },
           },
           fragmentShaderBuilder: scene.gpu.shaders.ColorShader,
-          vertexShaderBuilder: createGrassVertShader,
+          vertexShaderBuilder: createGrassVertShader(engine.gpu),
         },
         'uint16',
       );

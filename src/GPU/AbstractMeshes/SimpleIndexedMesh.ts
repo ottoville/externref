@@ -3,7 +3,6 @@ import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine } from '../../engine.js';
 import type { RenderPipelineProps0 } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import type { GPU } from '../../GPU.js';
 import {
   type VertexShaderFunction,
   Buffer,
@@ -27,15 +26,15 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps,
     createRenderPipeline: RenderPipelineProps0<
-      ReturnType<typeof vertexShaderBuilder>,
-      ReturnType<typeof fragmentShaderBuilder>
+      typeof vertexShaderBuilder,
+      typeof fragmentShaderBuilder
     >,
-    vertexShaderBuilder: (
-      gpu: GPU,
-    ) => VertexShaderBuilder<{ [index: string]: VertexShaderFunction }>,
-    fragmentShaderBuilder: (
-      gpu: GPU,
-    ) => FragmentShaderBuilder<{ [index: string]: FragmentShaderFunction }>,
+    vertexShaderBuilder: VertexShaderBuilder<{
+      [index: string]: VertexShaderFunction;
+    }>,
+    fragmentShaderBuilder: FragmentShaderBuilder<{
+      [index: string]: FragmentShaderFunction;
+    }>,
     {
       vBufferGPU,
       topology = 'triangle-list',

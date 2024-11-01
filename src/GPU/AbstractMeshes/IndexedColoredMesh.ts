@@ -1,11 +1,12 @@
 ﻿import { MainNodeProps } from 'MainNode.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import { createSimpleFragShader2 } from '../RenderPipeLines/ColoredRenderPipeline.js';
 import {
   SimpleIndexedMesh,
   type SimpleIndexedMeshProps,
 } from './SimpleIndexedMesh.js';
-import { createVertexColorShader } from '../Shaders/VertexColoredWithNormal.vert.js';
+import { Engine } from 'engine.js';
+declare const engine: Engine;
+
 /**
  * Mesh where each vertex have a color value
  */
@@ -24,8 +25,8 @@ export class IndexedColoredMesh extends SimpleIndexedMesh {
           pick: 'pick',
         },
       },
-      createVertexColorShader,
-      createSimpleFragShader2,
+      engine.gpu!.shaders.vertexColorShader,
+      engine.gpu!.shaders.simpleFragShader,
       simpleIndexedMeshProps,
     );
   }

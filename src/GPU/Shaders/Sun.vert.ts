@@ -12,7 +12,9 @@ import type { GPU } from '../../GPU.js';
 import { PositionOutput, type Scene } from './structs/Structs.js';
 
 export function createSunVertShader(gpu: GPU) {
-  const pipelineLayout = [gpu.shaders.positionAndTimeBindGroup] as const;
+  const pipelineLayout = [
+    gpu.pipelineLayouts.positionAndTimeBindGroup,
+  ] as const;
 
   const builder = new VertexShaderBuilder(
     pipelineLayout,

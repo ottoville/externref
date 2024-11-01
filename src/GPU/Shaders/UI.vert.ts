@@ -20,7 +20,9 @@ const buffers = new VertexBufferLayouts([
   },
 ]);
 
-export function createUIVertShader(pipelineLayout: GPU['canvasRootLayout']) {
+export function createUIVertShader(
+  pipelineLayout: GPU['pipelineLayouts']['canvasRootLayout'],
+) {
   return new VertexShaderBuilder([pipelineLayout] as const, 'UI.vert')
     .addFunction(
       'main',
@@ -35,7 +37,7 @@ export function createUIVertShader(pipelineLayout: GPU['canvasRootLayout']) {
             return output;
 `,
       ) satisfies VertexShaderFunction<
-        [
+        readonly [
           {
             uniforms: BufLayout<ShaderStage.VERTEX, typeof float2f32>;
           },

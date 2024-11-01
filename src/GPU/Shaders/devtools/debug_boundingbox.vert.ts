@@ -13,6 +13,7 @@ import { GPU } from '../../../GPU.js';
 import { type Scene, colorPositionOutput } from '../structs/Structs.js';
 
 export const createDebugBoundingBoxVertShader = (
+  gpu: GPU,
   buffers: VertexBufferLayouts<
     readonly [
       {
@@ -23,27 +24,26 @@ export const createDebugBoundingBoxVertShader = (
       },
     ]
   >,
-) =>
-  function (gpu: GPU) {
-    const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
-    return new VertexShaderBuilder(
-      [pipelineLayout],
-      'debug_boundingBox.vert',
-    ).addFunction(
-      'main',
-      new VertexShaderFunction(
-        colorPositionOutput,
-        buffers,
-        (
-          [
-            ,
-            /*{ uniforms, }*/ {
-              scene /*time, clusters_array, meshes, projection*/,
-            },
-            { world },
-          ],
-          [{ position }],
-        ) => WGSLcode/* wgsl */ `
+) => {
+  const pipelineLayout = gpu.pipelineLayouts.positionAndTimeBindGroup;
+  return new VertexShaderBuilder(
+    [pipelineLayout],
+    'debug_boundingBox.vert',
+  ).addFunction(
+    'main',
+    new VertexShaderFunction(
+      colorPositionOutput,
+      buffers,
+      (
+        [
+          ,
+          /*{ uniforms, }*/ {
+            scene /*time, clusters_array, meshes, projection*/,
+          },
+          { world },
+        ],
+        [{ position }],
+      ) => WGSLcode/* wgsl */ `
             var output : Output;
             var vertexPosition:vec4<f32> = ${world.prop(
               'transformation',
@@ -54,28 +54,24 @@ export const createDebugBoundingBoxVertShader = (
             output.color = vec3<f32>(0.0,1.0,0.0);
             return output;
         `,
-      ) satisfies VertexShaderFunction<
-        [
-          // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-          {},
-          {
-            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-          },
-          {
-            world: BufLayout<
-              ShaderStage.VERTEX_AND_FRAGMENT,
-              GPU['meshUniforms']
-            >;
-          },
-        ]
-      >,
-    );
-  };
+    ) satisfies VertexShaderFunction<
+      [
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+        {},
+        {
+          scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+        },
+        {
+          world: BufLayout<
+            ShaderStage.VERTEX_AND_FRAGMENT,
+            GPU['meshUniforms']
+          >;
+        },
+      ]
+    >,
+  );
+};
 export type DebugBoundingBoxVertShader = VertexShader<
-  ReturnType<
-    ReturnType<typeof createDebugBoundingBoxVertShader>
-  >['entryPoints'],
-  ReturnType<
-    ReturnType<typeof createDebugBoundingBoxVertShader>
-  >['pipelineLayouts']
+  ReturnType<typeof createDebugBoundingBoxVertShader>['entryPoints'],
+  ReturnType<typeof createDebugBoundingBoxVertShader>['pipelineLayouts']
 >;

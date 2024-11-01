@@ -61,7 +61,9 @@ export abstract class DrawableDirect<N extends MainNode> extends Drawable<N> {
     const bindgroups =
       firstPipelinelayout.pipelineLayouts[0]!.bindGroupLayouts.map(
         (bgLayout) => {
-          if (bgLayout === engine.gpu!.shaders.BindGroupLayoutPosition) {
+          if (
+            bgLayout === engine.gpu!.pipelineLayouts.BindGroupLayoutPosition
+          ) {
             return {
               bindGroup: engine.gpu!.BindGroupPosition,
               offsets: [

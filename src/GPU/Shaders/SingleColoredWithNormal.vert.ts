@@ -76,9 +76,10 @@ const buffers = new VertexBufferLayouts([
   },
 ]);
 export function createSimpleVertShader(gpu: GPU) {
-  const pipelineLayout = gpu.shaders.positionAndTimeBindGroup;
-
-  return new VertexShaderBuilder([pipelineLayout] as const, 'Simple.vert')
+  return new VertexShaderBuilder(
+    [gpu.pipelineLayouts.positionAndTimeBindGroup] as const,
+    'Simple.vert',
+  )
     .addFunction(
       'main',
       new VertexShaderFunction(

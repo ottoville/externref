@@ -5,23 +5,19 @@ import {
   ShaderStage,
   Buffer,
   BufferUsageEnums,
-  RenderPipelineLayout,
   FragmentShaderFunction,
   FragmentShaderBuilder,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
 import {
-  Clusters,
   IntArray,
   PlaneArray,
-  ProjectionStruct,
-  Scene,
-  ScreenDimensions,
-  Time,
   colorPositionOutput,
   diffuseOutput,
 } from './structs/Structs.js';
-import { PROJECTION_BUFFER_SIZE } from '../../GPU/Projection.js';
+import { createSimpleVertShader } from './SingleColoredWithNormal.vert.js';
+import { createSimpleFragShader } from './Simple.frag.js';
+import { createVertexColorShader } from './VertexColoredWithNormal.vert.js';
 export const TerrainSubdivisions = [64, 64] as const;
 export const gpu_memory_index_size = 256;
 
@@ -35,101 +31,6 @@ export const colorFragmentFunction = new FragmentShaderFunction(
 );
 
 export function createShaderBuilders(gpu: GPU) {
-  const BindGroupLayoutPosition = new BGLayout(
-    gpu.device,
-    'BindGroupLayoutPosition',
-    {
-      world: new BufLayout(
-        {
-          buffer: {
-            hasDynamicOffset: true,
-            minBindingSize: gpu_memory_index_size,
-            type: 'uniform',
-          },
-          visibility: ShaderStage.VERTEX_AND_FRAGMENT,
-        },
-        gpu.meshUniforms,
-      ),
-    },
-  );
-  const uniformBindGroupLayoutWithTime = new BGLayout(
-    gpu.device,
-    'uniformBindGroupLayoutWithTime',
-    {
-      clusters_array: new BufLayout(
-        {
-          //clusters
-          buffer: {
-            minBindingSize: 7962624, //Must be in sync with Struct Clusters in shader
-            type: 'read-only-storage',
-          },
-          visibility: ShaderStage.FRAGMENT,
-        },
-        Clusters,
-      ),
-      meshes: new BufLayout(
-        {
-          // mesh array for lights
-          buffer: {
-            minBindingSize: 512,
-            type: 'read-only-storage',
-          },
-          visibility: ShaderStage.FRAGMENT,
-        },
-        gpu.meshUniforms.asArray,
-      ),
-      projection: new BufLayout(
-        {
-          //projection
-          buffer: {
-            minBindingSize: PROJECTION_BUFFER_SIZE,
-            type: 'uniform',
-          },
-          visibility: ShaderStage.FRAGMENT,
-        },
-        ProjectionStruct,
-      ),
-      scene: new BufLayout(
-        {
-          buffer: {
-            minBindingSize: 144,
-            type: 'uniform',
-          },
-          visibility: ShaderStage.VERTEX_AND_FRAGMENT,
-        },
-        Scene,
-      ),
-      time: new BufLayout(
-        {
-          buffer: {
-            minBindingSize: 8,
-            type: 'uniform',
-          },
-          visibility: ShaderStage.VERTEX,
-        },
-        Time,
-      ),
-    },
-  );
-  const sizeBindGroupLayout = new BGLayout(gpu.device, 'sizeBindGroupLayout', {
-    screen_dimensions: new BufLayout(
-      {
-        buffer: {
-          minBindingSize: 16,
-          type: 'uniform',
-        },
-        visibility: ShaderStage.COMPUTE_AND_FRAGMENT,
-      },
-      ScreenDimensions,
-    ),
-  });
-  const rootCameralayout = new RenderPipelineLayout({
-    bindGroupLayouts: [
-      sizeBindGroupLayout,
-      uniformBindGroupLayoutWithTime,
-    ] as const,
-    label: 'rootCamera',
-  });
   const facet12ArrGPUBuffer = new Buffer({
     gpu: gpu.device,
     label: 'facet12ArrGPUBuffer',
@@ -172,48 +73,48 @@ export function createShaderBuilders(gpu: GPU) {
       IntArray,
     ),
   });
-  const terrainHeightsbindGroupTreePosition = rootCameralayout.appendBinds(
-    'TerrainHeightsbindGroupTreePosition',
-    [
-      {
-        bindGroup: new BindGroup(
-          heightsLayout,
-          'TerrainHeightsbindGroupTree',
-          (bindGroup) => ({
-            facet12: facet12ArrGPUBuffer.getStorageBinding(bindGroup),
-            slopes: slopeArrGPUBuffer.getStorageBinding(bindGroup),
-          }),
-        ),
-      },
-      BindGroupLayoutPosition,
-    ],
-  );
-  const positionAndTimeBindGroup = rootCameralayout.appendBinds(
-    'positionBindGroupTimeWGSLLayot',
-    [BindGroupLayoutPosition],
-  );
+  const terrainHeightsbindGroupTreePosition =
+    gpu.pipelineLayouts.rootCameralayout.appendBinds(
+      'TerrainHeightsbindGroupTreePosition',
+      [
+        {
+          bindGroup: new BindGroup(
+            heightsLayout,
+            'TerrainHeightsbindGroupTree',
+            (bindGroup) => ({
+              facet12: facet12ArrGPUBuffer.getStorageBinding(bindGroup),
+              slopes: slopeArrGPUBuffer.getStorageBinding(bindGroup),
+            }),
+          ),
+        },
+        gpu.pipelineLayouts.BindGroupLayoutPosition,
+      ],
+    );
+
   const ColorShader = new FragmentShaderBuilder(
     [
       terrainHeightsbindGroupTreePosition,
-      rootCameralayout,
-      positionAndTimeBindGroup,
+      gpu.pipelineLayouts.rootCameralayout,
+      gpu.pipelineLayouts.positionAndTimeBindGroup,
     ],
     'color.frag',
   ).addFunction('main', colorFragmentFunction);
+  const simpleFragShader = createSimpleFragShader(
+    gpu.pipelineLayouts.positionAndTimeBindGroup,
+  );
+  const vertexColorShader = createVertexColorShader(gpu);
   return {
-    BindGroupLayoutPosition,
     /**
      Non pickable single color shader where color is set from vertice
      See Simple.frag.ts for pickable counterpart
      See SingleColor.frag.ts for pickable shared single color for all vertices
      */
-    ColorShader: () => ColorShader,
+    ColorShader,
     facet12ArrGPUBuffer,
-    positionAndTimeBindGroup,
-    rootCameralayout,
-    sizeBindGroupLayout,
+    simpleFragShader,
+    simpleVertShader: createSimpleVertShader(gpu),
     slopeArrGPUBuffer,
     terrainHeightsbindGroupTreePosition,
-    uniformBindGroupLayoutWithTime,
+    vertexColorShader,
   } as const;
 }

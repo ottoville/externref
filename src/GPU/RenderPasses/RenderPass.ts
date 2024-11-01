@@ -116,7 +116,7 @@ export class RenderPass<
     this.#screenDimensionsBuffer = this.#updateSizeBindGroup(gpu, true);
     this.createSizeBindGroup = () => {
       this.sizeBindGroup = new BindGroup(
-        gpu.shaders.sizeBindGroupLayout,
+        gpu.pipelineLayouts.sizeBindGroupLayout,
         'sizeBindGroup',
         (bindGroup) => ({
           screen_dimensions: this.#screenDimensionsBuffer.getUniformBinding(

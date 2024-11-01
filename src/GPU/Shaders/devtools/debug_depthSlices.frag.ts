@@ -21,7 +21,10 @@ var output:Output;
 );
 export function createDebugDepthSlicesFragShader(gpu: GPU) {
   return new FragmentShaderBuilder(
-    [gpu.lightsTextureBindGroup, gpu.shaders.positionAndTimeBindGroup],
+    [
+      gpu.pipelineLayouts.lightsTextureBindGroup,
+      gpu.pipelineLayouts.positionAndTimeBindGroup,
+    ],
     'DebugDepthSlicesFragShader.frag',
     ([
       { screen_dimensions },

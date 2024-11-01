@@ -93,7 +93,7 @@ const mainFunction = new FragmentShaderFunction(
   ]
 >;
 export function createSimpleFragShader(
-  pipelineLayout: GPU['shaders']['positionAndTimeBindGroup'],
+  pipelineLayout: GPU['pipelineLayouts']['positionAndTimeBindGroup'],
 ) {
   return new FragmentShaderBuilder(
     [pipelineLayout],

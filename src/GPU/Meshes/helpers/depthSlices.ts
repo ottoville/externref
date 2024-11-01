@@ -11,24 +11,23 @@ export function creatDepthSlices(
   targetNode: DrawableDirect<DataNode>,
 ) {
   targetNode.remove();
-  const createDepthSlicesVertShader2 = () => {
-    return targetNode.renderPipeline.builder.vertexShader as VertexShader<
-      {
-        // Need to assume main function.
-        main: VertexShaderFunction;
-      },
-      // Need to assume some same layout than createDebugDepthSlicesFragShader
-      [typeof gpu.shaders.positionAndTimeBindGroup]
-    >;
-  };
+  const DepthSlicesVertShader = targetNode.renderPipeline.builder
+    .vertexShader as VertexShader<
+    {
+      // Need to assume main function.
+      main: VertexShaderFunction;
+    },
+    // Need to assume some same layout than createDebugDepthSlicesFragShader
+    [typeof gpu.pipelineLayouts.positionAndTimeBindGroup]
+  >;
   const renderPipeline = gpu.createRenderPipelineBuilder({
     desc: {
       connections: {
         [gpu.renderPassScreen.entryPoint]: 'debug_depth_slices',
       },
     },
-    fragmentShaderBuilder: createDebugDepthSlicesFragShader,
-    vertexShaderBuilder: createDepthSlicesVertShader2,
+    fragmentShaderBuilder: createDebugDepthSlicesFragShader(gpu),
+    vertexShaderBuilder: DepthSlicesVertShader,
   });
   const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
   if (!gpuVertexBuffer) {

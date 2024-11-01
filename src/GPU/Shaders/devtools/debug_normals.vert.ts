@@ -29,28 +29,24 @@ type vertices_array = {
 export const createDebugNormalsVertShader = (
   bindGroup: RenderPipelineLayout<
     [
-      ...GPU['shaders']['positionAndTimeBindGroup']['bindGroupLayouts'],
+      ...GPU['pipelineLayouts']['positionAndTimeBindGroup']['bindGroupLayouts'],
       BGLayout<vertices_array>,
     ]
   >,
 ) =>
-  function () {
-    return new VertexShaderBuilder(
-      [bindGroup],
-      'debug_normals.vert',
-    ).addFunction(
-      'main',
-      new VertexShaderFunction(
-        colorPositionOutput,
-        new VertexBufferLayouts([]),
-        ([
-          ,
-          /*{ uniforms, }*/ {
-            scene /*time, clusters_array, meshes, projection*/,
-          },
-          { world },
-          { vertices },
-        ]) => WGSLcode/* wgsl */ `
+  new VertexShaderBuilder([bindGroup], 'debug_normals.vert').addFunction(
+    'main',
+    new VertexShaderFunction(
+      colorPositionOutput,
+      new VertexBufferLayouts([]),
+      ([
+        ,
+        /*{ uniforms, }*/ {
+          scene /*time, clusters_array, meshes, projection*/,
+        },
+        { world },
+        { vertices },
+      ]) => WGSLcode/* wgsl */ `
         var real_idx = f32(${VertexBuildin.vertex_index}) / 2.0;
         var vertice = ${vertices.prop('values')}[u32(floor(real_idx))];
 
@@ -65,21 +61,20 @@ export const createDebugNormalsVertShader = (
         output.color=vec3<f32>(0.0,1.0,0.0);
         return output;
         `,
-      ) satisfies VertexShaderFunction<
-        [
-          // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-          {},
-          {
-            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-          },
-          {
-            world: BufLayout<
-              ShaderStage.VERTEX_AND_FRAGMENT,
-              GPU['meshUniforms']
-            >;
-          },
-          vertices_array,
-        ]
-      >,
-    );
-  };
+    ) satisfies VertexShaderFunction<
+      [
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+        {},
+        {
+          scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+        },
+        {
+          world: BufLayout<
+            ShaderStage.VERTEX_AND_FRAGMENT,
+            GPU['meshUniforms']
+          >;
+        },
+        vertices_array,
+      ]
+    >,
+  );

@@ -455,7 +455,7 @@ export abstract class UIRectangle<
           bindGroups: [
             {
               bindGroup: new BindGroup(
-                engine.gpu!.BindGroupLayoutCanvas,
+                engine.gpu!.pipelineLayouts.BindGroupLayoutCanvas,
                 'UI_bindgroup_' + label,
                 (bindGroup) => {
                   return {

@@ -32,7 +32,7 @@ const buffers = new VertexBufferLayouts([
 ]);
 
 export function createGrassVertShader(gpu: GPU) {
-  const pipelineLayout = gpu.shaders.rootCameralayout;
+  const pipelineLayout = gpu.pipelineLayouts.rootCameralayout;
 
   const shaderFunction = new VertexShaderFunction(
     colorPositionOutput,

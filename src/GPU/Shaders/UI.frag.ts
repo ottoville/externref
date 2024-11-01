@@ -9,7 +9,10 @@ import {
 } from '../../webgpu-ts/index.js';
 
 export function createUIFragmentShader(gpu: GPU) {
-  return new FragmentShaderBuilder([gpu.canvasRootLayout], 'UI.frag')
+  return new FragmentShaderBuilder(
+    [gpu.pipelineLayouts.canvasRootLayout],
+    'UI.frag',
+  )
     .addFunction(
       'main',
       new FragmentShaderFunction(
@@ -27,7 +30,7 @@ export function createUIFragmentShader(gpu: GPU) {
           `,
         UI_Input,
       ) satisfies FragmentShaderFunction<
-        [
+        readonly [
           {
             texture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
           },

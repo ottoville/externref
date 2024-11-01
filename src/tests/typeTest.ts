@@ -9,8 +9,6 @@ import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { createWaterVertShader } from '../GPU/Shaders/Water.vert.js';
 import { Texture, TextureUsageEnums } from '../webgpu-ts/Texture.js';
-import { createSimpleVertShader } from 'GPU/Shaders/SingleColoredWithNormal.vert.js';
-import type { GPU } from '../GPU.js';
 import { createSunVertShader } from 'GPU/Shaders/Sun.vert.js';
 import { createSingleColorFragShader } from 'GPU/Shaders/SingleColor.frag.js';
 import { TextureView } from 'webgpu-ts/TextureView.js';
@@ -137,10 +135,8 @@ engine.gpu!.createRenderPipelineBuilder({
       topology: 'triangle-strip',
     },
   },
-  vertexShaderBuilder: createSimpleVertShader,
-  fragmentShaderBuilder: (_gpu: GPU) => {
-    return engine.gpu!.simpleFragShader;
-  },
+  vertexShaderBuilder: engine.gpu!.shaders.simpleVertShader,
+  fragmentShaderBuilder: engine.gpu!.shaders.simpleFragShader,
 });
 //Should be fine
 const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
@@ -152,10 +148,8 @@ const renderPipeline = engine.gpu!.createRenderPipelineBuilder(
       },
       primitive: primitiveState,
     },
-    vertexShaderBuilder: createSimpleVertShader,
-    fragmentShaderBuilder: (_gpu: GPU) => {
-      return engine.gpu!.simpleFragShader;
-    },
+    vertexShaderBuilder: engine.gpu!.shaders.simpleVertShader,
+    fragmentShaderBuilder: engine.gpu!.shaders.simpleFragShader,
   },
   'uint32',
 );
@@ -178,8 +172,8 @@ engine.gpu!.createRenderPipelineBuilder(
         topology: 'triangle-list',
       },
     },
-    vertexShaderBuilder: createSunVertShader,
-    fragmentShaderBuilder: createSingleColorFragShader,
+    vertexShaderBuilder: createSunVertShader(engine.gpu!),
+    fragmentShaderBuilder: createSingleColorFragShader(engine.gpu!),
   },
   'uint32',
 );
@@ -191,8 +185,8 @@ engine.gpu!.createRenderPipelineBuilder({
       topology: 'triangle-list',
     },
   },
-  vertexShaderBuilder: createSunVertShader,
-  fragmentShaderBuilder: createSingleColorFragShader,
+  vertexShaderBuilder: createSunVertShader(engine.gpu!),
+  fragmentShaderBuilder: createSingleColorFragShader(engine.gpu!),
 });
 //Should be fine
 const renderPipeline2 = engine.gpu!.createRenderPipelineBuilder(
@@ -204,8 +198,8 @@ const renderPipeline2 = engine.gpu!.createRenderPipelineBuilder(
         topology: 'triangle-strip',
       },
     },
-    vertexShaderBuilder: createSunVertShader,
-    fragmentShaderBuilder: createSingleColorFragShader,
+    vertexShaderBuilder: createSunVertShader(engine.gpu!),
+    fragmentShaderBuilder: createSingleColorFragShader(engine.gpu!),
   },
   'uint32',
 );

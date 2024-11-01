@@ -68,8 +68,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
             pick: 'pick',
           },
         },
-        fragmentShaderBuilder: createGroundFragShader,
-        vertexShaderBuilder: createGroundVertShader,
+        fragmentShaderBuilder: createGroundFragShader(engine.gpu),
+        vertexShaderBuilder: createGroundVertShader(engine.gpu),
       });
       this.drawable = new LightsTextureDrawableIndexed(
         {
@@ -82,7 +82,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
           renderPipeline,
           vertexBuffers: [this.vBuffer],
         },
-        engine.gpu.lightsTextureBindGroup,
+        engine.gpu.pipelineLayouts.lightsTextureBindGroup,
         initialTexture,
         this.sampler!,
       );

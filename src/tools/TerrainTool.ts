@@ -181,22 +181,19 @@ export class TerrainTool extends MainNode {
     });
     engine.addInputListener(this.#pointerdownf);
     this.positions_count = 4;
-    const getRenderPipeline = Object.freeze({
-      connections: {
-        main: 'main',
-      },
-    } as const);
 
     const renderPipeline = terrain.gpu.createRenderPipelineBuilder({
       desc: {
-        ...getRenderPipeline,
+        connections: {
+          main: 'main',
+        },
         primitive: {
           cullMode: 'none',
           topology: 'triangle-list',
         },
       },
       fragmentShaderBuilder: terrain.gpu.shaders.ColorShader,
-      vertexShaderBuilder: createHelperVertShader,
+      vertexShaderBuilder: createHelperVertShader(terrain.gpu),
     });
     const scene = engine.scenes.get('main');
     if (!scene) throw new Error('no scene');

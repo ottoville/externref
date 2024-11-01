@@ -69,7 +69,7 @@ export class paintPlane extends paintGround {
         },
       },
       fragmentShaderBuilder: ground.gpu.shaders.ColorShader,
-      vertexShaderBuilder: createPlaneAtGroundHeightVertShader,
+      vertexShaderBuilder: createPlaneAtGroundHeightVertShader(ground.gpu),
     });
 
     this.#mesh = new PlaneMesh(renderPipeline);

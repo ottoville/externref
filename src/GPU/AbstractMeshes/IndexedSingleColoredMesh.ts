@@ -4,8 +4,9 @@ import {
   type SimpleIndexedMeshProps,
 } from './SimpleIndexedMesh.js';
 import { MainNodeProps } from 'MainNode.js';
-import { createSimpleFragShader2 } from '../RenderPipeLines/ColoredRenderPipeline.js';
-import { createSimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
+import { Engine } from 'engine.js';
+declare const engine: Engine;
+
 /**
  * Mesh where whole mesh is single colored
  */
@@ -24,8 +25,8 @@ export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
           pick: 'pick',
         },
       },
-      createSimpleVertShader,
-      createSimpleFragShader2,
+      engine.gpu!.shaders.simpleVertShader,
+      engine.gpu!.shaders.simpleFragShader,
       simpleIndexedMeshProps,
     );
   }

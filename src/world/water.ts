@@ -44,8 +44,8 @@ export class Sea extends BoundableNodeSimple {
               topology: 'triangle-strip',
             },
           },
-          fragmentShaderBuilder: createWaterFragShader,
-          vertexShaderBuilder: createWaterVertShader,
+          fragmentShaderBuilder: createWaterFragShader(engine.gpu),
+          vertexShaderBuilder: createWaterVertShader(engine.gpu),
         },
         'uint16',
       );
@@ -59,7 +59,7 @@ export class Sea extends BoundableNodeSimple {
         bindGroups: [
           {
             bindGroup: new BindGroup(
-              engine.gpu.waterTextureLayot,
+              engine.gpu.pipelineLayouts.waterTextureLayot,
               'waterTexture',
               () => ({
                 diffuseTexture:
