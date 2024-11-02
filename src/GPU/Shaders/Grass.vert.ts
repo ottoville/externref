@@ -96,7 +96,7 @@ export function createGrassVertShader(gpu: GPU) {
          
             //var diffuse:f32 = dot(normal, lights.sunDirection)*lights.shadow;
          
-            output.position = ${scene.prop('modelViewProjection')} * worldPos;
+            output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
          
             output.color = vec3<f32>(clamp(${shape}.w,0.0,1.0),1.0,0.0);//*diffuse;
              return output;

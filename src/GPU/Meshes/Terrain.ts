@@ -17,7 +17,6 @@ import type {
   VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
-import { createGroundFragShader } from '../Shaders/Ground.frag.js';
 
 export class TerrainMesh extends BoundableNodeIndexed {
   sampler: GPUSampler | undefined;
@@ -68,7 +67,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
             pick: 'pick',
           },
         },
-        fragmentShaderBuilder: createGroundFragShader(engine.gpu),
+        fragmentShaderBuilder: engine.gpu.shaders.groundFragShader,
         vertexShaderBuilder: createGroundVertShader(engine.gpu),
       });
       this.drawable = new LightsTextureDrawableIndexed(
@@ -82,7 +81,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
           renderPipeline,
           vertexBuffers: [this.vBuffer],
         },
-        engine.gpu.pipelineLayouts.lightsTextureBindGroup,
+        engine.gpu.pipelineLayouts.lightsTextureBindGroup.bindGroupLayouts[3],
         initialTexture,
         this.sampler!,
       );

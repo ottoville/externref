@@ -37,8 +37,8 @@ export function createWaterVertShader(gpu: GPU) {
         [{ position }],
       ) => WGSLcode/* wgsl */ `
             var output:Output;
-            output.Position = ${scene.prop('modelViewProjection')} * ${position};
-            output.v_uv = output.Position;
+            output.fragCoord = ${scene.prop('modelViewProjection')} * ${position};
+            output.v_uv = output.fragCoord;
             output.position=${position};
             output.id=${world.prop('id')};
         

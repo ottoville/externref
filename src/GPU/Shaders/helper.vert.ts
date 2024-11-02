@@ -45,7 +45,7 @@ var worldPos:vec4<f32> = ${world.prop(
     'transformation',
   )} * vec4<f32>(offset.x, position.y, offset.y, 1.0);
 worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 3.0;
-output.position = ${scene.prop('modelViewProjection')} * worldPos;
+output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
 output.color = vec3<f32>(1.0,1.0,1.0);
 return output;
         `,

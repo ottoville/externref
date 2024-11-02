@@ -119,10 +119,9 @@ export function createPipelineLayouts(gpu: GPU) {
     'positionBindGroupTimeWGSLLayot',
     [BindGroupLayoutPosition],
   );
-  const lightsTextureBindGroup = rootCameralayout.appendBinds(
+  const lightsTextureBindGroup = positionAndTimeBindGroup.appendBinds(
     'lightsBindGroupTexture2Layout2',
     [
-      BindGroupLayoutPosition,
       new BGLayout(gpu.device, 'lightsBindGroupTexture2', {
         diffuseTexture: new TextLayout(
           {

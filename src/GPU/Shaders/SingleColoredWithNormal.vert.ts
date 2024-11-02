@@ -45,7 +45,7 @@ export function createPickOutput(
     ) => WGSLcode/* wgsl */ `
         var output: PickOutput;
         var worldPos=${world.prop('transformation')} * ${position};
-        output.Position = ${scene.prop('modelViewProjection')} * worldPos;
+        output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
         output.id=${world.prop('id')};
         //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
         //ambient=lights.ambient;

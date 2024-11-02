@@ -87,9 +87,9 @@ export function createGroundVertShader(gpu: GPU) {
           [{ position }],
         ) => WGSLcode/* wgsl */ `
             var output : PickOutput;
-            output.Position = ${scene.prop(
+            output.fragCoord = ${scene.prop(
               'modelViewProjection',
-            )} * vec4<f32>(${position}.xyz, 1.0);
+            )} * ${position};
             output.id=${world.prop('id')};
             return output;
         `,

@@ -48,7 +48,7 @@ export class Plane extends VertexShader {
                 var worldPos:vec4<f32> = ${world.prop(
                   'transformation',
                 )} * ${position};
-                output.Position = ${scene.prop(
+                output.fragCoord = ${scene.prop(
                   'modelViewProjection',
                 )} * worldPos;
                 output.color = vec3<f32>(1.0,1.0,1.0);

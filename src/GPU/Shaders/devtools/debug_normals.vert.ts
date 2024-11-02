@@ -57,7 +57,7 @@ export const createDebugNormalsVertShader = (
         if(${VertexBuildin.vertex_index} % 2u == 1u) {
             vertexPosition = vertexPosition + vec4<f32>(normalize(${world.prop('transformation_normals')} *   vertice.normal)*5,0.0);
         }
-        output.position = ${scene.prop('modelViewProjection')} * vertexPosition;
+        output.fragCoord = ${scene.prop('modelViewProjection')} * vertexPosition;
         output.color=vec3<f32>(0.0,1.0,0.0);
         return output;
         `,

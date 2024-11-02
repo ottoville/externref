@@ -19,7 +19,6 @@ import {
   type Texture,
   type TextureView,
   type VertexShader,
-  type RenderPipelineLayout,
 } from '../../webgpu-ts/index.js';
 import type { Engine } from 'engine.js';
 import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
@@ -43,24 +42,17 @@ export class LightsTextureDrawableIndexed<
       renderPipeline: R;
       vertexBuffers: MappedVertexBuffers<R>;
     },
-    layout: RenderPipelineLayout<
-      readonly [
-        BGLayout,
-        BGLayout,
-        BGLayout,
-        BGLayout<{
-          mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
-          diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
-        }>,
-      ]
-    >,
+    bglayout: BGLayout<{
+      mySampler: SampLayout<ShaderStage.FRAGMENT, 'sampler'>;
+      diffuseTexture: TextLayout<ShaderStage.FRAGMENT, 'texture_2d<f32>'>;
+    }>,
     private texture: TextureView<Texture<TEXTURE_BINDING_TEXTURE>>,
     private sampler: GPUSampler,
     drawableDirectProps?: DrawableDirectProps,
     drawableIndexedProps: DrawableIndexedProps = {},
   ) {
     const textureBindGroup = new BindGroup(
-      layout.bindGroupLayouts[3],
+      bglayout,
       'LightsTextureDrawableIndexed_static',
       () => {
         return {

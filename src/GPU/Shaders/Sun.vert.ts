@@ -68,7 +68,7 @@ export function createSunVertShader(gpu: GPU) {
             VertexBuildin.vertex_index
           }].y;
         
-          output.Position = ${scene.prop(
+          output.fragCoord = ${scene.prop(
             'modelViewProjection',
           )} * vec4<f32>(transformbill.xyz, 1.0);
           //output.Position.z = 1.0;

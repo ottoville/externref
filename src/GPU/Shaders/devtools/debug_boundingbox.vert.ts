@@ -48,7 +48,7 @@ export const createDebugBoundingBoxVertShader = (
             var vertexPosition:vec4<f32> = ${world.prop(
               'transformation',
             )} * ${position};
-            output.position = ${scene.prop(
+            output.fragCoord = ${scene.prop(
               'modelViewProjection',
             )} * vertexPosition;
             output.color = vec3<f32>(0.0,1.0,0.0);

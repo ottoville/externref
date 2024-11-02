@@ -3,26 +3,36 @@
 import { Struct, StructProperty } from '../../../webgpu-ts/index.js';
 export const tileCount = [32, 18, 48] as const;
 
+const fragCoord = new StructProperty('@builtin(position)', 'vec4<f32>');
+
 export const typicalOutput = new Struct('Output', {
-  fragCoord: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  fragCoord,
   normal: new StructProperty('@location(0)', 'vec3<f32>'),
   id: new StructProperty('@location(1) @interpolate(flat)', 'u32'),
   color: new StructProperty('@location(2)', 'vec3<f32>'),
   position: new StructProperty('@location(3)', 'vec3<f32>'),
   scenes: new StructProperty('@location(4) @interpolate(flat)', 'u32'),
 });
+export const GroundInput = new Struct('Output', {
+  fragCoord,
+  normal: new StructProperty('@location(0)', 'vec3<f32>'),
+  id: new StructProperty('@location(1) @interpolate(flat)', 'u32'),
+  v_uv: new StructProperty('@location(2)', 'vec2<f32>'),
+  position: new StructProperty('@location(3)', 'vec3<f32>'),
+  scenes: new StructProperty('@location(4) @interpolate(flat)', 'u32'),
+});
 export const fragOutput = new Struct('Output', {
-  fragCoord: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  fragCoord,
 });
 export const pickOutput = new Struct('PickOutput', {
-  Position: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  fragCoord,
   id: new StructProperty('@location(0) @interpolate(flat)', 'u32'),
 });
 export const pickOutputFragment = new Struct('PickOutput', {
   ID: new StructProperty('@location(0)', 'u32'),
 });
 export const colorPositionOutput = new Struct('Output', {
-  position: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  fragCoord,
   color: new StructProperty('@location(0)', 'vec3<f32>'),
 });
 export const diffuseOutput = new Struct('Output', {
@@ -94,26 +104,19 @@ export const Vec4Array = new Struct('Vec4Array', {
   vectors: new StructProperty('', 'array<vec4<f32>>'),
 });
 export const PositionOutput = new Struct('Output', {
-  Position: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  fragCoord,
 });
 export const UI_Input = new Struct('Output', {
-  Position: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  fragCoord,
   v_uv: new StructProperty('@location(0)', 'vec2<f32>'),
 });
 export const WaterInput = new Struct('Output', {
-  Position: new StructProperty('@builtin(position)', 'vec4<f32>'),
+  fragCoord,
   v_uv: new StructProperty('@location(0)', 'vec4<f32>'),
   position: new StructProperty('@location(1)', 'vec4<f32>'),
   id: new StructProperty('@location(2) @interpolate(flat)', 'u32'),
 });
-export const GroundInput = new Struct('Output', {
-  fragCoord: new StructProperty('@builtin(position)', 'vec4<f32>'),
-  v_uv: new StructProperty('@location(0)', 'vec2<f32>'),
-  normal: new StructProperty('@location(1)', 'vec3<f32>'),
-  position: new StructProperty('@location(2)', 'vec3<f32>'),
-  id: new StructProperty('@location(3) @interpolate(flat)', 'u32'),
-  scenes: new StructProperty('@location(4) @interpolate(flat)', 'u32'),
-});
+
 const vertexPosition = new StructProperty(
   '@size(16)',
   'vec3<f32>',

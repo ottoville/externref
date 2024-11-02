@@ -18,6 +18,7 @@ import {
 import { createSimpleVertShader } from './SingleColoredWithNormal.vert.js';
 import { createSimpleFragShader } from './Simple.frag.js';
 import { createVertexColorShader } from './VertexColoredWithNormal.vert.js';
+import { createGroundFragShader } from './Ground.frag.js';
 export const TerrainSubdivisions = [64, 64] as const;
 export const gpu_memory_index_size = 256;
 
@@ -103,6 +104,8 @@ export function createShaderBuilders(gpu: GPU) {
     gpu.pipelineLayouts.positionAndTimeBindGroup,
   );
   const vertexColorShader = createVertexColorShader(gpu);
+
+  const groundFragShader = createGroundFragShader(gpu);
   return {
     /**
      Non pickable single color shader where color is set from vertice
@@ -111,6 +114,7 @@ export function createShaderBuilders(gpu: GPU) {
      */
     ColorShader,
     facet12ArrGPUBuffer,
+    groundFragShader,
     simpleFragShader,
     simpleVertShader: createSimpleVertShader(gpu),
     slopeArrGPUBuffer,

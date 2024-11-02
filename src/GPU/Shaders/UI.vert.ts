@@ -32,7 +32,7 @@ export function createUIVertShader(
         ([{ uniforms /*texture*/ }], [{ position, uv }]) =>
           WGSLcode/* wgsl */ `
             var output : Output;   
-            output.Position = vec4<f32>(${uniforms.prop('numbers')} + ${position}, 1.0, 1.0);
+            output.fragCoord = vec4<f32>(${uniforms.prop('numbers')} + ${position}, 1.0, 1.0);
             output.v_uv=${uv};
             return output;
 `,
