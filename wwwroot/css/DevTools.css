@@ -1,65 +1,78 @@
 aside {
-    font-size: 10px;
-    background-color: grey;
-    color: white;
-    overflow: hidden;
-    height: 100%;
-    & button {
-        padding:0;
-        background-color: darkgrey;
-        &:hover {
-            background-color: grey;
-        }
+  font-size: 10px;
+  background-color: grey;
+  color: white;
+  overflow: hidden;
+  height: 100%;
+  & button {
+    padding: 0;
+    background-color: darkgrey;
+    &:hover {
+      background-color: grey;
     }
-    & .variant {
-        display: flex;
-        justify-content: space-between;
-        &:hover, &.selected {
-            background-color: darkgrey;
-        }
+  }
+  & .variant {
+    display: flex;
+    justify-content: space-between;
+    &:hover,
+    &.selected {
+      background-color: darkgrey;
     }
-    & ul {
-        list-style-type: none;
-        padding-left: 5px;
-        margin: 0;
+  }
+  & ul {
+    list-style-type: none;
+    padding-left: 5px;
+    margin: 0;
+  }
+  & ol {
+    padding: 0;
+    margin: 0;
+    list-style-position: inside;
+  }
+  & .indices tr {
+    &:nth-child(6n + 1),
+    &:nth-child(6n + 2),
+    &:nth-child(6n + 3) {
+      background-color: darkgrey;
     }
-    & ol {
-        padding: 0;
-        margin: 0;
-        list-style-position: inside;
+  }
+  & .btn-small {
+    padding: 0;
+    margin: 0;
+    border: none;
+    font-size: 95%;
+  }
+  & input[type="radio"] {
+    display: none;
+  }
+  --closebtn-height: 20px;
+  #closebtn {
+    height: var(--closebtn-height);
+  }
+  #DevToolsAppContainer {
+    direction: ltr;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: calc(100% - var(--closebtn-height));
+  }
+  #vertices {
+    & .positions {
+      background-color: darkgray;
     }
-    & .indices tr {
-        &:nth-child(6n+1),&:nth-child(6n+2),&:nth-child(6n+3) {
-            background-color: darkgrey;
-        }
+    & .normals {
+      background-color: gray;
     }
-    & .btn-small {
-        padding: 0;
-        margin: 0;
-        border: none;
-        font-size: 95%
+    & .uvs {
+      background-color: darkgray;
     }
-    & input[type="radio"] {
-        display: none;
-    }
-    --closebtn-height: 20px;
-    #closebtn {
-        height: var(--closebtn-height);
-    }
-    #DevToolsAppContainer {
-        direction: ltr;
-        overflow-y: scroll;
-        overflow-x: hidden;
-        height: calc(100% - var(--closebtn-height));
-    }
+  }
 }
 
-
 .meshlist {
-    max-height: 200px;
-    overflow-y: auto;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 250px;
+  & ul {
     width: 250px;
-    & ul {
-        width: 250px;
-    }
+  }
 }

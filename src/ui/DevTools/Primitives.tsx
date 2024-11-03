@@ -53,15 +53,11 @@ export function Primitives({ node }: { node: DataNode }) {
         </button>
 
         {node instanceof DataNode && verticesOpen ? (
-          <table>
+          <table id="vertices">
             <colgroup>
-              <col
-                span={3}
-                style={{
-                  backgroundColor: 'darkgray',
-                }}
-              />
-              <col />
+              <col span={3} className="positions" />
+              <col span={3} className="normals" />
+              <col span={2} className="uvs" />
             </colgroup>
             <thead>
               <tr>

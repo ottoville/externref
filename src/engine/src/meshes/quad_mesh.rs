@@ -45,7 +45,7 @@ fn create_tiled_mesh(
             position_matrix.push(PositionAndNormalAndUV {
                 position: Vec3wgslF32([(x - (width * 0.5)) / max, 0.0, z]),
                 normal: Vec3wgslF32([0.0, 1.0, 0.0]),
-                uv: Vec2wgslF32 { vec: [0.0, 1.0] },
+                uv: Vec2wgslF32 { vec: [0.0, 0.0] },
             });
             if w != 0 && h != 0 {
                 indices_matrix.push((h * positions_x_count) + (w));
