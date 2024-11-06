@@ -1,9 +1,9 @@
 fn main() {
     use externref::processor::Processor;
     let input = if cfg!(debug_assertions) {
-        "../src/target/wasm32-unknown-unknown/debug/engine.wasm"
+        "../src/engine/target/wasm32-unknown-unknown/debug/engine.wasm"
     } else {
-        "../src/target/wasm32-unknown-unknown/release/engine.wasm"
+        "../src/engine/target/wasm32-unknown-unknown/release/engine.wasm"
     };
     let module: Result<Vec<u8>, std::io::Error> = std::fs::read(input);
     match module {

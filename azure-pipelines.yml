@@ -82,7 +82,7 @@ stages:
       displayName: Restore rust cache
       inputs:
         key: 'rust'
-        path: './src/target'
+        path: './src/engine/target'
     - task: Cache@2
       displayName: Restore rust buildscript cache
       inputs:
