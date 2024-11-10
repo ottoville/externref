@@ -5,7 +5,6 @@ import type { Engine } from '../../../engine.js';
 declare const engine: Engine;
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import { createDebugNormalsVertShader } from '../../Shaders/devtools/debug_normals.vert.js';
-import { create_rust_label } from '../../../MainNode.js';
 import {
   BGLayout,
   BindGroup,
@@ -22,6 +21,7 @@ import {
   colorFragmentFunction,
   gpu_memory_index_size,
 } from '../../Shaders/ShaderBuilders.js';
+import { create_rust_label } from '../../../utils.js';
 
 export class NormalsMesh extends DataNode {
   override drawable: DrawableSimple<RenderPipelineProps>;

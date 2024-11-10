@@ -13,6 +13,7 @@ mod vertices;
 mod mesh_property;
 mod devtools;
 mod indices;
+mod gpu;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;

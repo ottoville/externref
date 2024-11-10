@@ -1,5 +1,6 @@
-use crate::{engine::JSBuffer, MULTIVALUE_USIZE};
 use externref::{externref, Resource};
+
+use crate::{gpu::buffer::buffer::JSBuffer, MULTIVALUE_USIZE};
 
 #[externref]
 #[no_mangle]

@@ -69,23 +69,21 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         if ((globals.env as string) === 'debug') {
           usages |= BufferUsageEnums.STORAGE;
         }
-        vBufferGPU = new Buffer(
-          {
-            gpu: engine.gpu.device,
-            label: 'SimpleIndexedMeshVertex_' + this.label,
-            size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
-            usages: usages as BufferUsageEnums.VERTEX,
-          },
-          (b) => {
-            new Float32Array(b.getMappedRange()).set(
-              new Float32Array(
-                engine.rust.memory.buffer,
-                vertices_view,
-                vertices_len,
-              ),
-            );
-          },
+        const vBufferGPUMapped = new Buffer({
+          gpu: engine.gpu.device,
+          label: 'SimpleIndexedMeshVertex_' + this.label,
+          mappedAtCreation: true,
+          size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
+          usages: usages as BufferUsageEnums.VERTEX,
+        });
+        new Float32Array(vBufferGPUMapped.getMappedRange()).set(
+          new Float32Array(
+            engine.rust.memory.buffer,
+            vertices_view,
+            vertices_len,
+          ),
         );
+        vBufferGPU = vBufferGPUMapped.unmap();
       }
       if (topology === 'triangle-strip' || topology === 'line-strip') {
         var renderPipeline = engine.gpu.createRenderPipelineBuilder(

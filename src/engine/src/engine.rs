@@ -6,6 +6,8 @@ use std::sync::{LazyLock, Mutex};
 
 use crate::allocators::freeindex::{FreeIndex, FreeIndexIndex};
 use crate::allocators::stack_allocator::StackAllocator;
+use crate::gpu::buffer::buffer::{GPUBuffer, JSBuffer};
+use crate::gpu::buffer::usages::{COPYSRC_USAGE, UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE};
 pub use crate::mesh::Mesh;
 use crate::mesh::{get_mesh_by_id, get_mesh_by_id_mut};
 pub use crate::GPUMesh;
@@ -22,7 +24,6 @@ extern "C" {
     fn error(number: *const usize);
 }
 pub struct GPUCommandEncoder(());
-pub struct JSBuffer(());
 
 extern "C" {
     #[cfg(feature = "webgpu")]
@@ -48,8 +49,8 @@ pub unsafe extern "C" fn set_update_lights(value: bool) {
 }
 #[externref]
 #[no_mangle]
-pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Resource<JSBuffer>) {
-    TEMP_GPU_BUFFERS.lock().unwrap().push(buffer);
+pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_USAGE>>) {
+    TEMP_GPU_BUFFERS.lock().unwrap().push((*buffer).externref);
 }
 #[no_mangle]
 pub unsafe extern "C" fn clear_temp_gpu_buffers() {
@@ -61,17 +62,6 @@ pub unsafe extern "C" fn clear_temp_gpu_buffers() {
 #[link(wasm_import_module = "env")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    #[cfg(feature = "webgpu")]
-    fn handle_gpu_queue(
-        pointerVec: *const usize,
-        length: usize,
-        command_encoder: &Resource<GPUCommandEncoder>,
-        buffer: &Resource<JSBuffer>,
-    );
-    #[cfg(feature = "webgpu")]
-    fn create_temp_gpu_buffer(length: usize) -> Resource<JSBuffer>;
-    #[cfg(feature = "webgpu")]
-    fn destroy_buffer(buffer: &Resource<JSBuffer>);
     fn mesh_on_change(mesh: Option<&Resource<crate::mesh::JSMesh>>);
 }
 pub struct Engine {
@@ -79,6 +69,10 @@ pub struct Engine {
     pub directional_lights: Vec<FreeIndexIndex>,
     pub engine2: Option<Engine2>,
 }
+const GPU_MEMORY_INDEX_SIZE: usize = 256;
+const DEFAULT_MAX_INSTANCES: usize = 10;
+pub static MAX_INSTANCES: Mutex<usize> = Mutex::new(DEFAULT_MAX_INSTANCES);
+
 pub static mut ENGINE: Engine = Engine {
     point_lights: Vec::new(),
     directional_lights: Vec::new(),
@@ -87,13 +81,33 @@ pub static mut ENGINE: Engine = Engine {
 
 #[no_mangle]
 #[cfg(feature = "webgpu")]
+#[externref]
+pub unsafe extern "C" fn get_gpu_mesh_buffer() -> &'static Resource<JSBuffer> {
+    &ENGINE
+        .physic_engine()
+        .gpu_buffer
+        .as_ref()
+        .unwrap()
+        .externref
+}
+
+#[no_mangle]
+#[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
 #[externref]
 pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommandEncoder>) {
+    use crate::gpu::buffer::{buffer::MappedGPUBuffer, copy_dst::CopyDst, copy_src::CopySrc};
+
     let mut queue = GPU_QUEUE.lock().unwrap();
     if queue.len() > 0 {
-        let buffer = create_temp_gpu_buffer(queue.len());
-        for mesh_id in queue.iter() {
+        let mut need_resize_to = *MAX_INSTANCES.lock().unwrap();
+        let temp_buffer= MappedGPUBuffer::<COPYSRC_USAGE>::new(
+            std::mem::size_of::<GPUMesh>() * queue.len(),
+            String::from("handle_gpu_queue"),
+            false,
+        );
+        let engine = ENGINE.physic_engine_mut();
+        for (i, mesh_id) in queue.iter().enumerate() {
             let mesh = get_mesh_by_id_mut(*mesh_id);
             let mut mesh_property = mesh.mesh_property.lock().unwrap();
             for (_, cb) in mesh_property.on_change.iter() {
@@ -109,10 +123,37 @@ pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommand
             if mesh.externref.is_some() {
                 mesh_on_change(mesh.externref.as_ref());
             }
+            if mesh_property.gpu_mesh_alignment.0 > need_resize_to {
+                need_resize_to = mesh_property.gpu_mesh_alignment.0
+            }
+            temp_buffer.set_mapped_range(
+                &raw const mesh_property.gpu_memory as usize,
+                std::mem::size_of::<GPUMesh>(),
+                i * std::mem::size_of::<GPUMesh>(),
+                std::mem::size_of::<GPUMesh>(),
+            );
         }
-        handle_gpu_queue(queue.as_ptr(), queue.len(), command_encoder, &buffer);
+        let meshes_buffer = engine.gpu_buffer.as_mut().unwrap();
+        if need_resize_to > *MAX_INSTANCES.lock().unwrap() {
+            let mut max_instances = MAX_INSTANCES.lock().unwrap();
+            *max_instances = need_resize_to + 16;
+            let old_externref =meshes_buffer.resize(command_encoder, GPU_MEMORY_INDEX_SIZE * *max_instances);
+            TEMP_GPU_BUFFERS.lock().unwrap().push(old_externref);
+        }
+        for (i, mesh_id) in queue.iter().enumerate() {
+            let mesh = get_mesh_by_id_mut(*mesh_id);
+            let mesh_property = mesh.mesh_property.lock().unwrap();
+            meshes_buffer.copy_from(
+                command_encoder,
+                &temp_buffer.0,
+                i * std::mem::size_of::<GPUMesh>(),
+                mesh_property.gpu_mesh_alignment.0 * GPU_MEMORY_INDEX_SIZE,
+                std::mem::size_of::<GPUMesh>(),
+            );
+        }
+        let unmapped_temp_buffer = temp_buffer.unmap();
         queue.clear();
-        TEMP_GPU_BUFFERS.lock().unwrap().push(buffer);
+        TEMP_GPU_BUFFERS.lock().unwrap().push(unmapped_temp_buffer.externref);
     }
 }
 pub struct Engine2 {
@@ -127,12 +168,13 @@ pub struct Engine2 {
     pub broad_phase: DefaultBroadPhase,
     pub joint_set: ImpulseJointSet,
     pub gpu_allocated: FreeIndex,
+    pub gpu_buffer: Option<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>,
 }
 pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> =
     LazyLock::new(|| Mutex::new(Vec::with_capacity(128)));
 static UPDATE_LIGHTS: AtomicBool = AtomicBool::new(false);
 
-static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Resource<JSBuffer>, 16>> =
+pub static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Resource<JSBuffer>, 16>> =
     Mutex::new(StackAllocator::new());
 
 static mut LOG_STRING: String = String::new();
@@ -238,6 +280,18 @@ pub extern "C" fn init_engine2() -> usize {
     debug_assert!(std::mem::size_of::<GPUMesh>() % 8 == 0, "GPUMesh offset must be multiple of 8 https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange");
     std::mem::size_of::<GPUMesh>()
 }
+#[no_mangle]
+#[cfg(feature = "webgpu")]
+#[cfg(any(not(test), rust_analyzer))]
+#[externref]
+pub unsafe extern "C" fn init_gpu() {
+    ENGINE.physic_engine_mut().gpu_buffer =
+        Some(GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
+            GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
+            String::from("GPUMeshes"),
+            false,
+        ))
+}
 pub fn init_engine() {
     let rigid_body_set = RigidBodySet::new();
     let collider_set = ColliderSet::new();
@@ -254,6 +308,7 @@ pub fn init_engine() {
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
         gpu_allocated: FreeIndex::new(),
+        gpu_buffer: None,
     };
     unsafe {
         ENGINE.engine2 = Some(e);

@@ -23,6 +23,8 @@ import {
   Destroyable,
   INDEX_BUFFER,
 } from './webgpu-ts/index.js';
+import { BufferExports, type BufferInterface } from './BufferInterface.js';
+import { stringFromPtr } from './utils.js';
 
 const textDecoder = new TextDecoder();
 
@@ -350,14 +352,20 @@ export type rustWasm = {
   dedup_positions(geometry: rust_pointer<'geometry'>): void;
   get_update_lights(): boolean;
   set_update_lights(value: boolean): void;
-  push_to_temp_gpu_buffers(
-    buffer: externref<false, Buffer<BufferUsageEnums.COPY_SRC>>,
-  ): void;
+  push_to_temp_gpu_buffers(buffer: rust_pointer<'GPUBuffer'>): void;
   clear_temp_gpu_buffers(): void;
   devtools_pointer(): rust_pointer<'devtools'>;
   add_onchange_callback(mesh_id: number): number;
   remove_onchange_callback(mesh_id: number, cb: number): void;
-};
+  get_gpu_mesh_buffer(): externref<
+    false,
+    Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
+  >;
+  get_raw_buffer<U extends BufferUsageEnums, M extends boolean>(
+    buffer: rust_pointer<'GPUBuffer'>,
+  ): externref<false, Buffer<U, M>>;
+  init_gpu(): void;
+} & BufferInterface;
 
 function Dot(
   left: readonly [number, number, number] | Float32Array | TerraVector3,
@@ -479,17 +487,6 @@ type Events =
   | 'keydown'
   | 'keyup';
 
-function stringFromPtr(
-  memory: WebAssembly.ExportValue | undefined,
-  ptr: number,
-) {
-  if (!(memory instanceof WebAssembly.Memory)) {
-    throw new Error('Webassembly module does not have memory');
-  }
-  const [s_ptr, len] = new Uint32Array(memory.buffer, ptr, 2);
-  return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
-}
-
 export class Engine {
   /*
         This is the distance that collision response will set the object after collide.
@@ -596,6 +593,7 @@ export class Engine {
     let rust: WebAssembly.WebAssemblyInstantiatedSource;
     let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
     const exportObj: WebAssembly.Imports = {
+      buffer: BufferExports,
       console: {
         error(ptr: number) {
           console.error(stringFromPtr(rust.instance.exports.memory, ptr));
@@ -611,18 +609,6 @@ export class Engine {
         },
       },
       env: {
-        create_temp_gpu_buffer(length: number) {
-          return {
-            externref: new Buffer({
-              gpu: engine.gpu!.device,
-              label: 'handle_gpu_queue',
-              mapped: true,
-              size: GPUDataSize * length,
-              usages: BufferUsageEnums.COPY_SRC,
-            }),
-            ownedByJS: false,
-          } as const;
-        },
         drop_ref(ref: externref) {
           /**
            * wasm externref module does not separate dropping references or ownership from externref table,
@@ -631,19 +617,6 @@ export class Engine {
           if (!ref.ownedByJS && Destroyable.isDestroyable(ref.externref)) {
             ref.externref.destroy();
           }
-        },
-        handle_gpu_queue(
-          pointerVec: number,
-          length: number,
-          commandEncoder: externref<true, GPUCommandEncoder>,
-          buffer: externref<false, Buffer<BufferUsageEnums.COPY_SRC, true>>,
-        ) {
-          engine.gpu?.handle_gpu_queue(
-            pointerVec,
-            length,
-            commandEncoder.externref,
-            buffer.externref,
-          );
         },
         jspanic(ptr: number) {
           if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
@@ -685,6 +658,7 @@ export class Engine {
         update_point_lights(pointer: number, length: number) {
           engine.gpu?.update_point_lights(pointer, length);
         },
+
         verticesChange(mesh_id: number) {
           const mesh = DataNode.Meshes.get(mesh_id);
           if (mesh) {
@@ -693,7 +667,6 @@ export class Engine {
         },
       },
     };
-    let GPUDataSize: number;
     try {
       if (
         wasmBinaries.rust instanceof ArrayBuffer ||
@@ -710,7 +683,6 @@ export class Engine {
         return showError(new Error('No memory exported'));
       }
       var rustWasm = rust.instance.exports as rustWasm;
-      GPUDataSize = rustWasm.init_engine2();
       if (nodes?.canvas && !window.navigator.gpu) {
         throw new Error('no webgpu support');
       }
@@ -744,6 +716,7 @@ export class Engine {
           colliderExportObj,
         );
       }
+
       //Init rust wasm
     } catch (e) {
       return showError(createError(e));
@@ -755,7 +728,6 @@ export class Engine {
       wasm,
       rustWasm,
       showError,
-      GPUDataSize,
     );
   }
   readonly cameras: TerraCamera[] = [];
@@ -864,6 +836,7 @@ export class Engine {
 
     const gpu = new GPU(this.canvas!, device, GPUDataSize);
     this.gpu = gpu;
+    this.rust.init_gpu();
     console.log('new GPU initialized ', device.label);
     cb(gpu);
     return gpu;
@@ -934,9 +907,10 @@ export class Engine {
     public wasm: ColliderWasm,
     public rust: rustWasm,
     public showErrorError: (e: Error) => void,
-    GPUDataSize: number,
   ) {
     console.log('environment:', globals.env);
+    const GPUDataSize = rust.init_engine2();
+
     if (nodes) {
       this.canvas = nodes.canvas;
       //@ts-expect-error Way to manually open devtools if UI is not working

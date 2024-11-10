@@ -349,18 +349,17 @@ export abstract class UIRectangle<
 
     const gpu =
       canvaspipeline.builder.vertexShader.props.pipelineLayouts[0].gpu;
-    this.uniformBuffer = new Buffer(
-      {
-        gpu: gpu,
-        label: 'UI_transform',
-        size: 8,
-        usages: BufferUsageEnums['UNIFORM|COPY_DST'],
-      },
-      (buff) => {
-        this.updatePosition();
-        new Float32Array(buff.getMappedRange()).set(this.screenPosition);
-      },
-    );
+    const uniformBuffer = new Buffer({
+      gpu: gpu,
+      label: 'UI_transform',
+      mappedAtCreation: true,
+      size: 8,
+      usages: BufferUsageEnums['UNIFORM|COPY_DST'],
+    });
+    this.updatePosition();
+    new Float32Array(uniformBuffer.getMappedRange()).set(this.screenPosition);
+    this.uniformBuffer = uniformBuffer.unmap();
+
     if (events) {
       const { onClick, onPointerEnter, onPointerLeave } = events;
       if (onPointerEnter || onPointerLeave) {

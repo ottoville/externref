@@ -132,24 +132,22 @@ export class RenderPass<
   }
   #updateSizeBindGroup(gpu: GPU, initial = false) {
     if (!initial) this.#screenDimensionsBuffer.destroy();
-    this.#screenDimensionsBuffer = new Buffer(
-      {
-        gpu: gpu.device,
-        label: 'screen_buffer',
-        size: gpu_screen_buffer_size,
-        usages: BufferUsageEnums.UNIFORM,
-      },
-      (b) => {
-        const uniformbuffer = b.getMappedRange();
-        new Float32Array(uniformbuffer, 0, 4).set([
-          this.size.width,
-          this.size.height,
-          this.size.width / tileCount[0],
-          this.size.height / tileCount[1],
-        ]);
-      },
-    );
+    const screenDimensionsBuffer = new Buffer({
+      gpu: gpu.device,
+      label: 'screen_buffer',
+      mappedAtCreation: true,
+      size: gpu_screen_buffer_size,
+      usages: BufferUsageEnums.UNIFORM,
+    });
+    const uniformbuffer = screenDimensionsBuffer.getMappedRange();
+    new Float32Array(uniformbuffer, 0, 4).set([
+      this.size.width,
+      this.size.height,
+      this.size.width / tileCount[0],
+      this.size.height / tileCount[1],
+    ]);
 
+    this.#screenDimensionsBuffer = screenDimensionsBuffer.unmap();
     return this.#screenDimensionsBuffer;
   }
   onRenderPipelinesChange: Set<() => void> = new Set();

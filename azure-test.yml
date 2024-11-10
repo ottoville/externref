@@ -1,0 +1,42 @@
+steps:
+- checkout: self
+  submodules: true
+- task: Cache@2
+  displayName: Restore rust cache
+  inputs:
+    key: 'rust1820' ##TODO: remove version from key when wasm-bindgen fix has been removed
+    path: './src/engine/target'
+- task: Cargo@1
+  displayName: Rust unit test
+  inputs:
+    cargoCommand: 'test'
+    cargoWorkingDir: './src/engine'
+    cargoCommandOptions: '--lib --workspace'
+    verbose: false
+- task: PowerShell@2
+  displayName: Install wasm-bindgen-cli
+  inputs:
+    targetType: 'inline'
+    script: 'cargo install wasm-bindgen-cli'
+    pwsh: true
+# wasm-bindgen test runner didnt work for 1.82.0, remove when works.
+- task: Rustup@1
+  displayName: Set rust version to 1.81.0
+  inputs:
+    rustupCommand: default 1.81.0
+- task: Rustup@1
+  displayName: Add wasm32-unknown-unknown target
+  inputs:
+    rustupCommand: target add wasm32-unknown-unknown
+- task: Cache@2
+  displayName: Restore rust terramath cache
+  inputs:
+    key: 'rustterramath'
+    path: './src/terramath/target'
+- task: PowerShell@2
+  displayName: Math library unit test
+  inputs:
+    targetType: 'inline'
+    script: 'cargo test --target wasm32-unknown-unknown'
+    pwsh: true
+    workingDirectory: './src/terramath'

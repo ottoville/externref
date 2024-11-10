@@ -168,27 +168,20 @@ export class PickableRenderPass<
         .gRenderTargetDiffuse;
     if (gRenderTargetDiffuse instanceof MSAARenderTarget) {
       if (!this.#zAndIDPromise) {
-        const mousePositionSwapBuffer = new Buffer(
-          {
-            gpu: engine.gpu!.device,
-            label: 'mousePositionSwapBuffer',
-            size: 8,
-            usages: BufferUsageEnums.COPY_SRC,
-          },
-          (b) => {
-            new Uint32Array(b.getMappedRange(0, 8)).set([
-              engine.gpu!.mousePosition[0],
-              engine.gpu!.mousePosition[1],
-            ]);
-          },
-        );
-        mousePositionSwapBuffer.copyTo(
-          encoder,
-          this.#mousePositionBuffer!,
-          0,
-          0,
-          8,
-        );
+        const mousePositionSwapBuffer = new Buffer({
+          gpu: engine.gpu!.device,
+          label: 'mousePositionSwapBuffer',
+          mappedAtCreation: true,
+          size: 8,
+          usages: BufferUsageEnums.COPY_SRC,
+        });
+        new Uint32Array(mousePositionSwapBuffer.getMappedRange(0, 8)).set([
+          engine.gpu!.mousePosition[0],
+          engine.gpu!.mousePosition[1],
+        ]);
+        mousePositionSwapBuffer
+          .unmap()
+          .copyTo(encoder, this.#mousePositionBuffer!, 0, 0, 8);
         const pickPass = encoder.beginComputePass({
           label: 'pickPass',
         });

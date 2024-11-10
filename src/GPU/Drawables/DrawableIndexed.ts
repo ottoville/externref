@@ -74,24 +74,20 @@ export class DrawableIndexed<
       const indices_ptr = engine.rust.get_indices_pointer(buffer);
       const indices = create_rust_vec_ptr(indices_ptr);
       if (indices[1] > 0) {
-        this.#indexBuffer = new Buffer(
-          {
-            gpu: engine.gpu!.device,
-            label: 'index_' + this.node.label,
-            size: indices[1] * Uint32Array.BYTES_PER_ELEMENT,
-            usages: BufferUsageEnums.INDEX,
-          },
-          (b) => {
-            new Uint32Array(b.getMappedRange()).set(
-              new Uint32Array(
-                engine.rust.memory.buffer,
-                indices[0],
-                indices[1],
-              ),
-            );
-            this.#GPUIndexFormat = 'uint32';
-          },
+        const indexBuffer = new Buffer({
+          gpu: engine.gpu!.device,
+          label: 'index_' + this.node.label,
+          mappedAtCreation: true,
+          size: indices[1] * Uint32Array.BYTES_PER_ELEMENT,
+          usages: BufferUsageEnums.INDEX,
+        });
+
+        new Uint32Array(indexBuffer.getMappedRange()).set(
+          new Uint32Array(engine.rust.memory.buffer, indices[0], indices[1]),
         );
+        this.#indexBuffer = indexBuffer.unmap();
+        this.#GPUIndexFormat = 'uint32';
+
         engine.rust.set_indices_gpu_buffer(buffer, {
           externref: this.#indexBuffer,
           ownedByJS: false,

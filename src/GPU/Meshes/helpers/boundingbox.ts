@@ -31,23 +31,18 @@ export class BoundingBoxMesh extends IndexedDataNode {
     const vertices_view = engine.rust.vertices_pointer(geometry);
     const vertices_len = engine.rust.vertices_count(geometry) * 4;
 
-    const debug_render_boundingbox_vertexBuffer = new Buffer(
-      {
-        gpu: engine.gpu!.device,
-        label: 'vertex_debug_bounding_box',
-        size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
-        usages: BufferUsageEnums.VERTEX,
-      },
-      (b) => {
-        const view = new Float32Array(b.getMappedRange());
-        view.set(
-          new Float32Array(
-            engine.rust.memory.buffer,
-            vertices_view,
-            vertices_len,
-          ),
-        );
-      },
+    const debug_render_boundingbox_vertexBuffer = new Buffer({
+      gpu: engine.gpu!.device,
+      label: 'vertex_debug_bounding_box',
+      mappedAtCreation: true,
+      size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
+      usages: BufferUsageEnums.VERTEX,
+    });
+    const view = new Float32Array(
+      debug_render_boundingbox_vertexBuffer.getMappedRange(),
+    );
+    view.set(
+      new Float32Array(engine.rust.memory.buffer, vertices_view, vertices_len),
     );
     super(
       {
@@ -83,7 +78,7 @@ export class BoundingBoxMesh extends IndexedDataNode {
       bindGroups: [],
       node: this,
       renderPipeline,
-      vertexBuffers: [debug_render_boundingbox_vertexBuffer],
+      vertexBuffers: [debug_render_boundingbox_vertexBuffer.unmap()],
     });
   }
 }

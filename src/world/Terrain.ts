@@ -89,28 +89,24 @@ TODO
   }
   updateSwap2(offset = 0, byteLength: number, nofaces = false) {
     if (!engine.gpu) return;
-    const b1 = new Buffer(
-      {
-        gpu: engine.gpu.device,
-        label: 'terrain_b1',
-        size: byteLength,
-        usages: BufferUsageEnums.COPY_SRC,
-      },
-      (b) => {
-        new Float32Array(b.getMappedRange()).set(
-          new Float32Array(
-            engine.rust.memory.buffer,
-            engine.rust.vertices_pointer(this.mesh.geometry) + offset,
-            byteLength / 4,
-          ),
-        );
-      },
+    const b1 = new Buffer({
+      gpu: engine.gpu.device,
+      label: 'terrain_b1',
+      mappedAtCreation: true,
+      size: byteLength,
+      usages: BufferUsageEnums.COPY_SRC,
+    });
+    new Float32Array(b1.getMappedRange()).set(
+      new Float32Array(
+        engine.rust.memory.buffer,
+        engine.rust.vertices_pointer(this.mesh.geometry) + offset,
+        byteLength / 4,
+      ),
     );
-
     const commandEncoder = engine.gpu.device.createCommandEncoder({
       label: 'updateSwap2_encoder',
     });
-    b1.copyTo(
+    b1.unmap().copyTo(
       commandEncoder,
       this.terrainPositionAndUvsAndNormalsGPU,
       0,
@@ -121,24 +117,21 @@ TODO
       const facesByteLength =
         this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
 
-      const b2 = new Buffer(
-        {
-          gpu: engine.gpu.device,
-          label: 'terrain_b2',
-          size: facesByteLength,
-          usages: BufferUsageEnums.COPY_SRC,
-        },
-        (b) => {
-          new Float32Array(b.getMappedRange()).set(
-            new Float32Array(
-              engine.rust.memory.buffer,
-              engine.rust.faces_pointer(this.mesh.id),
-              this.mesh.faces_count * 4,
-            ),
-          );
-        },
+      const b2 = new Buffer({
+        gpu: engine.gpu.device,
+        label: 'terrain_b2',
+        mappedAtCreation: true,
+        size: facesByteLength,
+        usages: BufferUsageEnums.COPY_SRC,
+      });
+      new Float32Array(b2.getMappedRange()).set(
+        new Float32Array(
+          engine.rust.memory.buffer,
+          engine.rust.faces_pointer(this.mesh.id),
+          this.mesh.faces_count * 4,
+        ),
       );
-      b2.copyTo(
+      b2.unmap().copyTo(
         commandEncoder,
         this.gpu.shaders.facet12ArrGPUBuffer,
         0,
@@ -168,19 +161,18 @@ TODO
       .then(async (cachedvertices) => {
         if (cachedvertices) {
           const cachedBuffer = await Terrain.fromSave(cachedvertices);
-          var terrainPositionAndUvsAndNormalsGPU = new Buffer(
-            {
-              gpu: gpu.device,
-              label: 'terrainPositionAndUvsAndNormalsGPU0',
-              size: verticesBufferSize,
-              usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
-            },
-            (b) => {
-              new Uint8Array(b.getMappedRange()).set(
-                new Uint8Array(cachedBuffer),
-              );
-            },
-          );
+          var terrainPositionAndUvsAndNormalsGPUMapped = new Buffer({
+            gpu: gpu.device,
+            label: 'terrainPositionAndUvsAndNormalsGPU0',
+            mappedAtCreation: true,
+            size: verticesBufferSize,
+            usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
+          });
+          new Uint8Array(
+            terrainPositionAndUvsAndNormalsGPUMapped.getMappedRange(),
+          ).set(new Uint8Array(cachedBuffer));
+          var terrainPositionAndUvsAndNormalsGPU =
+            terrainPositionAndUvsAndNormalsGPUMapped.unmap();
         } else {
           const b = await (await fetch('/images/tenerife250.webp')).blob();
           const bitmap = await createImageBitmap(b);

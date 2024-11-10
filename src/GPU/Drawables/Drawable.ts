@@ -183,18 +183,17 @@ export abstract class Drawable<N extends MainNode = MainNode>
       const len =
         (buffer[1] * Float32Array.BYTES_PER_ELEMENT) /
         Uint8Array.BYTES_PER_ELEMENT;
-      var Tbuffer = new Buffer(
-        {
-          gpu: engine.gpu!.device,
-          label: 'DrawableVertex_' + this.node.label,
-          size: buffer[1] * Float32Array.BYTES_PER_ELEMENT,
-          usages: BufferUsageEnums.VERTEX,
-        },
-        (b) => {
-          const buff = new Uint8Array(b.getMappedRange());
-          buff.set(new Uint8Array(engine.rust.memory.buffer, ptr, len));
-        },
-      ) as Buffer<VERTEX_BUFFER>;
+      const TbufferMapped = new Buffer({
+        gpu: engine.gpu!.device,
+        label: 'DrawableVertex_' + this.node.label,
+        mappedAtCreation: true,
+        size: buffer[1] * Float32Array.BYTES_PER_ELEMENT,
+        usages: BufferUsageEnums.VERTEX,
+      });
+
+      const buff = new Uint8Array(TbufferMapped.getMappedRange());
+      buff.set(new Uint8Array(engine.rust.memory.buffer, ptr, len));
+      var Tbuffer = TbufferMapped.unmap() as Buffer<VERTEX_BUFFER>;
     }
     const oldBuffer = this.vertexBuffers[index];
     if (oldBuffer) {

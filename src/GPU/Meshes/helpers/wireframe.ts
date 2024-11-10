@@ -1,7 +1,6 @@
 import type { DrawableDirect } from '../../Drawables/DrawableDirect.js';
 import { DrawableIndexed } from '../../Drawables/DrawableIndexed.js';
 import type { Engine } from '../../../engine.js';
-import { create_rust_label } from '../../../MainNode.js';
 import { createDebugBoundingBoxVertShader } from '../../Shaders/devtools/debug_boundingbox.vert.js';
 import { IndexedDataNode } from '../../../nodes/IndexedDataNode.js';
 import {
@@ -9,6 +8,7 @@ import {
   StructProperty,
   VertexBufferLayouts,
 } from 'webgpu-ts/index.js';
+import { create_rust_label } from '../../../utils.js';
 declare const engine: Engine;
 export function createWireFrameMesh(
   targetNode: DrawableDirect<IndexedDataNode>,

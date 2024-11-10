@@ -89,7 +89,7 @@ stages:
         key: 'rustbuildscript'
         path: './buildscript/target'
     - task: Rustup@1
-      displayName: Rustup
+      displayName: Add wasm32-unknown-unknown target
       inputs:
         rustupCommand: target add wasm32-unknown-unknown
     - task: Npm@1
@@ -99,13 +99,6 @@ stages:
         workingDir: src
         verbose: false
         customCommand: run build-prod
-    - task: Npm@1
-      displayName: Test rust
-      inputs:
-        command: custom
-        workingDir: src
-        verbose: false
-        customCommand: run test-rust
     - task: CopyFiles@2
       inputs:
         SourceFolder: './wwwroot'
@@ -116,6 +109,14 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)'
         artifact: 'build'
         publishLocation: 'pipeline'
+  - job: test
+    displayName: Run tests
+    timeoutInMinutes: 0
+    pool:
+      vmImage: ubuntu-22.04
+    steps:
+    - template: azure-test.yml
+
 - stage: deployEnv
   dependsOn: BuildSwa
   displayName: Deploy env

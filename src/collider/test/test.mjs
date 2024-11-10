@@ -40,7 +40,6 @@ const exportObj = {
     },
     mesh_on_collide(mesh_id, started) {},
     mesh_on_physic_tick(mesh_id) {},
-    handle_gpu_queue(pointerVec, length) {},
     update_directional_lights(pointer, length) {},
     update_point_lights(pointer, length) {},
   },

@@ -72,9 +72,7 @@ pub unsafe extern "C" fn new_mesh_from_js(
     );
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_geometry<'frame>(
-    mesh_id: usize
-) -> *mut Geometry {
+pub unsafe extern "C" fn get_geometry<'frame>(mesh_id: usize) -> *mut Geometry {
     let mesh = get_mesh_by_id_mut(mesh_id);
     mesh.geometry.as_mut().unwrap().as_mut() as *mut Geometry
 }
@@ -705,7 +703,6 @@ impl Mesh {
 impl Drop for Mesh {
     fn drop(&mut self) {
         unsafe {
-            let engine2 = ENGINE.physic_engine_mut();
             let mesh_property = self.mesh_property.lock().unwrap();
             if mesh_property.gpu_memory.point_light_squared > 0.0 {
                 let index = ENGINE
@@ -728,9 +725,12 @@ impl Drop for Mesh {
                 ENGINE.update_directional_lights();
             }
             #[cfg(feature = "webgpu")]
-            engine2
-                .gpu_allocated
-                .remove(mesh_property.gpu_mesh_alignment)
+            {
+                let engine2 = ENGINE.physic_engine_mut();
+                engine2
+                    .gpu_allocated
+                    .remove(mesh_property.gpu_mesh_alignment)
+            }
         }
     }
 }

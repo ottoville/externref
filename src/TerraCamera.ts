@@ -9,6 +9,7 @@ import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
 import { ClustersComp } from './GPU/Shaders/Clusters.comp.js';
 import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
+import { create_rust_label } from './utils.js';
 declare const engine: Engine;
 
 export type CameraControl = {
@@ -108,7 +109,9 @@ export class TerraCamera {
         (bindGroup) => ({
           clusters_array:
             this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
-          meshes: gpu.GPUMeshes.getStorageBinding(bindGroup),
+          meshes: engine.rust
+            .get_gpu_mesh_buffer()
+            .externref.getStorageBinding(bindGroup),
           //TODO: Set to own group because shared by many cameras
           projection: projection.gpuBuffer.getUniformBinding(bindGroup),
           scene: this.#uniformBuffer!.getUniformBinding(bindGroup),
@@ -291,28 +294,26 @@ export class TerraCamera {
     }
     this.projectionViewInvertedIsDirty = true;
     if (this.gpu) {
-      const tempBuffer = new Buffer(
-        {
-          gpu: this.gpu.device,
-          label: 'camera_tempBuffer',
-          size: this.#viewAndProjection.byteLength,
-          usages: BufferUsageEnums.COPY_SRC,
-        },
-        (b) => {
-          engine.rust.push_to_temp_gpu_buffers({
-            externref: b,
-            ownedByJS: false,
-          });
-          new Float32Array(b.getMappedRange()).set(this.#viewAndProjection);
-        },
-      );
-      tempBuffer.copyTo(
-        commandEncoder,
-        this.#uniformBuffer!,
-        0,
-        0,
+      const tempBuffer = engine.rust.create_mapped_GPU_buffer_copysrc(
         this.#viewAndProjection.byteLength,
+        ...create_rust_label('camera_tempBuffer'),
       );
+      engine.rust.push_to_temp_gpu_buffers(tempBuffer);
+      const rawBuffer = engine.rust.get_raw_buffer<
+        BufferUsageEnums.COPY_SRC,
+        true
+      >(tempBuffer).externref;
+      new Float32Array(rawBuffer.getMappedRange()).set(this.#viewAndProjection);
+
+      rawBuffer
+        .unmap()
+        .copyTo(
+          commandEncoder,
+          this.#uniformBuffer!,
+          0,
+          0,
+          this.#viewAndProjection.byteLength,
+        );
     }
     return true;
   }

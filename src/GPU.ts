@@ -68,8 +68,6 @@ interface createRenderPipelineProps<
 }
 
 export class GPU {
-  #maxInstances = 10;
-
   readonly mousePositionBuffer = new SharedArrayBuffer(4);
   readonly mousePosition = new Uint16Vector2(this.mousePositionBuffer);
 
@@ -80,10 +78,6 @@ export class GPU {
   readonly projections: Set<Projection> = new Set();
   readonly cameras: TerraCamera[] = [];
 
-  //Todo: Remove COPY_SRC
-  readonly GPUMeshes: Buffer<
-    (typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']
-  >;
   readonly #GPUPointLights: Buffer<
     (typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_DST']
   >;
@@ -331,7 +325,7 @@ export class GPU {
   constructor(
     public canvas: HTMLCanvasElement,
     public device: GPUDevice,
-    private GPUDataSizeBytes: number,
+    GPUDataSizeBytes: number,
   ) {
     this.meshUniforms = new Struct('MeshUniforms', {
       transformation: new StructProperty('', 'mat4x4<f32>'),
@@ -359,12 +353,6 @@ export class GPU {
       totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
     this.updateViewShader = createUpdateViewShader(this);
 
-    this.GPUMeshes = new Buffer({
-      gpu: device,
-      label: 'GPUMeshes',
-      size: gpu_memory_index_size * this.#maxInstances,
-      usages: BufferUsageEnums['UNIFORM|STORAGE|COPY_SRC|COPY_DST'],
-    });
     this.pipelineLayouts = createPipelineLayouts(this);
     this.shaders = createShaderBuilders(this);
 
@@ -388,7 +376,9 @@ export class GPU {
       (bindGroup) => ({
         directional_lights:
           this.#GPUDirectionalLights.getStorageBinding(bindGroup),
-        meshes: this.GPUMeshes.getStorageBinding(bindGroup),
+        meshes: engine.rust
+          .get_gpu_mesh_buffer()
+          .externref.getStorageBinding(bindGroup),
         point_lights: this.#GPUPointLights.getStorageBinding(bindGroup),
       }),
     );
@@ -396,11 +386,9 @@ export class GPU {
       this.pipelineLayouts.BindGroupLayoutPosition,
       'BindGroupPosition',
       (bindGroup) => ({
-        world: this.GPUMeshes.getUniformBinding(
-          bindGroup,
-          0,
-          gpu_memory_index_size,
-        ),
+        world: engine.rust
+          .get_gpu_mesh_buffer()
+          .externref.getUniformBinding(bindGroup, 0, gpu_memory_index_size),
       }),
     );
 
@@ -745,58 +733,6 @@ export class GPU {
     }
     this.#ro.observe(canvas.parentElement);
   }
-
-  handle_gpu_queue(
-    pointerVec: number,
-    length: number,
-    commandEncoder: GPUCommandEncoder,
-    tempBuffer: Buffer<BufferUsageEnums.COPY_SRC, true>,
-  ) {
-    let tempOffset = 0;
-    const pointers_to_gpumesh_and_offset = new Uint32Array(
-      engine.rust.memory.buffer,
-      pointerVec,
-      length,
-    );
-    const meshes: [mesh_id: number, gpu_alignment: number][] = [];
-    let needResizeTo = this.#maxInstances;
-    for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i++) {
-      const meshID = pointers_to_gpumesh_and_offset[i]!;
-      const offset = engine.rust.gpu_alignment(meshID);
-      meshes.push([meshID, offset]);
-      if (offset >= needResizeTo) {
-        needResizeTo = offset;
-      }
-    }
-    if (needResizeTo > this.#maxInstances) {
-      this.#maxInstances = needResizeTo + 16;
-      this.GPUMeshes.resize(gpu_memory_index_size * this.#maxInstances);
-    }
-    for (let i = 0; i < meshes.length; i++) {
-      const [meshID, offset] = meshes[i]!;
-      const gpumeshPointer = engine.rust.gpu_pointer(meshID);
-      const dataLength = this.GPUDataSizeBytes / 4;
-      const data = new Float32Array(
-        engine.rust.memory.buffer,
-        gpumeshPointer,
-        dataLength,
-      );
-      new Float32Array(
-        tempBuffer.getMappedRange(
-          tempOffset * this.GPUDataSizeBytes,
-          this.GPUDataSizeBytes,
-        ),
-      ).set(data);
-      this.GPUMeshes.copyFrom(
-        commandEncoder,
-        tempBuffer,
-        tempOffset++ * this.GPUDataSizeBytes,
-        offset * gpu_memory_index_size,
-        this.GPUDataSizeBytes,
-      );
-    }
-    tempBuffer.unmap();
-  }
   update_directional_lights(pointer: number, length: number) {
     const lights = new Uint32Array(engine.rust.memory.buffer, pointer, length);
     const commandEncoder = this.device.createCommandEncoder({
@@ -804,27 +740,20 @@ export class GPU {
     });
     //TODO: Potential buffer overflow
     const byteLength = 4 + lights.byteLength;
-    const tempBuffer = new Buffer(
-      {
-        gpu: this.device,
-        label: 'directional_lights_tempBuffer',
-        size: byteLength,
-        usages: BufferUsageEnums.COPY_SRC,
-      },
-      (tempBuffer2) => {
-        const gpu_buffer = new Uint32Array(tempBuffer2.getMappedRange());
-        gpu_buffer[0] = lights.length;
-        gpu_buffer.set(lights, 1);
-      },
-    );
+    const tempBuffer = new Buffer({
+      gpu: this.device,
+      label: 'directional_lights_tempBuffer',
+      mappedAtCreation: true,
+      size: byteLength,
+      usages: BufferUsageEnums.COPY_SRC,
+    });
+    const gpu_buffer = new Uint32Array(tempBuffer.getMappedRange());
+    gpu_buffer[0] = lights.length;
+    gpu_buffer.set(lights, 1);
 
-    tempBuffer.copyTo(
-      commandEncoder,
-      this.#GPUDirectionalLights,
-      0,
-      0,
-      byteLength,
-    );
+    tempBuffer
+      .unmap()
+      .copyTo(commandEncoder, this.#GPUDirectionalLights, 0, 0, byteLength);
     this.pendingCommandBuffers.push(
       commandEncoder.finish({
         label: 'update_directional_lights',
@@ -838,20 +767,20 @@ export class GPU {
     });
     //TODO: Potential buffer overflow
     const byteLength = 4 + lights.byteLength;
-    const tempBuffer = new Buffer(
-      {
-        gpu: this.device,
-        label: 'point_lights_tempBuffer',
-        size: byteLength,
-        usages: BufferUsageEnums.COPY_SRC,
-      },
-      (tempBuffer2) => {
-        const gpu_buffer = new Uint32Array(tempBuffer2.getMappedRange());
-        gpu_buffer[0] = lights.length;
-        gpu_buffer.set(lights, 1);
-      },
-    );
-    tempBuffer.copyTo(commandEncoder, this.#GPUPointLights, 0, 0, byteLength);
+    const tempBuffer = new Buffer({
+      gpu: this.device,
+      label: 'point_lights_tempBuffer',
+      mappedAtCreation: true,
+      size: byteLength,
+      usages: BufferUsageEnums.COPY_SRC,
+    });
+    const gpu_buffer = new Uint32Array(tempBuffer.getMappedRange());
+    gpu_buffer[0] = lights.length;
+    gpu_buffer.set(lights, 1);
+
+    tempBuffer
+      .unmap()
+      .copyTo(commandEncoder, this.#GPUPointLights, 0, 0, byteLength);
     this.pendingCommandBuffers.push(
       commandEncoder.finish({
         label: 'update_point_lights',
@@ -942,8 +871,6 @@ export class GPU {
           lightPass.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
         });
         lightPass.end();
-        // Cluster debug
-        //var readBuffer = engine.mainCamera.clusterArrayBuffer?.createReadCopy(renderEncoder)
         engine.rust.set_update_lights(false);
       }
 
@@ -961,18 +888,15 @@ export class GPU {
       }),
     );
     this.device.queue.submit(this.pendingCommandBuffers);
-    // Cluster debug
-    /*
-        if(debugNumber === 0) {
-            readBuffer?.readAndDestroy((buff) => {
-                console.log('clusters',new Uint32Array(buff,8*4 * 27648 + 4 * 27648, 2 ));
-            });
-            debugNumber=debugNumber+1;
-        }*/
+    this.device.queue
+      .onSubmittedWorkDone()
+      .then(() => {
+        this.onceAfterRender.forEach((cb) => cb());
+        this.onceAfterRender.length = 0;
+      })
+      .catch((err) => engine.showError(err));
     this.pendingCommandBuffers.length = 0;
     engine.rust.clear_temp_gpu_buffers();
-    this.onceAfterRender.forEach((cb) => cb());
-    this.onceAfterRender.length = 0;
 
     if (!this.#renderStarted) this.#renderStarted = true;
     this.#renderFrame = window.requestAnimationFrame((time2) =>

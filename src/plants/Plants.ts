@@ -11,6 +11,7 @@ import { allocate_vec } from '../nodes/DataNode.js';
 import { BindGroup, Buffer, BufferUsageEnums } from '../webgpu-ts/index.js';
 import type { PTDresult } from 'paintGround/paintGround.js';
 import { createGrassVertShader } from '../GPU/Shaders/Grass.vert.js';
+import { create_rust_label } from '../utils.js';
 declare const engine: Engine;
 
 /**
@@ -171,23 +172,21 @@ export class Plants extends MainNode {
               label: 'plants_pass_encoder',
             });
             passEncoder.setPipeline(computePipeline);
-            const worldCopyGPU = new Buffer(
-              {
-                gpu: scene.gpu.device,
-                label: 'worldCopyGPU',
-                size: numBlades * 2 * 4,
-                usages: BufferUsageEnums['STORAGE|COPY_DST'],
-              },
-              (buffer) => {
-                const worldSetArr = buffer.getMappedRange();
-                new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
-              },
-            );
+            const worldCopyGPU = new Buffer({
+              gpu: scene.gpu.device,
+              label: 'worldCopyGPU',
+              mappedAtCreation: true,
+              size: numBlades * 2 * 4,
+              usages: BufferUsageEnums['STORAGE|COPY_DST'],
+            });
+            const worldSetArr = worldCopyGPU.getMappedRange();
+            new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
+            const worldCopyGPUUnmapped = worldCopyGPU.unmap();
             const bindGroup2 = new BindGroup(
               bindLayouts[1],
               'bindGroup2',
               (bg) => ({
-                positions: worldCopyGPU.getStorageBinding(bg),
+                positions: worldCopyGPUUnmapped.getStorageBinding(bg),
               }),
             );
 
@@ -213,29 +212,24 @@ export class Plants extends MainNode {
             );
             const data2 = new Uint32Array([7, (data.buffer.byteLength / 4) * 2])
               .buffer;
-            const swapBuffer = new Buffer(
-              {
-                gpu: scene.gpu.device,
-                label: '_swap',
-                size: data2.byteLength,
-                usages: BufferUsageEnums.COPY_SRC,
-              },
-              (tempBuffer) => {
-                engine.rust.push_to_temp_gpu_buffers({
-                  externref: tempBuffer,
-                  ownedByJS: false,
-                });
-                const srcOffset = 0;
-                new Int8Array(tempBuffer.getMappedRange()).set(
-                  new Int8Array(
-                    data2,
-                    srcOffset,
-                    data2.byteLength / Int8Array.BYTES_PER_ELEMENT,
-                  ),
-                );
-              },
+            const swapBuffer2 = engine.rust.create_mapped_GPU_buffer_copysrc(
+              data2.byteLength,
+              ...create_rust_label('_swap'),
             );
-            indirectBuffer.copyFrom(commandEncoder, swapBuffer);
+            engine.rust.push_to_temp_gpu_buffers(swapBuffer2);
+            const srcOffset = 0;
+            const rawSwapBuffer = engine.rust.get_raw_buffer<
+              BufferUsageEnums.COPY_SRC,
+              true
+            >(swapBuffer2).externref;
+            new Int8Array(rawSwapBuffer.getMappedRange()).set(
+              new Int8Array(
+                data2,
+                srcOffset,
+                data2.byteLength / Int8Array.BYTES_PER_ELEMENT,
+              ),
+            );
+            indirectBuffer.copyFrom(commandEncoder, rawSwapBuffer.unmap());
             scene.gpu.pendingCommandBuffers.push(commandEncoder.finish());
           },
         );

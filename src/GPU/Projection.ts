@@ -58,33 +58,31 @@ export class Projection {
     ]);
 
     if (!initial && this.gpuBuffer) this.gpuBuffer.destroy();
-    this.gpuBuffer = new Buffer(
-      {
-        gpu: gpu.device,
-        label: 'uniform_projection',
-        size: PROJECTION_BUFFER_SIZE,
-        usages: BufferUsageEnums.UNIFORM,
-      },
-      (b) => {
-        const gpuBuffer = b.getMappedRange();
-        this.projectionReversedZ.invertToRef(new TerraMatrix(gpuBuffer));
-        new TerraMatrix(gpuBuffer, 64).set(this.projectionReversedZ);
-        this.reversedProjectionFarPlane.invertToRef(
-          new TerraMatrix(gpuBuffer, 128),
-        );
-        new Float32Array(gpuBuffer, 192, 6).set([
-          this.nearPlane,
-          this.farPlane,
-          this.nearPlane * this.farPlane,
-          this.farPlane - this.nearPlane,
-          tileCount[2] / Math.log2(this.farPlane / this.nearPlane), //sliceScale
-          -(
-            (tileCount[2] * Math.log2(this.nearPlane)) /
-            Math.log2(this.farPlane / this.nearPlane)
-          ), //sliceBias
-        ]);
-      },
+    const gpuBuffer = new Buffer({
+      gpu: gpu.device,
+      label: 'uniform_projection',
+      mappedAtCreation: true,
+      size: PROJECTION_BUFFER_SIZE,
+      usages: BufferUsageEnums.UNIFORM,
+    });
+    const gpuBufferRange = gpuBuffer.getMappedRange();
+    this.projectionReversedZ.invertToRef(new TerraMatrix(gpuBufferRange));
+    new TerraMatrix(gpuBufferRange, 64).set(this.projectionReversedZ);
+    this.reversedProjectionFarPlane.invertToRef(
+      new TerraMatrix(gpuBufferRange, 128),
     );
+    new Float32Array(gpuBufferRange, 192, 6).set([
+      this.nearPlane,
+      this.farPlane,
+      this.nearPlane * this.farPlane,
+      this.farPlane - this.nearPlane,
+      tileCount[2] / Math.log2(this.farPlane / this.nearPlane), //sliceScale
+      -(
+        (tileCount[2] * Math.log2(this.nearPlane)) /
+        Math.log2(this.farPlane / this.nearPlane)
+      ), //sliceBias
+    ]);
+    this.gpuBuffer = gpuBuffer.unmap();
     return this.gpuBuffer;
   }
 }

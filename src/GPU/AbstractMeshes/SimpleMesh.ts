@@ -32,23 +32,21 @@ export class SimpleMesh extends BoundableNodeSimple {
         );
         const vertices_len = this.vertices_count * this.vertices_stride;
 
-        vBufferGPU = new Buffer(
-          {
-            gpu: engine.gpu.device,
-            label: 'SimpleMeshVertex_' + this.label,
-            size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
-            usages: BufferUsageEnums.VERTEX,
-          },
-          (b) => {
-            new Float32Array(b.getMappedRange()).set(
-              new Float32Array(
-                engine.rust.memory.buffer,
-                vertices_view,
-                vertices_len,
-              ),
-            );
-          },
+        const vBufferGPUMapped = new Buffer({
+          gpu: engine.gpu.device,
+          label: 'SimpleMeshVertex_' + this.label,
+          mappedAtCreation: true,
+          size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
+          usages: BufferUsageEnums.VERTEX,
+        });
+        new Float32Array(vBufferGPUMapped.getMappedRange()).set(
+          new Float32Array(
+            engine.rust.memory.buffer,
+            vertices_view,
+            vertices_len,
+          ),
         );
+        vBufferGPU = vBufferGPUMapped.unmap();
       }
       const renderPipeline = engine.gpu.createRenderPipelineBuilder({
         desc: {
