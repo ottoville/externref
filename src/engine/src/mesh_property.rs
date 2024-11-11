@@ -1,41 +1,37 @@
-use std::{
-    collections::HashMap,
-    sync::{Mutex, MutexGuard},
-};
+use std::sync::MutexGuard;
 
 use terramath::{MatrixMath, Quaternion};
 
 use crate::{
-    allocators::freeindex::FreeIndexIndex, devtools::DEVTOOLS, engine::js_warn, math2::Vec3wgslF32,
-    mesh::get_mesh_by_id_mut, GPUMesh,
+    allocators::{
+        explicit_freelist::{ExplicitFreeList, ExplicitFreeListIndex},
+        freeindex::FreeIndexIndex,
+    },
+    devtools::DEVTOOLS,
+    engine::js_warn,
+    math2::Vec3wgslF32,
+    mesh::get_mesh_by_id_mut,
+    GPUMesh,
 };
 
-static CB_ID: Mutex<usize> = Mutex::new(0);
-
 #[no_mangle]
-pub unsafe extern "C" fn remove_onchange_callback(mesh_id: usize, cb: usize) {
+pub unsafe extern "C" fn remove_onchange_callback(mesh_id: usize, cb: ExplicitFreeListIndex) {
     let mesh = get_mesh_by_id_mut(mesh_id);
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
-    mesh_property.on_change.remove(&cb);
+    mesh_property.on_change.remove(cb);
 }
 #[no_mangle]
-pub unsafe extern "C" fn add_onchange_callback(mesh_id: usize) -> usize {
+pub unsafe extern "C" fn add_onchange_callback(mesh_id: usize) -> ExplicitFreeListIndex {
     let mesh = get_mesh_by_id_mut(mesh_id);
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
-    let mut mid = CB_ID.lock().unwrap();
-    let id = mid.clone();
-    mesh_property.on_change.insert(
-        id,
-        Box::new(|mesh_property| {
-            let mut devtools = DEVTOOLS.write().unwrap();
-            mesh_property
-                .rotation
-                .to_euler_angles(&mut devtools.euler_angles);
-            devtools.translation = mesh_property.translation.0.clone();
-            devtools.scale = mesh_property.scaling.clone();
-        }),
-    );
-    *mid += 1;
+    let id = mesh_property.on_change.insert(Box::new(|mesh_property| {
+        let mut devtools = DEVTOOLS.write().unwrap();
+        mesh_property
+            .rotation
+            .to_euler_angles(&mut devtools.euler_angles);
+        devtools.translation = mesh_property.translation.0.clone();
+        devtools.scale = mesh_property.scaling.clone();
+    }));
     return id;
 }
 
@@ -48,7 +44,7 @@ pub struct MeshProperty {
     pub rotation: Quaternion,
     pub scaling: [f32; 3],
     pub color: [f32; 4],
-    pub on_change: HashMap<usize, Box<dyn Fn(&MutexGuard<MeshProperty>) -> ()>>,
+    pub on_change: ExplicitFreeList<Box<dyn Fn(&MutexGuard<MeshProperty>) -> ()>>,
 }
 impl MeshProperty {
     pub fn update_matrix(&mut self) {

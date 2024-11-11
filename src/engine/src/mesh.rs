@@ -1,3 +1,4 @@
+use crate::allocators::explicit_freelist::ExplicitFreeList;
 pub use crate::drawable::DrawCommand;
 use crate::engine::js_error;
 #[cfg(target_arch = "wasm32")]
@@ -19,7 +20,6 @@ use core::panic;
 use externref::externref;
 use externref::Resource;
 use rapier3d::prelude::*;
-use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Mutex;
 use terramath::MatrixMath;
@@ -496,7 +496,7 @@ impl Mesh {
                 },
                 scaling: [1.0; 3],
                 color: [1.0, 0.0, 0.0, 0.0],
-                on_change: HashMap::new(),
+                on_change: ExplicitFreeList::new(8),
             }));
         });
         let m = Mesh {

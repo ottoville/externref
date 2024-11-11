@@ -110,7 +110,7 @@ pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommand
         for (i, mesh_id) in queue.iter().enumerate() {
             let mesh = get_mesh_by_id_mut(*mesh_id);
             let mut mesh_property = mesh.mesh_property.lock().unwrap();
-            for (_, cb) in mesh_property.on_change.iter() {
+            for cb in mesh_property.on_change.iter() {
                 cb(&mesh_property);
             }
             if mesh_property.transformation_is_dirty {

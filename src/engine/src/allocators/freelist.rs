@@ -86,12 +86,12 @@ impl<T> Drop for FreeList<T> {
 impl<T> Index<FreeListIndex> for FreeList<T> {
     type Output = T;
     fn index(&self, index: FreeListIndex) -> &Self::Output {
-        unsafe { &*self.entries[index.0].item }
+        unsafe { &self.entries.get_unchecked(index.0).item }
     }
 }
 impl<T> IndexMut<FreeListIndex> for FreeList<T> {
     fn index_mut(&mut self, index: FreeListIndex) -> &mut Self::Output {
-        unsafe { &mut *self.entries[index.0].item }
+        unsafe { &mut self.entries.get_unchecked_mut(index.0).item }
     }
 }
 
