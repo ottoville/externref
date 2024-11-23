@@ -361,6 +361,14 @@ export type rustWasm = {
     false,
     Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
   >;
+  get_directional_lights_buffer(): externref<
+    false,
+    Buffer<(typeof BufferUsageEnums)['STORAGE|COPY_DST']>
+  >;
+  get_point_lights_buffer(): externref<
+    false,
+    Buffer<(typeof BufferUsageEnums)['STORAGE|COPY_DST']>
+  >;
   get_raw_buffer<U extends BufferUsageEnums, M extends boolean>(
     buffer: rust_pointer<'GPUBuffer'>,
   ): externref<false, Buffer<U, M>>;
@@ -652,13 +660,6 @@ export class Engine {
         now() {
           return performance.now();
         },
-        update_directional_lights(pointer: number, length: number) {
-          engine.gpu?.update_directional_lights(pointer, length);
-        },
-        update_point_lights(pointer: number, length: number) {
-          engine.gpu?.update_point_lights(pointer, length);
-        },
-
         verticesChange(mesh_id: number) {
           const mesh = DataNode.Meshes.get(mesh_id);
           if (mesh) {

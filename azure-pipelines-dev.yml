@@ -86,6 +86,11 @@ stages:
       inputs:
         key: 'rustbuildscript'
         path: './buildscript/target'
+    - task: Cache@2
+      displayName: Restore rollup cache
+      inputs:
+        key: 'rollupcache'
+        path: './.rollup.cache'
     - task: Rustup@1
       displayName: Add wasm32-unknown-unknown target
       inputs:

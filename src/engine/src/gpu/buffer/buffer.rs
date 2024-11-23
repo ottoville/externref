@@ -37,6 +37,7 @@ extern "C" {
         copySize: usize,
     );
     pub fn unmap(buffer: &Resource<JSBuffer>);
+    pub fn write(buffer: &Resource<JSBuffer>, ptr: usize, size: usize, buffer_offset: usize);
 }
 
 #[no_mangle]
@@ -65,7 +66,7 @@ pub struct GPUBuffer<const U: u32> {
     pub externref: Resource<JSBuffer>,
     pub label: String,
     owned_by_js: bool,
-    size: usize,
+    pub size: usize,
 }
 pub struct MappedGPUBuffer<const U: u32>(pub GPUBuffer<U>);
 #[cfg(feature = "webgpu")]

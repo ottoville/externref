@@ -40,6 +40,10 @@ pub const UNIFORM_USAGE:u32 = 64;
 /////////////////////////////////////////////////////////////////////////////////////
 // Storage
 pub const STORAGE_USAGE:u32 = 128;
+pub const STORAGE_COPYDST_USAGE:u32 = STORAGE_USAGE | COPYDST_USAGE;
+#[cfg(feature = "webgpu")]
+#[cfg(any(not(test), rust_analyzer))]
+impl CopyDst for GPUBuffer<STORAGE_COPYDST_USAGE> {}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Indirect

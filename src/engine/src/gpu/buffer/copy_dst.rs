@@ -1,9 +1,8 @@
 use externref::Resource;
-
 use crate::engine::GPUCommandEncoder;
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
-use super::{buffer::{copy_from, GpuBuffer}, copy_src::CopySrc};
+use super::{buffer::{copy_from, GpuBuffer, write}, copy_src::CopySrc};
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
 pub trait CopyDst: GpuBuffer {
@@ -24,6 +23,11 @@ pub trait CopyDst: GpuBuffer {
                 destination_offset,
                 copy_size,
             )
+        }
+    }
+    fn write(&self, ptr: usize, size: usize, buffer_offset: usize) {
+        unsafe {
+            write(&self.externref(), ptr, size, buffer_offset);
         }
     }
 }

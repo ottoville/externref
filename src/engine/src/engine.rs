@@ -4,10 +4,12 @@ use std::panic;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{LazyLock, Mutex};
 
-use crate::allocators::freeindex::{FreeIndex, FreeIndexIndex};
+use crate::allocators::freeindex::FreeIndex;
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::gpu::buffer::buffer::{GPUBuffer, JSBuffer};
 use crate::gpu::buffer::usages::{COPYSRC_USAGE, UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE};
+use crate::gpu::gpu::GPU;
+use crate::gpu::lights::Lights;
 pub use crate::mesh::Mesh;
 use crate::mesh::{get_mesh_by_id, get_mesh_by_id_mut};
 pub use crate::GPUMesh;
@@ -26,10 +28,6 @@ extern "C" {
 pub struct GPUCommandEncoder(());
 
 extern "C" {
-    #[cfg(feature = "webgpu")]
-    fn update_point_lights(pointer: *const FreeIndexIndex, length: usize);
-    #[cfg(feature = "webgpu")]
-    fn update_directional_lights(pointer: *const FreeIndexIndex, length: usize);
     #[cfg(target_arch = "wasm32")]
     fn jspanic(number: *const u8);
     #[cfg(target_arch = "wasm32")]
@@ -65,32 +63,49 @@ extern "C" {
     fn mesh_on_change(mesh: Option<&Resource<crate::mesh::JSMesh>>);
 }
 pub struct Engine {
-    pub point_lights: Vec<FreeIndexIndex>,
-    pub directional_lights: Vec<FreeIndexIndex>,
     pub engine2: Option<Engine2>,
 }
 const GPU_MEMORY_INDEX_SIZE: usize = 256;
 const DEFAULT_MAX_INSTANCES: usize = 10;
 pub static MAX_INSTANCES: Mutex<usize> = Mutex::new(DEFAULT_MAX_INSTANCES);
 
-pub static mut ENGINE: Engine = Engine {
-    point_lights: Vec::new(),
-    directional_lights: Vec::new(),
-    engine2: None,
-};
-
+pub static mut ENGINE: Engine = Engine { engine2: None };
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 #[externref]
 pub unsafe extern "C" fn get_gpu_mesh_buffer() -> &'static Resource<JSBuffer> {
     &ENGINE
         .physic_engine()
+        .gpu
+        .as_ref()
+        .unwrap()
         .gpu_buffer
+        .externref
+}
+#[no_mangle]
+#[cfg(feature = "webgpu")]
+#[externref]
+pub unsafe extern "C" fn get_directional_lights_buffer() -> &'static Resource<JSBuffer> {
+    &ENGINE
+        .physic_engine()
+        .directional_lights
+        .buffer
         .as_ref()
         .unwrap()
         .externref
 }
-
+#[no_mangle]
+#[cfg(feature = "webgpu")]
+#[externref]
+pub unsafe extern "C" fn get_point_lights_buffer() -> &'static Resource<JSBuffer> {
+    &ENGINE
+        .physic_engine()
+        .point_lights
+        .buffer
+        .as_ref()
+        .unwrap()
+        .externref
+}
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
@@ -101,7 +116,7 @@ pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommand
     let mut queue = GPU_QUEUE.lock().unwrap();
     if queue.len() > 0 {
         let mut need_resize_to = *MAX_INSTANCES.lock().unwrap();
-        let temp_buffer= MappedGPUBuffer::<COPYSRC_USAGE>::new(
+        let temp_buffer = MappedGPUBuffer::<COPYSRC_USAGE>::new(
             std::mem::size_of::<GPUMesh>() * queue.len(),
             String::from("handle_gpu_queue"),
             false,
@@ -133,11 +148,12 @@ pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommand
                 std::mem::size_of::<GPUMesh>(),
             );
         }
-        let meshes_buffer = engine.gpu_buffer.as_mut().unwrap();
+        let meshes_buffer = &mut engine.gpu.as_mut().unwrap().gpu_buffer;
         if need_resize_to > *MAX_INSTANCES.lock().unwrap() {
             let mut max_instances = MAX_INSTANCES.lock().unwrap();
             *max_instances = need_resize_to + 16;
-            let old_externref =meshes_buffer.resize(command_encoder, GPU_MEMORY_INDEX_SIZE * *max_instances);
+            let old_externref =
+                meshes_buffer.resize(command_encoder, GPU_MEMORY_INDEX_SIZE * *max_instances);
             TEMP_GPU_BUFFERS.lock().unwrap().push(old_externref);
         }
         for (i, mesh_id) in queue.iter().enumerate() {
@@ -153,7 +169,15 @@ pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommand
         }
         let unmapped_temp_buffer = temp_buffer.unmap();
         queue.clear();
-        TEMP_GPU_BUFFERS.lock().unwrap().push(unmapped_temp_buffer.externref);
+        TEMP_GPU_BUFFERS
+            .lock()
+            .unwrap()
+            .push(unmapped_temp_buffer.externref);
+
+
+        //Lights
+        engine.directional_lights.update_buffer();
+        engine.point_lights.update_buffer();
     }
 }
 pub struct Engine2 {
@@ -168,7 +192,9 @@ pub struct Engine2 {
     pub broad_phase: DefaultBroadPhase,
     pub joint_set: ImpulseJointSet,
     pub gpu_allocated: FreeIndex,
-    pub gpu_buffer: Option<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>,
+    pub gpu: Option<GPU>,
+    pub point_lights: Lights,
+    pub directional_lights: Lights,
 }
 pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> =
     LazyLock::new(|| Mutex::new(Vec::with_capacity(128)));
@@ -285,12 +311,15 @@ pub extern "C" fn init_engine2() -> usize {
 #[cfg(any(not(test), rust_analyzer))]
 #[externref]
 pub unsafe extern "C" fn init_gpu() {
-    ENGINE.physic_engine_mut().gpu_buffer =
-        Some(GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
+    ENGINE.physic_engine_mut().point_lights.init_buffer();
+    ENGINE.physic_engine_mut().directional_lights.init_buffer();
+    ENGINE.physic_engine_mut().gpu = Some(GPU {
+        gpu_buffer: GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
             GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
             String::from("GPUMeshes"),
             false,
-        ))
+        ),
+    });
 }
 pub fn init_engine() {
     let rigid_body_set = RigidBodySet::new();
@@ -308,7 +337,9 @@ pub fn init_engine() {
         ccd_solver: CCDSolver::new(),
         joint_set: ImpulseJointSet::new(),
         gpu_allocated: FreeIndex::new(),
-        gpu_buffer: None,
+        gpu: None,
+        point_lights: Lights::new(String::from("GPUPointLights")),
+        directional_lights: Lights::new(String::from("GPUDirectionalLights")),
     };
     unsafe {
         ENGINE.engine2 = Some(e);
@@ -453,22 +484,6 @@ impl Engine {
                 return e;
             }
             None => panic!("Engine not initialized"),
-        }
-    }
-
-    #[cfg(feature = "webgpu")]
-    pub fn update_point_lights(&self) {
-        unsafe {
-            update_point_lights(self.point_lights.as_ptr(), self.point_lights.len());
-        }
-    }
-    #[cfg(feature = "webgpu")]
-    pub fn update_directional_lights(&self) {
-        unsafe {
-            update_directional_lights(
-                self.directional_lights.as_ptr(),
-                self.directional_lights.len(),
-            );
         }
     }
 }

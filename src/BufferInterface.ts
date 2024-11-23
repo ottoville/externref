@@ -69,4 +69,17 @@ export const BufferExports = {
   }: externref<boolean, Buffer<BufferUsageEnums, true>>) {
     buffer.unmap();
   },
+  write(
+    { externref: destination }: externref<boolean, Buffer<COPY_DST_BUFFER>>,
+    sourceOffset: GPUSize64,
+    copySize: GPUSize64,
+    destinationOffset: GPUSize64,
+  ) {
+    destination.write(
+      destinationOffset,
+      engine.rust.memory.buffer,
+      sourceOffset,
+      copySize,
+    );
+  },
 };

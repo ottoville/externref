@@ -513,19 +513,18 @@ impl Mesh {
             on_gpu_queue: false,
             externref,
         };
+        let gpu_mesh_alignment = m.mesh_property.lock().unwrap().gpu_mesh_alignment;
         if point_light > 0.0 {
             ENGINE
+                .physic_engine_mut()
                 .point_lights
-                .push(m.mesh_property.lock().unwrap().gpu_mesh_alignment);
-            #[cfg(feature = "webgpu")]
-            ENGINE.update_point_lights();
+                .push(gpu_mesh_alignment);
         }
         if directional_light > 0.0 {
             ENGINE
+                .physic_engine_mut()
                 .directional_lights
-                .push(m.mesh_property.lock().unwrap().gpu_mesh_alignment);
-            #[cfg(feature = "webgpu")]
-            ENGINE.update_directional_lights();
+                .push(gpu_mesh_alignment);
         }
 
         engine2.meshes.push(m);
@@ -705,24 +704,10 @@ impl Drop for Mesh {
         unsafe {
             let mesh_property = self.mesh_property.lock().unwrap();
             if mesh_property.gpu_memory.point_light_squared > 0.0 {
-                let index = ENGINE
-                    .point_lights
-                    .iter()
-                    .position(|x| x.0 == mesh_property.gpu_mesh_alignment.0)
-                    .unwrap();
-                ENGINE.point_lights.swap_remove(index);
-                #[cfg(feature = "webgpu")]
-                ENGINE.update_point_lights();
+                ENGINE.physic_engine_mut().point_lights.remove(mesh_property.gpu_mesh_alignment);
             }
             if mesh_property.gpu_memory.directional_light > 0.0 {
-                let index = ENGINE
-                    .directional_lights
-                    .iter()
-                    .position(|x| x.0 == mesh_property.gpu_mesh_alignment.0)
-                    .unwrap();
-                ENGINE.directional_lights.swap_remove(index);
-                #[cfg(feature = "webgpu")]
-                ENGINE.update_directional_lights();
+                ENGINE.physic_engine_mut().directional_lights.remove(mesh_property.gpu_mesh_alignment);
             }
             #[cfg(feature = "webgpu")]
             {

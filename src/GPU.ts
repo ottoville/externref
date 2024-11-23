@@ -71,19 +71,10 @@ export class GPU {
   readonly mousePositionBuffer = new SharedArrayBuffer(4);
   readonly mousePosition = new Uint16Vector2(this.mousePositionBuffer);
 
-  readonly #gpu_max_point_lights = 63;
-
   readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
 
   readonly projections: Set<Projection> = new Set();
   readonly cameras: TerraCamera[] = [];
-
-  readonly #GPUPointLights: Buffer<
-    (typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_DST']
-  >;
-  readonly #GPUDirectionalLights: Buffer<
-    (typeof BufferUsageEnums)['STORAGE|COPY_DST']
-  >;
 
   readonly BindGroupPosition: BindGroup<
     typeof this.pipelineLayouts.BindGroupLayoutPosition
@@ -356,31 +347,24 @@ export class GPU {
     this.pipelineLayouts = createPipelineLayouts(this);
     this.shaders = createShaderBuilders(this);
 
-    this.#GPUPointLights = new Buffer({
-      gpu: device,
-      label: 'GPUPointLights',
-      size: this.#gpu_max_point_lights * 4,
-      usages: BufferUsageEnums['UNIFORM|STORAGE|COPY_DST'],
-    });
-
-    this.#GPUDirectionalLights = new Buffer({
-      gpu: device,
-      label: 'GPUDirectionalLights',
-      size: 63 * 4,
-      usages: BufferUsageEnums['STORAGE|COPY_DST'],
-    });
-
     this.#updateViewBindGroup = new BindGroup(
       this.updateViewShader[0][0],
       'updateViewBindGroup',
-      (bindGroup) => ({
-        directional_lights:
-          this.#GPUDirectionalLights.getStorageBinding(bindGroup),
-        meshes: engine.rust
-          .get_gpu_mesh_buffer()
-          .externref.getStorageBinding(bindGroup),
-        point_lights: this.#GPUPointLights.getStorageBinding(bindGroup),
-      }),
+      (bindGroup) => {
+        const { externref: directional_lights_buffer } =
+          engine.rust.get_directional_lights_buffer();
+        const { externref: point_lights_buffer } =
+          engine.rust.get_point_lights_buffer();
+
+        return {
+          directional_lights:
+            directional_lights_buffer.getStorageBinding(bindGroup),
+          meshes: engine.rust
+            .get_gpu_mesh_buffer()
+            .externref.getStorageBinding(bindGroup),
+          point_lights: point_lights_buffer.getStorageBinding(bindGroup),
+        };
+      },
     );
     this.BindGroupPosition = new BindGroup(
       this.pipelineLayouts.BindGroupLayoutPosition,
@@ -732,60 +716,6 @@ export class GPU {
       throw new Error('Canvas must have parent element');
     }
     this.#ro.observe(canvas.parentElement);
-  }
-  update_directional_lights(pointer: number, length: number) {
-    const lights = new Uint32Array(engine.rust.memory.buffer, pointer, length);
-    const commandEncoder = this.device.createCommandEncoder({
-      label: 'update_directional_lights_encoder',
-    });
-    //TODO: Potential buffer overflow
-    const byteLength = 4 + lights.byteLength;
-    const tempBuffer = new Buffer({
-      gpu: this.device,
-      label: 'directional_lights_tempBuffer',
-      mappedAtCreation: true,
-      size: byteLength,
-      usages: BufferUsageEnums.COPY_SRC,
-    });
-    const gpu_buffer = new Uint32Array(tempBuffer.getMappedRange());
-    gpu_buffer[0] = lights.length;
-    gpu_buffer.set(lights, 1);
-
-    tempBuffer
-      .unmap()
-      .copyTo(commandEncoder, this.#GPUDirectionalLights, 0, 0, byteLength);
-    this.pendingCommandBuffers.push(
-      commandEncoder.finish({
-        label: 'update_directional_lights',
-      }),
-    );
-  }
-  update_point_lights(pointer: number, length: number) {
-    const lights = new Uint32Array(engine.rust.memory.buffer, pointer, length);
-    const commandEncoder = this.device.createCommandEncoder({
-      label: 'update_point_lights_encoder',
-    });
-    //TODO: Potential buffer overflow
-    const byteLength = 4 + lights.byteLength;
-    const tempBuffer = new Buffer({
-      gpu: this.device,
-      label: 'point_lights_tempBuffer',
-      mappedAtCreation: true,
-      size: byteLength,
-      usages: BufferUsageEnums.COPY_SRC,
-    });
-    const gpu_buffer = new Uint32Array(tempBuffer.getMappedRange());
-    gpu_buffer[0] = lights.length;
-    gpu_buffer.set(lights, 1);
-
-    tempBuffer
-      .unmap()
-      .copyTo(commandEncoder, this.#GPUPointLights, 0, 0, byteLength);
-    this.pendingCommandBuffers.push(
-      commandEncoder.finish({
-        label: 'update_point_lights',
-      }),
-    );
   }
   readonly timeAndDeltaBuffer = new ArrayBuffer(8);
   readonly deltaView = new Float32Array(this.timeAndDeltaBuffer, 4, 1);

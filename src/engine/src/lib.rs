@@ -2,18 +2,18 @@
 mod allocators;
 mod boundingbox;
 mod collider;
+mod devtools;
 mod drawable;
 mod engine;
 mod geometry;
+mod gpu;
+mod indices;
 mod math2;
 mod mesh;
+mod mesh_property;
 mod meshes;
 mod terrain;
 mod vertices;
-mod mesh_property;
-mod devtools;
-mod indices;
-mod gpu;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
@@ -155,21 +155,15 @@ impl GPUMesh {
         if range > 0.0 {
             self.point_light_squared = range * range;
             if old_value == 0.0 {
-                engine.point_lights.push(gpu_alignment);
-                #[cfg(feature = "webgpu")]
-                engine.update_point_lights();
+                engine.physic_engine_mut().point_lights.push(gpu_alignment);
             }
         } else {
             self.point_light_squared = 0.0;
             if old_value > 0.0 {
-                let index = engine
+                engine
+                    .physic_engine_mut()
                     .point_lights
-                    .iter()
-                    .position(|x| x.0 == gpu_alignment.0)
-                    .unwrap();
-                engine.point_lights.swap_remove(index);
-                #[cfg(feature = "webgpu")]
-                engine.update_point_lights();
+                    .remove(gpu_alignment);
             }
         }
     }
@@ -183,21 +177,18 @@ impl GPUMesh {
         if range > 0.0 {
             self.directional_light = range;
             if old_value == 0.0 {
-                engine.directional_lights.push(gpu_alignment);
-                #[cfg(feature = "webgpu")]
-                engine.update_directional_lights();
+                engine
+                    .physic_engine_mut()
+                    .directional_lights
+                    .push(gpu_alignment);
             }
         } else {
             self.directional_light = 0.0;
             if old_value > 0.0 {
-                let index = engine
+                engine
+                    .physic_engine_mut()
                     .directional_lights
-                    .iter()
-                    .position(|x| x.0 == gpu_alignment.0)
-                    .unwrap();
-                engine.directional_lights.swap_remove(index);
-                #[cfg(feature = "webgpu")]
-                engine.update_directional_lights();
+                    .remove(gpu_alignment);
             }
         }
     }

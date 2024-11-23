@@ -12,7 +12,7 @@
     "buildWasmSimd": "pwsh -Command ./wat2wasm src/collider/colliderSIMD2.wat --debug-names -o ./wwwroot/collider/colliderSimd.wasm",
     "buildWasmSimd-prod": "pwsh -Command \"./wat2wasm src/collider/colliderSIMD2.wat -o ./wwwroot/collider/colliderSimd.wasm\"",
     "build": "tsc --project ./src/tsconfig.debug.json && npm run buildWasmSimd && npm run buildRust && npm run build-rollup-debug",
-    "build-prod": "tsc -b  && npm run buildWasmSimd-prod && npm run buildRust-prod && npm run build-rollup-prod",
+    "build-prod": "tsc --project ./src/tsconfig.json  && npm run buildWasmSimd-prod && npm run buildRust-prod && npm run build-rollup-prod",
     "build-rollup-debug": "rollup -c rollup.config.js && rollup -c rollup.devtools.config.js --environment BUILD:debug",
     "build-rollup-prod": "rollup -c && rollup -c rollup.devtools.config.js --environment BUILD:production",
     "eslint": "eslint src --cache --cache-location ./.eslintcache/",
@@ -26,7 +26,7 @@
     "test-rust": "cargo test --lib --workspace --manifest-path ./src/engine/Cargo.toml && cargo install wasm-bindgen-cli && cd src/terramath && cargo test --target wasm32-unknown-unknown",
     "test-wasm": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
     "test-duplicates": " jscpd --exitCode 1 --ignore \"./node_modules/**,./rapier,./target,./jest*,./tests/**,.eslintrc.js,*.config.ts,tsconfig.json,cypress,webgpu-ts/Tests,parry3d\" ./",
-    "clean": "pwsh -Command \"rm *.tsbuildinfo; rm -r ./node_modules;rm -r ./wwwroot/js\"; cargo clean --manifest-path ./src/engine/Cargo.toml; cargo clean --manifest-path ./buildscript/Cargo.toml; cargo clean --manifest-path ./src/terramath/Cargo.toml"
+    "clean": "pwsh -Command \"rm *.tsbuildinfo; rm -r ./node_modules;rm -r ./.rollup.cache;rm -r ./wwwroot/js\"; cargo clean --manifest-path ./src/engine/Cargo.toml; cargo clean --manifest-path ./buildscript/Cargo.toml; cargo clean --manifest-path ./src/terramath/Cargo.toml"
   },
   "author": "Otto-Ville Lamminpää",
   "license": "All rights reserved",
