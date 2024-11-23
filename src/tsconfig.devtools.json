@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../wwwroot/js/ui/DevTools",
+  },
+  "exclude": [
+    "env.dev.ts",
+    "node_modules",
+    "jestWorker.ts",
+    "workers",
+    "service-worker.ts",
+    "**/*.test.integration.ts",
+    "**/*.test.ts",
+    "cypress",
+    "cypress.config.ts",
+    "cypress.ci.config.ts"
+  ]
+}

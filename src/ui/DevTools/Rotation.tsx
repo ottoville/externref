@@ -3,8 +3,8 @@ import { ReadOnlyTerraVector3 } from '../../Math.js';
 import { useEffect, useRef } from 'react';
 import type { Engine } from '../../engine.js';
 // Import side effects
-import './Slider.js';
-import type { SliderElement } from './Slider.js';
+import './Slider.jsx';
+import type { SliderElement } from './Slider.jsx';
 declare const engine: Engine;
 
 export function Rotation({ node }: { node: MainNode }) {

@@ -50,13 +50,12 @@ stages:
       displayName: npm audit
       inputs:
         command: custom
-        workingDir: src
         verbose: false
         customCommand: audit --omit dev
     - task: Cache@2
       displayName: Restore npm cache
       inputs:
-        key: 'npm | "$(Agent.OS)" | ./src/package-lock.json'
+        key: 'npm | "$(Agent.OS)" | ./package-lock.json'
         restoreKeys: |
           npm | "$(Agent.OS)"
         path: $(npm_config_cache)
@@ -64,14 +63,17 @@ stages:
       displayName: npm install
       inputs:
         command: custom
-        workingDir: src
         verbose: false
         customCommand: ci
+    - task: Cache@2
+      displayName: Restore eslint cache
+      inputs:
+        key: 'eslint'
+        path: '.eslintcache'
     - task: Npm@1
       displayName: eslint
       inputs:
         command: custom
-        workingDir: src
         verbose: false
         customCommand: run eslint
     - task: Cache@2

@@ -61,13 +61,12 @@ stages:
       displayName: npm audit
       inputs:
         command: custom
-        workingDir: src
         verbose: false
         customCommand: audit --omit dev
     - task: Cache@2
       displayName: Restore npm cache
       inputs:
-        key: 'npm | "$(Agent.OS)" | ./src/package-lock.json'
+        key: 'npm | "$(Agent.OS)" | ./package-lock.json'
         restoreKeys: |
           npm | "$(Agent.OS)"
         path: $(npm_config_cache)
@@ -75,7 +74,6 @@ stages:
       displayName: npm install
       inputs:
         command: custom
-        workingDir: src
         verbose: false
         customCommand: ci --omit dev
     - task: Cache@2
@@ -96,7 +94,6 @@ stages:
       displayName: npm build
       inputs:
         command: custom
-        workingDir: src
         verbose: false
         customCommand: run build-prod
     - task: CopyFiles@2

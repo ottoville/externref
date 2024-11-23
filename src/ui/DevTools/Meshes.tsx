@@ -3,8 +3,8 @@ import type { GPU } from '../../GPU.js';
 import type { Drawable } from '../../GPU/Drawables/Drawable.js';
 
 import { useEffect, useState } from 'react';
-import { VariantList } from './VariantList.js';
-import { NodeInfo } from './NodeInfo.js';
+import { VariantList } from './VariantList.jsx';
+import { NodeInfo } from './NodeInfo.jsx';
 import { RenderPipeline, RenderPipelineBuilder } from 'webgpu-ts/index.js';
 import type { MainNode } from 'MainNode.js';
 import type { Engine } from '../../engine.js';

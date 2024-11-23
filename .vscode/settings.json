@@ -2,7 +2,7 @@
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
-    "typescript.tsdk": "./src/node_modules\\typescript\\lib",
+    "typescript.tsdk": "./node_modules\\typescript\\lib",
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },

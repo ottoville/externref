@@ -5,7 +5,7 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import pluginPromise from 'eslint-plugin-promise';
 
 export default [
-  { files: ['**/*.{cjs,ts,tsx}'] },
+  { files: ['src/**/*.{cjs,ts,tsx}'] },
   { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
@@ -20,24 +20,22 @@ export default [
   },
   {
     ignores: [
-      'webpack.config*',
-      'webgpu-ts/dist',
-      'workers',
+      'src/webgpu-ts/dist',
+      'src/workers',
       '**/*.cjs',
-      'tests',
-      'target',
-      'teardown.js',
-      'setup.js',
-      'puppeteer_environment.js',
-      'jest.integration.config.js',
-      'jest.config.js',
-      'eslint.config.mjs',
-      'cypress',
-      'cypress.config.ts',
-      'cypress.ci.config.ts',
+      'src/tests',
+      'src/teardown.js',
+      'src/setup.js',
+      'src/puppeteer_environment.js',
+      'src/jest.integration.config.js',
+      'src/jest.config.js',
+      'src/cypress',
+      'src/cypress.config.ts',
+      'src/cypress.ci.config.ts',
       '**/*.test.ts',
       '**/*test.mjs',
-      'env.dev.ts',
+      'src/env.dev.ts',
+      'src/terramath'
     ],
   },
   {

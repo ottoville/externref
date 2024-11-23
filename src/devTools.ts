@@ -18,6 +18,12 @@ customElements.define(
       this.#closeBtn = shadowRoot.querySelector<HTMLButtonElement>('button')!;
     }
     async connectedCallback() {
+      //@ts-expect-error injecting global namespace env that react uses
+      window.process = {
+        env: {
+          NODE_ENV: globals.env,
+        },
+      };
       const { DevTools } = await import('./ui/DevTools/DevTools.js');
       this.#root = DevTools(
         this.shadowRoot!.querySelector<HTMLElement>('aside')!,

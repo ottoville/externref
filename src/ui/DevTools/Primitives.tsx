@@ -1,7 +1,7 @@
 import { DataNode } from '../../nodes/DataNode.js';
-import { Vertex } from './Vertex.js';
+import { Vertex } from './Vertex.jsx';
 import { useEffect, useRef, useState } from 'react';
-import { Indices } from './Indices.js';
+import { Indices } from './Indices.jsx';
 import type { Engine } from '../../engine.js';
 import { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 declare const engine: Engine;

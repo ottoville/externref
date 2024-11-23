@@ -22,7 +22,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "lib": ["dom", "esnext", "ES2017.SharedMemory", "DOM.Iterable"],
-    "typeRoots": ["./node_modules/", "./node_modules/@types/"],
+    "typeRoots": ["../node_modules/", "../node_modules/@types/"],
     "types": ["@webgpu/types"],
     "resolveJsonModule": true,
     "moduleResolution": "node",
