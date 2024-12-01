@@ -1,5 +1,4 @@
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
+use super::{mappadle_buffer::MappadleGPUBuffer, mapped_buffer::{MappedGPUBuffer, MappedgpuBuffer}};
 use super::{buffer::GPUBuffer, copy_dst::CopyDst, copy_src::CopySrc};
 
 
@@ -10,6 +9,11 @@ pub const MAP_READ_USAGE:u32 = 1;
 /////////////////////////////////////////////////////////////////////////////////////
 // MapWrite
 pub const MAP_WRITE_USAGE: u32 = 2;
+pub const MAP_WRITE_COPYSRC_USAGE: u32 = MAP_WRITE_USAGE | COPYSRC_USAGE;
+#[cfg(feature = "webgpu")]
+#[cfg(any(not(test), rust_analyzer))]
+impl CopySrc for GPUBuffer<MAP_WRITE_COPYSRC_USAGE> {}
+impl MappedgpuBuffer<MAP_WRITE_COPYSRC_USAGE> for MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>> {}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // CopySrc
@@ -17,7 +21,9 @@ pub const COPYSRC_USAGE: u32 = 4;
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
 impl CopySrc for GPUBuffer<COPYSRC_USAGE> {}
-
+#[cfg(feature = "webgpu")]
+#[cfg(any(not(test), rust_analyzer))]
+impl MappedgpuBuffer<COPYSRC_USAGE> for MappedGPUBuffer<GPUBuffer<COPYSRC_USAGE>> {}
 /////////////////////////////////////////////////////////////////////////////////////
 // CopyDst
 pub const COPYDST_USAGE:u32 = 8;

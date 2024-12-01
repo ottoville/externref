@@ -3,9 +3,10 @@ import {
   COPY_DST_BUFFER,
   COPY_SRC_BUFFER,
   type BufferUsageEnums,
-} from './webgpu-ts/index.js';
-import type { Engine } from './engine.js';
-import { stringFromPtr } from './utils.js';
+} from '../webgpu-ts/index.js';
+import type { Engine } from '../engine.js';
+import { stringFromPtr } from '../utils.js';
+import { Externref } from '../externref.js';
 
 declare const engine: Engine;
 
@@ -20,9 +21,9 @@ export type BufferInterface = {
 
 export const BufferExports = {
   copy_from(
-    { externref: commandEncoder }: externref<boolean, GPUCommandEncoder>,
-    { externref: destination }: externref<boolean, Buffer<COPY_DST_BUFFER>>,
-    { externref: source }: externref<boolean, Buffer<COPY_SRC_BUFFER>>,
+    commandEncoder: GPUCommandEncoder,
+    { externref: destination }: Externref<boolean, Buffer<COPY_DST_BUFFER>>,
+    { externref: source }: Externref<boolean, Buffer<COPY_SRC_BUFFER>>,
     sourceOffset: GPUSize64,
     destinationOffset: GPUSize64,
     copySize?: GPUSize64,
@@ -43,19 +44,36 @@ export const BufferExports = {
     ownedByJS: boolean,
   ) {
     const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
-    return {
-      externref: new Buffer({
+    return new Externref(
+      ownedByJS,
+      new Buffer({
         gpu: engine.gpu!.device,
         label,
         mappedAtCreation: mapped,
         size,
         usages,
       }),
-      ownedByJS,
-    } as const;
+    );
+  },
+  map_state({
+    externref: buffer,
+  }: Externref<boolean, Buffer<BufferUsageEnums.MAP_WRITE>>) {
+    const mapState = buffer.mapState();
+    if (mapState === 'unmapped') return 0;
+    if (mapState === 'pending') return 1;
+    return 2;
+  },
+  map_write_async(
+    {
+      externref: buffer,
+    }: Externref<boolean, Buffer<BufferUsageEnums.MAP_WRITE>>,
+    offset: number,
+    size: number,
+  ) {
+    buffer.map_write(offset, size).catch((err) => engine.showError(err));
   },
   set_mapped_range(
-    { externref: buffer }: externref<boolean, Buffer<BufferUsageEnums, true>>,
+    { externref: buffer }: Externref<boolean, Buffer<BufferUsageEnums, true>>,
     offset: number,
     size: Word<'dword'>,
     buffer_offset: GPUSize64,
@@ -66,11 +84,11 @@ export const BufferExports = {
   },
   unmap({
     externref: buffer,
-  }: externref<boolean, Buffer<BufferUsageEnums, true>>) {
+  }: Externref<boolean, Buffer<BufferUsageEnums, true>>) {
     buffer.unmap();
   },
   write(
-    { externref: destination }: externref<boolean, Buffer<COPY_DST_BUFFER>>,
+    { externref: destination }: Externref<boolean, Buffer<COPY_DST_BUFFER>>,
     sourceOffset: GPUSize64,
     copySize: GPUSize64,
     destinationOffset: GPUSize64,

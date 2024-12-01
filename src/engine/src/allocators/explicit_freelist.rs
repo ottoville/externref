@@ -67,6 +67,15 @@ impl<T> ExplicitFreeList<T> {
             return None;
         })
     }
+    pub fn drain(&mut self) -> impl Iterator<Item = T> + '_ {
+        self.next_free = 0;
+        self.entries.drain(..).filter_map(|slot| {
+            if let Slot::Item(item) = slot {
+                return Some(item);
+            }
+            return None;
+        })
+    }
 }
 impl<T> Index<ExplicitFreeListIndex> for ExplicitFreeList<T> {
     type Output = T;

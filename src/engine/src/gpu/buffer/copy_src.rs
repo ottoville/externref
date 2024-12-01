@@ -1,20 +1,17 @@
 use externref::Resource;
 
-use crate::{engine::GPUCommandEncoder, MULTIVALUE_USIZE};
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
-use super::buffer::{copy_from, create_gpu_buffer, GpuBuffer, JSBuffer};
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
+use super::buffer::{copy_from, create_gpu_buffer};
+use super::buffer::{GpuBuffer, JSBuffer};
+use crate::{gpu::commandEncoder::GPUCommandEncoder, MULTIVALUE_USIZE};
 pub trait CopySrc: GpuBuffer {
     /**
      * Resizes the underlying buffer by creating new one and copies the old content to new one, then returns old buffer
      */
-    fn resize(
-        &mut self,
-        command_encoder: &Resource<GPUCommandEncoder>,
-        size: usize,
-    ) -> Resource<JSBuffer> {
+    #[cfg(feature = "webgpu")]
+    #[cfg(any(not(test), rust_analyzer))]
+    fn resize(&mut self, command_encoder: &GPUCommandEncoder, size: usize) -> Resource<JSBuffer> {
         unsafe {
             MULTIVALUE_USIZE[0] = self.label().as_ptr() as usize;
             MULTIVALUE_USIZE[1] = self.label().len();
@@ -28,7 +25,7 @@ pub trait CopySrc: GpuBuffer {
                 self.owned_by_js(),
             );
             copy_from(
-                command_encoder,
+                &command_encoder.externref,
                 &new_externref,
                 &self.externref(),
                 0,

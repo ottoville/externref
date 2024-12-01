@@ -729,6 +729,7 @@ export class GPU {
       this.onceAfterRender.push(cb);
     }
   }
+  #idleCallback: number | undefined;
   readonly #renderLoop = (
     time: DOMHighResTimeStamp,
     updateViewPipeline: GPUComputePipeline,
@@ -767,57 +768,67 @@ export class GPU {
     if (physicDelta !== null) this.deltaView.set([physicDelta]);
     this.timeBuffer.write(0, this.timeAndDeltaBuffer);
 
-    try {
-      const updatedCameras = engine.cameras.filter((camera) => {
-        return camera.updateView(renderloop_commandEncoder);
-      });
-      // Rust render loop start
-      const GPUQueueCommandEncoder = this.device.createCommandEncoder({
-        label: 'handle_gpu_queue_encoder',
-      });
-      engine.rust.process_gpu_queue({
-        externref: GPUQueueCommandEncoder,
-        ownedByJS: true,
-      });
-      const commandBuff = GPUQueueCommandEncoder.finish({
-        label: 'renderloop',
-      });
+    const updatedCameras = engine.cameras.filter((camera) => {
+      return camera.updateView(renderloop_commandEncoder);
+    });
+    const mapping_buffers = engine.rust.process_gpu_queue();
 
-      // Insert this to begin of the array to get all changes to mesh properties affected first
-      this.pendingCommandBuffers.unshift(commandBuff);
-
-      const updateLights = engine.rust.get_update_lights();
-      // Rust render loop end
-      if (updateLights || updatedCameras.length > 0) {
-        const lightPass = renderloop_commandEncoder.beginComputePass({
-          label: 'lightPassEncoder',
-        });
-        lightPass.setPipeline(updateViewPipeline);
-        lightPass.setBindGroup(0, this.#updateViewBindGroup.bindGroup);
-        //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
-        const camerasToUpdate = updateLights ? engine.cameras : updatedCameras;
-        camerasToUpdate.forEach((camera) => {
-          lightPass.setBindGroup(1, camera.updateViewBindGroup!.bindGroup);
-          lightPass.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
-        });
-        lightPass.end();
-        engine.rust.set_update_lights(false);
-      }
-
-      this.#renderPasses.forEach((renderPass) => {
-        //Do the actual drawing
-        renderPass.render(renderloop_commandEncoder);
+    const updateLights = engine.rust.get_update_lights();
+    // Rust render loop end
+    if (updateLights || updatedCameras.length > 0) {
+      const lightPass = renderloop_commandEncoder.beginComputePass({
+        label: 'lightPassEncoder',
       });
-    } catch (e) {
-      console.error(e);
+      lightPass.setPipeline(updateViewPipeline);
+      lightPass.setBindGroup(0, this.#updateViewBindGroup.bindGroup);
+      //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
+      const camerasToUpdate = updateLights ? engine.cameras : updatedCameras;
+      camerasToUpdate.forEach((camera) => {
+        lightPass.setBindGroup(1, camera.updateViewBindGroup!.bindGroup);
+        lightPass.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
+      });
+      lightPass.end();
+      engine.rust.set_update_lights(false);
     }
+
+    this.#renderPasses.forEach((renderPass) => {
+      //Do the actual drawing
+      renderPass.render(renderloop_commandEncoder);
+    });
 
     this.pendingCommandBuffers.push(
       renderloop_commandEncoder.finish({
         label: 'renderencoder',
       }),
     );
-    this.device.queue.submit(this.pendingCommandBuffers);
+
+    const pending_command_buffers_iterator =
+      engine.rust.create_pending_command_buffers_iterator();
+    const buffersIterator = {
+      next(): IteratorResult<GPUCommandBuffer, null> {
+        const commandBuffer = engine.rust.iterate_pending_command_buffers(
+          pending_command_buffers_iterator,
+        );
+        if (commandBuffer) {
+          return {
+            done: false,
+            value: commandBuffer,
+          };
+        }
+        return {
+          done: true,
+          value: null,
+        };
+      },
+      [Symbol.iterator]() {
+        return this;
+      },
+    };
+
+    this.device.queue.submit([
+      ...buffersIterator,
+      ...this.pendingCommandBuffers,
+    ]);
     this.device.queue
       .onSubmittedWorkDone()
       .then(() => {
@@ -825,6 +836,14 @@ export class GPU {
         this.onceAfterRender.length = 0;
       })
       .catch((err) => engine.showError(err));
+    engine.rust.gpu_queue_submited();
+    if (mapping_buffers && this.#idleCallback === undefined) {
+      this.#idleCallback = requestIdleCallback(() => {
+        this.#idleCallback = undefined;
+        engine.rust.check_mapped_buffers();
+      });
+    }
+
     this.pendingCommandBuffers.length = 0;
     engine.rust.clear_temp_gpu_buffers();
 

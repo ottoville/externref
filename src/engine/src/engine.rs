@@ -25,7 +25,6 @@ extern "C" {
     fn warn(number: *const usize);
     fn error(number: *const usize);
 }
-pub struct GPUCommandEncoder(());
 
 extern "C" {
     #[cfg(target_arch = "wasm32")]
@@ -54,7 +53,6 @@ pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_
 pub unsafe extern "C" fn clear_temp_gpu_buffers() {
     TEMP_GPU_BUFFERS.lock().unwrap().clear();
 }
-
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "env")]
@@ -110,20 +108,25 @@ pub unsafe extern "C" fn get_point_lights_buffer() -> &'static Resource<JSBuffer
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
 #[externref]
-pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommandEncoder>) {
-    use crate::gpu::buffer::{buffer::MappedGPUBuffer, copy_dst::CopyDst, copy_src::CopySrc};
+pub unsafe extern "C" fn process_gpu_queue() -> bool {
+    use crate::gpu::{
+        buffer::{copy_dst::CopyDst, copy_src::CopySrc, mapped_buffer::{MappedGPUBuffer, MappedgpuBuffer}},
+        commandEncoder::GPUCommandEncoder,
+    };
 
+    let command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
     let mut queue = GPU_QUEUE.lock().unwrap();
+    let engine = ENGINE.physic_engine_mut();
     if queue.len() > 0 {
         let mut need_resize_to = *MAX_INSTANCES.lock().unwrap();
-        let temp_buffer = MappedGPUBuffer::<COPYSRC_USAGE>::new(
+        let temp_buffer = MappedGPUBuffer::<GPUBuffer<COPYSRC_USAGE>>::new_gpubuffer(
             std::mem::size_of::<GPUMesh>() * queue.len(),
             String::from("handle_gpu_queue"),
             false,
         );
-        let engine = ENGINE.physic_engine_mut();
         for (i, mesh_id) in queue.iter().enumerate() {
             let mesh = get_mesh_by_id_mut(*mesh_id);
+            //js_log([&mesh.label]);
             let mut mesh_property = mesh.mesh_property.lock().unwrap();
             for cb in mesh_property.on_change.iter() {
                 cb(&mesh_property);
@@ -153,15 +156,15 @@ pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommand
             let mut max_instances = MAX_INSTANCES.lock().unwrap();
             *max_instances = need_resize_to + 16;
             let old_externref =
-                meshes_buffer.resize(command_encoder, GPU_MEMORY_INDEX_SIZE * *max_instances);
+                meshes_buffer.resize(&command_encoder, GPU_MEMORY_INDEX_SIZE * *max_instances);
             TEMP_GPU_BUFFERS.lock().unwrap().push(old_externref);
         }
         for (i, mesh_id) in queue.iter().enumerate() {
             let mesh = get_mesh_by_id_mut(*mesh_id);
             let mesh_property = mesh.mesh_property.lock().unwrap();
             meshes_buffer.copy_from(
-                command_encoder,
-                &temp_buffer.0,
+                &command_encoder,
+                &*temp_buffer,
                 i * std::mem::size_of::<GPUMesh>(),
                 mesh_property.gpu_mesh_alignment.0 * GPU_MEMORY_INDEX_SIZE,
                 std::mem::size_of::<GPUMesh>(),
@@ -173,12 +176,17 @@ pub unsafe extern "C" fn process_gpu_queue(command_encoder: &Resource<GPUCommand
             .lock()
             .unwrap()
             .push(unmapped_temp_buffer.externref);
-
-
-        //Lights
-        engine.directional_lights.update_buffer();
-        engine.point_lights.update_buffer();
     }
+    //Lights
+    let directional_lights_mapping = engine.directional_lights.update_buffer(&command_encoder);
+    let point_lights_mapping = engine.point_lights.update_buffer(&command_encoder);
+    let command_buffer = command_encoder.finish(String::from("renderloop"));
+    let gpu = engine.gpu.as_mut().unwrap();
+    let len = gpu.pending_command_buffers.len();
+    gpu.pending_command_buffers.push(command_buffer);
+    // Insert this to begin of the array to get all changes to mesh properties affected first
+    gpu.pending_command_buffers.swap(0, len);
+    return directional_lights_mapping || point_lights_mapping;
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
@@ -319,6 +327,7 @@ pub unsafe extern "C" fn init_gpu() {
             String::from("GPUMeshes"),
             false,
         ),
+        pending_command_buffers: Vec::with_capacity(8),
     });
 }
 pub fn init_engine() {

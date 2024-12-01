@@ -21,8 +21,3 @@ type rust_array_ptr<T> = readonly [ptr: rust_pointer<T>, len: number];
  * Pointer to vector with ptr, len and cap
  */
 type rust_vec_ptr<T> = readonly [...rust_array_ptr<T>, cap: number];
-
-type externref<O extends boolean = boolean, E extends object = object> = {
-  ownedByJS: O;
-  externref: E;
-};

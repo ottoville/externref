@@ -14,6 +14,7 @@ import {
 } from '../../webgpu-ts/index.js';
 import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 import { create_rust_vec_ptr } from '../../Math.js';
+import { Externref } from '../../externref.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {
@@ -88,10 +89,10 @@ export class DrawableIndexed<
         this.#indexBuffer = indexBuffer.unmap();
         this.#GPUIndexFormat = 'uint32';
 
-        engine.rust.set_indices_gpu_buffer(buffer, {
-          externref: this.#indexBuffer,
-          ownedByJS: false,
-        });
+        engine.rust.set_indices_gpu_buffer(
+          buffer,
+          new Externref(false, this.#indexBuffer),
+        );
       }
     }
   }

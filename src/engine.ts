@@ -17,14 +17,14 @@ import {
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
+import { Buffer, BufferUsageEnums, INDEX_BUFFER } from './webgpu-ts/index.js';
 import {
-  Buffer,
-  BufferUsageEnums,
-  Destroyable,
-  INDEX_BUFFER,
-} from './webgpu-ts/index.js';
-import { BufferExports, type BufferInterface } from './BufferInterface.js';
+  BufferExports,
+  type BufferInterface,
+} from './wasm-interfaces/BufferInterface.js';
 import { stringFromPtr } from './utils.js';
+import { CommandEncoderInterface } from './wasm-interfaces/CommandEncoderInterface.js';
+import { Externref } from './externref.js';
 
 const textDecoder = new TextDecoder();
 
@@ -137,7 +137,7 @@ export type rustWasm = {
   basepoint_world_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
-  process_gpu_queue(commandEncoder: externref<true, GPUCommandEncoder>): void;
+  process_gpu_queue(): boolean;
 
   new_mesh_from_js(
     point_light: number,
@@ -147,7 +147,7 @@ export type rustWasm = {
     label_ptr: number,
     label_len: number,
     label_cap: number,
-    externref: externref<false, MainNode>,
+    externref: Externref<false, MainNode>,
   ): number;
   create_debug_mesh_wireframe(
     target_mesh_id: number,
@@ -220,11 +220,11 @@ export type rustWasm = {
   ): rust_pointer<'indices'>;
   set_indices_gpu_buffer(
     indices: rust_pointer<'indices'>,
-    buffer: externref<false, Buffer<INDEX_BUFFER>>,
+    buffer: Externref<false, Buffer<INDEX_BUFFER>>,
   ): void;
   get_indices_gpu_buffer(
     indices: rust_pointer<'indices'>,
-  ): externref<false, Buffer<INDEX_BUFFER>> | null;
+  ): Externref<false, Buffer<INDEX_BUFFER>> | null;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<rust_vec_ptr<'usize'>>;
@@ -264,7 +264,7 @@ export type rustWasm = {
   gpu_alignment(mesh_id: number): number;
   positions_count(mesh_id: number): number;
   set_positions_count(mesh_id: number, positions_count: number): number;
-  get_mesh_externref_by_id(id: number): externref<false, MainNode> | null;
+  get_mesh_externref_by_id(id: number): Externref<false, MainNode> | null;
   strip(mesh_id: number): number;
   collider_planes_parallel_pointer(
     mesh_id: number,
@@ -357,22 +357,28 @@ export type rustWasm = {
   devtools_pointer(): rust_pointer<'devtools'>;
   add_onchange_callback(mesh_id: number): number;
   remove_onchange_callback(mesh_id: number, cb: number): void;
-  get_gpu_mesh_buffer(): externref<
+  get_gpu_mesh_buffer(): Externref<
     false,
     Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
   >;
-  get_directional_lights_buffer(): externref<
+  get_directional_lights_buffer(): Externref<
     false,
     Buffer<(typeof BufferUsageEnums)['STORAGE|COPY_DST']>
   >;
-  get_point_lights_buffer(): externref<
+  get_point_lights_buffer(): Externref<
     false,
     Buffer<(typeof BufferUsageEnums)['STORAGE|COPY_DST']>
   >;
   get_raw_buffer<U extends BufferUsageEnums, M extends boolean>(
     buffer: rust_pointer<'GPUBuffer'>,
-  ): externref<false, Buffer<U, M>>;
+  ): Externref<false, Buffer<U, M>>;
   init_gpu(): void;
+  create_pending_command_buffers_iterator(): rust_pointer<'iterator'>;
+  iterate_pending_command_buffers(
+    iterator_ptr: rust_pointer<'iterator'>,
+  ): GPUCommandBuffer | null;
+  gpu_queue_submited(): void;
+  check_mapped_buffers(): void;
 } & BufferInterface;
 
 function Dot(
@@ -602,6 +608,7 @@ export class Engine {
     let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
     const exportObj: WebAssembly.Imports = {
       buffer: BufferExports,
+      commandencoder: CommandEncoderInterface,
       console: {
         error(ptr: number) {
           console.error(stringFromPtr(rust.instance.exports.memory, ptr));
@@ -617,12 +624,12 @@ export class Engine {
         },
       },
       env: {
-        drop_ref(ref: externref) {
+        drop_ref(ref: unknown) {
           /**
            * wasm externref module does not separate dropping references or ownership from externref table,
            * so we need to track if dropped externref was owned by rust or was it a reference
            */
-          if (!ref.ownedByJS && Destroyable.isDestroyable(ref.externref)) {
+          if (ref instanceof Externref && !ref.ownedByJS) {
             ref.externref.destroy();
           }
         },
@@ -638,7 +645,7 @@ export class Engine {
               .trimEnd(),
           );
         },
-        mesh_on_change(mesh: externref<false, MainNode>) {
+        mesh_on_change(mesh: Externref<false, MainNode>) {
           mesh.externref.onMeshChange.forEach((cb) => cb());
         },
         mesh_on_collide(mesh_id: number, started: boolean) {
@@ -755,6 +762,8 @@ export class Engine {
           gpu?.device.label,
           'destroyed:',
           gpu?.destroyed,
+          e,
+          gpu,
         );
         return;
       }

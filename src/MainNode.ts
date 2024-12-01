@@ -11,6 +11,7 @@ import type { ColliderJS } from './Collider.js';
 import type { Drawable } from './GPU/Drawables/Drawable.js';
 import { Destroyable } from 'webgpu-ts/index.js';
 import { create_rust_label } from './utils.js';
+import { Externref } from './externref.js';
 declare const engine: Engine;
 const textDecoder = new TextDecoder();
 export const enum RigidBody {
@@ -188,7 +189,7 @@ export abstract class MainNode implements Destroyable {
         sceneids,
         rigid_body,
         ...create_rust_label(label),
-        { externref: this, ownedByJS: false },
+        new Externref(false, this),
       );
     }
   }

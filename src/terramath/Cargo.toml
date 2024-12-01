@@ -12,6 +12,6 @@ path = "src/lib.rs"
 [dependencies]
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.45"
+wasm-bindgen-test = "0.3.47"
 
 

@@ -2,7 +2,7 @@ use std::mem;
 
 use externref::{externref, Resource};
 
-use crate::{engine::GPUCommandEncoder, MULTIVALUE_USIZE};
+use crate::{gpu::commandEncoder::JSCommandEncoder, MULTIVALUE_USIZE};
 
 use super::usages::COPYSRC_USAGE;
 
@@ -29,7 +29,7 @@ extern "C" {
         buffer_size: usize,
     );
     pub fn copy_from(
-        command_encoder: &Resource<GPUCommandEncoder>,
+        command_encoder: &Resource<JSCommandEncoder>,
         destination: &Resource<JSBuffer>,
         source: &Resource<JSBuffer>,
         sourceOffset: usize,
@@ -38,22 +38,13 @@ extern "C" {
     );
     pub fn unmap(buffer: &Resource<JSBuffer>);
     pub fn write(buffer: &Resource<JSBuffer>, ptr: usize, size: usize, buffer_offset: usize);
+    pub fn map_write_async(buffer: &Resource<JSBuffer>, offset: usize, size: usize);
+    /**
+     * 0: unmapped, 1: pending: 2: mapped;
+     */
+    pub fn map_state(buffer: &Resource<JSBuffer>) -> u32;
 }
 
-#[no_mangle]
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
-pub unsafe extern "C" fn create_mapped_GPU_buffer_copysrc(
-    length: usize,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
-) -> *const MappedGPUBuffer<COPYSRC_USAGE> {
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(MappedGPUBuffer::<COPYSRC_USAGE>::new(
-        length, label, true,
-    )))
-}
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 #[externref]
@@ -65,53 +56,15 @@ pub unsafe extern "C" fn get_raw_buffer(
 pub struct GPUBuffer<const U: u32> {
     pub externref: Resource<JSBuffer>,
     pub label: String,
-    owned_by_js: bool,
+    pub owned_by_js: bool,
     pub size: usize,
-}
-pub struct MappedGPUBuffer<const U: u32>(pub GPUBuffer<U>);
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
-impl<const U: u32> MappedGPUBuffer<U> {
-    pub fn set_mapped_range(
-        &self,
-        ptr: usize,
-        size: usize,
-        buffer_offset: usize,
-        buffer_size: usize,
-    ) {
-        unsafe {
-            set_mapped_range(&self.0.externref(), ptr, size, buffer_offset, buffer_size);
-        }
-    }
-    pub fn unmap(self) -> GPUBuffer<U> {
-        unsafe {
-            unmap(&self.0.externref);
-        }
-        self.0
-    }
-    pub fn new(size: usize, label: String, owned_by_js: bool) -> MappedGPUBuffer<U> {
-        unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-
-            let externref =
-                create_gpu_buffer(size, MULTIVALUE_USIZE.as_ptr(), U, true, owned_by_js);
-            return MappedGPUBuffer(GPUBuffer {
-                externref,
-                label,
-                owned_by_js,
-                size,
-            });
-        }
-    }
 }
 //////////////////////////////
 pub trait GpuBuffer {
     fn externref(&self) -> &Resource<JSBuffer>;
     fn label(&self) -> &String;
-    fn usages(&self) -> u32;
     fn owned_by_js(&self) -> bool;
+    fn usages(&self) -> u32;
     fn size(&self) -> usize;
     fn set_size(&mut self, size: usize);
     fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Resource<JSBuffer>;
@@ -124,11 +77,11 @@ impl<const U: u32> GpuBuffer for GPUBuffer<U> {
     fn label(&self) -> &String {
         &self.label
     }
-    fn usages(&self) -> u32 {
-        U
-    }
     fn owned_by_js(&self) -> bool {
         self.owned_by_js
+    }
+    fn usages(&self) -> u32 {
+        U
     }
     fn size(&self) -> usize {
         self.size
@@ -140,6 +93,7 @@ impl<const U: u32> GpuBuffer for GPUBuffer<U> {
         mem::replace(&mut self.externref, externref)
     }
 }
+
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
 impl<const U: u32> GPUBuffer<U> {
@@ -148,7 +102,6 @@ impl<const U: u32> GPUBuffer<U> {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
             MULTIVALUE_USIZE[1] = label.len();
             MULTIVALUE_USIZE[2] = label.capacity();
-
             let externref =
                 create_gpu_buffer(size, MULTIVALUE_USIZE.as_ptr(), U, false, owned_by_js);
             return GPUBuffer {
@@ -158,8 +111,5 @@ impl<const U: u32> GPUBuffer<U> {
                 size,
             };
         }
-    }
-    fn map_async() -> MappedGPUBuffer<U> {
-        todo!("todo");
     }
 }
