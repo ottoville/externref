@@ -127,23 +127,23 @@ let cluster=${clusters.prop('bounds')}[tileIndex];
 for(var pointerIndex:u32 = 0u; pointerIndex < ${point_lights.prop(
           'length',
         )}; pointerIndex = pointerIndex + 1u) {
-let meshIndex = ${point_lights.prop('pointers')}[pointerIndex];
-let mesh=${meshes.prop('values')}[meshIndex];
-// TODO: Preselect lights with CPU
-let lightViewPos = ${viewUniforms.prop(
-          'view',
-        )} * vec4<f32>(mesh.transformation[3].xyz, 1.0);
-let sqDist = sqDistPointAABB(lightViewPos.xyz, cluster.minAABB.xyz, cluster.maxAABB.xyz);
+    let meshIndex = ${point_lights.prop('pointers')}[pointerIndex];
+    let mesh=${meshes.prop('values')}[meshIndex];
+    // TODO: Preselect lights with CPU
+    let lightViewPos = ${viewUniforms.prop(
+      'view',
+    )} * vec4<f32>(mesh.transformation[3].xyz, 1.0);
+    let sqDist = sqDistPointAABB(lightViewPos.xyz, cluster.minAABB.xyz, cluster.maxAABB.xyz);
 
-if (sqDist <= mesh.point_light_squared) {
-  // Light affects this cluster. Add it to the list.
-  ${clusters.prop('lights')}[tileIndex*63u + lightCount] = meshIndex;
-  lightCount=lightCount+1u;
-  //TODO: lightCount might already be max because of directional lights
-  if(lightCount==63u) {
-    break;
-  }
-}
+    if (sqDist <= mesh.point_light_squared) {
+      // Light affects this cluster. Add it to the list.
+      ${clusters.prop('lights')}[tileIndex*63u + lightCount] = meshIndex;
+      lightCount=lightCount+1u;
+      //TODO: lightCount might already be max because of directional lights
+      if(lightCount==63u) {
+        break;
+      }
+    }
 
 }
 ${clusters.prop('lightsCount')}[tileIndex] = lightCount;

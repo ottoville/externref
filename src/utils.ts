@@ -26,3 +26,30 @@ export function stringFromPtr(
   const [s_ptr, len] = new Uint32Array(memory.buffer, ptr, 2);
   return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
 }
+export type Rust_Iterator<T> = rust_pointer<'iterator'> & {
+  __brand: T;
+};
+export function rust_iterator_to_js<T>(
+  rust_iterator: Rust_Iterator<T>,
+  rust_next: (rust_iterator: Rust_Iterator<T>) => T | null,
+): Iterable<T> {
+  const iterator = {
+    next(): IteratorResult<T, null> {
+      const item = rust_next(rust_iterator);
+      if (item) {
+        return {
+          done: false,
+          value: item,
+        };
+      }
+      return {
+        done: true,
+        value: null,
+      };
+    },
+    [Symbol.iterator]() {
+      return this;
+    },
+  };
+  return iterator;
+}

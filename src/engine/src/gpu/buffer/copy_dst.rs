@@ -2,7 +2,7 @@
 #[cfg(feature = "webgpu")]
 use super::buffer::{copy_from, write};
 use super::{buffer::GpuBuffer, copy_src::CopySrc};
-use crate::gpu::commandEncoder::GPUCommandEncoder;
+use crate::gpu::command_encoder::GPUCommandEncoder;
 pub trait CopyDst: GpuBuffer {
     fn copy_from(
         &self,

@@ -4,50 +4,25 @@ use crate::mesh::ENGINE;
 
 use super::{
     buffer::{buffer::GPUBuffer, usages::UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE},
-    commandEncoder::JSCommandBuffer,
+    command_encoder::JSCommandBuffer,
 };
 #[no_mangle]
 pub unsafe extern "C" fn check_mapped_buffers() {
     let engine = ENGINE.physic_engine_mut();
-    let point_lights_pendinds = &mut engine.point_lights.buffer_ring_pending;
-    let point_lights_mapped = &mut engine.point_lights.buffer_ring_mapped;
-    let mut i = 0;
-    while i < point_lights_pendinds.len() {
-        if point_lights_pendinds[i].map_state() == 2 {
-            let pending_buffer = point_lights_pendinds.remove(i);
-            point_lights_mapped.push(pending_buffer.into())
-        } else {
-            i = i + 1;
-        }
-    }
-    let directional_lights_pendinds = &mut engine.directional_lights.buffer_ring_pending;
-    let directional_lights_mapped = &mut engine.directional_lights.buffer_ring_mapped;
-    let mut i = 0;
-    while i < directional_lights_pendinds.len() {
-        if directional_lights_pendinds[i].map_state() == 2 {
-            let pending_buffer = directional_lights_pendinds.remove(i);
-            directional_lights_mapped.push(pending_buffer.into())
-        } else {
-            i = i + 1;
-        }
-    }
+    engine.point_lights.check_mapped_buffers();
+    engine.directional_lights.check_mapped_buffers();
 }
 #[no_mangle]
-pub unsafe extern "C" fn gpu_queue_submited() {
+pub unsafe extern "C" fn gpu_queue_submited() -> bool {
     let engine = ENGINE.physic_engine_mut();
-    for buffer in engine.point_lights.buffer_ring_onqueue.drain(..) {
-        let size = buffer.size;
-        let pending_buffer = buffer.map_write_async(0, size);
-        engine.point_lights.buffer_ring_pending.push(pending_buffer);
+    let mut mapping = false;
+    if engine.point_lights.queue_submited() {
+        mapping = true
     }
-    for buffer in engine.directional_lights.buffer_ring_onqueue.drain(..) {
-        let size = buffer.size;
-        let pending_buffer = buffer.map_write_async(0, size);
-        engine
-            .directional_lights
-            .buffer_ring_pending
-            .push(pending_buffer);
+    if engine.directional_lights.queue_submited() {
+        mapping = true;
     }
+    return mapping;
 }
 
 #[no_mangle]

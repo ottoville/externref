@@ -4,7 +4,7 @@ use externref::Resource;
 #[cfg(any(not(test), rust_analyzer))]
 use super::buffer::{copy_from, create_gpu_buffer};
 use super::buffer::{GpuBuffer, JSBuffer};
-use crate::{gpu::commandEncoder::GPUCommandEncoder, MULTIVALUE_USIZE};
+use crate::{gpu::command_encoder::GPUCommandEncoder, MULTIVALUE_USIZE};
 pub trait CopySrc: GpuBuffer {
     /**
      * Resizes the underlying buffer by creating new one and copies the old content to new one, then returns old buffer

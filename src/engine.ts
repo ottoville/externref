@@ -17,14 +17,21 @@ import {
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
-import { Buffer, BufferUsageEnums, INDEX_BUFFER } from './webgpu-ts/index.js';
+import {
+  BindGroup,
+  Buffer,
+  BufferUsageEnums,
+  INDEX_BUFFER,
+} from './webgpu-ts/index.js';
 import {
   BufferExports,
   type BufferInterface,
 } from './wasm-interfaces/BufferInterface.js';
-import { stringFromPtr } from './utils.js';
+import { Rust_Iterator, stringFromPtr } from './utils.js';
 import { CommandEncoderInterface } from './wasm-interfaces/CommandEncoderInterface.js';
 import { Externref } from './externref.js';
+import { ComputePassEncoderInterface } from './wasm-interfaces/ComputePassEncoder.js';
+import { CameraInterface } from './wasm-interfaces/CameraInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -69,7 +76,6 @@ type ListenerOptions = {
      */
   force?: boolean;
 };
-
 export type rustWasm = {
   add_drawble(mesh_id: number): void;
   set_drawble_direct(
@@ -137,7 +143,10 @@ export type rustWasm = {
   basepoint_world_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
-  process_gpu_queue(): boolean;
+  process_gpu_queue(
+    updateViewPipeline: GPUComputePipeline,
+    updateViewBindGroup: BindGroup,
+  ): void;
 
   new_mesh_from_js(
     point_light: number,
@@ -350,8 +359,6 @@ export type rustWasm = {
     radius: number,
   ): rust_pointer<'collider'>;
   dedup_positions(geometry: rust_pointer<'geometry'>): void;
-  get_update_lights(): boolean;
-  set_update_lights(value: boolean): void;
   push_to_temp_gpu_buffers(buffer: rust_pointer<'GPUBuffer'>): void;
   clear_temp_gpu_buffers(): void;
   devtools_pointer(): rust_pointer<'devtools'>;
@@ -373,12 +380,21 @@ export type rustWasm = {
     buffer: rust_pointer<'GPUBuffer'>,
   ): Externref<false, Buffer<U, M>>;
   init_gpu(): void;
-  create_pending_command_buffers_iterator(): rust_pointer<'iterator'>;
+  create_pending_command_buffers_iterator(): Rust_Iterator<GPUCommandBuffer>;
   iterate_pending_command_buffers(
-    iterator_ptr: rust_pointer<'iterator'>,
+    iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
   ): GPUCommandBuffer | null;
-  gpu_queue_submited(): void;
+  gpu_queue_submited(): boolean;
   check_mapped_buffers(): void;
+  add_camera(
+    camera: TerraCamera,
+    label_ptr: number,
+    label_len: number,
+    label_cap: number,
+  ): number;
+  get_camera_label(camera_id: number): rust_pointer<'camera_label'>;
+  get_camera_externref(camera_id: number): TerraCamera;
+  get_cameras_count(): number;
 } & BufferInterface;
 
 function Dot(
@@ -608,7 +624,9 @@ export class Engine {
     let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
     const exportObj: WebAssembly.Imports = {
       buffer: BufferExports,
+      camera: CameraInterface,
       commandencoder: CommandEncoderInterface,
+      computepassencoder: ComputePassEncoderInterface,
       console: {
         error(ptr: number) {
           console.error(stringFromPtr(rust.instance.exports.memory, ptr));
@@ -666,6 +684,9 @@ export class Engine {
         },
         now() {
           return performance.now();
+        },
+        render_renderpasses(renderloop_commandEncoder: GPUCommandEncoder) {
+          engine.gpu!.renderRenderPasses(renderloop_commandEncoder);
         },
         verticesChange(mesh_id: number) {
           const mesh = DataNode.Meshes.get(mesh_id);
@@ -738,7 +759,6 @@ export class Engine {
       showError,
     );
   }
-  readonly cameras: TerraCamera[] = [];
 
   showError(e: unknown, gpu?: GPU) {
     if (e instanceof Error) {
@@ -919,6 +939,9 @@ export class Engine {
     public showErrorError: (e: Error) => void,
   ) {
     console.log('environment:', globals.env);
+    //@ts-expect-error todo
+    globalThis.engine = this;
+
     const GPUDataSize = rust.init_engine2();
 
     if (nodes) {
@@ -931,8 +954,6 @@ export class Engine {
       };
     }
 
-    //@ts-expect-error todo
-    globalThis.engine = this;
     this.mainCamera = new TerraCamera('mainCamera', 'renderPassScreen');
 
     if (nodes?.canvas) {

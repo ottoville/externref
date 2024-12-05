@@ -40,9 +40,12 @@ export function Cameras() {
     <fieldset>
       <legend>Cameras</legend>
       <ul>
-        {engine.cameras.map((camera) => {
-          return <Camera key={camera.label} camera={camera}></Camera>;
-        })}
+        {new Array(engine.rust.get_cameras_count())
+          .fill(0)
+          .map((_v, camera_id) => {
+            const camera = engine.rust.get_camera_externref(camera_id);
+            return <Camera key={camera.label} camera={camera}></Camera>;
+          })}
       </ul>
       {debugCamera ? (
         <>

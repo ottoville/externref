@@ -2,7 +2,7 @@ use std::mem;
 
 use externref::{externref, Resource};
 
-use crate::{gpu::commandEncoder::JSCommandEncoder, MULTIVALUE_USIZE};
+use crate::{gpu::command_encoder::JSCommandEncoder, MULTIVALUE_USIZE};
 
 use super::usages::COPYSRC_USAGE;
 
@@ -94,9 +94,9 @@ impl<const U: u32> GpuBuffer for GPUBuffer<U> {
     }
 }
 
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
 impl<const U: u32> GPUBuffer<U> {
+    #[cfg(feature = "webgpu")]
+    #[cfg(any(not(test), rust_analyzer))]
     pub fn new(size: usize, label: String, owned_by_js: bool) -> GPUBuffer<U> {
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
@@ -106,6 +106,18 @@ impl<const U: u32> GPUBuffer<U> {
                 create_gpu_buffer(size, MULTIVALUE_USIZE.as_ptr(), U, false, owned_by_js);
             return GPUBuffer {
                 externref,
+                label,
+                owned_by_js,
+                size,
+            };
+        }
+    }
+    #[cfg(test)]
+    pub fn new(size: usize, label: String, owned_by_js: bool) -> GPUBuffer<U> {
+        use externref::ExternRef;
+        unsafe {
+            return GPUBuffer {
+                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
                 label,
                 owned_by_js,
                 size,

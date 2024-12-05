@@ -28,9 +28,9 @@ pub unsafe extern "C" fn create_mapped_GPU_buffer_copysrc(
     ))
 }
 
+#[cfg(feature = "webgpu")]
+#[cfg(any(not(test), rust_analyzer))]
 pub trait MappedgpuBuffer<const U: u32>: GpuBuffer {
-    #[cfg(feature = "webgpu")]
-    #[cfg(any(not(test), rust_analyzer))]
     fn new_mappadle_gpubuffer(
         size: usize,
         label: String,
@@ -51,8 +51,6 @@ pub trait MappedgpuBuffer<const U: u32>: GpuBuffer {
             }));
         }
     }
-    #[cfg(feature = "webgpu")]
-    #[cfg(any(not(test), rust_analyzer))]
     fn new_gpubuffer(
         size: usize,
         label: String,
@@ -67,6 +65,40 @@ pub trait MappedgpuBuffer<const U: u32>: GpuBuffer {
                 create_gpu_buffer(size, MULTIVALUE_USIZE.as_ptr(), U, true, owned_by_js);
             return MappedGPUBuffer(GPUBuffer {
                 externref,
+                label,
+                owned_by_js,
+                size,
+            });
+        }
+    }
+}
+
+#[cfg(test)]
+pub trait MappedgpuBuffer<const U: u32>: GpuBuffer {
+    fn new_mappadle_gpubuffer(
+        size: usize,
+        label: String,
+        owned_by_js: bool,
+    ) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
+        use externref::ExternRef;
+        unsafe {
+            return MappedGPUBuffer(MappadleGPUBuffer::new(GPUBuffer {
+                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+                label,
+                owned_by_js,
+                size,
+            }));
+        }
+    }
+    fn new_gpubuffer(
+        size: usize,
+        label: String,
+        owned_by_js: bool,
+    ) -> MappedGPUBuffer<GPUBuffer<U>> {
+        use externref::ExternRef;
+        unsafe {
+            return MappedGPUBuffer(GPUBuffer {
+                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
                 label,
                 owned_by_js,
                 size,
@@ -120,8 +152,6 @@ impl<const U: u32> GpuBuffer for MappedGPUBuffer<MappadleGPUBuffer<U>> {
         self.0.replace_externref(externref)
     }
 }
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
 impl<B: GpuBuffer> MappedGPUBuffer<B> {
     pub fn set_mapped_range(
         &self,
@@ -130,11 +160,15 @@ impl<B: GpuBuffer> MappedGPUBuffer<B> {
         buffer_offset: usize,
         buffer_size: usize,
     ) {
+        #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             set_mapped_range(&self.0.externref(), ptr, size, buffer_offset, buffer_size);
         }
     }
     pub fn unmap(self) -> B {
+        #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             unmap(&self.0.externref());
         }

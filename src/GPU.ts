@@ -3,7 +3,7 @@ import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 
 import { Projection } from './GPU/Projection.js';
 
-import type { Engine } from './engine.js';
+import { type Engine } from './engine.js';
 import { Uint16Vector2 } from './Math.js';
 import { DepthRenderPass } from './GPU/RenderPasses/DepthRenderPass.js';
 import { TerraCamera } from './TerraCamera.js';
@@ -52,6 +52,7 @@ import {
 import { StructProperty } from './webgpu-ts/index.js';
 import { createPipelineLayouts } from './GPU/Shaders/Pipelinelayouts.js';
 import { createUI } from './GPU/UI.js';
+import { rust_iterator_to_js } from './utils.js';
 
 declare const engine: Engine;
 let curSecond = 0;
@@ -730,6 +731,12 @@ export class GPU {
     }
   }
   #idleCallback: number | undefined;
+  renderRenderPasses(renderloop_commandEncoder: GPUCommandEncoder) {
+    this.#renderPasses.forEach((renderPass) => {
+      //Do the actual drawing
+      renderPass.render(renderloop_commandEncoder);
+    });
+  }
   readonly #renderLoop = (
     time: DOMHighResTimeStamp,
     updateViewPipeline: GPUComputePipeline,
@@ -754,10 +761,6 @@ export class GPU {
         engine.inputManager.calculateCameraPositionAndTarget();
     }
 
-    const renderloop_commandEncoder = this.device.createCommandEncoder({
-      label: 'renderloop_commandEncoder',
-    });
-
     this.#timeView.set([time]);
     let physicDelta: number | null;
     if (engine.physics.gameSpeed == -1) physicDelta = null;
@@ -768,63 +771,14 @@ export class GPU {
     if (physicDelta !== null) this.deltaView.set([physicDelta]);
     this.timeBuffer.write(0, this.timeAndDeltaBuffer);
 
-    const updatedCameras = engine.cameras.filter((camera) => {
-      return camera.updateView(renderloop_commandEncoder);
-    });
-    const mapping_buffers = engine.rust.process_gpu_queue();
-
-    const updateLights = engine.rust.get_update_lights();
-    // Rust render loop end
-    if (updateLights || updatedCameras.length > 0) {
-      const lightPass = renderloop_commandEncoder.beginComputePass({
-        label: 'lightPassEncoder',
-      });
-      lightPass.setPipeline(updateViewPipeline);
-      lightPass.setBindGroup(0, this.#updateViewBindGroup.bindGroup);
-      //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
-      const camerasToUpdate = updateLights ? engine.cameras : updatedCameras;
-      camerasToUpdate.forEach((camera) => {
-        lightPass.setBindGroup(1, camera.updateViewBindGroup!.bindGroup);
-        lightPass.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
-      });
-      lightPass.end();
-      engine.rust.set_update_lights(false);
-    }
-
-    this.#renderPasses.forEach((renderPass) => {
-      //Do the actual drawing
-      renderPass.render(renderloop_commandEncoder);
-    });
-
-    this.pendingCommandBuffers.push(
-      renderloop_commandEncoder.finish({
-        label: 'renderencoder',
-      }),
+    engine.rust.process_gpu_queue(
+      updateViewPipeline,
+      this.#updateViewBindGroup,
     );
-
-    const pending_command_buffers_iterator =
-      engine.rust.create_pending_command_buffers_iterator();
-    const buffersIterator = {
-      next(): IteratorResult<GPUCommandBuffer, null> {
-        const commandBuffer = engine.rust.iterate_pending_command_buffers(
-          pending_command_buffers_iterator,
-        );
-        if (commandBuffer) {
-          return {
-            done: false,
-            value: commandBuffer,
-          };
-        }
-        return {
-          done: true,
-          value: null,
-        };
-      },
-      [Symbol.iterator]() {
-        return this;
-      },
-    };
-
+    const buffersIterator = rust_iterator_to_js(
+      engine.rust.create_pending_command_buffers_iterator(),
+      engine.rust.iterate_pending_command_buffers,
+    );
     this.device.queue.submit([
       ...buffersIterator,
       ...this.pendingCommandBuffers,
@@ -836,7 +790,7 @@ export class GPU {
         this.onceAfterRender.length = 0;
       })
       .catch((err) => engine.showError(err));
-    engine.rust.gpu_queue_submited();
+    const mapping_buffers = engine.rust.gpu_queue_submited();
     if (mapping_buffers && this.#idleCallback === undefined) {
       this.#idleCallback = requestIdleCallback(() => {
         this.#idleCallback = undefined;

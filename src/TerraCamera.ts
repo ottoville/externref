@@ -9,7 +9,7 @@ import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
 import { ClustersComp } from './GPU/Shaders/Clusters.comp.js';
 import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
-import { create_rust_label } from './utils.js';
+import { create_rust_label, stringFromPtr } from './utils.js';
 declare const engine: Engine;
 
 export type CameraControl = {
@@ -74,8 +74,15 @@ export class TerraCamera {
   public gpu?: GPU;
 
   onUpdatePosition: Set<() => void> = new Set();
+  id: number;
+  get label(): string {
+    return stringFromPtr(
+      engine.rust.memory,
+      engine.rust.get_camera_label(this.id),
+    );
+  }
   constructor(
-    public label: string,
+    label: string,
     renderPassName: 'renderPassScreen' | 'renderPassWater',
     parent?: TerraCamera,
   ) {
@@ -132,7 +139,7 @@ export class TerraCamera {
 
     this.viewArr[15] = 1;
 
-    engine.cameras.push(this);
+    this.id = engine.rust.add_camera(this, ...create_rust_label(label));
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const me = this;
     this.#controls = {

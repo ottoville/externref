@@ -6,10 +6,19 @@ use std::sync::{LazyLock, Mutex};
 
 use crate::allocators::freeindex::FreeIndex;
 use crate::allocators::stack_allocator::StackAllocator;
+use crate::camera::Camera;
 use crate::gpu::buffer::buffer::{GPUBuffer, JSBuffer};
 use crate::gpu::buffer::usages::{COPYSRC_USAGE, UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE};
+use crate::gpu::buffer::{
+    copy_dst::CopyDst,
+    copy_src::CopySrc,
+    mapped_buffer::{MappedGPUBuffer, MappedgpuBuffer},
+};
+use crate::gpu::command_encoder::{GPUCommandEncoder, JSCommandEncoder};
+use crate::gpu::compute_pass_encoder::{JSBindGroup, JSComputePipeline};
 use crate::gpu::gpu::GPU;
 use crate::gpu::lights::Lights;
+
 pub use crate::mesh::Mesh;
 use crate::mesh::{get_mesh_by_id, get_mesh_by_id_mut};
 pub use crate::GPUMesh;
@@ -36,14 +45,6 @@ extern "C" {
     #[cfg(target_arch = "wasm32")]
     pub fn verticesChange(mesh_id: usize);
 }
-#[no_mangle]
-pub unsafe extern "C" fn get_update_lights() -> bool {
-    UPDATE_LIGHTS.load(Ordering::Relaxed)
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_update_lights(value: bool) {
-    UPDATE_LIGHTS.store(value, Ordering::Relaxed);
-}
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_USAGE>>) {
@@ -53,12 +54,14 @@ pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_
 pub unsafe extern "C" fn clear_temp_gpu_buffers() {
     TEMP_GPU_BUFFERS.lock().unwrap().clear();
 }
+
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "env")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     fn mesh_on_change(mesh: Option<&Resource<crate::mesh::JSMesh>>);
+    fn render_renderpasses(command_encoder: &Resource<JSCommandEncoder>);
 }
 pub struct Engine {
     pub engine2: Option<Engine2>,
@@ -104,19 +107,28 @@ pub unsafe extern "C" fn get_point_lights_buffer() -> &'static Resource<JSBuffer
         .unwrap()
         .externref
 }
+static TILE_COUNT: [u32; 3] = [32, 18, 48];
+static CLUSTER_WORKGROUP_SIZE: [u32; 3] = [4, 2, 4];
+static CLUSTER_DISPATCH_SIZE: [u32; 3] = [
+    TILE_COUNT[0] / CLUSTER_WORKGROUP_SIZE[0],
+    TILE_COUNT[1] / CLUSTER_WORKGROUP_SIZE[1],
+    TILE_COUNT[2] / CLUSTER_WORKGROUP_SIZE[2],
+];
+
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
 #[externref]
-pub unsafe extern "C" fn process_gpu_queue() -> bool {
-    use crate::gpu::{
-        buffer::{copy_dst::CopyDst, copy_src::CopySrc, mapped_buffer::{MappedGPUBuffer, MappedgpuBuffer}},
-        commandEncoder::GPUCommandEncoder,
-    };
+pub unsafe extern "C" fn process_gpu_queue(
+    update_view_pipeline: &Resource<JSComputePipeline>,
+    update_view_bindgroup: &Resource<JSBindGroup>,
+) {
+    let mut renderloop_command_encoder =
+        GPUCommandEncoder::new(String::from("renderloop_commandEncoder"));
+    let engine = ENGINE.physic_engine_mut();
 
     let command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
     let mut queue = GPU_QUEUE.lock().unwrap();
-    let engine = ENGINE.physic_engine_mut();
     if queue.len() > 0 {
         let mut need_resize_to = *MAX_INSTANCES.lock().unwrap();
         let temp_buffer = MappedGPUBuffer::<GPUBuffer<COPYSRC_USAGE>>::new_gpubuffer(
@@ -178,15 +190,61 @@ pub unsafe extern "C" fn process_gpu_queue() -> bool {
             .push(unmapped_temp_buffer.externref);
     }
     //Lights
-    let directional_lights_mapping = engine.directional_lights.update_buffer(&command_encoder);
-    let point_lights_mapping = engine.point_lights.update_buffer(&command_encoder);
+    engine.directional_lights.update_buffer(&command_encoder);
+    engine.point_lights.update_buffer(&command_encoder);
     let command_buffer = command_encoder.finish(String::from("renderloop"));
     let gpu = engine.gpu.as_mut().unwrap();
     let len = gpu.pending_command_buffers.len();
     gpu.pending_command_buffers.push(command_buffer);
     // Insert this to begin of the array to get all changes to mesh properties affected first
     gpu.pending_command_buffers.swap(0, len);
-    return directional_lights_mapping || point_lights_mapping;
+
+    //Cameras
+    let mut some_camera_updated = false;
+    for camera in engine.cameras.iter_mut() {
+        camera.update_view(&renderloop_command_encoder);
+        if camera.updated {
+            some_camera_updated = true;
+        }
+    }
+    let lights_updated = UPDATE_LIGHTS.load(Ordering::Relaxed);
+    if some_camera_updated || lights_updated {
+        let lights_pass =
+            renderloop_command_encoder.begin_compute_pass(String::from("lightPassEncoder"));
+        lights_pass.set_pipeline(update_view_pipeline);
+        lights_pass.set_bindgroup(0, update_view_bindgroup);
+        //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
+        if lights_updated {
+            for camera in engine.cameras.iter() {
+                lights_pass.set_bindgroup(1, &camera.get_update_view_bindgroup());
+                lights_pass.dispatch_workgroups(
+                    CLUSTER_DISPATCH_SIZE[0],
+                    CLUSTER_DISPATCH_SIZE[1],
+                    CLUSTER_DISPATCH_SIZE[2],
+                );
+            }
+        } else {
+            for camera in engine.cameras.iter() {
+                if camera.updated {
+                    lights_pass.set_bindgroup(1, &camera.get_update_view_bindgroup());
+                    lights_pass.dispatch_workgroups(
+                        CLUSTER_DISPATCH_SIZE[0],
+                        CLUSTER_DISPATCH_SIZE[1],
+                        CLUSTER_DISPATCH_SIZE[2],
+                    );
+                }
+            }
+        }
+        renderloop_command_encoder = lights_pass.end();
+        UPDATE_LIGHTS.store(false, Ordering::Relaxed)
+    }
+    render_renderpasses(&renderloop_command_encoder.externref);
+    engine
+        .gpu
+        .as_mut()
+        .unwrap()
+        .pending_command_buffers
+        .push(renderloop_command_encoder.finish(String::from("renderencoder")));
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
@@ -203,6 +261,7 @@ pub struct Engine2 {
     pub gpu: Option<GPU>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
+    pub cameras: Vec<Camera>,
 }
 pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> =
     LazyLock::new(|| Mutex::new(Vec::with_capacity(128)));
@@ -319,8 +378,6 @@ pub extern "C" fn init_engine2() -> usize {
 #[cfg(any(not(test), rust_analyzer))]
 #[externref]
 pub unsafe extern "C" fn init_gpu() {
-    ENGINE.physic_engine_mut().point_lights.init_buffer();
-    ENGINE.physic_engine_mut().directional_lights.init_buffer();
     ENGINE.physic_engine_mut().gpu = Some(GPU {
         gpu_buffer: GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
             GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
@@ -349,6 +406,7 @@ pub fn init_engine() {
         gpu: None,
         point_lights: Lights::new(String::from("GPUPointLights")),
         directional_lights: Lights::new(String::from("GPUDirectionalLights")),
+        cameras: Vec::with_capacity(4),
     };
     unsafe {
         ENGINE.engine2 = Some(e);

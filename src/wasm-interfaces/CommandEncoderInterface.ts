@@ -4,6 +4,13 @@ import { stringFromPtr } from '../utils.js';
 declare const engine: Engine;
 
 export const CommandEncoderInterface = {
+  begin_compute_pass(
+    commandEncoder: GPUCommandEncoder,
+    label_vec_ptr: rust_pointer<'label'>,
+  ): GPUComputePassEncoder {
+    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    return commandEncoder.beginComputePass({ label });
+  },
   create_gpu_command_encoder(
     label_vec_ptr: rust_pointer<'label'>,
   ): GPUCommandEncoder {
