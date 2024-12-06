@@ -68,7 +68,9 @@ pub struct Camera {
 impl Camera {
     pub fn update_view(&mut self, command_encoder: &GPUCommandEncoder) {
         #[cfg(feature = "webgpu")]
-        unsafe { self.updated = update_view(&self.externref, &command_encoder.externref) }
+        unsafe {
+            self.updated = update_view(&self.externref, &command_encoder.externref)
+        }
     }
     #[cfg(feature = "webgpu")]
     pub fn get_update_view_bindgroup(&self) -> Resource<JSBindGroup> {
@@ -79,5 +81,4 @@ impl Camera {
         use externref::ExternRef;
         unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)) }
     }
-
 }

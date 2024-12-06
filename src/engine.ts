@@ -32,6 +32,7 @@ import { CommandEncoderInterface } from './wasm-interfaces/CommandEncoderInterfa
 import { Externref } from './externref.js';
 import { ComputePassEncoderInterface } from './wasm-interfaces/ComputePassEncoder.js';
 import { CameraInterface } from './wasm-interfaces/CameraInterface.js';
+import { QueueInterface } from './wasm-interfaces/QueueInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -379,9 +380,9 @@ export type rustWasm = {
   get_raw_buffer<U extends BufferUsageEnums, M extends boolean>(
     buffer: rust_pointer<'GPUBuffer'>,
   ): Externref<false, Buffer<U, M>>;
-  init_gpu(): void;
-  create_pending_command_buffers_iterator(): Rust_Iterator<GPUCommandBuffer>;
-  iterate_pending_command_buffers(
+  init_gpu(queue: GPUQueue): void;
+  push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
+  drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
   ): GPUCommandBuffer | null;
   gpu_queue_submited(): boolean;
@@ -695,6 +696,7 @@ export class Engine {
           }
         },
       },
+      queue: QueueInterface,
     };
     try {
       if (
@@ -866,7 +868,8 @@ export class Engine {
 
     const gpu = new GPU(this.canvas!, device, GPUDataSize);
     this.gpu = gpu;
-    this.rust.init_gpu();
+
+    this.rust.init_gpu(gpu.device.queue);
     console.log('new GPU initialized ', device.label);
     cb(gpu);
     return gpu;

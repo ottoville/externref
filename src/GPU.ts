@@ -52,7 +52,6 @@ import {
 import { StructProperty } from './webgpu-ts/index.js';
 import { createPipelineLayouts } from './GPU/Shaders/Pipelinelayouts.js';
 import { createUI } from './GPU/UI.js';
-import { rust_iterator_to_js } from './utils.js';
 
 declare const engine: Engine;
 let curSecond = 0;
@@ -775,14 +774,7 @@ export class GPU {
       updateViewPipeline,
       this.#updateViewBindGroup,
     );
-    const buffersIterator = rust_iterator_to_js(
-      engine.rust.create_pending_command_buffers_iterator(),
-      engine.rust.iterate_pending_command_buffers,
-    );
-    this.device.queue.submit([
-      ...buffersIterator,
-      ...this.pendingCommandBuffers,
-    ]);
+    this.device.queue.submit(this.pendingCommandBuffers);
     this.device.queue
       .onSubmittedWorkDone()
       .then(() => {

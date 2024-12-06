@@ -66,8 +66,8 @@ extern "C" {
 pub struct Engine {
     pub engine2: Option<Engine2>,
 }
-const GPU_MEMORY_INDEX_SIZE: usize = 256;
-const DEFAULT_MAX_INSTANCES: usize = 10;
+pub const GPU_MEMORY_INDEX_SIZE: usize = 256;
+pub const DEFAULT_MAX_INSTANCES: usize = 10;
 pub static MAX_INSTANCES: Mutex<usize> = Mutex::new(DEFAULT_MAX_INSTANCES);
 
 pub static mut ENGINE: Engine = Engine { engine2: None };
@@ -123,98 +123,96 @@ pub unsafe extern "C" fn process_gpu_queue(
     update_view_pipeline: &Resource<JSComputePipeline>,
     update_view_bindgroup: &Resource<JSBindGroup>,
 ) {
-    let mut renderloop_command_encoder =
+    let renderloop_command_encoder =
         GPUCommandEncoder::new(String::from("renderloop_commandEncoder"));
     let engine = ENGINE.physic_engine_mut();
+    let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
 
-    let command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
-    let mut queue = GPU_QUEUE.lock().unwrap();
-    if queue.len() > 0 {
-        let mut need_resize_to = *MAX_INSTANCES.lock().unwrap();
-        let temp_buffer = MappedGPUBuffer::<GPUBuffer<COPYSRC_USAGE>>::new_gpubuffer(
-            std::mem::size_of::<GPUMesh>() * queue.len(),
-            String::from("handle_gpu_queue"),
-            false,
-        );
-        for (i, mesh_id) in queue.iter().enumerate() {
-            let mesh = get_mesh_by_id_mut(*mesh_id);
-            //js_log([&mesh.label]);
-            let mut mesh_property = mesh.mesh_property.lock().unwrap();
-            for cb in mesh_property.on_change.iter() {
-                cb(&mesh_property);
-            }
-            if mesh_property.transformation_is_dirty {
-                mesh_property.update_matrix();
-            }
-            mesh.on_gpu_queue = false;
-            if mesh_property.gpu_memory.point_light_squared > 0.0 {
-                UPDATE_LIGHTS.store(true, Ordering::Relaxed)
-            }
-            if mesh.externref.is_some() {
-                mesh_on_change(mesh.externref.as_ref());
-            }
-            if mesh_property.gpu_mesh_alignment.0 > need_resize_to {
-                need_resize_to = mesh_property.gpu_mesh_alignment.0
-            }
-            temp_buffer.set_mapped_range(
-                &raw const mesh_property.gpu_memory as usize,
-                std::mem::size_of::<GPUMesh>(),
-                i * std::mem::size_of::<GPUMesh>(),
-                std::mem::size_of::<GPUMesh>(),
-            );
-        }
-        let meshes_buffer = &mut engine.gpu.as_mut().unwrap().gpu_buffer;
-        if need_resize_to > *MAX_INSTANCES.lock().unwrap() {
-            let mut max_instances = MAX_INSTANCES.lock().unwrap();
-            *max_instances = need_resize_to + 16;
-            let old_externref =
-                meshes_buffer.resize(&command_encoder, GPU_MEMORY_INDEX_SIZE * *max_instances);
-            TEMP_GPU_BUFFERS.lock().unwrap().push(old_externref);
-        }
-        for (i, mesh_id) in queue.iter().enumerate() {
-            let mesh = get_mesh_by_id_mut(*mesh_id);
-            let mesh_property = mesh.mesh_property.lock().unwrap();
-            meshes_buffer.copy_from(
-                &command_encoder,
-                &*temp_buffer,
-                i * std::mem::size_of::<GPUMesh>(),
-                mesh_property.gpu_mesh_alignment.0 * GPU_MEMORY_INDEX_SIZE,
-                std::mem::size_of::<GPUMesh>(),
-            );
-        }
-        let unmapped_temp_buffer = temp_buffer.unmap();
-        queue.clear();
-        TEMP_GPU_BUFFERS
-            .lock()
-            .unwrap()
-            .push(unmapped_temp_buffer.externref);
-    }
     //Lights
     engine.directional_lights.update_buffer(&command_encoder);
     engine.point_lights.update_buffer(&command_encoder);
-    let command_buffer = command_encoder.finish(String::from("renderloop"));
-    let gpu = engine.gpu.as_mut().unwrap();
-    let len = gpu.pending_command_buffers.len();
-    gpu.pending_command_buffers.push(command_buffer);
-    // Insert this to begin of the array to get all changes to mesh properties affected first
-    gpu.pending_command_buffers.swap(0, len);
 
     //Cameras
     let mut some_camera_updated = false;
     for camera in engine.cameras.iter_mut() {
-        camera.update_view(&renderloop_command_encoder);
+        camera.update_view(&command_encoder);
         if camera.updated {
             some_camera_updated = true;
         }
     }
-    let lights_updated = UPDATE_LIGHTS.load(Ordering::Relaxed);
-    if some_camera_updated || lights_updated {
-        let lights_pass =
-            renderloop_command_encoder.begin_compute_pass(String::from("lightPassEncoder"));
+    let gpu = engine.gpu.as_mut().unwrap();
+
+    let mut update_lights = false;
+    // Meshes
+    {
+        let mut queue = GPU_QUEUE.lock().unwrap();
+        if queue.len() > 0 {
+            let mut need_resize_to = *MAX_INSTANCES.lock().unwrap();
+            let temp_buffer = MappedGPUBuffer::<GPUBuffer<COPYSRC_USAGE>>::new_gpubuffer(
+                std::mem::size_of::<GPUMesh>() * queue.len(),
+                String::from("handle_gpu_queue"),
+                false,
+            );
+            for (i, mesh_id) in queue.iter().enumerate() {
+                let mesh = get_mesh_by_id_mut(*mesh_id);
+                //js_log([&mesh.label]);
+                let mut mesh_property = mesh.mesh_property.lock().unwrap();
+                for cb in mesh_property.on_change.iter() {
+                    cb(&mesh_property);
+                }
+                if mesh_property.transformation_is_dirty {
+                    mesh_property.update_matrix();
+                }
+                mesh.on_gpu_queue = false;
+                if mesh_property.gpu_memory.point_light_squared > 0.0 {
+                    update_lights = true;
+                }
+                if mesh.externref.is_some() {
+                    mesh_on_change(mesh.externref.as_ref());
+                }
+                if mesh_property.gpu_mesh_alignment.0 > need_resize_to {
+                    need_resize_to = mesh_property.gpu_mesh_alignment.0
+                }
+                temp_buffer.set_mapped_range(
+                    &raw const mesh_property.gpu_memory as usize,
+                    std::mem::size_of::<GPUMesh>(),
+                    i * std::mem::size_of::<GPUMesh>(),
+                    std::mem::size_of::<GPUMesh>(),
+                );
+            }
+            let meshes_buffer = &mut gpu.gpu_buffer;
+            if need_resize_to > *MAX_INSTANCES.lock().unwrap() {
+                let mut max_instances = MAX_INSTANCES.lock().unwrap();
+                *max_instances = need_resize_to + 16;
+                let old_externref =
+                    meshes_buffer.resize(&command_encoder, GPU_MEMORY_INDEX_SIZE * *max_instances);
+                TEMP_GPU_BUFFERS.lock().unwrap().push(old_externref);
+            }
+            for (i, mesh_id) in queue.drain(..).enumerate() {
+                let mesh = get_mesh_by_id_mut(mesh_id);
+                let mesh_property = mesh.mesh_property.lock().unwrap();
+                meshes_buffer.copy_from(
+                    &command_encoder,
+                    &*temp_buffer,
+                    i * std::mem::size_of::<GPUMesh>(),
+                    mesh_property.gpu_mesh_alignment.0 * GPU_MEMORY_INDEX_SIZE,
+                    std::mem::size_of::<GPUMesh>(),
+                );
+            }
+            let unmapped_temp_buffer = temp_buffer.unmap();
+            TEMP_GPU_BUFFERS
+                .lock()
+                .unwrap()
+                .push(unmapped_temp_buffer.externref);
+        }
+    }
+    // Cameras continue here because update_lights could change between
+    if some_camera_updated || update_lights {
+        let lights_pass = command_encoder.begin_compute_pass(String::from("lightPassEncoder"));
         lights_pass.set_pipeline(update_view_pipeline);
         lights_pass.set_bindgroup(0, update_view_bindgroup);
         //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
-        if lights_updated {
+        if update_lights {
             for camera in engine.cameras.iter() {
                 lights_pass.set_bindgroup(1, &camera.get_update_view_bindgroup());
                 lights_pass.dispatch_workgroups(
@@ -235,16 +233,19 @@ pub unsafe extern "C" fn process_gpu_queue(
                 }
             }
         }
-        renderloop_command_encoder = lights_pass.end();
-        UPDATE_LIGHTS.store(false, Ordering::Relaxed)
+        command_encoder = lights_pass.end();
     }
     render_renderpasses(&renderloop_command_encoder.externref);
-    engine
-        .gpu
-        .as_mut()
-        .unwrap()
-        .pending_command_buffers
-        .push(renderloop_command_encoder.finish(String::from("renderencoder")));
+    // Update mesh positions etc
+    gpu.queue
+        .submit(&mut vec![command_encoder.finish(String::from("renderloop"))].drain(..));
+    // Every other than depends on mesh positions etc
+    gpu.queue.submit(&mut gpu.pending_command_buffers.drain(..));
+    // Draw commands last so everything is up to date
+    gpu.queue.submit(
+        &mut vec![renderloop_command_encoder.finish(String::from("renderloop_renderencoder"))]
+            .drain(..),
+    );
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
@@ -265,7 +266,6 @@ pub struct Engine2 {
 }
 pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> =
     LazyLock::new(|| Mutex::new(Vec::with_capacity(128)));
-static UPDATE_LIGHTS: AtomicBool = AtomicBool::new(false);
 
 pub static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Resource<JSBuffer>, 16>> =
     Mutex::new(StackAllocator::new());
@@ -373,20 +373,7 @@ pub extern "C" fn init_engine2() -> usize {
     debug_assert!(std::mem::size_of::<GPUMesh>() % 8 == 0, "GPUMesh offset must be multiple of 8 https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange");
     std::mem::size_of::<GPUMesh>()
 }
-#[no_mangle]
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
-#[externref]
-pub unsafe extern "C" fn init_gpu() {
-    ENGINE.physic_engine_mut().gpu = Some(GPU {
-        gpu_buffer: GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
-            GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
-            String::from("GPUMeshes"),
-            false,
-        ),
-        pending_command_buffers: Vec::with_capacity(8),
-    });
-}
+
 pub fn init_engine() {
     let rigid_body_set = RigidBodySet::new();
     let collider_set = ColliderSet::new();

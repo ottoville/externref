@@ -1,11 +1,31 @@
 use externref::{externref, Resource};
 
+use crate::engine::{DEFAULT_MAX_INSTANCES, GPU_MEMORY_INDEX_SIZE};
 use crate::mesh::ENGINE;
 
+use super::queue::JSQueue;
 use super::{
     buffer::{buffer::GPUBuffer, usages::UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE},
     command_encoder::JSCommandBuffer,
+    queue::Queue,
 };
+
+#[no_mangle]
+#[cfg(feature = "webgpu")]
+#[cfg(any(not(test), rust_analyzer))]
+#[externref]
+pub unsafe extern "C" fn init_gpu(queue: Resource<JSQueue>) {
+    ENGINE.physic_engine_mut().gpu = Some(GPU {
+        queue: Queue { externref: queue },
+        gpu_buffer: GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
+            GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
+            String::from("GPUMeshes"),
+            false,
+        ),
+        pending_command_buffers: Vec::with_capacity(8),
+    });
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn check_mapped_buffers() {
     let engine = ENGINE.physic_engine_mut();
@@ -25,33 +45,16 @@ pub unsafe extern "C" fn gpu_queue_submited() -> bool {
     return mapping;
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn create_pending_command_buffers_iterator(
-) -> *mut std::slice::Iter<'static, Resource<JSCommandBuffer>> {
-    let iterator = ENGINE
-        .physic_engine()
-        .gpu
-        .as_ref()
-        .unwrap()
-        .pending_command_buffers
-        .iter();
-    return Box::into_raw(Box::new(iterator));
-}
 #[externref]
 #[no_mangle]
-pub unsafe extern "C" fn iterate_pending_command_buffers(
-    iterator_ptr: *mut std::slice::Iter<'static, Resource<JSCommandBuffer>>,
-) -> Option<&Resource<JSCommandBuffer>> {
-    let next = (*iterator_ptr).next();
-    if next.is_none() {
-        drop(Box::from_raw(iterator_ptr));
-        let engine = ENGINE.physic_engine_mut();
-        engine.gpu.as_mut().unwrap().pending_command_buffers.clear();
-    }
-    return next;
+pub unsafe extern "C" fn push_to_pending_command_buffers(
+    buffer: Resource<JSCommandBuffer>,
+) {
+    let engine = ENGINE.physic_engine_mut();
+    engine.gpu.as_mut().unwrap().pending_command_buffers.push(buffer);
 }
-
 pub struct GPU {
+    pub queue: Queue,
     pub gpu_buffer: GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>,
     pub pending_command_buffers: Vec<Resource<JSCommandBuffer>>,
 }
