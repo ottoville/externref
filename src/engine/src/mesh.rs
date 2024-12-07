@@ -595,6 +595,7 @@ impl Mesh {
     }
     pub fn update_dynamic_buffer(&mut self) {
         if !self.on_gpu_queue {
+            println!("hello there!");
             GPU_QUEUE.lock().unwrap().push(self.id);
             self.on_gpu_queue = true;
         }

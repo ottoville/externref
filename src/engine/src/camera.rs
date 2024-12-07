@@ -26,6 +26,14 @@ pub unsafe extern "C" fn get_camera_label(camera_id: usize) -> *const usize {
     MULTIVALUE_USIZE[2] = label.capacity();
     MULTIVALUE_USIZE.as_ptr()
 }
+#[no_mangle]
+pub unsafe extern "C" fn set_do_update_view(camera_id: usize, value: u32) {
+    ENGINE.physic_engine_mut().cameras[camera_id].do_update_view = value;
+}
+#[no_mangle]
+pub unsafe extern "C" fn get_do_update_view(camera_id: usize) -> u32 {
+    ENGINE.physic_engine().cameras[camera_id].do_update_view
+}
 pub struct JSCamera(());
 
 #[cfg(target_arch = "wasm32")]
@@ -37,7 +45,7 @@ extern "C" {
     pub fn update_view(
         externref: &Resource<JSCamera>,
         command_encoder: &Resource<JSCommandEncoder>,
-    ) -> bool;
+    );
     pub fn get_update_view_bindgroup(externref: &Resource<JSCamera>) -> Resource<JSBindGroup>;
 }
 
@@ -57,6 +65,7 @@ pub unsafe extern "C" fn add_camera(
         externref: camera,
         updated: false,
         label,
+        do_update_view: 0,
     });
     return id;
 }
@@ -64,15 +73,23 @@ pub struct Camera {
     pub externref: Resource<JSCamera>,
     pub updated: bool,
     pub label: String,
+    do_update_view: u32,
 }
 impl Camera {
     pub fn update_view(&mut self, command_encoder: &GPUCommandEncoder) {
-        #[cfg(feature = "webgpu")]
-        unsafe {
-            self.updated = update_view(&self.externref, &command_encoder.externref)
+        if self.do_update_view == 0 {
+            self.updated = false;
+            return;
         }
+        #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
+        unsafe {
+            update_view(&self.externref, &command_encoder.externref);
+        }
+        self.updated = true;
     }
     #[cfg(feature = "webgpu")]
+    #[cfg(any(not(test), rust_analyzer))]
     pub fn get_update_view_bindgroup(&self) -> Resource<JSBindGroup> {
         unsafe { get_update_view_bindgroup(&self.externref) }
     }

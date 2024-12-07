@@ -100,7 +100,9 @@ fn test_bounding_box() {
         Geometry,
     };
     unsafe {
-        init_engine();
+        if ENGINE.engine2.is_none() {
+            init_engine();
+        }
         let engine2 = ENGINE.physic_engine_mut();
         let len = engine2.meshes.len();
         Mesh::new(0.0, 0.0, 0.0, 0, String::from("box"), None, None);
@@ -124,19 +126,22 @@ fn test_bounding_box() {
 
         m.set_translation(123.0, 1000.0, 123.0);
 
-        let m2 = get_mesh_by_id_mut(m.id);
-        let mut mesh_property2 = m2.mesh_property.lock().unwrap();
-        let geo = m.get_geometry_mut();
+        let mut mesh_property2 = m.mesh_property.lock().unwrap();
+        match &mut m.geometry {
+            Some(geo) => {
+                geo.update_bounding_box(mesh_property2.get_transformation());
 
-        geo.update_bounding_box(mesh_property2.get_transformation());
-
-        assert_eq!(geo.bounding_box.min[0], -377.0);
-        assert_eq!(geo.bounding_box.min[1], 301.50122);
-        assert_eq!(geo.bounding_box.min[2], -575.4988);
-
-        assert_eq!(geo.bounding_box.max[0], 623.0);
-        assert_eq!(geo.bounding_box.max[1], 1698.498779296875);
-        assert_eq!(geo.bounding_box.max[2], 821.4988);
+                assert_eq!(geo.bounding_box.min[0], -377.0);
+                assert_eq!(geo.bounding_box.min[1], 301.50122);
+                assert_eq!(geo.bounding_box.min[2], -575.4988);
+        
+                assert_eq!(geo.bounding_box.max[0], 623.0);
+                assert_eq!(geo.bounding_box.max[1], 1698.498779296875);
+                assert_eq!(geo.bounding_box.max[2], 821.4988);
+        
+            },
+            None => todo!(),
+        }
     }
 }
 

@@ -36,7 +36,6 @@ export class Plants extends MainNode {
 
     this.#ready
       .then(() => {
-        // console.log('sending grass to worker, took ', new Date().getTime() - d);
         this.#worker
           .message(
             WorkerReturn.noReturn,
@@ -230,7 +229,10 @@ export class Plants extends MainNode {
               ),
             );
             indirectBuffer.copyFrom(commandEncoder, rawSwapBuffer.unmap());
-            scene.gpu.pendingCommandBuffers.push(commandEncoder.finish());
+
+            engine.rust.push_to_pending_command_buffers(
+              commandEncoder.finish(),
+            );
           },
         );
         await this.#worker.message(

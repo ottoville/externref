@@ -60,7 +60,12 @@ export class TerraCamera {
   updateViewBindGroup?: BindGroup;
   uniformBindGroup?: BindGroup;
   readonly #controls: CameraControl;
-  #doUpdateView = VIEW_UPDATED.NONE;
+  set #doUpdateView(value: VIEW_UPDATED) {
+    engine.rust.set_do_update_view(this.id, value);
+  }
+  get #doUpdateView() {
+    return engine.rust.get_do_update_view(this.id);
+  }
   readonly beforeViewUpdate: Set<
     (
       position: MutableTerraVector3,
@@ -211,8 +216,7 @@ export class TerraCamera {
    * @param commandEncoder GPUCommandEncoder
    * @returns boolean indicating if view was actually changed
    */
-  updateView(commandEncoder: GPUCommandEncoder): boolean {
-    if (!this.#doUpdateView) return false;
+  updateView(commandEncoder: GPUCommandEncoder) {
     if (this.beforeViewUpdate.size > 0) {
       this.#doUpdateView |= VIEW_UPDATED.POSITION & VIEW_UPDATED.DIRECTION;
       this.beforeViewUpdate.forEach((cb) =>
@@ -322,6 +326,5 @@ export class TerraCamera {
           this.#viewAndProjection.byteLength,
         );
     }
-    return true;
   }
 }

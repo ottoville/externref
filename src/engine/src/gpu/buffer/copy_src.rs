@@ -36,4 +36,12 @@ pub trait CopySrc: GpuBuffer {
             self.replace_externref(new_externref)
         }
     }
+    #[cfg(test)]
+    fn resize(&mut self, command_encoder: &GPUCommandEncoder, size: usize) -> Resource<JSBuffer> {
+        use externref::ExternRef;
+        unsafe {
+            self.set_size(size);
+            self.replace_externref(Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)))
+        }
+    }
 }

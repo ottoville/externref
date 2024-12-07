@@ -396,6 +396,8 @@ export type rustWasm = {
   get_camera_label(camera_id: number): rust_pointer<'camera_label'>;
   get_camera_externref(camera_id: number): TerraCamera;
   get_cameras_count(): number;
+  get_do_update_view(camera_id: number): number;
+  set_do_update_view(camera_id: number, value: number): void;
 } & BufferInterface;
 
 function Dot(

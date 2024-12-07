@@ -71,8 +71,6 @@ export class GPU {
   readonly mousePositionBuffer = new SharedArrayBuffer(4);
   readonly mousePosition = new Uint16Vector2(this.mousePositionBuffer);
 
-  readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
-
   readonly projections: Set<Projection> = new Set();
   readonly cameras: TerraCamera[] = [];
 
@@ -774,7 +772,6 @@ export class GPU {
       updateViewPipeline,
       this.#updateViewBindGroup,
     );
-    this.device.queue.submit(this.pendingCommandBuffers);
     this.device.queue
       .onSubmittedWorkDone()
       .then(() => {
@@ -790,7 +787,6 @@ export class GPU {
       });
     }
 
-    this.pendingCommandBuffers.length = 0;
     engine.rust.clear_temp_gpu_buffers();
 
     if (!this.#renderStarted) this.#renderStarted = true;

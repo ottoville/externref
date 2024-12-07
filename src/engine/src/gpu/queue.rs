@@ -34,6 +34,7 @@ pub struct Queue {
 impl Queue {
     pub fn submit(&self, command_buffers: &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>)) {
         #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             submit(&self.externref, Box::into_raw(Box::new(command_buffers)));
         }

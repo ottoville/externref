@@ -36,12 +36,14 @@ pub struct ComputePassEncoder {
 impl ComputePassEncoder {
     pub fn set_pipeline(&self, pipeline: &Resource<JSComputePipeline>) {
         #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             set_pipeline(&self.externref, pipeline);
         }
     }
     pub fn set_bindgroup(&self, index: u32, bindgroup: &Resource<JSBindGroup>) {
         #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             set_bindgroup(&self.externref, index, bindgroup);
         }
@@ -53,6 +55,7 @@ impl ComputePassEncoder {
         workgroup_count_z: u32,
     ) {
         #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             dispatch_workgroups(
                 &self.externref,
@@ -64,6 +67,7 @@ impl ComputePassEncoder {
     }
     pub fn end(self) -> GPUCommandEncoder{
         #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             end(&self.externref);
         }
