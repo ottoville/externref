@@ -15,6 +15,7 @@ mod meshes;
 mod terrain;
 mod vertices;
 pub mod camera;
+mod cameras;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;

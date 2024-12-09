@@ -6,11 +6,11 @@ import {
   TerraVector3,
   TerraVector4,
   Triangle,
-  create_rust_vec_ptr,
 } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
 import type { Engine } from '../engine.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
+import { create_rust_vec_ptr } from '../utils.js';
 declare const engine: Engine;
 
 export interface canCollideCharacter {

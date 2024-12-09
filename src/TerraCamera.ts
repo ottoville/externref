@@ -9,7 +9,11 @@ import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
 import { ClustersComp } from './GPU/Shaders/Clusters.comp.js';
 import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
-import { create_rust_label, stringFromPtr } from './utils.js';
+import {
+  create_rust_label,
+  rust_iterator_to_js,
+  stringFromPtr,
+} from './utils.js';
 declare const engine: Engine;
 
 export type CameraControl = {
@@ -25,11 +29,7 @@ const uniformBufferSize =
   /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ +
   4 * 4;
 export class TerraCamera {
-  readonly #childCameras: Set<CameraControl> = new Set();
-
   #clusterArrayBuffer?: Buffer<BufferUsageEnums.STORAGE>;
-
-  readonly #direction = new MutableTerraVector3([1, 0, 0]);
 
   readonly #viewProjectionPositionBuffer = new ArrayBuffer(uniformBufferSize);
 
@@ -59,7 +59,7 @@ export class TerraCamera {
   #uniformBuffer?: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
   updateViewBindGroup?: BindGroup;
   uniformBindGroup?: BindGroup;
-  readonly #controls: CameraControl;
+  readonly controls: CameraControl;
   set #doUpdateView(value: VIEW_UPDATED) {
     engine.rust.set_do_update_view(this.id, value);
   }
@@ -91,6 +91,15 @@ export class TerraCamera {
     renderPassName: 'renderPassScreen' | 'renderPassWater',
     parent?: TerraCamera,
   ) {
+    if (parent) {
+      this.id = engine.rust.add_child_to_camera(
+        parent.id,
+        this,
+        ...create_rust_label(label),
+      );
+    } else {
+      this.id = engine.rust.add_camera(this, ...create_rust_label(label));
+    }
     engine.getGPU((gpu) => {
       const projection = parent?.projection ?? new Projection(gpu);
       const renderPass = gpu[renderPassName];
@@ -144,16 +153,19 @@ export class TerraCamera {
 
     this.viewArr[15] = 1;
 
-    this.id = engine.rust.add_camera(this, ...create_rust_label(label));
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const me = this;
-    this.#controls = {
+    this.controls = {
       updateDirection(cb: (direction: MutableTerraVector3) => void) {
-        cb(me.#direction);
+        const direction = new MutableTerraVector3(
+          engine.rust.memory.buffer,
+          engine.rust.get_camera_direction_ptr(me.id),
+        );
+        cb(direction);
         if (
-          me.viewArr[2] !== me.#direction[0] ||
-          me.viewArr[6] !== me.#direction[1] ||
-          me.viewArr[10] !== me.#direction[2]
+          me.viewArr[2] !== direction[0] ||
+          me.viewArr[6] !== direction[1] ||
+          me.viewArr[10] !== direction[2]
         ) {
           me.#doUpdateView |= VIEW_UPDATED.DIRECTION;
         }
@@ -163,16 +175,13 @@ export class TerraCamera {
         me.#doUpdateView |= VIEW_UPDATED.POSITION;
       },
     };
-    if (parent) {
-      parent.#childCameras.add(this.getControlForCamera(parent));
-    }
   }
   getControlForCamera(owner: TerraCamera) {
     if (this.#cameraController && this.#cameraController !== owner)
       throw new Error('Camera is already controlled');
     else {
       this.#cameraController = owner;
-      return this.#controls;
+      return this.controls;
     }
   }
   attachControllerForCamera(controller: CameraController) {
@@ -182,14 +191,14 @@ export class TerraCamera {
           this.#inputController.deAttachCameraController();
         delete this.#inputController.cameraControl;
       } else {
-        return this.#controls;
+        return this.controls;
       }
     }
     this.#inputController = controller;
     engine.inputManager = controller;
     if (typeof document !== 'undefined') controller.attachCameraController();
-    controller.cameraControl = this.#controls;
-    return this.#controls;
+    controller.cameraControl = this.controls;
+    return this.controls;
   }
   updateClusters(
     passEncoder: GPUComputePassEncoder,
@@ -208,8 +217,17 @@ export class TerraCamera {
     passEncoder.dispatchWorkgroups(...this.gpu!.CLUSTER_DISPATCH_SIZE);
   }
 
-  get direction(): Readonly<{ [0]: number; [1]: number; [2]: number }> {
-    return this.#direction;
+  get direction() {
+    return new ReadOnlyTerraVector3(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_direction_ptr(this.id),
+    );
+  }
+  getIterator() {
+    return rust_iterator_to_js(
+      engine.rust.create_child_camera_iterator(this.id),
+      engine.rust.iterate_child_camera,
+    );
   }
   /**
    * Update camera view
@@ -217,10 +235,14 @@ export class TerraCamera {
    * @returns boolean indicating if view was actually changed
    */
   updateView(commandEncoder: GPUCommandEncoder) {
+    const direction = new MutableTerraVector3(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_direction_ptr(this.id),
+    );
     if (this.beforeViewUpdate.size > 0) {
       this.#doUpdateView |= VIEW_UPDATED.POSITION & VIEW_UPDATED.DIRECTION;
       this.beforeViewUpdate.forEach((cb) =>
-        cb(this.#positionMutable, this.#direction, commandEncoder),
+        cb(this.#positionMutable, direction, commandEncoder),
       );
     }
     if (
@@ -229,12 +251,17 @@ export class TerraCamera {
     ) {
       this.onUpdatePosition.forEach((cb) => cb());
     }
-    this.#childCameras.forEach((childCameraControl) => {
+    Iterator.from(
+      rust_iterator_to_js(
+        engine.rust.create_child_camera_iterator(this.id),
+        engine.rust.iterate_child_camera,
+      ),
+    ).forEach((childCameraControl) => {
       if (
         (this.#doUpdateView & VIEW_UPDATED.POSITION) ===
         VIEW_UPDATED.POSITION
       ) {
-        childCameraControl.updatePosition((position) => {
+        childCameraControl.controls.updatePosition((position) => {
           position[0] = this.position[0];
           position[1] = this.position[1];
           position[2] = this.position[2];
@@ -245,17 +272,16 @@ export class TerraCamera {
         VIEW_UPDATED.DIRECTION
       ) {
         //TODO: share same buffer;
-        childCameraControl.updateDirection((direction) => {
-          direction.set(this.#direction);
+        childCameraControl.controls.updateDirection((childdirection) => {
+          childdirection.set(direction);
         });
       }
     });
-    this.#doUpdateView = VIEW_UPDATED.NONE;
 
     //Camera direction
-    this.viewArr[2] = this.#direction[0];
-    this.viewArr[6] = this.#direction[1];
-    this.viewArr[10] = this.#direction[2];
+    this.viewArr[2] = direction[0]!;
+    this.viewArr[6] = direction[1]!;
+    this.viewArr[10] = direction[2]!;
 
     this.viewArr[0] = this.viewArr[10];
     this.viewArr[8] = -this.viewArr[2];

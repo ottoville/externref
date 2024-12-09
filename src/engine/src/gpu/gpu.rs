@@ -24,13 +24,6 @@ pub const GPU_MEMORY_INDEX_SIZE: usize = 256;
 pub const DEFAULT_MAX_INSTANCES: usize = 10;
 pub static MAX_INSTANCES: Mutex<usize> = Mutex::new(DEFAULT_MAX_INSTANCES);
 
-static TILE_COUNT: [u32; 3] = [32, 18, 48];
-static CLUSTER_WORKGROUP_SIZE: [u32; 3] = [4, 2, 4];
-static CLUSTER_DISPATCH_SIZE: [u32; 3] = [
-    TILE_COUNT[0] / CLUSTER_WORKGROUP_SIZE[0],
-    TILE_COUNT[1] / CLUSTER_WORKGROUP_SIZE[1],
-    TILE_COUNT[2] / CLUSTER_WORKGROUP_SIZE[2],
-];
 pub static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Resource<JSBuffer>, 16>> =
     Mutex::new(StackAllocator::new());
 
@@ -130,9 +123,8 @@ impl GPU {
 
         //Cameras
         let mut some_camera_updated = false;
-        for camera in engine.cameras.iter_mut() {
-            camera.update_view(&command_encoder);
-            if camera.updated {
+        for camera in engine.cameras.cameras.iter_mut() {
+            if camera.update_view(&command_encoder) {
                 some_camera_updated = true;
             }
         }
@@ -208,26 +200,8 @@ impl GPU {
             lights_pass.set_pipeline(update_view_pipeline);
             lights_pass.set_bindgroup(0, update_view_bindgroup);
             //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
-            if update_lights {
-                for camera in engine.cameras.iter() {
-                    lights_pass.set_bindgroup(1, &camera.get_update_view_bindgroup());
-                    lights_pass.dispatch_workgroups(
-                        CLUSTER_DISPATCH_SIZE[0],
-                        CLUSTER_DISPATCH_SIZE[1],
-                        CLUSTER_DISPATCH_SIZE[2],
-                    );
-                }
-            } else {
-                for camera in engine.cameras.iter() {
-                    if camera.updated {
-                        lights_pass.set_bindgroup(1, &camera.get_update_view_bindgroup());
-                        lights_pass.dispatch_workgroups(
-                            CLUSTER_DISPATCH_SIZE[0],
-                            CLUSTER_DISPATCH_SIZE[1],
-                            CLUSTER_DISPATCH_SIZE[2],
-                        );
-                    }
-                }
+            for camera in engine.cameras.cameras.iter() {
+                camera.update_camera(update_lights, &lights_pass);
             }
             command_encoder = lights_pass.end();
         }

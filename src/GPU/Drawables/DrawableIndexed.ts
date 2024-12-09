@@ -13,8 +13,8 @@ import {
   type INDEX_BUFFER,
 } from '../../webgpu-ts/index.js';
 import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
-import { create_rust_vec_ptr } from '../../Math.js';
 import { Externref } from '../../externref.js';
+import { create_rust_vec_ptr } from '../../utils.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {

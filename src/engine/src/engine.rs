@@ -4,7 +4,7 @@ use std::panic;
 use std::sync::{LazyLock, Mutex};
 
 use crate::allocators::freeindex::FreeIndex;
-use crate::camera::Camera;
+use crate::cameras::Cameras;
 use crate::gpu::buffer::buffer::JSBuffer;
 
 use crate::gpu::gpu::GPU;
@@ -94,7 +94,7 @@ pub struct Engine2 {
     pub gpu: Option<GPU>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
-    pub cameras: Vec<Camera>,
+    pub cameras: Cameras,
 }
 pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> =
     LazyLock::new(|| Mutex::new(Vec::with_capacity(128)));
@@ -222,7 +222,9 @@ pub fn init_engine() {
         gpu: None,
         point_lights: Lights::new(String::from("GPUPointLights")),
         directional_lights: Lights::new(String::from("GPUDirectionalLights")),
-        cameras: Vec::with_capacity(4),
+        cameras: Cameras {
+            cameras: Vec::with_capacity(4),
+        },
     };
     unsafe {
         ENGINE.engine2 = Some(e);

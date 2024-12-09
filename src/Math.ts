@@ -202,11 +202,6 @@ export class TerraVector2 extends Float32Array {
   declare 0: number;
   declare 1: number;
 }
-export function create_rust_vec_ptr<T>(ptr: rust_pointer<rust_vec_ptr<T>>) {
-  return Array.from(
-    new Uint32Array(engine.rust.memory.buffer, ptr, 3),
-  ) as unknown as rust_vec_ptr<T>;
-}
 
 export abstract class TerraVector3 extends Float32Array {
   abstract 0: number;
