@@ -412,9 +412,6 @@ export type rustWasm = {
   get_cameras_count(): number;
   get_do_update_view(camera_id: number): number;
   set_do_update_view(camera_id: number, value: number): void;
-  iterate_child_camera(
-    iterator: Rust_Iterator<TerraCamera>,
-  ): TerraCamera | null;
   get_camera_direction_ptr(camera_id: number): rust_pointer<'direction'>;
   get_camera_position_ptr(camera_id: number): rust_pointer<'position'>;
 } & BufferInterface;

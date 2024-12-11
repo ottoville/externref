@@ -111,18 +111,6 @@ pub unsafe extern "C" fn add_camera(
     cameras.cameras.push(camera);
     return id;
 }
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn iterate_child_camera(
-    iterator_ptr: *mut std::slice::Iter<'_, Camera>,
-) -> Option<&Resource<JSCamera>> {
-    let next = (*iterator_ptr).next();
-    if next.is_none() {
-        drop(Box::from_raw(iterator_ptr));
-        return None;
-    }
-    return Some(&next.unwrap().externref);
-}
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_direction_ptr(camera_id: u32) -> *const f32 {
     ENGINE
@@ -153,12 +141,12 @@ extern "C" {
     pub fn update_view(
         externref: &Resource<JSCamera>,
         command_encoder: &Resource<JSCommandEncoder>,
-        child_iterator: *mut Iter<'_, Camera>,
         direction_ptr: *const f32,
         position_ptr: *const f32,
-        do_update_view: u32,
     );
     pub fn get_update_view_bindgroup(externref: &Resource<JSCamera>) -> Resource<JSBindGroup>;
+    pub fn on_update_position(externref: &Resource<JSCamera>);
+
 }
 static TILE_COUNT: [u32; 3] = [32, 18, 48];
 static CLUSTER_WORKGROUP_SIZE: [u32; 3] = [4, 2, 4];
@@ -216,23 +204,56 @@ impl Camera {
             })),
         }
     }
+    fn on_update_position(&self) {
+        #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
+        unsafe {
+            on_update_position(&self.externref);
+        }
+    }
+    pub fn update_position(&mut self, position: [f32; 3]) {
+        if position[0] != self.position[0]
+            || position[1] != self.position[1]
+            || position[2] != self.position[2]
+        {
+            self.position = position;
+            self.do_update_view |= VIEW_UPDATED_POSITION;
+        }
+    }
+    pub fn update_direction(&mut self, direction: [f32; 3]) {
+        if direction[0] != self.direction[0]
+            || direction[1] != self.direction[1]
+            || direction[2] != self.direction[2]
+        {
+            self.direction = direction;
+            self.do_update_view |= VIEW_UPDATED_DIRECTION;
+        }
+    }
     pub fn update_view(&mut self, command_encoder: &GPUCommandEncoder) -> bool {
         if self.do_update_view != 0 {
+            if let Some(before_view_update) = &self.before_view_update {
+                self.do_update_view |= VIEW_UPDATED_POSITION & VIEW_UPDATED_DIRECTION;
+                before_view_update(&mut self.direction, &mut self.position);
+            }
+            if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
+                self.on_update_position();
+            }
+            for child in self.children.iter_mut() {
+                if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
+                    child.update_position(self.position.clone());
+                }
+                if (self.do_update_view & VIEW_UPDATED_DIRECTION) == VIEW_UPDATED_DIRECTION {
+                    child.update_direction(self.direction.clone());
+                }
+            }
             #[cfg(feature = "webgpu")]
             #[cfg(any(not(test), rust_analyzer))]
             unsafe {
-                if let Some(before_view_update) = &self.before_view_update {
-                    self.do_update_view |= VIEW_UPDATED_POSITION & VIEW_UPDATED_DIRECTION;
-                    before_view_update(&mut self.direction, &mut self.position);
-                }
-                let child_iterator = Box::into_raw(Box::new(self.children.iter()));
                 update_view(
                     &self.externref,
                     &command_encoder.externref,
-                    child_iterator,
                     self.direction.as_ptr(),
                     self.position.as_ptr(),
-                    self.do_update_view,
                 );
             }
             self.do_update_view = 0;

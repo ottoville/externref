@@ -9,19 +9,14 @@ import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
 import { ClustersComp } from './GPU/Shaders/Clusters.comp.js';
 import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
-import {
-  create_rust_label,
-  Rust_Iterator,
-  rust_iterator_to_js,
-  stringFromPtr,
-} from './utils.js';
+import { create_rust_label, stringFromPtr } from './utils.js';
 declare const engine: Engine;
 
 export type CameraControl = {
   updatePosition(cb: (position: MutableTerraVector3) => void): void;
   updateDirection(cb: (direction: MutableTerraVector3) => void): void;
 };
-export const enum VIEW_UPDATED {
+const enum VIEW_UPDATED {
   NONE = 0,
   POSITION = 1,
   DIRECTION = 2,
@@ -232,10 +227,8 @@ export class TerraCamera {
    */
   updateView(
     commandEncoder: GPUCommandEncoder,
-    child_iterator: Rust_Iterator<TerraCamera>,
     direction_ptr: rust_pointer<'direction'>,
     position_ptr: rust_pointer<'position'>,
-    doUpdateView: VIEW_UPDATED,
   ) {
     const direction = new MutableTerraVector3(
       engine.rust.memory.buffer,
@@ -245,27 +238,6 @@ export class TerraCamera {
       engine.rust.memory.buffer,
       position_ptr,
     );
-    if ((doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
-      this.onUpdatePosition.forEach((cb) => cb());
-    }
-    Iterator.from(
-      rust_iterator_to_js(child_iterator, engine.rust.iterate_child_camera),
-    ).forEach((childCameraControl) => {
-      if ((doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
-        childCameraControl.controls.updatePosition((childposition) => {
-          childposition[0] = position[0];
-          childposition[1] = position[1];
-          childposition[2] = position[2];
-        });
-      }
-      if ((doUpdateView & VIEW_UPDATED.DIRECTION) === VIEW_UPDATED.DIRECTION) {
-        //TODO: share same buffer;
-        childCameraControl.controls.updateDirection((childdirection) => {
-          childdirection.set(direction);
-        });
-      }
-    });
-
     //Camera direction
     this.viewArr[2] = direction[0]!;
     this.viewArr[6] = direction[1]!;
