@@ -346,7 +346,7 @@ pub unsafe extern "C" fn physic_tick() {
                     mesh_property.rotation.w = newrot.w;
                 }
                 let pos = rigid_body.position();
-                mesh.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
+                mesh.update_translation(pos.translation.x, pos.translation.y, pos.translation.z, false);
             }
             None => js_warn(["Mesh not found for rigid body"]),
         }

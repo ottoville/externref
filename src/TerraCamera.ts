@@ -11,6 +11,7 @@ import { ClustersComp } from './GPU/Shaders/Clusters.comp.js';
 import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
 import {
   create_rust_label,
+  Rust_Iterator,
   rust_iterator_to_js,
   stringFromPtr,
 } from './utils.js';
@@ -20,7 +21,7 @@ export type CameraControl = {
   updatePosition(cb: (position: MutableTerraVector3) => void): void;
   updateDirection(cb: (direction: MutableTerraVector3) => void): void;
 };
-const enum VIEW_UPDATED {
+export const enum VIEW_UPDATED {
   NONE = 0,
   POSITION = 1,
   DIRECTION = 2,
@@ -46,16 +47,12 @@ export class TerraCamera {
     0,
     32,
   );
-
-  readonly position = new ReadOnlyTerraVector3(
-    this.#viewProjectionPositionBuffer,
-    128,
-  );
-  readonly #positionMutable = new MutableTerraVector3(
-    this.#viewProjectionPositionBuffer,
-    128,
-  );
-
+  get position() {
+    return new MutableTerraVector3(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_position_ptr(this.id),
+    );
+  }
   #uniformBuffer?: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
   updateViewBindGroup?: BindGroup;
   uniformBindGroup?: BindGroup;
@@ -66,13 +63,6 @@ export class TerraCamera {
   get #doUpdateView() {
     return engine.rust.get_do_update_view(this.id);
   }
-  readonly beforeViewUpdate: Set<
-    (
-      position: MutableTerraVector3,
-      direction: MutableTerraVector3,
-      commandEncoder: GPUCommandEncoder,
-    ) => void
-  > = new Set();
   #cameraController?: TerraCamera;
   #inputController?: CameraController;
   projection?: Projection;
@@ -92,11 +82,19 @@ export class TerraCamera {
     parent?: TerraCamera,
   ) {
     if (parent) {
-      this.id = engine.rust.add_child_to_camera(
-        parent.id,
-        this,
-        ...create_rust_label(label),
-      );
+      if (label === 'waterCamera') {
+        this.id = engine.rust.add_child_to_camera_water(
+          parent.id,
+          this,
+          ...create_rust_label(label),
+        );
+      } else {
+        this.id = engine.rust.add_child_to_camera(
+          parent.id,
+          this,
+          ...create_rust_label(label),
+        );
+      }
     } else {
       this.id = engine.rust.add_camera(this, ...create_rust_label(label));
     }
@@ -171,7 +169,11 @@ export class TerraCamera {
         }
       },
       updatePosition(cb: (position: MutableTerraVector3) => void) {
-        cb(me.#positionMutable);
+        const position = new MutableTerraVector3(
+          engine.rust.memory.buffer,
+          engine.rust.get_camera_position_ptr(me.id),
+        );
+        cb(position);
         me.#doUpdateView |= VIEW_UPDATED.POSITION;
       },
     };
@@ -223,54 +225,40 @@ export class TerraCamera {
       engine.rust.get_camera_direction_ptr(this.id),
     );
   }
-  getIterator() {
-    return rust_iterator_to_js(
-      engine.rust.create_child_camera_iterator(this.id),
-      engine.rust.iterate_child_camera,
-    );
-  }
   /**
    * Update camera view
    * @param commandEncoder GPUCommandEncoder
    * @returns boolean indicating if view was actually changed
    */
-  updateView(commandEncoder: GPUCommandEncoder) {
+  updateView(
+    commandEncoder: GPUCommandEncoder,
+    child_iterator: Rust_Iterator<TerraCamera>,
+    direction_ptr: rust_pointer<'direction'>,
+    position_ptr: rust_pointer<'position'>,
+    doUpdateView: VIEW_UPDATED,
+  ) {
     const direction = new MutableTerraVector3(
       engine.rust.memory.buffer,
-      engine.rust.get_camera_direction_ptr(this.id),
+      direction_ptr,
     );
-    if (this.beforeViewUpdate.size > 0) {
-      this.#doUpdateView |= VIEW_UPDATED.POSITION & VIEW_UPDATED.DIRECTION;
-      this.beforeViewUpdate.forEach((cb) =>
-        cb(this.#positionMutable, direction, commandEncoder),
-      );
-    }
-    if (
-      (this.#doUpdateView & VIEW_UPDATED.POSITION) ===
-      VIEW_UPDATED.POSITION
-    ) {
+    const position = new MutableTerraVector3(
+      engine.rust.memory.buffer,
+      position_ptr,
+    );
+    if ((doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
       this.onUpdatePosition.forEach((cb) => cb());
     }
     Iterator.from(
-      rust_iterator_to_js(
-        engine.rust.create_child_camera_iterator(this.id),
-        engine.rust.iterate_child_camera,
-      ),
+      rust_iterator_to_js(child_iterator, engine.rust.iterate_child_camera),
     ).forEach((childCameraControl) => {
-      if (
-        (this.#doUpdateView & VIEW_UPDATED.POSITION) ===
-        VIEW_UPDATED.POSITION
-      ) {
-        childCameraControl.controls.updatePosition((position) => {
-          position[0] = this.position[0];
-          position[1] = this.position[1];
-          position[2] = this.position[2];
+      if ((doUpdateView & VIEW_UPDATED.POSITION) === VIEW_UPDATED.POSITION) {
+        childCameraControl.controls.updatePosition((childposition) => {
+          childposition[0] = position[0];
+          childposition[1] = position[1];
+          childposition[2] = position[2];
         });
       }
-      if (
-        (this.#doUpdateView & VIEW_UPDATED.DIRECTION) ===
-        VIEW_UPDATED.DIRECTION
-      ) {
+      if ((doUpdateView & VIEW_UPDATED.DIRECTION) === VIEW_UPDATED.DIRECTION) {
         //TODO: share same buffer;
         childCameraControl.controls.updateDirection((childdirection) => {
           childdirection.set(direction);
@@ -308,20 +296,20 @@ export class TerraCamera {
 
     //x
     this.viewArr[12] = -(
-      this.viewArr[0] * this.position[0] +
-      this.viewArr[8] * this.position[2]
+      this.viewArr[0] * position[0] +
+      this.viewArr[8] * position[2]
     );
     //y
     this.viewArr[13] = -(
-      this.viewArr[1] * this.position[0] +
-      this.viewArr[5] * this.position[1] +
-      this.viewArr[9] * this.position[2]
+      this.viewArr[1] * position[0] +
+      this.viewArr[5] * position[1] +
+      this.viewArr[9] * position[2]
     );
     //z
     this.viewArr[14] = -(
-      this.viewArr[2] * this.position[0] +
-      this.viewArr[6] * this.position[1] +
-      this.viewArr[10] * this.position[2]
+      this.viewArr[2] * position[0] +
+      this.viewArr[6] * position[1] +
+      this.viewArr[10] * position[2]
     );
     if (this.projection) {
       this.viewArr.multiplyToRef(

@@ -560,7 +560,7 @@ impl Mesh {
         }
     }
     pub unsafe fn set_translation(&mut self, x: f32, y: f32, z: f32) {
-        self.update_translation(x, y, z);
+        self.update_translation(x, y, z, true);
         match self.rigid_body_handle {
             Some(rigid_body_handle) => {
                 let e = ENGINE.physic_engine_mut();
@@ -573,12 +573,12 @@ impl Mesh {
             _ => {}
         }
     }
-    pub fn update_translation(&mut self, x: f32, y: f32, z: f32) {
+    pub fn update_translation(&mut self, x: f32, y: f32, z: f32, physics: bool) {
         {
             let mut mesh_property = self.mesh_property.lock().unwrap();
             mesh_property.translation.0 = [x, y, z];
         }
-        self.on_update(true);
+        self.on_update(physics);
     }
     pub unsafe fn apply_impulse(&mut self, x: f32, y: f32, z: f32) {
         let e = ENGINE.physic_engine_mut();

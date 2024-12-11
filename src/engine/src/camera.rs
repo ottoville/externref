@@ -1,6 +1,10 @@
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::{
+    slice::Iter,
+    sync::atomic::{AtomicU32, Ordering},
+};
 
 use externref::{externref, Resource};
+use terramath::MatrixMath;
 
 use crate::{
     gpu::{
@@ -74,6 +78,26 @@ pub unsafe extern "C" fn add_child_to_camera(
 }
 #[externref]
 #[no_mangle]
+pub unsafe extern "C" fn add_child_to_camera_water(
+    camera_id: u32,
+    externref: Resource<JSCamera>,
+    label_ptr: *mut u8,
+    label_len: usize,
+    label_cap: usize,
+) -> u32 {
+    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
+    let camera = Camera::new_water(externref, label);
+    let id = camera.id;
+    ENGINE
+        .physic_engine_mut()
+        .cameras
+        .get_camera_by_id_mut(camera_id)
+        .children
+        .push(camera);
+    return id;
+}
+#[externref]
+#[no_mangle]
 pub unsafe extern "C" fn add_camera(
     externref: Resource<JSCamera>,
     label_ptr: *mut u8,
@@ -87,19 +111,6 @@ pub unsafe extern "C" fn add_camera(
     cameras.cameras.push(camera);
     return id;
 }
-#[no_mangle]
-pub unsafe extern "C" fn create_child_camera_iterator(
-    camera_id: u32,
-) -> *mut std::slice::Iter<'static, Camera> {
-    return Box::into_raw(Box::new(
-        ENGINE
-            .physic_engine()
-            .cameras
-            .get_camera_by_id(camera_id)
-            .children
-            .iter(),
-    ));
-}
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn iterate_child_camera(
@@ -112,7 +123,6 @@ pub unsafe extern "C" fn iterate_child_camera(
     }
     return Some(&next.unwrap().externref);
 }
-#[externref]
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_direction_ptr(camera_id: u32) -> *const f32 {
     ENGINE
@@ -120,6 +130,15 @@ pub unsafe extern "C" fn get_camera_direction_ptr(camera_id: u32) -> *const f32 
         .cameras
         .get_camera_by_id(camera_id)
         .direction
+        .as_ptr()
+}
+#[no_mangle]
+pub unsafe extern "C" fn get_camera_position_ptr(camera_id: u32) -> *const f32 {
+    ENGINE
+        .physic_engine()
+        .cameras
+        .get_camera_by_id(camera_id)
+        .position
         .as_ptr()
 }
 pub struct JSCamera(());
@@ -134,6 +153,10 @@ extern "C" {
     pub fn update_view(
         externref: &Resource<JSCamera>,
         command_encoder: &Resource<JSCommandEncoder>,
+        child_iterator: *mut Iter<'_, Camera>,
+        direction_ptr: *const f32,
+        position_ptr: *const f32,
+        do_update_view: u32,
     );
     pub fn get_update_view_bindgroup(externref: &Resource<JSCamera>) -> Resource<JSBindGroup>;
 }
@@ -144,46 +167,73 @@ static CLUSTER_DISPATCH_SIZE: [u32; 3] = [
     TILE_COUNT[1] / CLUSTER_WORKGROUP_SIZE[1],
     TILE_COUNT[2] / CLUSTER_WORKGROUP_SIZE[2],
 ];
+static VIEW_UPDATED_POSITION: u32 = 1;
+static VIEW_UPDATED_DIRECTION: u32 = 2;
 pub struct Camera {
+    view: [[f32; 4]; 4],
+    projection: [[f32; 4]; 4],
+    direction: [f32; 3],
+    position: [f32; 3],
     pub externref: Resource<JSCamera>,
     pub updated: bool,
     pub label: String,
     pub children: Vec<Camera>,
     do_update_view: u32,
     pub id: u32,
-    direction: [f32; 3],
-    pub before_view_update: Option<Box<dyn Fn(usize) -> usize>>,
+    pub before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 3])>>,
 }
 impl Camera {
     pub fn new(externref: Resource<JSCamera>, label: String) -> Self {
         Camera {
+            view: MatrixMath::new(),
+            projection: MatrixMath::new(),
+            position: [0.0; 3],
+            direction: [1.0, 0.0, 0.0],
             externref,
             updated: false,
             label,
             children: Vec::new(),
             do_update_view: 0,
             id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
-            direction: [1.0, 0.0, 0.0],
             before_view_update: None,
         }
     }
-    /*pub fn new_water(externref: Resource<JSCamera>, label: String) -> Self {
+    pub fn new_water(externref: Resource<JSCamera>, label: String) -> Self {
         Camera {
+            view: MatrixMath::new(),
+            projection: MatrixMath::new(),
+            position: [0.0; 3],
+            direction: [1.0, 0.0, 0.0],
             externref,
             updated: false,
             label,
             children: Vec::new(),
             do_update_view: 0,
             id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
-            before_view_update: None
+            before_view_update: Some(Box::new(|direction, position| {
+                position[1] -= (position[1] - 3.0) * 2.0;
+                direction[1] = -direction[1];
+            })),
         }
-    }*/
+    }
     pub fn update_view(&mut self, command_encoder: &GPUCommandEncoder) -> bool {
         if self.do_update_view != 0 {
             #[cfg(feature = "webgpu")]
             #[cfg(any(not(test), rust_analyzer))]
             unsafe {
-                update_view(&self.externref, &command_encoder.externref);
+                if let Some(before_view_update) = &self.before_view_update {
+                    self.do_update_view |= VIEW_UPDATED_POSITION & VIEW_UPDATED_DIRECTION;
+                    before_view_update(&mut self.direction, &mut self.position);
+                }
+                let child_iterator = Box::into_raw(Box::new(self.children.iter()));
+                update_view(
+                    &self.externref,
+                    &command_encoder.externref,
+                    child_iterator,
+                    self.direction.as_ptr(),
+                    self.position.as_ptr(),
+                    self.do_update_view,
+                );
             }
             self.do_update_view = 0;
             self.updated = true;

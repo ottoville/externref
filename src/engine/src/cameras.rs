@@ -19,9 +19,9 @@ fn search_camera_by_id(
     return None;
 }
 fn search_camera_by_id_mut(
-    iterator: std::slice::IterMut<'static, Camera>,
+    iterator: std::slice::IterMut<'_, Camera>,
     camera_id: u32,
-) -> Option<&'static mut Camera> {
+) -> Option<&'_ mut Camera> {
     for camera in iterator {
         if camera.id == camera_id {
             return Some(camera);
@@ -34,15 +34,10 @@ fn search_camera_by_id_mut(
     return None;
 }
 impl Cameras {
-    pub unsafe fn get_camera_by_id(&'static self, camera_id: u32) -> &'static Camera {
-        let iterator = self.cameras.iter();
-        let search_camera = search_camera_by_id(iterator, camera_id);
-        if let Some(camera) = search_camera {
-            return camera;
-        }
-        panic!("Camera {} not found", camera_id);
+    pub unsafe fn get_camera_by_id(&self, camera_id: u32) -> &Camera {
+        self.iter().find(|camera| camera.id == camera_id).unwrap()
     }
-    pub unsafe fn get_camera_by_id_mut(&'static mut self, camera_id: u32) -> &'static mut Camera {
+    pub unsafe fn get_camera_by_id_mut(&'_ mut self, camera_id: u32) -> &mut Camera {
         let search_camera = search_camera_by_id_mut(self.cameras.iter_mut(), camera_id);
         if let Some(camera) = search_camera {
             return camera;
