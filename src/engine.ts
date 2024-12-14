@@ -147,7 +147,7 @@ export type rustWasm = {
   process_gpu_queue(
     updateViewPipeline: GPUComputePipeline,
     updateViewBindGroup: BindGroup,
-  ): void;
+  ): boolean;
 
   new_mesh_from_js(
     point_light: number,
@@ -385,7 +385,6 @@ export type rustWasm = {
   drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
   ): GPUCommandBuffer | null;
-  gpu_queue_submited(): boolean;
   check_mapped_buffers(): void;
   add_camera(
     camera: TerraCamera,
@@ -410,10 +409,24 @@ export type rustWasm = {
   get_camera_label(camera_id: number): rust_pointer<'camera_label'>;
   get_camera_externref(camera_id: number): TerraCamera;
   get_cameras_count(): number;
-  get_do_update_view(camera_id: number): number;
-  set_do_update_view(camera_id: number, value: number): void;
   get_camera_direction_ptr(camera_id: number): rust_pointer<'direction'>;
   get_camera_position_ptr(camera_id: number): rust_pointer<'position'>;
+  get_camera_view_ptr(camera_id: number): rust_pointer<'camera_view'>;
+  get_camera_projection_ptr(
+    camera_id: number,
+  ): rust_pointer<'camera_projection'>;
+  update_camera_position(
+    camera_id: number,
+    x: number,
+    y: number,
+    z: number,
+  ): void;
+  update_camera_direction(
+    camera_id: number,
+    x: number,
+    y: number,
+    z: number,
+  ): void;
 } & BufferInterface;
 
 function Dot(

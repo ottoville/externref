@@ -23,14 +23,16 @@ export class PositionCamera extends CameraController {
   ) {
     super();
     const syncCamera = () => {
-      this.cameraControl?.updatePosition((position) =>
-        position.set(this.#position),
+      this.cameraControl?.updatePosition(
+        this.#position[0],
+        this.#position[1],
+        this.#position[2],
       );
-      this.cameraControl?.updateDirection((direction) => {
-        direction[0] = Math.cos(this.#angle);
-        direction[1] = 0;
-        direction[2] = Math.sin(this.#angle);
-      });
+      this.cameraControl?.updateDirection(
+        Math.cos(this.#angle),
+        0,
+        Math.sin(this.#angle),
+      );
     };
     if (initial && engine.DB) {
       engine.DB.transaction('save')
@@ -122,23 +124,32 @@ export class PositionCamera extends CameraController {
   checkInputs() {
     if (this.#arrowKeysDown === 0 && this.#elevation === 0) return false;
     if (this.#elevation !== 0) {
-      this.cameraControl?.updatePosition((position) => {
-        position[1] += this.#elevation * this.#velocity;
-      });
+      const oldPos = this.camera.position;
+      this.cameraControl?.updatePosition(
+        oldPos[0],
+        oldPos[1] + this.#elevation * this.#velocity,
+        oldPos[2],
+      );
     }
+
     if ((this.#arrowKeysDown & ARROW_KEYS.UP_OR_DOWN) > 0) {
-      this.cameraControl?.updatePosition((position) => {
-        if ((this.#arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
-          const direction = this.camera.direction;
-          position[0] -= direction[0] * this.#velocity;
-          position[2] -= direction[2] * this.#velocity;
-        } else {
-          const direction = this.camera.direction;
-          position[0] += direction[0] * this.#velocity;
-          position[2] += direction[2] * this.#velocity;
-        }
-        this.#position = position.clone();
-      });
+      const oldPos = this.camera.position;
+      const direction = this.camera.direction;
+
+      if ((this.#arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
+        this.cameraControl?.updatePosition(
+          oldPos[0] - direction[0] * this.#velocity,
+          oldPos[1],
+          oldPos[2] - direction[2] * this.#velocity,
+        );
+      } else {
+        this.cameraControl?.updatePosition(
+          oldPos[0] + direction[0] * this.#velocity,
+          oldPos[1],
+          oldPos[2] + direction[2] * this.#velocity,
+        );
+      }
+      this.#position = this.camera.position.clone();
     }
 
     if (this.#arrowKeysDown) {
@@ -161,22 +172,28 @@ export class PositionCamera extends CameraController {
         }
         this.#vAngle = this.#vAngle % (Math.PI * 2);
 
-        this.cameraControl?.updateDirection((direction) => {
-          direction[0] = Math.cos(this.#angle) * Math.sin(this.#vAngle);
-          direction[1] = Math.cos(this.#vAngle);
-          direction[2] = Math.sin(this.#angle) * Math.sin(this.#vAngle);
-        });
+        this.cameraControl?.updateDirection(
+          Math.cos(this.#angle) * Math.sin(this.#vAngle),
+          Math.cos(this.#vAngle),
+          Math.sin(this.#angle) * Math.sin(this.#vAngle),
+        );
       } else if ((this.#arrowKeysDown & ARROW_KEYS.LEFT_OR_RIGHT) > 0) {
-        this.cameraControl?.updatePosition((position) => {
-          const direction = this.camera.direction;
-          if ((this.#arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
-            position[0] += direction[2] * this.#velocity;
-            position[2] -= direction[0] * this.#velocity;
-          } else {
-            position[0] -= direction[2] * this.#velocity;
-            position[2] += direction[0] * this.#velocity;
-          }
-        });
+        const oldPos = this.camera.position;
+        const direction = this.camera.direction;
+
+        if ((this.#arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
+          this.cameraControl?.updatePosition(
+            oldPos[0] + direction[2] * this.#velocity,
+            oldPos[1],
+            oldPos[2] - direction[0] * this.#velocity,
+          );
+        } else {
+          this.cameraControl?.updatePosition(
+            oldPos[0] - direction[2] * this.#velocity,
+            oldPos[1],
+            oldPos[2] + direction[0] * this.#velocity,
+          );
+        }
       }
     }
     return true;

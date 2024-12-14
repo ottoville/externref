@@ -106,18 +106,18 @@ export class ArcRotateCamera extends CameraController {
           this.#beta = result.data.beta;
           this.#radius = result.data.radius;
           this.#target.set(result.data.target);
-          this.cameraControl?.updatePosition((position) => {
-            position.set(result.data.position);
-          });
+          this.cameraControl?.updatePosition(
+            result.data.position[0],
+            result.data.position[1],
+            result.data.position[2],
+          );
           this.#calculateDirection();
         } else {
           // Use these default values for camera when there are no existing save
           this.#alpha = 0.4614110368395256;
           this.#beta = 1.4816457152012938;
           this.#radius = 457.55058783756886;
-          this.cameraControl?.updatePosition((position) => {
-            position.set([952.791, 299.464, 587.233]);
-          });
+          this.cameraControl?.updatePosition(952.791, 299.464, 587.233);
           this.#target.set([544.716, 258.727, 384.335]);
         }
       };
@@ -322,35 +322,41 @@ export class ArcRotateCamera extends CameraController {
         this.camera.position[1] != engine.collider.finalPosition[1] ||
         this.camera.position[2] != engine.collider.finalPosition[2]
       ) {
-        this.cameraControl?.updatePosition((position) =>
-          position.set(engine.collider.finalPosition),
+        this.cameraControl?.updatePosition(
+          engine.collider.finalPosition[0],
+          engine.collider.finalPosition[1],
+          engine.collider.finalPosition[2],
         );
       }
       this.#rebuildAnglesAndRadius();
     }
     this.#collisionTriggered = false;
     // Recompute because of constraints
-    this.cameraControl?.updatePosition((position) =>
-      position.set(this.#calculatePosition()),
+    const calculatedPosition = this.#calculatePosition();
+    this.cameraControl?.updatePosition(
+      calculatedPosition[0],
+      calculatedPosition[1],
+      calculatedPosition[2],
     );
 
     this.#calculateDirection();
   }
   #calculateDirection() {
-    this.cameraControl?.updateDirection((direction) => {
-      direction[0] = this.camera.position[0] - this.#target[0];
-      direction[1] = this.camera.position[1] - this.#target[1];
-      direction[2] = this.camera.position[2] - this.#target[2];
-      //Normalize direction
-      const zLength = Math.hypot(direction[0], direction[1], direction[2]);
-      if (!(zLength === 0 || zLength === 1)) {
-        //zAxis.normalizeFromLength(xLength);
-        const scale = 1.0 / zLength;
-        direction[0] *= scale;
-        direction[1] *= scale;
-        direction[2] *= scale;
-      }
-    });
+    const direction = [
+      this.camera.position[0] - this.#target[0],
+      this.camera.position[1] - this.#target[1],
+      this.camera.position[2] - this.#target[2],
+    ] as [number, number, number];
+    //Normalize direction
+    const zLength = Math.hypot(direction[0], direction[1], direction[2]);
+    if (!(zLength === 0 || zLength === 1)) {
+      //zAxis.normalizeFromLength(xLength);
+      const scale = 1.0 / zLength;
+      direction[0] *= scale;
+      direction[1] *= scale;
+      direction[2] *= scale;
+    }
+    this.cameraControl?.updateDirection(...direction);
   }
   #targetMovingfrom: ReadOnlyTerraVector3 | null = null;
   #targetMovingTo: ReadOnlyTerraVector3 | null = null;

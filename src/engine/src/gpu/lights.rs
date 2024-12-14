@@ -122,7 +122,10 @@ fn test_lights() {
     assert_eq!(lights.dirty, false);
     let update_needed = lights.update_buffer(&command_encoder);
     assert_eq!(lights.dirty, false);
-    assert_eq!(lights.buffer.as_ref().unwrap().size, lights.lights.capacity()*4);
+    assert_eq!(
+        lights.buffer.as_ref().unwrap().size,
+        lights.lights.capacity() * 4
+    );
     lights.push(FreeIndexIndex(2));
     lights.push(FreeIndexIndex(3));
     lights.push(FreeIndexIndex(4));

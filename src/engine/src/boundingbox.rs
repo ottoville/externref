@@ -99,9 +99,13 @@ fn test_bounding_box() {
         vertices::VertexKind,
         Geometry,
     };
+    use crate::gpu::gpu::init_gpu;
+    use externref::ExternRef;
+    use externref::Resource;
     unsafe {
         if ENGINE.engine2.is_none() {
             init_engine();
+            init_gpu(Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)));
         }
         let engine2 = ENGINE.physic_engine_mut();
         let len = engine2.meshes.len();

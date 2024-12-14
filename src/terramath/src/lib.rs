@@ -183,7 +183,6 @@ pub trait VectorMath<T, const N: usize> {
     fn to_scaling_matrix(&self) -> [[T; N]; N];
 }
 pub trait MatrixMath<T> {
-    fn new() -> Self;
     fn identity() -> Self;
     fn determinant(&self) -> T;
     fn invert(&mut self) -> bool;
@@ -429,9 +428,6 @@ impl VectorMath<f32, 4> for [f32; 4] {
 }
 
 impl MatrixMath<f32> for [[f32; 2]; 2] {
-    fn new() -> Self {
-        [[0.0, 0.0], [0.0, 0.0]]
-    }
     fn identity() -> Self {
         [[1.0, 0.0], [0.0, 1.0]]
     }
@@ -500,9 +496,6 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
 }
 
 impl MatrixMath<f32> for [[f32; 3]; 3] {
-    fn new() -> Self {
-        [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
-    }
     fn identity() -> Self {
         [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     }
@@ -641,14 +634,6 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
 }
 
 impl MatrixMath<f32> for [[f32; 4]; 4] {
-    fn new() -> Self {
-        [
-            [0.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0],
-        ]
-    }
     fn identity() -> Self {
         [
             [1.0, 0.0, 0.0, 0.0],

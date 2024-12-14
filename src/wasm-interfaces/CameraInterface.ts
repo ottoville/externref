@@ -10,9 +10,9 @@ export const CameraInterface = {
   update_view(
     camera: TerraCamera,
     commandEncoder: GPUCommandEncoder,
-    direction_ptr: rust_pointer<'direction'>,
-    position_ptr: rust_pointer<'position'>,
+    view_ptr: rust_pointer<'matrix'>,
+    projection_ptr: rust_pointer<'matrix'>,
   ) {
-    return camera.updateView(commandEncoder, direction_ptr, position_ptr);
+    return camera.updateView(commandEncoder, view_ptr, projection_ptr);
   },
 };

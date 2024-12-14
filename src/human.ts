@@ -121,11 +121,11 @@ export class Human extends Box {
       const ang = this.inputManager.angle - Math.PI;
       const vang = this.inputManager.verticalAngle;
 
-      this.inputManager.cameraControl?.updateDirection((direction) => {
-        direction[0] = Math.cos(ang) * Math.sin(vang);
-        direction[1] = Math.cos(vang);
-        direction[2] = Math.sin(ang) * Math.sin(vang);
-      });
+      this.inputManager.cameraControl?.updateDirection(
+        Math.cos(ang) * Math.sin(vang),
+        Math.cos(vang),
+        Math.sin(ang) * Math.sin(vang),
+      );
     }
     if (this.colliding_character && this.speedSquared > maxSpeedSquared) {
       const direction = this.inputManager.camera.direction;
@@ -209,8 +209,10 @@ export class Human extends Box {
         }
       }
     }
-    this.inputManager.cameraControl?.updatePosition((position) =>
-      position.set(this.translation),
+    this.inputManager.cameraControl?.updatePosition(
+      this.translation[0],
+      this.translation[1],
+      this.translation[2],
     );
   };
   directionUpdate = false;

@@ -458,7 +458,7 @@ impl Mesh {
         }
     }
 
-    pub unsafe fn new<'a>(
+    pub fn new<'a>(
         point_light: f32,
         directional_light: f32,
         scenes: f32,
@@ -467,81 +467,84 @@ impl Mesh {
         externref: Option<Resource<JSMesh>>,
         mesh_property_opt: Option<Rc<Mutex<MeshProperty>>>,
     ) -> usize {
-        let engine2 = ENGINE.physic_engine_mut();
-        let id = engine2.meshes.len();
-        let idx = engine2.gpu_allocated.allocate();
-        let mesh_property = mesh_property_opt.unwrap_or_else(|| {
-            return Rc::new(Mutex::new(MeshProperty {
-                gpu_memory: GPUMesh {
+        unsafe {
+            let engine2 = ENGINE.physic_engine_mut();
+            let id = engine2.meshes.len();
+            let idx = engine2.gpu_allocated.allocate();
+            let mesh_property = mesh_property_opt.unwrap_or_else(|| {
+                return Rc::new(Mutex::new(MeshProperty {
+                    gpu_memory: GPUMesh {
+                        transformation: MatrixMath::identity(),
+                        transformation_normals: Mat3wgslF32::identity(),
+                        ambient: [0.0, 0.0, 0.0],
+                        shadow: 0.0,
+                        color: [0.0, 0.0, 0.0, 0.0],
+                        spotlight: [0.0, 0.0, 0.0, 0.0],
+                        _id: id,
+                        point_light_squared: point_light * point_light,
+                        directional_light,
+                        scenes: scenes as u32,
+                    },
+                    gpu_mesh_alignment: idx,
                     transformation: MatrixMath::identity(),
-                    transformation_normals: Mat3wgslF32::identity(),
-                    ambient: [0.0, 0.0, 0.0],
-                    shadow: 0.0,
-                    color: [0.0, 0.0, 0.0, 0.0],
-                    spotlight: [0.0, 0.0, 0.0, 0.0],
-                    _id: id,
-                    point_light_squared: point_light * point_light,
-                    directional_light,
-                    scenes: scenes as u32,
-                },
-                gpu_mesh_alignment: idx,
-                transformation: MatrixMath::identity(),
-                transformation_is_dirty: true,
-                translation: Vec3wgslF32::new_zero(),
-                rotation: Quaternion {
-                    i: 0.0,
-                    j: 0.0,
-                    k: 0.0,
-                    w: 1.0,
-                },
-                scaling: [1.0; 3],
-                color: [1.0, 0.0, 0.0, 0.0],
-                on_change: ExplicitFreeList::new(8),
-            }));
-        });
-        let m = Mesh {
-            id,
-            mesh_property,
-            geometry: None,
-            velocity: [0.0, 0.0, 0.0, 0.0],
-            positions_count: Option::None,
-            draw_command: Option::None,
-            rigid_body_handle: None,
-            collider_handle: None,
-            label,
-            drawable: Option::None,
-            on_gpu_queue: false,
-            externref,
-        };
-        let gpu_mesh_alignment = m.mesh_property.lock().unwrap().gpu_mesh_alignment;
-        if point_light > 0.0 {
-            ENGINE
-                .physic_engine_mut()
-                .point_lights
-                .push(gpu_mesh_alignment);
-        }
-        if directional_light > 0.0 {
-            ENGINE
-                .physic_engine_mut()
-                .directional_lights
-                .push(gpu_mesh_alignment);
-        }
-
-        engine2.meshes.push(m);
-        engine2.meshes[id].update_dynamic_buffer();
-        if rigid_body > 0 {
-            let rigid_body_builder: RigidBodyBuilder;
-            if rigid_body == 2 {
-                rigid_body_builder = RigidBodyBuilder::fixed().ccd_enabled(true);
-            } else {
-                rigid_body_builder = RigidBodyBuilder::dynamic().sleeping(true).ccd_enabled(true);
+                    transformation_is_dirty: true,
+                    translation: Vec3wgslF32::new_zero(),
+                    rotation: Quaternion {
+                        i: 0.0,
+                        j: 0.0,
+                        k: 0.0,
+                        w: 1.0,
+                    },
+                    scaling: [1.0; 3],
+                    color: [1.0, 0.0, 0.0, 0.0],
+                    on_change: ExplicitFreeList::new(8),
+                }));
+            });
+            let m = Mesh {
+                id,
+                mesh_property,
+                geometry: None,
+                velocity: [0.0, 0.0, 0.0, 0.0],
+                positions_count: Option::None,
+                draw_command: Option::None,
+                rigid_body_handle: None,
+                collider_handle: None,
+                label,
+                drawable: Option::None,
+                on_gpu_queue: false,
+                externref,
+            };
+            let gpu_mesh_alignment = m.mesh_property.lock().unwrap().gpu_mesh_alignment;
+            if point_light > 0.0 {
+                ENGINE
+                    .physic_engine_mut()
+                    .point_lights
+                    .push(gpu_mesh_alignment);
             }
-            let rigid_body = rigid_body_builder.build();
-            let rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
-            engine2.meshes[id].rigid_body_handle = Some(rigid_body_handle);
-            engine2.rigid_bodies.insert(rigid_body_handle, id);
+            if directional_light > 0.0 {
+                ENGINE
+                    .physic_engine_mut()
+                    .directional_lights
+                    .push(gpu_mesh_alignment);
+            }
+
+            engine2.meshes.push(m);
+            engine2.meshes[id].update_dynamic_buffer();
+            if rigid_body > 0 {
+                let rigid_body_builder: RigidBodyBuilder;
+                if rigid_body == 2 {
+                    rigid_body_builder = RigidBodyBuilder::fixed().ccd_enabled(true);
+                } else {
+                    rigid_body_builder =
+                        RigidBodyBuilder::dynamic().sleeping(true).ccd_enabled(true);
+                }
+                let rigid_body = rigid_body_builder.build();
+                let rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
+                engine2.meshes[id].rigid_body_handle = Some(rigid_body_handle);
+                engine2.rigid_bodies.insert(rigid_body_handle, id);
+            }
+            return id;
         }
-        return id;
     }
     pub fn get_geometry(&self) -> &Geometry {
         if let Some(g) = &self.geometry {
@@ -595,7 +598,6 @@ impl Mesh {
     }
     pub fn update_dynamic_buffer(&mut self) {
         if !self.on_gpu_queue {
-            println!("hello there!");
             GPU_QUEUE.lock().unwrap().push(self.id);
             self.on_gpu_queue = true;
         }
@@ -705,10 +707,16 @@ impl Drop for Mesh {
         unsafe {
             let mesh_property = self.mesh_property.lock().unwrap();
             if mesh_property.gpu_memory.point_light_squared > 0.0 {
-                ENGINE.physic_engine_mut().point_lights.remove(mesh_property.gpu_mesh_alignment);
+                ENGINE
+                    .physic_engine_mut()
+                    .point_lights
+                    .remove(mesh_property.gpu_mesh_alignment);
             }
             if mesh_property.gpu_memory.directional_light > 0.0 {
-                ENGINE.physic_engine_mut().directional_lights.remove(mesh_property.gpu_mesh_alignment);
+                ENGINE
+                    .physic_engine_mut()
+                    .directional_lights
+                    .remove(mesh_property.gpu_mesh_alignment);
             }
             #[cfg(feature = "webgpu")]
             {

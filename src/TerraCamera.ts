@@ -13,35 +13,30 @@ import { create_rust_label, stringFromPtr } from './utils.js';
 declare const engine: Engine;
 
 export type CameraControl = {
-  updatePosition(cb: (position: MutableTerraVector3) => void): void;
-  updateDirection(cb: (direction: MutableTerraVector3) => void): void;
+  updatePosition(x: number, y: number, z: number): void;
+  updateDirection(x: number, y: number, z: number): void;
 };
-const enum VIEW_UPDATED {
-  NONE = 0,
-  POSITION = 1,
-  DIRECTION = 2,
-}
+
 const uniformBufferSize =
   /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ +
   4 * 4;
 export class TerraCamera {
   #clusterArrayBuffer?: Buffer<BufferUsageEnums.STORAGE>;
 
-  readonly #viewProjectionPositionBuffer = new ArrayBuffer(uniformBufferSize);
-
-  readonly projectionViewArr = new TerraMatrix(
-    this.#viewProjectionPositionBuffer,
-    0,
-  );
+  get projectionViewArr() {
+    return new TerraMatrix(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_projection_ptr(this.id),
+    );
+  }
   readonly projectionViewInverted: TerraMatrix = new TerraMatrix();
   projectionViewInvertedIsDirty = false;
-  readonly viewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 64);
-
-  readonly #viewAndProjection = new Float32Array(
-    this.#viewProjectionPositionBuffer,
-    0,
-    32,
-  );
+  get viewArr() {
+    return new TerraMatrix(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_view_ptr(this.id),
+    );
+  }
   get position() {
     return new MutableTerraVector3(
       engine.rust.memory.buffer,
@@ -52,12 +47,6 @@ export class TerraCamera {
   updateViewBindGroup?: BindGroup;
   uniformBindGroup?: BindGroup;
   readonly controls: CameraControl;
-  set #doUpdateView(value: VIEW_UPDATED) {
-    engine.rust.set_do_update_view(this.id, value);
-  }
-  get #doUpdateView() {
-    return engine.rust.get_do_update_view(this.id);
-  }
   #cameraController?: TerraCamera;
   #inputController?: CameraController;
   projection?: Projection;
@@ -144,32 +133,14 @@ export class TerraCamera {
       gpu.cameras.push(this);
     });
 
-    this.viewArr[15] = 1;
-
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const me = this;
     this.controls = {
-      updateDirection(cb: (direction: MutableTerraVector3) => void) {
-        const direction = new MutableTerraVector3(
-          engine.rust.memory.buffer,
-          engine.rust.get_camera_direction_ptr(me.id),
-        );
-        cb(direction);
-        if (
-          me.viewArr[2] !== direction[0] ||
-          me.viewArr[6] !== direction[1] ||
-          me.viewArr[10] !== direction[2]
-        ) {
-          me.#doUpdateView |= VIEW_UPDATED.DIRECTION;
-        }
+      updateDirection(x: number, y: number, z: number) {
+        engine.rust.update_camera_direction(me.id, x, y, z);
       },
-      updatePosition(cb: (position: MutableTerraVector3) => void) {
-        const position = new MutableTerraVector3(
-          engine.rust.memory.buffer,
-          engine.rust.get_camera_position_ptr(me.id),
-        );
-        cb(position);
-        me.#doUpdateView |= VIEW_UPDATED.POSITION;
+      updatePosition(x: number, y: number, z: number) {
+        engine.rust.update_camera_position(me.id, x, y, z);
       },
     };
   }
@@ -227,72 +198,29 @@ export class TerraCamera {
    */
   updateView(
     commandEncoder: GPUCommandEncoder,
-    direction_ptr: rust_pointer<'direction'>,
-    position_ptr: rust_pointer<'position'>,
+    view_ptr: rust_pointer<'matrix'>,
+    projection_ptr: rust_pointer<'matrix'>,
   ) {
-    const direction = new MutableTerraVector3(
+    const viewArr = new TerraMatrix(engine.rust.memory.buffer, view_ptr);
+    const projectionViewArr = new TerraMatrix(
       engine.rust.memory.buffer,
-      direction_ptr,
+      projection_ptr,
     );
-    const position = new MutableTerraVector3(
+    const viewAndProjection = new Float32Array(
       engine.rust.memory.buffer,
-      position_ptr,
-    );
-    //Camera direction
-    this.viewArr[2] = direction[0]!;
-    this.viewArr[6] = direction[1]!;
-    this.viewArr[10] = direction[2]!;
-
-    this.viewArr[0] = this.viewArr[10];
-    this.viewArr[8] = -this.viewArr[2];
-
-    const xSquareLength =
-      this.viewArr[0] * this.viewArr[0] + this.viewArr[8] * this.viewArr[8];
-    if (xSquareLength === 0) {
-      this.viewArr[0] = 1.0;
-    } else {
-      const len = Math.sqrt(xSquareLength);
-      if (!(len === 0 || len === 1.0)) {
-        const scale = 1.0 / len;
-        this.viewArr[0] *= scale;
-        this.viewArr[8] *= scale;
-      }
-    }
-
-    // Y axis
-    this.viewArr[1] = this.viewArr[6] * this.viewArr[8];
-    this.viewArr[5] =
-      this.viewArr[10] * this.viewArr[0] - this.viewArr[2] * this.viewArr[8];
-    this.viewArr[9] = -(this.viewArr[6] * this.viewArr[0]);
-    // Eye angles, dot products
-
-    //x
-    this.viewArr[12] = -(
-      this.viewArr[0] * position[0] +
-      this.viewArr[8] * position[2]
-    );
-    //y
-    this.viewArr[13] = -(
-      this.viewArr[1] * position[0] +
-      this.viewArr[5] * position[1] +
-      this.viewArr[9] * position[2]
-    );
-    //z
-    this.viewArr[14] = -(
-      this.viewArr[2] * position[0] +
-      this.viewArr[6] * position[1] +
-      this.viewArr[10] * position[2]
+      projection_ptr,
+      32,
     );
     if (this.projection) {
-      this.viewArr.multiplyToRef(
+      viewArr.multiplyToRef(
         this.projection.projectionReversedZ,
-        this.projectionViewArr,
+        projectionViewArr,
       );
     }
     this.projectionViewInvertedIsDirty = true;
     if (this.gpu) {
       const tempBuffer = engine.rust.create_mapped_GPU_buffer_copysrc(
-        this.#viewAndProjection.byteLength,
+        viewAndProjection.byteLength,
         ...create_rust_label('camera_tempBuffer'),
       );
       engine.rust.push_to_temp_gpu_buffers(tempBuffer);
@@ -300,7 +228,7 @@ export class TerraCamera {
         BufferUsageEnums.COPY_SRC,
         true
       >(tempBuffer).externref;
-      new Float32Array(rawBuffer.getMappedRange()).set(this.#viewAndProjection);
+      new Float32Array(rawBuffer.getMappedRange()).set(viewAndProjection);
 
       rawBuffer
         .unmap()
@@ -309,7 +237,7 @@ export class TerraCamera {
           this.#uniformBuffer!,
           0,
           0,
-          this.#viewAndProjection.byteLength,
+          viewAndProjection.byteLength,
         );
     }
   }

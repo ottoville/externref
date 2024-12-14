@@ -768,10 +768,18 @@ export class GPU {
     if (physicDelta !== null) this.deltaView.set([physicDelta]);
     this.timeBuffer.write(0, this.timeAndDeltaBuffer);
 
-    engine.rust.process_gpu_queue(
+    const mapping_buffers = engine.rust.process_gpu_queue(
       updateViewPipeline,
       this.#updateViewBindGroup,
     );
+
+    if (mapping_buffers && this.#idleCallback === undefined) {
+      this.#idleCallback = requestIdleCallback(() => {
+        this.#idleCallback = undefined;
+        engine.rust.check_mapped_buffers();
+      });
+    }
+    engine.rust.clear_temp_gpu_buffers();
     this.device.queue
       .onSubmittedWorkDone()
       .then(() => {
@@ -779,16 +787,6 @@ export class GPU {
         this.onceAfterRender.length = 0;
       })
       .catch((err) => engine.showError(err));
-    const mapping_buffers = engine.rust.gpu_queue_submited();
-    if (mapping_buffers && this.#idleCallback === undefined) {
-      this.#idleCallback = requestIdleCallback(() => {
-        this.#idleCallback = undefined;
-        engine.rust.check_mapped_buffers();
-      });
-    }
-
-    engine.rust.clear_temp_gpu_buffers();
-
     if (!this.#renderStarted) this.#renderStarted = true;
     this.#renderFrame = window.requestAnimationFrame((time2) =>
       this.#renderLoop(time2, updateViewPipeline),
