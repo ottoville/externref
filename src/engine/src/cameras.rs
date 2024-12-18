@@ -3,22 +3,7 @@ use crate::camera::Camera;
 pub struct Cameras {
     pub cameras: Vec<Camera>,
 }
-fn search_camera_by_id(
-    iterator: std::slice::Iter<'static, Camera>,
-    camera_id: u32,
-) -> Option<&'static Camera> {
-    for camera in iterator {
-        if camera.id == camera_id {
-            return Some(camera);
-        }
-        let from_children = search_camera_by_id(camera.children.iter(), camera_id);
-        if from_children.is_some() {
-            return from_children;
-        }
-    }
-    return None;
-}
-fn search_camera_by_id_mut(
+pub fn search_camera_by_id_mut(
     iterator: std::slice::IterMut<'_, Camera>,
     camera_id: u32,
 ) -> Option<&'_ mut Camera> {
@@ -34,16 +19,6 @@ fn search_camera_by_id_mut(
     return None;
 }
 impl Cameras {
-    pub unsafe fn get_camera_by_id(&self, camera_id: u32) -> &Camera {
-        self.iter().find(|camera| camera.id == camera_id).unwrap()
-    }
-    pub unsafe fn get_camera_by_id_mut(&'_ mut self, camera_id: u32) -> &mut Camera {
-        let search_camera = search_camera_by_id_mut(self.cameras.iter_mut(), camera_id);
-        if let Some(camera) = search_camera {
-            return camera;
-        }
-        panic!("Camera {} not found", camera_id);
-    }
     pub fn iter(&self) -> CamerasIterator {
         CamerasIterator {
             camerasiters: vec![self.cameras.iter()],

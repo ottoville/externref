@@ -369,13 +369,10 @@ export type rustWasm = {
     false,
     Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
   >;
-  borrow_gpu_projection_buffer(): rust_pointer<'refcell'>;
-  release_gpu_projection_buffer(
-    ptr: rust_pointer<'refcell'>,
-  ): rust_pointer<'refcell'>;
-  get_gpu_projection_buffer(
-    ptr: rust_pointer<'refcell'>,
-  ): Externref<false, Buffer<(typeof BufferUsageEnums)['UNIFORM']>>;
+  get_gpu_projection_buffer(): Externref<
+    false,
+    Buffer<(typeof BufferUsageEnums)['UNIFORM']>
+  >;
   get_directional_lights_buffer(): Externref<
     false,
     Buffer<(typeof BufferUsageEnums)['STORAGE|COPY_DST']>

@@ -32,7 +32,9 @@ pub unsafe extern "C" fn get_cameras_count() -> u32 {
 pub unsafe extern "C" fn get_camera_externref(camera_id: u32) -> &'static Resource<JSCamera> {
     &ENGINE
         .physic_engine()
-        .cameras
+        .gpu
+        .as_ref()
+        .unwrap()
         .get_camera_by_id(camera_id)
         .externref
 }
@@ -40,7 +42,9 @@ pub unsafe extern "C" fn get_camera_externref(camera_id: u32) -> &'static Resour
 pub unsafe extern "C" fn get_camera_label(camera_id: u32) -> *const usize {
     let label = &ENGINE
         .physic_engine()
-        .cameras
+        .gpu
+        .as_ref()
+        .unwrap()
         .get_camera_by_id(camera_id)
         .label;
     MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
@@ -52,7 +56,9 @@ pub unsafe extern "C" fn get_camera_label(camera_id: u32) -> *const usize {
 pub unsafe extern "C" fn update_camera_position(camera_id: u32, x: f32, y: f32, z: f32) {
     ENGINE
         .physic_engine_mut()
-        .cameras
+        .gpu
+        .as_mut()
+        .unwrap()
         .get_camera_by_id_mut(camera_id)
         .update_position([x, y, z]);
 }
@@ -60,7 +66,9 @@ pub unsafe extern "C" fn update_camera_position(camera_id: u32, x: f32, y: f32, 
 pub unsafe extern "C" fn update_camera_direction(camera_id: u32, x: f32, y: f32, z: f32) {
     ENGINE
         .physic_engine_mut()
-        .cameras
+        .gpu
+        .as_mut()
+        .unwrap()
         .get_camera_by_id_mut(camera_id)
         .update_direction([x, y, z]);
 }
@@ -78,7 +86,9 @@ pub unsafe extern "C" fn add_child_to_camera(
     let id = camera.id;
     ENGINE
         .physic_engine_mut()
-        .cameras
+        .gpu
+        .as_mut()
+        .unwrap()
         .get_camera_by_id_mut(camera_id)
         .children
         .push(camera);
@@ -98,7 +108,9 @@ pub unsafe extern "C" fn add_child_to_camera_water(
     let id = camera.id;
     ENGINE
         .physic_engine_mut()
-        .cameras
+        .gpu
+        .as_mut()
+        .unwrap()
         .get_camera_by_id_mut(camera_id)
         .children
         .push(camera);
@@ -112,7 +124,7 @@ pub unsafe extern "C" fn add_camera(
     label_len: usize,
     label_cap: usize,
 ) -> u32 {
-    let cameras = &mut ENGINE.physic_engine_mut().cameras;
+    let cameras = &mut ENGINE.physic_engine_mut().gpu.as_mut().unwrap().projections[0].cameras;
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     let camera = Camera::new(externref, label);
     let id = camera.id;
@@ -123,7 +135,9 @@ pub unsafe extern "C" fn add_camera(
 pub unsafe extern "C" fn get_camera_direction_ptr(camera_id: u32) -> *const f32 {
     ENGINE
         .physic_engine()
-        .cameras
+        .gpu
+        .as_ref()
+        .unwrap()
         .get_camera_by_id(camera_id)
         .direction
         .as_ptr()
@@ -132,7 +146,9 @@ pub unsafe extern "C" fn get_camera_direction_ptr(camera_id: u32) -> *const f32 
 pub unsafe extern "C" fn get_camera_position_ptr(camera_id: u32) -> *const f32 {
     ENGINE
         .physic_engine()
-        .cameras
+        .gpu
+        .as_ref()
+        .unwrap()
         .get_camera_by_id(camera_id)
         .position
         .as_ptr()
@@ -141,7 +157,9 @@ pub unsafe extern "C" fn get_camera_position_ptr(camera_id: u32) -> *const f32 {
 pub unsafe extern "C" fn get_camera_view_ptr(camera_id: u32) -> *const [f32; 4] {
     ENGINE
         .physic_engine()
-        .cameras
+        .gpu
+        .as_ref()
+        .unwrap()
         .get_camera_by_id(camera_id)
         .view
         .as_ptr()
@@ -150,7 +168,9 @@ pub unsafe extern "C" fn get_camera_view_ptr(camera_id: u32) -> *const [f32; 4] 
 pub unsafe extern "C" fn get_camera_projection_inverted_ptr(camera_id: u32) -> *const [f32; 4] {
     ENGINE
         .physic_engine()
-        .cameras
+        .gpu
+        .as_ref()
+        .unwrap()
         .get_camera_by_id(camera_id)
         .projection_view_inverted
         .as_ptr()
@@ -159,7 +179,9 @@ pub unsafe extern "C" fn get_camera_projection_inverted_ptr(camera_id: u32) -> *
 pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: u32) {
     let camera = ENGINE
         .physic_engine_mut()
-        .cameras
+        .gpu
+        .as_mut()
+        .unwrap()
         .get_camera_by_id_mut(camera_id);
     if camera.projection_view_inverted_is_dirty {
         camera
@@ -173,7 +195,9 @@ pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: u32) 
 pub unsafe extern "C" fn get_camera_buffer(camera_id: u32) -> &'static Resource<JSBuffer> {
     &ENGINE
         .physic_engine()
-        .cameras
+        .gpu
+        .as_ref()
+        .unwrap()
         .get_camera_by_id(camera_id)
         .buffer
         .externref
@@ -206,17 +230,16 @@ static UNIFORM_BUFFER_SIZE: usize =
   4 * 4;
 #[repr(C, align(4))]
 pub struct Camera {
-    projection: Rc<RefCell<Projection>>,
-    projection_view: [[f32; 4]; 4],
-    view: [[f32; 4]; 4],
+    pub projection_view: [[f32; 4]; 4],
+    pub view: [[f32; 4]; 4],
     projection_view_inverted: [[f32; 4]; 4],
     direction: [f32; 3],
     position: [f32; 3],
     externref: Resource<JSCamera>,
-    updated: bool,
+    pub updated: bool,
     pub label: String,
     pub children: Vec<Camera>,
-    do_update_view: u32,
+    pub do_update_view: u32,
     pub id: u32,
     before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 3])>>,
     projection_view_inverted_is_dirty: bool,
@@ -233,7 +256,6 @@ impl Camera {
                     [0.0, 0.0, 0.0, 0.0],
                     [0.0, 0.0, 0.0, 1.0],
                 ],
-                projection: Rc::clone(&gpu.projection),
                 projection_view: [[0.0; 4]; 4],
                 projection_view_inverted: [[0.0; 4]; 4],
                 position: [0.0; 3],
@@ -268,7 +290,6 @@ impl Camera {
                 ],
                 projection_view: [[0.0; 4]; 4],
                 projection_view_inverted: [[0.0; 4]; 4],
-                projection: Rc::clone(&gpu.projection),
                 position: [0.0; 3],
                 direction: [1.0, 0.0, 0.0],
                 externref,
@@ -316,103 +337,83 @@ impl Camera {
             self.do_update_view |= VIEW_UPDATED_DIRECTION;
         }
     }
+    pub fn update_view(&mut self) {
+        if let Some(before_view_update) = &self.before_view_update {
+            self.do_update_view |= VIEW_UPDATED_POSITION & VIEW_UPDATED_DIRECTION;
+            before_view_update(&mut self.direction, &mut self.position);
+        }
+        if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
+            self.on_update_position();
+        }
+        for child in self.children.iter_mut() {
+            if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
+                child.update_position(self.position.clone());
+            }
+            if (self.do_update_view & VIEW_UPDATED_DIRECTION) == VIEW_UPDATED_DIRECTION {
+                child.update_direction(self.direction.clone());
+            }
+        }
+        //Camera direction
+        self.view[0][2] = self.direction[0];
+        self.view[1][2] = self.direction[1];
+        self.view[2][2] = self.direction[2];
+
+        self.view[0][0] = self.view[2][2];
+        self.view[2][0] = -self.view[0][2];
+
+        let x_square_length = self.view[0][0] * self.view[0][0] + self.view[2][0] * self.view[2][0];
+        if x_square_length == 0.0 {
+            self.view[0][0] = 1.0;
+        } else {
+            let len = x_square_length.sqrt();
+            if !(len == 0.0 || len == 1.0) {
+                let scale = 1.0 / len;
+                self.view[0][0] *= scale;
+                self.view[2][0] *= scale;
+            }
+        }
+        // Y axis
+        self.view[0][1] = self.view[1][2] * self.view[2][0];
+        self.view[1][1] = self.view[2][2] * self.view[0][0] - self.view[0][2] * self.view[2][0];
+        self.view[2][1] = -(self.view[1][2] * self.view[0][0]);
+        // Eye angles, dot products
+
+        //x
+        self.view[3][0] =
+            -(self.view[0][0] * self.position[0] + self.view[2][0] * self.position[2]);
+        //y
+        self.view[3][1] = -(self.view[0][1] * self.position[0]
+            + self.view[1][1] * self.position[1]
+            + self.view[2][1] * self.position[2]);
+        //z
+        self.view[3][2] = -(self.view[0][2] * self.position[0]
+            + self.view[1][2] * self.position[1]
+            + self.view[2][2] * self.position[2]);
+    }
     /**
      * Update camera view
      * @param commandEncoder GPUCommandEncoder
-     * @returns boolean indicating if view was actually changed
+     * @returns
      */
-    pub fn update_view<'c>(
+    pub fn update_projection<'c>(
         &mut self,
         device: &Resource<JSDevice>,
         command_encoder: &GPUCommandEncoder,
-    ) -> bool {
-        if self.do_update_view != 0 {
-            if let Some(before_view_update) = &self.before_view_update {
-                self.do_update_view |= VIEW_UPDATED_POSITION & VIEW_UPDATED_DIRECTION;
-                before_view_update(&mut self.direction, &mut self.position);
-            }
-            if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
-                self.on_update_position();
-            }
-            for child in self.children.iter_mut() {
-                if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
-                    child.update_position(self.position.clone());
-                }
-                if (self.do_update_view & VIEW_UPDATED_DIRECTION) == VIEW_UPDATED_DIRECTION {
-                    child.update_direction(self.direction.clone());
-                }
-            }
-            //Camera direction
-            self.view[0][2] = self.direction[0];
-            self.view[1][2] = self.direction[1];
-            self.view[2][2] = self.direction[2];
-
-            self.view[0][0] = self.view[2][2];
-            self.view[2][0] = -self.view[0][2];
-
-            let x_square_length =
-                self.view[0][0] * self.view[0][0] + self.view[2][0] * self.view[2][0];
-            if x_square_length == 0.0 {
-                self.view[0][0] = 1.0;
-            } else {
-                let len = x_square_length.sqrt();
-                if !(len == 0.0 || len == 1.0) {
-                    let scale = 1.0 / len;
-                    self.view[0][0] *= scale;
-                    self.view[2][0] *= scale;
-                }
-            }
-            // Y axis
-            self.view[0][1] = self.view[1][2] * self.view[2][0];
-            self.view[1][1] = self.view[2][2] * self.view[0][0] - self.view[0][2] * self.view[2][0];
-            self.view[2][1] = -(self.view[1][2] * self.view[0][0]);
-            // Eye angles, dot products
-
-            //x
-            self.view[3][0] =
-                -(self.view[0][0] * self.position[0] + self.view[2][0] * self.position[2]);
-            //y
-            self.view[3][1] = -(self.view[0][1] * self.position[0]
-                + self.view[1][1] * self.position[1]
-                + self.view[2][1] * self.position[2]);
-            //z
-            self.view[3][2] = -(self.view[0][2] * self.position[0]
-                + self.view[1][2] * self.position[1]
-                + self.view[2][2] * self.position[2]);
-
-            self.view.multiply(
-                &self
-                    .projection
-                    .borrow()
-                    .inner_projection
-                    .projection_reversed_z,
-                &mut self.projection_view,
-            );
-
-            self.projection_view_inverted_is_dirty = true;
-            let buffer = GPUBuffer::<COPYSRC_USAGE>::new_mapped(
-                device,
-                128,
-                String::from("camera_tempBuffer"),
-                false,
-            );
-            buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0, 128);
-            let mut unmapped = buffer.unmap();
-            self.buffer
-                .copy_from(command_encoder, &mut unmapped, 0, 0, 128);
-            TEMP_GPU_BUFFERS.lock().unwrap().push(unmapped.externref);
-            self.do_update_view = 0;
-            self.updated = true;
-        } else {
-            self.updated = false;
-        }
-        let mut me_or_some_child_updated = self.updated;
-        for child_camera in self.children.iter_mut() {
-            if child_camera.update_view(device, command_encoder) {
-                me_or_some_child_updated = true;
-            }
-        }
-        return me_or_some_child_updated;
+    ) {
+        self.projection_view_inverted_is_dirty = true;
+        let buffer = GPUBuffer::<COPYSRC_USAGE>::new_mapped(
+            device,
+            128,
+            String::from("camera_tempBuffer"),
+            false,
+        );
+        buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0, 128);
+        let mut unmapped = buffer.unmap();
+        self.buffer
+            .copy_from(command_encoder, &mut unmapped, 0, 0, 128);
+        TEMP_GPU_BUFFERS.lock().unwrap().push(unmapped.externref);
+        self.do_update_view = 0;
+        self.updated = true;
     }
     pub fn update_camera(&self, force: bool, lights_pass: &ComputePassEncoder) {
         if force || self.updated {
@@ -441,8 +442,17 @@ impl Camera {
 #[cfg(test)]
 #[test]
 fn test_child_camera() {
+    use crate::engine::init_engine;
+    use crate::gpu::gpu::init_gpu;
     use externref::ExternRef;
     unsafe {
+        if ENGINE.engine2.is_none() {
+            init_engine();
+            init_gpu(
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            );
+        }
         let mut camera = Camera::new(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),
@@ -454,10 +464,26 @@ fn test_child_camera() {
         camera.children.push(child_1);
         camera.update_position([1.0, 2.0, 3.0]);
         let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
-        camera.update_view(
+        let mut projection = Projection::new(&Resource::new_non_null(std::mem::transmute::<
+            usize,
+            ExternRef,
+        >(0)));
+        projection.cameras.cameras.push(camera);
+        projection.update_views(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+            &command_encoder,
+        );
+        /*camera.update_projection(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             &mut command_encoder,
+            &Projection::new(&Resource::new_non_null(std::mem::transmute::<
+                usize,
+                ExternRef,
+            >(0))),
+        );*/
+        assert_eq!(
+            projection.cameras.cameras[0].children[0].position,
+            [1.0, 2.0, 3.0]
         );
-        assert_eq!(camera.children[0].position, [1.0, 2.0, 3.0]);
     }
 }

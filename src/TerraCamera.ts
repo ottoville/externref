@@ -95,11 +95,9 @@ export class TerraCamera {
         gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
         'uniformBindGroup',
         (bindGroup) => {
-          const refcell = engine.rust.borrow_gpu_projection_buffer();
           const projectionBuffer = engine.rust
-            .get_gpu_projection_buffer(refcell)
+            .get_gpu_projection_buffer()
             .externref.getUniformBinding(bindGroup);
-          engine.rust.release_gpu_projection_buffer(refcell);
           const group = {
             clusters_array:
               this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
@@ -172,14 +170,12 @@ export class TerraCamera {
       computePipelineClustersLayout,
       'updateProjection',
       (bindGroup2) => {
-        const refcell = engine.rust.borrow_gpu_projection_buffer();
         const group = {
           clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup2),
           screentoview: engine.rust
-            .get_gpu_projection_buffer(refcell)
+            .get_gpu_projection_buffer()
             .externref.getUniformBinding(bindGroup2),
         };
-        engine.rust.release_gpu_projection_buffer(refcell);
         return group;
       },
     );

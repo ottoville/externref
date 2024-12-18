@@ -2,9 +2,11 @@ use externref::Resource;
 use terramath::MatrixMath;
 
 use crate::{
-    engine::{js_log, Logger},
+    camera::Camera,
+    cameras::Cameras,
     gpu::{
         buffer::{buffer::GPUBuffer, usages::UNIFORM_USAGE},
+        command_encoder::GPUCommandEncoder,
         gpu::JSDevice,
     },
 };
@@ -19,6 +21,7 @@ pub struct InnerProjection {
     fow: f32,
 }
 pub struct Projection {
+    pub cameras: Cameras,
     pub inner_projection: InnerProjection,
     pub buffer: GPUBuffer<UNIFORM_USAGE>,
 }
@@ -82,9 +85,42 @@ impl Projection {
         Projection {
             inner_projection,
             buffer,
+            cameras: Cameras {
+                cameras: Vec::with_capacity(4),
+            },
         }
     }
     pub fn update(&mut self, device: &Resource<JSDevice>, aspect_ratio: f32) {
         self.buffer = self.inner_projection.create_buffer(device, aspect_ratio);
+    }
+    pub fn update_views(
+        &mut self,
+        device: &Resource<JSDevice>,
+        command_encoder: &GPUCommandEncoder,
+    ) -> bool {
+        let mut some_camera_updated = false;
+        let mut closure = |camera: &mut Camera| {
+            if camera.do_update_view != 0 {
+                camera.update_view();
+                camera.view.multiply(
+                    &self.inner_projection.projection_reversed_z,
+                    &mut camera.projection_view,
+                );
+                camera.update_projection(&device, &command_encoder);
+                some_camera_updated = true;
+            } else {
+                camera.updated = false;
+            }
+        };
+        for camera in self.cameras.cameras.iter_mut() {
+            closure(camera);
+            for child_camera in camera.children.iter_mut() {
+                closure(child_camera);
+                for child_child_camera in child_camera.children.iter_mut() {
+                    closure(child_child_camera);
+                }
+            }
+        }
+        return some_camera_updated;
     }
 }
