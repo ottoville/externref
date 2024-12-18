@@ -2,7 +2,6 @@
 declare const engine: Engine;
 
 export class TerraMatrix extends Float32Array {
-  view64: Float64Array;
   constructor(Arr?: ArrayBufferLike, offset?: number);
   constructor(Arr?: number[]);
   constructor(Arr?: number[] | ArrayBufferLike, offset = 0) {
@@ -13,7 +12,6 @@ export class TerraMatrix extends Float32Array {
     } else {
       super(Arr, offset, 16);
     }
-    this.view64 = new Float64Array(this.buffer, offset, 8);
   }
   declare readonly length: 16;
   declare 0: number;
@@ -89,14 +87,22 @@ export class TerraMatrix extends Float32Array {
   }
   equals(om: TerraMatrix) {
     return (
-      this.view64[0] == om.view64[0] &&
-      this.view64[1] == om.view64[1] &&
-      this.view64[2] == om.view64[2] &&
-      this.view64[3] == om.view64[3] &&
-      this.view64[4] == om.view64[4] &&
-      this.view64[5] == om.view64[5] &&
-      this.view64[6] == om.view64[6] &&
-      this.view64[7] == om.view64[7]
+      this[0] == om[0] &&
+      this[1] == om[1] &&
+      this[2] == om[2] &&
+      this[3] == om[3] &&
+      this[4] == om[4] &&
+      this[5] == om[5] &&
+      this[6] == om[6] &&
+      this[7] == om[7] &&
+      this[8] == om[8] &&
+      this[9] == om[9] &&
+      this[10] == om[10] &&
+      this[11] == om[11] &&
+      this[12] == om[12] &&
+      this[13] == om[13] &&
+      this[14] == om[14] &&
+      this[15] == om[15]
     );
   }
   clone() {

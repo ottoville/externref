@@ -185,11 +185,12 @@ pub trait VectorMath<T, const N: usize> {
 pub trait MatrixMath<T> {
     fn identity() -> Self;
     fn determinant(&self) -> T;
-    fn invert(&mut self) -> bool;
+    fn invert_in_place(&mut self) -> bool;
+    fn invert_to_ref(&self, other: &mut Self) -> bool;
     fn transpose(&mut self);
     fn adjoint(&mut self);
     fn multiply_f32(&mut self, number: T);
-    fn multiply(&self, other: &Self, result: Self);
+    fn multiply(&self, other: &Self, result: &mut Self);
 }
 impl CrossProduct<f32> for [f32; 3] {
     fn cross(&self, other: &[f32; 3]) -> Self {
@@ -450,7 +451,7 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
             }
         }
     }
-    fn multiply(&self, _other: &Self, _result: Self) {
+    fn multiply(&self, _other: &Self, _result: &mut Self) {
         panic!("Not implemented");
     }
     fn determinant(&self) -> f32 {
@@ -484,7 +485,7 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
             }
         }
     }
-    fn invert(&mut self) -> bool {
+    fn invert_in_place(&mut self) -> bool {
         let determinant = self.determinant();
         if determinant == 0.0 {
             return false;
@@ -492,6 +493,10 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
         self.adjoint();
         self.multiply_f32(1.0 / determinant);
         return true;
+    }
+
+    fn invert_to_ref(&self, other: &mut Self) -> bool {
+        todo!()
     }
 }
 
@@ -510,7 +515,7 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         self[2][1] = self[2][1] * number;
         self[2][2] = self[2][2] * number;
     }
-    fn multiply(&self, _other: &Self, _result: Self) {
+    fn multiply(&self, _other: &Self, _result: &mut Self) {
         panic!("not implemented");
     }
     fn determinant(&self) -> f32 {
@@ -593,7 +598,7 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         self[2][1] = -m7.determinant();
         self[2][2] = m8.determinant();
     }
-    fn invert(&mut self) -> bool {
+    fn invert_in_place(&mut self) -> bool {
         // Submatrices of transported matrix
         let m0 = [[self[1][1], self[2][1]], [self[1][2], self[2][2]]];
         let m1 = [[self[0][1], self[2][1]], [self[0][2], self[2][2]]];
@@ -603,7 +608,6 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         let det1 = m1.determinant();
         let det2 = m2.determinant();
 
-        //let m_det: f32 = self[0][0] * det0 - self[1][0] * det1 + self[2][0] * det2;
         let m_det: f32 = self[2][0].mul_add(det2, self[0][0].mul_add(det0, -self[1][0] * det1));
 
         if m_det == 0.0 {
@@ -630,6 +634,10 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         self.multiply_f32(1.0 / m_det);
 
         return true;
+    }
+
+    fn invert_to_ref(&self, other: &mut Self) -> bool {
+        todo!()
     }
 }
 
@@ -661,7 +669,7 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
         self[3][3] = self[3][3] * number;
     }
     #[cfg(not(target_arch = "wasm32"))]
-    fn multiply(&self, other: &Self, mut result: Self) {
+    fn multiply(&self, other: &Self, result: &mut Self) {
         result[0][0] = self[0][0] * other[0][0]
             + self[0][1] * other[1][0]
             + self[0][2] * other[2][0]
@@ -735,11 +743,11 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
     To multiply matrix in place, use std::ptr::addr_of! macro to give original pointer
     */
     #[cfg(target_arch = "wasm32")]
-    fn multiply(&self, other: &Self, mut result: Self) {
+    fn multiply(&self, other: &Self, result: &mut Self) {
         unsafe {
             use std::arch::wasm32::*;
 
-            let v0 = v128_load(&result[0] as *const f32 as *const v128);
+            let v0 = v128_load(&other[0] as *const f32 as *const v128);
             let v1 = v128_load(&other[1] as *const f32 as *const v128);
             let v2 = v128_load(&other[2] as *const f32 as *const v128);
             let v3 = v128_load(&other[3] as *const f32 as *const v128);
@@ -850,7 +858,6 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
         let det2 = m2.determinant();
         let det3 = m3.determinant();
 
-        //let m_det = self[0][0] * det0 - self[1][0] * det1 + self[2][0] * det2 - self[3][0] * det3;
         let m_det = self[3][0].mul_add(
             -det3,
             self[2][0].mul_add(det2, self[1][0].mul_add(-det1, self[0][0] * det0)),
@@ -860,11 +867,82 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
     fn adjoint(&mut self) {
         panic!("not implement");
     }
-    fn invert(&mut self) -> bool {
+    fn invert_in_place(&mut self) -> bool {
         panic!("not implemented");
     }
     fn transpose(&mut self) {
         panic!("not implemented");
+    }
+
+    fn invert_to_ref(&self, other: &mut Self) -> bool {
+        let det_22_33 = [[self[2][2], self[2][3]], [self[3][2], self[3][3]]].determinant();
+        let det_21_33 = [[self[2][1], self[2][3]], [self[3][1], self[3][3]]].determinant();
+        let det_21_32 = [[self[2][1], self[2][2]], [self[3][1], self[3][2]]].determinant();
+        let det_20_33 = [[self[2][0], self[2][3]], [self[3][0], self[3][3]]].determinant();
+        let det_20_32 = [[self[2][0], self[3][0]], [self[2][2], self[3][2]]].determinant();
+        let det_20_31 = [[self[2][0], self[2][1]], [self[3][0], self[3][1]]].determinant();
+
+        let cofact_00 = self[1][1] * det_22_33 - self[1][2] * det_21_33 + self[1][3] * det_21_32;
+        let cofact_01 = -(self[1][0] * det_22_33 - self[1][2] * det_20_33 + self[1][3] * det_20_32);
+        let cofact_02 = self[1][0] * det_21_33 - self[1][1] * det_20_33 + self[1][3] * det_20_31;
+        let cofact_03 = -(self[1][0] * det_21_32 - self[1][1] * det_20_32 + self[1][2] * det_20_31);
+
+        let m_det = self[0][0] * cofact_00
+            + self[0][1] * cofact_01
+            + self[0][2] * cofact_02
+            + self[0][3] * cofact_03;
+
+        if m_det == 0.0 {
+            return false;
+        }
+
+        let det_12_33 = self[1][2] * self[3][3] - self[3][2] * self[1][3];
+        let det_11_33 = self[1][1] * self[3][3] - self[3][1] * self[1][3];
+        let det_11_32 = self[1][1] * self[3][2] - self[3][1] * self[1][2];
+        let det_10_33 = self[1][0] * self[3][3] - self[3][0] * self[1][3];
+        let det_10_32 = self[1][0] * self[3][2] - self[3][0] * self[1][2];
+        let det_10_31 = self[1][0] * self[3][1] - self[3][0] * self[1][1];
+        let det_12_23 = self[1][2] * self[2][3] - self[2][2] * self[1][3];
+        let det_11_23 = self[1][1] * self[2][3] - self[2][1] * self[1][3];
+        let det_11_22 = self[1][1] * self[2][2] - self[2][1] * self[1][2];
+        let det_10_23 = self[1][0] * self[2][3] - self[2][0] * self[1][3];
+        let det_10_22 = self[1][0] * self[2][2] - self[2][0] * self[1][2];
+        let det_10_21 = self[1][0] * self[2][1] - self[2][0] * self[1][1];
+
+        let cofact_10 = -(self[0][1] * det_22_33 - self[0][2] * det_21_33 + self[0][3] * det_21_32);
+        let cofact_11 = self[0][0] * det_22_33 - self[0][2] * det_20_33 + self[0][3] * det_20_32;
+        let cofact_12 = -(self[0][0] * det_21_33 - self[0][1] * det_20_33 + self[0][3] * det_20_31);
+        let cofact_13 = self[0][0] * det_21_32 - self[0][1] * det_20_32 + self[0][2] * det_20_31;
+
+        let cofact_20 = self[0][1] * det_12_33 - self[0][2] * det_11_33 + self[0][3] * det_11_32;
+        let cofact_21 = -(self[0][0] * det_12_33 - self[0][2] * det_10_33 + self[0][3] * det_10_32);
+        let cofact_22 = self[0][0] * det_11_33 - self[0][1] * det_10_33 + self[0][3] * det_10_31;
+        let cofact_23 = -(self[0][0] * det_11_32 - self[0][1] * det_10_32 + self[0][2] * det_10_31);
+
+        let cofact_30 = -(self[0][1] * det_12_23 - self[0][2] * det_11_23 + self[0][3] * det_11_22);
+        let cofact_31 = self[0][0] * det_12_23 - self[0][2] * det_10_23 + self[0][3] * det_10_22;
+        let cofact_32 = -(self[0][0] * det_11_23 - self[0][1] * det_10_23 + self[0][3] * det_10_21);
+        let cofact_33 = self[0][0] * det_11_22 - self[0][1] * det_10_22 + self[0][2] * det_10_21;
+
+        other[0][0] = cofact_00;
+        other[0][1] = cofact_10;
+        other[0][2] = cofact_20;
+        other[0][3] = cofact_30;
+        other[1][0] = cofact_01;
+        other[1][1] = cofact_11;
+        other[1][2] = cofact_21;
+        other[1][3] = cofact_31;
+        other[2][0] = cofact_02;
+        other[2][1] = cofact_12;
+        other[2][2] = cofact_22;
+        other[2][3] = cofact_32;
+        other[3][0] = cofact_03;
+        other[3][1] = cofact_13;
+        other[3][2] = cofact_23;
+        other[3][3] = cofact_33;
+        other.multiply_f32(1.0 / m_det);
+
+        return true;
     }
 }
 #[cfg(test)]
@@ -914,7 +992,7 @@ fn test_adjoint() {
 #[wasm_bindgen_test::wasm_bindgen_test]
 fn test_invert() {
     let mut mat: [[f32; 3]; 3] = [[4.0, 2.0, 3.0], [-1.354, 3.234, -34.42], [5.0, 6.0, 8.0]];
-    mat.invert();
+    mat.invert_in_place();
     assert_eq!(
         mat,
         [
@@ -923,10 +1001,50 @@ fn test_invert() {
             [-0.04548161, -0.026209868, 0.029287657]
         ]
     );
+    let mut mat2: [[f32; 4]; 4] = [
+        [4.0, 2.0, 3.0, 5.5],
+        [-1.354, 3.234, -34.42, 54.7],
+        [5.0, 6.0, 8.0, -45.6],
+        [-43.0, 8.0, -4.0, -435.6],
+    ];
+    let mut res = [[0.0; 4]; 4];
+    assert_eq!(mat2.invert_to_ref(&mut res), true);
+    assert_eq!(
+        res,
+        [
+            [-4.100362, 0.04672327, 1.6303737, -0.21657774],
+            [5.220164, -0.020502476, -1.913927, 0.2636926],
+            [1.4265577, -0.040159337, -0.5475979, 0.07029342],
+            [0.48753586, -0.004620027, -0.19106312, 0.02328101]
+        ]
+    );
 }
-pub mod prelude {
-    pub use crate::MatrixMath;
-}
-pub struct Foobar {
-    pub a: f32,
+
+#[cfg(test)]
+#[test]
+#[wasm_bindgen_test::wasm_bindgen_test]
+fn test_multiply() {
+    let mat: [[f32; 4]; 4] = [
+        [4.0, 2.0, 3.0, 5.5],
+        [-1.354, 3.234, -34.42, 54.7],
+        [5.0, 6.0, 8.0, -45.6],
+        [-43.0, 8.0, -4.0, -435.6],
+    ];
+    let mat2: [[f32; 4]; 4] = [
+        [4.0, 2.0, 3.0, 5.5],
+        [-1.354, 3.234, -34.42, 54.7],
+        [5.0, 6.0, 8.0, -45.6],
+        [-43.0, 8.0, -4.0, -435.6],
+    ];
+    let mut res = [[0.0; 4]; 4];
+    mat.multiply(&mat2, &mut res);
+    assert_eq!(
+        res,
+        [
+            [-208.20801, 76.468, -54.839996, -2401.2002],
+            [-2533.995, 238.83078, -609.53625, -22088.314],
+            [2012.6759, -287.396, 54.880005, 19854.258],
+            [18527.969, -3568.928, 1306.04, 190130.86]
+        ]
+    );
 }

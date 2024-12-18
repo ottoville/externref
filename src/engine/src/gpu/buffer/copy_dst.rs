@@ -4,10 +4,10 @@ use super::buffer::{copy_from, write};
 use super::{buffer::GpuBuffer, copy_src::CopySrc};
 use crate::gpu::command_encoder::GPUCommandEncoder;
 pub trait CopyDst: GpuBuffer {
-    fn copy_from(
+    fn copy_from/*<'c, 'b: 'c>*/(
         &self,
-        command_encoder: &GPUCommandEncoder,
-        source: &dyn CopySrc,
+        command_encoder: &/*'c*/ GPUCommandEncoder/*<'c>*/,
+        source: &/*'b*/ dyn CopySrc,
         source_offset: usize,
         destination_offset: usize,
         copy_size: usize,

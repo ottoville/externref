@@ -1,5 +1,6 @@
 use std::{
-    slice::Iter,
+    cell::RefCell,
+    rc::Rc,
     sync::atomic::{AtomicU32, Ordering},
 };
 
@@ -8,10 +9,17 @@ use terramath::MatrixMath;
 
 use crate::{
     gpu::{
-        command_encoder::{GPUCommandEncoder, JSCommandEncoder},
+        buffer::{
+            buffer::{GPUBuffer, JSBuffer},
+            copy_dst::CopyDst,
+            usages::{COPYSRC_USAGE, UNIFORM_COPYDST_USAGE},
+        },
+        command_encoder::GPUCommandEncoder,
         compute_pass_encoder::{ComputePassEncoder, JSBindGroup},
+        gpu::{JSDevice, TEMP_GPU_BUFFERS},
     },
     mesh::ENGINE,
+    projection::Projection,
     MULTIVALUE_USIZE,
 };
 #[no_mangle]
@@ -139,13 +147,36 @@ pub unsafe extern "C" fn get_camera_view_ptr(camera_id: u32) -> *const [f32; 4] 
         .as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_projection_ptr(camera_id: u32) -> *const [f32; 4] {
+pub unsafe extern "C" fn get_camera_projection_inverted_ptr(camera_id: u32) -> *const [f32; 4] {
     ENGINE
         .physic_engine()
         .cameras
         .get_camera_by_id(camera_id)
-        .projection
+        .projection_view_inverted
         .as_ptr()
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: u32) {
+    let camera = ENGINE
+        .physic_engine_mut()
+        .cameras
+        .get_camera_by_id_mut(camera_id);
+    if camera.projection_view_inverted_is_dirty {
+        camera
+            .projection_view
+            .invert_to_ref(&mut camera.projection_view_inverted);
+        camera.projection_view_inverted_is_dirty = false;
+    }
+}
+#[externref]
+#[no_mangle]
+pub unsafe extern "C" fn get_camera_buffer(camera_id: u32) -> &'static Resource<JSBuffer> {
+    &ENGINE
+        .physic_engine()
+        .cameras
+        .get_camera_by_id(camera_id)
+        .buffer
+        .externref
 }
 pub struct JSCamera(());
 static NEXT_CAMERA_ID: AtomicU32 = AtomicU32::new(0);
@@ -156,12 +187,6 @@ static NEXT_CAMERA_ID: AtomicU32 = AtomicU32::new(0);
 #[link(wasm_import_module = "camera")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    fn update_view(
-        externref: &Resource<JSCamera>,
-        command_encoder: &Resource<JSCommandEncoder>,
-        view_ptr: *const [f32; 4],
-        projection_ptr: *const [f32; 4],
-    );
     fn get_update_view_bindgroup(externref: &Resource<JSCamera>) -> Resource<JSBindGroup>;
     fn on_update_position(externref: &Resource<JSCamera>);
 
@@ -175,9 +200,16 @@ static CLUSTER_DISPATCH_SIZE: [u32; 3] = [
 ];
 static VIEW_UPDATED_POSITION: u32 = 1;
 static VIEW_UPDATED_DIRECTION: u32 = 2;
+static UNIFORM_BUFFER_SIZE: usize =
+    /* modelViewProjectionMatrix + view matrix */
+    4 * 16 * 2 /* viewPosition */ +
+  4 * 4;
+#[repr(C, align(4))]
 pub struct Camera {
-    projection: [[f32; 4]; 4],
+    projection: Rc<RefCell<Projection>>,
+    projection_view: [[f32; 4]; 4],
     view: [[f32; 4]; 4],
+    projection_view_inverted: [[f32; 4]; 4],
     direction: [f32; 3],
     position: [f32; 3],
     externref: Resource<JSCamera>,
@@ -187,49 +219,76 @@ pub struct Camera {
     do_update_view: u32,
     pub id: u32,
     before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 3])>>,
+    projection_view_inverted_is_dirty: bool,
+    buffer: GPUBuffer<UNIFORM_COPYDST_USAGE>,
 }
 impl Camera {
     pub fn new(externref: Resource<JSCamera>, label: String) -> Self {
-        Camera {
-            view: [
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
-            projection: [[0.0; 4]; 4],
-            position: [0.0; 3],
-            direction: [1.0, 0.0, 0.0],
-            externref,
-            updated: false,
-            label,
-            children: Vec::new(),
-            do_update_view: 0,
-            id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
-            before_view_update: None,
+        unsafe {
+            let gpu = ENGINE.physic_engine().gpu.as_ref().unwrap();
+            Camera {
+                view: [
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0],
+                ],
+                projection: Rc::clone(&gpu.projection),
+                projection_view: [[0.0; 4]; 4],
+                projection_view_inverted: [[0.0; 4]; 4],
+                position: [0.0; 3],
+                direction: [1.0, 0.0, 0.0],
+                externref,
+                updated: false,
+                label,
+                children: Vec::new(),
+                do_update_view: 0,
+                id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
+                before_view_update: None,
+                projection_view_inverted_is_dirty: false,
+                buffer: GPUBuffer::new(
+                    &gpu.device,
+                    UNIFORM_BUFFER_SIZE,
+                    String::from("camerauniformBuffer"),
+                    false,
+                ),
+            }
         }
     }
     pub fn new_water(externref: Resource<JSCamera>, label: String) -> Self {
-        Camera {
-            view: [
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
-            projection: [[0.0; 4]; 4],
-            position: [0.0; 3],
-            direction: [1.0, 0.0, 0.0],
-            externref,
-            updated: false,
-            label,
-            children: Vec::new(),
-            do_update_view: 0,
-            id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
-            before_view_update: Some(Box::new(|direction, position| {
-                position[1] -= (position[1] - 3.0) * 2.0;
-                direction[1] = -direction[1];
-            })),
+        unsafe {
+            let gpu = ENGINE.physic_engine().gpu.as_ref().unwrap();
+
+            Camera {
+                view: [
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0],
+                ],
+                projection_view: [[0.0; 4]; 4],
+                projection_view_inverted: [[0.0; 4]; 4],
+                projection: Rc::clone(&gpu.projection),
+                position: [0.0; 3],
+                direction: [1.0, 0.0, 0.0],
+                externref,
+                updated: false,
+                label,
+                children: Vec::new(),
+                do_update_view: 0,
+                id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
+                before_view_update: Some(Box::new(|direction, position| {
+                    position[1] -= (position[1] - 3.0) * 2.0;
+                    direction[1] = -direction[1];
+                })),
+                projection_view_inverted_is_dirty: false,
+                buffer: GPUBuffer::new(
+                    &gpu.device,
+                    UNIFORM_BUFFER_SIZE,
+                    String::from("camerauniformBuffer"),
+                    false,
+                ),
+            }
         }
     }
     fn on_update_position(&self) {
@@ -257,7 +316,16 @@ impl Camera {
             self.do_update_view |= VIEW_UPDATED_DIRECTION;
         }
     }
-    pub fn update_view(&mut self, command_encoder: &GPUCommandEncoder) -> bool {
+    /**
+     * Update camera view
+     * @param commandEncoder GPUCommandEncoder
+     * @returns boolean indicating if view was actually changed
+     */
+    pub fn update_view<'c>(
+        &mut self,
+        device: &Resource<JSDevice>,
+        command_encoder: &GPUCommandEncoder,
+    ) -> bool {
         if self.do_update_view != 0 {
             if let Some(before_view_update) = &self.before_view_update {
                 self.do_update_view |= VIEW_UPDATED_POSITION & VIEW_UPDATED_DIRECTION;
@@ -311,16 +379,28 @@ impl Camera {
             self.view[3][2] = -(self.view[0][2] * self.position[0]
                 + self.view[1][2] * self.position[1]
                 + self.view[2][2] * self.position[2]);
-            #[cfg(feature = "webgpu")]
-            #[cfg(any(not(test), rust_analyzer))]
-            unsafe {
-                update_view(
-                    &self.externref,
-                    &command_encoder.externref,
-                    self.view.as_ptr(),
-                    self.projection.as_ptr(),
-                );
-            }
+
+            self.view.multiply(
+                &self
+                    .projection
+                    .borrow()
+                    .inner_projection
+                    .projection_reversed_z,
+                &mut self.projection_view,
+            );
+
+            self.projection_view_inverted_is_dirty = true;
+            let buffer = GPUBuffer::<COPYSRC_USAGE>::new_mapped(
+                device,
+                128,
+                String::from("camera_tempBuffer"),
+                false,
+            );
+            buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0, 128);
+            let mut unmapped = buffer.unmap();
+            self.buffer
+                .copy_from(command_encoder, &mut unmapped, 0, 0, 128);
+            TEMP_GPU_BUFFERS.lock().unwrap().push(unmapped.externref);
             self.do_update_view = 0;
             self.updated = true;
         } else {
@@ -328,7 +408,7 @@ impl Camera {
         }
         let mut me_or_some_child_updated = self.updated;
         for child_camera in self.children.iter_mut() {
-            if child_camera.update_view(command_encoder) {
+            if child_camera.update_view(device, command_encoder) {
                 me_or_some_child_updated = true;
             }
         }
@@ -373,8 +453,11 @@ fn test_child_camera() {
         );
         camera.children.push(child_1);
         camera.update_position([1.0, 2.0, 3.0]);
-        let command_encoder = GPUCommandEncoder::new(String::from("test"));
-        camera.update_view(&command_encoder);
+        let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
+        camera.update_view(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+            &mut command_encoder,
+        );
         assert_eq!(camera.children[0].position, [1.0, 2.0, 3.0]);
     }
 }

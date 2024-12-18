@@ -2,7 +2,7 @@ use externref::{externref, Resource};
 
 use crate::MULTIVALUE_USIZE;
 
-use super::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder};
+use super::{buffer::copy_src::CopySrc, compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder}};
 
 pub struct JSCommandEncoder(());
 pub struct JSCommandBuffer(());
@@ -31,7 +31,7 @@ pub struct GPUCommandEncoder {
 }
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
-impl GPUCommandEncoder {
+impl<'b> GPUCommandEncoder {
     pub fn new(label: String) -> GPUCommandEncoder {
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
@@ -76,7 +76,7 @@ impl GPUCommandEncoder {
         use externref::ExternRef;
         unsafe {
             return GPUCommandEncoder {
-                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
                 label,
                 owned_by_js: false,
             };
@@ -84,7 +84,7 @@ impl GPUCommandEncoder {
     }
     pub fn finish(self, label: String) -> Resource<JSCommandBuffer> {
         use externref::ExternRef;
-        unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)) }
+        unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
     }
     pub fn begin_compute_pass(self, label: String) -> ComputePassEncoder {
         use externref::ExternRef;

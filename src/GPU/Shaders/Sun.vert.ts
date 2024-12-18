@@ -1,6 +1,4 @@
 import {
-  type BufLayout,
-  type ShaderStage,
   VertexShaderFunction,
   WGSLcode,
   VertexBuildin,
@@ -9,7 +7,8 @@ import {
   VertexBufferLayouts,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import { PositionOutput, type Scene } from './structs/Structs.js';
+import { PositionOutput } from './structs/Structs.js';
+import { PositionVertexFunction } from './SingleColoredWithNormal.vert.js';
 
 export function createSunVertShader(gpu: GPU) {
   const pipelineLayout = [
@@ -76,21 +75,7 @@ export function createSunVertShader(gpu: GPU) {
           return output;
       
         `,
-    ) satisfies VertexShaderFunction<
-      readonly [
-        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-        {},
-        {
-          scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-        },
-        {
-          world: BufLayout<
-            ShaderStage.VERTEX_AND_FRAGMENT,
-            GPU['meshUniforms']
-          >;
-        },
-      ]
-    >,
+    ) satisfies PositionVertexFunction,
   );
   return builder;
 }

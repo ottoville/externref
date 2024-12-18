@@ -16,6 +16,7 @@ mod terrain;
 mod vertices;
 pub mod camera;
 mod cameras;
+pub mod projection;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;

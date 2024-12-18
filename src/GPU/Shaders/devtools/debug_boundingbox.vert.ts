@@ -1,6 +1,4 @@
 import {
-  type BufLayout,
-  type ShaderStage,
   Struct,
   StructProperty,
   VertexBufferLayouts,
@@ -10,7 +8,8 @@ import {
   WGSLcode,
 } from '../../../webgpu-ts/index.js';
 import { GPU } from '../../../GPU.js';
-import { type Scene, colorPositionOutput } from '../structs/Structs.js';
+import { colorPositionOutput } from '../structs/Structs.js';
+import { PositionVertexFunction } from '../SingleColoredWithNormal.vert.js';
 
 export const createDebugBoundingBoxVertShader = (
   gpu: GPU,
@@ -54,21 +53,7 @@ export const createDebugBoundingBoxVertShader = (
             output.color = vec3<f32>(0.0,1.0,0.0);
             return output;
         `,
-    ) satisfies VertexShaderFunction<
-      [
-        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-        {},
-        {
-          scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-        },
-        {
-          world: BufLayout<
-            ShaderStage.VERTEX_AND_FRAGMENT,
-            GPU['meshUniforms']
-          >;
-        },
-      ]
-    >,
+    ) satisfies PositionVertexFunction,
   );
 };
 export type DebugBoundingBoxVertShader = VertexShader<

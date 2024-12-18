@@ -18,6 +18,19 @@ import {
   typicalOutput,
 } from './structs/Structs.js';
 
+export type PositionVertexFunction = VertexShaderFunction<
+  readonly [
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    {},
+    {
+      scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+    },
+    {
+      world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, GPU['meshUniforms']>;
+    },
+  ]
+>;
+
 export function createPickOutput(
   buffers: VertexBufferLayouts<
     readonly [
@@ -52,18 +65,7 @@ export function createPickOutput(
         return output;
     
     `,
-  ) satisfies VertexShaderFunction<
-    [
-      // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-      {},
-      {
-        scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-      },
-      {
-        world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, GPU['meshUniforms']>;
-      },
-    ]
-  >;
+  ) satisfies PositionVertexFunction;
 }
 
 /**
@@ -110,21 +112,7 @@ export function createSimpleVertShader(gpu: GPU) {
         //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
         //ambient=lights.ambient;
         return output;`,
-      ) satisfies VertexShaderFunction<
-        [
-          // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-          {},
-          {
-            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-          },
-          {
-            world: BufLayout<
-              ShaderStage.VERTEX_AND_FRAGMENT,
-              GPU['meshUniforms']
-            >;
-          },
-        ]
-      >,
+      ) satisfies PositionVertexFunction,
     )
     .addFunction('pick', createPickOutput(buffers));
 }

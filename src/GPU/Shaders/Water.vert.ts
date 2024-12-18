@@ -1,14 +1,13 @@
 import {
   VertexShaderFunction,
-  type BufLayout,
-  type ShaderStage,
   WGSLcode,
   VertexShaderBuilder,
   type VertexShader,
   VertexBufferLayouts,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
-import { PositionVertice, type Scene, WaterInput } from './structs/Structs.js';
+import { PositionVertice, WaterInput } from './structs/Structs.js';
+import { PlaneVertexFuntion } from './Plane.vert.js';
 const buffers = new VertexBufferLayouts([
   {
     stepMode: 'vertex',
@@ -46,23 +45,7 @@ export function createWaterVertShader(gpu: GPU) {
             //ambient=lights.ambient;
             return output;
         `,
-    ) satisfies VertexShaderFunction<
-      readonly [
-        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-        {},
-        {
-          scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-        },
-        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-        {},
-        {
-          world: BufLayout<
-            ShaderStage.VERTEX_AND_FRAGMENT,
-            GPU['meshUniforms']
-          >;
-        },
-      ]
-    >,
+    ) satisfies PlaneVertexFuntion,
   );
 }
 export type WaterVertShader = VertexShader<

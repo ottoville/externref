@@ -91,6 +91,7 @@ pub unsafe extern "C" fn create_bounding_box_geometry(mesh_id: usize) -> *mut Ge
 #[cfg(test)]
 #[test]
 fn test_bounding_box() {
+    use crate::gpu::gpu::init_gpu;
     use crate::{
         engine::init_engine,
         mesh::{get_mesh_by_id_mut, Mesh, ENGINE},
@@ -99,13 +100,15 @@ fn test_bounding_box() {
         vertices::VertexKind,
         Geometry,
     };
-    use crate::gpu::gpu::init_gpu;
     use externref::ExternRef;
     use externref::Resource;
     unsafe {
         if ENGINE.engine2.is_none() {
             init_engine();
-            init_gpu(Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)));
+            init_gpu(
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            );
         }
         let engine2 = ENGINE.physic_engine_mut();
         let len = engine2.meshes.len();
@@ -138,12 +141,11 @@ fn test_bounding_box() {
                 assert_eq!(geo.bounding_box.min[0], -377.0);
                 assert_eq!(geo.bounding_box.min[1], 301.50122);
                 assert_eq!(geo.bounding_box.min[2], -575.4988);
-        
+
                 assert_eq!(geo.bounding_box.max[0], 623.0);
                 assert_eq!(geo.bounding_box.max[1], 1698.498779296875);
                 assert_eq!(geo.bounding_box.max[2], 821.4988);
-        
-            },
+            }
             None => todo!(),
         }
     }

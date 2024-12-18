@@ -2,19 +2,17 @@ import { Terrain } from '../../world/Terrain.js';
 import { getHeightAtCoordinates } from './getHeightAtCoordinates.js';
 import {
   PositionNormalUvVertice,
-  type Scene,
   colorPositionOutput,
 } from './structs/Structs.js';
 import {
   VertexShaderFunction,
-  type BufLayout,
-  type ShaderStage,
   WGSLcode,
   VertexShaderBuilder,
   type VertexShader,
   VertexBufferLayouts,
 } from '../../webgpu-ts/index.js';
 import type { GPU } from '../../GPU.js';
+import { PlaneVertexFuntion } from './Plane.vert.js';
 
 const buffers = new VertexBufferLayouts([
   {
@@ -61,23 +59,7 @@ export function createPlaneAtGroundHeightVertShader(gpu: GPU) {
             output.color = vec3<f32>(1.0,1.0,1.0);
             return output;
         `,
-    ) satisfies VertexShaderFunction<
-      [
-        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-        {},
-        {
-          scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-        },
-        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-        {},
-        {
-          world: BufLayout<
-            ShaderStage.VERTEX_AND_FRAGMENT,
-            GPU['meshUniforms']
-          >;
-        },
-      ]
-    >,
+    ) satisfies PlaneVertexFuntion,
   );
 }
 

@@ -308,10 +308,7 @@ export class PickableRenderPass<
       };
     });
     //Calculate inverted matrix while buffer is mapping
-    if (camera.projectionViewInvertedIsDirty) {
-      camera.projectionViewArr.invertToRef(camera.projectionViewInverted);
-      camera.projectionViewInvertedIsDirty = false;
-    }
+    camera.update_camera_projection_view_inverted();
     if (mesh) {
       this.pickPromiseMesh = promise as Promise<{
         position: TerraVector3;

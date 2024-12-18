@@ -39,7 +39,7 @@ export class RenderPass<
   },
   E extends string = string,
 > extends Renderpass<U> {
-  readonly perspectiveCameras: Set<TerraCamera> = new Set();
+  readonly perspectiveCameras: TerraCamera[] = [];
   readonly #rootLayouts: RenderPipelineLayout[];
 
   readonly createSizeBindGroup: () => BindGroup;
@@ -90,7 +90,7 @@ export class RenderPass<
         });*/
 
         let drawedMeshes = 0;
-        if (this.perspectiveCameras.size === 0) {
+        if (this.perspectiveCameras.length === 0) {
           // Draw UI
           this.#rootLayouts.forEach((layout) => {
             drawedMeshes += layout.render(renderBundleEncoder, this, 0);
@@ -100,6 +100,7 @@ export class RenderPass<
             0,
             this.createSizeBindGroup().getForRenderBundle(renderBundleEncoder),
           );
+
           this.perspectiveCameras.forEach((camera) => {
             renderBundleEncoder.renderBundleEncoder.setBindGroup(
               1,

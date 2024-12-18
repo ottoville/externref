@@ -25,7 +25,20 @@ const buffers = new VertexBufferLayouts([
     struct: PositionVertice,
   },
 ]);
-
+export type PlaneVertexFuntion = VertexShaderFunction<
+  readonly [
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    {},
+    {
+      scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    {},
+    {
+      world: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, GPU['meshUniforms']>;
+    },
+  ]
+>;
 export class Plane extends VertexShader {
   constructor(pipelineLayout: RenderPipelineLayout<BindLayouts>) {
     super({
@@ -54,23 +67,7 @@ export class Plane extends VertexShader {
                 output.color = vec3<f32>(1.0,1.0,1.0);
                 return output;
                 `,
-        ) satisfies VertexShaderFunction<
-          [
-            // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-            {},
-            {
-              scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-            },
-            // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-            {},
-            {
-              world: BufLayout<
-                ShaderStage.VERTEX_AND_FRAGMENT,
-                GPU['meshUniforms']
-              >;
-            },
-          ]
-        >,
+        ) satisfies PlaneVertexFuntion,
       },
       label: 'plane.vert',
       pipelineLayouts: [pipelineLayout],

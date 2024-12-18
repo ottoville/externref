@@ -1,13 +1,20 @@
 use std::{mem, ops::Deref};
 
-use externref::Resource;
+use crate::MULTIVALUE_USIZE;
+
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
-use super::buffer::map_write_async;
-use super::{buffer::{GPUBuffer, GpuBuffer, JSBuffer}, pending_buffer::PendingGPUBuffer};
+use super::buffer::{create_gpu_buffer, map_write_async};
+use super::{
+    buffer::{GPUBuffer, GpuBuffer, JSBuffer},
+    mapped_buffer::MappedGPUBuffer,
+    pending_buffer::PendingGPUBuffer,
+};
+use externref::Resource;
+use crate::gpu::gpu::JSDevice;
 
 pub struct MappadleGPUBuffer<const U: u32>(GPUBuffer<U>);
-impl<const U: u32> MappadleGPUBuffer<U>{
+impl<const U: u32> MappadleGPUBuffer<U> {
     pub fn map_write_async(self, offset: usize, size: usize) -> PendingGPUBuffer<U> {
         #[cfg(feature = "webgpu")]
         #[cfg(any(not(test), rust_analyzer))]
@@ -16,8 +23,45 @@ impl<const U: u32> MappadleGPUBuffer<U>{
         }
         PendingGPUBuffer::new(self)
     }
-    pub fn new(b: GPUBuffer<U>) -> MappadleGPUBuffer<U> {
-        return MappadleGPUBuffer(b);
+    #[cfg(feature = "webgpu")]
+    #[cfg(any(not(test), rust_analyzer))]
+    pub fn new_mapped(
+        device: &Resource<JSDevice>,
+        size: usize,
+        label: String,
+        owned_by_js: bool,
+    ) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
+
+        unsafe {
+            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
+            MULTIVALUE_USIZE[1] = label.len();
+            MULTIVALUE_USIZE[2] = label.capacity();
+            let externref =
+                create_gpu_buffer(device,size, MULTIVALUE_USIZE.as_ptr(), U, true, owned_by_js);
+            return MappedGPUBuffer::new(MappadleGPUBuffer(GPUBuffer {
+                externref,
+                label,
+                owned_by_js,
+                size,
+            }));
+        }
+    }
+    #[cfg(test)]
+    pub fn new_mapped(
+        device: &Resource<JSDevice>,
+        size: usize,
+        label: String,
+        owned_by_js: bool,
+    ) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
+        use externref::ExternRef;
+        unsafe {
+            return MappedGPUBuffer::new(MappadleGPUBuffer(GPUBuffer {
+                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+                label,
+                owned_by_js,
+                size,
+            }));
+        }
     }
 }
 impl<const U: u32> GpuBuffer for MappadleGPUBuffer<U> {

@@ -1,6 +1,4 @@
 import {
-  type BufLayout,
-  type ShaderStage,
   VertexBufferLayouts,
   VertexShaderBuilder,
   VertexShaderFunction,
@@ -9,10 +7,12 @@ import {
 import type { GPU } from '../../GPU.js';
 import {
   PositionNormalColorVertice,
-  type Scene,
   typicalOutput,
 } from './structs/Structs.js';
-import { createPickOutput } from './SingleColoredWithNormal.vert.js';
+import {
+  createPickOutput,
+  PositionVertexFunction,
+} from './SingleColoredWithNormal.vert.js';
 
 /**
   Shader where each vertex carries a color property
@@ -58,21 +58,7 @@ export function createVertexColorShader(gpu: GPU) {
         //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
         //ambient=lights.ambient;
         return output;`,
-      ) satisfies VertexShaderFunction<
-        [
-          // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-          {},
-          {
-            scene: BufLayout<ShaderStage.VERTEX_AND_FRAGMENT, typeof Scene>;
-          },
-          {
-            world: BufLayout<
-              ShaderStage.VERTEX_AND_FRAGMENT,
-              GPU['meshUniforms']
-            >;
-          },
-        ]
-      >,
+      ) satisfies PositionVertexFunction,
     )
     .addFunction('pick', createPickOutput(buffers));
 }

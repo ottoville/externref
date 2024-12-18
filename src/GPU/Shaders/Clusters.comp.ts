@@ -1,4 +1,3 @@
-import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
 import {
   Clusters,
   ProjectionStruct,
@@ -26,6 +25,7 @@ export const UpdateClustersBufferLayout = new BufLayout(
   },
   Clusters,
 );
+export const PROJECTION_BUFFER_SIZE = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 
 const mainFunction = new ComputeShaderFunction<
   readonly [

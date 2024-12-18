@@ -50,9 +50,9 @@ export class Human extends Box {
     this.update_scale(1, 1, 1);
     // engine.inputManager?.destroy();
 
-    this.inputManager = new MeshCamera(engine.mainCamera);
+    this.inputManager = new MeshCamera(engine.gpu!.mainCamera);
     if (properties.inputEnabled) {
-      engine.mainCamera.attachControllerForCamera(this.inputManager);
+      engine.gpu!.mainCamera.attachControllerForCamera(this.inputManager);
     }
     engine.physics.onPhysicTick.add(() => {
       //  console.log('human translation', this.translation)
@@ -209,10 +209,11 @@ export class Human extends Box {
         }
       }
     }
+    const translation = this.translation;
     this.inputManager.cameraControl?.updatePosition(
-      this.translation[0],
-      this.translation[1],
-      this.translation[2],
+      translation[0],
+      translation[1],
+      translation[2],
     );
   };
   directionUpdate = false;

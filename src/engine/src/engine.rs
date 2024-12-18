@@ -42,18 +42,7 @@ pub struct Engine {
 }
 
 pub static mut ENGINE: Engine = Engine { engine2: None };
-#[no_mangle]
-#[cfg(feature = "webgpu")]
-#[externref]
-pub unsafe extern "C" fn get_gpu_mesh_buffer() -> &'static Resource<JSBuffer> {
-    &ENGINE
-        .physic_engine()
-        .gpu
-        .as_ref()
-        .unwrap()
-        .gpu_buffer
-        .externref
-}
+
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 #[externref]
@@ -168,6 +157,25 @@ impl Logger for Vec<usize> {
             for str in self.iter() {
                 LOG_STRING.push(' ');
                 LOG_STRING.push_str(&str.to_string());
+            }
+            MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
+            MULTIVALUE_USIZE[1] = LOG_STRING.len();
+            MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
+
+            #[cfg(target_arch = "wasm32")]
+            log(MULTIVALUE_USIZE.as_ptr());
+        }
+    }
+}
+impl Logger for [[f32; 4]; 4] {
+    fn log(&self) {
+        unsafe {
+            LOG_STRING.clear();
+            for i in 0..4 {
+                for ii in 0..4 {
+                    LOG_STRING.push_str(&self[i][ii].to_string());
+                    LOG_STRING.push(' ');
+                }
             }
             MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
             MULTIVALUE_USIZE[1] = LOG_STRING.len();
@@ -346,7 +354,12 @@ pub unsafe extern "C" fn physic_tick() {
                     mesh_property.rotation.w = newrot.w;
                 }
                 let pos = rigid_body.position();
-                mesh.update_translation(pos.translation.x, pos.translation.y, pos.translation.z, false);
+                mesh.update_translation(
+                    pos.translation.x,
+                    pos.translation.y,
+                    pos.translation.z,
+                    false,
+                );
             }
             None => js_warn(["Mesh not found for rigid body"]),
         }

@@ -54,7 +54,7 @@ export function Cameras() {
             onClick={() => {
               if (oldController) {
                 setDebugCamera(false);
-                engine.mainCamera.attachControllerForCamera(oldController);
+                engine.gpu!.mainCamera.attachControllerForCamera(oldController);
               }
             }}
           >
@@ -73,8 +73,11 @@ export function Cameras() {
           onClick={() => {
             setDebugCamera(true);
             oldController = engine.inputManager;
-            const positionCamera = new PositionCamera(engine.mainCamera, true);
-            engine.mainCamera.attachControllerForCamera(positionCamera);
+            const positionCamera = new PositionCamera(
+              engine.gpu!.mainCamera,
+              true,
+            );
+            engine.gpu!.mainCamera.attachControllerForCamera(positionCamera);
           }}
         >
           Switch to debug camera

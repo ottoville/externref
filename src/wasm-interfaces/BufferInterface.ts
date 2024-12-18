@@ -12,6 +12,7 @@ declare const engine: Engine;
 
 export type BufferInterface = {
   create_mapped_GPU_buffer_copysrc(
+    device: Externref<true, GPUDevice>,
     length: number,
     label_ptr: number,
     label_len: number,
@@ -37,6 +38,7 @@ export const BufferExports = {
     );
   },
   create_gpu_buffer(
+    { externref: device }: Externref<true, GPUDevice>,
     size: number,
     label_vec_ptr: rust_pointer<'label'>,
     usages: BufferUsageEnums,
@@ -47,7 +49,7 @@ export const BufferExports = {
     return new Externref(
       ownedByJS,
       new Buffer({
-        gpu: engine.gpu!.device,
+        gpu: device,
         label,
         mappedAtCreation: mapped,
         size,

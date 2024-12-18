@@ -22,9 +22,8 @@ impl<const U: u32> PendingGPUBuffer<U> {
         return 2;
     }
 }
-
 impl<const U: u32> Into<MappedGPUBuffer<MappadleGPUBuffer<U>>> for PendingGPUBuffer<U> {
     fn into(self) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
-        MappedGPUBuffer(self.0)
+        MappedGPUBuffer::new(self.0)
     }
 }

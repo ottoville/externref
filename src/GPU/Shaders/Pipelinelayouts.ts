@@ -15,8 +15,8 @@ import {
   ScreenDimensions,
   Time,
 } from './structs/Structs.js';
-import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
 import { gpu_memory_index_size } from './ShaderBuilders.js';
+import { PROJECTION_BUFFER_SIZE } from './Clusters.comp.js';
 
 export function createPipelineLayouts(gpu: GPU) {
   const uniformBindGroupLayoutWithTime = new BGLayout(

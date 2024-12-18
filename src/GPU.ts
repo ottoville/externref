@@ -1,8 +1,6 @@
 ﻿import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
 import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 
-import { Projection } from './GPU/Projection.js';
-
 import { type Engine } from './engine.js';
 import { Uint16Vector2 } from './Math.js';
 import { DepthRenderPass } from './GPU/RenderPasses/DepthRenderPass.js';
@@ -71,7 +69,6 @@ export class GPU {
   readonly mousePositionBuffer = new SharedArrayBuffer(4);
   readonly mousePosition = new Uint16Vector2(this.mousePositionBuffer);
 
-  readonly projections: Set<Projection> = new Set();
   readonly cameras: TerraCamera[] = [];
 
   readonly BindGroupPosition: BindGroup<
@@ -195,6 +192,7 @@ export class GPU {
      */
     readonly z: StructProperty<'f32'>;
   }>;
+  mainCamera: TerraCamera;
   /**
    * Create render pipeline. The function calculates hash and checks if existing render pipeline exists with same parameters.
    * @param desc
@@ -545,7 +543,9 @@ export class GPU {
       }),
       this,
     );
+    this.mainCamera = new TerraCamera('mainCamera', this.renderPassScreen);
 
+    new TerraCamera('waterCamera', this.renderPassWater, this.mainCamera);
     //TODO: this does not need to be canvas size
     /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
             (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');
@@ -680,10 +680,7 @@ export class GPU {
             label: 'resizePassEncoder',
           });
           passEncoder.setPipeline(await computePipelineClustersP);
-
-          this.projections.forEach((projection) =>
-            projection.update(aspectRatio, this),
-          );
+          engine.rust.on_resize(aspectRatio);
           this.#renderPasses.forEach((renderPass) => {
             renderPass.resize(canvas.width, canvas.height);
             passEncoder.setBindGroup(

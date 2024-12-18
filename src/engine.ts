@@ -369,6 +369,13 @@ export type rustWasm = {
     false,
     Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
   >;
+  borrow_gpu_projection_buffer(): rust_pointer<'refcell'>;
+  release_gpu_projection_buffer(
+    ptr: rust_pointer<'refcell'>,
+  ): rust_pointer<'refcell'>;
+  get_gpu_projection_buffer(
+    ptr: rust_pointer<'refcell'>,
+  ): Externref<false, Buffer<(typeof BufferUsageEnums)['UNIFORM']>>;
   get_directional_lights_buffer(): Externref<
     false,
     Buffer<(typeof BufferUsageEnums)['STORAGE|COPY_DST']>
@@ -380,7 +387,7 @@ export type rustWasm = {
   get_raw_buffer<U extends BufferUsageEnums, M extends boolean>(
     buffer: rust_pointer<'GPUBuffer'>,
   ): Externref<false, Buffer<U, M>>;
-  init_gpu(queue: GPUQueue): void;
+  init_gpu(device: Externref<true, GPUDevice>, queue: GPUQueue): void;
   push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
   drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
@@ -412,9 +419,13 @@ export type rustWasm = {
   get_camera_direction_ptr(camera_id: number): rust_pointer<'direction'>;
   get_camera_position_ptr(camera_id: number): rust_pointer<'position'>;
   get_camera_view_ptr(camera_id: number): rust_pointer<'camera_view'>;
-  get_camera_projection_ptr(
+  get_camera_projection_inverted_ptr(
     camera_id: number,
-  ): rust_pointer<'camera_projection'>;
+  ): rust_pointer<'camera_projection_inverted'>;
+  get_camera_buffer(
+    camera_id: number,
+  ): Externref<false, Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>>;
+  update_camera_projection_view_inverted(camera_id: number): void;
   update_camera_position(
     camera_id: number,
     x: number,
@@ -427,6 +438,7 @@ export type rustWasm = {
     y: number,
     z: number,
   ): void;
+  on_resize(aspect_ratio: number): void;
 } & BufferInterface;
 
 function Dot(
@@ -571,7 +583,6 @@ export class Engine {
 
   inputManager: CameraController | null = null;
 
-  mainCamera: TerraCamera;
   GPUReady: Promise<GPU>;
   canvas?: HTMLCanvasElement;
   GPUSubscribions: Set<(gpu: GPU) => void> = new Set();
@@ -896,11 +907,11 @@ export class Engine {
         if (ee instanceof Error) throw ee;
         else throw new Error(ee);
       });
+    this.rust.init_gpu(new Externref(true, device), device.queue);
 
     const gpu = new GPU(this.canvas!, device, GPUDataSize);
     this.gpu = gpu;
 
-    this.rust.init_gpu(gpu.device.queue);
     console.log('new GPU initialized ', device.label);
     cb(gpu);
     return gpu;
@@ -988,8 +999,6 @@ export class Engine {
       };
     }
 
-    this.mainCamera = new TerraCamera('mainCamera', 'renderPassScreen');
-
     if (nodes?.canvas) {
       (
         [
@@ -1029,7 +1038,6 @@ export class Engine {
           },
         );
       });
-      new TerraCamera('waterCamera', 'renderPassWater', this.mainCamera);
       this.GPUReady = this.createGPU(
         GPUDataSize,
         (gpu) => {
@@ -1041,7 +1049,7 @@ export class Engine {
           });
           this.GPUSubscribionsOnce.clear();
 
-          gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
+          gpu.pickRenderPass.perspectiveCameras.push(gpu.mainCamera);
           //@ts-expect-error todo
           window.printRenderTarget = () => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises

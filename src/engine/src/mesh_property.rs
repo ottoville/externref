@@ -116,7 +116,7 @@ impl MeshProperty {
         // If not equally to scale into all dimensions, re-calculate normals matrix
         if !uniform_scaling {
             sub_3x3.transpose();
-            if !sub_3x3.invert() {
+            if !sub_3x3.invert_in_place() {
                 js_warn([&"Cannot invert normal matrix for a mesh"]);
             }
         }

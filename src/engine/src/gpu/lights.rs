@@ -1,11 +1,14 @@
+use externref::Resource;
+
+use super::buffer::mappadle_buffer::MappadleGPUBuffer;
+use super::gpu::JSDevice;
 use super::{buffer::usages::MAP_WRITE_COPYSRC_USAGE, command_encoder::GPUCommandEncoder};
 use crate::allocators::freeindex::FreeIndexIndex;
-use crate::gpu::buffer::mapped_buffer::MappedgpuBuffer;
 
 use super::buffer::copy_dst::CopyDst;
 use super::buffer::{
-    buffer::GPUBuffer, mappadle_buffer::MappadleGPUBuffer, mapped_buffer::MappedGPUBuffer,
-    pending_buffer::PendingGPUBuffer, usages::STORAGE_COPYDST_USAGE,
+    buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer, pending_buffer::PendingGPUBuffer,
+    usages::STORAGE_COPYDST_USAGE,
 };
 
 pub struct Lights {
@@ -43,7 +46,11 @@ impl Lights {
         self.lights.swap_remove(index + 1);
         self.dirty = true;
     }
-    pub fn update_buffer(&mut self, command_encoder: &GPUCommandEncoder) {
+    pub fn update_buffer(
+        &mut self,
+        device: &Resource<JSDevice>,
+        command_encoder: &GPUCommandEncoder,
+    ) {
         if !self.dirty {
             return;
         }
@@ -56,6 +63,7 @@ impl Lights {
         };
         if self.lights.capacity() * 4 > size {
             self.buffer = Some(GPUBuffer::<STORAGE_COPYDST_USAGE>::new(
+                device,
                 self.lights.capacity() * 4,
                 self.label.to_string(),
                 false,
@@ -65,7 +73,8 @@ impl Lights {
             self.buffer_ring_pending.clear();
         }
         let buffer = self.buffer_ring_mapped.pop().unwrap_or_else(|| {
-            MappedGPUBuffer::<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>::new_mappadle_gpubuffer(
+            MappadleGPUBuffer::new_mapped(
+                device,
                 self.lights.capacity() * 4,
                 String::from(self.label.to_string() + "_swap_buffer"),
                 false,
@@ -80,7 +89,7 @@ impl Lights {
         let unmapped_buffer = buffer.unmap();
         self.buffer.as_ref().unwrap().copy_from(
             &command_encoder,
-            &*unmapped_buffer,
+            &unmapped_buffer,
             0,
             0,
             self.lights.len() * 4,
@@ -113,25 +122,29 @@ impl Lights {
 #[cfg(test)]
 #[test]
 fn test_lights() {
-    let mut lights = Lights::new(String::from("GPUPointLights"));
-    assert_eq!(lights.queue_submited(), false);
-    lights.push(FreeIndexIndex(1));
-    let command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
-    assert_eq!(lights.dirty, true);
-    lights.update_buffer(&command_encoder);
-    assert_eq!(lights.dirty, false);
-    let update_needed = lights.update_buffer(&command_encoder);
-    assert_eq!(lights.dirty, false);
-    assert_eq!(
-        lights.buffer.as_ref().unwrap().size,
-        lights.lights.capacity() * 4
-    );
-    lights.push(FreeIndexIndex(2));
-    lights.push(FreeIndexIndex(3));
-    lights.push(FreeIndexIndex(4));
-    lights.update_buffer(&command_encoder);
-    assert_eq!(lights.buffer.as_ref().unwrap().size, 32);
+    use externref::ExternRef;
+    unsafe {
+        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0));
+        let mut lights = Lights::new(String::from("GPUPointLights"));
+        assert_eq!(lights.queue_submited(), false);
+        lights.push(FreeIndexIndex(1));
+        let command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
+        assert_eq!(lights.dirty, true);
+        lights.update_buffer(&device, &command_encoder);
+        assert_eq!(lights.dirty, false);
+        let update_needed = lights.update_buffer(&device, &command_encoder);
+        assert_eq!(lights.dirty, false);
+        assert_eq!(
+            lights.buffer.as_ref().unwrap().size,
+            lights.lights.capacity() * 4
+        );
+        lights.push(FreeIndexIndex(2));
+        lights.push(FreeIndexIndex(3));
+        lights.push(FreeIndexIndex(4));
+        lights.update_buffer(&device, &command_encoder);
+        assert_eq!(lights.buffer.as_ref().unwrap().size, 32);
 
-    assert_eq!(lights.queue_submited(), true);
-    assert_eq!(lights.queue_submited(), false);
+        assert_eq!(lights.queue_submited(), true);
+        assert_eq!(lights.queue_submited(), false);
+    }
 }

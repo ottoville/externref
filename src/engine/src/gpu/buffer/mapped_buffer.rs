@@ -1,158 +1,40 @@
 use std::ops::Deref;
 
-use externref::Resource;
-
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
-use super::buffer::{create_gpu_buffer, set_mapped_range, unmap};
-use super::buffer::{GPUBuffer, GpuBuffer, JSBuffer};
-use super::mappadle_buffer::MappadleGPUBuffer;
+use super::buffer::{set_mapped_range, unmap};
+use super::buffer::{GPUBuffer, GpuBuffer};
 use super::usages::COPYSRC_USAGE;
-use crate::MULTIVALUE_USIZE;
+use externref::Resource;
+use externref::externref;
+
+use crate::gpu::gpu::JSDevice;
 
 // Todo: set inner buffer to private
-pub struct MappedGPUBuffer<B: GpuBuffer>(pub B);
+pub struct MappedGPUBuffer<B: GpuBuffer>(B);
 
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
+#[externref]
 pub unsafe extern "C" fn create_mapped_GPU_buffer_copysrc(
+    device: &Resource<JSDevice>,
     length: usize,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
 ) -> *const MappedGPUBuffer<GPUBuffer<COPYSRC_USAGE>> {
+
+
+
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(
-        MappedGPUBuffer::<GPUBuffer<COPYSRC_USAGE>>::new_gpubuffer(length, label, true),
-    ))
+    Box::into_raw(Box::new(GPUBuffer::new_mapped(device, length, label, true)))
 }
 
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
-pub trait MappedgpuBuffer<const U: u32>: GpuBuffer {
-    fn new_mappadle_gpubuffer(
-        size: usize,
-        label: String,
-        owned_by_js: bool,
-    ) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
-        unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-
-            let externref =
-                create_gpu_buffer(size, MULTIVALUE_USIZE.as_ptr(), U, true, owned_by_js);
-            return MappedGPUBuffer(MappadleGPUBuffer::new(GPUBuffer {
-                externref,
-                label,
-                owned_by_js,
-                size,
-            }));
-        }
-    }
-    fn new_gpubuffer(
-        size: usize,
-        label: String,
-        owned_by_js: bool,
-    ) -> MappedGPUBuffer<GPUBuffer<U>> {
-        unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-
-            let externref =
-                create_gpu_buffer(size, MULTIVALUE_USIZE.as_ptr(), U, true, owned_by_js);
-            return MappedGPUBuffer(GPUBuffer {
-                externref,
-                label,
-                owned_by_js,
-                size,
-            });
-        }
-    }
-}
-
-#[cfg(test)]
-pub trait MappedgpuBuffer<const U: u32>: GpuBuffer {
-    fn new_mappadle_gpubuffer(
-        size: usize,
-        label: String,
-        owned_by_js: bool,
-    ) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
-        use externref::ExternRef;
-        unsafe {
-            return MappedGPUBuffer(MappadleGPUBuffer::new(GPUBuffer {
-                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-                label,
-                owned_by_js,
-                size,
-            }));
-        }
-    }
-    fn new_gpubuffer(
-        size: usize,
-        label: String,
-        owned_by_js: bool,
-    ) -> MappedGPUBuffer<GPUBuffer<U>> {
-        use externref::ExternRef;
-        unsafe {
-            return MappedGPUBuffer(GPUBuffer {
-                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-                label,
-                owned_by_js,
-                size,
-            });
-        }
-    }
-}
-impl<const U: u32> GpuBuffer for MappedGPUBuffer<GPUBuffer<U>> {
-    fn externref(&self) -> &Resource<JSBuffer> {
-        &self.externref
-    }
-    fn label(&self) -> &String {
-        &self.label
-    }
-    fn owned_by_js(&self) -> bool {
-        self.owned_by_js
-    }
-    fn usages(&self) -> u32 {
-        U
-    }
-    fn size(&self) -> usize {
-        self.size
-    }
-    fn set_size(&mut self, size: usize) {
-        self.0.set_size(size);
-    }
-    fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Resource<JSBuffer> {
-        self.0.replace_externref(externref)
-    }
-}
-impl<const U: u32> GpuBuffer for MappedGPUBuffer<MappadleGPUBuffer<U>> {
-    fn externref(&self) -> &Resource<JSBuffer> {
-        &self.externref
-    }
-    fn label(&self) -> &String {
-        &self.label
-    }
-    fn owned_by_js(&self) -> bool {
-        self.owned_by_js
-    }
-    fn usages(&self) -> u32 {
-        U
-    }
-    fn size(&self) -> usize {
-        self.size
-    }
-    fn set_size(&mut self, size: usize) {
-        self.0.set_size(size);
-    }
-    fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Resource<JSBuffer> {
-        self.0.replace_externref(externref)
-    }
-}
 impl<B: GpuBuffer> MappedGPUBuffer<B> {
+    pub fn new(buffer: B) -> MappedGPUBuffer<B> {
+        MappedGPUBuffer(buffer)
+    }
     pub fn set_mapped_range(
         &self,
         ptr: usize,

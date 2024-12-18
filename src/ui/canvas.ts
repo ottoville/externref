@@ -140,10 +140,10 @@ export class Canvas {
           new Sea([terrascene]);
           //new testPlane(terrascene);
           const archRotateController = new ArcRotateCamera(
-            engine.mainCamera,
+            gpu.mainCamera,
             true,
           );
-          engine.mainCamera.attachControllerForCamera(archRotateController);
+          gpu.mainCamera.attachControllerForCamera(archRotateController);
           const human = new Human({
             inputEnabled: false,
             scenes: [terrascene],
@@ -158,11 +158,9 @@ export class Canvas {
           document.addEventListener('keydown', (e) => {
             if (e.key === 'Tab') {
               if (engine.inputManager === human.inputManager) {
-                engine.mainCamera.attachControllerForCamera(
-                  archRotateController,
-                );
+                gpu.mainCamera.attachControllerForCamera(archRotateController);
               } else {
-                engine.mainCamera.attachControllerForCamera(human.inputManager);
+                gpu.mainCamera.attachControllerForCamera(human.inputManager);
               }
             }
           });
