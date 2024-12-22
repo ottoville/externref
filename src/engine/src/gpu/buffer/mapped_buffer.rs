@@ -24,9 +24,6 @@ pub unsafe extern "C" fn create_mapped_GPU_buffer_copysrc(
     label_len: usize,
     label_cap: usize,
 ) -> *const MappedGPUBuffer<GPUBuffer<COPYSRC_USAGE>> {
-
-
-
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     Box::into_raw(Box::new(GPUBuffer::new_mapped(device, length, label, true)))
 }

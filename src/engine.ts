@@ -381,9 +381,6 @@ export type rustWasm = {
     false,
     Buffer<(typeof BufferUsageEnums)['STORAGE|COPY_DST']>
   >;
-  get_raw_buffer<U extends BufferUsageEnums, M extends boolean>(
-    buffer: rust_pointer<'GPUBuffer'>,
-  ): Externref<false, Buffer<U, M>>;
   init_gpu(device: Externref<true, GPUDevice>, queue: GPUQueue): void;
   push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
   drain_command_buffers(
@@ -391,6 +388,7 @@ export type rustWasm = {
   ): GPUCommandBuffer | null;
   check_mapped_buffers(): void;
   add_camera(
+    device: Externref<true, GPUDevice>,
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -398,6 +396,7 @@ export type rustWasm = {
   ): number;
   add_child_to_camera(
     camera_id: number,
+    device: Externref<true, GPUDevice>,
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -405,6 +404,7 @@ export type rustWasm = {
   ): number;
   add_child_to_camera_water(
     camera_id: number,
+    device: Externref<true, GPUDevice>,
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -422,6 +422,10 @@ export type rustWasm = {
   get_camera_buffer(
     camera_id: number,
   ): Externref<false, Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>>;
+  get_camera_cluster_buffer(
+    camera_id: number,
+  ): Externref<false, Buffer<(typeof BufferUsageEnums)['STORAGE']>>;
+
   update_camera_projection_view_inverted(camera_id: number): void;
   update_camera_position(
     camera_id: number,

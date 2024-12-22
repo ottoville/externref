@@ -1,7 +1,6 @@
 import { type GPU } from '../../GPU.js';
-import { Lights, tileCount, ViewUniforms } from './structs/Structs.js';
+import { Lights, tileCount } from './structs/Structs.js';
 
-import { UpdateClustersBufferLayout } from './Clusters.comp.js';
 import {
   BGLayout,
   BufLayout,
@@ -48,20 +47,7 @@ export function createUpdateViewShader(gpu: GPU) {
         Lights,
       ),
     }),
-    new BGLayout(gpu.device, 'UpdateClustersLayout', {
-      clusters: UpdateClustersBufferLayout,
-      viewUniforms: new BufLayout(
-        {
-          buffer: {
-            hasDynamicOffset: false,
-            minBindingSize: 144,
-            type: 'uniform',
-          },
-          visibility: ShaderStage.COMPUTE,
-        },
-        ViewUniforms,
-      ),
-    }),
+    gpu.pipelineLayouts.updateClustersLayout,
   ] as const;
 
   const pipelineLayout = new PipelineLayout({

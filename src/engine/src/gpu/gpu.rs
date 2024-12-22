@@ -22,7 +22,6 @@ use super::{
     command_encoder::JSCommandBuffer,
     queue::Queue,
 };
-use std::cell::Ref;
 
 pub const GPU_MEMORY_INDEX_SIZE: usize = 256;
 pub const DEFAULT_MAX_INSTANCES: usize = 10;

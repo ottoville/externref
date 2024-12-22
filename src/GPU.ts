@@ -338,10 +338,10 @@ export class GPU {
     const totalClusters = tileCount[0] * tileCount[1] * tileCount[2];
     this.clusterSizeinBytes =
       totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
-    this.updateViewShader = createUpdateViewShader(this);
 
     this.pipelineLayouts = createPipelineLayouts(this);
     this.shaders = createShaderBuilders(this);
+    this.updateViewShader = createUpdateViewShader(this);
 
     this.#updateViewBindGroup = new BindGroup(
       this.updateViewShader[0][0],
@@ -543,9 +543,18 @@ export class GPU {
       }),
       this,
     );
-    this.mainCamera = new TerraCamera('mainCamera', this.renderPassScreen);
+    this.mainCamera = new TerraCamera(
+      'mainCamera',
+      this.device,
+      this.renderPassScreen,
+    );
 
-    new TerraCamera('waterCamera', this.renderPassWater, this.mainCamera);
+    new TerraCamera(
+      'waterCamera',
+      this.device,
+      this.renderPassWater,
+      this.mainCamera,
+    );
     //TODO: this does not need to be canvas size
     /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
             (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');
@@ -628,9 +637,7 @@ export class GPU {
       usages: BufferUsageEnums['UNIFORM|COPY_DST'],
     });
 
-    const ClustersShader = createClustersCompShader(
-      this.pipelineLayouts.sizeBindGroupLayout,
-    );
+    const ClustersShader = createClustersCompShader(this);
     const computePipelineClustersP =
       ClustersShader[1].createComputePipeline('main');
     const updateViewPipelineP =
@@ -688,7 +695,11 @@ export class GPU {
               renderPass.createSizeBindGroup().bindGroup,
             );
             renderPass.perspectiveCameras.forEach((camera) => {
-              camera.updateClusters(passEncoder, ClustersShader[0][1]);
+              passEncoder.setBindGroup(
+                1,
+                camera.updateClustersBindGroup!.bindGroup,
+              );
+              passEncoder.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
             });
           });
           // Call onResize after all renderPasses have resizes so callbacks

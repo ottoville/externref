@@ -6,7 +6,6 @@ import {
 } from './structs/Structs.js';
 import { type GPU } from '../../GPU.js';
 import {
-  BGLayout,
   BufLayout,
   ComputeShaderBuilder,
   ComputeShaderFunction,
@@ -14,17 +13,6 @@ import {
   ShaderStage,
 } from '../../webgpu-ts/index.js';
 
-export const UpdateClustersBufferLayout = new BufLayout(
-  {
-    buffer: {
-      hasDynamicOffset: false,
-      minBindingSize: 7962624,
-      type: 'storage',
-    },
-    visibility: ShaderStage.COMPUTE,
-  },
-  Clusters,
-);
 export const PROJECTION_BUFFER_SIZE = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 
 const mainFunction = new ComputeShaderFunction<
@@ -80,25 +68,10 @@ ${clusters.prop(
   `,
 );
 
-export function createClustersCompShader(
-  sizeGroup: GPU['pipelineLayouts']['sizeBindGroupLayout'],
-) {
+export function createClustersCompShader(gpu: GPU) {
   const bindLayouts = [
-    sizeGroup,
-    new BGLayout(sizeGroup.gpu, 'CreateClustersLayout2', {
-      clusters: UpdateClustersBufferLayout,
-      screentoview: new BufLayout(
-        {
-          buffer: {
-            hasDynamicOffset: false,
-            minBindingSize: PROJECTION_BUFFER_SIZE,
-            type: 'uniform',
-          },
-          visibility: ShaderStage.COMPUTE,
-        },
-        ProjectionStruct,
-      ),
-    }),
+    gpu.pipelineLayouts.sizeBindGroupLayout,
+    gpu.pipelineLayouts.clustersLayout,
   ] as const;
   const pipelineLayout = new PipelineLayout({
     bindGroupLayouts: bindLayouts,

@@ -14,10 +14,22 @@ import {
   Scene,
   ScreenDimensions,
   Time,
+  ViewUniforms,
 } from './structs/Structs.js';
 import { gpu_memory_index_size } from './ShaderBuilders.js';
 import { PROJECTION_BUFFER_SIZE } from './Clusters.comp.js';
 
+const UpdateClustersBufferLayout = new BufLayout(
+  {
+    buffer: {
+      hasDynamicOffset: false,
+      minBindingSize: 7962624,
+      type: 'storage',
+    },
+    visibility: ShaderStage.COMPUTE,
+  },
+  Clusters,
+);
 export function createPipelineLayouts(gpu: GPU) {
   const uniformBindGroupLayoutWithTime = new BGLayout(
     gpu.device,
@@ -183,15 +195,49 @@ export function createPipelineLayouts(gpu: GPU) {
     bindGroupLayouts: [BindGroupLayoutCanvas],
     label: 'canvasRootLayout',
   });
+  const clustersLayout = new BGLayout(gpu.device, 'CreateClustersLayout2', {
+    clusters: UpdateClustersBufferLayout,
+    screentoview: new BufLayout(
+      {
+        buffer: {
+          hasDynamicOffset: false,
+          minBindingSize: PROJECTION_BUFFER_SIZE,
+          type: 'uniform',
+        },
+        visibility: ShaderStage.COMPUTE,
+      },
+      ProjectionStruct,
+    ),
+  });
+  const updateClustersLayout = new BGLayout(
+    gpu.device,
+    'UpdateClustersLayout',
+    {
+      clusters: UpdateClustersBufferLayout,
+      viewUniforms: new BufLayout(
+        {
+          buffer: {
+            hasDynamicOffset: false,
+            minBindingSize: 144,
+            type: 'uniform',
+          },
+          visibility: ShaderStage.COMPUTE,
+        },
+        ViewUniforms,
+      ),
+    },
+  );
   return {
     BindGroupLayoutCanvas,
     BindGroupLayoutPosition,
     canvasRootLayout,
+    clustersLayout,
     lightsTextureBindGroup,
     positionAndTimeBindGroup,
     rootCameralayout,
     sizeBindGroupLayout,
     uniformBindGroupLayoutWithTime,
+    updateClustersLayout,
     waterTextureLayot,
   };
 }

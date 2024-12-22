@@ -1,4 +1,4 @@
-﻿import {
+import {
   MutableTerraVector3,
   ReadOnlyTerraVector3,
   TerraMatrix,
@@ -6,10 +6,10 @@
 import type { Engine } from './engine.js';
 import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
-import { ClustersComp } from './GPU/Shaders/Clusters.comp.js';
-import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
+import { BindGroup } from './webgpu-ts/index.js';
 import { create_rust_label, stringFromPtr } from './utils.js';
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
+import { Externref } from './externref.js';
 declare const engine: Engine;
 
 export type CameraControl = {
@@ -18,7 +18,7 @@ export type CameraControl = {
 };
 
 export class TerraCamera {
-  #clusterArrayBuffer?: Buffer<BufferUsageEnums.STORAGE>;
+  updateClustersBindGroup?: BindGroup<GPU['pipelineLayouts']['clustersLayout']>;
 
   get projectionViewInverted() {
     return new TerraMatrix(
@@ -57,39 +57,69 @@ export class TerraCamera {
       engine.rust.get_camera_label(this.id),
     );
   }
-  constructor(label: string, renderPass: RenderPass, parent?: TerraCamera) {
+  constructor(
+    label: string,
+    device: GPUDevice,
+    renderPass: RenderPass,
+    parent?: TerraCamera,
+  ) {
     renderPass.perspectiveCameras.push(this);
     if (parent) {
       if (label === 'waterCamera') {
         this.id = engine.rust.add_child_to_camera_water(
           parent.id,
+          new Externref(true, device),
           this,
           ...create_rust_label(label),
         );
       } else {
         this.id = engine.rust.add_child_to_camera(
           parent.id,
+          new Externref(true, device),
           this,
           ...create_rust_label(label),
         );
       }
     } else {
-      this.id = engine.rust.add_camera(this, ...create_rust_label(label));
+      this.id = engine.rust.add_camera(
+        new Externref(true, device),
+        this,
+        ...create_rust_label(label),
+      );
     }
     engine.getGPU((gpu) => {
-      this.#clusterArrayBuffer?.destroy();
+      //this.#clusterArrayBuffer?.destroy();
       //this.#uniformBuffer?.destroy();
       this.uniformBindGroup?.destroy();
       this.updateViewBindGroup?.destroy();
       this.gpu = gpu;
-
-      this.#clusterArrayBuffer = new Buffer({
-        gpu: gpu.device,
-        label: 'clusterArrayBuffer',
-        size: gpu.clusterSizeinBytes,
-        usages: BufferUsageEnums.STORAGE,
-      });
-
+      this.updateClustersBindGroup = new BindGroup(
+        gpu.pipelineLayouts.clustersLayout,
+        'updateProjection',
+        (bindGroup2) => {
+          const group = {
+            clusters: engine.rust
+              .get_camera_cluster_buffer(this.id)
+              .externref.getStorageBinding(bindGroup2),
+            screentoview: engine.rust
+              .get_gpu_projection_buffer()
+              .externref.getUniformBinding(bindGroup2),
+          };
+          return group;
+        },
+      );
+      this.updateViewBindGroup = new BindGroup(
+        gpu.pipelineLayouts.updateClustersLayout,
+        'updateViewBindGroup2',
+        (bindGroup) => ({
+          clusters: engine.rust
+            .get_camera_cluster_buffer(this.id)
+            .externref.getStorageBinding(bindGroup),
+          viewUniforms: engine.rust
+            .get_camera_buffer(this.id)
+            .externref.getUniformBinding(bindGroup),
+        }),
+      );
       //Todo: set to private
       this.uniformBindGroup = new BindGroup(
         gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
@@ -99,8 +129,9 @@ export class TerraCamera {
             .get_gpu_projection_buffer()
             .externref.getUniformBinding(bindGroup);
           const group = {
-            clusters_array:
-              this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
+            clusters_array: engine.rust
+              .get_camera_cluster_buffer(this.id)
+              .externref.getStorageBinding(bindGroup),
             meshes: engine.rust
               .get_gpu_mesh_buffer()
               .externref.getStorageBinding(bindGroup),
@@ -113,16 +144,7 @@ export class TerraCamera {
           return group;
         },
       );
-      this.updateViewBindGroup = new BindGroup(
-        gpu.updateViewShader[0][1],
-        'updateViewBindGroup2',
-        (bindGroup) => ({
-          clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup),
-          viewUniforms: engine.rust
-            .get_camera_buffer(this.id)
-            .externref.getUniformBinding(bindGroup),
-        }),
-      );
+
       gpu.cameras.push(this);
     });
 
@@ -161,29 +183,6 @@ export class TerraCamera {
     controller.cameraControl = this.controls;
     return this.controls;
   }
-  updateClusters(
-    passEncoder: GPUComputePassEncoder,
-    computePipelineClustersLayout: ClustersComp['0']['1'],
-  ) {
-    //TODO move out from loop
-    const bindGroup = new BindGroup(
-      computePipelineClustersLayout,
-      'updateProjection',
-      (bindGroup2) => {
-        const group = {
-          clusters: this.#clusterArrayBuffer!.getStorageBinding(bindGroup2),
-          screentoview: engine.rust
-            .get_gpu_projection_buffer()
-            .externref.getUniformBinding(bindGroup2),
-        };
-        return group;
-      },
-    );
-
-    passEncoder.setBindGroup(1, bindGroup.bindGroup);
-    passEncoder.dispatchWorkgroups(...this.gpu!.CLUSTER_DISPATCH_SIZE);
-  }
-
   get direction() {
     return new ReadOnlyTerraVector3(
       engine.rust.memory.buffer,

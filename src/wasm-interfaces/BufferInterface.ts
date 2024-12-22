@@ -18,6 +18,16 @@ export type BufferInterface = {
     label_len: number,
     label_cap: number,
   ): rust_pointer<'GPUBuffer'>;
+  create_GPU_buffer_storage(
+    device: Externref<true, GPUDevice>,
+    length: number,
+    label_ptr: number,
+    label_len: number,
+    label_cap: number,
+  ): rust_pointer<'GPUBuffer'>;
+  get_raw_buffer<U extends BufferUsageEnums, M extends boolean>(
+    buffer: rust_pointer<'GPUBuffer'>,
+  ): Externref<false, Buffer<U, M>>;
 };
 
 export const BufferExports = {

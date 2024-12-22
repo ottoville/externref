@@ -1,8 +1,4 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-    sync::atomic::{AtomicU32, Ordering},
-};
+use std::sync::atomic::{AtomicU32, Ordering};
 
 use externref::{externref, Resource};
 use terramath::MatrixMath;
@@ -12,14 +8,13 @@ use crate::{
         buffer::{
             buffer::{GPUBuffer, JSBuffer},
             copy_dst::CopyDst,
-            usages::{COPYSRC_USAGE, UNIFORM_COPYDST_USAGE},
+            usages::{COPYSRC_USAGE, STORAGE_USAGE, UNIFORM_COPYDST_USAGE},
         },
         command_encoder::GPUCommandEncoder,
         compute_pass_encoder::{ComputePassEncoder, JSBindGroup},
         gpu::{JSDevice, TEMP_GPU_BUFFERS},
     },
     mesh::ENGINE,
-    projection::Projection,
     MULTIVALUE_USIZE,
 };
 #[no_mangle]
@@ -76,13 +71,14 @@ pub unsafe extern "C" fn update_camera_direction(camera_id: u32, x: f32, y: f32,
 #[no_mangle]
 pub unsafe extern "C" fn add_child_to_camera(
     camera_id: u32,
+    device: &Resource<JSDevice>,
     externref: Resource<JSCamera>,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
 ) -> u32 {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let camera = Camera::new(externref, label);
+    let camera = Camera::new(device, externref, label);
     let id = camera.id;
     ENGINE
         .physic_engine_mut()
@@ -98,13 +94,14 @@ pub unsafe extern "C" fn add_child_to_camera(
 #[no_mangle]
 pub unsafe extern "C" fn add_child_to_camera_water(
     camera_id: u32,
+    device: &Resource<JSDevice>,
     externref: Resource<JSCamera>,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
 ) -> u32 {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let camera = Camera::new_water(externref, label);
+    let camera = Camera::new_water(device, externref, label);
     let id = camera.id;
     ENGINE
         .physic_engine_mut()
@@ -119,6 +116,7 @@ pub unsafe extern "C" fn add_child_to_camera_water(
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn add_camera(
+    device: Resource<JSDevice>,
     externref: Resource<JSCamera>,
     label_ptr: *mut u8,
     label_len: usize,
@@ -126,7 +124,7 @@ pub unsafe extern "C" fn add_camera(
 ) -> u32 {
     let cameras = &mut ENGINE.physic_engine_mut().gpu.as_mut().unwrap().projections[0].cameras;
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let camera = Camera::new(externref, label);
+    let camera = Camera::new(&device, externref, label);
     let id = camera.id;
     cameras.cameras.push(camera);
     return id;
@@ -202,6 +200,18 @@ pub unsafe extern "C" fn get_camera_buffer(camera_id: u32) -> &'static Resource<
         .buffer
         .externref
 }
+#[externref]
+#[no_mangle]
+pub unsafe extern "C" fn get_camera_cluster_buffer(camera_id: u32) -> &'static Resource<JSBuffer> {
+    &ENGINE
+        .physic_engine()
+        .gpu
+        .as_ref()
+        .unwrap()
+        .get_camera_by_id(camera_id)
+        .cluster_array_buffer
+        .externref
+}
 pub struct JSCamera(());
 static NEXT_CAMERA_ID: AtomicU32 = AtomicU32::new(0);
 
@@ -222,6 +232,9 @@ static CLUSTER_DISPATCH_SIZE: [u32; 3] = [
     TILE_COUNT[1] / CLUSTER_WORKGROUP_SIZE[1],
     TILE_COUNT[2] / CLUSTER_WORKGROUP_SIZE[2],
 ];
+static TOTAL_CLUSTERS: u32 = TILE_COUNT[0] * TILE_COUNT[1] * TILE_COUNT[2];
+static CLUSTER_SIZE_IN_BYTES: u32 = TOTAL_CLUSTERS * (8 + 64) * 4;
+
 static VIEW_UPDATED_POSITION: u32 = 1;
 static VIEW_UPDATED_DIRECTION: u32 = 2;
 static UNIFORM_BUFFER_SIZE: usize =
@@ -244,72 +257,82 @@ pub struct Camera {
     before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 3])>>,
     projection_view_inverted_is_dirty: bool,
     buffer: GPUBuffer<UNIFORM_COPYDST_USAGE>,
+    cluster_array_buffer: GPUBuffer<STORAGE_USAGE>,
 }
 impl Camera {
-    pub fn new(externref: Resource<JSCamera>, label: String) -> Self {
-        unsafe {
-            let gpu = ENGINE.physic_engine().gpu.as_ref().unwrap();
-            Camera {
-                view: [
-                    [0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 1.0],
-                ],
-                projection_view: [[0.0; 4]; 4],
-                projection_view_inverted: [[0.0; 4]; 4],
-                position: [0.0; 3],
-                direction: [1.0, 0.0, 0.0],
-                externref,
-                updated: false,
-                label,
-                children: Vec::new(),
-                do_update_view: 0,
-                id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
-                before_view_update: None,
-                projection_view_inverted_is_dirty: false,
-                buffer: GPUBuffer::new(
-                    &gpu.device,
-                    UNIFORM_BUFFER_SIZE,
-                    String::from("camerauniformBuffer"),
-                    false,
-                ),
-            }
+    pub fn new(device: &Resource<JSDevice>, externref: Resource<JSCamera>, label: String) -> Self {
+        Camera {
+            view: [
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+            projection_view: [[0.0; 4]; 4],
+            projection_view_inverted: [[0.0; 4]; 4],
+            position: [0.0; 3],
+            direction: [1.0, 0.0, 0.0],
+            externref,
+            updated: false,
+            label,
+            children: Vec::new(),
+            do_update_view: 0,
+            id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
+            before_view_update: None,
+            projection_view_inverted_is_dirty: false,
+            buffer: GPUBuffer::new(
+                device,
+                UNIFORM_BUFFER_SIZE,
+                String::from("camerauniformBuffer"),
+                false,
+            ),
+            cluster_array_buffer: GPUBuffer::new(
+                device,
+                CLUSTER_SIZE_IN_BYTES as usize,
+                String::from("clusterArrayBuffer"),
+                false,
+            ),
         }
     }
-    pub fn new_water(externref: Resource<JSCamera>, label: String) -> Self {
-        unsafe {
-            let gpu = ENGINE.physic_engine().gpu.as_ref().unwrap();
-
-            Camera {
-                view: [
-                    [0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 1.0],
-                ],
-                projection_view: [[0.0; 4]; 4],
-                projection_view_inverted: [[0.0; 4]; 4],
-                position: [0.0; 3],
-                direction: [1.0, 0.0, 0.0],
-                externref,
-                updated: false,
-                label,
-                children: Vec::new(),
-                do_update_view: 0,
-                id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
-                before_view_update: Some(Box::new(|direction, position| {
-                    position[1] -= (position[1] - 3.0) * 2.0;
-                    direction[1] = -direction[1];
-                })),
-                projection_view_inverted_is_dirty: false,
-                buffer: GPUBuffer::new(
-                    &gpu.device,
-                    UNIFORM_BUFFER_SIZE,
-                    String::from("camerauniformBuffer"),
-                    false,
-                ),
-            }
+    pub fn new_water(
+        device: &Resource<JSDevice>,
+        externref: Resource<JSCamera>,
+        label: String,
+    ) -> Self {
+        Camera {
+            view: [
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+            projection_view: [[0.0; 4]; 4],
+            projection_view_inverted: [[0.0; 4]; 4],
+            position: [0.0; 3],
+            direction: [1.0, 0.0, 0.0],
+            externref,
+            updated: false,
+            label,
+            children: Vec::new(),
+            do_update_view: 0,
+            id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
+            before_view_update: Some(Box::new(|direction, position| {
+                position[1] -= (position[1] - 3.0) * 2.0;
+                direction[1] = -direction[1];
+            })),
+            projection_view_inverted_is_dirty: false,
+            buffer: GPUBuffer::new(
+                device,
+                UNIFORM_BUFFER_SIZE,
+                String::from("camerauniformBuffer"),
+                false,
+            ),
+            cluster_array_buffer: GPUBuffer::new(
+                device,
+                CLUSTER_SIZE_IN_BYTES as usize,
+                String::from("clusterArrayBuffer"),
+                false,
+            ),
         }
     }
     fn on_update_position(&self) {
@@ -445,6 +468,7 @@ fn test_child_camera() {
     use crate::engine::init_engine;
     use crate::gpu::gpu::init_gpu;
     use externref::ExternRef;
+    use super::projection::Projection;
     unsafe {
         if ENGINE.engine2.is_none() {
             init_engine();
@@ -454,10 +478,12 @@ fn test_child_camera() {
             );
         }
         let mut camera = Camera::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),
         );
         let child_1 = Camera::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("camera1.0"),
         );

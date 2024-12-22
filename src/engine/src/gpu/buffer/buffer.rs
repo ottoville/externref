@@ -5,8 +5,8 @@ use externref::{externref, Resource};
 use crate::gpu::gpu::JSDevice;
 use crate::{gpu::command_encoder::JSCommandEncoder, MULTIVALUE_USIZE};
 
-use super::usages::COPYSRC_USAGE;
 use super::mapped_buffer::MappedGPUBuffer;
+use super::usages::{COPYSRC_USAGE, STORAGE_USAGE};
 
 pub struct JSBuffer(());
 
@@ -56,6 +56,21 @@ pub unsafe extern "C" fn get_raw_buffer(
 ) -> &'static Resource<JSBuffer> {
     &(*buffer).externref
 }
+#[no_mangle]
+#[cfg(feature = "webgpu")]
+#[cfg(any(not(test), rust_analyzer))]
+#[externref]
+pub unsafe extern "C" fn create_GPU_buffer_storage(
+    device: &Resource<JSDevice>,
+    length: usize,
+    label_ptr: *mut u8,
+    label_len: usize,
+    label_cap: usize,
+) -> *const GPUBuffer<STORAGE_USAGE> {
+    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
+    Box::into_raw(Box::new(GPUBuffer::new(device, length, label, true)))
+}
+
 pub struct GPUBuffer<const U: u32> {
     pub externref: Resource<JSBuffer>,
     pub label: String,
@@ -99,13 +114,24 @@ impl<const U: u32> GpuBuffer for GPUBuffer<U> {
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
 impl<const U: u32> GPUBuffer<U> {
-    pub fn new(device: &Resource<JSDevice>, size: usize, label: String, owned_by_js: bool) -> GPUBuffer<U> {
+    pub fn new(
+        device: &Resource<JSDevice>,
+        size: usize,
+        label: String,
+        owned_by_js: bool,
+    ) -> GPUBuffer<U> {
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
             MULTIVALUE_USIZE[1] = label.len();
             MULTIVALUE_USIZE[2] = label.capacity();
-            let externref =
-                create_gpu_buffer(device, size, MULTIVALUE_USIZE.as_ptr(), U, false, owned_by_js);
+            let externref = create_gpu_buffer(
+                device,
+                size,
+                MULTIVALUE_USIZE.as_ptr(),
+                U,
+                false,
+                owned_by_js,
+            );
             return GPUBuffer {
                 externref,
                 label,
@@ -114,13 +140,24 @@ impl<const U: u32> GPUBuffer<U> {
             };
         }
     }
-    pub fn new_mapped(device: &Resource<JSDevice>, size: usize, label: String, owned_by_js: bool) -> MappedGPUBuffer<GPUBuffer<U>> {
+    pub fn new_mapped(
+        device: &Resource<JSDevice>,
+        size: usize,
+        label: String,
+        owned_by_js: bool,
+    ) -> MappedGPUBuffer<GPUBuffer<U>> {
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
             MULTIVALUE_USIZE[1] = label.len();
             MULTIVALUE_USIZE[2] = label.capacity();
-            let externref =
-                create_gpu_buffer(device, size, MULTIVALUE_USIZE.as_ptr(), U, true, owned_by_js);
+            let externref = create_gpu_buffer(
+                device,
+                size,
+                MULTIVALUE_USIZE.as_ptr(),
+                U,
+                true,
+                owned_by_js,
+            );
             return MappedGPUBuffer::new(GPUBuffer {
                 externref,
                 label,
@@ -132,7 +169,12 @@ impl<const U: u32> GPUBuffer<U> {
 }
 #[cfg(test)]
 impl<const U: u32> GPUBuffer<U> {
-    pub fn new(device: &Resource<JSDevice>, size: usize, label: String, owned_by_js: bool) -> GPUBuffer<U> {
+    pub fn new(
+        device: &Resource<JSDevice>,
+        size: usize,
+        label: String,
+        owned_by_js: bool,
+    ) -> GPUBuffer<U> {
         use externref::ExternRef;
         unsafe {
             return GPUBuffer {
@@ -143,7 +185,12 @@ impl<const U: u32> GPUBuffer<U> {
             };
         }
     }
-    pub fn new_mapped(device: &Resource<JSDevice>, size: usize, label: String, owned_by_js: bool) -> MappedGPUBuffer<GPUBuffer<U>> {
+    pub fn new_mapped(
+        device: &Resource<JSDevice>,
+        size: usize,
+        label: String,
+        owned_by_js: bool,
+    ) -> MappedGPUBuffer<GPUBuffer<U>> {
         use externref::ExternRef;
         unsafe {
             return MappedGPUBuffer::new(GPUBuffer {

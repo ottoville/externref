@@ -54,28 +54,34 @@ fn test_cameras_iterator() {
         let mut cameras = Cameras {
             cameras: vec![
                 Camera::new(
+                    &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
                     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
                     String::from("camera0"),
                 ),
                 Camera::new(
+                    &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
                     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
                     String::from("camera1"),
                 ),
                 Camera::new(
+                    &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
                     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
                     String::from("camera2"),
                 ),
             ],
         };
         let mut child_1 = Camera::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("camera1.0"),
         );
         let child1_1 = Camera::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("camera1.0.0"),
         );
         let child1_2 = Camera::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("camera1.0.1"),
         );
