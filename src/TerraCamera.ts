@@ -49,7 +49,7 @@ export class TerraCamera {
   #inputController?: CameraController;
   public gpu?: GPU;
 
-  onUpdatePosition: Set<() => void> = new Set();
+  onUpdatePosition: Set<(x: number, y: number, z: number) => void> = new Set();
   id: number;
   get label(): string {
     return stringFromPtr(

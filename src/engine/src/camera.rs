@@ -222,7 +222,7 @@ static NEXT_CAMERA_ID: AtomicU32 = AtomicU32::new(0);
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     fn get_update_view_bindgroup(externref: &Resource<JSCamera>) -> Resource<JSBindGroup>;
-    fn on_update_position(externref: &Resource<JSCamera>);
+    fn on_update_position(externref: &Resource<JSCamera>, x: f32, y: f32, z: f32);
 
 }
 static TILE_COUNT: [u32; 3] = [32, 18, 48];
@@ -339,7 +339,12 @@ impl Camera {
         #[cfg(feature = "webgpu")]
         #[cfg(any(not(test), rust_analyzer))]
         unsafe {
-            on_update_position(&self.externref);
+            on_update_position(
+                &self.externref,
+                self.position[0],
+                self.position[1],
+                self.position[2],
+            );
         }
     }
     pub fn update_position(&mut self, position: [f32; 3]) {
@@ -465,10 +470,10 @@ impl Camera {
 #[cfg(test)]
 #[test]
 fn test_child_camera() {
+    use super::projection::Projection;
     use crate::engine::init_engine;
     use crate::gpu::gpu::init_gpu;
     use externref::ExternRef;
-    use super::projection::Projection;
     unsafe {
         if ENGINE.engine2.is_none() {
             init_engine();

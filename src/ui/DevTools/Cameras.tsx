@@ -9,15 +9,17 @@ function Camera(props: { camera: TerraCamera }) {
     readonly [number, number, number]
   >([0, 0, 0]);
   useEffect(() => {
-    const listener = () => {
-      setCameraPosition([...props.camera.position] as unknown as readonly [
-        number,
-        number,
-        number,
-      ]);
+    const listener = (x: number, y: number, z: number) => {
+      setCameraPosition([x, y, z] as const);
     };
     props.camera.onUpdatePosition.add(listener);
-    listener();
+    listener(
+      ...(props.camera.position as unknown as readonly [
+        number,
+        number,
+        number,
+      ]),
+    );
     return () => {
       props.camera.onUpdatePosition.delete(listener);
     };
