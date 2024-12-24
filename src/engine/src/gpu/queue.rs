@@ -3,6 +3,13 @@ use externref::{externref, Resource};
 use super::command_encoder::JSCommandBuffer;
 pub struct JSQueue(());
 
+#[cfg(test)]
+unsafe fn submit(
+    _queue: &Resource<JSQueue>,
+    _iterator: *mut &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>),
+) {
+}
+
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
 #[externref]
@@ -33,8 +40,6 @@ pub struct Queue {
 }
 impl Queue {
     pub fn submit(&self, command_buffers: &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>)) {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             submit(&self.externref, Box::into_raw(Box::new(command_buffers)));
         }

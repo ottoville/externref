@@ -28,7 +28,7 @@ export function create_rust_vec_ptr<T>(ptr: rust_pointer<rust_vec_ptr<T>>) {
 }
 
 export type Rust_Iterator<T> = rust_pointer<'iterator'> & {
-  __brand: T;
+  __iterator_brand: T;
 };
 export function rust_iterator_to_js<T>(
   rust_iterator: Rust_Iterator<T>,

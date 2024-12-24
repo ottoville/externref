@@ -517,13 +517,13 @@ impl Mesh {
             let gpu_mesh_alignment = m.mesh_property.lock().unwrap().gpu_mesh_alignment;
             if point_light > 0.0 {
                 ENGINE
-                    .physic_engine_mut()
+                    .physic_engine_mut().gpu.as_mut().unwrap()
                     .point_lights
                     .push(gpu_mesh_alignment);
             }
             if directional_light > 0.0 {
                 ENGINE
-                    .physic_engine_mut()
+                    .physic_engine_mut().gpu.as_mut().unwrap()
                     .directional_lights
                     .push(gpu_mesh_alignment);
             }
@@ -708,13 +708,13 @@ impl Drop for Mesh {
             let mesh_property = self.mesh_property.lock().unwrap();
             if mesh_property.gpu_memory.point_light_squared > 0.0 {
                 ENGINE
-                    .physic_engine_mut()
+                    .physic_engine_mut().gpu.as_mut().unwrap()
                     .point_lights
                     .remove(mesh_property.gpu_mesh_alignment);
             }
             if mesh_property.gpu_memory.directional_light > 0.0 {
                 ENGINE
-                    .physic_engine_mut()
+                    .physic_engine_mut().gpu.as_mut().unwrap()
                     .directional_lights
                     .remove(mesh_property.gpu_mesh_alignment);
             }

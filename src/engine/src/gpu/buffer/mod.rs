@@ -5,3 +5,4 @@ pub mod usages;
 pub mod mapped_buffer;
 pub mod pending_buffer;
 pub mod mappadle_buffer;
+pub mod uniform;

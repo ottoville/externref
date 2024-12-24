@@ -94,8 +94,7 @@ fn test_bounding_box() {
     use crate::gpu::gpu::init_gpu;
     use crate::{
         engine::init_engine,
-        mesh::{get_mesh_by_id_mut, Mesh, ENGINE},
-        mesh_property,
+        mesh::{Mesh, ENGINE},
         meshes::r#box::{create_box_vertices, BOX_INDICES},
         vertices::VertexKind,
         Geometry,
@@ -108,6 +107,7 @@ fn test_bounding_box() {
             init_gpu(
                 Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
                 Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             );
         }
         let engine2 = ENGINE.physic_engine_mut();

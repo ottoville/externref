@@ -17,12 +17,7 @@ import {
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
-import {
-  BindGroup,
-  Buffer,
-  BufferUsageEnums,
-  INDEX_BUFFER,
-} from './webgpu-ts/index.js';
+import { Buffer, BufferUsageEnums, INDEX_BUFFER } from './webgpu-ts/index.js';
 import {
   BufferExports,
   type BufferInterface,
@@ -33,6 +28,7 @@ import { Externref } from './externref.js';
 import { ComputePassEncoderInterface } from './wasm-interfaces/ComputePassEncoder.js';
 import { CameraInterface } from './wasm-interfaces/CameraInterface.js';
 import { QueueInterface } from './wasm-interfaces/QueueInterface.js';
+import { DeviceExports } from './wasm-interfaces/DeviceInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -78,6 +74,7 @@ type ListenerOptions = {
   force?: boolean;
 };
 export type rustWasm = {
+  externrefs: WebAssembly.Table;
   add_drawble(mesh_id: number): void;
   set_drawble_direct(
     mesh_id: number,
@@ -144,10 +141,7 @@ export type rustWasm = {
   basepoint_world_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
-  process_gpu_queue(
-    updateViewPipeline: GPUComputePipeline,
-    updateViewBindGroup: BindGroup,
-  ): boolean;
+  process_gpu_queue(updateViewPipeline: GPUComputePipeline): boolean;
 
   new_mesh_from_js(
     point_light: number,
@@ -365,23 +359,16 @@ export type rustWasm = {
   devtools_pointer(): rust_pointer<'devtools'>;
   add_onchange_callback(mesh_id: number): number;
   remove_onchange_callback(mesh_id: number, cb: number): void;
-  get_gpu_mesh_buffer(): Externref<
-    false,
-    Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
-  >;
+  get_gpu_mesh_buffer(): number;
   get_gpu_projection_buffer(): Externref<
     false,
     Buffer<(typeof BufferUsageEnums)['UNIFORM']>
   >;
-  get_directional_lights_buffer(): Externref<
-    false,
-    Buffer<(typeof BufferUsageEnums)['STORAGE|COPY_DST']>
-  >;
-  get_point_lights_buffer(): Externref<
-    false,
-    Buffer<(typeof BufferUsageEnums)['STORAGE|COPY_DST']>
-  >;
-  init_gpu(device: Externref<true, GPUDevice>, queue: GPUQueue): void;
+  init_gpu(
+    device: Externref<true, GPUDevice>,
+    queue: GPUQueue,
+    layout: GPU['pipelineLayouts']['updateViewLayout'],
+  ): void;
   push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
   drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
@@ -389,6 +376,7 @@ export type rustWasm = {
   check_mapped_buffers(): void;
   add_camera(
     device: Externref<true, GPUDevice>,
+    layout: GPU['pipelineLayouts']['updateClustersLayout'],
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -397,6 +385,7 @@ export type rustWasm = {
   add_child_to_camera(
     camera_id: number,
     device: Externref<true, GPUDevice>,
+    layout: GPU['pipelineLayouts']['updateClustersLayout'],
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -405,6 +394,7 @@ export type rustWasm = {
   add_child_to_camera_water(
     camera_id: number,
     device: Externref<true, GPUDevice>,
+    layout: GPU['pipelineLayouts']['updateClustersLayout'],
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -419,12 +409,8 @@ export type rustWasm = {
   get_camera_projection_inverted_ptr(
     camera_id: number,
   ): rust_pointer<'camera_projection_inverted'>;
-  get_camera_buffer(
-    camera_id: number,
-  ): Externref<false, Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>>;
-  get_camera_cluster_buffer(
-    camera_id: number,
-  ): Externref<false, Buffer<(typeof BufferUsageEnums)['STORAGE']>>;
+  get_camera_buffer(camera_id: number): number;
+  get_camera_cluster_buffer(camera_id: number): number;
 
   update_camera_projection_view_inverted(camera_id: number): void;
   update_camera_position(
@@ -440,6 +426,7 @@ export type rustWasm = {
     z: number,
   ): void;
   on_resize(aspect_ratio: number): void;
+  iterate_bindings(iterator: Rust_Iterator<number>): number;
 } & BufferInterface;
 
 function Dot(
@@ -685,6 +672,7 @@ export class Engine {
           console.warn(stringFromPtr(rust.instance.exports.memory, ptr));
         },
       },
+      device: DeviceExports,
       env: {
         drop_ref(ref: unknown) {
           /**
@@ -908,7 +896,6 @@ export class Engine {
         if (ee instanceof Error) throw ee;
         else throw new Error(ee);
       });
-    this.rust.init_gpu(new Externref(true, device), device.queue);
 
     const gpu = new GPU(this.canvas!, device, GPUDataSize);
     this.gpu = gpu;

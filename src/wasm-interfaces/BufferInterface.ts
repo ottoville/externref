@@ -5,20 +5,12 @@ import {
   type BufferUsageEnums,
 } from '../webgpu-ts/index.js';
 import type { Engine } from '../engine.js';
-import { stringFromPtr } from '../utils.js';
 import { Externref } from '../externref.js';
 
 declare const engine: Engine;
 
 export type BufferInterface = {
   create_mapped_GPU_buffer_copysrc(
-    device: Externref<true, GPUDevice>,
-    length: number,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
-  ): rust_pointer<'GPUBuffer'>;
-  create_GPU_buffer_storage(
     device: Externref<true, GPUDevice>,
     length: number,
     label_ptr: number,
@@ -45,26 +37,6 @@ export const BufferExports = {
       sourceOffset,
       destinationOffset,
       copySize,
-    );
-  },
-  create_gpu_buffer(
-    { externref: device }: Externref<true, GPUDevice>,
-    size: number,
-    label_vec_ptr: rust_pointer<'label'>,
-    usages: BufferUsageEnums,
-    mapped: boolean,
-    ownedByJS: boolean,
-  ) {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
-    return new Externref(
-      ownedByJS,
-      new Buffer({
-        gpu: device,
-        label,
-        mappedAtCreation: mapped,
-        size,
-        usages,
-      }),
     );
   },
   map_state({

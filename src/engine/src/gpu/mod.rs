@@ -4,3 +4,5 @@ pub mod lights;
 pub mod command_encoder;
 pub mod compute_pass_encoder;
 pub mod queue;
+pub mod bindgroup;
+pub mod bufferbinding;

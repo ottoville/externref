@@ -1,52 +1,15 @@
 import { type GPU } from '../../GPU.js';
-import { Lights, tileCount } from './structs/Structs.js';
+import { tileCount } from './structs/Structs.js';
 
 import {
-  BGLayout,
-  BufLayout,
   ComputeShaderBuilder,
   ComputeShaderFunction,
   PipelineLayout,
-  ShaderStage,
 } from '../../webgpu-ts/index.js';
 
 export function createUpdateViewShader(gpu: GPU) {
   const bindLayouts = [
-    new BGLayout(gpu.device, 'UpdateViewLayout', {
-      directional_lights: new BufLayout(
-        {
-          buffer: {
-            hasDynamicOffset: false,
-            minBindingSize: 16,
-            type: 'read-only-storage',
-          },
-          visibility: ShaderStage.COMPUTE,
-        },
-        Lights,
-      ),
-      meshes: new BufLayout(
-        {
-          buffer: {
-            hasDynamicOffset: false,
-            minBindingSize: 512,
-            type: 'read-only-storage',
-          },
-          visibility: ShaderStage.COMPUTE,
-        },
-        gpu.meshUniforms.asArray,
-      ),
-      point_lights: new BufLayout(
-        {
-          buffer: {
-            hasDynamicOffset: false,
-            minBindingSize: 16,
-            type: 'read-only-storage',
-          },
-          visibility: ShaderStage.COMPUTE,
-        },
-        Lights,
-      ),
-    }),
+    gpu.pipelineLayouts.updateViewLayout,
     gpu.pipelineLayouts.updateClustersLayout,
   ] as const;
 

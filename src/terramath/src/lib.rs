@@ -495,7 +495,7 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
         return true;
     }
 
-    fn invert_to_ref(&self, other: &mut Self) -> bool {
+    fn invert_to_ref(&self, _other: &mut Self) -> bool {
         todo!()
     }
 }
@@ -1001,7 +1001,7 @@ fn test_invert() {
             [-0.04548161, -0.026209868, 0.029287657]
         ]
     );
-    let mut mat2: [[f32; 4]; 4] = [
+    let mat2: [[f32; 4]; 4] = [
         [4.0, 2.0, 3.0, 5.5],
         [-1.354, 3.234, -34.42, 54.7],
         [5.0, 6.0, 8.0, -45.6],

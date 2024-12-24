@@ -43,31 +43,6 @@ pub struct Engine {
 
 pub static mut ENGINE: Engine = Engine { engine2: None };
 
-#[no_mangle]
-#[cfg(feature = "webgpu")]
-#[externref]
-pub unsafe extern "C" fn get_directional_lights_buffer() -> &'static Resource<JSBuffer> {
-    &ENGINE
-        .physic_engine()
-        .directional_lights
-        .buffer
-        .as_ref()
-        .unwrap()
-        .externref
-}
-#[no_mangle]
-#[cfg(feature = "webgpu")]
-#[externref]
-pub unsafe extern "C" fn get_point_lights_buffer() -> &'static Resource<JSBuffer> {
-    &ENGINE
-        .physic_engine()
-        .point_lights
-        .buffer
-        .as_ref()
-        .unwrap()
-        .externref
-}
-
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
     pub rigid_body_set: RigidBodySet,
@@ -81,8 +56,6 @@ pub struct Engine2 {
     pub joint_set: ImpulseJointSet,
     pub gpu_allocated: FreeIndex,
     pub gpu: Option<GPU>,
-    pub point_lights: Lights,
-    pub directional_lights: Lights,
 }
 pub static GPU_QUEUE: LazyLock<Mutex<Vec<usize>>> =
     LazyLock::new(|| Mutex::new(Vec::with_capacity(128)));
@@ -227,8 +200,6 @@ pub fn init_engine() {
         joint_set: ImpulseJointSet::new(),
         gpu_allocated: FreeIndex::new(),
         gpu: None,
-        point_lights: Lights::new(String::from("GPUPointLights")),
-        directional_lights: Lights::new(String::from("GPUDirectionalLights")),
     };
     unsafe {
         ENGINE.engine2 = Some(e);

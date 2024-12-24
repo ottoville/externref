@@ -50,6 +50,7 @@ import {
 import { StructProperty } from './webgpu-ts/index.js';
 import { createPipelineLayouts } from './GPU/Shaders/Pipelinelayouts.js';
 import { createUI } from './GPU/UI.js';
+import { Externref } from './externref.js';
 
 declare const engine: Engine;
 let curSecond = 0;
@@ -117,9 +118,6 @@ export class GPU {
       }>
     >;
   }>;
-
-  readonly #updateViewBindGroup: BindGroup;
-
   readonly clusterSizeinBytes: number;
 
   readonly #CLUSTER_WORKGROUP_SIZE: [number, number, number] = [4, 2, 4];
@@ -340,36 +338,31 @@ export class GPU {
       totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
 
     this.pipelineLayouts = createPipelineLayouts(this);
+    engine.rust.init_gpu(
+      new Externref(true, device),
+      device.queue,
+      this.pipelineLayouts.updateViewLayout,
+    );
     this.shaders = createShaderBuilders(this);
     this.updateViewShader = createUpdateViewShader(this);
 
-    this.#updateViewBindGroup = new BindGroup(
-      this.updateViewShader[0][0],
-      'updateViewBindGroup',
-      (bindGroup) => {
-        const { externref: directional_lights_buffer } =
-          engine.rust.get_directional_lights_buffer();
-        const { externref: point_lights_buffer } =
-          engine.rust.get_point_lights_buffer();
-
-        return {
-          directional_lights:
-            directional_lights_buffer.getStorageBinding(bindGroup),
-          meshes: engine.rust
-            .get_gpu_mesh_buffer()
-            .externref.getStorageBinding(bindGroup),
-          point_lights: point_lights_buffer.getStorageBinding(bindGroup),
-        };
-      },
-    );
     this.BindGroupPosition = new BindGroup(
       this.pipelineLayouts.BindGroupLayoutPosition,
       'BindGroupPosition',
-      (bindGroup) => ({
-        world: engine.rust
-          .get_gpu_mesh_buffer()
-          .externref.getUniformBinding(bindGroup, 0, gpu_memory_index_size),
-      }),
+      (bindGroup) => {
+        const index = engine.rust.get_gpu_mesh_buffer();
+        const buffer = engine.rust.externrefs.get(index) as Externref<
+          false,
+          Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
+        >;
+        return {
+          world: buffer.externref.getUniformBinding(
+            bindGroup,
+            0,
+            gpu_memory_index_size,
+          ),
+        };
+      },
     );
 
     this.bindGroupTextureWater =
@@ -545,16 +538,11 @@ export class GPU {
     );
     this.mainCamera = new TerraCamera(
       'mainCamera',
-      this.device,
+      this,
       this.renderPassScreen,
     );
 
-    new TerraCamera(
-      'waterCamera',
-      this.device,
-      this.renderPassWater,
-      this.mainCamera,
-    );
+    new TerraCamera('waterCamera', this, this.renderPassWater, this.mainCamera);
     //TODO: this does not need to be canvas size
     /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
             (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');
@@ -776,10 +764,7 @@ export class GPU {
     if (physicDelta !== null) this.deltaView.set([physicDelta]);
     this.timeBuffer.write(0, this.timeAndDeltaBuffer);
 
-    const mapping_buffers = engine.rust.process_gpu_queue(
-      updateViewPipeline,
-      this.#updateViewBindGroup,
-    );
+    const mapping_buffers = engine.rust.process_gpu_queue(updateViewPipeline);
 
     if (mapping_buffers && this.#idleCallback === undefined) {
       this.#idleCallback = requestIdleCallback(() => {

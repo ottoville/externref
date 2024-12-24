@@ -10,6 +10,7 @@ import type { GPU } from '../../GPU.js';
 import {
   Clusters,
   float2f32,
+  Lights,
   ProjectionStruct,
   Scene,
   ScreenDimensions,
@@ -227,6 +228,41 @@ export function createPipelineLayouts(gpu: GPU) {
       ),
     },
   );
+  const updateViewLayout = new BGLayout(gpu.device, 'UpdateViewLayout', {
+    directional_lights: new BufLayout(
+      {
+        buffer: {
+          hasDynamicOffset: false,
+          minBindingSize: 16,
+          type: 'read-only-storage',
+        },
+        visibility: ShaderStage.COMPUTE,
+      },
+      Lights,
+    ),
+    meshes: new BufLayout(
+      {
+        buffer: {
+          hasDynamicOffset: false,
+          minBindingSize: 512,
+          type: 'read-only-storage',
+        },
+        visibility: ShaderStage.COMPUTE,
+      },
+      gpu.meshUniforms.asArray,
+    ),
+    point_lights: new BufLayout(
+      {
+        buffer: {
+          hasDynamicOffset: false,
+          minBindingSize: 16,
+          type: 'read-only-storage',
+        },
+        visibility: ShaderStage.COMPUTE,
+      },
+      Lights,
+    ),
+  });
   return {
     BindGroupLayoutCanvas,
     BindGroupLayoutPosition,
@@ -238,6 +274,7 @@ export function createPipelineLayouts(gpu: GPU) {
     sizeBindGroupLayout,
     uniformBindGroupLayoutWithTime,
     updateClustersLayout,
+    updateViewLayout,
     waterTextureLayot,
   };
 }

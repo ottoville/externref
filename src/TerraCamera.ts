@@ -6,7 +6,7 @@ import {
 import type { Engine } from './engine.js';
 import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
-import { BindGroup } from './webgpu-ts/index.js';
+import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
 import { create_rust_label, stringFromPtr } from './utils.js';
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 import { Externref } from './externref.js';
@@ -41,8 +41,6 @@ export class TerraCamera {
       engine.rust.get_camera_position_ptr(this.id),
     );
   }
-  //#uniformBuffer?: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
-  updateViewBindGroup?: BindGroup;
   uniformBindGroup?: BindGroup;
   readonly controls: CameraControl;
   #cameraController?: TerraCamera;
@@ -59,7 +57,7 @@ export class TerraCamera {
   }
   constructor(
     label: string,
-    device: GPUDevice,
+    gpu: GPU,
     renderPass: RenderPass,
     parent?: TerraCamera,
   ) {
@@ -68,39 +66,46 @@ export class TerraCamera {
       if (label === 'waterCamera') {
         this.id = engine.rust.add_child_to_camera_water(
           parent.id,
-          new Externref(true, device),
+          new Externref(true, gpu.device),
+          gpu.pipelineLayouts.updateClustersLayout,
           this,
           ...create_rust_label(label),
         );
       } else {
         this.id = engine.rust.add_child_to_camera(
           parent.id,
-          new Externref(true, device),
+          new Externref(true, gpu.device),
+          gpu.pipelineLayouts.updateClustersLayout,
           this,
           ...create_rust_label(label),
         );
       }
     } else {
       this.id = engine.rust.add_camera(
-        new Externref(true, device),
+        new Externref(true, gpu.device),
+        gpu.pipelineLayouts.updateClustersLayout,
         this,
         ...create_rust_label(label),
       );
     }
-    engine.getGPU((gpu) => {
-      //this.#clusterArrayBuffer?.destroy();
-      //this.#uniformBuffer?.destroy();
+    engine.getGPU((gpu2) => {
       this.uniformBindGroup?.destroy();
-      this.updateViewBindGroup?.destroy();
-      this.gpu = gpu;
+      this.gpu = gpu2;
       this.updateClustersBindGroup = new BindGroup(
-        gpu.pipelineLayouts.clustersLayout,
+        gpu2.pipelineLayouts.clustersLayout,
         'updateProjection',
         (bindGroup2) => {
+          const cluster_buffer_index = engine.rust.get_camera_cluster_buffer(
+            this.id,
+          );
+
           const group = {
-            clusters: engine.rust
-              .get_camera_cluster_buffer(this.id)
-              .externref.getStorageBinding(bindGroup2),
+            clusters: (
+              engine.rust.externrefs.get(cluster_buffer_index) as Externref<
+                false,
+                Buffer<(typeof BufferUsageEnums)['STORAGE']>
+              >
+            ).externref.getStorageBinding(bindGroup2),
             screentoview: engine.rust
               .get_gpu_projection_buffer()
               .externref.getUniformBinding(bindGroup2),
@@ -108,44 +113,46 @@ export class TerraCamera {
           return group;
         },
       );
-      this.updateViewBindGroup = new BindGroup(
-        gpu.pipelineLayouts.updateClustersLayout,
-        'updateViewBindGroup2',
-        (bindGroup) => ({
-          clusters: engine.rust
-            .get_camera_cluster_buffer(this.id)
-            .externref.getStorageBinding(bindGroup),
-          viewUniforms: engine.rust
-            .get_camera_buffer(this.id)
-            .externref.getUniformBinding(bindGroup),
-        }),
-      );
       //Todo: set to private
       this.uniformBindGroup = new BindGroup(
-        gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
+        gpu2.pipelineLayouts.uniformBindGroupLayoutWithTime,
         'uniformBindGroup',
         (bindGroup) => {
           const projectionBuffer = engine.rust
             .get_gpu_projection_buffer()
             .externref.getUniformBinding(bindGroup);
+          const cluster_buffer_index = engine.rust.get_camera_cluster_buffer(
+            this.id,
+          );
+          const camera_buffer_index = engine.rust.get_camera_buffer(this.id);
+          const index = engine.rust.get_gpu_mesh_buffer();
+          const buffer = engine.rust.externrefs.get(index) as Externref<
+            false,
+            Buffer<
+              (typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']
+            >
+          >;
           const group = {
-            clusters_array: engine.rust
-              .get_camera_cluster_buffer(this.id)
-              .externref.getStorageBinding(bindGroup),
-            meshes: engine.rust
-              .get_gpu_mesh_buffer()
-              .externref.getStorageBinding(bindGroup),
+            clusters_array: (
+              engine.rust.externrefs.get(cluster_buffer_index) as Externref<
+                false,
+                Buffer<(typeof BufferUsageEnums)['STORAGE']>
+              >
+            ).externref.getStorageBinding(bindGroup),
+            meshes: buffer.externref.getStorageBinding(bindGroup),
             projection: projectionBuffer,
-            scene: engine.rust
-              .get_camera_buffer(this.id)
-              .externref.getUniformBinding(bindGroup),
-            time: gpu.timeBuffer.getUniformBinding(bindGroup),
+            scene: (
+              engine.rust.externrefs.get(camera_buffer_index) as Externref<
+                false,
+                Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>
+              >
+            ).externref.getUniformBinding(bindGroup),
+            time: gpu2.timeBuffer.getUniformBinding(bindGroup),
           };
           return group;
         },
       );
-
-      gpu.cameras.push(this);
+      gpu2.cameras.push(this);
     });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias

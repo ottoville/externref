@@ -1,4 +1,4 @@
-import { BindGroup } from 'webgpu-ts';
+import { BindGroup } from '../webgpu-ts/index.js';
 
 export const ComputePassEncoderInterface = {
   dispatch_workgroups(
@@ -19,9 +19,12 @@ export const ComputePassEncoderInterface = {
   set_bindgroup(
     commandEncoder: GPUComputePassEncoder,
     index: number,
-    bindgroup: BindGroup,
+    bindgroup: BindGroup | GPUBindGroup,
   ) {
-    commandEncoder.setBindGroup(index, bindgroup.bindGroup);
+    commandEncoder.setBindGroup(
+      index,
+      bindgroup instanceof BindGroup ? bindgroup.bindGroup : bindgroup,
+    );
   },
   set_pipeline(
     commandEncoder: GPUComputePassEncoder,

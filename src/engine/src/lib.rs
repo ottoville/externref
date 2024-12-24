@@ -29,6 +29,7 @@ use vertices::{Position, Position2DAndUV, PositionAndNormal, PositionAndNormalAn
 
 static mut MULTIVALUE_USIZE: [usize; 6] = [0; 6];
 static mut MULTIVALUE_F32: [f32; 6] = [0.0; 6];
+static mut MULTIVALUE_I32: [i32; 6] = [0; 6];
 
 unsafe fn create_multivalue_vector<T>(vector: Vec<T>) -> *const usize {
     let mut buf = std::mem::ManuallyDrop::new(vector);
@@ -158,14 +159,12 @@ impl GPUMesh {
         if range > 0.0 {
             self.point_light_squared = range * range;
             if old_value == 0.0 {
-                engine.physic_engine_mut().point_lights.push(gpu_alignment);
+                engine.physic_engine_mut().gpu.as_mut().unwrap().point_lights.push(gpu_alignment);
             }
         } else {
             self.point_light_squared = 0.0;
             if old_value > 0.0 {
-                engine
-                    .physic_engine_mut()
-                    .point_lights
+                engine.physic_engine_mut().gpu.as_mut().unwrap().point_lights
                     .remove(gpu_alignment);
             }
         }
@@ -180,16 +179,14 @@ impl GPUMesh {
         if range > 0.0 {
             self.directional_light = range;
             if old_value == 0.0 {
-                engine
-                    .physic_engine_mut()
+                engine.physic_engine_mut().gpu.as_mut().unwrap()
                     .directional_lights
                     .push(gpu_alignment);
             }
         } else {
             self.directional_light = 0.0;
             if old_value > 0.0 {
-                engine
-                    .physic_engine_mut()
+                engine.physic_engine_mut().gpu.as_mut().unwrap()
                     .directional_lights
                     .remove(gpu_alignment);
             }

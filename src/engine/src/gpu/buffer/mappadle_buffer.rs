@@ -1,23 +1,19 @@
-use std::{mem, ops::Deref};
+use std::{ops::Deref, rc::Weak, sync::Mutex};
 
-use crate::MULTIVALUE_USIZE;
+use crate::{gpu::bufferbinding::BufferBinding, MULTIVALUE_USIZE};
 
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
-use super::buffer::{create_gpu_buffer, map_write_async};
+use super::buffer::map_write_async;
 use super::{
     buffer::{GPUBuffer, GpuBuffer, JSBuffer},
     mapped_buffer::MappedGPUBuffer,
     pending_buffer::PendingGPUBuffer,
 };
-use externref::Resource;
 use crate::gpu::gpu::JSDevice;
+use externref::Resource;
 
 pub struct MappadleGPUBuffer<const U: u32>(GPUBuffer<U>);
 impl<const U: u32> MappadleGPUBuffer<U> {
     pub fn map_write_async(self, offset: usize, size: usize) -> PendingGPUBuffer<U> {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             map_write_async(&self.0.externref, offset, size);
         }
@@ -31,24 +27,32 @@ impl<const U: u32> MappadleGPUBuffer<U> {
         label: String,
         owned_by_js: bool,
     ) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
+        use crate::gpu::gpu::create_gpu_buffer;
 
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
             MULTIVALUE_USIZE[1] = label.len();
             MULTIVALUE_USIZE[2] = label.capacity();
-            let externref =
-                create_gpu_buffer(device,size, MULTIVALUE_USIZE.as_ptr(), U, true, owned_by_js);
+            let externref = create_gpu_buffer(
+                device,
+                size,
+                MULTIVALUE_USIZE.as_ptr(),
+                U,
+                true,
+                owned_by_js,
+            );
             return MappedGPUBuffer::new(MappadleGPUBuffer(GPUBuffer {
                 externref,
                 label,
                 owned_by_js,
                 size,
+                buffer_bindings: Vec::new(),
             }));
         }
     }
     #[cfg(test)]
     pub fn new_mapped(
-        device: &Resource<JSDevice>,
+        _device: &Resource<JSDevice>,
         size: usize,
         label: String,
         owned_by_js: bool,
@@ -60,6 +64,7 @@ impl<const U: u32> MappadleGPUBuffer<U> {
                 label,
                 owned_by_js,
                 size,
+                buffer_bindings: Vec::new(),
             }));
         }
     }
@@ -84,7 +89,10 @@ impl<const U: u32> GpuBuffer for MappadleGPUBuffer<U> {
         self.0.size = size;
     }
     fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Resource<JSBuffer> {
-        mem::replace(&mut self.0.externref, externref)
+        self.0.replace_externref(externref)
+    }
+    fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>) {
+        self.0.add_buffer_binding(bind_group);
     }
 }
 impl<const U: u32> Deref for MappadleGPUBuffer<U> {

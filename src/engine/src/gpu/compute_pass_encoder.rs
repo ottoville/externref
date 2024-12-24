@@ -1,7 +1,28 @@
 use externref::{externref, Resource};
 
-use super::command_encoder::GPUCommandEncoder;
+use super::{bindgroup::JSBindGroup, command_encoder::GPUCommandEncoder};
 
+#[cfg(test)]
+unsafe fn dispatch_workgroups(
+    _computepassencoder: &Resource<JSComputePassEncoder>,
+    _workgroup_count_x: u32,
+    _workgroup_count_y: u32,
+    _workgroup_count_z: u32,
+) {
+}
+#[cfg(test)]
+unsafe fn set_bindgroup(
+    _computepassencoder: &Resource<JSComputePassEncoder>,
+    _index: u32,
+    _bindgroup: &Resource<JSBindGroup>,
+) {
+}
+#[cfg(test)]
+unsafe fn set_pipeline(
+    _computepassencoder: &Resource<JSComputePassEncoder>,
+    _pipeline: &Resource<JSComputePipeline>,
+) {
+}
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
 #[externref]
@@ -27,7 +48,6 @@ extern "C" {
 }
 pub struct JSComputePassEncoder(());
 pub struct JSComputePipeline(());
-pub struct JSBindGroup(());
 
 pub struct ComputePassEncoder {
     pub command_encoder: GPUCommandEncoder,
@@ -35,15 +55,11 @@ pub struct ComputePassEncoder {
 }
 impl ComputePassEncoder {
     pub fn set_pipeline(&self, pipeline: &Resource<JSComputePipeline>) {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             set_pipeline(&self.externref, pipeline);
         }
     }
     pub fn set_bindgroup(&self, index: u32, bindgroup: &Resource<JSBindGroup>) {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             set_bindgroup(&self.externref, index, bindgroup);
         }
@@ -54,8 +70,6 @@ impl ComputePassEncoder {
         workgroup_count_y: u32,
         workgroup_count_z: u32,
     ) {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             dispatch_workgroups(
                 &self.externref,
@@ -65,7 +79,7 @@ impl ComputePassEncoder {
             );
         }
     }
-    pub fn end(self) -> GPUCommandEncoder{
+    pub fn end(self) -> GPUCommandEncoder {
         #[cfg(feature = "webgpu")]
         #[cfg(any(not(test), rust_analyzer))]
         unsafe {

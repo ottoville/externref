@@ -1,29 +1,28 @@
 use std::mem;
+use std::rc::Weak;
+use std::sync::Mutex;
 
 use externref::{externref, Resource};
 
+use crate::gpu::bufferbinding::BufferBinding;
+#[cfg(feature = "webgpu")]
+#[cfg(any(not(test), rust_analyzer))]
+use crate::gpu::gpu::create_gpu_buffer;
 use crate::gpu::gpu::JSDevice;
 use crate::{gpu::command_encoder::JSCommandEncoder, MULTIVALUE_USIZE};
 
 use super::mapped_buffer::MappedGPUBuffer;
-use super::usages::{COPYSRC_USAGE, STORAGE_USAGE};
+use super::usages::COPYSRC_USAGE;
 
 pub struct JSBuffer(());
-
+#[cfg(test)]
+pub unsafe fn map_write_async(_buffer: &Resource<JSBuffer>, _offset: usize, _size: usize) {}
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
 #[externref]
 #[link(wasm_import_module = "buffer")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    pub fn create_gpu_buffer(
-        device: &Resource<JSDevice>,
-        length: usize,
-        label: *const usize,
-        usages: u32,
-        mapped: bool,
-        owned_by_js: bool,
-    ) -> Resource<JSBuffer>;
     pub fn set_mapped_range(
         buffer: &Resource<JSBuffer>,
         offset: usize,
@@ -56,27 +55,15 @@ pub unsafe extern "C" fn get_raw_buffer(
 ) -> &'static Resource<JSBuffer> {
     &(*buffer).externref
 }
-#[no_mangle]
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
-#[externref]
-pub unsafe extern "C" fn create_GPU_buffer_storage(
-    device: &Resource<JSDevice>,
-    length: usize,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
-) -> *const GPUBuffer<STORAGE_USAGE> {
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new(device, length, label, true)))
-}
 
 pub struct GPUBuffer<const U: u32> {
     pub externref: Resource<JSBuffer>,
     pub label: String,
     pub owned_by_js: bool,
     pub size: usize,
+    pub buffer_bindings: Vec<Weak<Mutex<BufferBinding>>>,
 }
+
 //////////////////////////////
 pub trait GpuBuffer {
     fn externref(&self) -> &Resource<JSBuffer>;
@@ -86,8 +73,8 @@ pub trait GpuBuffer {
     fn size(&self) -> usize;
     fn set_size(&mut self, size: usize);
     fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Resource<JSBuffer>;
+    fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>);
 }
-
 impl<const U: u32> GpuBuffer for GPUBuffer<U> {
     fn externref(&self) -> &Resource<JSBuffer> {
         &self.externref
@@ -108,12 +95,17 @@ impl<const U: u32> GpuBuffer for GPUBuffer<U> {
         self.size = size;
     }
     fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Resource<JSBuffer> {
+        self.make_dirty();
         mem::replace(&mut self.externref, externref)
     }
+
+    fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>) {
+        self.buffer_bindings.push(bind_group);
+    }
 }
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
 impl<const U: u32> GPUBuffer<U> {
+    #[cfg(feature = "webgpu")]
+    #[cfg(any(not(test), rust_analyzer))]
     pub fn new(
         device: &Resource<JSDevice>,
         size: usize,
@@ -137,9 +129,12 @@ impl<const U: u32> GPUBuffer<U> {
                 label,
                 owned_by_js,
                 size,
+                buffer_bindings: Vec::new(),
             };
         }
     }
+    #[cfg(feature = "webgpu")]
+    #[cfg(any(not(test), rust_analyzer))]
     pub fn new_mapped(
         device: &Resource<JSDevice>,
         size: usize,
@@ -163,14 +158,13 @@ impl<const U: u32> GPUBuffer<U> {
                 label,
                 owned_by_js,
                 size,
+                buffer_bindings: Vec::new(),
             });
         }
     }
-}
-#[cfg(test)]
-impl<const U: u32> GPUBuffer<U> {
+    #[cfg(test)]
     pub fn new(
-        device: &Resource<JSDevice>,
+        _device: &Resource<JSDevice>,
         size: usize,
         label: String,
         owned_by_js: bool,
@@ -182,11 +176,13 @@ impl<const U: u32> GPUBuffer<U> {
                 label,
                 owned_by_js,
                 size,
+                buffer_bindings: Vec::new(),
             };
         }
     }
+    #[cfg(test)]
     pub fn new_mapped(
-        device: &Resource<JSDevice>,
+        _device: &Resource<JSDevice>,
         size: usize,
         label: String,
         owned_by_js: bool,
@@ -198,7 +194,15 @@ impl<const U: u32> GPUBuffer<U> {
                 label,
                 owned_by_js,
                 size,
+                buffer_bindings: Vec::new(),
             });
+        }
+    }
+    pub fn make_dirty(&mut self) {
+        for some_buffer_binding in self.buffer_bindings.iter() {
+            if let Some(buffer_binding) = some_buffer_binding.upgrade() {
+                buffer_binding.lock().unwrap().make_dirty();
+            }
         }
     }
 }

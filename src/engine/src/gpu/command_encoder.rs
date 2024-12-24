@@ -2,7 +2,7 @@ use externref::{externref, Resource};
 
 use crate::MULTIVALUE_USIZE;
 
-use super::{buffer::copy_src::CopySrc, compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder}};
+use super::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder};
 
 pub struct JSCommandEncoder(());
 pub struct JSCommandBuffer(());
@@ -82,11 +82,11 @@ impl GPUCommandEncoder {
             };
         }
     }
-    pub fn finish(self, label: String) -> Resource<JSCommandBuffer> {
+    pub fn finish(self, _label: String) -> Resource<JSCommandBuffer> {
         use externref::ExternRef;
         unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
     }
-    pub fn begin_compute_pass(self, label: String) -> ComputePassEncoder {
+    pub fn begin_compute_pass(self, _label: String) -> ComputePassEncoder {
         use externref::ExternRef;
         unsafe {
             ComputePassEncoder {

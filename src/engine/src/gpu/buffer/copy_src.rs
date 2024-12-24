@@ -2,10 +2,10 @@ use externref::Resource;
 
 #[cfg(feature = "webgpu")]
 #[cfg(any(not(test), rust_analyzer))]
-use super::buffer::{copy_from, create_gpu_buffer};
+use super::buffer::copy_from;
 use super::buffer::{GpuBuffer, JSBuffer};
-use crate::{gpu::command_encoder::GPUCommandEncoder, MULTIVALUE_USIZE};
 use crate::gpu::gpu::JSDevice;
+use crate::{gpu::command_encoder::GPUCommandEncoder, MULTIVALUE_USIZE};
 
 pub trait CopySrc: GpuBuffer {
     /**
@@ -19,6 +19,7 @@ pub trait CopySrc: GpuBuffer {
         command_encoder: &GPUCommandEncoder,
         size: usize,
     ) -> Resource<JSBuffer> {
+        use crate::gpu::gpu::create_gpu_buffer;
 
         unsafe {
             MULTIVALUE_USIZE[0] = self.label().as_ptr() as usize;
@@ -46,7 +47,12 @@ pub trait CopySrc: GpuBuffer {
         }
     }
     #[cfg(test)]
-    fn resize(&mut self, device: &Resource<JSDevice>, command_encoder: &GPUCommandEncoder, size: usize) -> Resource<JSBuffer> {
+    fn resize(
+        &mut self,
+        _device: &Resource<JSDevice>,
+        _command_encoder: &GPUCommandEncoder,
+        size: usize,
+    ) -> Resource<JSBuffer> {
         use externref::ExternRef;
         unsafe {
             self.set_size(size);
