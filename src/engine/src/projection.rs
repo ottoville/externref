@@ -96,7 +96,7 @@ impl Projection {
     pub fn update_views(
         &mut self,
         device: &Resource<JSDevice>,
-        command_encoder: &GPUCommandEncoder,
+        command_encoder: &mut GPUCommandEncoder,
     ) -> bool {
         let mut some_camera_updated = false;
         let mut closure = |camera: &mut Camera| {
@@ -106,7 +106,7 @@ impl Projection {
                     &self.inner_projection.projection_reversed_z,
                     &mut camera.projection_view,
                 );
-                camera.update_projection(&device, &command_encoder);
+                camera.update_projection(&device, command_encoder);
                 some_camera_updated = true;
             } else {
                 camera.updated = false;

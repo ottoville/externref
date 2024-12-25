@@ -1,7 +1,5 @@
 use std::ops::Deref;
 
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
 use super::buffer::{set_mapped_range, unmap};
 use super::buffer::{GPUBuffer, GpuBuffer};
 use super::usages::COPYSRC_USAGE;
@@ -39,8 +37,6 @@ impl<B: GpuBuffer> MappedGPUBuffer<B> {
         buffer_offset: usize,
         buffer_size: usize,
     ) {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             set_mapped_range(&self.0.externref(), ptr, size, buffer_offset, buffer_size);
         }

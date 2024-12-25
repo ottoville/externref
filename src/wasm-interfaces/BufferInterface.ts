@@ -1,7 +1,6 @@
 import {
   Buffer,
   COPY_DST_BUFFER,
-  COPY_SRC_BUFFER,
   type BufferUsageEnums,
 } from '../webgpu-ts/index.js';
 import type { Engine } from '../engine.js';
@@ -23,22 +22,6 @@ export type BufferInterface = {
 };
 
 export const BufferExports = {
-  copy_from(
-    commandEncoder: GPUCommandEncoder,
-    { externref: destination }: Externref<boolean, Buffer<COPY_DST_BUFFER>>,
-    { externref: source }: Externref<boolean, Buffer<COPY_SRC_BUFFER>>,
-    sourceOffset: GPUSize64,
-    destinationOffset: GPUSize64,
-    copySize?: GPUSize64,
-  ) {
-    destination.copyFrom(
-      commandEncoder,
-      source,
-      sourceOffset,
-      destinationOffset,
-      copySize,
-    );
-  },
   map_state({
     externref: buffer,
   }: Externref<boolean, Buffer<BufferUsageEnums.MAP_WRITE>>) {

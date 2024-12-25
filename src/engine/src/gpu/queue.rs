@@ -1,6 +1,12 @@
+use std::sync::Arc;
+
 use externref::{externref, Resource};
 
-use super::command_encoder::JSCommandBuffer;
+use super::{
+    buffer::buffer::JSBuffer,
+    command_buffer::{CommandBuffer, JSCommandBuffer},
+};
+
 pub struct JSQueue(());
 
 #[cfg(test)]
@@ -39,9 +45,16 @@ pub struct Queue {
     pub externref: Resource<JSQueue>,
 }
 impl Queue {
-    pub fn submit(&self, command_buffers: &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>)) {
+    pub fn submit(&self, command_buffers: &mut (dyn Iterator<Item = CommandBuffer>)) {
+        // Maintain reference for buffers until submit has been fully executed
+        let mut buffers: Vec<Vec<Arc<Resource<JSBuffer>>>> = Vec::new();
+        let mapped = &mut command_buffers.map(|c: CommandBuffer| {
+            buffers.push(c.buffers);
+            return c.externref;
+        }) as &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>);
+        let boxed = Box::into_raw(Box::new(mapped));
         unsafe {
-            submit(&self.externref, Box::into_raw(Box::new(command_buffers)));
+            submit(&self.externref, boxed);
         }
     }
 }

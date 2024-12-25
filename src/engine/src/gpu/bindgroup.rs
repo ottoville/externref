@@ -10,7 +10,6 @@ use super::gpu::create_bind_group;
 use super::gpu::JSDevice;
 
 #[no_mangle]
-#[cfg(feature = "webgpu")]
 pub unsafe extern "C" fn iterate_bindings(
     iterator: *mut std::slice::Iter<'_, Rc<Mutex<BufferBinding>>>,
 ) -> *const usize {

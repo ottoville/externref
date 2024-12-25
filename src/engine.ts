@@ -427,6 +427,8 @@ export type rustWasm = {
   ): void;
   on_resize(aspect_ratio: number): void;
   iterate_bindings(iterator: Rust_Iterator<number>): number;
+  get_directional_lights_count(): number;
+  get_point_lights_count(): number;
 } & BufferInterface;
 
 function Dot(

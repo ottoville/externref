@@ -1,8 +1,11 @@
 use std::{
-    num::NonZero, ptr, rc::Rc, sync::{
+    num::NonZero,
+    ptr,
+    rc::Rc,
+    sync::{
         atomic::{AtomicU32, Ordering},
         Mutex,
-    }
+    },
 };
 
 use externref::{externref, Resource};
@@ -13,13 +16,12 @@ use crate::{
         bindgroup::{BindGroup, JSBindGroupLayout},
         buffer::{
             buffer::{GPUBuffer, JSBuffer},
-            copy_dst::CopyDst,
             usages::{COPYSRC_USAGE, STORAGE_USAGE, UNIFORM_COPYDST_USAGE},
         },
         bufferbinding::BufferBinding,
         command_encoder::GPUCommandEncoder,
         compute_pass_encoder::ComputePassEncoder,
-        gpu::{JSDevice, TEMP_GPU_BUFFERS},
+        gpu::JSDevice,
     },
     mesh::ENGINE,
     MULTIVALUE_USIZE,
@@ -201,7 +203,7 @@ pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: u32) 
 
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_buffer(camera_id: u32) -> usize {
-    let buffer = &ENGINE
+    let buffer = &*ENGINE
         .physic_engine()
         .gpu
         .as_ref()
@@ -216,7 +218,7 @@ pub unsafe extern "C" fn get_camera_buffer(camera_id: u32) -> usize {
 
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_cluster_buffer(camera_id: u32) -> usize {
-    let buffer = &ENGINE
+    let buffer = &*ENGINE
         .physic_engine()
         .gpu
         .as_ref()
@@ -481,7 +483,7 @@ impl Camera {
     pub fn update_projection<'c>(
         &mut self,
         device: &Resource<JSDevice>,
-        command_encoder: &GPUCommandEncoder,
+        command_encoder: &mut GPUCommandEncoder,
     ) {
         self.projection_view_inverted_is_dirty = true;
         let buffer = GPUBuffer::<COPYSRC_USAGE>::new_mapped(
@@ -492,11 +494,13 @@ impl Camera {
         );
         buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0, 128);
         let mut unmapped = buffer.unmap();
-        self.buffer
-            .lock()
-            .unwrap()
-            .copy_from(command_encoder, &mut unmapped, 0, 0, 128);
-        TEMP_GPU_BUFFERS.lock().unwrap().push(unmapped.externref);
+        command_encoder.copy_buffer_to_buffer(
+            &mut unmapped,
+            &(*self.buffer.lock().unwrap()),
+            0,
+            0,
+            128,
+        );
         self.do_update_view = 0;
         self.updated = true;
     }
@@ -556,7 +560,7 @@ fn test_child_camera() {
         );
         camera.children.push(child_1);
         camera.update_position([1.0, 2.0, 3.0]);
-        let command_encoder = GPUCommandEncoder::new(String::from("test"));
+        let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
         let mut projection = Projection::new(&Resource::new_non_null(std::mem::transmute::<
             usize,
             ExternRef,
@@ -564,7 +568,7 @@ fn test_child_camera() {
         projection.cameras.cameras.push(camera);
         projection.update_views(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-            &command_encoder,
+            &mut command_encoder,
         );
         assert_eq!(
             projection.cameras.cameras[0].children[0].position,

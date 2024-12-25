@@ -8,14 +8,13 @@ use super::gpu::JSDevice;
 use super::{buffer::usages::MAP_WRITE_COPYSRC_USAGE, command_encoder::GPUCommandEncoder};
 use crate::allocators::freeindex::FreeIndexIndex;
 
-use super::buffer::copy_dst::CopyDst;
 use super::buffer::{
     buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer, pending_buffer::PendingGPUBuffer,
     usages::STORAGE_COPYDST_USAGE,
 };
 
 pub struct Lights {
-    lights: Vec<FreeIndexIndex>,
+    pub lights: Vec<FreeIndexIndex>,
     pub buffer: Rc<Mutex<GPUBuffer<STORAGE_COPYDST_USAGE>>>,
     buffer_ring_pending: Vec<PendingGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
     buffer_ring_mapped: Vec<MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>>,
@@ -57,7 +56,7 @@ impl Lights {
     pub fn update_buffer(
         &mut self,
         device: &Resource<JSDevice>,
-        command_encoder: &GPUCommandEncoder,
+        command_encoder: &mut GPUCommandEncoder,
     ) {
         if !self.dirty {
             return;
@@ -93,9 +92,9 @@ impl Lights {
             self.lights.len() * 4,
         );
         let unmapped_buffer = mapped_buffer.unmap();
-        buffer.copy_from(
-            &command_encoder,
+        command_encoder.copy_buffer_to_buffer(
             &unmapped_buffer,
+            &*buffer,
             0,
             0,
             self.lights.len() * 4,
@@ -134,11 +133,11 @@ fn test_lights() {
         let mut lights = Lights::new(&device, String::from("GPUPointLights"));
         assert_eq!(lights.queue_submited(), false);
         lights.push(FreeIndexIndex(1));
-        let command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
+        let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
         assert_eq!(lights.dirty, true);
-        lights.update_buffer(&device, &command_encoder);
+        lights.update_buffer(&device, &mut command_encoder);
         assert_eq!(lights.dirty, false);
-        lights.update_buffer(&device, &command_encoder);
+        lights.update_buffer(&device, &mut command_encoder);
         assert_eq!(lights.dirty, false);
         assert_eq!(
             lights.buffer.lock().as_ref().unwrap().size,
@@ -147,7 +146,7 @@ fn test_lights() {
         lights.push(FreeIndexIndex(2));
         lights.push(FreeIndexIndex(3));
         lights.push(FreeIndexIndex(4));
-        lights.update_buffer(&device, &command_encoder);
+        lights.update_buffer(&device, &mut command_encoder);
         assert_eq!(lights.buffer.lock().as_ref().unwrap().size, 32);
 
         assert_eq!(lights.queue_submited(), true);

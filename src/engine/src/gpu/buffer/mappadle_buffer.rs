@@ -1,6 +1,8 @@
+use std::sync::Arc;
 use std::{ops::Deref, rc::Weak, sync::Mutex};
 
 use crate::{gpu::bufferbinding::BufferBinding, MULTIVALUE_USIZE};
+use crate::gpu::gpu::create_gpu_buffer;
 
 use super::buffer::map_write_async;
 use super::{
@@ -19,15 +21,12 @@ impl<const U: u32> MappadleGPUBuffer<U> {
         }
         PendingGPUBuffer::new(self)
     }
-    #[cfg(feature = "webgpu")]
-    #[cfg(any(not(test), rust_analyzer))]
     pub fn new_mapped(
         device: &Resource<JSDevice>,
         size: usize,
         label: String,
         owned_by_js: bool,
     ) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
-        use crate::gpu::gpu::create_gpu_buffer;
 
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
@@ -42,25 +41,7 @@ impl<const U: u32> MappadleGPUBuffer<U> {
                 owned_by_js,
             );
             return MappedGPUBuffer::new(MappadleGPUBuffer(GPUBuffer {
-                externref,
-                label,
-                owned_by_js,
-                size,
-                buffer_bindings: Vec::new(),
-            }));
-        }
-    }
-    #[cfg(test)]
-    pub fn new_mapped(
-        _device: &Resource<JSDevice>,
-        size: usize,
-        label: String,
-        owned_by_js: bool,
-    ) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
-        use externref::ExternRef;
-        unsafe {
-            return MappedGPUBuffer::new(MappadleGPUBuffer(GPUBuffer {
-                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+                externref: Arc::new(externref),
                 label,
                 owned_by_js,
                 size,
@@ -88,11 +69,15 @@ impl<const U: u32> GpuBuffer for MappadleGPUBuffer<U> {
     fn set_size(&mut self, size: usize) {
         self.0.size = size;
     }
-    fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Resource<JSBuffer> {
+    fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Arc<Resource<JSBuffer>> {
         self.0.replace_externref(externref)
     }
     fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>) {
         self.0.add_buffer_binding(bind_group);
+    }
+    
+    fn externref_arc(&self) -> Arc<Resource<JSBuffer>> {
+        self.0.externref_arc()
     }
 }
 impl<const U: u32> Deref for MappadleGPUBuffer<U> {
