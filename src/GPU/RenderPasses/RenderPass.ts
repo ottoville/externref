@@ -76,19 +76,6 @@ export class RenderPass<
       gpu.device,
       GPURenderBundleEncoderDescriptor,
       (renderBundleEncoder) => {
-        /*Object.values(this.props.colorRenderTargets).some((rt) => {
-          if (
-            rt.renderTarget.texture.sampleCount === 0 &&
-            rt.view.bindGroups.size === 0
-          ) {
-            console.warn(
-              'Rendertarget ',
-              rt.renderTarget.props.label,
-              ' is not binded as texture, render result will not be shown.',
-            );
-          }
-        });*/
-
         let drawedMeshes = 0;
         if (this.perspectiveCameras.length === 0) {
           // Draw UI

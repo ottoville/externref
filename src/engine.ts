@@ -29,6 +29,7 @@ import { ComputePassEncoderInterface } from './wasm-interfaces/ComputePassEncode
 import { CameraInterface } from './wasm-interfaces/CameraInterface.js';
 import { QueueInterface } from './wasm-interfaces/QueueInterface.js';
 import { DeviceExports } from './wasm-interfaces/DeviceInterface.js';
+import { DevToolsInterface } from 'wasm-interfaces/DevToolsInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -427,9 +428,8 @@ export type rustWasm = {
   ): void;
   on_resize(aspect_ratio: number): void;
   iterate_bindings(iterator: Rust_Iterator<number>): number;
-  get_directional_lights_count(): number;
-  get_point_lights_count(): number;
-} & BufferInterface;
+} & BufferInterface &
+  DevToolsInterface;
 
 function Dot(
   left: readonly [number, number, number] | Float32Array | TerraVector3,

@@ -41,20 +41,26 @@ export function VariantList(props: {
             onClick={() => props.setSelectedDrawable(drawable)}
           >
             <div>{drawable.node.label}</div>
-            <button
-              className={'btn-small'}
-              type="button"
-              onClick={() => {
-                if (engine.inputManager instanceof ArcRotateCamera) {
-                  if (drawable instanceof DrawableDirect) {
-                    const node = drawable.node;
-                    engine.inputManager.moveto(node.translation);
+            <div>
+              {engine.rust.get_mesh_directional_light(drawable.node.id) ||
+              engine.rust.get_mesh_point_light(drawable.node.id)
+                ? '💡'
+                : ''}
+              <button
+                className={'btn-small'}
+                type="button"
+                onClick={() => {
+                  if (engine.inputManager instanceof ArcRotateCamera) {
+                    if (drawable instanceof DrawableDirect) {
+                      const node = drawable.node;
+                      engine.inputManager.moveto(node.translation);
+                    }
                   }
-                }
-              }}
-            >
-              🎥
-            </button>
+                }}
+              >
+                🎥
+              </button>
+            </div>
           </li>
         );
       })}

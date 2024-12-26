@@ -66,13 +66,7 @@ impl Lights {
         let mut buffer = self.buffer.lock().unwrap();
         let size = buffer.size;
         if self.lights.capacity() * 4 > size {
-            //Todo: use resize trait method?
-            *buffer = GPUBuffer::<STORAGE_COPYDST_USAGE>::new(
-                device,
-                self.lights.capacity() * 4,
-                self.label.to_string(),
-                false,
-            );
+            buffer.resize_zeroed(device, self.lights.capacity() * 4);
             self.buffer_ring_mapped.clear();
             self.buffer_ring_onqueue.clear();
             self.buffer_ring_pending.clear();
@@ -128,9 +122,20 @@ impl Lights {
 #[test]
 fn test_lights() {
     use externref::ExternRef;
+
+    use crate::gpu::{bindgroup::BindGroup, bufferbinding::BufferBinding};
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0));
+        let layout = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         let mut lights = Lights::new(&device, String::from("GPUPointLights"));
+        let bindgroup = BindGroup::new(
+            &device,
+            String::from("test"),
+            layout,
+            vec![BufferBinding::new(lights.buffer.clone(), 0, None)],
+        );
+        bindgroup.lock().unwrap().get_bind_group(&device);
+        assert_eq!(bindgroup.lock().unwrap().dirty, false);
         assert_eq!(lights.queue_submited(), false);
         lights.push(FreeIndexIndex(1));
         let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
@@ -139,15 +144,13 @@ fn test_lights() {
         assert_eq!(lights.dirty, false);
         lights.update_buffer(&device, &mut command_encoder);
         assert_eq!(lights.dirty, false);
-        assert_eq!(
-            lights.buffer.lock().as_ref().unwrap().size,
-            lights.lights.capacity() * 4
-        );
+        assert_eq!(lights.buffer.lock().as_ref().unwrap().size, 16);
         lights.push(FreeIndexIndex(2));
         lights.push(FreeIndexIndex(3));
         lights.push(FreeIndexIndex(4));
         lights.update_buffer(&device, &mut command_encoder);
         assert_eq!(lights.buffer.lock().as_ref().unwrap().size, 32);
+        assert_eq!(bindgroup.lock().unwrap().dirty, true);
 
         assert_eq!(lights.queue_submited(), true);
         assert_eq!(lights.queue_submited(), false);

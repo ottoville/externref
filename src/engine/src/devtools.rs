@@ -1,6 +1,6 @@
 use std::sync::{LazyLock, RwLock};
 
-use crate::mesh::ENGINE;
+use crate::mesh::{get_mesh_by_id, ENGINE};
 
 #[no_mangle]
 pub unsafe extern "C" fn devtools_pointer() -> *const f32 {
@@ -18,6 +18,14 @@ pub unsafe extern "C" fn get_point_lights_count() -> usize {
         Some(len) => len.0,
         None => 0,
     }
+}
+#[no_mangle]
+pub extern "C" fn get_mesh_directional_light(mesh_id: usize) -> f32 {
+    get_mesh_by_id(mesh_id).mesh_property.lock().unwrap().gpu_memory.directional_light
+}
+#[no_mangle]
+pub extern "C" fn get_mesh_point_light(mesh_id: usize) -> f32 {
+    get_mesh_by_id(mesh_id).mesh_property.lock().unwrap().gpu_memory.point_light_squared
 }
 pub struct DevTools {
     pub euler_angles: [f32; 3],

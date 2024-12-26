@@ -175,11 +175,25 @@ impl<const U: u32> GPUBuffer<U> {
             });
         }
     }
-    pub fn make_dirty(&mut self) {
+    pub fn make_dirty(&self) {
         for some_buffer_binding in self.buffer_bindings.iter() {
             if let Some(buffer_binding) = some_buffer_binding.upgrade() {
                 buffer_binding.lock().unwrap().make_dirty();
             }
+        }
+    }
+    pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: usize) {
+        unsafe {
+            self.size = size;
+            self.externref = Arc::new(create_gpu_buffer(
+                device,
+                size,
+                MULTIVALUE_USIZE.as_ptr(),
+                U,
+                false,
+                self.owned_by_js,
+            ));
+            self.make_dirty();
         }
     }
 }

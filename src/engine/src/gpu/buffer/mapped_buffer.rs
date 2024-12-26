@@ -42,8 +42,6 @@ impl<B: GpuBuffer> MappedGPUBuffer<B> {
         }
     }
     pub fn unmap(self) -> B {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             unmap(&self.0.externref());
         }
