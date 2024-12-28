@@ -13,6 +13,7 @@ import { Primitives } from './Primitives.jsx';
 import { creatDepthSlices } from '../../GPU/Meshes/helpers/depthSlices.js';
 import type { Engine } from '../../engine.js';
 import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
+import './Light.ts';
 declare const engine: Engine;
 
 export const NodeInfo = memo(function NodeInfo({
@@ -97,6 +98,7 @@ export const NodeInfo = memo(function NodeInfo({
         </label>
       </fieldset>
       <Rotation node={drawable.node} />
+      <light-details mesh-id={drawable.node.id.toString()}></light-details>
       <fieldset>
         <legend>Scale</legend>
         <label>

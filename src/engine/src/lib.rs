@@ -17,6 +17,7 @@ mod vertices;
 pub mod camera;
 mod cameras;
 pub mod projection;
+mod swapbuffers;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;

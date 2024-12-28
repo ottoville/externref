@@ -322,7 +322,7 @@ export class DataNode extends MainNode {
       engine.physics.tickables.splice(idx, 1);
     }
     idx = engine.physics.movables.indexOf(this);
-    if (idx) {
+    if (idx >= 0) {
       engine.physics.movables.splice(idx, 1);
     }
     DataNode.Meshes.delete(this.id);

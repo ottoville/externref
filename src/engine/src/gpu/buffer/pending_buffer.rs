@@ -21,6 +21,9 @@ impl<const U: u32> PendingGPUBuffer<U> {
         #[cfg(test)]
         return 2;
     }
+    pub fn size(&self) -> usize {
+        self.0.size
+    }
 }
 impl<const U: u32> Into<MappedGPUBuffer<MappadleGPUBuffer<U>>> for PendingGPUBuffer<U> {
     fn into(self) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {

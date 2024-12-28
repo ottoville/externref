@@ -3,22 +3,16 @@ use std::sync::Mutex;
 
 use externref::Resource;
 
-use super::buffer::mappadle_buffer::MappadleGPUBuffer;
+use super::command_encoder::GPUCommandEncoder;
 use super::gpu::JSDevice;
-use super::{buffer::usages::MAP_WRITE_COPYSRC_USAGE, command_encoder::GPUCommandEncoder};
 use crate::allocators::freeindex::FreeIndexIndex;
+use crate::swapbuffers::SwapBuffers;
 
-use super::buffer::{
-    buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer, pending_buffer::PendingGPUBuffer,
-    usages::STORAGE_COPYDST_USAGE,
-};
+use super::buffer::{buffer::GPUBuffer, usages::STORAGE_COPYDST_USAGE};
 
 pub struct Lights {
     pub lights: Vec<FreeIndexIndex>,
     pub buffer: Rc<Mutex<GPUBuffer<STORAGE_COPYDST_USAGE>>>,
-    buffer_ring_pending: Vec<PendingGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
-    buffer_ring_mapped: Vec<MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>>,
-    buffer_ring_onqueue: Vec<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
     label: String,
     dirty: bool,
 }
@@ -33,9 +27,6 @@ impl Lights {
                 label.to_string(),
                 false,
             ))),
-            buffer_ring_pending: Vec::with_capacity(8),
-            buffer_ring_mapped: Vec::with_capacity(8),
-            buffer_ring_onqueue: Vec::with_capacity(8),
             label,
             dirty: false,
         }
@@ -57,6 +48,7 @@ impl Lights {
         &mut self,
         device: &Resource<JSDevice>,
         command_encoder: &mut GPUCommandEncoder,
+        swap_buffer: &mut SwapBuffers,
     ) {
         if !self.dirty {
             return;
@@ -64,66 +56,29 @@ impl Lights {
         self.dirty = false;
         self.lights[0] = FreeIndexIndex(self.lights.len() - 1);
         let mut buffer = self.buffer.lock().unwrap();
-        let size = buffer.size;
-        if self.lights.capacity() * 4 > size {
+        if self.lights.capacity() * 4 > buffer.size {
             buffer.resize_zeroed(device, self.lights.capacity() * 4);
-            self.buffer_ring_mapped.clear();
-            self.buffer_ring_onqueue.clear();
-            self.buffer_ring_pending.clear();
         }
-        let mapped_buffer = self.buffer_ring_mapped.pop().unwrap_or_else(|| {
-            MappadleGPUBuffer::new_mapped(
-                device,
-                self.lights.capacity() * 4,
-                String::from(self.label.to_string() + "_swap_buffer"),
-                false,
-            )
+        swap_buffer.get(device, buffer.size, |mapped_buffer| {
+            mapped_buffer.set_mapped_range(
+                self.lights.as_ptr() as usize,
+                self.lights.len() * 4,
+                0,
+                self.lights.len() * 4,
+            );
+            let unmapped_buffer = mapped_buffer.unmap();
+            command_encoder.copy_buffer_to_buffer(&unmapped_buffer, &*buffer, 0, 0, buffer.size);
+            return unmapped_buffer;
         });
-        mapped_buffer.set_mapped_range(
-            self.lights.as_ptr() as usize,
-            self.lights.len() * 4,
-            0,
-            self.lights.len() * 4,
-        );
-        let unmapped_buffer = mapped_buffer.unmap();
-        command_encoder.copy_buffer_to_buffer(
-            &unmapped_buffer,
-            &*buffer,
-            0,
-            0,
-            self.lights.len() * 4,
-        );
-        self.buffer_ring_onqueue.push(unmapped_buffer);
-    }
-    pub fn queue_submited(&mut self) -> bool {
-        if self.buffer_ring_onqueue.len() == 0 {
-            return false;
-        }
-        for buffer in self.buffer_ring_onqueue.drain(..) {
-            let size = buffer.size;
-            let pending_buffer = buffer.map_write_async(0, size);
-            self.buffer_ring_pending.push(pending_buffer);
-        }
-        return true;
-    }
-    pub fn check_mapped_buffers(&mut self) {
-        let mut i = 0;
-        while i < self.buffer_ring_pending.len() {
-            if self.buffer_ring_pending[i].map_state() == 2 {
-                let pending_buffer = self.buffer_ring_pending.remove(i);
-                self.buffer_ring_mapped.push(pending_buffer.into())
-            } else {
-                i = i + 1;
-            }
-        }
     }
 }
+
 #[cfg(test)]
 #[test]
 fn test_lights() {
     use externref::ExternRef;
 
-    use crate::gpu::{bindgroup::BindGroup, bufferbinding::BufferBinding};
+    use crate::gpu::{bindgroup::BindGroup, bufferbinding::BufferBinding, queue::Queue};
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0));
         let layout = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
@@ -136,23 +91,28 @@ fn test_lights() {
         );
         bindgroup.lock().unwrap().get_bind_group(&device);
         assert_eq!(bindgroup.lock().unwrap().dirty, false);
-        assert_eq!(lights.queue_submited(), false);
+        let mut swapbuffers = SwapBuffers::new();
+
+        assert_eq!(swapbuffers.queue_submited(), false);
         lights.push(FreeIndexIndex(1));
         let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
         assert_eq!(lights.dirty, true);
-        lights.update_buffer(&device, &mut command_encoder);
+        lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.dirty, false);
-        lights.update_buffer(&device, &mut command_encoder);
+        lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.dirty, false);
         assert_eq!(lights.buffer.lock().as_ref().unwrap().size, 16);
         lights.push(FreeIndexIndex(2));
         lights.push(FreeIndexIndex(3));
         lights.push(FreeIndexIndex(4));
-        lights.update_buffer(&device, &mut command_encoder);
+        lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.buffer.lock().as_ref().unwrap().size, 32);
         assert_eq!(bindgroup.lock().unwrap().dirty, true);
-
-        assert_eq!(lights.queue_submited(), true);
-        assert_eq!(lights.queue_submited(), false);
+        let queue = Queue {
+            externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+        };
+        queue.submit(&mut vec![command_encoder.finish(String::from("test"))].drain(..));
+        assert_eq!(swapbuffers.queue_submited(), true);
+        assert_eq!(swapbuffers.queue_submited(), false);
     }
 }

@@ -1,3 +1,4 @@
+use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::{ops::Deref, rc::Weak, sync::Mutex};
 
@@ -15,9 +16,13 @@ use externref::Resource;
 
 pub struct MappadleGPUBuffer<const U: u32>(GPUBuffer<U>);
 impl<const U: u32> MappadleGPUBuffer<U> {
-    pub fn map_write_async(self, offset: usize, size: usize) -> PendingGPUBuffer<U> {
+    pub fn map_write_async(self, offset: usize, size: Option<NonZeroUsize>) -> PendingGPUBuffer<U> {
+        let actual_size = match size {
+            Some(size) => size.get(),
+            None => self.0.size - offset,
+        };
         unsafe {
-            map_write_async(&self.0.externref, offset, size);
+            map_write_async(&self.0.externref, offset, actual_size);
         }
         PendingGPUBuffer::new(self)
     }

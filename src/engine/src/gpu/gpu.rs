@@ -9,6 +9,7 @@ use crate::cameras::search_camera_by_id_mut;
 use crate::engine::GPU_QUEUE;
 use crate::mesh::{get_mesh_by_id_mut, ENGINE};
 use crate::projection::Projection;
+use crate::swapbuffers::SwapBuffers;
 use crate::GPUMesh;
 
 use super::bindgroup::{BindGroup, JSBindGroup, JSBindGroupLayout};
@@ -54,6 +55,9 @@ pub unsafe fn create_gpu_buffer(
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
+#[cfg(test)]
+pub unsafe fn render_renderpasses(_command_encoder: &Resource<JSCommandEncoder>) {}
+
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "device")]
@@ -144,24 +148,19 @@ pub unsafe extern "C" fn init_gpu(
         update_view_bindgroup,
         point_lights,
         directional_lights,
+        swap_buffers: SwapBuffers::new(),
     });
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn check_mapped_buffers() {
+pub unsafe extern "C" fn check_mapped_buffers() -> bool {
     let engine = ENGINE.physic_engine_mut();
     engine
         .gpu
         .as_mut()
         .unwrap()
-        .point_lights
-        .check_mapped_buffers();
-    engine
-        .gpu
-        .as_mut()
-        .unwrap()
-        .directional_lights
-        .check_mapped_buffers();
+        .swap_buffers
+        .check_mapped_buffers()
 }
 
 #[externref]
@@ -213,13 +212,16 @@ pub unsafe extern "C" fn process_gpu_queue(
     let renderloop_command_encoder =
         GPUCommandEncoder::new(String::from("renderloop_commandEncoder"));
     let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
-
-    //Lights
-    gpu.directional_lights
-        .update_buffer(&gpu.device, &mut command_encoder);
-    gpu.point_lights
-        .update_buffer(&gpu.device, &mut command_encoder);
-
+    {
+        //Lights
+        gpu.directional_lights.update_buffer(
+            &gpu.device,
+            &mut command_encoder,
+            &mut gpu.swap_buffers,
+        );
+        gpu.point_lights
+            .update_buffer(&gpu.device, &mut command_encoder, &mut gpu.swap_buffers);
+    }
     //Cameras
     let mut some_camera_updated = false;
 
@@ -251,8 +253,6 @@ pub unsafe extern "C" fn process_gpu_queue(
 
         command_encoder = lights_pass.end();
     }
-    #[cfg(feature = "webgpu")]
-    #[cfg(any(not(test), rust_analyzer))]
     render_renderpasses(&renderloop_command_encoder.externref);
     // Update mesh positions etc
     gpu.queue
@@ -265,14 +265,7 @@ pub unsafe extern "C" fn process_gpu_queue(
             .drain(..),
     );
 
-    let mut mapping = false;
-    if gpu.point_lights.queue_submited() {
-        mapping = true
-    }
-    if gpu.directional_lights.queue_submited() {
-        mapping = true;
-    }
-    return mapping;
+    return gpu.swap_buffers.queue_submited();
 }
 pub struct JSDevice(());
 
@@ -285,6 +278,7 @@ pub struct GPU {
     update_view_bindgroup: Rc<Mutex<BindGroup>>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
+    swap_buffers: SwapBuffers,
 }
 impl GPU {
     pub unsafe fn get_camera_by_id(&self, camera_id: u32) -> &Camera {
@@ -415,6 +409,7 @@ fn test_gpu_queue() {
         assert_eq!(GPU_QUEUE.lock().unwrap().len(), 0);
     }
 }
+
 #[cfg(test)]
 #[test]
 fn test_gpu_lights() {
@@ -437,7 +432,7 @@ fn test_gpu_lights() {
                 .gpu
                 .as_mut()
                 .unwrap()
-                .directional_lights
+                .swap_buffers
                 .queue_submited(),
             false
         );

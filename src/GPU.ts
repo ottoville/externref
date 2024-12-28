@@ -730,6 +730,7 @@ export class GPU {
       renderPass.render(renderloop_commandEncoder);
     });
   }
+  executeRuntime = false;
   readonly #renderLoop = (
     time: DOMHighResTimeStamp,
     updateViewPipeline: GPUComputePipeline,
@@ -764,12 +765,15 @@ export class GPU {
     if (physicDelta !== null) this.deltaView.set([physicDelta]);
     this.timeBuffer.write(0, this.timeAndDeltaBuffer);
 
-    const mapping_buffers = engine.rust.process_gpu_queue(updateViewPipeline);
-
-    if (mapping_buffers && this.#idleCallback === undefined) {
+    if (engine.rust.process_gpu_queue(updateViewPipeline)) {
+      // Some buffers did move from onqueue to pending, execute runtime later on
+      this.executeRuntime = true;
+    }
+    if (this.executeRuntime && this.#idleCallback === undefined) {
       this.#idleCallback = requestIdleCallback(() => {
         this.#idleCallback = undefined;
-        engine.rust.check_mapped_buffers();
+        // If there are still pending buffers, execute runtime again later on
+        this.executeRuntime = engine.rust.check_mapped_buffers();
       });
     }
     engine.rust.clear_temp_gpu_buffers();

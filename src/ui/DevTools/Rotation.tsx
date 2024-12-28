@@ -19,7 +19,6 @@ export function Rotation({ node }: { node: MainNode }) {
 
   const changeRotation = () => {
     if (rotationX.current && rotationY.current && rotationZ.current) {
-      console.log('set rotatedManually true');
       rotatedManually.current = true;
       node.euler_angles = [
         rotationX.current.valueAsNumber,
@@ -30,6 +29,21 @@ export function Rotation({ node }: { node: MainNode }) {
   };
 
   useEffect(() => {
+    if (rotationX.current) {
+      rotationX.current.textCallback = (text) => {
+        return ((180 / Math.PI) * text).toFixed(2).toString();
+      };
+    }
+    if (rotationY.current) {
+      rotationY.current.textCallback = (text) => {
+        return ((180 / Math.PI) * text).toFixed(2).toString();
+      };
+    }
+    if (rotationZ.current) {
+      rotationZ.current.textCallback = (text) => {
+        return ((180 / Math.PI) * text).toFixed(2).toString();
+      };
+    }
     const ptr = engine.rust.devtools_pointer();
     const listener = () => {
       if (!rotatedManually.current) {
@@ -66,11 +80,26 @@ export function Rotation({ node }: { node: MainNode }) {
   return (
     <fieldset>
       <legend>Rotation</legend>
-      <slider-label ref={rotationX}></slider-label>
+      <slider-label
+        label="X"
+        min="-3.14"
+        max="3.14"
+        ref={rotationX}
+      ></slider-label>
       <br />
-      <slider-label ref={rotationY}></slider-label>
+      <slider-label
+        label="Y"
+        min="-3.14"
+        max="3.14"
+        ref={rotationY}
+      ></slider-label>
       <br />
-      <slider-label ref={rotationZ}></slider-label>
+      <slider-label
+        label="Z"
+        min="-3.14"
+        max="3.14"
+        ref={rotationZ}
+      ></slider-label>
     </fieldset>
   );
 }

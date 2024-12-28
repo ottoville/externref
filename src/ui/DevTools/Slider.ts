@@ -1,76 +1,79 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 const sliderTemplate = `<label>
-        <span id="label">Y</span>:
+        <span id="label"></span>:
         <input
           style="vertical-align: middle"
           title="rotation Y"
           type="range"
-          min="-3.14"
-          max="3.14"
           step="0.01"
         />
       </label>
-      <span id="value"></span>`;
+      <span id="text"></span>`;
 
 export class SliderElement extends HTMLElement {
+  static observedAttributes = ['label', 'min', 'max', 'value'] as const;
+
   set valueAsNumber(newValue: number) {
-    this.#setValue(newValue);
+    this.setAttribute('value', newValue.toString());
   }
 
   get valueAsNumber() {
     return this.#input.valueAsNumber;
   }
   #label: HTMLSpanElement;
-  #value: HTMLSpanElement;
   #input: HTMLInputElement;
+  #text: HTMLSpanElement;
 
-  #setValue(newValue: number) {
-    this.#input.valueAsNumber = newValue;
-    this.#setLabel();
-  }
-  #setLabel() {
-    this.#value.textContent = (
-      (180 / Math.PI) *
-      this.#input.valueAsNumber
-    ).toFixed(2);
-  }
   constructor() {
     super();
     const shadowRoot = this.attachShadow({ mode: 'open' });
     shadowRoot.innerHTML = sliderTemplate;
     this.#input = shadowRoot.querySelector<HTMLInputElement>('input')!;
     this.#input.addEventListener('input', () => {
-      if (
-        shadowRoot.dispatchEvent(
-          new CustomEvent('input', {
-            bubbles: true,
-            composed: true,
-          }),
-        )
-      ) {
-        this.#setLabel();
-      }
+      this.#text.textContent = this.textCallback
+        ? this.textCallback(this.#input.valueAsNumber)
+        : this.#input.value;
+      shadowRoot.dispatchEvent(
+        new CustomEvent('input', {
+          bubbles: true,
+          composed: true,
+        }),
+      );
     });
     this.#label = shadowRoot.getElementById('label')!;
-    this.#value = shadowRoot.getElementById('value')!;
+    this.#text = shadowRoot.getElementById('text')!;
   }
+  textCallback?: (text: number) => string;
   disconnectedCallback() {}
-  attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+  attributeChangedCallback(
+    name: (typeof SliderElement)['observedAttributes'][number],
+    oldValue: string | null,
+    newValue: string,
+  ) {
     if (name == 'value') {
-      this.#setValue(parseFloat(newValue));
+      this.#input.valueAsNumber = parseFloat(newValue);
+      if (newValue !== oldValue || oldValue === null) {
+        this.#text.textContent = this.textCallback
+          ? this.textCallback(this.#input.valueAsNumber)
+          : newValue;
+      }
     } else if (name == 'label') {
       this.#label.textContent = newValue;
-    } else if (name == 'label-long') {
-      this.#input.title = newValue;
+    } else if (name == 'min') {
+      this.#input.min = newValue;
+    } else if (name == 'max') {
+      this.#input.max = newValue;
     }
   }
 }
-
 declare global {
   namespace JSX {
     interface IntrinsicElements {
       'slider-label': React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
+        React.HTMLAttributes<HTMLElement> &
+          Partial<
+            Record<(typeof SliderElement)['observedAttributes'][number], string>
+          >,
         HTMLElement
       >;
     }

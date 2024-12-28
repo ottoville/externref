@@ -374,7 +374,7 @@ export type rustWasm = {
   drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
   ): GPUCommandBuffer | null;
-  check_mapped_buffers(): void;
+  check_mapped_buffers(): boolean;
   add_camera(
     device: Externref<true, GPUDevice>,
     layout: GPU['pipelineLayouts']['updateClustersLayout'],

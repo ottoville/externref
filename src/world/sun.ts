@@ -1,5 +1,5 @@
 ﻿import type { Scene } from '../Scene.js';
-import { MainNode } from '../MainNode.js';
+import { MainNode, RigidBody } from '../MainNode.js';
 import { Angle } from '../Math.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import type { Engine } from '../engine.js';
@@ -55,6 +55,7 @@ export class Sun extends MainNode {
     super({
       directional_light: 1,
       label: 'sun',
+      rigid_body: RigidBody.off,
       scenes,
     });
     this.positions_count = 14;
