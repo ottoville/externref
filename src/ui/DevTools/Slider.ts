@@ -29,14 +29,18 @@ export class SliderElement extends HTMLElement {
     const shadowRoot = this.attachShadow({ mode: 'open' });
     shadowRoot.innerHTML = sliderTemplate;
     this.#input = shadowRoot.querySelector<HTMLInputElement>('input')!;
-    this.#input.addEventListener('input', () => {
+    this.#input.addEventListener('input', (evt) => {
       this.#text.textContent = this.textCallback
         ? this.textCallback(this.#input.valueAsNumber)
         : this.#input.value;
+      evt.stopPropagation();
       shadowRoot.dispatchEvent(
         new CustomEvent('input', {
           bubbles: true,
           composed: true,
+          detail: {
+            value: (evt.target as HTMLInputElement).valueAsNumber,
+          },
         }),
       );
     });

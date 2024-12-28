@@ -517,13 +517,19 @@ impl Mesh {
             let gpu_mesh_alignment = m.mesh_property.lock().unwrap().gpu_mesh_alignment;
             if point_light > 0.0 {
                 ENGINE
-                    .physic_engine_mut().gpu.as_mut().unwrap()
+                    .physic_engine_mut()
+                    .gpu
+                    .as_mut()
+                    .unwrap()
                     .point_lights
                     .push(gpu_mesh_alignment);
             }
             if directional_light > 0.0 {
                 ENGINE
-                    .physic_engine_mut().gpu.as_mut().unwrap()
+                    .physic_engine_mut()
+                    .gpu
+                    .as_mut()
+                    .unwrap()
                     .directional_lights
                     .push(gpu_mesh_alignment);
             }
@@ -667,19 +673,19 @@ impl Mesh {
         }
         self.on_update(true);
     }
-    pub unsafe fn set_point_light(&mut self, engine: &'static mut Engine, range: f32) {
+    pub fn set_point_light(&mut self, range: f32) {
         let mut mesh_property = self.mesh_property.lock().unwrap();
         let gpu_mesh_alignment = mesh_property.gpu_mesh_alignment.clone();
         mesh_property
             .gpu_memory
-            .set_point_light(engine, range, gpu_mesh_alignment);
+            .set_point_light(range, gpu_mesh_alignment);
     }
-    pub unsafe fn set_directional_light(&mut self, engine: &'static mut Engine, range: f32) {
+    pub fn set_directional_light(&mut self, range: f32) {
         let mut mesh_property = self.mesh_property.lock().unwrap();
         let gpu_mesh_alignment = mesh_property.gpu_mesh_alignment.clone();
         mesh_property
             .gpu_memory
-            .set_directional_light(engine, range, gpu_mesh_alignment);
+            .set_directional_light(range, gpu_mesh_alignment);
     }
 
     pub unsafe fn intersect_box_aa_sphere(
@@ -708,13 +714,19 @@ impl Drop for Mesh {
             let mesh_property = self.mesh_property.lock().unwrap();
             if mesh_property.gpu_memory.point_light_squared > 0.0 {
                 ENGINE
-                    .physic_engine_mut().gpu.as_mut().unwrap()
+                    .physic_engine_mut()
+                    .gpu
+                    .as_mut()
+                    .unwrap()
                     .point_lights
                     .remove(mesh_property.gpu_mesh_alignment);
             }
             if mesh_property.gpu_memory.directional_light > 0.0 {
                 ENGINE
-                    .physic_engine_mut().gpu.as_mut().unwrap()
+                    .physic_engine_mut()
+                    .gpu
+                    .as_mut()
+                    .unwrap()
                     .directional_lights
                     .remove(mesh_property.gpu_mesh_alignment);
             }

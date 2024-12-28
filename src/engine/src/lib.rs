@@ -1,6 +1,8 @@
 #!cfg(target_arch = "wasm32")
 mod allocators;
 mod boundingbox;
+pub mod camera;
+mod cameras;
 mod collider;
 mod devtools;
 mod drawable;
@@ -12,12 +14,10 @@ mod math2;
 mod mesh;
 mod mesh_property;
 mod meshes;
-mod terrain;
-mod vertices;
-pub mod camera;
-mod cameras;
 pub mod projection;
 mod swapbuffers;
+mod terrain;
+mod vertices;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
@@ -25,6 +25,7 @@ pub use crate::terrain::elevator::Elevator;
 
 use allocators::freeindex::FreeIndexIndex;
 use math2::Mat3wgslF32;
+use mesh::ENGINE;
 use rapier3d::prelude::*;
 use vertices::{Position, Position2DAndUV, PositionAndNormal, PositionAndNormalAndUV};
 
@@ -150,46 +151,59 @@ pub struct GPUMesh {
     scenes: u32,
 }
 impl GPUMesh {
-    pub fn set_point_light(
-        &mut self,
-        engine: &'static mut Engine,
-        range: f32,
-        gpu_alignment: FreeIndexIndex,
-    ) {
+    pub fn set_point_light(&mut self, range: f32, gpu_alignment: FreeIndexIndex) {
         let old_value = self.point_light_squared;
-        if range > 0.0 {
-            self.point_light_squared = range * range;
-            if old_value == 0.0 {
-                engine.physic_engine_mut().gpu.as_mut().unwrap().point_lights.push(gpu_alignment);
-            }
-        } else {
-            self.point_light_squared = 0.0;
-            if old_value > 0.0 {
-                engine.physic_engine_mut().gpu.as_mut().unwrap().point_lights
-                    .remove(gpu_alignment);
+        unsafe {
+            if range > 0.0 {
+                self.point_light_squared = range * range;
+                if old_value == 0.0 {
+                    ENGINE
+                        .physic_engine_mut()
+                        .gpu
+                        .as_mut()
+                        .unwrap()
+                        .point_lights
+                        .push(gpu_alignment);
+                }
+            } else {
+                self.point_light_squared = 0.0;
+                if old_value > 0.0 {
+                    ENGINE
+                        .physic_engine_mut()
+                        .gpu
+                        .as_mut()
+                        .unwrap()
+                        .point_lights
+                        .remove(gpu_alignment);
+                }
             }
         }
     }
-    pub fn set_directional_light(
-        &mut self,
-        engine: &'static mut Engine,
-        range: f32,
-        gpu_alignment: FreeIndexIndex,
-    ) {
+    pub fn set_directional_light(&mut self, range: f32, gpu_alignment: FreeIndexIndex) {
         let old_value = self.directional_light;
-        if range > 0.0 {
-            self.directional_light = range;
-            if old_value == 0.0 {
-                engine.physic_engine_mut().gpu.as_mut().unwrap()
-                    .directional_lights
-                    .push(gpu_alignment);
-            }
-        } else {
-            self.directional_light = 0.0;
-            if old_value > 0.0 {
-                engine.physic_engine_mut().gpu.as_mut().unwrap()
-                    .directional_lights
-                    .remove(gpu_alignment);
+        unsafe {
+            if range > 0.0 {
+                self.directional_light = range;
+                if old_value == 0.0 {
+                    ENGINE
+                        .physic_engine_mut()
+                        .gpu
+                        .as_mut()
+                        .unwrap()
+                        .directional_lights
+                        .push(gpu_alignment);
+                }
+            } else {
+                self.directional_light = 0.0;
+                if old_value > 0.0 {
+                    ENGINE
+                        .physic_engine_mut()
+                        .gpu
+                        .as_mut()
+                        .unwrap()
+                        .directional_lights
+                        .remove(gpu_alignment);
+                }
             }
         }
     }

@@ -130,7 +130,8 @@ export class Human extends Box {
     if (this.colliding_character && this.speedSquared > maxSpeedSquared) {
       const direction = this.inputManager.camera.direction;
       if (this.inputManager.arrowKeysDown) {
-        const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+        const velocity = this.velocity;
+        const horizontalSpeed = Math.hypot(velocity[0], velocity[2]);
         let diagonal = false;
         let angle = 0;
         if (

@@ -308,67 +308,66 @@ impl GPU {
         let mut queue = GPU_QUEUE.lock().unwrap();
         if queue.len() > 0 {
             let mut need_resize_to = *MAX_INSTANCES.lock().unwrap();
-            let temp_buffer = GPUBuffer::<COPYSRC_USAGE>::new_mapped(
+            self.swap_buffers.get(
                 &self.device,
                 std::mem::size_of::<GPUMesh>() * queue.len(),
-                String::from("handle_gpu_queue"),
-                false,
-            );
-            for (i, mesh_id) in queue.iter().enumerate() {
-                let mesh = get_mesh_by_id_mut(*mesh_id);
-                //js_log([&mesh.label]);
-                let mut mesh_property = mesh.mesh_property.lock().unwrap();
-                for cb in mesh_property.on_change.iter() {
-                    cb(&mesh_property);
-                }
-                if mesh_property.transformation_is_dirty {
-                    mesh_property.update_matrix();
-                }
-                mesh.on_gpu_queue = false;
-                if mesh_property.gpu_memory.point_light_squared > 0.0 {
-                    update_lights = true;
-                }
-                if mesh.externref.is_some() {
-                    #[cfg(feature = "webgpu")]
-                    #[cfg(any(not(test), rust_analyzer))]
-                    unsafe {
-                        mesh_on_change(mesh.externref.as_ref());
+                |temp_buffer| {
+                    for (i, mesh_id) in queue.iter().enumerate() {
+                        let mesh = get_mesh_by_id_mut(*mesh_id);
+                        //js_log([&mesh.label]);
+                        let mut mesh_property = mesh.mesh_property.lock().unwrap();
+                        for cb in mesh_property.on_change.iter() {
+                            cb(&mesh_property);
+                        }
+                        if mesh_property.transformation_is_dirty {
+                            mesh_property.update_matrix();
+                        }
+                        mesh.on_gpu_queue = false;
+                        if mesh_property.gpu_memory.point_light_squared > 0.0 {
+                            update_lights = true;
+                        }
+                        if mesh.externref.is_some() {
+                            #[cfg(feature = "webgpu")]
+                            #[cfg(any(not(test), rust_analyzer))]
+                            unsafe {
+                                mesh_on_change(mesh.externref.as_ref());
+                            }
+                        }
+                        if mesh_property.gpu_mesh_alignment.0 > need_resize_to {
+                            need_resize_to = mesh_property.gpu_mesh_alignment.0
+                        }
+                        temp_buffer.set_mapped_range(
+                            &raw const mesh_property.gpu_memory as usize,
+                            std::mem::size_of::<GPUMesh>(),
+                            i * std::mem::size_of::<GPUMesh>(),
+                            std::mem::size_of::<GPUMesh>(),
+                        );
                     }
-                }
-                if mesh_property.gpu_mesh_alignment.0 > need_resize_to {
-                    need_resize_to = mesh_property.gpu_mesh_alignment.0
-                }
-                temp_buffer.set_mapped_range(
-                    &raw const mesh_property.gpu_memory as usize,
-                    std::mem::size_of::<GPUMesh>(),
-                    i * std::mem::size_of::<GPUMesh>(),
-                    std::mem::size_of::<GPUMesh>(),
-                );
-            }
-            let mut gpu_buffer = self.gpu_buffer.lock().unwrap();
-            if need_resize_to > *MAX_INSTANCES.lock().unwrap() {
-                let mut max_instances = MAX_INSTANCES.lock().unwrap();
-                *max_instances = need_resize_to + 16;
-                let old_externref = gpu_buffer.resize(
-                    &self.device,
-                    &command_encoder,
-                    GPU_MEMORY_INDEX_SIZE * *max_instances,
-                );
-                TEMP_GPU_BUFFERS.lock().unwrap().push(old_externref);
-            }
-            for (i, mesh_id) in queue.drain(..).enumerate() {
-                let mesh = get_mesh_by_id_mut(mesh_id);
-                let mesh_property = mesh.mesh_property.lock().unwrap();
-                command_encoder.copy_buffer_to_buffer(
-                    &*temp_buffer,
-                    &*gpu_buffer,
-                    i * std::mem::size_of::<GPUMesh>(),
-                    mesh_property.gpu_mesh_alignment.0 * GPU_MEMORY_INDEX_SIZE,
-                    std::mem::size_of::<GPUMesh>(),
-                );
-            }
-            //Todo, make it so that buffer in getting unmapped when dropped
-            temp_buffer.unmap();
+                    let mut gpu_buffer = self.gpu_buffer.lock().unwrap();
+                    if need_resize_to > *MAX_INSTANCES.lock().unwrap() {
+                        let mut max_instances = MAX_INSTANCES.lock().unwrap();
+                        *max_instances = need_resize_to + 16;
+                        let old_externref = gpu_buffer.resize(
+                            &self.device,
+                            &command_encoder,
+                            GPU_MEMORY_INDEX_SIZE * *max_instances,
+                        );
+                        TEMP_GPU_BUFFERS.lock().unwrap().push(old_externref);
+                    }
+                    for (i, mesh_id) in queue.drain(..).enumerate() {
+                        let mesh = get_mesh_by_id_mut(mesh_id);
+                        let mesh_property = mesh.mesh_property.lock().unwrap();
+                        command_encoder.copy_buffer_to_buffer(
+                            &*temp_buffer,
+                            &*gpu_buffer,
+                            i * std::mem::size_of::<GPUMesh>(),
+                            mesh_property.gpu_mesh_alignment.0 * GPU_MEMORY_INDEX_SIZE,
+                            std::mem::size_of::<GPUMesh>(),
+                        );
+                    }
+                    temp_buffer.unmap()
+                },
+            );
         }
         return update_lights;
     }
@@ -428,14 +427,13 @@ fn test_gpu_lights() {
         };
         let engine = ENGINE.engine2.as_mut().unwrap();
         assert_eq!(
-            engine
-                .gpu
-                .as_mut()
-                .unwrap()
-                .swap_buffers
-                .queue_submited(),
+            engine.gpu.as_mut().unwrap().swap_buffers.queue_submited(),
             false
         );
+        process_gpu_queue(&Resource::new_non_null(std::mem::transmute::<
+            usize,
+            ExternRef,
+        >(2)));
         let mapping = process_gpu_queue(&Resource::new_non_null(std::mem::transmute::<
             usize,
             ExternRef,

@@ -28,19 +28,22 @@ impl SwapBuffers {
         size: usize,
     ) -> Option<MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>> {
         //Check if there are free buffer with given size
-        // TODO: use range to get close enought size, not exact.
         // TODO: Remove buffers not used for a while.
-        self.mapped.get_mut(&size)?.pop()
+        self.mapped
+            .range_mut(size..(size as f32 * 1.1) as usize)
+            .next()?
+            .1
+            .pop()
     }
     pub fn get<
-        F: FnMut(
+        F: FnOnce(
             MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
         ) -> MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>,
     >(
         &mut self,
         device: &Resource<JSDevice>,
         size: usize,
-        mut cb: F,
+        cb: F,
     ) {
         let mapped_buffer = self.get_existing(size).unwrap_or_else(|| {
             MappadleGPUBuffer::new_mapped(
