@@ -114,6 +114,7 @@ TODO
       byteLength,
     );
     if (!nofaces) {
+      const facesCount = this.mesh.faces_count;
       const facesByteLength =
         this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
 
@@ -128,7 +129,7 @@ TODO
         new Float32Array(
           engine.rust.memory.buffer,
           engine.rust.faces_pointer(this.mesh.id),
-          this.mesh.faces_count * 4,
+          facesCount * 4,
         ),
       );
       b2.unmap().copyTo(

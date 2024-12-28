@@ -3,7 +3,6 @@ pub use crate::drawable::DrawCommand;
 use crate::engine::js_error;
 #[cfg(target_arch = "wasm32")]
 use crate::engine::verticesChange;
-pub use crate::engine::Engine;
 use crate::engine::Engine2;
 pub use crate::engine::ENGINE;
 use crate::engine::GPU_QUEUE;
@@ -60,6 +59,7 @@ pub unsafe extern "C" fn new_mesh_from_js(
     label_cap: usize,
     externref: Resource<JSMesh>,
 ) -> usize {
+
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     return Mesh::new(
         point_light,

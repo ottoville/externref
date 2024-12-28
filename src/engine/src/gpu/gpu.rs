@@ -28,7 +28,6 @@ use super::{
 };
 pub const GPU_MEMORY_INDEX_SIZE: usize = 256;
 pub const DEFAULT_MAX_INSTANCES: usize = 10;
-pub static MAX_INSTANCES: Mutex<usize> = Mutex::new(DEFAULT_MAX_INSTANCES);
 
 pub static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Arc<Resource<JSBuffer>>, 16>> =
     Mutex::new(StackAllocator::new());
@@ -99,10 +98,13 @@ pub unsafe extern "C" fn clear_temp_gpu_buffers() {
 #[no_mangle]
 unsafe extern "C" fn on_resize(aspect_ratio: f32) {
     let gpu = ENGINE.physic_engine_mut().gpu.as_mut().unwrap();
-
+    let mut command_encoder = GPUCommandEncoder::new(String::from("screen_resize"));
     for projection in &mut gpu.projections {
-        projection.update(&gpu.device, aspect_ratio)
+        projection.update(&gpu.device, aspect_ratio, &mut command_encoder, &mut gpu.swap_buffers)
     }
+    gpu.queue.submit(
+        &mut vec![command_encoder.finish(String::from("screen_resize_commandbuffer"))].drain(..),
+    );
 }
 #[no_mangle]
 #[externref]
@@ -226,7 +228,7 @@ pub unsafe extern "C" fn process_gpu_queue(
     let mut some_camera_updated = false;
 
     for projection in &mut gpu.projections {
-        if projection.update_views(&gpu.device, &mut command_encoder) {
+        if projection.update_views(&gpu.device, &mut command_encoder, &mut gpu.swap_buffers, false) {
             some_camera_updated = true;
         }
     }
@@ -307,11 +309,12 @@ impl GPU {
         let mut update_lights = false;
         let mut queue = GPU_QUEUE.lock().unwrap();
         if queue.len() > 0 {
-            let mut need_resize_to = *MAX_INSTANCES.lock().unwrap();
             self.swap_buffers.get(
                 &self.device,
                 std::mem::size_of::<GPUMesh>() * queue.len(),
                 |temp_buffer| {
+                    let mut wanted_size = self.gpu_buffer.lock().unwrap().size;
+
                     for (i, mesh_id) in queue.iter().enumerate() {
                         let mesh = get_mesh_by_id_mut(*mesh_id);
                         //js_log([&mesh.label]);
@@ -333,9 +336,8 @@ impl GPU {
                                 mesh_on_change(mesh.externref.as_ref());
                             }
                         }
-                        if mesh_property.gpu_mesh_alignment.0 > need_resize_to {
-                            need_resize_to = mesh_property.gpu_mesh_alignment.0
-                        }
+                        wanted_size = wanted_size
+                            .max(GPU_MEMORY_INDEX_SIZE * (mesh_property.gpu_mesh_alignment.0 + 16));
                         temp_buffer.set_mapped_range(
                             &raw const mesh_property.gpu_memory as usize,
                             std::mem::size_of::<GPUMesh>(),
@@ -344,14 +346,10 @@ impl GPU {
                         );
                     }
                     let mut gpu_buffer = self.gpu_buffer.lock().unwrap();
-                    if need_resize_to > *MAX_INSTANCES.lock().unwrap() {
-                        let mut max_instances = MAX_INSTANCES.lock().unwrap();
-                        *max_instances = need_resize_to + 16;
-                        let old_externref = gpu_buffer.resize(
-                            &self.device,
-                            &command_encoder,
-                            GPU_MEMORY_INDEX_SIZE * *max_instances,
-                        );
+                    // if MAX_INSTANCES was increased, resize the buffer
+                    if gpu_buffer.size < wanted_size {
+                        let old_externref =
+                            gpu_buffer.resize(&self.device, &command_encoder, wanted_size);
                         TEMP_GPU_BUFFERS.lock().unwrap().push(old_externref);
                     }
                     for (i, mesh_id) in queue.drain(..).enumerate() {

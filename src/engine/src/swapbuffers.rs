@@ -23,17 +23,27 @@ impl SwapBuffers {
             onqueue: Vec::with_capacity(16),
         }
     }
+    /**
+     * Check if there are free buffer with given size
+     * TODO: Remove buffers not used for a while.
+     */
     fn get_existing(
         &mut self,
         size: usize,
     ) -> Option<MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>> {
-        //Check if there are free buffer with given size
-        // TODO: Remove buffers not used for a while.
-        self.mapped
-            .range_mut(size..(size as f32 * 1.1) as usize)
-            .next()?
-            .1
-            .pop()
+        let (got_size, len, buffer) = {
+            let (got_size, pool) = self
+                .mapped
+                .range_mut(size..(size as f32 * 1.1) as usize)
+                .next()?;
+            let buffer = pool.pop();
+            //js_log([&"ask size".to_string(), &size.to_string(), &"got size".to_string(), &got_size.to_string()]);
+            (*got_size, pool.len(), buffer)
+        };
+        if len == 0 {
+            self.mapped.remove(&got_size);
+        }
+        return buffer;
     }
     pub fn get<
         F: FnOnce(
@@ -46,6 +56,7 @@ impl SwapBuffers {
         cb: F,
     ) {
         let mapped_buffer = self.get_existing(size).unwrap_or_else(|| {
+            //js_log([&"create buffer".to_string(), &size.to_string()]);
             MappadleGPUBuffer::new_mapped(
                 device,
                 size,

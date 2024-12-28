@@ -9,6 +9,7 @@ use crate::{
         command_encoder::GPUCommandEncoder,
         gpu::JSDevice,
     },
+    swapbuffers::SwapBuffers,
 };
 
 const PROJECTION_BUFFER_SIZE: usize = 224; // 64+64+64+8+4+4+4+4 + ALIGN
@@ -90,23 +91,36 @@ impl Projection {
             },
         }
     }
-    pub fn update(&mut self, device: &Resource<JSDevice>, aspect_ratio: f32) {
+    /**
+     * Called on window resize
+     */
+    pub fn update(
+        &mut self,
+        device: &Resource<JSDevice>,
+        aspect_ratio: f32,
+        command_encoder: &mut GPUCommandEncoder,
+        swap_buffer: &mut SwapBuffers,
+    ) {
         self.buffer = self.inner_projection.create_buffer(device, aspect_ratio);
+        self.update_views(device, command_encoder, swap_buffer, true);
     }
+
     pub fn update_views(
         &mut self,
         device: &Resource<JSDevice>,
         command_encoder: &mut GPUCommandEncoder,
+        swap_buffer: &mut SwapBuffers,
+        force: bool,
     ) -> bool {
         let mut some_camera_updated = false;
         let mut closure = |camera: &mut Camera| {
-            if camera.do_update_view != 0 {
+            if force || camera.do_update_view != 0 {
                 camera.update_view();
                 camera.view.multiply(
                     &self.inner_projection.projection_reversed_z,
                     &mut camera.projection_view,
                 );
-                camera.update_projection(&device, command_encoder);
+                camera.update_projection(&device, command_encoder, swap_buffer);
                 some_camera_updated = true;
             } else {
                 camera.updated = false;

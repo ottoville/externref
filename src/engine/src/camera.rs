@@ -24,6 +24,7 @@ use crate::{
         gpu::JSDevice,
     },
     mesh::ENGINE,
+    swapbuffers::SwapBuffers,
     MULTIVALUE_USIZE,
 };
 #[no_mangle]
@@ -484,23 +485,21 @@ impl Camera {
         &mut self,
         device: &Resource<JSDevice>,
         command_encoder: &mut GPUCommandEncoder,
+        swap_buffer: &mut SwapBuffers,
     ) {
         self.projection_view_inverted_is_dirty = true;
-        let buffer = GPUBuffer::<COPYSRC_USAGE>::new_mapped(
-            device,
-            128,
-            String::from("camera_tempBuffer"),
-            false,
-        );
-        buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0, 128);
-        let mut unmapped = buffer.unmap();
-        command_encoder.copy_buffer_to_buffer(
-            &mut unmapped,
-            &(*self.buffer.lock().unwrap()),
-            0,
-            0,
-            128,
-        );
+        swap_buffer.get(device, 128, |buffer| {
+            buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0, 128);
+            let mut unmapped = buffer.unmap();
+            command_encoder.copy_buffer_to_buffer(
+                &mut unmapped,
+                &(*self.buffer.lock().unwrap()),
+                0,
+                0,
+                128,
+            );
+            return unmapped;
+        });
         self.do_update_view = 0;
         self.updated = true;
     }
@@ -566,9 +565,12 @@ fn test_child_camera() {
             ExternRef,
         >(0)));
         projection.cameras.cameras.push(camera);
+        let mut swap_buffers = SwapBuffers::new();
         projection.update_views(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             &mut command_encoder,
+            &mut swap_buffers,
+            false,
         );
         assert_eq!(
             projection.cameras.cameras[0].children[0].position,

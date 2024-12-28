@@ -9,7 +9,7 @@ import { Sea } from '../world/water.js';
 //import { LazyEval } from "../LazyEval.js";
 import { Sun } from '../world/sun.js';
 
-import { MainNode, RigidBody } from '../MainNode.js';
+import { RigidBody } from '../MainNode.js';
 import { Scene } from '../Scene.js';
 import { Human } from '../human.js';
 //import { savedCamera } from "../types/interfaces/index.js";
@@ -31,17 +31,6 @@ import { RightTriangularPrism } from '../GPU/Meshes/right_triangular_prism.js';
 
 declare const engine: Engine;
 
-class Light extends MainNode {
-  drawable = undefined;
-  constructor(scene: Scene) {
-    super({
-      directional_light: 1,
-      label: 'Light',
-      point_light: 0,
-      scenes: [scene],
-    });
-  }
-}
 const errors: Error[] = [];
 export class Canvas {
   currentGameTime = 0;
@@ -186,14 +175,6 @@ export class Canvas {
 
           this.setProgress(100);
           return terrainInited;
-        });
-        //Debug scene
-        new Scene('static', terraEngine.gpu!, (scene) => {
-          const sun = new Light(scene);
-          sun.translation = [0, 1, 0];
-          sun.ambient = [0, 0, 0];
-          sun.shadow = 1; // shadow to 1 (no shadow)
-          return undefined;
         });
 
         /* const slope = new Box(
