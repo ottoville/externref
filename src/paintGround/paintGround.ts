@@ -46,9 +46,7 @@ export abstract class paintGround {
   #drawArea: ListenerObj<'pointermove'> = {
     cb: () => {
       engine
-        .gpu!.renderPassScreen.pickMesh(undefined, (mesh) => {
-          return mesh === this.ground.mesh;
-        })
+        .gpu!.renderPassScreen.pickMesh([this.ground.mesh])
         .then((pickInfo) => {
           if (pickInfo) {
             this.#end_position[0] = pickInfo.position[0];
@@ -99,9 +97,7 @@ export abstract class paintGround {
       }
       this.#mouseMoved = true;
       engine
-        .gpu!.renderPassScreen.pickMesh(undefined, (mesh) => {
-          return mesh === this.ground.mesh;
-        })
+        .gpu!.renderPassScreen.pickMesh([this.ground.mesh])
         .then((pickInfo) => {
           if (pickInfo && this.#end_position) {
             //Distance from first point
@@ -188,9 +184,7 @@ export abstract class paintGround {
                   return mesh === this.ground
               }, false, this.camera);*/
       engine
-        .gpu!.renderPassScreen.pickMesh(undefined, (mesh) => {
-          return mesh === this.ground.mesh;
-        })
+        .gpu!.renderPassScreen.pickMesh([this.ground.mesh])
         .then((pickInfo) => {
           if (pickInfo) {
             this.#start_position = new TerraVector2([

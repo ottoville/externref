@@ -54,9 +54,6 @@ export class Human extends Box {
     if (properties.inputEnabled) {
       engine.gpu!.mainCamera.attachControllerForCamera(this.inputManager);
     }
-    engine.physics.onPhysicTick.add(() => {
-      //  console.log('human translation', this.translation)
-    });
 
     const radius = this.#radius;
     const collisionsScalingMatrix = this.collisionsScalingMatrix;
@@ -88,7 +85,10 @@ export class Human extends Box {
       },
     };
   }
-  override onPhysicTick = () => {
+  override onPhysicTick = (
+    _delta: number,
+    engine_lock: rust_mutex<'locked', 'engine'>,
+  ) => {
     let updateCameraDirection = false;
     if (
       this.inputManager.pointerMovement.x ||
@@ -127,10 +127,13 @@ export class Human extends Box {
         Math.sin(ang) * Math.sin(vang),
       );
     }
-    if (this.colliding_character && this.speedSquared > maxSpeedSquared) {
+    if (
+      this.colliding_character &&
+      this.getSpeedSquared(engine_lock) > maxSpeedSquared
+    ) {
       const direction = this.inputManager.camera.direction;
       if (this.inputManager.arrowKeysDown) {
-        const velocity = this.velocity;
+        const velocity = this.getVelocity(engine_lock);
         const horizontalSpeed = Math.hypot(velocity[0], velocity[2]);
         let diagonal = false;
         let angle = 0;
@@ -165,52 +168,52 @@ export class Human extends Box {
             this.last_velocity[0],
           );
           if (Math.abs(angle2 - angle) > 0.1) {
-            this.velocity = [
+            this.setVelocity(engine_lock, [
               Math.cos(angle) * horizontalSpeed,
-              this.velocity[1],
+              velocity[1],
               Math.sin(angle) * horizontalSpeed,
-            ];
+            ]);
           }
         } else if (
           (this.inputManager.arrowKeysDown & ARROW_KEYS.UP) ===
           ARROW_KEYS.UP
         ) {
-          this.velocity = [
+          this.setVelocity(engine_lock, [
             -direction[0] * horizontalSpeed,
-            this.velocity[1],
+            velocity[1],
             -direction[2] * horizontalSpeed,
-          ];
+          ]);
         } else if (
           (this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN) ===
           ARROW_KEYS.DOWN
         ) {
-          this.velocity = [
+          this.setVelocity(engine_lock, [
             direction[0] * horizontalSpeed,
-            this.velocity[1],
+            velocity[1],
             direction[2] * horizontalSpeed,
-          ];
+          ]);
         } else if (
           (this.inputManager.arrowKeysDown & ARROW_KEYS.LEFT) ===
           ARROW_KEYS.LEFT
         ) {
-          this.velocity = [
+          this.setVelocity(engine_lock, [
             -direction[2] * horizontalSpeed,
-            this.velocity[1],
+            velocity[1],
             direction[0] * horizontalSpeed,
-          ];
+          ]);
         } else if (
           (this.inputManager.arrowKeysDown & ARROW_KEYS.RIGHT) ===
           ARROW_KEYS.RIGHT
         ) {
-          this.velocity = [
+          this.setVelocity(engine_lock, [
             direction[2] * horizontalSpeed,
-            this.velocity[1],
+            velocity[1],
             -direction[0] * horizontalSpeed,
-          ];
+          ]);
         }
       }
     }
-    const translation = this.translation;
+    const translation = this.getTranslation(engine_lock);
     this.inputManager.cameraControl?.updatePosition(
       translation[0],
       translation[1],
@@ -218,8 +221,11 @@ export class Human extends Box {
     );
   };
   directionUpdate = false;
-  override onCollideCharacter() {
-    const speedSquared = this.speedSquared;
+  override onCollideCharacter(
+    _started: boolean,
+    engine_lock: rust_mutex<'locked', 'engine'>,
+  ) {
+    const speedSquared = this.getSpeedSquared(engine_lock);
     if (speedSquared < maxSpeedSquared) {
       const impulse = [0, 0, 0] as [number, number, number];
       const direction = this.inputManager.camera.direction;
@@ -282,9 +288,12 @@ export class Human extends Box {
       this.impulse[2] = impulse[2];
     }
   }
-  override checkCollide(velocityPerDelta: readonly [number, number, number]) {
+  override checkCollide(
+    velocityPerDelta: readonly [number, number, number],
+    engine_lock: rust_mutex<'locked', 'engine'>,
+  ) {
     this.grip = this.inputManager.arrowKeysDown ? 0 : 1;
-    const translation = this.translation;
+    const translation = this.getTranslation(engine_lock);
     const scaledPosition = engine.collider.scaledPosition;
     scaledPosition[0] = translation[0] / this.radius[0];
     scaledPosition[1] = translation[1] / this.radius[1];
@@ -295,7 +304,7 @@ export class Human extends Box {
     scaledVelocity[2] = velocityPerDelta[2] / this.radius[2];
     engine.collider.collidedMesh = undefined;
     engine.collider._retry = 0;
-    engine.collideWithWorld(this, scaledPosition, scaledVelocity);
+    engine.collideWithWorld(engine_lock, this, scaledPosition, scaledVelocity);
     if (!engine.collider.collision_resolved) {
       //console.log('cant solve collision', this.label)
     }

@@ -4,6 +4,7 @@ import type { Engine } from '../../engine.js';
 import { ArcRotateCamera } from '../../controllers/ArcRotateCamera.js';
 import { DrawableDirect } from '../../GPU/Drawables/DrawableDirect.js';
 import { RenderPipeline } from '../../webgpu-ts/index.js';
+import { MainNode } from 'MainNode.js';
 declare const engine: Engine;
 
 export function VariantList(props: {
@@ -52,8 +53,12 @@ export function VariantList(props: {
                 onClick={() => {
                   if (engine.inputManager instanceof ArcRotateCamera) {
                     if (drawable instanceof DrawableDirect) {
-                      const node = drawable.node;
-                      engine.inputManager.moveto(node.translation);
+                      const node = drawable.node as MainNode;
+                      const engine_lock = engine.rust.get_engine();
+                      engine.inputManager.moveto(
+                        node.getTranslation(engine_lock),
+                      );
+                      engine.rust.drop_engine_lock(engine_lock);
                     }
                   }
                 }}

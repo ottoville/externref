@@ -12,12 +12,14 @@ pub use crate::boundingbox::BoundingBox;
 use crate::{
     indices::Indices,
     math2::{Vec2wgslF32, Vec3wgslF32},
-    mesh::{get_mesh_by_id, get_mesh_by_id_mut},
+    mesh::ENGINE,
     vertices::{Position, Position2DAndUV, PositionAndNormal, PositionAndNormalAndUV, VertexKind},
     MULTIVALUE_USIZE,
 };
 #[no_mangle]
-pub unsafe extern "C" fn indices_pointer_from_geometry(geometry_ptr: *mut Geometry) -> *mut Indices {
+pub unsafe extern "C" fn indices_pointer_from_geometry(
+    geometry_ptr: *mut Geometry,
+) -> *mut Indices {
     let geometry = &mut (*geometry_ptr);
     &mut geometry.indices as *mut Indices
 }
@@ -52,7 +54,8 @@ pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry) -> usize {
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize, cap: usize) {
     let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);
-    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
+    let engine = &mut ENGINE.engine2.lock().unwrap();
+    let geometry = engine.meshes[mesh_id].get_geometry_mut();
     geometry.collider_planes = Vec::with_capacity(planes.len());
     geometry.collider_planes_parallel = Vec::with_capacity(planes.len());
     geometry.planes.planes = planes;
@@ -86,7 +89,7 @@ pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry) -> usize 
 }
 #[no_mangle]
 pub unsafe extern "C" fn have_vertices(mesh_id: usize) -> bool {
-    let mesh = get_mesh_by_id(mesh_id);
+    let mesh = &ENGINE.engine2.lock().unwrap().meshes[mesh_id];
     mesh.get_geometry().vertices.have_vertices()
 }
 #[no_mangle]
@@ -101,7 +104,9 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
 ) {
     let indices = Vec::from_raw_parts(indices_ptr, indices_length, indices_cap);
     let vertices = Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_cap);
-    let geometry = get_mesh_by_id_mut(mesh_id).get_geometry_mut();
+    let engine = &mut ENGINE.engine2.lock().unwrap();
+
+    let geometry = engine.meshes[mesh_id].get_geometry_mut();
     geometry.indices = Indices {
         indices,
         gpu_buffer: None,

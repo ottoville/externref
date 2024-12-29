@@ -116,18 +116,14 @@ export class DataNode extends MainNode {
   //Actual velocity that occured last tick
   last_velocity: [number, number, number] = [0, 0, 0];
   last_acceleration: [number, number, number] = [0, 0, 0];
-  get speed() {
-    return Math.sqrt(
-      this.velocity[0] * this.velocity[0] +
-        this.velocity[1] * this.velocity[1] +
-        this.velocity[2] * this.velocity[2],
-    );
-  }
-  get speedSquared() {
+  // Shortcut property to avoid calls to rust
+  #strip: boolean;
+  getSpeedSquared(engine_lock: rust_mutex<'locked', 'engine'>) {
+    const velocity = this.getVelocity(engine_lock);
     return (
-      this.velocity[0] * this.velocity[0] +
-      this.velocity[1] * this.velocity[1] +
-      this.velocity[2] * this.velocity[2]
+      velocity[0] * velocity[0] +
+      velocity[1] * velocity[1] +
+      velocity[2] * velocity[2]
     );
   }
   //coefficient of friction
@@ -148,11 +144,14 @@ export class DataNode extends MainNode {
   colliding_character = false;
 
   #vectorsVec4: number[] = [];
-  checkCollide(_velocityPerDelta: [number, number, number]): TerraVector3 {
-    return this.translation;
+  checkCollide(
+    _velocityPerDelta: [number, number, number],
+    engine_lock: rust_mutex<'locked', 'engine'>,
+  ): TerraVector3 {
+    return this.getTranslation(engine_lock);
     // TODO: Generic collision check, object shape is not known
   }
-  onCollideCharacter(_started: boolean) {}
+  onCollideCharacter(_started: boolean, _engine_lock: rust_pointer<'engine'>) {}
   readonly pickInfo = new pickInfo();
   protected readonly colliderVerticesV4: number[] = [];
   readonly #triangleFaces: Triangle[] = [];
@@ -164,8 +163,8 @@ export class DataNode extends MainNode {
   #positionsAndCollider: [pointerToVec3: number, pointerToVec4: number][] = [];
   #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
 
-  get faces_count() {
-    return engine.rust.faces_count(this.id);
+  get_faces_count(engine_lock: rust_mutex<'locked', 'engine'>) {
+    return engine.rust.faces_count(engine_lock, this.id);
   }
   set faces(faces: Float32Array) {
     const vec_ptr = create_rust_vec_ptr(
@@ -263,8 +262,12 @@ export class DataNode extends MainNode {
     if (character_can_collide_to) {
       DataNode.CharacterCanCollideMeshes.add(this);
     }
+    this.#strip = this.strip;
   }
-  protected pushVertice = (position: number) => {
+  protected pushVertice = (
+    position: number,
+    collider_faces_pointer: rust_pointer<'collider_faces'>,
+  ) => {
     let newLen = 0;
     if (this.#frontFace === 'ccw') {
       newLen = this.#vectorsVec4.unshift(position);
@@ -272,9 +275,6 @@ export class DataNode extends MainNode {
       newLen = this.#vectorsVec4.push(position);
     }
     if (newLen === 3) {
-      const collider_faces_pointer = engine.rust.collider_faces_pointer(
-        this.id,
-      );
       const faceIndex = this.#triangleFaces.length;
       this.#triangleFaces.push(
         new Triangle(
@@ -290,7 +290,7 @@ export class DataNode extends MainNode {
         3,
       ).set(this.#vectorsVec4); //4 is from plane
 
-      if (this.strip) {
+      if (this.#strip) {
         this.#vectorsVec4 = [
           (this.#vectorsVec4 as [number, number, number])[1],
           (this.#vectorsVec4 as [number, number, number])[2],
@@ -332,19 +332,25 @@ export class DataNode extends MainNode {
   initCollider() {
     if (!this.#character_can_collide_to) return false;
     //TODO: Calculate on demand
-    if (this.faces_count === 0 || this.vertices_count === 0) return false;
+    const engine_lock = engine.rust.get_engine();
+    const facesCount = this.get_faces_count(engine_lock);
+    engine.rust.drop_engine_lock(engine_lock);
+
+    if (facesCount === 0 || this.vertices_count === 0) return false;
     this.#triangleFaces.length = 0;
     this.#vectorsVec4 = [];
     this.#positionsAndCollider.length = 0;
     this.colliderVerticesV4.length = 0;
     //this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
     const vertices_pointer = engine.rust.vertices_pointer(this.geometry);
+    const last_collider_world_vertices_pointer =
+      this.last_collider_world_vertices_pointer;
     for (let i = 0; i < this.vertices_count; i++) {
       const pos =
         vertices_pointer +
         i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
       const colPos =
-        this.last_collider_world_vertices_pointer +
+        last_collider_world_vertices_pointer +
         i * 4 * Float32Array.BYTES_PER_ELEMENT;
       this.colliderVerticesV4.push(colPos);
       this.#positionsAndCollider.push([pos, colPos]);
@@ -353,9 +359,10 @@ export class DataNode extends MainNode {
     return true;
   }
 
-  #updateColliderPlanes() {
+  #updateColliderPlanes(engine_lock: rust_mutex<'locked', 'engine'>) {
+    const positions_count = this.get_positions_count(engine_lock);
     this.#positionsAndCollider.forEach((posAndCol, i) => {
-      if (i > this.positions_count) {
+      if (i > positions_count) {
         throw new Error('Tried to access vertice out of boundary');
       }
       new MutableTerraVector3(
@@ -367,7 +374,7 @@ export class DataNode extends MainNode {
       );
     });
     const collider_planes_parallel_pointer =
-      engine.rust.collider_planes_parallel_pointer(this.id);
+      engine.rust.collider_planes_parallel_pointer(engine_lock, this.id);
     this.#triangleFaces.forEach((face) => {
       face.updatePlane();
     });
@@ -399,7 +406,11 @@ export class DataNode extends MainNode {
   }
   //collisionsScalingMatrix = new TerraMatrix();
   #myCollisionsTransformMatrix = new TerraMatrix();
-  public checkCollision(_collider: ColliderJS, sphere: Ellipsoid) {
+  public checkCollision(
+    engine_lock: rust_mutex<'locked', 'engine'>,
+    _collider: ColliderJS,
+    sphere: Ellipsoid,
+  ) {
     //TODO: When there is support for bounding sphere.
     //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
 
@@ -408,11 +419,11 @@ export class DataNode extends MainNode {
     /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
                return false;
            }*/
-    if (!this.intersect_box_aa_sphere(engine.collider, max)) {
+    if (!this.intersect_box_aa_sphere(engine_lock, engine.collider, max)) {
       return;
     }
     // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix
-    this.get_transformation().multiplyToRef(
+    this.get_transformation(engine_lock).multiplyToRef(
       sphere.collisionsScalingMatrix,
       this.#myCollisionsTransformMatrix,
     );
@@ -423,10 +434,10 @@ export class DataNode extends MainNode {
     ) {
       this.#lastColliderTransformMatrix =
         this.#myCollisionsTransformMatrix.clone();
-      this.#updateColliderPlanes();
+      this.#updateColliderPlanes(engine_lock);
     }
-
-    if (this.faces_count % 4 != 0) {
+    const facesCount = this.get_faces_count(engine_lock);
+    if (facesCount % 4 != 0) {
       /* const scaledPosition=collider.scaledPosition;
              const scaledVelocity=collider.scaledVelocity
              const trLength=this.#triangleFaces.length;
@@ -442,9 +453,9 @@ export class DataNode extends MainNode {
     } else {
       //   TODO: Use wasm when this.faces_count % 4 == 0
       engine.wasm.testTriangles(
-        engine.rust.collider_faces_pointer(this.id),
-        engine.rust.collider_planes_parallel_pointer(this.id),
-        this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
+        engine.rust.collider_faces_pointer(engine_lock, this.id),
+        engine.rust.collider_planes_parallel_pointer(engine_lock, this.id),
+        facesCount * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
         this.id,
       );
       /*
@@ -457,7 +468,8 @@ export class DataNode extends MainNode {
     }
   }
   protected buildFaces() {
-    if (this.faces_count % 4 === 0) {
+    const engine_lock = engine.rust.get_engine();
+    if (this.get_faces_count(engine_lock) % 4 === 0) {
       this.#faceQuatros.length = 0;
       let faceQuatro: Triangle[] = [];
       this.#triangleFaces.forEach((face) => {
@@ -469,6 +481,7 @@ export class DataNode extends MainNode {
         }
       });
     }
-    this.#updateColliderPlanes();
+    this.#updateColliderPlanes(engine_lock);
+    engine.rust.drop_engine_lock(engine_lock);
   }
 }

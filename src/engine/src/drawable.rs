@@ -1,4 +1,4 @@
-use crate::{mesh::{get_mesh_by_id_mut, get_mesh_by_id}, engine::js_warn};
+use crate::{engine::js_warn, mesh::ENGINE};
 
 pub struct DrawableDirect {
     instance_count: u32,
@@ -6,26 +6,37 @@ pub struct DrawableDirect {
 }
 #[no_mangle]
 pub extern "C" fn get_instance_count(mesh_id: usize) -> u32 {
-    let mesh = get_mesh_by_id(mesh_id);
-    mesh.draw_command.as_ref().unwrap().direct.as_ref().unwrap().instance_count
+    let mesh = &ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+
+    mesh.draw_command
+        .as_ref()
+        .unwrap()
+        .direct
+        .as_ref()
+        .unwrap()
+        .instance_count
 }
 #[no_mangle]
 pub extern "C" fn get_first_instance(mesh_id: usize) -> u32 {
-    let mesh = get_mesh_by_id(mesh_id);
-    mesh.draw_command.as_ref().unwrap().direct.as_ref().unwrap().first_instance
+    let mesh = &ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+
+    mesh.draw_command
+        .as_ref()
+        .unwrap()
+        .direct
+        .as_ref()
+        .unwrap()
+        .first_instance
 }
 #[no_mangle]
 pub extern "C" fn set_instance_count(mesh_id: usize, instance_count: u32) {
-    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+
     match mesh.draw_command {
-        Some(ref mut draw_command) => {
-            match&mut (draw_command.direct) {
-                Some(direct) => {
-                    direct.instance_count = instance_count
-                },
-                None => {
-                    panic!("Mesh is not direct drawable");
-                }
+        Some(ref mut draw_command) => match &mut (draw_command.direct) {
+            Some(direct) => direct.instance_count = instance_count,
+            None => {
+                panic!("Mesh is not direct drawable");
             }
         },
         None => {
@@ -35,16 +46,13 @@ pub extern "C" fn set_instance_count(mesh_id: usize, instance_count: u32) {
 }
 #[no_mangle]
 pub extern "C" fn set_first_instance(mesh_id: usize, first_instance: u32) {
-    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+
     match mesh.draw_command {
-        Some(ref mut draw_command) => {
-            match&mut (draw_command.direct) {
-                Some(direct) => {
-                    direct.first_instance = first_instance
-                },
-                None => {
-                    panic!("Mesh is not direct drawable");
-                }
+        Some(ref mut draw_command) => match &mut (draw_command.direct) {
+            Some(direct) => direct.first_instance = first_instance,
+            None => {
+                panic!("Mesh is not direct drawable");
             }
         },
         None => {
@@ -54,7 +62,8 @@ pub extern "C" fn set_first_instance(mesh_id: usize, first_instance: u32) {
 }
 #[no_mangle]
 pub extern "C" fn add_drawble(mesh_id: usize) {
-    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+
     let d = DrawCommand {
         draw_type: DrawType::Indexed,
         direct: Option::None,
@@ -71,11 +80,15 @@ pub extern "C" fn set_drawble_direct(mesh_id: usize, instance_count: u32, first_
     if instance_count == 0 {
         js_warn(["Added drawable with 0 instances, nothing will be drawn"])
     }
-    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+
     match mesh.draw_command {
         Some(ref mut draw_command) => {
-            draw_command.direct = Some(DrawableDirect { instance_count, first_instance });
-        },
+            draw_command.direct = Some(DrawableDirect {
+                instance_count,
+                first_instance,
+            });
+        }
         None => {
             panic!("Mesh have no draw_command");
         }

@@ -38,17 +38,19 @@ function Camera(props: { camera: TerraCamera }) {
 let oldController: CameraController | null = null;
 export function Cameras() {
   const [debugCamera, setDebugCamera] = useState(false);
+  const cameras = new Array(engine.rust.get_cameras_count())
+    .fill(0)
+    .map((_v, camera_id) => {
+      const gpu_lock = engine.rust.get_gpu();
+      const camera = engine.rust.get_camera_externref(gpu_lock, camera_id);
+      engine.rust.drop_gpu_lock(gpu_lock);
+      return <Camera key={camera.label} camera={camera}></Camera>;
+    });
+
   return (
     <fieldset>
       <legend>Cameras</legend>
-      <ul>
-        {new Array(engine.rust.get_cameras_count())
-          .fill(0)
-          .map((_v, camera_id) => {
-            const camera = engine.rust.get_camera_externref(camera_id);
-            return <Camera key={camera.label} camera={camera}></Camera>;
-          })}
-      </ul>
+      <ul>{cameras}</ul>
       {debugCamera ? (
         <>
           <button

@@ -350,11 +350,13 @@ export class GPU {
       this.pipelineLayouts.BindGroupLayoutPosition,
       'BindGroupPosition',
       (bindGroup) => {
-        const index = engine.rust.get_gpu_mesh_buffer();
+        const gpu_lock = engine.rust.get_gpu();
+        const index = engine.rust.get_gpu_mesh_buffer(gpu_lock);
         const buffer = engine.rust.externrefs.get(index) as Externref<
           false,
           Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
         >;
+        engine.rust.drop_gpu_lock(gpu_lock);
         return {
           world: buffer.externref.getUniformBinding(
             bindGroup,
@@ -776,7 +778,6 @@ export class GPU {
         this.executeRuntime = engine.rust.check_mapped_buffers();
       });
     }
-    engine.rust.clear_temp_gpu_buffers();
     this.device.queue
       .onSubmittedWorkDone()
       .then(() => {

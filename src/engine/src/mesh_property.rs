@@ -10,19 +10,19 @@ use crate::{
     devtools::DEVTOOLS,
     engine::js_warn,
     math2::Vec3wgslF32,
-    mesh::get_mesh_by_id_mut,
+    mesh::ENGINE,
     GPUMesh,
 };
 
 #[no_mangle]
 pub unsafe extern "C" fn remove_onchange_callback(mesh_id: usize, cb: ExplicitFreeListIndex) {
-    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     mesh_property.on_change.remove(cb);
 }
 #[no_mangle]
 pub unsafe extern "C" fn add_onchange_callback(mesh_id: usize) -> ExplicitFreeListIndex {
-    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     let id = mesh_property.on_change.insert(Box::new(|mesh_property| {
         let mut devtools = DEVTOOLS.write().unwrap();
@@ -44,7 +44,7 @@ pub struct MeshProperty {
     pub rotation: Quaternion,
     pub scaling: [f32; 3],
     pub color: [f32; 4],
-    pub on_change: ExplicitFreeList<Box<dyn Fn(&MutexGuard<MeshProperty>) -> ()>>,
+    pub on_change: ExplicitFreeList<Box<dyn Fn(&MutexGuard<MeshProperty>) -> () + Send>>,
 }
 impl MeshProperty {
     pub fn update_matrix(&mut self) {

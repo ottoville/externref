@@ -18,7 +18,9 @@ export class Cone extends IndexedSingleColoredMesh {
       },
       mainNodeProps,
     );
-    this.color = color;
+    const engine_lock = engine.rust.get_engine();
+    this.setColor(engine_lock, color);
+    engine.rust.drop_engine_lock(engine_lock);
   }
   override create_collider() {
     return engine.rust.create_cone_collider(this.scale_y, this.radius);

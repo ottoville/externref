@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
 
 use externref::{externref, Resource};
@@ -6,8 +6,7 @@ use externref::{externref, Resource};
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::camera::Camera;
 use crate::cameras::search_camera_by_id_mut;
-use crate::engine::GPU_QUEUE;
-use crate::mesh::{get_mesh_by_id_mut, ENGINE};
+use crate::mesh::ENGINE;
 use crate::projection::Projection;
 use crate::swapbuffers::SwapBuffers;
 use crate::GPUMesh;
@@ -37,7 +36,7 @@ pub unsafe fn create_bind_group(
     _device: &Resource<JSDevice>,
     _layout: &Resource<JSBindGroupLayout>,
     _label: *const usize,
-    _entries: *mut std::slice::Iter<'_, Rc<Mutex<BufferBinding>>>,
+    _entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
 ) -> Resource<JSBindGroup> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
@@ -66,7 +65,7 @@ extern "C" {
         device: &Resource<JSDevice>,
         layout: &Resource<JSBindGroupLayout>,
         label: *const usize,
-        entries: *mut std::slice::Iter<'_, Rc<Mutex<BufferBinding>>>,
+        entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
     ) -> Resource<JSBindGroup>;
     pub fn create_gpu_buffer(
         device: &Resource<JSDevice>,
@@ -91,20 +90,32 @@ extern "C" {
 pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_USAGE>>) {
     TEMP_GPU_BUFFERS.lock().unwrap().push((*buffer).externref);
 }
-#[no_mangle]
-pub unsafe extern "C" fn clear_temp_gpu_buffers() {
-    TEMP_GPU_BUFFERS.lock().unwrap().clear();
-}
+
 #[no_mangle]
 unsafe extern "C" fn on_resize(aspect_ratio: f32) {
-    let gpu = ENGINE.physic_engine_mut().gpu.as_mut().unwrap();
+    let gpuoption = &mut ENGINE.gpu.lock().unwrap();
+    let gpu = gpuoption.as_mut().unwrap();
     let mut command_encoder = GPUCommandEncoder::new(String::from("screen_resize"));
     for projection in &mut gpu.projections {
-        projection.update(&gpu.device, aspect_ratio, &mut command_encoder, &mut gpu.swap_buffers)
+        projection.update(
+            &gpu.device,
+            aspect_ratio,
+            &mut command_encoder,
+            &mut gpu.swap_buffers,
+        )
     }
     gpu.queue.submit(
         &mut vec![command_encoder.finish(String::from("screen_resize_commandbuffer"))].drain(..),
     );
+}
+#[no_mangle]
+pub unsafe extern "C" fn get_gpu() -> *mut MutexGuard<'static, Option<GPU>> {
+    Box::into_raw(Box::new(ENGINE.gpu.lock().unwrap()))
+}
+#[no_mangle]
+pub unsafe extern "C" fn drop_gpu_lock(gpu: *mut MutexGuard<'static, Option<GPU>>) {
+    let gpu = Box::from_raw(gpu);
+    drop(gpu);
 }
 #[no_mangle]
 #[externref]
@@ -113,64 +124,62 @@ pub unsafe extern "C" fn init_gpu(
     queue: Resource<JSQueue>,
     layout: Resource<JSBindGroupLayout>,
 ) {
-    let gpu_buffer = Rc::new(Mutex::new(
-        GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
+    let mut gpu = ENGINE.gpu.lock().unwrap();
+    if gpu.is_none() {
+        let gpu_buffer = Arc::new(Mutex::new(
+            GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
+                &device,
+                GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
+                String::from("GPUMeshes"),
+                false,
+            ),
+        ));
+        let projection = Projection::new(&device);
+        let point_lights = Lights::new(&device, String::from("GPUPointLights"));
+        let directional_lights = Lights::new(&device, String::from("GPUDirectionalLights"));
+
+        let directional_lights_buffer_binding =
+            BufferBinding::new(directional_lights.buffer.clone(), 0, None);
+        let point_lights_buffer_binding = BufferBinding::new(point_lights.buffer.clone(), 0, None);
+        let meshes_buffer_binding = BufferBinding::new(gpu_buffer.clone(), 0, None);
+
+        let update_view_bindgroup = BindGroup::new(
             &device,
-            GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
-            String::from("GPUMeshes"),
-            false,
-        ),
-    ));
-    let projection = Projection::new(&device);
-    let engine2 = ENGINE.physic_engine_mut();
-    let point_lights = Lights::new(&device, String::from("GPUPointLights"));
-    let directional_lights = Lights::new(&device, String::from("GPUDirectionalLights"));
-
-    let directional_lights_buffer_binding =
-        BufferBinding::new(directional_lights.buffer.clone(), 0, None);
-    let point_lights_buffer_binding = BufferBinding::new(point_lights.buffer.clone(), 0, None);
-    let meshes_buffer_binding = BufferBinding::new(gpu_buffer.clone(), 0, None);
-
-    let update_view_bindgroup = BindGroup::new(
-        &device,
-        String::from("updateViewBindGroup"),
-        layout,
-        vec![
-            directional_lights_buffer_binding,
-            meshes_buffer_binding,
-            point_lights_buffer_binding,
-        ],
-    );
-    engine2.gpu = Some(GPU {
-        device,
-        queue: Queue { externref: queue },
-        gpu_buffer,
-        pending_command_buffers: Vec::with_capacity(8),
-        projections: vec![projection],
-        update_view_bindgroup,
-        point_lights,
-        directional_lights,
-        swap_buffers: SwapBuffers::new(),
-    });
+            String::from("updateViewBindGroup"),
+            layout,
+            vec![
+                directional_lights_buffer_binding,
+                meshes_buffer_binding,
+                point_lights_buffer_binding,
+            ],
+        );
+        let _ = gpu.insert(GPU {
+            device,
+            queue: Queue { externref: queue },
+            gpu_buffer,
+            pending_command_buffers: Vec::with_capacity(8),
+            projections: vec![projection],
+            update_view_bindgroup,
+            point_lights,
+            directional_lights,
+            swap_buffers: SwapBuffers::new(),
+            update_queue: Vec::with_capacity(128),
+        });
+    }
 }
-
 #[no_mangle]
 pub unsafe extern "C" fn check_mapped_buffers() -> bool {
-    let engine = ENGINE.physic_engine_mut();
-    engine
-        .gpu
-        .as_mut()
-        .unwrap()
-        .swap_buffers
-        .check_mapped_buffers()
+    let mut gpu = ENGINE.gpu.lock().unwrap();
+    gpu.as_mut().unwrap().swap_buffers.check_mapped_buffers()
 }
 
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn push_to_pending_command_buffers(buffer: Resource<JSCommandBuffer>) {
-    let engine = ENGINE.physic_engine_mut();
-    engine
+    ENGINE
         .gpu
+        .lock()
+        .unwrap()
         .as_mut()
         .unwrap()
         .pending_command_buffers
@@ -181,12 +190,10 @@ pub unsafe extern "C" fn push_to_pending_command_buffers(buffer: Resource<JSComm
 }
 #[no_mangle]
 #[cfg(feature = "webgpu")]
-pub unsafe extern "C" fn get_gpu_mesh_buffer() -> usize {
+pub unsafe extern "C" fn get_gpu_mesh_buffer(gpu: *mut MutexGuard<'static, Option<GPU>>) -> usize {
     use std::ptr;
 
-    let externref = &*ENGINE
-        .physic_engine()
-        .gpu
+    let externref = &*(*gpu)
         .as_ref()
         .unwrap()
         .gpu_buffer
@@ -198,23 +205,24 @@ pub unsafe extern "C" fn get_gpu_mesh_buffer() -> usize {
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 #[externref]
-pub unsafe extern "C" fn get_gpu_projection_buffer() -> &'static Resource<JSBuffer> {
-    &ENGINE.physic_engine().gpu.as_ref().unwrap().projections[0]
-        .buffer
-        .externref
+pub unsafe extern "C" fn get_gpu_projection_buffer(
+    ptr: *mut MutexGuard<'static, Option<GPU>>,
+) -> &'static Resource<JSBuffer> {
+    let gpu = &(*ptr).as_ref().unwrap();
+    &gpu.projections[0].buffer.externref
 }
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn process_gpu_queue(
     update_view_pipeline: &Resource<JSComputePipeline>,
 ) -> bool {
-    let engine = ENGINE.physic_engine_mut();
-
-    let gpu = engine.gpu.as_mut().unwrap();
     let renderloop_command_encoder =
         GPUCommandEncoder::new(String::from("renderloop_commandEncoder"));
     let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
     {
+        let mut gpuoption = ENGINE.gpu.lock().unwrap();
+        let gpu = gpuoption.as_mut().unwrap();
+
         //Lights
         gpu.directional_lights.update_buffer(
             &gpu.device,
@@ -223,39 +231,32 @@ pub unsafe extern "C" fn process_gpu_queue(
         );
         gpu.point_lights
             .update_buffer(&gpu.device, &mut command_encoder, &mut gpu.swap_buffers);
-    }
-    //Cameras
-    let mut some_camera_updated = false;
+        //Cameras
+        let (update_lights, some_camera_updated) = gpu.process_gpu_queue(&mut command_encoder);
 
-    for projection in &mut gpu.projections {
-        if projection.update_views(&gpu.device, &mut command_encoder, &mut gpu.swap_buffers, false) {
-            some_camera_updated = true;
-        }
-    }
-
-    // Meshes
-    let update_lights = gpu.process_gpu_queue(&mut command_encoder);
-    // Cameras continue here because update_lights could change between
-    if some_camera_updated || update_lights {
-        let lights_pass = command_encoder.begin_compute_pass(String::from("lightPassEncoder"));
-        lights_pass.set_pipeline(update_view_pipeline);
-        lights_pass.set_bindgroup(
-            0,
-            gpu.update_view_bindgroup
-                .lock()
-                .unwrap()
-                .get_bind_group(&gpu.device),
-        );
-        //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
-        for projection in &gpu.projections {
-            for camera in projection.cameras.cameras.iter() {
-                camera.update_camera(&gpu.device, update_lights, &lights_pass);
+        // Cameras continue here because update_lights could change between
+        if some_camera_updated || update_lights {
+            let mut lights_pass =
+                command_encoder.begin_compute_pass(String::from("lightPassEncoder"));
+            lights_pass.set_pipeline(update_view_pipeline);
+            lights_pass.set_bindgroup(
+                &gpu.device,
+                0,
+                &mut gpu.update_view_bindgroup.lock().unwrap(),
+            );
+            //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
+            for projection in &gpu.projections {
+                for camera in projection.cameras.cameras.iter() {
+                    camera.update_camera(&gpu.device, update_lights, &mut lights_pass);
+                }
             }
-        }
 
-        command_encoder = lights_pass.end();
+            command_encoder = lights_pass.end();
+        }
     }
     render_renderpasses(&renderloop_command_encoder.externref);
+    let gpuoption = &mut ENGINE.gpu.lock().unwrap();
+    let gpu = gpuoption.as_mut().unwrap();
     // Update mesh positions etc
     gpu.queue
         .submit(&mut vec![command_encoder.finish(String::from("renderloop"))].drain(..));
@@ -266,7 +267,7 @@ pub unsafe extern "C" fn process_gpu_queue(
         &mut vec![renderloop_command_encoder.finish(String::from("renderloop_renderencoder"))]
             .drain(..),
     );
-
+    TEMP_GPU_BUFFERS.lock().unwrap().clear();
     return gpu.swap_buffers.queue_submited();
 }
 pub struct JSDevice(());
@@ -274,13 +275,14 @@ pub struct JSDevice(());
 pub struct GPU {
     pub device: Resource<JSDevice>,
     pub queue: Queue,
-    pub gpu_buffer: Rc<Mutex<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>>,
+    pub gpu_buffer: Arc<Mutex<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>>,
     pub pending_command_buffers: Vec<CommandBuffer>,
     pub projections: Vec<Projection>,
-    update_view_bindgroup: Rc<Mutex<BindGroup>>,
+    update_view_bindgroup: Arc<Mutex<BindGroup>>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
     swap_buffers: SwapBuffers,
+    pub update_queue: Vec<usize>,
 }
 impl GPU {
     pub unsafe fn get_camera_by_id(&self, camera_id: u32) -> &Camera {
@@ -305,19 +307,28 @@ impl GPU {
         }
         panic!("Camera {} not found", camera_id);
     }
-    pub fn process_gpu_queue(&mut self, command_encoder: &mut GPUCommandEncoder) -> bool {
+    pub fn process_gpu_queue(&mut self, command_encoder: &mut GPUCommandEncoder) -> (bool, bool) {
         let mut update_lights = false;
-        let mut queue = GPU_QUEUE.lock().unwrap();
-        if queue.len() > 0 {
+        let mut some_camera_updated = false;
+        //Cameras
+        for projection in &mut self.projections {
+            if projection.update_views(&self.device, command_encoder, &mut self.swap_buffers, false)
+            {
+                some_camera_updated = true;
+            }
+        }
+        // Meshes
+
+        if self.update_queue.len() > 0 {
             self.swap_buffers.get(
                 &self.device,
-                std::mem::size_of::<GPUMesh>() * queue.len(),
+                std::mem::size_of::<GPUMesh>() * self.update_queue.len(),
                 |temp_buffer| {
+                    let mut engine = ENGINE.engine2.lock().unwrap();
                     let mut wanted_size = self.gpu_buffer.lock().unwrap().size;
 
-                    for (i, mesh_id) in queue.iter().enumerate() {
-                        let mesh = get_mesh_by_id_mut(*mesh_id);
-                        //js_log([&mesh.label]);
+                    for (i, mesh_id) in self.update_queue.iter().enumerate() {
+                        let mesh = &mut engine.meshes[*mesh_id];
                         let mut mesh_property = mesh.mesh_property.lock().unwrap();
                         for cb in mesh_property.on_change.iter() {
                             cb(&mesh_property);
@@ -348,12 +359,10 @@ impl GPU {
                     let mut gpu_buffer = self.gpu_buffer.lock().unwrap();
                     // if MAX_INSTANCES was increased, resize the buffer
                     if gpu_buffer.size < wanted_size {
-                        let old_externref =
-                            gpu_buffer.resize(&self.device, &command_encoder, wanted_size);
-                        TEMP_GPU_BUFFERS.lock().unwrap().push(old_externref);
+                        gpu_buffer.resize(&self.device, command_encoder, wanted_size);
                     }
-                    for (i, mesh_id) in queue.drain(..).enumerate() {
-                        let mesh = get_mesh_by_id_mut(mesh_id);
+                    for (i, mesh_id) in self.update_queue.drain(..).enumerate() {
+                        let mesh = &engine.meshes[mesh_id];
                         let mesh_property = mesh.mesh_property.lock().unwrap();
                         command_encoder.copy_buffer_to_buffer(
                             &*temp_buffer,
@@ -363,71 +372,74 @@ impl GPU {
                             std::mem::size_of::<GPUMesh>(),
                         );
                     }
+                    //Todo, make it so that buffer in getting unmapped when dropped
                     temp_buffer.unmap()
                 },
-            );
+            )
         }
-        return update_lights;
+
+        return (update_lights, some_camera_updated);
     }
 }
 
 #[cfg(test)]
 #[test]
 fn test_gpu_queue() {
-    use crate::{engine::init_engine, mesh::Mesh};
+    use crate::mesh::Mesh;
     use externref::ExternRef;
     unsafe {
-        if ENGINE.engine2.is_none() {
-            init_engine();
-            init_gpu(
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            );
-        };
+        init_gpu(
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+        );
         process_gpu_queue(&Resource::new_non_null(std::mem::transmute::<
             usize,
             ExternRef,
         >(1)));
         {
-            let queue = GPU_QUEUE.lock().unwrap();
-            assert_eq!(queue.len(), 0);
+            let maybegpu = &mut ENGINE.gpu.lock().unwrap();
+            let gpu = maybegpu.as_mut().unwrap();
+            assert_eq!(gpu.update_queue.len(), 0);
         }
         let mesh = Mesh::new(0.0, 1.0, 0.0, 0, String::from("sun"), None, None);
         {
-            let queue = GPU_QUEUE.lock().unwrap();
-            assert_eq!(queue[0], mesh);
-            assert_eq!(queue.len(), 1);
+            let maybegpu = &mut ENGINE.gpu.lock().unwrap();
+            let gpu = maybegpu.as_mut().unwrap();
+            assert_eq!(gpu.update_queue.binary_search(&mesh).is_ok(), true);
         }
         process_gpu_queue(&Resource::new_non_null(std::mem::transmute::<
             usize,
             ExternRef,
         >(1)));
-        assert_eq!(GPU_QUEUE.lock().unwrap().len(), 0);
+        let maybegpu = &mut ENGINE.gpu.lock().unwrap();
+        let gpu = maybegpu.as_mut().unwrap();
+
+        assert_eq!(gpu.update_queue.len(), 0);
     }
 }
 
 #[cfg(test)]
 #[test]
 fn test_gpu_lights() {
+    use crate::engine;
+    use crate::mesh::Mesh;
     use crate::mesh::ENGINE;
-    use crate::{engine::init_engine, mesh::Mesh};
     use externref::ExternRef;
 
     unsafe {
-        if ENGINE.engine2.is_none() {
-            init_engine();
-            init_gpu(
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            );
-        };
-        let engine = ENGINE.engine2.as_mut().unwrap();
-        assert_eq!(
-            engine.gpu.as_mut().unwrap().swap_buffers.queue_submited(),
-            false
+        init_gpu(
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
+        {
+            let mut maybegpu = ENGINE.gpu.lock().unwrap();
+            assert_eq!(
+                maybegpu.as_mut().unwrap().swap_buffers.queue_submited(),
+                false
+            );
+        }
         process_gpu_queue(&Resource::new_non_null(std::mem::transmute::<
             usize,
             ExternRef,

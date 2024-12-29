@@ -320,26 +320,25 @@ export class PickableRenderPass<
       return this.pickPromise;
     }
   }
+  /**
+   *
+   * @param wantedMeshes List of meshes to test pick against
+   * @returns
+   */
   async pickMesh(
-    wantedMeshIds?: Set<number>,
-    predicate?: (mesh: MainNode) => boolean,
+    wantedMeshes: MainNode[],
   ): Promise<{ position: TerraVector3; mesh: MainNode } | null> {
     const pickInfo = await this.pickPosition(true);
-    if (!pickInfo || (wantedMeshIds && !wantedMeshIds.has(pickInfo.meshId))) {
+    if (!pickInfo) {
       return null;
-    } else {
-      const mesh = engine.rust.get_mesh_externref_by_id(pickInfo.meshId);
-      if (!mesh) {
-        throw new Error('Mesh, ' + pickInfo.meshId + ' not found');
-      }
-      if (predicate && !predicate(mesh.externref)) {
-        return null;
-      } else {
-        return {
-          mesh: mesh.externref,
-          position: pickInfo.position,
-        };
-      }
     }
+    const pickedMesh = wantedMeshes.find((mesh) => mesh.id === pickInfo.meshId);
+    if (!pickedMesh) {
+      return null;
+    }
+    return {
+      mesh: pickedMesh,
+      position: pickInfo.position,
+    };
   }
 }

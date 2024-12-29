@@ -1,5 +1,5 @@
-use std::rc::Weak;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use std::sync::{Mutex, Weak};
 
 use externref::{externref, Resource};
 

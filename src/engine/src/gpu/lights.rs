@@ -1,5 +1,4 @@
-use std::rc::Rc;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use externref::Resource;
 
@@ -12,7 +11,7 @@ use super::buffer::{buffer::GPUBuffer, usages::STORAGE_COPYDST_USAGE};
 
 pub struct Lights {
     pub lights: Vec<FreeIndexIndex>,
-    pub buffer: Rc<Mutex<GPUBuffer<STORAGE_COPYDST_USAGE>>>,
+    pub buffer: Arc<Mutex<GPUBuffer<STORAGE_COPYDST_USAGE>>>,
     label: String,
     dirty: bool,
 }
@@ -21,7 +20,7 @@ impl Lights {
     pub fn new(device: &Resource<JSDevice>, label: String) -> Lights {
         Lights {
             lights: vec![FreeIndexIndex(0)],
-            buffer: Rc::new(Mutex::new(GPUBuffer::<STORAGE_COPYDST_USAGE>::new(
+            buffer: Arc::new(Mutex::new(GPUBuffer::<STORAGE_COPYDST_USAGE>::new(
                 device,
                 16,
                 label.to_string(),
@@ -95,7 +94,7 @@ fn test_lights() {
 
         assert_eq!(swapbuffers.queue_submited(), false);
         lights.push(FreeIndexIndex(1));
-        let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
+        let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
         assert_eq!(lights.dirty, true);
         lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.dirty, false);

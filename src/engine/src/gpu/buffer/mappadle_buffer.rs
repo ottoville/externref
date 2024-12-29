@@ -1,9 +1,9 @@
 use std::num::NonZeroUsize;
-use std::sync::Arc;
-use std::{ops::Deref, rc::Weak, sync::Mutex};
+use std::sync::{Arc, Weak};
+use std::{ops::Deref, sync::Mutex};
 
-use crate::{gpu::bufferbinding::BufferBinding, MULTIVALUE_USIZE};
 use crate::gpu::gpu::create_gpu_buffer;
+use crate::{gpu::bufferbinding::BufferBinding, MULTIVALUE_USIZE};
 
 use super::buffer::map_write_async;
 use super::{
@@ -32,7 +32,6 @@ impl<const U: u32> MappadleGPUBuffer<U> {
         label: String,
         owned_by_js: bool,
     ) -> MappedGPUBuffer<MappadleGPUBuffer<U>> {
-
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
             MULTIVALUE_USIZE[1] = label.len();
@@ -80,7 +79,7 @@ impl<const U: u32> GpuBuffer for MappadleGPUBuffer<U> {
     fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>) {
         self.0.add_buffer_binding(bind_group);
     }
-    
+
     fn externref_arc(&self) -> Arc<Resource<JSBuffer>> {
         self.0.externref_arc()
     }

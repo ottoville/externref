@@ -114,10 +114,10 @@ TODO
       byteLength,
     );
     if (!nofaces) {
-      const facesCount = this.mesh.faces_count;
-      const facesByteLength =
-        this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
-
+      const engine_lock = engine.rust.get_engine();
+      const facesCount = this.mesh.get_faces_count(engine_lock);
+      const facesByteLength = facesCount * 4 * Float32Array.BYTES_PER_ELEMENT;
+      engine.rust.drop_engine_lock(engine_lock);
       const b2 = new Buffer({
         gpu: engine.gpu.device,
         label: 'terrain_b2',

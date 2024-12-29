@@ -35,14 +35,27 @@ export abstract class MainNode implements Destroyable {
     return stringFromPtr(engine.rust.memory, label_field_pointer);
   }
 
-  set color(data: [number, number, number, number]) {
-    engine.rust.set_color(this.id, data[0], data[1], data[2], data[3]);
+  setColor(
+    engine_lock: rust_pointer<'engine'>,
+    data: [number, number, number, number],
+  ) {
+    engine.rust.set_color(
+      engine_lock,
+      this.id,
+      data[0],
+      data[1],
+      data[2],
+      data[3],
+    );
   }
-  set ambient(data: [r: number, b: number, g: number]) {
-    engine.rust.set_ambient(this.id, data[0], data[1], data[2]);
+  setAmbient(
+    engine_lock: rust_pointer<'engine'>,
+    data: [r: number, b: number, g: number],
+  ) {
+    engine.rust.set_ambient(engine_lock, this.id, data[0], data[1], data[2]);
   }
-  set shadow(shadow: number) {
-    engine.rust.set_shadow(this.id, shadow);
+  setShadow(engine_lock: rust_pointer<'engine'>, shadow: number) {
+    engine.rust.set_shadow(engine_lock, this.id, shadow);
   }
   /**
    *
@@ -87,8 +100,8 @@ export abstract class MainNode implements Destroyable {
   set_scenes(id: number) {
     engine.rust.set_scenes(this.id, id);
   }
-  update_dynamic_buffer() {
-    engine.rust.update_dynamic_buffer(this.id);
+  update_dynamic_buffer(engine_lock: rust_pointer<'engine'>) {
+    engine.rust.update_dynamic_buffer(engine_lock, this.id);
   }
   get scale_x(): number {
     return engine.rust.scale_x(this.id);
@@ -100,8 +113,8 @@ export abstract class MainNode implements Destroyable {
     return engine.rust.scale_z(this.id);
   }
 
-  get positions_count() {
-    return engine.rust.positions_count(this.id);
+  get_positions_count(engine_lock: rust_mutex<'locked', 'engine'>) {
+    return engine.rust.positions_count(engine_lock, this.id);
   }
   set positions_count(positions_count: number) {
     engine.rust.set_positions_count(this.id, positions_count);
@@ -111,22 +124,36 @@ export abstract class MainNode implements Destroyable {
     return engine.rust.strip(this.id) === 1 ? true : false;
   }
   onMeshChange: Set<() => void> = new Set();
-  onPhysicTick?: (time: number) => void;
+  onPhysicTick?: (
+    time: number,
+    engine_lock: rust_mutex<'locked', 'engine'>,
+  ) => void;
 
-  get_transformation = () =>
+  get_transformation = (engine_lock: rust_mutex<'locked', 'engine'>) =>
     new TerraMatrix(
       engine.rust.memory.buffer,
-      engine.rust.gpu_pointer(this.id),
+      engine.rust.gpu_pointer(engine_lock, this.id),
     );
 
-  get translation(): ReadOnlyTerraVector3 {
+  getTranslation(
+    engine_lock: rust_mutex<'locked', 'engine'>,
+  ): ReadOnlyTerraVector3 {
     return new ReadOnlyTerraVector3(
       engine.rust.memory.buffer,
-      engine.rust.translation_pointer(this.id),
+      engine.rust.translation_pointer(engine_lock, this.id),
     );
   }
-  set translation(value: [number, number, number] | ReadOnlyTerraVector3) {
-    engine.rust.update_translation(this.id, value[0], value[1], value[2]);
+  setTranslation(
+    engine_lock: rust_pointer<'engine'>,
+    value: [number, number, number] | ReadOnlyTerraVector3,
+  ) {
+    engine.rust.update_translation(
+      engine_lock,
+      this.id,
+      value[0],
+      value[1],
+      value[2],
+    );
   }
   get scale(): ReadOnlyTerraVector3 {
     return new ReadOnlyTerraVector3(
@@ -138,21 +165,31 @@ export abstract class MainNode implements Destroyable {
   apply_impulse(value: [number, number, number] | TerraVector3) {
     engine.rust.apply_impulse(this.id, value[0], value[1], value[2]);
   }
-  get velocity(): ReadOnlyTerraVector3 {
+  getVelocity(
+    engine_lock: rust_mutex<'locked', 'engine'>,
+  ): ReadOnlyTerraVector3 {
     return new ReadOnlyTerraVector3(
       engine.rust.memory.buffer,
-      engine.rust.velocity_pointer(this.id),
+      engine.rust.velocity_pointer(engine_lock, this.id),
     );
   }
-  set velocity(value: [number, number, number] | TerraVector3) {
+  setVelocity(
+    engine_lock: rust_mutex<'locked', 'engine'>,
+    value: [number, number, number] | TerraVector3,
+  ) {
     new MutableTerraVector3(
       engine.rust.memory.buffer,
-      engine.rust.velocity_pointer(this.id),
+      engine.rust.velocity_pointer(engine_lock, this.id),
     ).set(value);
-    this.update_dynamic_buffer();
+    this.update_dynamic_buffer(engine_lock);
   }
-  intersect_box_aa_sphere(collider: ColliderJS, radius: number) {
+  intersect_box_aa_sphere(
+    engine_lock: rust_mutex<'locked', 'engine'>,
+    collider: ColliderJS,
+    radius: number,
+  ) {
     return engine.rust.intersect_box_aa_sphere(
+      engine_lock,
       this.id,
       collider.collider_ptr,
       radius,

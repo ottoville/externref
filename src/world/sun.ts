@@ -23,7 +23,10 @@ export class Sun extends MainNode {
     return Math.min(Math.max(value, min), max);
   };
 
-  override onPhysicTick = (/*delta: number*/) => {
+  override onPhysicTick = (
+    _delta: number,
+    engine_lock: rust_mutex<'locked', 'engine'>,
+  ) => {
     const secondsOfDay = engine.physics.tickTime % 86400;
     const minutesOfDay = secondsOfDay / 60;
     const sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
@@ -34,21 +37,21 @@ export class Sun extends MainNode {
     const sunPositionZ = sin * zAngle;
     const sunPositionY = sin * yAngle;
 
-    const translation = this.translation;
-    this.velocity = [
+    const translation = this.getTranslation(engine_lock);
+    this.setVelocity(engine_lock, [
       sunPositionX - translation[0],
       sunPositionY - translation[1],
       sunPositionZ - translation[2],
-    ];
+    ]);
     //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
     const ambientR = this.#clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
     const ambientGB = this.#clamp((sunPositionY + 0.1) * 0.4 - 0.1, 0.05, 0.3);
 
-    this.color = [1, 1, 1, 1];
+    this.setColor(engine_lock, [1, 1, 1, 1]);
     //earth shadow
-    this.ambient = [ambientR, ambientGB, ambientGB];
-    this.shadow = this.#clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
-    this.update_dynamic_buffer();
+    this.setAmbient(engine_lock, [ambientR, ambientGB, ambientGB]);
+    this.setShadow(engine_lock, this.#clamp(sunPositionY * 8 + 1, 0, 1)); // <<3 == * 8
+    this.update_dynamic_buffer(engine_lock);
   };
   drawable: DrawableSimple<RenderPipelineProps<SunVertShader>> | undefined;
   constructor(gpu: GPU, scenes: Scene[]) {

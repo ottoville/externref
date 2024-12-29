@@ -152,58 +152,35 @@ pub struct GPUMesh {
 }
 impl GPUMesh {
     pub fn set_point_light(&mut self, range: f32, gpu_alignment: FreeIndexIndex) {
+        let maybegpu = &mut ENGINE.gpu.lock().unwrap();
+        let point_lights = &mut maybegpu.as_mut().unwrap().point_lights;
+
         let old_value = self.point_light_squared;
-        unsafe {
-            if range > 0.0 {
-                self.point_light_squared = range * range;
-                if old_value == 0.0 {
-                    ENGINE
-                        .physic_engine_mut()
-                        .gpu
-                        .as_mut()
-                        .unwrap()
-                        .point_lights
-                        .push(gpu_alignment);
-                }
-            } else {
-                self.point_light_squared = 0.0;
-                if old_value > 0.0 {
-                    ENGINE
-                        .physic_engine_mut()
-                        .gpu
-                        .as_mut()
-                        .unwrap()
-                        .point_lights
-                        .remove(gpu_alignment);
-                }
+        if range > 0.0 {
+            self.point_light_squared = range * range;
+            if old_value == 0.0 {
+                point_lights.push(gpu_alignment);
+            }
+        } else {
+            self.point_light_squared = 0.0;
+            if old_value > 0.0 {
+                point_lights.remove(gpu_alignment);
             }
         }
     }
     pub fn set_directional_light(&mut self, range: f32, gpu_alignment: FreeIndexIndex) {
+        let maybegpu = &mut ENGINE.gpu.lock().unwrap();
+        let directional_lights = &mut maybegpu.as_mut().unwrap().directional_lights;
         let old_value = self.directional_light;
-        unsafe {
-            if range > 0.0 {
-                self.directional_light = range;
-                if old_value == 0.0 {
-                    ENGINE
-                        .physic_engine_mut()
-                        .gpu
-                        .as_mut()
-                        .unwrap()
-                        .directional_lights
-                        .push(gpu_alignment);
-                }
-            } else {
-                self.directional_light = 0.0;
-                if old_value > 0.0 {
-                    ENGINE
-                        .physic_engine_mut()
-                        .gpu
-                        .as_mut()
-                        .unwrap()
-                        .directional_lights
-                        .remove(gpu_alignment);
-                }
+        if range > 0.0 {
+            self.directional_light = range;
+            if old_value == 0.0 {
+                directional_lights.push(gpu_alignment);
+            }
+        } else {
+            self.directional_light = 0.0;
+            if old_value > 0.0 {
+                directional_lights.remove(gpu_alignment);
             }
         }
     }

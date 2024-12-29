@@ -7,6 +7,8 @@ import { MainNode } from '../../MainNode.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import { DrawableProps } from './Drawable.js';
 import { RenderBundleEncoder } from '../../webgpu-ts/index.js';
+import type { Engine } from '../../engine.js';
+declare const engine: Engine;
 
 export class DrawableSimple<
   const R extends RenderPipelineProps,
@@ -32,16 +34,19 @@ export class DrawableSimple<
       renderEncoder instanceof RenderBundleEncoder
         ? renderEncoder.renderBundleEncoder
         : renderEncoder;
+    const engine_lock = engine.rust.get_engine();
+    const positionsCount = this.node.get_positions_count(engine_lock);
+    engine.rust.drop_engine_lock(engine_lock);
     console.debug(
       'drawSimple',
       this.node.label,
       'positions_count',
-      this.node.positions_count,
+      positionsCount,
       'instanceCount',
       this.instanceCount,
     );
     encoder.draw(
-      this.node.positions_count,
+      positionsCount,
       this.instanceCount,
       this.#firstVertex,
       this.firstInstance,

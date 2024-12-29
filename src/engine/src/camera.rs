@@ -1,7 +1,7 @@
+use std::sync::{Arc, MutexGuard};
 use std::{
     num::NonZero,
     ptr,
-    rc::Rc,
     sync::{
         atomic::{AtomicU32, Ordering},
         Mutex,
@@ -11,12 +11,13 @@ use std::{
 use externref::{externref, Resource};
 use terramath::MatrixMath;
 
+use crate::gpu::gpu::GPU;
 use crate::{
     gpu::{
         bindgroup::{BindGroup, JSBindGroupLayout},
         buffer::{
             buffer::{GPUBuffer, JSBuffer},
-            usages::{COPYSRC_USAGE, STORAGE_USAGE, UNIFORM_COPYDST_USAGE},
+            usages::{STORAGE_USAGE, UNIFORM_COPYDST_USAGE},
         },
         bufferbinding::BufferBinding,
         command_encoder::GPUCommandEncoder,
@@ -31,13 +32,13 @@ use crate::{
 pub unsafe extern "C" fn get_cameras_count() -> u32 {
     NEXT_CAMERA_ID.load(Ordering::Relaxed)
 }
-
 #[no_mangle]
 #[externref]
-pub unsafe extern "C" fn get_camera_externref(camera_id: u32) -> &'static Resource<JSCamera> {
-    &ENGINE
-        .physic_engine()
-        .gpu
+pub unsafe extern "C" fn get_camera_externref(
+    gpu_lock: *mut MutexGuard<'static, Option<GPU>>,
+    camera_id: u32,
+) -> &Resource<JSCamera> {
+    &(*gpu_lock)
         .as_ref()
         .unwrap()
         .get_camera_by_id(camera_id)
@@ -45,13 +46,9 @@ pub unsafe extern "C" fn get_camera_externref(camera_id: u32) -> &'static Resour
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_label(camera_id: u32) -> *const usize {
-    let label = &ENGINE
-        .physic_engine()
-        .gpu
-        .as_ref()
-        .unwrap()
-        .get_camera_by_id(camera_id)
-        .label;
+    let gpuoption = ENGINE.gpu.lock().unwrap();
+    let gpu = gpuoption.as_ref().unwrap();
+    let label = &gpu.get_camera_by_id(camera_id).label;
     MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
     MULTIVALUE_USIZE[1] = label.len();
     MULTIVALUE_USIZE[2] = label.capacity();
@@ -59,9 +56,8 @@ pub unsafe extern "C" fn get_camera_label(camera_id: u32) -> *const usize {
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_position(camera_id: u32, x: f32, y: f32, z: f32) {
-    ENGINE
-        .physic_engine_mut()
-        .gpu
+    let mut gpuoption = ENGINE.gpu.lock().unwrap();
+    gpuoption
         .as_mut()
         .unwrap()
         .get_camera_by_id_mut(camera_id)
@@ -69,14 +65,15 @@ pub unsafe extern "C" fn update_camera_position(camera_id: u32, x: f32, y: f32, 
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_direction(camera_id: u32, x: f32, y: f32, z: f32) {
-    ENGINE
-        .physic_engine_mut()
-        .gpu
+    let mut gpuoption = ENGINE.gpu.lock().unwrap();
+
+    gpuoption
         .as_mut()
         .unwrap()
         .get_camera_by_id_mut(camera_id)
         .update_direction([x, y, z]);
 }
+
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn add_child_to_camera(
@@ -91,9 +88,9 @@ pub unsafe extern "C" fn add_child_to_camera(
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     let camera = Camera::new(device, layout, externref, label);
     let id = camera.id;
-    ENGINE
-        .physic_engine_mut()
-        .gpu
+    let mut gpuoption = ENGINE.gpu.lock().unwrap();
+
+    gpuoption
         .as_mut()
         .unwrap()
         .get_camera_by_id_mut(camera_id)
@@ -115,9 +112,9 @@ pub unsafe extern "C" fn add_child_to_camera_water(
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     let camera = Camera::new_water(device, layout, externref, label);
     let id = camera.id;
-    ENGINE
-        .physic_engine_mut()
-        .gpu
+    let mut gpuoption = ENGINE.gpu.lock().unwrap();
+
+    gpuoption
         .as_mut()
         .unwrap()
         .get_camera_by_id_mut(camera_id)
@@ -135,18 +132,20 @@ pub unsafe extern "C" fn add_camera(
     label_len: usize,
     label_cap: usize,
 ) -> u32 {
-    let cameras = &mut ENGINE.physic_engine_mut().gpu.as_mut().unwrap().projections[0].cameras;
+    let mut gpuoption = ENGINE.gpu.lock().unwrap();
+
+    let cameras = &mut gpuoption.as_mut().unwrap().projections[0].cameras.cameras;
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     let camera = Camera::new(device, layout, externref, label);
     let id = camera.id;
-    cameras.cameras.push(camera);
+    cameras.push(camera);
     return id;
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_direction_ptr(camera_id: u32) -> *const f32 {
-    ENGINE
-        .physic_engine()
-        .gpu
+    let gpuoption = ENGINE.gpu.lock().unwrap();
+
+    gpuoption
         .as_ref()
         .unwrap()
         .get_camera_by_id(camera_id)
@@ -155,9 +154,9 @@ pub unsafe extern "C" fn get_camera_direction_ptr(camera_id: u32) -> *const f32 
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_position_ptr(camera_id: u32) -> *const f32 {
-    ENGINE
-        .physic_engine()
-        .gpu
+    let gpuoption = ENGINE.gpu.lock().unwrap();
+
+    gpuoption
         .as_ref()
         .unwrap()
         .get_camera_by_id(camera_id)
@@ -166,9 +165,9 @@ pub unsafe extern "C" fn get_camera_position_ptr(camera_id: u32) -> *const f32 {
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_view_ptr(camera_id: u32) -> *const [f32; 4] {
-    ENGINE
-        .physic_engine()
-        .gpu
+    let gpuoption = ENGINE.gpu.lock().unwrap();
+
+    gpuoption
         .as_ref()
         .unwrap()
         .get_camera_by_id(camera_id)
@@ -177,9 +176,9 @@ pub unsafe extern "C" fn get_camera_view_ptr(camera_id: u32) -> *const [f32; 4] 
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_projection_inverted_ptr(camera_id: u32) -> *const [f32; 4] {
-    ENGINE
-        .physic_engine()
-        .gpu
+    let gpuoption = ENGINE.gpu.lock().unwrap();
+
+    gpuoption
         .as_ref()
         .unwrap()
         .get_camera_by_id(camera_id)
@@ -188,12 +187,9 @@ pub unsafe extern "C" fn get_camera_projection_inverted_ptr(camera_id: u32) -> *
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: u32) {
-    let camera = ENGINE
-        .physic_engine_mut()
-        .gpu
-        .as_mut()
-        .unwrap()
-        .get_camera_by_id_mut(camera_id);
+    let mut gpuoption = ENGINE.gpu.lock().unwrap();
+
+    let camera = gpuoption.as_mut().unwrap().get_camera_by_id_mut(camera_id);
     if camera.projection_view_inverted_is_dirty {
         camera
             .projection_view
@@ -203,10 +199,11 @@ pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: u32) 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_buffer(camera_id: u32) -> usize {
-    let buffer = &*ENGINE
-        .physic_engine()
-        .gpu
+pub unsafe extern "C" fn get_camera_buffer(
+    gpu_lock: *mut MutexGuard<'static, Option<GPU>>,
+    camera_id: u32,
+) -> usize {
+    let buffer = &*(*gpu_lock)
         .as_ref()
         .unwrap()
         .get_camera_by_id(camera_id)
@@ -218,10 +215,11 @@ pub unsafe extern "C" fn get_camera_buffer(camera_id: u32) -> usize {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_cluster_buffer(camera_id: u32) -> usize {
-    let buffer = &*ENGINE
-        .physic_engine()
-        .gpu
+pub unsafe extern "C" fn get_camera_cluster_buffer(
+    gpu_lock: *mut MutexGuard<'static, Option<GPU>>,
+    camera_id: u32,
+) -> usize {
+    let buffer = &*(*gpu_lock)
         .as_ref()
         .unwrap()
         .get_camera_by_id(camera_id)
@@ -274,11 +272,11 @@ pub struct Camera {
     pub children: Vec<Camera>,
     pub do_update_view: u32,
     pub id: u32,
-    before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 3])>>,
+    before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 3]) + Send>>,
     projection_view_inverted_is_dirty: bool,
-    buffer: Rc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
-    cluster_array_buffer: Rc<Mutex<GPUBuffer<STORAGE_USAGE>>>,
-    update_view_bind_group: Rc<Mutex<BindGroup>>,
+    buffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
+    cluster_array_buffer: Arc<Mutex<GPUBuffer<STORAGE_USAGE>>>,
+    update_view_bind_group: Arc<Mutex<BindGroup>>,
 }
 impl Camera {
     pub fn new(
@@ -287,22 +285,22 @@ impl Camera {
         externref: Resource<JSCamera>,
         label: String,
     ) -> Self {
-        let buffer = Rc::new(Mutex::new(GPUBuffer::<UNIFORM_COPYDST_USAGE>::new(
+        let buffer = Arc::new(Mutex::new(GPUBuffer::<UNIFORM_COPYDST_USAGE>::new(
             device,
             UNIFORM_BUFFER_SIZE,
             String::from("camerauniformBuffer"),
             false,
         )));
-        let c = Rc::clone(&buffer);
+        let c = Arc::clone(&buffer);
         let buffer_binding = BufferBinding::new(c, 0, NonZero::new(UNIFORM_BUFFER_SIZE));
 
-        let cluster_array_buffer = Rc::new(Mutex::new(GPUBuffer::<STORAGE_USAGE>::new(
+        let cluster_array_buffer = Arc::new(Mutex::new(GPUBuffer::<STORAGE_USAGE>::new(
             device,
             CLUSTER_SIZE_IN_BYTES as usize,
             String::from("clusterArrayBuffer"),
             false,
         )));
-        let c2 = Rc::clone(&cluster_array_buffer);
+        let c2 = Arc::clone(&cluster_array_buffer);
 
         let cluster_array_buffer_binding =
             BufferBinding::new(c2, 0, NonZero::new(CLUSTER_SIZE_IN_BYTES as usize));
@@ -341,7 +339,7 @@ impl Camera {
         externref: Resource<JSCamera>,
         label: String,
     ) -> Self {
-        let buffer = Rc::new(Mutex::new(
+        let buffer = Arc::new(Mutex::new(
             GPUBuffer::<UNIFORM_COPYDST_USAGE>::new(
                 device,
                 UNIFORM_BUFFER_SIZE,
@@ -349,15 +347,15 @@ impl Camera {
                 false,
             ), /*as Box<dyn UniformCopyDst>*/
         ));
-        let c = Rc::clone(&buffer);
+        let c = Arc::clone(&buffer);
         let buffer_binding = BufferBinding::new(c, 0, NonZero::new(UNIFORM_BUFFER_SIZE));
-        let cluster_array_buffer = Rc::new(Mutex::new(GPUBuffer::<STORAGE_USAGE>::new(
+        let cluster_array_buffer = Arc::new(Mutex::new(GPUBuffer::<STORAGE_USAGE>::new(
             device,
             CLUSTER_SIZE_IN_BYTES as usize,
             String::from("clusterArrayBuffer"),
             false,
         )));
-        let c2 = Rc::clone(&cluster_array_buffer);
+        let c2 = Arc::clone(&cluster_array_buffer);
 
         let cluster_array_buffer_binding =
             BufferBinding::new(c2, 0, NonZero::new(CLUSTER_SIZE_IN_BYTES as usize));
@@ -507,16 +505,10 @@ impl Camera {
         &self,
         device: &Resource<JSDevice>,
         force: bool,
-        lights_pass: &ComputePassEncoder,
+        lights_pass: &mut ComputePassEncoder,
     ) {
         if force || self.updated {
-            lights_pass.set_bindgroup(
-                1,
-                self.update_view_bind_group
-                    .lock()
-                    .unwrap()
-                    .get_bind_group(device),
-            );
+            lights_pass.set_bindgroup(device, 1, &mut self.update_view_bind_group.lock().unwrap());
             lights_pass.dispatch_workgroups(
                 CLUSTER_DISPATCH_SIZE[0],
                 CLUSTER_DISPATCH_SIZE[1],
@@ -533,18 +525,14 @@ impl Camera {
 #[test]
 fn test_child_camera() {
     use super::projection::Projection;
-    use crate::engine::init_engine;
     use crate::gpu::gpu::init_gpu;
     use externref::ExternRef;
     unsafe {
-        if ENGINE.engine2.is_none() {
-            init_engine();
-            init_gpu(
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            );
-        }
+        init_gpu(
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+        );
         let mut camera = Camera::new(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),

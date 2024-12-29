@@ -1,4 +1,4 @@
-use std::{rc::Weak, sync::Mutex};
+use std::sync::{Mutex, Weak};
 
 use super::buffer::GpuBuffer;
 use crate::gpu::bufferbinding::BufferBinding;

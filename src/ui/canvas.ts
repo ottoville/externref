@@ -9,7 +9,7 @@ import { Sea } from '../world/water.js';
 //import { LazyEval } from "../LazyEval.js";
 import { Sun } from '../world/sun.js';
 
-import { RigidBody } from '../MainNode.js';
+import { MainNode, RigidBody } from '../MainNode.js';
 import { Scene } from '../Scene.js';
 import { Human } from '../human.js';
 //import { savedCamera } from "../types/interfaces/index.js";
@@ -30,6 +30,18 @@ import { UIRectangleTextureView } from './UIRectangleTextureView.js';
 import { RightTriangularPrism } from '../GPU/Meshes/right_triangular_prism.js';
 
 declare const engine: Engine;
+
+class Light extends MainNode {
+  drawable = undefined;
+  constructor(scene: Scene) {
+    super({
+      directional_light: 1,
+      label: 'Light',
+      point_light: 0,
+      scenes: [scene],
+    });
+  }
+}
 
 const errors: Error[] = [];
 export class Canvas {
@@ -137,12 +149,16 @@ export class Canvas {
             inputEnabled: false,
             scenes: [terrascene],
           });
-          human.translation = [403.4, 1000, 23];
+          const engine_lock = engine.rust.get_engine();
+          human.setTranslation(engine_lock, [403.4, 1000, 23]);
+          engine.rust.drop_engine_lock(engine_lock);
 
           const prism = new RightTriangularPrism({
             can_collide: false,
           });
-          prism.translation = [403.4, 1000, 30];
+          const engine_lock2 = engine.rust.get_engine();
+          prism.setTranslation(engine_lock2, [403.4, 1000, 30]);
+          engine.rust.drop_engine_lock(engine_lock2);
 
           document.addEventListener('keydown', (e) => {
             if (e.key === 'Tab') {
@@ -176,7 +192,16 @@ export class Canvas {
           this.setProgress(100);
           return terrainInited;
         });
-
+        // This scene is used to draw zones. It is referred by its label
+        new Scene('static', terraEngine.gpu!, (scene) => {
+          const sun = new Light(scene);
+          const engine_lock = engine.rust.get_engine();
+          sun.setTranslation(engine_lock, [0, 1, 0]);
+          sun.setAmbient(engine_lock, [0, 0, 0]);
+          sun.setShadow(engine_lock, 1); // shadow to 1 (no shadow)
+          engine.rust.drop_engine_lock(engine_lock);
+          return undefined;
+        });
         /* const slope = new Box(
                  {can_collide: true, label: 'gravitybixbox2', fixed: true});
              slope.update_scale(200, 5, 200);
@@ -190,30 +215,43 @@ export class Canvas {
           true,
         );
         cone.euler_angles = [90, 0, 0];
-        cone.translation = [0, 900, -70];
+        const engine_lock = engine.rust.get_engine();
+        cone.setTranslation(engine_lock, [0, 900, -70]);
+        cone.setColor(engine_lock, [1, 0, 0, 0]);
+        engine.rust.drop_engine_lock(engine_lock);
         cone.update_scale(50, 50, 50);
         cone.radius = 50;
-        cone.color = [1, 0, 0, 0];
 
         const capsule = new Capsule(true, CAPSULE_ORIENTATION.x, 3, {
           label: 'capsule1',
         });
-        capsule.translation = [60, 900, -70];
+        const engine_lock2 = engine.rust.get_engine();
+
+        capsule.setTranslation(engine_lock2, [60, 900, -70]);
+
+        capsule.setColor(engine_lock2, [0, 0, 1, 0]);
+        engine.rust.drop_engine_lock(engine_lock2);
         capsule.radius = 30;
-        capsule.color = [0, 0, 1, 0];
+
         const capsule2 = new Capsule(true, CAPSULE_ORIENTATION.y, 3, {
           label: 'capsule2',
         });
-        capsule2.translation = [100, 900, -70];
+        const engine_lock3 = engine.rust.get_engine();
+
+        capsule2.setTranslation(engine_lock3, [100, 900, -70]);
+        capsule2.setColor(engine_lock3, [0, 0, 1, 0]);
+        engine.rust.drop_engine_lock(engine_lock3);
         capsule2.radius = 30;
-        capsule2.color = [0, 0, 1, 0];
 
         const capsule3 = new Capsule(true, CAPSULE_ORIENTATION.z, 3, {
           label: 'capsule3',
         });
-        capsule3.translation = [140, 900, -70];
+        const engine_lock4 = engine.rust.get_engine();
+
+        capsule3.setTranslation(engine_lock4, [140, 900, -70]);
+        capsule3.setColor(engine_lock4, [0, 0, 1, 0]);
+        engine.rust.drop_engine_lock(engine_lock4);
         capsule3.radius = 30;
-        capsule3.color = [0, 0, 1, 0];
 
         const roundCuboid = new RoundCuboid(
           {
@@ -229,8 +267,12 @@ export class Canvas {
             label: 'roundCuboid',
           },
         );
-        roundCuboid.translation = [200, 900, -70];
-        roundCuboid.color = [0, 0, 1, 0];
+        const engine_lock5 = engine.rust.get_engine();
+
+        roundCuboid.setTranslation(engine_lock5, [200, 900, -70]);
+
+        roundCuboid.setColor(engine_lock5, [0, 0, 1, 0]);
+        engine.rust.drop_engine_lock(engine_lock5);
 
         const sphere4 = new IcoSphere({
           can_collide: true,
@@ -238,9 +280,13 @@ export class Canvas {
           order: 1,
           rigid_body: RigidBody.fixed,
         });
-        sphere4.translation = [-100, 900, -70];
+        const engine_lock6 = engine.rust.get_engine();
+
+        sphere4.setTranslation(engine_lock6, [-100, 900, -70]);
+
+        sphere4.setColor(engine_lock6, [1, 0, 1, 0]);
+        engine.rust.drop_engine_lock(engine_lock6);
         sphere4.update_scale(30, 30, 30);
-        sphere4.color = [1, 0, 1, 0];
 
         /*const b = new Box(
                 { can_collide: false, label: 'PickGreenbox' });

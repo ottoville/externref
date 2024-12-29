@@ -3,7 +3,7 @@ use terramath::VectorMath;
 use crate::collider::Collider;
 use crate::engine::js_error;
 use crate::math2::Vec3wgslF32;
-use crate::mesh::get_mesh_by_id_mut;
+use crate::mesh::ENGINE;
 use crate::vertices::{Position, VertexKind};
 use crate::Geometry;
 
@@ -23,7 +23,7 @@ pub const BOUNDING_BOX_INDICES: [usize; 26] = [
 ];
 #[no_mangle]
 pub unsafe extern "C" fn create_bounding_box_geometry(mesh_id: usize) -> *mut Geometry {
-    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     if let Some(geometry) = &mut mesh.geometry {
         geometry.update_bounding_box(&mesh_property.get_transformation());
@@ -93,7 +93,6 @@ pub unsafe extern "C" fn create_bounding_box_geometry(mesh_id: usize) -> *mut Ge
 fn test_bounding_box() {
     use crate::gpu::gpu::init_gpu;
     use crate::{
-        engine::init_engine,
         mesh::{Mesh, ENGINE},
         meshes::r#box::{create_box_vertices, BOX_INDICES},
         vertices::VertexKind,
@@ -102,17 +101,17 @@ fn test_bounding_box() {
     use externref::ExternRef;
     use externref::Resource;
     unsafe {
-        if ENGINE.engine2.is_none() {
-            init_engine();
-            init_gpu(
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            );
-        }
-        let engine2 = ENGINE.physic_engine_mut();
-        let len = engine2.meshes.len();
+        init_gpu(
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+        );
+        let len = {
+            let engine2 = ENGINE.engine2.lock().unwrap();
+            engine2.meshes.len()
+        };
         Mesh::new(0.0, 0.0, 0.0, 0, String::from("box"), None, None);
+        let mut engine2 = ENGINE.engine2.lock().unwrap();
         let m = &mut engine2.meshes[len];
         let mut geometry = Geometry::new(true, false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());

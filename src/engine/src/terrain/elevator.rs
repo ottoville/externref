@@ -1,5 +1,5 @@
 pub use crate::mesh::Mesh;
-use crate::{math2::Vec3wgslF32, mesh::get_mesh_by_id_mut, Geometry};
+use crate::{math2::Vec3wgslF32, mesh::ENGINE, Geometry};
 use std::collections::HashSet;
 
 pub struct Elevator {
@@ -16,7 +16,8 @@ pub struct Elevator {
 
 #[no_mangle]
 pub unsafe extern "C" fn create_elevator(mesh_id: usize) -> *mut Elevator {
-    let mesh = get_mesh_by_id_mut(mesh_id);
+    
+    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
     Box::into_raw(Box::new(Elevator::new(&mut mesh.get_geometry_mut())))
 }
 
@@ -37,7 +38,9 @@ pub unsafe extern "C" fn elevate(
     radius: f32,
     height: f32,
 ) {
-    (*elevator_ptr)._elevate(get_mesh_by_id_mut(mesh_id), radius, height)
+    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+
+    (*elevator_ptr)._elevate(mesh, radius, height)
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_length(elevator_ptr: *const Elevator) -> usize {
@@ -59,7 +62,7 @@ impl Elevator {
         f32x4_mul(v, scale)
     }
     #[cfg(target_arch = "wasm32")]
-    unsafe fn _elevate(&mut self, mesh: &'static mut Mesh, radius: f32, full_height: f32) {
+    unsafe fn _elevate(&mut self, mesh: &mut Mesh, radius: f32, full_height: f32) {
         use std::arch::wasm32::*;
         let height_max = 500.0;
         let height_min = -500.0;

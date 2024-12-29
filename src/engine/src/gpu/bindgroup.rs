@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::{rc::Rc, sync::Mutex};
 
 use externref::Resource;
@@ -45,7 +46,9 @@ pub struct BindGroup {
     externref: Resource<JSBindGroup>,
     label: String,
     layout: Resource<JSBindGroupLayout>,
-    bufferbindings: Vec<Rc<Mutex<BufferBinding>>>,
+    bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
+    pub rawbuffers: Vec<Arc<Resource<JSBuffer>>>,
+
 }
 
 impl BindGroup {
@@ -53,15 +56,20 @@ impl BindGroup {
         device: &Resource<JSDevice>,
         label: String,
         layout: Resource<JSBindGroupLayout>,
-        bufferbindings: Vec<Rc<Mutex<BufferBinding>>>,
-    ) -> Rc<Mutex<BindGroup>> {
+        bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
+    ) -> Arc<Mutex<BindGroup>> {
+        let mut rawbuffers = Vec::new();
+        for binding in bufferbindings.iter() {
+            let buffer_binding = binding.lock().unwrap();
+            rawbuffers.push(buffer_binding.buffer.lock().unwrap().externref_arc());
+        }
         let bindings_iterator = Box::new(bufferbindings.iter());
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
             MULTIVALUE_USIZE[1] = label.len();
             MULTIVALUE_USIZE[2] = label.capacity();
 
-            let bind_group = Rc::new(Mutex::new(BindGroup {
+            let bind_group = Arc::new(Mutex::new(BindGroup {
                 dirty: true,
                 externref: create_bind_group(
                     device,
@@ -72,15 +80,28 @@ impl BindGroup {
                 label,
                 layout,
                 bufferbindings,
+                rawbuffers
             }));
             for buffer_binding_mutex in bind_group.lock().unwrap().bufferbindings.iter() {
-                BufferBinding::get_binding(buffer_binding_mutex, Rc::downgrade(&bind_group));
+                let mut buffer_binding = buffer_binding_mutex.lock().unwrap();
+                buffer_binding.bindgroups.push(Arc::downgrade(&bind_group));
+                buffer_binding
+                    .buffer
+                    .lock()
+                    .unwrap()
+                    .add_buffer_binding(Arc::downgrade(buffer_binding_mutex));
             }
             return bind_group;
         }
     }
     pub fn get_bind_group(&mut self, device: &Resource<JSDevice>) -> &Resource<JSBindGroup> {
         if self.dirty {
+            self.rawbuffers.clear();
+            for binding in self.bufferbindings.iter() {
+                let buffer_binding = binding.lock().unwrap();
+                self.rawbuffers.push(buffer_binding.buffer.lock().unwrap().externref_arc());
+            }
+
             let bindings_iterator = Box::new(self.bufferbindings.iter());
             unsafe {
                 MULTIVALUE_USIZE[0] = self.label.as_ptr() as usize;

@@ -1,5 +1,5 @@
 use crate::{
-    mesh::{get_mesh_by_id, get_mesh_by_id_mut, Mesh},
+    mesh::{Mesh, ENGINE},
     Geometry,
 };
 
@@ -11,7 +11,19 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
     label_cap: usize,
 ) -> usize {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let target = get_mesh_by_id(target_mesh_id);
+    let engine = &mut ENGINE.engine2.lock().unwrap();
+    let target = &engine.meshes[target_mesh_id];
+    let target_indices = &target.get_geometry().indices;
+    let mut indices: Vec<usize> = vec![0; target_indices.indices.len() * 2];
+    for (i, target_triangle) in target_indices.indices.chunks_exact(3).enumerate() {
+        indices[i * 6] = target_triangle[0];
+        indices[i * 6 + 1] = target_triangle[1];
+        indices[i * 6 + 2] = target_triangle[1];
+        indices[i * 6 + 3] = target_triangle[2];
+        indices[i * 6 + 4] = target_triangle[2];
+        indices[i * 6 + 5] = target_triangle[0];
+    }
+
     let mesh_id = Mesh::new(
         0.0,
         0.0,
@@ -21,7 +33,7 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
         None,
         Some(target.mesh_property.clone()),
     );
-    let mesh = get_mesh_by_id_mut(mesh_id);
+    let mesh = &mut engine.meshes[mesh_id];
     let mut geometry = Geometry::new(
         false,
         false,
@@ -29,17 +41,6 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
         false,
         String::from("debugmesh_geometry_wireframe"),
     );
-    let target_indices = &target.get_geometry().indices;
-    let mut indices: Vec<usize> = vec![0; target_indices.indices.len() * 2];
-
-    for (i, target_triangle) in target_indices.indices.chunks_exact(3).enumerate() {
-        indices[i * 6] = target_triangle[0];
-        indices[i * 6 + 1] = target_triangle[1];
-        indices[i * 6 + 2] = target_triangle[1];
-        indices[i * 6 + 3] = target_triangle[2];
-        indices[i * 6 + 4] = target_triangle[2];
-        indices[i * 6 + 5] = target_triangle[0];
-    }
     geometry.set_indices(indices);
     mesh.geometry = Some(Box::new(geometry));
     return mesh_id;
@@ -53,7 +54,11 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
     label_cap: usize,
 ) -> usize {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let target = get_mesh_by_id(target_mesh_id);
+    let engine = &mut ENGINE.engine2.lock().unwrap();
+
+    let target = &engine.meshes[target_mesh_id];
+    let target_vertices = &target.get_geometry().vertices;
+    let positions_count = target_vertices.length() * 2;
     let mesh_id = Mesh::new(
         0.0,
         0.0,
@@ -63,10 +68,9 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
         None,
         Some(target.mesh_property.clone()),
     );
-    let mesh = get_mesh_by_id_mut(mesh_id);
-    let target_vertices = &target.get_geometry().vertices;
+    let mesh = &mut engine.meshes[mesh_id];
 
-    mesh.positions_count = Some(target_vertices.length() * 2);
+    mesh.positions_count = Some(positions_count);
     let geometry = Geometry::new(
         false,
         false,
