@@ -47,8 +47,8 @@ impl SwapBuffers {
     }
     pub fn get<
         F: FnOnce(
-            MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
-        ) -> MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>,
+            &MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
+        ),
     >(
         &mut self,
         device: &Resource<JSDevice>,
@@ -64,9 +64,8 @@ impl SwapBuffers {
                 false,
             )
         });
-        let unmapped = cb(mapped_buffer);
-
-        self.onqueue.push(unmapped);
+        cb(&mapped_buffer);
+        self.onqueue.push(mapped_buffer.unmap());
     }
     pub fn queue_submited(&mut self) -> bool {
         let mut i = 0;

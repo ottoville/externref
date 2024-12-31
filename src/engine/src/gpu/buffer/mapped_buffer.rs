@@ -48,7 +48,6 @@ impl<B: GpuBuffer> MappedGPUBuffer<B> {
         self.0
     }
 }
-
 impl<B: GpuBuffer> Deref for MappedGPUBuffer<B> {
     type Target = B;
     fn deref(&self) -> &B {

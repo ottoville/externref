@@ -103,6 +103,13 @@ export type rustWasm = {
   intersection_point_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
+  lowest_root_pointer(
+    collider_ptr: rust_pointer<'legacy_collider'>,
+  ): rust_pointer<'lowestroot'>;
+  collision_point_pointer(
+    collider_ptr: rust_pointer<'legacy_collider'>,
+  ): rust_pointer<'collissionpoint'>;
+
   collision_resolved_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
@@ -131,13 +138,11 @@ export type rustWasm = {
     collider_ptr: rust_pointer<'legacy_collider'>,
     t: number,
     velocitySquaredLength: number,
-    collision_point_x: number,
-    collision_point_y: number,
-    collision_point_z: number,
     collided_point_in_triangle: boolean,
     collided_plane: number,
   ): void;
   get_lowest_root(a: number, b: number, c: number, maxR: number): number;
+  v3_dot(v1: number, v2: number): number;
   set_speed(collider_ptr: rust_pointer<'legacy_collider'>, speed: number): void;
   basepoint_world_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
@@ -396,13 +401,17 @@ export type rustWasm = {
   add_onchange_callback(mesh_id: number): number;
   remove_onchange_callback(mesh_id: number, cb: number): void;
   get_engine(): rust_mutex<'locked', 'engine'>;
-  get_gpu(): rust_mutex<'locked', 'gpu'>;
+  get_gpu(): rust_mutex<'locked', 'gpulock'>;
   drop_engine_lock(engine: rust_mutex<'locked', 'engine'>): void;
-  drop_gpu_lock(engine: rust_mutex<'locked', 'gpu'>): void;
-  get_gpu_mesh_buffer(engine: rust_mutex<'locked', 'gpu'>): number;
-  get_gpu_projection_buffer(
-    engine: rust_mutex<'locked', 'gpu'>,
+  drop_gpu_lock(engine: rust_mutex<'locked', 'gpulock'>): void;
+  get_gpu_mesh_buffer(engine: rust_pointer<'gpu'>): number;
+  get_gpu_projection_buffer_from_mutex(
+    engine: rust_mutex<'locked', 'gpulock'>,
   ): Externref<false, Buffer<(typeof BufferUsageEnums)['UNIFORM']>>;
+  get_gpu_projection_buffer(
+    engine: rust_pointer<'gpu'>,
+  ): Externref<false, Buffer<(typeof BufferUsageEnums)['UNIFORM']>>;
+
   init_gpu(
     device: Externref<true, GPUDevice>,
     queue: GPUQueue,
@@ -441,7 +450,7 @@ export type rustWasm = {
   ): number;
   get_camera_label(camera_id: number): rust_pointer<'camera_label'>;
   get_camera_externref(
-    cameras: rust_mutex<'locked', 'gpu'>,
+    cameras: rust_mutex<'locked', 'gpulock'>,
     camera_id: number,
   ): TerraCamera;
   get_cameras_count(): number;
@@ -451,12 +460,13 @@ export type rustWasm = {
   get_camera_projection_inverted_ptr(
     camera_id: number,
   ): rust_pointer<'camera_projection_inverted'>;
-  get_camera_buffer(
-    cameras: rust_mutex<'locked', 'gpu'>,
+  get_camera_buffer(cameras: rust_pointer<'gpu'>, camera_id: number): number;
+  get_camera_cluster_buffer_from_mutex(
+    cameras: rust_mutex<'locked', 'gpulock'>,
     camera_id: number,
   ): number;
   get_camera_cluster_buffer(
-    cameras: rust_mutex<'locked', 'gpu'>,
+    cameras: rust_pointer<'gpu'>,
     camera_id: number,
   ): number;
 
@@ -577,6 +587,7 @@ interface ColliderWasm {
     basePoint: number,
     collidedPointInTrianglePointer: number,
     rust_collider_ptr: rust_pointer<'legacy_collider'>,
+    lowest_root_ptr: rust_pointer<'lowestroot'>,
   ): void;
   memory: WebAssembly.Memory;
   testTriangles: (
@@ -773,8 +784,11 @@ export class Engine {
         now() {
           return performance.now();
         },
-        render_renderpasses(renderloop_commandEncoder: GPUCommandEncoder) {
-          engine.gpu!.renderRenderPasses(renderloop_commandEncoder);
+        render_renderpasses(
+          renderloop_commandEncoder: GPUCommandEncoder,
+          rust_gpu: rust_pointer<'gpu'>,
+        ) {
+          engine.gpu!.renderRenderPasses(renderloop_commandEncoder, rust_gpu);
         },
         verticesChange(mesh_id: number) {
           const mesh = DataNode.Meshes.get(mesh_id);
@@ -1142,6 +1156,7 @@ export class Engine {
         this.collider.collider_ptr,
       ),
       this.collider.collider_ptr,
+      engine.rust.lowest_root_pointer(this.collider.collider_ptr),
     );
   }
   #getFinalPosition(

@@ -54,7 +54,11 @@ pub unsafe fn create_gpu_buffer(
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(test)]
-pub unsafe fn render_renderpasses(_command_encoder: &Resource<JSCommandEncoder>) {}
+pub unsafe fn render_renderpasses(
+    _command_encoder: &Resource<JSCommandEncoder>,
+    gpu: *mut &mut GPU,
+) {
+}
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
@@ -83,7 +87,7 @@ extern "C" {
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn mesh_on_change(mesh: Option<&Resource<crate::mesh::JSMesh>>);
-    pub fn render_renderpasses(command_encoder: &Resource<JSCommandEncoder>);
+    pub fn render_renderpasses(command_encoder: &Resource<JSCommandEncoder>, gpu: *mut &mut GPU);
 }
 #[externref]
 #[no_mangle]
@@ -112,6 +116,7 @@ unsafe extern "C" fn on_resize(aspect_ratio: f32) {
 pub unsafe extern "C" fn get_gpu() -> *mut MutexGuard<'static, Option<GPU>> {
     Box::into_raw(Box::new(ENGINE.gpu.lock().unwrap()))
 }
+
 #[no_mangle]
 pub unsafe extern "C" fn drop_gpu_lock(gpu: *mut MutexGuard<'static, Option<GPU>>) {
     let gpu = Box::from_raw(gpu);
@@ -190,25 +195,27 @@ pub unsafe extern "C" fn push_to_pending_command_buffers(buffer: Resource<JSComm
 }
 #[no_mangle]
 #[cfg(feature = "webgpu")]
-pub unsafe extern "C" fn get_gpu_mesh_buffer(gpu: *mut MutexGuard<'static, Option<GPU>>) -> usize {
+pub unsafe extern "C" fn get_gpu_mesh_buffer(gpu: *mut &mut GPU) -> usize {
     use std::ptr;
 
-    let externref = &*(*gpu)
-        .as_ref()
-        .unwrap()
-        .gpu_buffer
-        .lock()
-        .unwrap()
-        .externref;
+    let externref = &*(*gpu).gpu_buffer.lock().unwrap().externref;
     ptr::read(externref as *const Resource<JSBuffer> as *const usize)
+}
+#[cfg(feature = "webgpu")]
+#[externref]
+pub unsafe extern "C" fn get_gpu_projection_buffer_from_mutex(
+    ptr: *mut MutexGuard<'static, Option<GPU>>,
+) -> &'static Resource<JSBuffer> {
+    let gpu = &(*ptr).as_ref().unwrap();
+    &gpu.projections[0].buffer.externref
 }
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 #[externref]
 pub unsafe extern "C" fn get_gpu_projection_buffer(
-    ptr: *mut MutexGuard<'static, Option<GPU>>,
+    ptr: *mut &'static mut GPU,
 ) -> &'static Resource<JSBuffer> {
-    let gpu = &(*ptr).as_ref().unwrap();
+    let gpu = &(*ptr);
     &gpu.projections[0].buffer.externref
 }
 #[no_mangle]
@@ -216,59 +223,10 @@ pub unsafe extern "C" fn get_gpu_projection_buffer(
 pub unsafe extern "C" fn process_gpu_queue(
     update_view_pipeline: &Resource<JSComputePipeline>,
 ) -> bool {
-    let renderloop_command_encoder =
-        GPUCommandEncoder::new(String::from("renderloop_commandEncoder"));
-    let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
-    {
-        let mut gpuoption = ENGINE.gpu.lock().unwrap();
-        let gpu = gpuoption.as_mut().unwrap();
-
-        //Lights
-        gpu.directional_lights.update_buffer(
-            &gpu.device,
-            &mut command_encoder,
-            &mut gpu.swap_buffers,
-        );
-        gpu.point_lights
-            .update_buffer(&gpu.device, &mut command_encoder, &mut gpu.swap_buffers);
-        //Cameras
-        let (update_lights, some_camera_updated) = gpu.process_gpu_queue(&mut command_encoder);
-
-        // Cameras continue here because update_lights could change between
-        if some_camera_updated || update_lights {
-            let mut lights_pass =
-                command_encoder.begin_compute_pass(String::from("lightPassEncoder"));
-            lights_pass.set_pipeline(update_view_pipeline);
-            lights_pass.set_bindgroup(
-                &gpu.device,
-                0,
-                &mut gpu.update_view_bindgroup.lock().unwrap(),
-            );
-            //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
-            for projection in &gpu.projections {
-                for camera in projection.cameras.cameras.iter() {
-                    camera.update_camera(&gpu.device, update_lights, &mut lights_pass);
-                }
-            }
-
-            command_encoder = lights_pass.end();
-        }
-    }
-    render_renderpasses(&renderloop_command_encoder.externref);
-    let gpuoption = &mut ENGINE.gpu.lock().unwrap();
+    let mut gpuoption = ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
-    // Update mesh positions etc
-    gpu.queue
-        .submit(&mut vec![command_encoder.finish(String::from("renderloop"))].drain(..));
-    // Every other than depends on mesh positions etc
-    gpu.queue.submit(&mut gpu.pending_command_buffers.drain(..));
-    // Draw commands last so everything is up to date
-    gpu.queue.submit(
-        &mut vec![renderloop_command_encoder.finish(String::from("renderloop_renderencoder"))]
-            .drain(..),
-    );
-    TEMP_GPU_BUFFERS.lock().unwrap().clear();
-    return gpu.swap_buffers.queue_submited();
+
+    return gpu.process_gpu_queue(update_view_pipeline);
 }
 pub struct JSDevice(());
 
@@ -307,13 +265,34 @@ impl GPU {
         }
         panic!("Camera {} not found", camera_id);
     }
-    pub fn process_gpu_queue(&mut self, command_encoder: &mut GPUCommandEncoder) -> (bool, bool) {
+    pub fn process_gpu_queue(
+        &mut self,
+        update_view_pipeline: &Resource<JSComputePipeline>,
+    ) -> bool {
+        let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
+
+        let renderloop_command_encoder =
+            GPUCommandEncoder::new(String::from("renderloop_commandEncoder"));
+
+        //Lights
+        self.directional_lights.update_buffer(
+            &self.device,
+            &mut command_encoder,
+            &mut self.swap_buffers,
+        );
+        self.point_lights
+            .update_buffer(&self.device, &mut command_encoder, &mut self.swap_buffers);
+
         let mut update_lights = false;
         let mut some_camera_updated = false;
         //Cameras
         for projection in &mut self.projections {
-            if projection.update_views(&self.device, command_encoder, &mut self.swap_buffers, false)
-            {
+            if projection.update_views(
+                &self.device,
+                &mut command_encoder,
+                &mut self.swap_buffers,
+                false,
+            ) {
                 some_camera_updated = true;
             }
         }
@@ -359,26 +338,59 @@ impl GPU {
                     let mut gpu_buffer = self.gpu_buffer.lock().unwrap();
                     // if MAX_INSTANCES was increased, resize the buffer
                     if gpu_buffer.size < wanted_size {
-                        gpu_buffer.resize(&self.device, command_encoder, wanted_size);
+                        gpu_buffer.resize(&self.device, &mut command_encoder, wanted_size);
                     }
                     for (i, mesh_id) in self.update_queue.drain(..).enumerate() {
                         let mesh = &engine.meshes[mesh_id];
                         let mesh_property = mesh.mesh_property.lock().unwrap();
                         command_encoder.copy_buffer_to_buffer(
-                            &*temp_buffer,
+                            &**temp_buffer,
                             &*gpu_buffer,
                             i * std::mem::size_of::<GPUMesh>(),
                             mesh_property.gpu_mesh_alignment.0 * GPU_MEMORY_INDEX_SIZE,
                             std::mem::size_of::<GPUMesh>(),
                         );
                     }
-                    //Todo, make it so that buffer in getting unmapped when dropped
-                    temp_buffer.unmap()
                 },
             )
         }
+        // Cameras continue here because update_lights could change between
+        if some_camera_updated || update_lights {
+            let mut lights_pass =
+                command_encoder.begin_compute_pass(String::from("lightPassEncoder"));
+            lights_pass.set_pipeline(update_view_pipeline);
+            lights_pass.set_bindgroup(
+                &self.device,
+                0,
+                &mut self.update_view_bindgroup.lock().unwrap(),
+            );
+            //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
+            for projection in &self.projections {
+                for camera in projection.cameras.cameras.iter() {
+                    camera.update_camera(&self.device, update_lights, &mut lights_pass);
+                }
+            }
 
-        return (update_lights, some_camera_updated);
+            command_encoder = lights_pass.end();
+        }
+        let gpubox = Box::into_raw(Box::new(self));
+        let gpu2 = unsafe {
+            render_renderpasses(&renderloop_command_encoder.externref, gpubox);
+            *Box::from_raw(gpubox)
+        };
+        // Update mesh positions etc
+        gpu2.queue
+            .submit(&mut vec![command_encoder.finish(String::from("renderloop"))].drain(..));
+        // Every other than depends on mesh positions etc
+        gpu2.queue
+            .submit(&mut gpu2.pending_command_buffers.drain(..));
+        // Draw commands last so everything is up to date
+        gpu2.queue.submit(
+            &mut vec![renderloop_command_encoder.finish(String::from("renderloop_renderencoder"))]
+                .drain(..),
+        );
+        TEMP_GPU_BUFFERS.lock().unwrap().clear();
+        return gpu2.swap_buffers.queue_submited();
     }
 }
 

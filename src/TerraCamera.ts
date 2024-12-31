@@ -97,11 +97,11 @@ export class TerraCamera {
         (bindGroup2) => {
           const gpu_lock = engine.rust.get_gpu();
           const projection_buffer =
-            engine.rust.get_gpu_projection_buffer(gpu_lock).externref;
-          const cluster_buffer_index = engine.rust.get_camera_cluster_buffer(
-            gpu_lock,
-            this.id,
-          );
+            engine.rust.get_gpu_projection_buffer_from_mutex(
+              gpu_lock,
+            ).externref;
+          const cluster_buffer_index =
+            engine.rust.get_camera_cluster_buffer_from_mutex(gpu_lock, this.id);
 
           engine.rust.drop_gpu_lock(gpu_lock);
 
@@ -122,17 +122,15 @@ export class TerraCamera {
         gpu2.pipelineLayouts.uniformBindGroupLayoutWithTime,
         'uniformBindGroup',
         (bindGroup) => {
-          const gpu_lock = engine.rust.get_gpu();
-
           const projectionBuffer = engine.rust
-            .get_gpu_projection_buffer(gpu_lock)
+            .get_gpu_projection_buffer(gpu2.gpu_lock!)
             .externref.getUniformBinding(bindGroup);
 
           const cluster_buffer_index = engine.rust.get_camera_cluster_buffer(
-            gpu_lock,
+            gpu2.gpu_lock!,
             this.id,
           );
-          const index = engine.rust.get_gpu_mesh_buffer(gpu_lock);
+          const index = engine.rust.get_gpu_mesh_buffer(gpu2.gpu_lock!);
           const buffer = engine.rust.externrefs.get(index) as Externref<
             false,
             Buffer<
@@ -140,10 +138,9 @@ export class TerraCamera {
             >
           >;
           const camera_buffer_index = engine.rust.get_camera_buffer(
-            gpu_lock,
+            gpu2.gpu_lock!,
             this.id,
           );
-          engine.rust.drop_gpu_lock(gpu_lock);
 
           const group = {
             clusters_array: (

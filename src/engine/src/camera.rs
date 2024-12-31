@@ -200,12 +200,10 @@ pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: u32) 
 
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_buffer(
-    gpu_lock: *mut MutexGuard<'static, Option<GPU>>,
+    gpu_lock: *mut &'static mut GPU,
     camera_id: u32,
 ) -> usize {
     let buffer = &*(*gpu_lock)
-        .as_ref()
-        .unwrap()
         .get_camera_by_id(camera_id)
         .buffer
         .lock()
@@ -213,15 +211,27 @@ pub unsafe extern "C" fn get_camera_buffer(
         .externref;
     ptr::read(buffer as *const Resource<JSBuffer> as *const usize)
 }
-
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_cluster_buffer(
+pub unsafe extern "C" fn get_camera_cluster_buffer_from_mutex(
     gpu_lock: *mut MutexGuard<'static, Option<GPU>>,
     camera_id: u32,
 ) -> usize {
     let buffer = &*(*gpu_lock)
         .as_ref()
         .unwrap()
+        .get_camera_by_id(camera_id)
+        .cluster_array_buffer
+        .lock()
+        .unwrap()
+        .externref;
+    ptr::read(buffer as *const Resource<JSBuffer> as *const usize)
+}
+#[no_mangle]
+pub unsafe extern "C" fn get_camera_cluster_buffer(
+    gpu_lock: *mut &'static mut GPU,
+    camera_id: u32,
+) -> usize {
+    let buffer = &*(*gpu_lock)
         .get_camera_by_id(camera_id)
         .cluster_array_buffer
         .lock()
@@ -488,15 +498,13 @@ impl Camera {
         self.projection_view_inverted_is_dirty = true;
         swap_buffer.get(device, 128, |buffer| {
             buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0, 128);
-            let mut unmapped = buffer.unmap();
             command_encoder.copy_buffer_to_buffer(
-                &mut unmapped,
+                &**buffer,
                 &(*self.buffer.lock().unwrap()),
                 0,
                 0,
                 128,
             );
-            return unmapped;
         });
         self.do_update_view = 0;
         self.updated = true;

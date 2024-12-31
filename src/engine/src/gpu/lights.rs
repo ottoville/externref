@@ -65,9 +65,7 @@ impl Lights {
                 0,
                 self.lights.len() * 4,
             );
-            let unmapped_buffer = mapped_buffer.unmap();
-            command_encoder.copy_buffer_to_buffer(&unmapped_buffer, &*buffer, 0, 0, buffer.size);
-            return unmapped_buffer;
+            command_encoder.copy_buffer_to_buffer(&**mapped_buffer, &*buffer, 0, 0, buffer.size);
         });
     }
 }

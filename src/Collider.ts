@@ -72,7 +72,13 @@ export class ColliderJS {
    */
   public collidedMesh: string | undefined;
 
-  #collisionPoint: [x: number, y: number, z: number] = [0, 0, 0];
+  get #collisionPoint() {
+    return new Float32Array(
+      engine.rust.memory.buffer,
+      engine.rust.collision_point_pointer(this.collider_ptr),
+      4,
+    ) as unknown as [x: number, y: number, z: number];
+  }
   #planeIntersectionPoint: [x: number, y: number, z: number] = [0, 0, 0];
 
   #tempVector: [x: number, y: number, z: number] = [0, 0, 0];
@@ -460,9 +466,6 @@ export class ColliderJS {
         this.collider_ptr,
         t,
         this.#velocitySquaredLength,
-        this.#collisionPoint[0],
-        this.#collisionPoint[1],
-        this.#collisionPoint[2],
         collidedPointInTriangle,
         triangle.planeCollider.byteOffset,
       );
