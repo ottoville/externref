@@ -56,7 +56,7 @@ export function VariantList(props: {
                       const node = drawable.node as MainNode;
                       const engine_lock = engine.rust.get_engine();
                       engine.inputManager.moveto(
-                        node.getTranslation(engine_lock),
+                        node.getTranslationFromMutex(engine_lock),
                       );
                       engine.rust.drop_engine_lock(engine_lock);
                     }

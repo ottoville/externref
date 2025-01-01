@@ -52,7 +52,7 @@ export const NodeInfo = memo(function NodeInfo({
             onChange={(evt) => {
               const engine_lock = engine.rust.get_engine();
               const currentTranslation =
-                drawable.node.getTranslation(engine_lock);
+                drawable.node.getTranslationFromMutex(engine_lock);
               drawable.node.setTranslation(engine_lock, [
                 evt.target.valueAsNumber,
                 currentTranslation[1],
@@ -73,7 +73,7 @@ export const NodeInfo = memo(function NodeInfo({
             onChange={(evt) => {
               const engine_lock = engine.rust.get_engine();
               const currentTranslation =
-                drawable.node.getTranslation(engine_lock);
+                drawable.node.getTranslationFromMutex(engine_lock);
 
               drawable.node.setTranslation(engine_lock, [
                 currentTranslation[0],
@@ -95,7 +95,7 @@ export const NodeInfo = memo(function NodeInfo({
             onChange={(evt) => {
               const engine_lock = engine.rust.get_engine();
               const currentTranslation =
-                drawable.node.getTranslation(engine_lock);
+                drawable.node.getTranslationFromMutex(engine_lock);
 
               drawable.node.setTranslation(engine_lock, [
                 currentTranslation[0],

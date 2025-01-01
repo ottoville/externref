@@ -197,8 +197,8 @@ export class Canvas {
           const sun = new Light(scene);
           const engine_lock = engine.rust.get_engine();
           sun.setTranslation(engine_lock, [0, 1, 0]);
-          sun.setAmbient(engine_lock, [0, 0, 0]);
-          sun.setShadow(engine_lock, 1); // shadow to 1 (no shadow)
+          sun.setAmbientFromMutex(engine_lock, [0, 0, 0]);
+          sun.setShadowFromMutex(engine_lock, 1); // shadow to 1 (no shadow)
           engine.rust.drop_engine_lock(engine_lock);
           return undefined;
         });
@@ -217,7 +217,7 @@ export class Canvas {
         cone.euler_angles = [90, 0, 0];
         const engine_lock = engine.rust.get_engine();
         cone.setTranslation(engine_lock, [0, 900, -70]);
-        cone.setColor(engine_lock, [1, 0, 0, 0]);
+        cone.setColorFromMutex(engine_lock, [1, 0, 0, 0]);
         engine.rust.drop_engine_lock(engine_lock);
         cone.update_scale(50, 50, 50);
         cone.radius = 50;
@@ -229,7 +229,7 @@ export class Canvas {
 
         capsule.setTranslation(engine_lock2, [60, 900, -70]);
 
-        capsule.setColor(engine_lock2, [0, 0, 1, 0]);
+        capsule.setColorFromMutex(engine_lock2, [0, 0, 1, 0]);
         engine.rust.drop_engine_lock(engine_lock2);
         capsule.radius = 30;
 
@@ -239,7 +239,7 @@ export class Canvas {
         const engine_lock3 = engine.rust.get_engine();
 
         capsule2.setTranslation(engine_lock3, [100, 900, -70]);
-        capsule2.setColor(engine_lock3, [0, 0, 1, 0]);
+        capsule2.setColorFromMutex(engine_lock3, [0, 0, 1, 0]);
         engine.rust.drop_engine_lock(engine_lock3);
         capsule2.radius = 30;
 
@@ -249,7 +249,7 @@ export class Canvas {
         const engine_lock4 = engine.rust.get_engine();
 
         capsule3.setTranslation(engine_lock4, [140, 900, -70]);
-        capsule3.setColor(engine_lock4, [0, 0, 1, 0]);
+        capsule3.setColorFromMutex(engine_lock4, [0, 0, 1, 0]);
         engine.rust.drop_engine_lock(engine_lock4);
         capsule3.radius = 30;
 
@@ -271,7 +271,7 @@ export class Canvas {
 
         roundCuboid.setTranslation(engine_lock5, [200, 900, -70]);
 
-        roundCuboid.setColor(engine_lock5, [0, 0, 1, 0]);
+        roundCuboid.setColorFromMutex(engine_lock5, [0, 0, 1, 0]);
         engine.rust.drop_engine_lock(engine_lock5);
 
         const sphere4 = new IcoSphere({
@@ -284,7 +284,7 @@ export class Canvas {
 
         sphere4.setTranslation(engine_lock6, [-100, 900, -70]);
 
-        sphere4.setColor(engine_lock6, [1, 0, 1, 0]);
+        sphere4.setColorFromMutex(engine_lock6, [1, 0, 1, 0]);
         engine.rust.drop_engine_lock(engine_lock6);
         sphere4.update_scale(30, 30, 30);
 

@@ -118,8 +118,16 @@ export class DataNode extends MainNode {
   last_acceleration: [number, number, number] = [0, 0, 0];
   // Shortcut property to avoid calls to rust
   #strip: boolean;
-  getSpeedSquared(engine_lock: rust_mutex<'locked', 'engine'>) {
+  getSpeedSquared(engine_lock: rust_pointer<'engine'>) {
     const velocity = this.getVelocity(engine_lock);
+    return (
+      velocity[0] * velocity[0] +
+      velocity[1] * velocity[1] +
+      velocity[2] * velocity[2]
+    );
+  }
+  getSpeedSquaredFromMutex(engine_lock: rust_mutex<'locked', 'enginelock'>) {
+    const velocity = this.getVelocityFromMutex(engine_lock);
     return (
       velocity[0] * velocity[0] +
       velocity[1] * velocity[1] +
@@ -146,12 +154,15 @@ export class DataNode extends MainNode {
   #vectorsVec4: number[] = [];
   checkCollide(
     _velocityPerDelta: [number, number, number],
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
   ): TerraVector3 {
-    return this.getTranslation(engine_lock);
+    return this.getTranslationFromMutex(engine_lock);
     // TODO: Generic collision check, object shape is not known
   }
-  onCollideCharacter(_started: boolean, _engine_lock: rust_pointer<'engine'>) {}
+  onCollideCharacter(
+    _started: boolean,
+    _engine_lock: rust_mutex<'locked', 'enginelock'>,
+  ) {}
   readonly pickInfo = new pickInfo();
   protected readonly colliderVerticesV4: number[] = [];
   readonly #triangleFaces: Triangle[] = [];
@@ -163,7 +174,7 @@ export class DataNode extends MainNode {
   #positionsAndCollider: [pointerToVec3: number, pointerToVec4: number][] = [];
   #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
 
-  get_faces_count(engine_lock: rust_mutex<'locked', 'engine'>) {
+  get_faces_count(engine_lock: rust_mutex<'locked', 'enginelock'>) {
     return engine.rust.faces_count(engine_lock, this.id);
   }
   set faces(faces: Float32Array) {
@@ -359,7 +370,7 @@ export class DataNode extends MainNode {
     return true;
   }
 
-  #updateColliderPlanes(engine_lock: rust_mutex<'locked', 'engine'>) {
+  #updateColliderPlanes(engine_lock: rust_mutex<'locked', 'enginelock'>) {
     const positions_count = this.get_positions_count(engine_lock);
     this.#positionsAndCollider.forEach((posAndCol, i) => {
       if (i > positions_count) {
@@ -407,7 +418,7 @@ export class DataNode extends MainNode {
   //collisionsScalingMatrix = new TerraMatrix();
   #myCollisionsTransformMatrix = new TerraMatrix();
   public checkCollision(
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     _collider: ColliderJS,
     sphere: Ellipsoid,
   ) {

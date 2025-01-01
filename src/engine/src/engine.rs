@@ -1,20 +1,20 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
-use std::panic;
 use std::sync::{LazyLock, Mutex, MutexGuard};
+use std::{panic, usize};
 
 use crate::allocators::freeindex::FreeIndex;
-use crate::cameras::Cameras;
-use crate::gpu::buffer::buffer::JSBuffer;
 
 use crate::gpu::gpu::GPU;
-use crate::gpu::lights::Lights;
 
+use crate::mesh::JSMesh;
 pub use crate::mesh::Mesh;
 pub use crate::GPUMesh;
 use crate::MULTIVALUE_USIZE;
-use externref::{externref, Resource};
-use rapier3d::prelude::*;
+use externref::externref;
+use externref::Resource;
+use rapier3d::control::KinematicCharacterController;
+use rapier3d::{crossbeam, prelude::*};
 
 #[link(wasm_import_module = "console")]
 #[cfg(target_arch = "wasm32")]
@@ -29,52 +29,97 @@ extern "C" {
     #[cfg(target_arch = "wasm32")]
     fn jspanic(number: *const u8);
     #[cfg(target_arch = "wasm32")]
-    fn mesh_on_collide(engine: *const MutexGuard<'_, Engine2>, mesh_id: usize, status: bool);
-    #[cfg(target_arch = "wasm32")]
-    fn mesh_on_physic_tick(engine: *const MutexGuard<'_, Engine2>, number: usize);
-    #[cfg(target_arch = "wasm32")]
     pub fn verticesChange(mesh_id: usize);
 
 }
-
-pub struct PhysicEngine {
-    pub broad_phase: DefaultBroadPhase,
+#[cfg(test)]
+unsafe fn mesh_on_physic_tick(_engine: *const Engine2, _delta: u32, _externref: &Resource<JSMesh>) {
 }
-pub struct Engine {
-    pub rigid_body_set: Mutex<RigidBodySet>,
-    pub island_manager: Mutex<IslandManager>,
-    pub physic_engine: Mutex<PhysicEngine>,
-    pub collider_set: Mutex<ColliderSet>,
-    pub joint_set: Mutex<ImpulseJointSet>,
-    pub narrow_phase: Mutex<NarrowPhase>,
-    pub ccd_solver: Mutex<CCDSolver>,
 
+#[cfg(target_arch = "wasm32")]
+#[externref]
+#[link(wasm_import_module = "env")]
+extern "C" {
+    fn mesh_on_physic_tick(engine: *const Engine2, delta: u32, externref: &Resource<JSMesh>);
+}
+
+const INTEGRATION_PARAMETERS: IntegrationParameters = IntegrationParameters {
+    dt: 1.0 / 60.0,
+    min_ccd_dt: 1.0 / 60.0 / 100.0,
+    contact_natural_frequency: 30.0,
+    contact_damping_ratio: 5.0,
+    joint_natural_frequency: 1.0e6,
+    joint_damping_ratio: 1.0,
+    warmstart_coefficient: 1.0,
+    num_internal_pgs_iterations: 1,
+    num_internal_stabilization_iterations: 2,
+    num_additional_friction_iterations: 0,
+    num_solver_iterations: unsafe { NonZeroUsize::new_unchecked(4) },
+    // TODO: what is the optimal value for min_island_size?
+    // It should not be too big so that we don't end up with
+    // huge islands that don't fit in cache.
+    // However we don't want it to be too small and end up with
+    // tons of islands, reducing SIMD parallelism opportunities.
+    min_island_size: 128,
+    normalized_allowed_linear_error: 0.001,
+    normalized_max_corrective_velocity: 10.0,
+    normalized_prediction_distance: 0.002,
+    max_ccd_substeps: 2,
+    length_unit: 1.0,
+};
+const GRAVITY: nalgebra::Matrix<
+    f32,
+    nalgebra::Const<3>,
+    nalgebra::Const<1>,
+    nalgebra::ArrayStorage<f32, 3, 1>,
+> = vector![0.0, -9.81, 0.0];
+
+pub struct Engine {
     pub engine2: Mutex<Engine2>,
     pub gpu: Mutex<Option<GPU>>,
+    pub rigid_body_set: Mutex<RigidBodySet>,
+    event_handler: ChannelEventCollector,
+    character_controller: KinematicCharacterController,
+}
+pub struct Engine2 {
+    pub physic_pipeline: PhysicsPipeline,
+    pub meshes: Vec<Mesh>,
+    pub rigid_bodies: HashMap<RigidBodyHandle, usize>,
+    pub gpu_allocated: FreeIndex,
+    pub collider_set: ColliderSet,
+    pub broad_phase: DefaultBroadPhase,
+    pub ccd_solver: CCDSolver,
+    pub island_manager: IslandManager,
+    pub joint_set: ImpulseJointSet,
+    pub narrow_phase: NarrowPhase,
+    pub multi_joint_set: MultibodyJointSet,
 }
 
 pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
-    let rigid_body_set = Mutex::new(RigidBodySet::new());
-    let collider_set = ColliderSet::new();
+    // Initialize the event collector.
+    let (contact_send, _contact_recv) = crossbeam::channel::unbounded();
+    let (collision_send, _collision_recv) = crossbeam::channel::unbounded();
 
-    Engine {
-        rigid_body_set,
-        island_manager: Mutex::new(IslandManager::new()),
-        physic_engine: Mutex::new(PhysicEngine {
-            broad_phase: DefaultBroadPhase::new(),
-        }),
-        collider_set: Mutex::new(collider_set),
-        joint_set: Mutex::new(ImpulseJointSet::new()),
-        narrow_phase: Mutex::new(NarrowPhase::new()),
-        ccd_solver: Mutex::new(CCDSolver::new()),
+    return Engine {
         engine2: Mutex::new(Engine2 {
             physic_pipeline: PhysicsPipeline::new(),
             meshes: Vec::with_capacity(100),
             rigid_bodies: HashMap::new(),
             gpu_allocated: FreeIndex::new(),
+            collider_set: ColliderSet::new(),
+            broad_phase: DefaultBroadPhase::new(),
+            ccd_solver: CCDSolver::new(),
+            island_manager: IslandManager::new(),
+            joint_set: ImpulseJointSet::new(),
+            narrow_phase: NarrowPhase::new(),
+            multi_joint_set: MultibodyJointSet::new(),
         }),
         gpu: Mutex::new(None),
-    }
+        rigid_body_set: Mutex::new(RigidBodySet::new()),
+        event_handler: ChannelEventCollector::new(collision_send, contact_send),
+
+        character_controller: KinematicCharacterController::default(),
+    };
 });
 #[no_mangle]
 #[externref]
@@ -87,12 +132,6 @@ pub unsafe extern "C" fn drop_engine_lock(engine: *mut MutexGuard<'static, Engin
     drop(Box::from_raw(engine));
 }
 
-pub struct Engine2 {
-    pub physic_pipeline: PhysicsPipeline,
-    pub meshes: Vec<Mesh>,
-    pub rigid_bodies: HashMap<RigidBodyHandle, usize>,
-    pub gpu_allocated: FreeIndex,
-}
 static mut LOG_STRING: String = String::new();
 
 // TODO, remove and use "str_ptr_from_arr" syntax
@@ -223,7 +262,7 @@ unsafe fn collider_to_mesh<'frame>(
     let rigid_body_handle = collider.parent()?;
     let mesh_id = e.rigid_bodies.get(&rigid_body_handle)?;
     return Some(get_mesh_by_id(*mesh_id));*/
-    let collider_set = &mut ENGINE.collider_set.lock().unwrap();
+    let collider_set = &mut ENGINE.engine2.lock().unwrap().collider_set;
 
     return match collider_set.get(collider_handle) {
         Some(collider) => match collider.parent() {
@@ -250,107 +289,106 @@ unsafe fn collider_to_mesh<'frame>(
 }
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
-pub unsafe extern "C" fn physic_tick() {
-    //  jslog_number(&(ENGINE.physic_engine().meshes[0]) as *const Mesh as u32);
-    use rapier3d::crossbeam;
-    let gravity = vector![0.0, -9.81, 0.0];
-    let integration_parameters = IntegrationParameters {
-        dt: 1.0 / 60.0,
-        min_ccd_dt: 1.0 / 60.0 / 100.0,
-        contact_natural_frequency: 30.0,
-        contact_damping_ratio: 5.0,
-        joint_natural_frequency: 1.0e6,
-        joint_damping_ratio: 1.0,
-        warmstart_coefficient: 1.0,
-        num_internal_pgs_iterations: 1,
-        num_internal_stabilization_iterations: 2,
-        num_additional_friction_iterations: 0,
-        num_solver_iterations: NonZeroUsize::new(4).unwrap(),
-        // TODO: what is the optimal value for min_island_size?
-        // It should not be too big so that we don't end up with
-        // huge islands that don't fit in cache.
-        // However we don't want it to be too small and end up with
-        // tons of islands, reducing SIMD parallelism opportunities.
-        min_island_size: 128,
-        normalized_allowed_linear_error: 0.001,
-        normalized_max_corrective_velocity: 10.0,
-        normalized_prediction_distance: 0.002,
-        max_ccd_substeps: 2,
-        length_unit: 1.0,
-    };
-
-    let mut multi_joint_set = MultibodyJointSet::new();
-    let physics_hooks = ();
-    // Initialize the event collector.
-    //TODO: do not create on each step.
-    let (contact_send, _contact_recv) = crossbeam::channel::unbounded();
-    let (collision_send, collision_recv) = crossbeam::channel::unbounded();
-
-    let event_handler = ChannelEventCollector::new(collision_send, contact_send);
+pub unsafe extern "C" fn physic_tick(delta: u32) {
     let engine = &mut ENGINE.engine2.lock().unwrap();
-    for mesh in &engine.meshes {
-        mesh_on_physic_tick(engine, mesh.id)
-    }
-    // engine.meshes.iter().for_each(|m| mesh_on_physic_tick(engine, m.id));
-
-    let island_manager = &mut ENGINE.island_manager.lock().unwrap();
-    let rigid_body_set = &mut ENGINE.rigid_body_set.lock().unwrap();
-    let physic_engine = &mut ENGINE.physic_engine.lock().unwrap();
-    let collider_set = &mut ENGINE.collider_set.lock().unwrap();
-    let joint_set = &mut ENGINE.joint_set.lock().unwrap();
-    let narrow_phase = &mut ENGINE.narrow_phase.lock().unwrap();
-    let ccd_solver = &mut ENGINE.ccd_solver.lock().unwrap();
-    engine.physic_pipeline.step(
-        &gravity,
-        &integration_parameters,
-        island_manager,
-        &mut physic_engine.broad_phase,
-        narrow_phase,
-        rigid_body_set,
-        collider_set,
-        joint_set,
-        &mut multi_joint_set,
-        ccd_solver,
-        None,
-        &physics_hooks,
-        &event_handler,
-    );
-    while let Ok(collision_event) = collision_recv.try_recv() {
-        // Handle the collision event.
-        match collider_to_mesh(engine, collision_event.collider1()) {
-            Some(m) => mesh_on_collide(engine, m.id, collision_event.started()),
-            None => js_warn(["Mesh not found for collider1"]),
-        }
-        match collider_to_mesh(engine, collision_event.collider2()) {
-            Some(m) => mesh_on_collide(engine, m.id, collision_event.started()),
-            None => js_warn(["Mesh not found for collider2"]),
-        }
-    }
-    // Iter on each dynamic rigid-bodies that moved.
-    for rigid_body_handle in island_manager.active_dynamic_bodies() {
-        let mesh = engine.rigid_bodies.get_mut(rigid_body_handle);
-        match mesh {
-            Some(m_id) => {
-                let rigid_body = &rigid_body_set[*rigid_body_handle];
-                let newrot = rigid_body.rotation().as_vector();
-                let mesh_id = *m_id;
-                let mesh = &mut engine.meshes[mesh_id];
-                {
-                    let mut mesh_property = mesh.mesh_property.lock().unwrap();
-                    mesh_property.rotation.i = newrot.x;
-                    mesh_property.rotation.j = newrot.y;
-                    mesh_property.rotation.k = newrot.z;
-                    mesh_property.rotation.w = newrot.w;
-                }
-                let pos = rigid_body.position();
-                mesh.update_translation(
-                    pos.translation.x,
-                    pos.translation.y,
-                    pos.translation.z,
-                    false,
-                );
+    engine.physic_tick(delta);
+}
+impl Engine2 {
+    pub fn physic_tick(&mut self, delta: u32) {
+        let physics_hooks = ();
+        for mesh in &self.meshes {
+            if let Some(externref) = mesh.externref.as_ref() {
+                unsafe { mesh_on_physic_tick(self, delta, externref) }
             }
-            None => js_warn(["Mesh not found for rigid body"]),
+        }
+        let mut rigid_body_set = ENGINE.rigid_body_set.lock().unwrap();
+        self.physic_pipeline.step(
+            &GRAVITY,
+            &INTEGRATION_PARAMETERS,
+            &mut self.island_manager,
+            &mut self.broad_phase,
+            &mut self.narrow_phase,
+            &mut rigid_body_set,
+            &mut self.collider_set,
+            &mut self.joint_set,
+            &mut self.multi_joint_set,
+            &mut self.ccd_solver,
+            None,
+            &physics_hooks,
+            &ENGINE.event_handler,
+        );
+        // MESH ON COLLIDE JAVASCRIPT EVENT REMOVED
+        // TODO: create rust event for that
+        /*
+        unsafe {
+            while let Ok(collision_event) = collision_recv.try_recv() {
+                // Handle the collision event.
+                match collider_to_mesh(self, collision_event.collider1()) {
+                    Some(m) => mesh_on_collide(self, m.id, collision_event.started()),
+                    None => js_warn(["Mesh not found for collider1"]),
+                }
+                match collider_to_mesh(&self, collision_event.collider2()) {
+                    Some(m) => mesh_on_collide(self, m.id, collision_event.started()),
+                    None => js_warn(["Mesh not found for collider2"]),
+                }
+            }
+        };*/
+        // Iter on each dynamic rigid-bodies that moved.
+        for rigid_body_handle in self.island_manager.active_dynamic_bodies() {
+            let mesh = self.rigid_bodies.get_mut(rigid_body_handle);
+            match mesh {
+                Some(m_id) => {
+                    let rigid_body = &rigid_body_set[*rigid_body_handle];
+                    let newrot = rigid_body.rotation().as_vector();
+                    let mesh_id = *m_id;
+                    let mesh = &mut self.meshes[mesh_id];
+                    {
+                        let mut mesh_property = mesh.mesh_property.lock().unwrap();
+                        mesh_property.rotation.i = newrot.x;
+                        mesh_property.rotation.j = newrot.y;
+                        mesh_property.rotation.k = newrot.z;
+                        mesh_property.rotation.w = newrot.w;
+                    }
+                    let pos = rigid_body.position();
+                    mesh.update_translation(
+                        pos.translation.x,
+                        pos.translation.y,
+                        pos.translation.z,
+                        false,
+                    );
+                }
+                None => js_warn(["Mesh not found for rigid body"]),
+            }
+        }
+    }
+    pub fn add_collider_to_mesh<'a>(&mut self, collider: Collider, mesh_id: usize) {
+        let mesh = &mut self.meshes[mesh_id];
+        let collider_set = &mut self.collider_set;
+        match mesh.rigid_body_handle {
+            Some(rigid_body_handle) => {
+                let mut rigid_body_set = ENGINE.rigid_body_set.lock().unwrap();
+                let old = mesh
+                    .collider_handle
+                    .replace(collider_set.insert_with_parent(
+                        collider,
+                        rigid_body_handle,
+                        &mut rigid_body_set,
+                    ));
+                match old {
+                    Some(handle) => {
+                        collider_set.remove(
+                            handle,
+                            &mut self.island_manager,
+                            &mut rigid_body_set,
+                            true,
+                        );
+                    }
+                    _ => (),
+                };
+            }
+            None => {
+                mesh.collider_handle.replace(collider_set.insert(collider));
+            }
         }
     }
 }
