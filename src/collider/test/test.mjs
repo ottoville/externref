@@ -38,7 +38,6 @@ const exportObj = {
     jslog_number(number) {
       console.log(number);
     },
-    mesh_on_collide(mesh_id, started) {},
     mesh_on_physic_tick(mesh_id) {},
     update_directional_lights(pointer, length) {},
     update_point_lights(pointer, length) {},

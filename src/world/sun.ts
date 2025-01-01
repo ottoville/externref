@@ -25,7 +25,7 @@ export class Sun extends MainNode {
 
   override onPhysicTick = (
     _delta: number,
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_pointer<'engine'>,
   ) => {
     const secondsOfDay = engine.physics.tickTime % 86400;
     const minutesOfDay = secondsOfDay / 60;

@@ -39,7 +39,7 @@ pub struct Mesh {
     pub positions_count: Option<usize>,
     pub draw_command: Option<DrawCommand>,
     pub rigid_body_handle: Option<RigidBodyHandle>,
-    collider_handle: Option<ColliderHandle>,
+    pub collider_handle: Option<ColliderHandle>,
     pub label: String,
     velocity: [f32; 4],
     drawable: Option<DrawCommand>,
@@ -59,7 +59,6 @@ pub unsafe extern "C" fn new_mesh_from_js(
     label_cap: usize,
     externref: Resource<JSMesh>,
 ) -> usize {
-
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     return Mesh::new(
         point_light,
@@ -89,8 +88,11 @@ pub unsafe extern "C" fn set_geometry<'frame>(
 #[no_mangle]
 pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *const Collider) {
     let coll = std::ptr::read(collider);
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
-    mesh.add_collider(coll);
+    ENGINE
+        .engine2
+        .lock()
+        .unwrap()
+        .add_collider_to_mesh(coll, mesh_id);
 }
 #[no_mangle]
 pub unsafe extern "C" fn last_collider_world_vertices_pointer(mesh_id: usize) -> *const f32 {
@@ -111,21 +113,27 @@ pub unsafe extern "C" fn faces_count(
 pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     let engine = &mut ENGINE.engine2.lock().unwrap();
     let mesh = &mut engine.meshes[mesh_id];
+
     {
+
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
 
         mesh_property.scaling[0] = x;
         mesh_property.scaling[1] = y;
         mesh_property.scaling[2] = z;
     }
-    mesh.on_update(true);
+    mesh.on_update( true);
 }
 #[no_mangle]
 pub unsafe extern "C" fn calculate_normals(mesh_id: usize) {
     ENGINE.engine2.lock().unwrap().meshes[mesh_id].calculate_normals();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_dynamic_buffer(
+pub unsafe extern "C" fn update_dynamic_buffer(engine: *mut Engine2, mesh_id: usize) {
+    (*engine).meshes[mesh_id].update_dynamic_buffer();
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_dynamic_buffer_from_mutex(
     engine: *mut MutexGuard<'_, Engine2>,
     mesh_id: usize,
 ) {
@@ -139,16 +147,18 @@ pub unsafe extern "C" fn have_rigid_body(mesh_id: usize) -> bool {
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_euler_angles(mesh_id: usize, x: f32, y: f32, z: f32) {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let engine = &mut ENGINE.engine2.lock().unwrap();
+    let mesh = &mut engine.meshes[mesh_id];
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.rotation = Quaternion::from_euler(&[x, y, z]);
     }
-    mesh.on_update(true);
+    mesh.on_update( true);
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_rotation(mesh_id: usize, x: f32, y: f32, z: f32, w: f32) {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let engine = &mut ENGINE.engine2.lock().unwrap();
+    let mesh = &mut engine.meshes[mesh_id];
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.rotation.i = x;
@@ -156,7 +166,7 @@ pub unsafe extern "C" fn update_rotation(mesh_id: usize, x: f32, y: f32, z: f32,
         mesh_property.rotation.k = z;
         mesh_property.rotation.w = w;
     }
-    mesh.on_update(true);
+    mesh.on_update( true);
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_translation(
@@ -232,6 +242,17 @@ pub unsafe extern "C" fn gpu_pointer(
 }
 #[no_mangle]
 pub unsafe extern "C" fn translation_pointer(
+    engine: *const Engine2,
+    mesh_id: usize,
+) -> *const Vec3wgslF32 {
+    &(*engine).meshes[mesh_id]
+        .mesh_property
+        .lock()
+        .unwrap()
+        .translation
+}
+#[no_mangle]
+pub unsafe extern "C" fn translation_pointer_from_mutex(
     engine: *const MutexGuard<'_, Engine2>,
     mesh_id: usize,
 ) -> *const Vec3wgslF32 {
@@ -273,6 +294,13 @@ pub unsafe extern "C" fn rotation_pointer_euler(mesh_id: usize) -> *const f32 {
 }
 #[no_mangle]
 pub unsafe extern "C" fn velocity_pointer(
+    engine: *const Engine2,
+    mesh_id: usize,
+) -> *const [f32; 4] {
+    &(*engine).meshes[mesh_id].velocity
+}
+#[no_mangle]
+pub unsafe extern "C" fn velocity_pointer_from_mutex(
     engine: *const MutexGuard<'_, Engine2>,
     mesh_id: usize,
 ) -> *const [f32; 4] {
@@ -331,6 +359,23 @@ pub unsafe extern "C" fn scale_z(mesh_id: usize) -> f32 {
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_color(
+    engine: *mut Engine2,
+    mesh_id: usize,
+    data_0: f32,
+    data_1: f32,
+    data_2: f32,
+    data_3: f32,
+) {
+    let mesh = &mut (*engine).meshes[mesh_id];
+    let mesh_property = Arc::get_mut(&mut mesh.mesh_property).unwrap();
+    mesh_property.lock().unwrap().color[0] = data_0;
+    mesh_property.lock().unwrap().color[1] = data_1;
+    mesh_property.lock().unwrap().color[2] = data_2;
+    mesh_property.lock().unwrap().color[3] = data_3;
+    mesh.on_update(false);
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_color_from_mutex(
     engine: *mut MutexGuard<'_, Engine2>,
     mesh_id: usize,
     data_0: f32,
@@ -348,6 +393,21 @@ pub unsafe extern "C" fn set_color(
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_ambient(
+    engine: *mut Engine2,
+    mesh_id: usize,
+    ambient_r: f32,
+    ambient_g: f32,
+    ambient_b: f32,
+) {
+    let mesh = &mut (*engine).meshes[mesh_id];
+    let mut mesh_property = mesh.mesh_property.lock().unwrap();
+
+    mesh_property.gpu_memory.ambient[0] = ambient_r;
+    mesh_property.gpu_memory.ambient[1] = ambient_g;
+    mesh_property.gpu_memory.ambient[2] = ambient_b;
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_ambient_from_mutex(
     engine: *mut MutexGuard<'_, Engine2>,
     mesh_id: usize,
     ambient_r: f32,
@@ -362,12 +422,25 @@ pub unsafe extern "C" fn set_ambient(
     mesh_property.gpu_memory.ambient[2] = ambient_b;
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_shadow(engine: *mut MutexGuard<'_, Engine2>, mesh_id: usize, shadow: f32) {
+pub unsafe extern "C" fn set_shadow(
+    engine: *mut Engine2,
+    mesh_id: usize,
+    shadow: f32,
+) {
     let mesh = &mut (*engine).meshes[mesh_id];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     mesh_property.gpu_memory.shadow = shadow;
 }
-
+#[no_mangle]
+pub unsafe extern "C" fn set_shadow_from_mutex(
+    engine: *mut MutexGuard<'_, Engine2>,
+    mesh_id: usize,
+    shadow: f32,
+) {
+    let mesh = &mut (*engine).meshes[mesh_id];
+    let mut mesh_property = mesh.mesh_property.lock().unwrap();
+    mesh_property.gpu_memory.shadow = shadow;
+}
 #[no_mangle]
 pub unsafe extern "C" fn collider_faces_pointer(
     engine: *const MutexGuard<'_, Engine2>,
@@ -398,7 +471,8 @@ pub unsafe extern "C" fn update_scale_and_rotation(
     rz: f32,
     rw: f32,
 ) {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let engine = &mut ENGINE.engine2.lock().unwrap();
+    let mesh = &mut engine.meshes[mesh_id];
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.scaling[0] = x;
@@ -443,37 +517,6 @@ impl Mesh {
             }
         }
     }
-    pub unsafe fn add_collider<'a>(&mut self, collider: Collider) {
-        let collider_set = &mut ENGINE.collider_set.lock().unwrap();
-        match self.rigid_body_handle {
-            Some(rigid_body_handle) => {
-                let rigid_body_set = &mut ENGINE.rigid_body_set.lock().unwrap();
-
-                let old = self
-                    .collider_handle
-                    .replace(collider_set.insert_with_parent(
-                        collider,
-                        rigid_body_handle,
-                        rigid_body_set,
-                    ));
-                match old {
-                    Some(handle) => {
-                        collider_set.remove(
-                            handle,
-                            &mut ENGINE.island_manager.lock().unwrap(),
-                            rigid_body_set,
-                            true,
-                        );
-                    }
-                    _ => (),
-                };
-            }
-            None => {
-                self.collider_handle.replace(collider_set.insert(collider));
-            }
-        }
-    }
-
     pub fn new<'a>(
         point_light: f32,
         directional_light: f32,
@@ -551,7 +594,9 @@ impl Mesh {
                 rigid_body_builder = RigidBodyBuilder::dynamic().sleeping(true).ccd_enabled(true);
             }
             let rigid_body = rigid_body_builder.build();
-            let rigid_body_handle = ENGINE.rigid_body_set.lock().unwrap().insert(rigid_body);
+            let mut rigid_body_set = ENGINE.rigid_body_set.lock().unwrap();
+
+            let rigid_body_handle = rigid_body_set.insert(rigid_body);
             engine.meshes[id].rigid_body_handle = Some(rigid_body_handle);
             engine.rigid_bodies.insert(rigid_body_handle, id);
         }

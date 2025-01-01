@@ -87,7 +87,7 @@ export class Human extends Box {
   }
   override onPhysicTick = (
     _delta: number,
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_pointer<'engine'>,
   ) => {
     let updateCameraDirection = false;
     if (
@@ -223,9 +223,10 @@ export class Human extends Box {
   directionUpdate = false;
   override onCollideCharacter(
     _started: boolean,
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
   ) {
-    const speedSquared = this.getSpeedSquared(engine_lock);
+    const speedSquared = this.getSpeedSquaredFromMutex(engine_lock);
+
     if (speedSquared < maxSpeedSquared) {
       const impulse = [0, 0, 0] as [number, number, number];
       const direction = this.inputManager.camera.direction;
@@ -290,10 +291,10 @@ export class Human extends Box {
   }
   override checkCollide(
     velocityPerDelta: readonly [number, number, number],
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
   ) {
     this.grip = this.inputManager.arrowKeysDown ? 0 : 1;
-    const translation = this.getTranslation(engine_lock);
+    const translation = this.getTranslationFromMutex(engine_lock);
     const scaledPosition = engine.collider.scaledPosition;
     scaledPosition[0] = translation[0] / this.radius[0];
     scaledPosition[1] = translation[1] / this.radius[1];

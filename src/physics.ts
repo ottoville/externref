@@ -97,13 +97,13 @@ export class Physics {
             otherwise gravity will pull objects that are ground causing jumping.
 
         */
-    this.engine.rust.physic_tick();
+    this.engine.rust.physic_tick(delta);
     const engine_lock = this.engine.rust.get_engine();
     this.movables.forEach((movable) => {
-      if (movable.onPhysicTick) movable.onPhysicTick(delta, engine_lock);
-      const velocity = movable.getVelocity(engine_lock);
+      //if (movable.onPhysicTick) movable.onPhysicTick(delta, engine_lock);
+      const velocity = movable.getVelocityFromMutex(engine_lock);
       if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
-        const currentTranslation = movable.getTranslation(engine_lock);
+        const currentTranslation = movable.getTranslationFromMutex(engine_lock);
         movable.setTranslation(engine_lock, [
           currentTranslation[0] + velocity[0],
           currentTranslation[1] + velocity[1],
@@ -120,7 +120,7 @@ export class Physics {
       //if (tickable.onPhysicTick) //@ts-ignore
       //    tickable.onPhysicTick(delta);
 
-      const velocity = tickable.getVelocity(engine_lock);
+      const velocity = tickable.getVelocityFromMutex(engine_lock);
       /* if(velocity[0] > 0 || velocity[1] > 0 || velocity[2] > 0) {
                  // TODO: take account to Y axis also.
                  let speed = Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
@@ -139,7 +139,7 @@ export class Physics {
       wantedVelocityPerDelta[2] =
         velocity[2] * dt + tickable.acceleration2[2] * dt_half_sqrt;
       const motionFrictionAcceleration: [number, number, number] = [0, 0, 0];
-      const translation = tickable.getTranslation(engine_lock);
+      const translation = tickable.getTranslationFromMutex(engine_lock);
       if (
         wantedVelocityPerDelta[0] !== 0 ||
         wantedVelocityPerDelta[1] !== 0 ||
@@ -241,7 +241,7 @@ export class Physics {
       tickable.impulse[1] = 0;
       tickable.impulse[2] = 0;
 
-      tickable.setVelocity(engine_lock, [
+      tickable.setVelocityFromMutex(engine_lock, [
         velocity[0] +
           (tickable.last_acceleration[0] + tickable.acceleration2[0]) * dt_half,
         velocity[1] +
@@ -249,8 +249,6 @@ export class Physics {
         velocity[2] +
           (tickable.last_acceleration[2] + tickable.acceleration2[2]) * dt_half,
       ]);
-      //TODO: Update only if neeeded
-      tickable.update_dynamic_buffer(engine_lock);
     }
     this.engine.rust.drop_engine_lock(engine_lock);
     if (realDeltaInGameTime > MIN_TICK_DELTA) {

@@ -246,7 +246,7 @@ export type rustWasm = {
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: number): boolean;
   faces_count(
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
   ): number;
   alloc_vector_f32(size: Word<'dword'>): rust_pointer<rust_vec_ptr<'f32'>>;
@@ -272,7 +272,7 @@ export type rustWasm = {
   ): void;
   update_euler_angles(mesh_id: number, x: number, y: number, z: number): void;
   update_translation(
-    engine_lock: rust_pointer<'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
     x: number,
     y: number,
@@ -280,35 +280,49 @@ export type rustWasm = {
   ): void;
   apply_impulse(mesh_id: number, x: number, y: number, z: number): void;
   update_dynamic_buffer(engine: rust_pointer<'engine'>, mesh_id: number): void;
+  update_dynamic_buffer_from_mutex(
+    engine: rust_mutex<'locked', 'enginelock'>,
+    mesh_id: number,
+  ): void;
+
   gpu_alignment(mesh_id: number): number;
   positions_count(
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
   ): number;
   set_positions_count(mesh_id: number, positions_count: number): number;
   strip(mesh_id: number): number;
   collider_planes_parallel_pointer(
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
   ): rust_pointer<'collider_planes_parallel_pointer'>;
   gpu_pointer(
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
   ): number;
   label_field_pointer(mesh_id: number): rust_pointer<'label_field'>;
   translation_pointer(
-    engine: rust_mutex<'locked', 'engine'>,
+    engine: rust_pointer<'engine'>,
+    mesh_id: number,
+  ): rust_pointer<'translation'>;
+  translation_pointer_from_mutex(
+    engine: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
   ): rust_pointer<'translation'>;
   rotation_pointer(mesh_id: number): rust_pointer<'rotation'>;
   rotation_pointer_euler(mesh_id: number): rust_pointer<'f32'>;
   scale_pointer(mesh_id: number): rust_pointer<'scale'>;
   velocity_pointer(
-    engine: rust_mutex<'locked', 'engine'>,
+    engine: rust_pointer<'engine'>,
     mesh_id: number,
   ): rust_pointer<'velocity'>;
+  velocity_pointer_from_mutex(
+    engine: rust_mutex<'locked', 'enginelock'>,
+    mesh_id: number,
+  ): rust_pointer<'velocity'>;
+
   intersect_box_aa_sphere(
-    engine: rust_mutex<'locked', 'engine'>,
+    engine: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
     collider_ptr: number,
     radius: number,
@@ -326,8 +340,23 @@ export type rustWasm = {
     d2: number,
     d3: number,
   ): void;
+  set_color_from_mutex(
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
+    mesh_id: number,
+    d0: number,
+    d1: number,
+    d2: number,
+    d3: number,
+  ): void;
   set_ambient(
     engine_lock: rust_pointer<'engine'>,
+    mesh_id: number,
+    r: number,
+    g: number,
+    b: number,
+  ): void;
+  set_ambient_from_mutex(
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
     r: number,
     g: number,
@@ -338,8 +367,13 @@ export type rustWasm = {
     mesh_id: number,
     shadow: number,
   ): void;
+  set_shadow_from_mutex(
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
+    mesh_id: number,
+    shadow: number,
+  ): void;
   collider_faces_pointer(
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
   ): rust_pointer<'collider_faces'>;
   set_scenes(mesh_id: number, scenes: number): void;
@@ -370,7 +404,7 @@ export type rustWasm = {
   get_offset(elevator_ptr: rust_pointer<'elevator'>): number;
 
   init_engine2(): number;
-  physic_tick(): void;
+  physic_tick(delta: number): void;
 
   create_ball_collider(radius: number): rust_pointer<'collider'>;
   create_capsule_collider(
@@ -400,9 +434,9 @@ export type rustWasm = {
   devtools_pointer(): rust_pointer<'devtools'>;
   add_onchange_callback(mesh_id: number): number;
   remove_onchange_callback(mesh_id: number, cb: number): void;
-  get_engine(): rust_mutex<'locked', 'engine'>;
+  get_engine(): rust_mutex<'locked', 'enginelock'>;
   get_gpu(): rust_mutex<'locked', 'gpulock'>;
-  drop_engine_lock(engine: rust_mutex<'locked', 'engine'>): void;
+  drop_engine_lock(engine: rust_mutex<'locked', 'enginelock'>): void;
   drop_gpu_lock(engine: rust_mutex<'locked', 'gpulock'>): void;
   get_gpu_mesh_buffer(engine: rust_pointer<'gpu'>): number;
   get_gpu_projection_buffer_from_mutex(
@@ -758,27 +792,14 @@ export class Engine {
         mesh_on_change(mesh: Externref<false, MainNode>) {
           mesh.externref.onMeshChange.forEach((cb) => cb());
         },
-        mesh_on_collide(
-          engine_lock: rust_pointer<'engine'>,
-          mesh_id: number,
-          started: boolean,
-        ) {
-          const mesh = DataNode.Meshes.get(mesh_id);
-          if (mesh) {
-            mesh.onCollideCharacter(started, engine_lock);
-            mesh.colliding_physics = started;
-          } else {
-            console.warn('mesh_on_collide on non-existing mesh', mesh_id);
-          }
-        },
         mesh_on_physic_tick(
-          engine_lock: rust_mutex<'locked', 'engine'>,
-          mesh_id: number,
+          engine_lock: rust_pointer<'engine'>,
+          delta: number,
+          externref: Externref<false, MainNode>,
         ) {
-          const cb = DataNode.Meshes.get(mesh_id)?.onPhysicTick;
+          const cb = externref.externref.onPhysicTick;
           if (cb) {
-            //TODO: fix delta
-            cb(0, engine_lock);
+            cb(delta, engine_lock);
           }
         },
         now() {
@@ -1160,7 +1181,7 @@ export class Engine {
     );
   }
   #getFinalPosition(
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     sphere: Ellipsoid,
     scaledPosition: TerraVector3,
     scaledVelocity: TerraVector3,
@@ -1318,7 +1339,7 @@ export class Engine {
     return scaledPosition;
   }
   collideWithWorld(
-    engine_lock: rust_mutex<'locked', 'engine'>,
+    engine_lock: rust_mutex<'locked', 'enginelock'>,
     sphere: Ellipsoid,
     scaledPosition: TerraVector3,
     scaledVelocity: TerraVector3,
