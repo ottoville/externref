@@ -254,7 +254,9 @@ pub extern "C" fn init_engine2() -> usize {
     std::mem::size_of::<GPUMesh>()
 }
 
-unsafe fn collider_to_mesh<'frame>(
+// MESH ON COLLIDE JAVASCRIPT EVENT REMOVED
+// TODO: create rust event for that
+/*unsafe fn collider_to_mesh<'frame>(
     e: &'frame Engine2,
     collider_handle: ColliderHandle,
 ) -> Option<&'frame Mesh> {
@@ -286,7 +288,7 @@ unsafe fn collider_to_mesh<'frame>(
             None
         }
     };
-}
+}*/
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn physic_tick(delta: u32) {
@@ -360,6 +362,12 @@ impl Engine2 {
                 None => js_warn(["Mesh not found for rigid body"]),
             }
         }
+    }
+    pub fn find_mesh_by_id(&self, mesh_id: usize) -> &Mesh {
+        &self.meshes[mesh_id]
+    }
+    pub fn find_mesh_by_id_mut(&mut self, mesh_id: usize) -> &mut Mesh {
+        &mut self.meshes[mesh_id]
     }
     pub fn add_collider_to_mesh<'a>(&mut self, collider: Collider, mesh_id: usize) {
         let mesh = &mut self.meshes[mesh_id];

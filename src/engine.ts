@@ -242,7 +242,9 @@ export type rustWasm = {
     indices: rust_pointer<'indices'>,
   ): rust_pointer<rust_vec_ptr<'usize'>>;
 
-  last_collider_world_vertices_pointer(mesh_id: number): number;
+  last_collider_world_vertices_pointer(
+    geometry: rust_pointer<'geometry'>,
+  ): number;
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: number): boolean;
   faces_count(
@@ -519,6 +521,10 @@ export type rustWasm = {
   ): void;
   on_resize(aspect_ratio: number): void;
   iterate_bindings(iterator: Rust_Iterator<number>): number;
+  collisions_transform_matrix_ptr(
+    geometry: rust_pointer<'geometry'>,
+  ): rust_pointer<'matrix'>;
+  update_collider_planes(geometry: rust_pointer<'geometry'>): void;
 } & BufferInterface &
   DevToolsInterface;
 

@@ -130,7 +130,7 @@ fn test_bounding_box() {
         }
         m.geometry = Some(Box::new(geometry));
 
-        m.set_translation(123.0, 1000.0, 123.0);
+        m.update_translation(123.0, 1000.0, 123.0, false);
 
         let mut mesh_property2 = m.mesh_property.lock().unwrap();
         match &mut m.geometry {

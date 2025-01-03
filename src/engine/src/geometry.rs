@@ -51,6 +51,23 @@ pub unsafe extern "C" fn vertices_pointer(geometry: *const Geometry) -> *const f
 pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry) -> usize {
     (*geometry).vertices.vertices_stride() / 4usize
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn collisions_transform_matrix_ptr(
+    geometry: *const Geometry,
+) -> *const [[f32; 4]; 4] {
+    &(*geometry).collisions_transform_matrix
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_collider_planes(geometry: *mut Geometry) {
+    (*geometry).update_collider_planes();
+}
+#[no_mangle]
+pub unsafe extern "C" fn last_collider_world_vertices_pointer(
+    geometry: *mut Geometry,
+) -> *const Vec3wgslF32 {
+    (*geometry).last_collider_world_vertices.as_ptr()
+}
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize, cap: usize) {
     let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);
@@ -182,7 +199,8 @@ pub struct Geometry {
     pub label: String,
     pub collider_planes: Vec<ColliderPlane>,
     pub collider_planes_parallel: Vec<[f32; 4]>, //lanes for x,y,z,d
-    pub last_collider_world_vertices: Vec<f32>,
+    pub last_collider_world_vertices: Vec<Vec3wgslF32>,
+    pub collisions_transform_matrix: [[f32; 4]; 4],
 
     pub static_faces: bool, // Used for terrain
     pub character_can_collide_to: bool,
@@ -421,6 +439,7 @@ impl<'vert> Geometry {
             strip,
             character_can_collide_to,
             label,
+            collisions_transform_matrix: [[0.0; 4]; 4],
         }
     }
     pub fn create_faces(&mut self, override_positions_count: Option<NonZeroUsize>) {
@@ -490,7 +509,8 @@ impl<'vert> Geometry {
     }
     pub fn allocate_collider_planes(&mut self) {
         if self.vertices.have_vertices() {
-            self.last_collider_world_vertices = Vec::with_capacity((self.vertices.length()) * 4);
+            self.last_collider_world_vertices =
+                vec![Vec3wgslF32::new_zero(); self.vertices.length()]; //Vec::with_capacity((self.vertices.length()));
             if self.static_faces {
                 return;
             }
@@ -498,6 +518,12 @@ impl<'vert> Geometry {
             self.planes = Faces::new(faces_count);
             self.collider_planes = Vec::with_capacity(faces_count);
             self.collider_planes_parallel = Vec::with_capacity(faces_count * 4usize);
+        }
+    }
+    pub fn update_collider_planes(&mut self) {
+        let positions = self.vertices.get_positions();
+        for (position, col_pos) in positions.zip(&mut self.last_collider_world_vertices) {
+            col_pos.0 = position.0.transform(self.collisions_transform_matrix);
         }
     }
     pub fn update_bounding_box(&mut self, transformation: &[[f32; 4]; 4]) {

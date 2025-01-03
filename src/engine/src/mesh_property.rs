@@ -132,4 +132,57 @@ impl MeshProperty {
         }
         return &self.transformation;
     }
+    pub fn update_translation(&mut self, x: f32, y: f32, z: f32) {
+        self.translation.0 = [x, y, z];
+    }
+    pub fn update_scale(&mut self, x: f32, y: f32, z: f32) {
+        self.scaling[0] = x;
+        self.scaling[1] = y;
+        self.scaling[2] = z;
+    }
+    pub fn update_euler_angles(&mut self, x: f32, y: f32, z: f32) {
+        self.rotation = Quaternion::from_euler(&[x, y, z]);
+    }
+    pub fn update_rotation(&mut self, x: f32, y: f32, z: f32, w: f32) {
+        self.rotation.i = x;
+        self.rotation.j = y;
+        self.rotation.k = z;
+        self.rotation.w = w;
+    }
+    pub fn update_color(&mut self, data_0: f32, data_1: f32, data_2: f32, data_3: f32) {
+        self.color[0] = data_0;
+        self.color[1] = data_1;
+        self.color[2] = data_2;
+        self.color[3] = data_3;
+    }
+    pub fn set_scenes(&mut self, scenes: u32) {
+        self.gpu_memory.scenes = scenes;
+    }
+    pub fn update_scale_and_rotation(
+        &mut self,
+        x: f32,
+        y: f32,
+        z: f32,
+        rx: f32,
+        ry: f32,
+        rz: f32,
+        rw: f32,
+    ) {
+        self.scaling[0] = x;
+        self.scaling[1] = y;
+        self.scaling[2] = z;
+        self.rotation.i = rx;
+        self.rotation.j = ry;
+        self.rotation.k = rz;
+        self.rotation.w = rw;
+    }
+    pub fn set_point_light(&mut self, range: f32) {
+        let gpu_mesh_alignment = self.gpu_mesh_alignment.clone();
+        self.gpu_memory.set_point_light(range, gpu_mesh_alignment);
+    }
+    pub fn set_directional_light(&mut self, range: f32) {
+        let gpu_mesh_alignment = self.gpu_mesh_alignment.clone();
+        self.gpu_memory
+            .set_directional_light(range, gpu_mesh_alignment);
+    }
 }

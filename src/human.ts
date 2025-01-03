@@ -11,7 +11,7 @@ const maxSpeedSquared = 1.4 * 1.4;
 export class Human extends Box {
   inputManager: MeshCamera;
   radius: { 0: number; 1: number; 2: number };
-  readonly #radius: [x: number, y: number, z: number] = [0.5, 1.8, 0.3];
+  readonly #radius: [x: number, y: number, z: number] = [2, 2, 2];
   readonly collisionsScalingMatrix: TerraMatrix = new TerraMatrix([
     1.0 / this.#radius[0],
     0.0,

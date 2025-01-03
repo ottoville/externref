@@ -4,7 +4,6 @@ import {
   ReadOnlyFloat32Array,
   TerraMatrix,
   TerraVector3,
-  TerraVector4,
   Triangle,
 } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
@@ -168,10 +167,6 @@ export class DataNode extends MainNode {
   readonly #triangleFaces: Triangle[] = [];
   #lastColliderTransformMatrix = new TerraMatrix();
 
-  // facesBufferColliderPointer?: DataView;
-  //lastColliderWorldVectorsPointer?: DataView;
-  //facesBufferColliderPointerParallel?: DataView;
-  #positionsAndCollider: [pointerToVec3: number, pointerToVec4: number][] = [];
   #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
 
   get_faces_count(engine_lock: rust_mutex<'locked', 'enginelock'>) {
@@ -235,7 +230,7 @@ export class DataNode extends MainNode {
     }
   }
   get last_collider_world_vertices_pointer() {
-    return engine.rust.last_collider_world_vertices_pointer(this.id);
+    return engine.rust.last_collider_world_vertices_pointer(this.geometry);
   }
   create_collider() {
     return engine.rust.create_trimesh_collider(this.id);
@@ -350,45 +345,27 @@ export class DataNode extends MainNode {
     if (facesCount === 0 || this.vertices_count === 0) return false;
     this.#triangleFaces.length = 0;
     this.#vectorsVec4 = [];
-    this.#positionsAndCollider.length = 0;
     this.colliderVerticesV4.length = 0;
     //this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
-    const vertices_pointer = engine.rust.vertices_pointer(this.geometry);
     const last_collider_world_vertices_pointer =
       this.last_collider_world_vertices_pointer;
     for (let i = 0; i < this.vertices_count; i++) {
-      const pos =
-        vertices_pointer +
-        i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
       const colPos =
         last_collider_world_vertices_pointer +
         i * 4 * Float32Array.BYTES_PER_ELEMENT;
       this.colliderVerticesV4.push(colPos);
-      this.#positionsAndCollider.push([pos, colPos]);
     }
     //return this.facesBufferColliderPointer.byteOffset;
     return true;
   }
 
   #updateColliderPlanes(engine_lock: rust_mutex<'locked', 'enginelock'>) {
-    const positions_count = this.get_positions_count(engine_lock);
-    this.#positionsAndCollider.forEach((posAndCol, i) => {
-      if (i > positions_count) {
-        throw new Error('Tried to access vertice out of boundary');
-      }
-      new MutableTerraVector3(
-        engine.rust.memory.buffer,
-        posAndCol[0],
-      ).multiply2Ref(
-        this.#myCollisionsTransformMatrix,
-        new TerraVector4(engine.rust.memory.buffer, posAndCol[1]),
-      );
-    });
-    const collider_planes_parallel_pointer =
-      engine.rust.collider_planes_parallel_pointer(engine_lock, this.id);
+    engine.rust.update_collider_planes(this.geometry);
     this.#triangleFaces.forEach((face) => {
       face.updatePlane();
     });
+    const collider_planes_parallel_pointer =
+      engine.rust.collider_planes_parallel_pointer(engine_lock, this.id);
 
     this.#faceQuatros.forEach((quatro, i) => {
       new Float32Array(
@@ -416,7 +393,12 @@ export class DataNode extends MainNode {
     });
   }
   //collisionsScalingMatrix = new TerraMatrix();
-  #myCollisionsTransformMatrix = new TerraMatrix();
+  get #myCollisionsTransformMatrix(): TerraMatrix {
+    return new TerraMatrix(
+      engine.rust.memory.buffer,
+      engine.rust.collisions_transform_matrix_ptr(this.geometry),
+    );
+  }
   public checkCollision(
     engine_lock: rust_mutex<'locked', 'enginelock'>,
     _collider: ColliderJS,

@@ -181,6 +181,8 @@ pub trait VectorMath<T, const N: usize> {
     fn divide_in_place(&mut self, dividor: T);
     fn normalize_in_place(&mut self);
     fn to_scaling_matrix(&self) -> [[T; N]; N];
+    fn transform(&self, matrix: [[f32; 4]; 4]) -> Self;
+    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], other: &mut Self);
 }
 pub trait MatrixMath<T> {
     fn identity() -> Self;
@@ -288,6 +290,56 @@ impl VectorMath<f32, 3> for [f32; 3] {
             [0.0, self[1], 0.0],
             [0.0, 0.0, self[2]],
         ]
+    }
+    fn transform(&self, matrix: [[f32; 4]; 4]) -> Self {
+        let mut result = [0.0; 3];
+        self.transform_to_ref(matrix, &mut result);
+        return result;
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], other: &mut Self) {
+        let rx =
+            self[0] * matrix[0][0] + self[1] * matrix[1][0] + self[2] * matrix[2][0] + matrix[3][0];
+        let ry =
+            self[0] * matrix[0][1] + self[1] * matrix[1][1] + self[2] * matrix[2][1] + matrix[3][1];
+        let rz =
+            self[0] * matrix[0][2] + self[1] * matrix[1][2] + self[2] * matrix[2][2] + matrix[3][2];
+        let rw = 1.0
+            / (self[0] * matrix[0][3]
+                + self[1] * matrix[1][3]
+                + self[2] * matrix[2][3]
+                + matrix[3][3]);
+        other[0] = rx * rw;
+        other[1] = ry * rw;
+        other[2] = rz * rw;
+    }
+    #[cfg(target_arch = "wasm32")]
+    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], other: &mut Self) {
+        use std::arch::wasm32::{
+            f32x4_add, f32x4_extract_lane, f32x4_mul, f32x4_splat, v128, v128_load,
+        };
+
+        let r0 = unsafe { v128_load(&matrix[0] as *const f32 as *const v128) };
+        let r1 = unsafe { v128_load(&matrix[1] as *const f32 as *const v128) };
+        let r2 = unsafe { v128_load(&matrix[2] as *const f32 as *const v128) };
+        let r3 = unsafe { v128_load(&matrix[3] as *const f32 as *const v128) };
+        let rows = f32x4_add(
+            f32x4_add(
+                f32x4_add(
+                    f32x4_mul(r0, f32x4_splat(self[0])),
+                    f32x4_mul(r1, f32x4_splat(self[1])),
+                ),
+                f32x4_mul(r2, f32x4_splat(self[2])),
+            ),
+            r3,
+        );
+        let rx = f32x4_extract_lane::<0>(rows);
+        let ry = f32x4_extract_lane::<1>(rows);
+        let rz = f32x4_extract_lane::<2>(rows);
+        let rw = 1.0 / f32x4_extract_lane::<3>(rows);
+        other[0] = rx * rw;
+        other[1] = ry * rw;
+        other[2] = rz * rw;
     }
 }
 impl VectorMath<f32, 4> for [f32; 4] {
@@ -425,6 +477,14 @@ impl VectorMath<f32, 4> for [f32; 4] {
             [0.0, 0.0, self[2], 0.0],
             [0.0, 0.0, 0.0, 1.0],
         ]
+    }
+
+    fn transform(&self, _matrix: [[f32; 4]; 4]) -> Self {
+        todo!()
+    }
+
+    fn transform_to_ref(&self, _matrix: [[f32; 4]; 4], other: &mut Self) {
+        todo!()
     }
 }
 
@@ -636,7 +696,7 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         return true;
     }
 
-    fn invert_to_ref(&self, other: &mut Self) -> bool {
+    fn invert_to_ref(&self, _other: &mut Self) -> bool {
         todo!()
     }
 }
