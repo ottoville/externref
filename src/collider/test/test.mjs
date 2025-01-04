@@ -1,8 +1,10 @@
 ﻿import fs from 'fs';
+import assert from 'node:assert/strict';
 import WASI from 'wasi';
 const wasi = new WASI.WASI({
   args: process.argv,
   env: process.env,
+  version: 'preview1',
 });
 
 let instanceRust;
@@ -10,6 +12,7 @@ const exportObj = {
   console: {
     log(ptr) {},
     warn(ptr) {},
+    error(ptr) {},
   },
   env: {
     now() {
@@ -39,13 +42,44 @@ const exportObj = {
       console.log(number);
     },
     mesh_on_physic_tick(mesh_id) {},
-    update_directional_lights(pointer, length) {},
-    update_point_lights(pointer, length) {},
+    mesh_on_change() {},
+    verticesChange() {},
+    render_renderpasses() {},
+    drop_ref() {},
+  },
+  queue: {
+    submit() {},
+  },
+  camera: {
+    on_update_position() {},
+  },
+  commandencoder: {
+    create_gpu_command_encoder() {},
+    finish() {},
+    begin_compute_pass() {},
+    copy_buffer_to_buffer() {},
+  },
+  computepassencoder: {
+    set_pipeline() {},
+    set_bindgroup() {},
+    dispatch_workgroups() {},
+    end() {},
+  },
+  buffer: {
+    set_mapped_range() {},
+    unmap() {},
+    write() {},
+    map_write_async() {},
+    map_state() {},
+  },
+  device: {
+    create_bind_group() {},
+    create_gpu_buffer() {},
   },
 };
 
 const wasmRust = await WebAssembly.compile(
-  fs.readFileSync('../wwwroot/engine.wasm'),
+  fs.readFileSync('./wwwroot/engine.wasm'),
 );
 instanceRust = await WebAssembly.instantiate(wasmRust, exportObj);
 
@@ -65,9 +99,8 @@ const importObject = {
     memory: instanceRust.exports.memory,
   },
 };
-
 const wasm = await WebAssembly.compile(
-  fs.readFileSync('../wwwroot/collider/colliderSIMD.wasm'),
+  fs.readFileSync('./wwwroot/collider/colliderSIMD.wasm'),
 );
 const instance = await WebAssembly.instantiate(wasm, importObject);
 
@@ -98,6 +131,7 @@ const position = new Float32Array(
   instanceRust.exports.scaled_position_pointer(collider_ptr),
   4,
 );
+
 position.set([3384.10498046875, 143.2760772705078, -5874.26806640625]);
 
 instance.exports.construct(
@@ -108,6 +142,7 @@ instance.exports.construct(
   position.byteOffset,
   instanceRust.exports.collided_point_in_triangle_pointer(collider_ptr),
   collider_ptr,
+  instanceRust.exports.lowest_root_pointer(collider_ptr),
 );
 
 instance.exports._initialize();
@@ -239,6 +274,18 @@ if (nearestDistanceSquared[0] !== 17312.142578125) {
   console.error('faulty nearesDistanceSquared', nearestDistanceSquared[0]);
   process.exit(1);
 }
+///////////////////////////////////////////////
+
+instance.exports.test_checkForLowestRoot2();
+
+assert.deepEqual(
+  [...new Float32Array(
+    memory.buffer,
+    instanceRust.exports.collision_point_pointer(collider_ptr),
+    4,
+  )],
+  [312.5, 65.6070785522461, -343.26318359375, 2.2420775429197073e-44],
+);
 
 //console.log(Dot(planeCollider,normalizedVelocity))
 //wasi.start(instance);

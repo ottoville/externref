@@ -6,7 +6,7 @@ use rapier3d::{
     na::{Const, OPoint},
     pipeline::ActiveEvents,
 };
-use terramath::{CrossProduct, VectorMath};
+use terramath::{CrossProduct, Plane, VectorMath};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
@@ -559,10 +559,6 @@ pub struct Faces {
     pub planes: Vec<Plane>,
 }
 
-pub struct Plane {
-    pub norm: [f32; 3],
-    pub d: f32,
-}
 impl Faces {
     pub fn new(amount: usize) -> Faces {
         Faces {

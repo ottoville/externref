@@ -1,3 +1,7 @@
+pub struct Plane {
+    pub norm: [f32; 3],
+    pub d: f32,
+}
 pub struct Quaternion {
     pub i: f32,
     pub j: f32,

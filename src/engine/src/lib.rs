@@ -3,7 +3,6 @@ mod allocators;
 mod boundingbox;
 pub mod camera;
 mod cameras;
-mod collider;
 mod devtools;
 mod drawable;
 mod engine;
@@ -22,6 +21,7 @@ mod vertices;
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
+use crate::Collider;
 
 use allocators::freeindex::FreeIndexIndex;
 use math2::Mat3wgslF32;

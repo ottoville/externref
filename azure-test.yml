@@ -19,11 +19,6 @@ steps:
     targetType: 'inline'
     script: 'cargo install wasm-bindgen-cli'
     pwsh: true
-# wasm-bindgen test runner didnt work for 1.82.0, remove when works.
-- task: Rustup@1
-  displayName: Set rust version to 1.81.0
-  inputs:
-    rustupCommand: default 1.81.0
 - task: Rustup@1
   displayName: Add wasm32-unknown-unknown target
   inputs:
@@ -33,6 +28,12 @@ steps:
   inputs:
     key: 'rustterramath'
     path: './src/terramath/target'
+- task: Cache@2
+  displayName: Restore collider terramath cache
+  inputs:
+    key: 'ruscollider'
+    path: './src/collider/target'
+
 - task: PowerShell@2
   displayName: Math library unit test
   inputs:
@@ -40,3 +41,10 @@ steps:
     script: 'cargo test --target wasm32-unknown-unknown'
     pwsh: true
     workingDirectory: './src/terramath'
+- task: PowerShell@2
+  displayName: Collider library unit test
+  inputs:
+    targetType: 'inline'
+    script: 'cargo test --target wasm32-unknown-unknown'
+    pwsh: true
+    workingDirectory: './src/collider'

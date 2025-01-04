@@ -7,7 +7,6 @@ use crate::engine::Engine2;
 pub use crate::engine::ENGINE;
 pub use crate::geometry::ColliderPlane;
 pub use crate::geometry::Geometry;
-pub use crate::geometry::Plane;
 use crate::math2::Mat3wgslF32;
 use crate::math2::Vec3wgslF32;
 use crate::mesh_property::MeshProperty;
@@ -18,11 +17,13 @@ use core::panic;
 use externref::externref;
 use externref::Resource;
 use rapier3d::prelude::*;
+use terramath::Plane;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
 use terramath::MatrixMath;
 use terramath::Quaternion;
+use crate::Collider;
 
 pub struct JSMesh(());
 
@@ -349,7 +350,7 @@ pub unsafe extern "C" fn velocity_pointer_from_mutex(
 pub unsafe extern "C" fn intersect_box_aa_sphere(
     engine: *mut MutexGuard<'_, Engine2>,
     mesh_id: usize,
-    collider: *const crate::collider::Collider,
+    collider: *const collider::Collider,
     radius: f32,
 ) -> bool {
     (*engine).meshes[mesh_id].intersect_box_aa_sphere(&(*collider), radius)
@@ -741,7 +742,7 @@ impl Mesh {
     }
     pub unsafe fn intersect_box_aa_sphere(
         &mut self,
-        collider: &crate::collider::Collider,
+        collider: &collider::Collider,
         radius: f32,
     ) -> bool {
         let mesh_property = &mut self.mesh_property.lock().unwrap();

@@ -132,7 +132,6 @@ pub unsafe extern "C" fn drop_engine_lock(engine: *mut MutexGuard<'static, Engin
     drop(Box::from_raw(engine));
 }
 
-static mut LOG_STRING: String = String::new();
 
 // TODO, remove and use "str_ptr_from_arr" syntax
 pub fn create_js_string(mut str: String) -> *const u8 {
@@ -142,6 +141,8 @@ pub fn create_js_string(mut str: String) -> *const u8 {
     std::mem::forget(log_str);
     return ptr;
 }
+static mut LOG_STRING: String = String::new();
+
 unsafe fn str_ptr_from_arr<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
     LOG_STRING.clear();
     for str in strings.iter() {

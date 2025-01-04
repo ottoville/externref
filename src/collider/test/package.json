@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd test.mjs"
+    "test": "node --experimental-wasi-unstable-preview1 test.mjs"
   },
   "author": "",
   "license": "ISC"

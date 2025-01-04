@@ -14,7 +14,7 @@ stages:
     displayName: Deploy bicep
     timeoutInMinutes: 0
     pool:
-      vmImage: ubuntu-22.04
+      vmImage: ubuntu-24.04
     environment: PR
     strategy:
       runOnce:    #rolling, canary are the other strategies that are supported
@@ -42,7 +42,7 @@ stages:
     displayName: Build SWA
     timeoutInMinutes: 0
     pool:
-      vmImage: ubuntu-22.04
+      vmImage: ubuntu-24.04
     steps:
     - checkout: self
       submodules: true
@@ -116,7 +116,7 @@ stages:
     displayName: Run tests
     timeoutInMinutes: 0
     pool:
-      vmImage: ubuntu-22.04
+      vmImage: ubuntu-24.04
     steps:
     - template: azure-test.yml
 
@@ -131,7 +131,7 @@ stages:
     environment: PR
     timeoutInMinutes: 0
     pool:
-      vmImage: ubuntu-22.04
+      vmImage: ubuntu-24.04
     strategy:
       runOnce:    #rolling, canary are the other strategies that are supported
         deploy:

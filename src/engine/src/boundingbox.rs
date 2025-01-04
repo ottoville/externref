@@ -1,6 +1,5 @@
 use terramath::VectorMath;
 
-use crate::collider::Collider;
 use crate::engine::js_error;
 use crate::math2::Vec3wgslF32;
 use crate::mesh::ENGINE;
@@ -358,7 +357,7 @@ impl BoundingBox {
 
         self.dirty = false;
     }
-    pub fn intersect_box_aa_sphere(&self, collider: &Collider, radius: f32) -> bool {
+    pub fn intersect_box_aa_sphere(&self, collider: &collider::Collider, radius: f32) -> bool {
         let bound = collider.speed + radius;
         if self.min[0] > collider.basepoint_world[0] + bound {
             return false;

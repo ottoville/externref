@@ -2,8 +2,38 @@
 use std::arch::wasm32::v128;
 use std::mem;
 
-use crate::mesh::Plane;
+use terramath::Plane;
 
+#[link(wasm_import_module = "console")]
+#[cfg(target_arch = "wasm32")]
+extern "C" {
+    fn log(number: *const usize);
+    pub fn log_u32(number: u32);
+    fn warn(number: *const usize);
+    fn error(number: *const usize);
+}
+
+static mut LOG_STRING: String = String::new();
+static mut MULTIVALUE_USIZE: [usize; 6] = [0; 6];
+
+unsafe fn str_ptr_from_arr<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
+    LOG_STRING.clear();
+    for str in strings.iter() {
+        LOG_STRING.push(' ');
+        LOG_STRING.push_str(&str.to_string());
+    }
+    MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
+    MULTIVALUE_USIZE[1] = LOG_STRING.len();
+    MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
+}
+
+pub fn js_log<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
+    unsafe {
+        str_ptr_from_arr(strings);
+        #[cfg(target_arch = "wasm32")]
+        log(MULTIVALUE_USIZE.as_ptr());
+    }
+}
 pub struct Collider {
     pub basepoint_world: [f32; 4],
     intersection_point: [f32; 4],
@@ -95,6 +125,87 @@ pub extern "C" fn v3_dot(a: v128, b: v128) -> f32 {
 }
 #[cfg(target_arch = "wasm32")]
 #[no_mangle]
+pub unsafe extern "C" fn check_point_in_triangle(
+    point: v128,
+    plane_collider: v128,
+    v0: v128,
+    v1: v128,
+    v2: v128,
+) -> bool {
+    use std::arch::wasm32::{f32x4_mul, f32x4_sub, i8x16_shuffle};
+
+    let temp_v2 = f32x4_sub(v1, point);
+    let temp_v1 = f32x4_sub(v2, point);
+
+    let temp_v1_shuffle =
+        i8x16_shuffle::<8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0>(temp_v1, temp_v1);
+    let temp_v2_shuffle =
+        i8x16_shuffle::<8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0>(temp_v2, temp_v2);
+
+    let mut shuffled_cross = f32x4_sub(
+        f32x4_mul(temp_v2, temp_v1_shuffle),
+        f32x4_mul(temp_v1, temp_v2_shuffle),
+    );
+    if v3_dot(
+        i8x16_shuffle::<8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0>(
+            shuffled_cross,
+            shuffled_cross,
+        ),
+        plane_collider,
+    ) < 0.0
+    {
+        return false;
+    }
+    let temp_v3 = f32x4_sub(v0, point);
+    let temp_v3_shuffle =
+        i8x16_shuffle::<8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0>(temp_v3, temp_v3);
+
+    shuffled_cross = f32x4_sub(
+        f32x4_mul(temp_v3, temp_v2_shuffle),
+        f32x4_mul(temp_v2, temp_v3_shuffle),
+    );
+    if v3_dot(
+        i8x16_shuffle::<8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0>(
+            shuffled_cross,
+            shuffled_cross,
+        ),
+        plane_collider,
+    ) < 0.0
+    {
+        return false;
+    }
+    shuffled_cross = f32x4_sub(
+        f32x4_mul(temp_v1, temp_v3_shuffle),
+        f32x4_mul(temp_v3, temp_v1_shuffle),
+    );
+    return v3_dot(
+        i8x16_shuffle::<8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0>(
+            shuffled_cross,
+            shuffled_cross,
+        ),
+        plane_collider,
+    ) > 0.0;
+}
+//TODO finish this
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
+pub unsafe extern "C" fn test_triangle(
+    collider: *mut Collider,
+    embedded_in_plane: bool,
+    planePosition: i32,
+    triangle0: v128,
+    triangle1: v128,
+    triangle2: v128,
+    meshID: i32,
+    t0: f32,
+) -> bool {
+    let found = false;
+    (*collider).lowest_root = 1.0;
+    if !embedded_in_plane {}
+    return found;
+}
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
 pub unsafe extern "C" fn check_for_lowest_root(
     collider: *mut Collider,
     triangle1: v128,
@@ -102,7 +213,7 @@ pub unsafe extern "C" fn check_for_lowest_root(
     velocity: v128,
     velocity_squared: f32,
     basepoint: v128,
-) {
+) -> bool {
     use std::arch::wasm32::{f32x4_add, f32x4_mul, f32x4_splat, f32x4_sub, v128_store};
 
     let edge: v128 = f32x4_sub(triangle1, triangle2);
@@ -122,16 +233,18 @@ pub unsafe extern "C" fn check_for_lowest_root(
     if cur_lowest_root > 0.0 {
         let f = (edge_dot_velocity * (*collider).lowest_root - edge_dot_base_to_vertex)
             / edge_squared_length;
-        if f < 0.0 {
-            return;
-        }
-        if f > 1.0 {
-            return;
+        if f < 0.0 || f > 1.0 {
+            return false;
         }
         (*collider).lowest_root = cur_lowest_root;
-        
-        v128_store((*collider).collision_point.as_mut_ptr() as *mut v128, f32x4_add(triangle2, f32x4_mul(edge, f32x4_splat(f))));
-    }
+
+        v128_store(
+            (*collider).collision_point.as_mut_ptr() as *mut v128,
+            f32x4_add(triangle2, f32x4_mul(edge, f32x4_splat(f))),
+        );
+        return true;
+    };
+    return false;
 }
 
 #[no_mangle]
@@ -254,4 +367,42 @@ impl Collider {
             }
         }
     }
+}
+#[cfg(test)]
+#[test]
+#[wasm_bindgen_test::wasm_bindgen_test]
+fn test_check_for_lowest_root() {
+    use std::arch::wasm32::i32x4;
+    use std::arch::wasm32::u32x4;
+    use std::arch::wasm32::f32x4;
+
+    let mut collider = Box::new(Collider::new());
+    collider.lowest_root = 1.0;
+    let collider_ptr = Box::into_raw(collider);
+    unsafe {
+        use mem;
+        use std::arch::wasm32::f32x4;
+        //let v1 = u32x4(0x439C4000, 0x426C2C2B, 0xC3C35000, 0x00000010);
+        let v1 = f32x4(312.5, 59.043133, -390.625, 0.000000000000000000000000000000000000000000022);
+        //let v2 = u32x4(0x439C4000, 0x428BBDBE, 0xC39C4000, 0x00000010);
+        let v2 = f32x4(312.5, 69.87059, -312.5, 0.000000000000000000000000000000000000000000022);
+        //let v3 = u32x4(0xC0821D40, 0xC05A36A0, 0x3D8DD000, 0x00000000);
+        let v3 = f32x4(-4.0660706, -3.409584, 0.069244385, 0.0);
+        let velocity_squared = 28.162988662719727;
+        //let basepoint = u32x4(0x439CD56E, 0x4284E862, 0xC3ABAC5D, 0x00000000);
+        let basepoint = f32x4(313.66742, 66.45387, -343.3466, 0.0);
+        assert_eq!(
+            check_for_lowest_root(collider_ptr, v1, v2, v3, velocity_squared, basepoint),
+            true
+        );
+        assert_eq!(
+            (*collider_ptr).collision_point,
+            [
+                312.5,
+                65.55685424804688,
+                -343.62554931640625,
+                2.2420775429197073e-44
+            ]
+        );
+    };
 }
