@@ -117,8 +117,6 @@ export class Physics {
         */
     for (let i = 0; i < this.tickables.length; i++) {
       const tickable = this.tickables[i]!;
-      //if (tickable.onPhysicTick) //@ts-ignore
-      //    tickable.onPhysicTick(delta);
 
       const velocity = tickable.getVelocityFromMutex(engine_lock);
       /* if(velocity[0] > 0 || velocity[1] > 0 || velocity[2] > 0) {

@@ -765,7 +765,21 @@ export class Engine {
         log(ptr: number) {
           console.log(stringFromPtr(rust.instance.exports.memory, ptr));
         },
+        log_str(ptr: number, length: number) {
+          console.log(
+            textDecoder.decode(
+              new Uint8Array(
+                (rust.instance.exports.memory as WebAssembly.Memory).buffer,
+                ptr,
+                length,
+              ),
+            ),
+          );
+        },
         log_u32(n: number) {
+          console.log(n);
+        },
+        log_usize(n: number) {
           console.log(n);
         },
         warn(ptr: number) {

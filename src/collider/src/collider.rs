@@ -4,36 +4,6 @@ use std::mem;
 
 use terramath::Plane;
 
-#[link(wasm_import_module = "console")]
-#[cfg(target_arch = "wasm32")]
-extern "C" {
-    fn log(number: *const usize);
-    pub fn log_u32(number: u32);
-    fn warn(number: *const usize);
-    fn error(number: *const usize);
-}
-
-static mut LOG_STRING: String = String::new();
-static mut MULTIVALUE_USIZE: [usize; 6] = [0; 6];
-
-unsafe fn str_ptr_from_arr<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
-    LOG_STRING.clear();
-    for str in strings.iter() {
-        LOG_STRING.push(' ');
-        LOG_STRING.push_str(&str.to_string());
-    }
-    MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = LOG_STRING.len();
-    MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-}
-
-pub fn js_log<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
-    unsafe {
-        str_ptr_from_arr(strings);
-        #[cfg(target_arch = "wasm32")]
-        log(MULTIVALUE_USIZE.as_ptr());
-    }
-}
 pub struct Collider {
     pub basepoint_world: [f32; 4],
     intersection_point: [f32; 4],

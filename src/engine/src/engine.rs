@@ -13,7 +13,9 @@ pub use crate::GPUMesh;
 use crate::MULTIVALUE_USIZE;
 use externref::externref;
 use externref::Resource;
+use nalgebra::{Isometry3, Vector3};
 use rapier3d::control::KinematicCharacterController;
+use rapier3d::parry::shape::Ball;
 use rapier3d::{crossbeam, prelude::*};
 
 #[link(wasm_import_module = "console")]
@@ -43,6 +45,40 @@ extern "C" {
     fn mesh_on_physic_tick(engine: *const Engine2, delta: u32, externref: &Resource<JSMesh>);
 }
 
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn get_engine() -> *mut MutexGuard<'static, Engine2> {
+    Box::into_raw(Box::new(ENGINE.engine2.lock().unwrap()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn drop_engine_lock(engine: *mut MutexGuard<'static, Engine2>) {
+    drop(Box::from_raw(engine));
+}
+#[no_mangle]
+#[cfg(target_arch = "wasm32")]
+pub extern "C" fn init_engine2() -> usize {
+    use logger::Logger;
+    String::from("Init engine").log();
+    panic::set_hook(Box::new(|panic_info| unsafe {
+        jspanic(create_js_string(panic_info.to_string()));
+    }));
+    debug_assert!(std::mem::size_of::<GPUMesh>() % 8 == 0, "GPUMesh offset must be multiple of 8 https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange");
+    std::mem::size_of::<GPUMesh>()
+}
+
+#[no_mangle]
+#[cfg(target_arch = "wasm32")]
+pub unsafe extern "C" fn physic_tick(delta: u32) {
+    let engine = &mut ENGINE.engine2.lock().unwrap();
+    engine.physic_tick(delta);
+}
+#[no_mangle]
+#[cfg(target_arch = "wasm32")]
+pub unsafe extern "C" fn move_character(dt: f32) {
+    let engine = &mut ENGINE.engine2.lock().unwrap();
+    engine.move_character(dt);
+}
 const INTEGRATION_PARAMETERS: IntegrationParameters = IntegrationParameters {
     dt: 1.0 / 60.0,
     min_ccd_dt: 1.0 / 60.0 / 100.0,
@@ -121,17 +157,6 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
         character_controller: KinematicCharacterController::default(),
     };
 });
-#[no_mangle]
-#[externref]
-pub unsafe extern "C" fn get_engine() -> *mut MutexGuard<'static, Engine2> {
-    Box::into_raw(Box::new(ENGINE.engine2.lock().unwrap()))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn drop_engine_lock(engine: *mut MutexGuard<'static, Engine2>) {
-    drop(Box::from_raw(engine));
-}
-
 
 // TODO, remove and use "str_ptr_from_arr" syntax
 pub fn create_js_string(mut str: String) -> *const u8 {
@@ -161,76 +186,7 @@ pub fn js_log<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
         log(MULTIVALUE_USIZE.as_ptr());
     }
 }
-pub trait Logger {
-    fn log(&self);
-}
-impl Logger for usize {
-    fn log(&self) {
-        unsafe {
-            LOG_STRING.clear();
-            LOG_STRING = self.to_string();
-            MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = LOG_STRING.len();
-            MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
 
-            #[cfg(target_arch = "wasm32")]
-            log(MULTIVALUE_USIZE.as_ptr());
-        }
-    }
-}
-impl Logger for Vec<u32> {
-    fn log(&self) {
-        unsafe {
-            LOG_STRING.clear();
-            for str in self.iter() {
-                LOG_STRING.push(' ');
-                LOG_STRING.push_str(&str.to_string());
-            }
-            MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = LOG_STRING.len();
-            MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-
-            #[cfg(target_arch = "wasm32")]
-            log(MULTIVALUE_USIZE.as_ptr());
-        }
-    }
-}
-impl Logger for Vec<usize> {
-    fn log(&self) {
-        unsafe {
-            LOG_STRING.clear();
-            for str in self.iter() {
-                LOG_STRING.push(' ');
-                LOG_STRING.push_str(&str.to_string());
-            }
-            MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = LOG_STRING.len();
-            MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-
-            #[cfg(target_arch = "wasm32")]
-            log(MULTIVALUE_USIZE.as_ptr());
-        }
-    }
-}
-impl Logger for [[f32; 4]; 4] {
-    fn log(&self) {
-        unsafe {
-            LOG_STRING.clear();
-            for i in 0..4 {
-                for ii in 0..4 {
-                    LOG_STRING.push_str(&self[i][ii].to_string());
-                    LOG_STRING.push(' ');
-                }
-            }
-            MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = LOG_STRING.len();
-            MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-
-            #[cfg(target_arch = "wasm32")]
-            log(MULTIVALUE_USIZE.as_ptr());
-        }
-    }
-}
 pub fn js_warn<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
     unsafe {
         str_ptr_from_arr(strings);
@@ -244,15 +200,6 @@ pub fn js_error<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
         #[cfg(target_arch = "wasm32")]
         error(MULTIVALUE_USIZE.as_ptr());
     }
-}
-#[no_mangle]
-#[cfg(target_arch = "wasm32")]
-pub extern "C" fn init_engine2() -> usize {
-    panic::set_hook(Box::new(|panic_info| unsafe {
-        jspanic(create_js_string(panic_info.to_string()));
-    }));
-    debug_assert!(std::mem::size_of::<GPUMesh>() % 8 == 0, "GPUMesh offset must be multiple of 8 https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange");
-    std::mem::size_of::<GPUMesh>()
 }
 
 // MESH ON COLLIDE JAVASCRIPT EVENT REMOVED
@@ -290,13 +237,30 @@ pub extern "C" fn init_engine2() -> usize {
         }
     };
 }*/
-#[no_mangle]
-#[cfg(target_arch = "wasm32")]
-pub unsafe extern "C" fn physic_tick(delta: u32) {
-    let engine = &mut ENGINE.engine2.lock().unwrap();
-    engine.physic_tick(delta);
-}
+
 impl Engine2 {
+    pub fn move_character(&self, dt: f32) {
+        let mut rigid_body_set = ENGINE.rigid_body_set.lock().unwrap();
+        let query_pipeline = QueryPipeline::new();
+        let character_shape = Ball::new(1.8);
+        let character_pos =  Isometry3::new(
+            Vector3::new(1.0, 2.0, 3.0), 
+            Vector3::y() * std::f32::consts::FRAC_PI_2
+        );
+        let desired_translation = Vector3::new(1.0, 2.0, 3.0);
+        let filter = QueryFilter::default();
+        ENGINE.character_controller.move_shape(
+            dt,
+            &mut rigid_body_set,
+            &self.collider_set,
+            &query_pipeline,
+            &character_shape,
+            &character_pos,
+            desired_translation,
+            filter,
+            |collision| { /* Handle or collect the collision in this closure. */ },
+        );
+    }
     pub fn physic_tick(&mut self, delta: u32) {
         let physics_hooks = ();
         for mesh in &self.meshes {
