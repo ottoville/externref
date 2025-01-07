@@ -44,10 +44,9 @@ export const BufferExports = {
     offset: number,
     size: Word<'dword'>,
     buffer_offset: GPUSize64,
-    buffer_size: GPUSize64,
   ) {
     const data = new Uint8Array(engine.rust.memory.buffer, offset, size);
-    new Uint8Array(buffer.getMappedRange(buffer_offset, buffer_size)).set(data);
+    new Uint8Array(buffer.getMappedRange(buffer_offset, size)).set(data);
   },
   unmap({
     externref: buffer,

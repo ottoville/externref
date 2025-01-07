@@ -243,9 +243,9 @@ impl Engine2 {
         let mut rigid_body_set = ENGINE.rigid_body_set.lock().unwrap();
         let query_pipeline = QueryPipeline::new();
         let character_shape = Ball::new(1.8);
-        let character_pos =  Isometry3::new(
-            Vector3::new(1.0, 2.0, 3.0), 
-            Vector3::y() * std::f32::consts::FRAC_PI_2
+        let character_pos = Isometry3::new(
+            Vector3::new(1.0, 2.0, 3.0),
+            Vector3::y() * std::f32::consts::FRAC_PI_2,
         );
         let desired_translation = Vector3::new(1.0, 2.0, 3.0);
         let filter = QueryFilter::default();

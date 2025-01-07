@@ -11,6 +11,7 @@ use std::{
 use externref::{externref, Resource};
 use terramath::MatrixMath;
 
+use crate::gpu::command_buffer::CommandBuffer;
 use crate::gpu::gpu::GPU;
 use crate::{
     gpu::{
@@ -283,6 +284,7 @@ pub struct Camera {
     pub do_update_view: u32,
     pub id: u32,
     before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 3]) + Send>>,
+    pub on_update_position: Vec<Box<dyn Fn(&[f32; 3], &mut Vec<CommandBuffer>) + Send>>,
     projection_view_inverted_is_dirty: bool,
     buffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
     cluster_array_buffer: Arc<Mutex<GPUBuffer<STORAGE_USAGE>>>,
@@ -336,11 +338,11 @@ impl Camera {
             buffer,
             cluster_array_buffer,
             update_view_bind_group: BindGroup::new(
-                device,
                 String::from("updateViewBindGroup2"),
                 layout,
                 vec![cluster_array_buffer_binding, buffer_binding],
             ),
+            on_update_position: Vec::new(),
         }
     }
     pub fn new_water(
@@ -394,11 +396,11 @@ impl Camera {
             buffer,
             cluster_array_buffer,
             update_view_bind_group: BindGroup::new(
-                device,
                 String::from("updateViewBindGroup2_water"),
                 layout,
                 vec![cluster_array_buffer_binding, buffer_binding],
             ),
+            on_update_position: Vec::new(),
         }
     }
     fn on_update_position(&self) {
@@ -431,12 +433,16 @@ impl Camera {
             self.do_update_view |= VIEW_UPDATED_DIRECTION;
         }
     }
-    pub fn update_view(&mut self) {
+    pub fn update_view(&mut self, pending_command_buffers: &mut Vec<CommandBuffer>) {
         if let Some(before_view_update) = &self.before_view_update {
             self.do_update_view |= VIEW_UPDATED_POSITION & VIEW_UPDATED_DIRECTION;
             before_view_update(&mut self.direction, &mut self.position);
         }
         if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
+            for cb in self.on_update_position.iter() {
+                cb(&self.position, pending_command_buffers);
+            }
+            // To use with JS interop
             self.on_update_position();
         }
         for child in self.children.iter_mut() {
@@ -497,7 +503,7 @@ impl Camera {
     ) {
         self.projection_view_inverted_is_dirty = true;
         swap_buffer.get(device, 128, |buffer| {
-            buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0, 128);
+            buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0);
             command_encoder.copy_buffer_to_buffer(
                 &**buffer,
                 &(*self.buffer.lock().unwrap()),
@@ -566,6 +572,7 @@ fn test_child_camera() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             &mut command_encoder,
             &mut swap_buffers,
+            &mut Vec::new(),
             false,
         );
         assert_eq!(

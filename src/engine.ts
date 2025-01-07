@@ -331,7 +331,10 @@ export type rustWasm = {
   ): boolean;
   scale_x(mesh_id: number): number;
   scale_y(mesh_id: number): number;
-  scale_z(mesh_id: number): number;
+  scale_z(
+    enginelock: rust_mutex<'locked', 'enginelock'>,
+    mesh_id: number,
+  ): number;
   vertices_stride(geometry: rust_pointer<'geometry'>): Word<'dword'>;
   set_faces(mesh_id: number, ptr: number, length: number, cap: number): void;
   set_color(

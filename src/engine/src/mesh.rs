@@ -180,8 +180,7 @@ pub unsafe extern "C" fn update_translation(
     y: f32,
     z: f32,
 ) {
-    let mesh = (*engine)
-        .find_mesh_by_id_mut(mesh_id);
+    let mesh = (*engine).find_mesh_by_id_mut(mesh_id);
     // No onupdate is called here because it is called inside set_translation.
     mesh.update_translation(x, y, z, true);
 }
@@ -398,11 +397,8 @@ pub unsafe extern "C" fn scale_y(mesh_id: usize) -> f32 {
         .scaling[1]
 }
 #[no_mangle]
-pub unsafe extern "C" fn scale_z(mesh_id: usize) -> f32 {
-    ENGINE
-        .engine2
-        .lock()
-        .unwrap()
+pub unsafe extern "C" fn scale_z(engine: *mut MutexGuard<'_, Engine2>, mesh_id: usize) -> f32 {
+    (*engine)
         .find_mesh_by_id(mesh_id)
         .mesh_property
         .lock()
@@ -690,13 +686,7 @@ impl Mesh {
         }
     }
     pub fn update_dynamic_buffer(&mut self) {
-        if !self.on_gpu_queue {
-            let maybegpu = &mut ENGINE.gpu.lock().unwrap();
-            let gpu = maybegpu.as_mut().unwrap();
-
-            gpu.update_queue.push(self.id);
-            self.on_gpu_queue = true;
-        }
+        self.on_gpu_queue = true;
     }
     /**
      * To be called when mesh property change

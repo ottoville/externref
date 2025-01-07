@@ -29,6 +29,9 @@ pub const INDEX_USAGE: u32 = 16;
 /////////////////////////////////////////////////////////////////////////////////////
 // Vertex
 pub const VERTEX_USAGE: u32 = 32;
+pub const VERTEX_STORAGE_COPYSRC_USAGE: u32 = VERTEX_USAGE | STORAGE_USAGE | COPYSRC_USAGE;
+pub const VERTEX_STORAGE_COPYSRC_COPYDSST_USAGE: u32 = VERTEX_USAGE | STORAGE_USAGE | COPYSRC_USAGE | COPYDST_USAGE;
+impl BindGroupBindable for GPUBuffer<VERTEX_STORAGE_COPYSRC_COPYDSST_USAGE> {}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Uniform

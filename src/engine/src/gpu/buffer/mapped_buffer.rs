@@ -3,8 +3,7 @@ use std::ops::Deref;
 use super::buffer::{set_mapped_range, unmap};
 use super::buffer::{GPUBuffer, GpuBuffer};
 use super::usages::COPYSRC_USAGE;
-use externref::Resource;
-use externref::externref;
+use externref::{externref, Resource};
 
 use crate::gpu::gpu::JSDevice;
 
@@ -30,15 +29,9 @@ impl<B: GpuBuffer> MappedGPUBuffer<B> {
     pub fn new(buffer: B) -> MappedGPUBuffer<B> {
         MappedGPUBuffer(buffer)
     }
-    pub fn set_mapped_range(
-        &self,
-        ptr: usize,
-        size: usize,
-        buffer_offset: usize,
-        buffer_size: usize,
-    ) {
+    pub fn set_mapped_range(&self, ptr: usize, size: usize, buffer_offset: usize) {
         unsafe {
-            set_mapped_range(&self.0.externref(), ptr, size, buffer_offset, buffer_size);
+            set_mapped_range(&self.0.externref(), ptr, size, buffer_offset);
         }
     }
     pub fn unmap(self) -> B {

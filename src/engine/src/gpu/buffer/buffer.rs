@@ -21,7 +21,6 @@ pub unsafe fn set_mapped_range(
     _offset: usize,
     _size: usize,
     _buffer_offset: usize,
-    _buffer_size: usize,
 ) {
 }
 #[cfg(test)]
@@ -46,7 +45,6 @@ extern "C" {
         offset: usize,
         size: usize,
         buffer_offset: usize,
-        buffer_size: usize,
     );
     pub fn unmap(buffer: &Resource<JSBuffer>);
     pub fn write(buffer: &Resource<JSBuffer>, ptr: usize, size: usize, buffer_offset: usize);

@@ -106,6 +106,7 @@ unsafe extern "C" fn on_resize(aspect_ratio: f32) {
             aspect_ratio,
             &mut command_encoder,
             &mut gpu.swap_buffers,
+            &mut gpu.pending_command_buffers,
         )
     }
     gpu.queue.submit(
@@ -149,7 +150,6 @@ pub unsafe extern "C" fn init_gpu(
         let meshes_buffer_binding = BufferBinding::new(gpu_buffer.clone(), 0, None);
 
         let update_view_bindgroup = BindGroup::new(
-            &device,
             String::from("updateViewBindGroup"),
             layout,
             vec![
@@ -255,7 +255,7 @@ impl GPU {
         }
         panic!("Camera not found");
     }
-    pub unsafe fn get_camera_by_id_mut(&'_ mut self, camera_id: u32) -> &mut Camera {
+    pub fn get_camera_by_id_mut(&'_ mut self, camera_id: u32) -> &mut Camera {
         for projection in self.projections.iter_mut() {
             let search_camera =
                 search_camera_by_id_mut(projection.cameras.cameras.iter_mut(), camera_id);
@@ -291,12 +291,22 @@ impl GPU {
                 &self.device,
                 &mut command_encoder,
                 &mut self.swap_buffers,
+                &mut self.pending_command_buffers,
                 false,
             ) {
                 some_camera_updated = true;
             }
         }
         // Meshes
+        // Place for frustum culling
+        {
+            let engine = ENGINE.engine2.lock().unwrap();
+            for mesh in engine.meshes.iter() {
+                if mesh.on_gpu_queue {
+                    self.update_queue.push(mesh.id);
+                }
+            }
+        }
 
         if self.update_queue.len() > 0 {
             self.swap_buffers.get(
@@ -332,7 +342,6 @@ impl GPU {
                             &raw const mesh_property.gpu_memory as usize,
                             std::mem::size_of::<GPUMesh>(),
                             i * std::mem::size_of::<GPUMesh>(),
-                            std::mem::size_of::<GPUMesh>(),
                         );
                     }
                     let mut gpu_buffer = self.gpu_buffer.lock().unwrap();
@@ -414,20 +423,21 @@ fn test_gpu_queue() {
             let gpu = maybegpu.as_mut().unwrap();
             assert_eq!(gpu.update_queue.len(), 0);
         }
-        let mesh = Mesh::new(0.0, 1.0, 0.0, 0, String::from("sun"), None, None);
+        let mesh_id = Mesh::new(0.0, 1.0, 0.0, 0, String::from("sun"), None, None);
         {
-            let maybegpu = &mut ENGINE.gpu.lock().unwrap();
-            let gpu = maybegpu.as_mut().unwrap();
-            assert_eq!(gpu.update_queue.binary_search(&mesh).is_ok(), true);
+            let engine = ENGINE.engine2.lock().unwrap();
+            let mesh = engine.find_mesh_by_id(mesh_id);
+            assert_eq!(mesh.on_gpu_queue, true);
         }
         process_gpu_queue(&Resource::new_non_null(std::mem::transmute::<
             usize,
             ExternRef,
         >(1)));
-        let maybegpu = &mut ENGINE.gpu.lock().unwrap();
-        let gpu = maybegpu.as_mut().unwrap();
-
-        assert_eq!(gpu.update_queue.len(), 0);
+        {
+            let engine = ENGINE.engine2.lock().unwrap();
+            let mesh = engine.find_mesh_by_id(mesh_id);
+            assert_eq!(mesh.on_gpu_queue, false);
+        }
     }
 }
 

@@ -95,12 +95,14 @@ export class paintPlane extends paintGround {
     ];
     const engine_lock = engine.rust.get_engine();
     this.#mesh.setTranslation(engine_lock, this.#meshPosition);
+    const scaleZ = this.#mesh.getScaleZ(engine_lock);
+
     engine.rust.drop_engine_lock(engine_lock);
     engine.rust.update_scale_and_rotation(
       this.#mesh.id,
       height * 0.5,
       this.#mesh.scale_y,
-      this.#mesh.scale_z,
+      scaleZ,
       0,
       Math.sin(halfYaw),
       0,

@@ -6,6 +6,7 @@ use crate::{
     cameras::Cameras,
     gpu::{
         buffer::{buffer::GPUBuffer, usages::UNIFORM_USAGE},
+        command_buffer::CommandBuffer,
         command_encoder::GPUCommandEncoder,
         gpu::JSDevice,
     },
@@ -65,12 +66,12 @@ impl InnerProjection {
             -((TILE_COUNT[2] * self.near_plane.log2()) / far_near_log),
         ]);
 
-        buffer.set_mapped_range(inverted.as_ptr() as usize, 64, 0, 64);
-        buffer.set_mapped_range(self.projection_reversed_z.as_ptr() as usize, 64, 64, 64);
-        buffer.set_mapped_range(inverted_far_plane.as_ptr() as usize, 64, 128, 64);
+        buffer.set_mapped_range(inverted.as_ptr() as usize, 64, 0);
+        buffer.set_mapped_range(self.projection_reversed_z.as_ptr() as usize, 64, 64);
+        buffer.set_mapped_range(inverted_far_plane.as_ptr() as usize, 64, 128);
         //Near and far plane
-        buffer.set_mapped_range(&raw const self.near_plane as usize, 8, 192, 8);
-        buffer.set_mapped_range(near_and_far.as_ptr() as usize, 16, 200, 16);
+        buffer.set_mapped_range(&raw const self.near_plane as usize, 8, 192);
+        buffer.set_mapped_range(near_and_far.as_ptr() as usize, 16, 200);
         return buffer.unmap();
     }
 }
@@ -100,9 +101,16 @@ impl Projection {
         aspect_ratio: f32,
         command_encoder: &mut GPUCommandEncoder,
         swap_buffer: &mut SwapBuffers,
+        pending_command_buffers: &mut Vec<CommandBuffer>,
     ) {
         self.buffer = self.inner_projection.create_buffer(device, aspect_ratio);
-        self.update_views(device, command_encoder, swap_buffer, true);
+        self.update_views(
+            device,
+            command_encoder,
+            swap_buffer,
+            pending_command_buffers,
+            true,
+        );
     }
 
     pub fn update_views(
@@ -110,12 +118,13 @@ impl Projection {
         device: &Resource<JSDevice>,
         command_encoder: &mut GPUCommandEncoder,
         swap_buffer: &mut SwapBuffers,
+        pending_command_buffers: &mut Vec<CommandBuffer>,
         force: bool,
     ) -> bool {
         let mut some_camera_updated = false;
         let mut closure = |camera: &mut Camera| {
             if force || camera.do_update_view != 0 {
-                camera.update_view();
+                camera.update_view(pending_command_buffers);
                 camera.view.multiply(
                     &self.inner_projection.projection_reversed_z,
                     &mut camera.projection_view,

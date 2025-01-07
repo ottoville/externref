@@ -28,7 +28,7 @@ pub unsafe extern "C" fn iterate_bindings(
             MULTIVALUE_USIZE[1] = binding.offset;
             MULTIVALUE_USIZE[2] = match binding.size {
                 Some(size) => size.get(),
-                None => buffer.size(),
+                None => buffer.size() - binding.offset,
             };
             return MULTIVALUE_USIZE.as_ptr();
         }
@@ -42,18 +42,15 @@ pub struct JSBindGroup(());
 pub struct JSBindGroupLayout(());
 
 pub struct BindGroup {
-    pub dirty: bool,
-    externref: Resource<JSBindGroup>,
+    pub externref: Option<Resource<JSBindGroup>>,
     label: String,
     layout: Resource<JSBindGroupLayout>,
     bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
     pub rawbuffers: Vec<Arc<Resource<JSBuffer>>>,
-
 }
 
 impl BindGroup {
     pub fn new(
-        device: &Resource<JSDevice>,
         label: String,
         layout: Resource<JSBindGroupLayout>,
         bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
@@ -63,43 +60,31 @@ impl BindGroup {
             let buffer_binding = binding.lock().unwrap();
             rawbuffers.push(buffer_binding.buffer.lock().unwrap().externref_arc());
         }
-        let bindings_iterator = Box::new(bufferbindings.iter());
-        unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-
-            let bind_group = Arc::new(Mutex::new(BindGroup {
-                dirty: true,
-                externref: create_bind_group(
-                    device,
-                    &layout,
-                    MULTIVALUE_USIZE.as_ptr(),
-                    Box::into_raw(bindings_iterator),
-                ),
-                label,
-                layout,
-                bufferbindings,
-                rawbuffers
-            }));
-            for buffer_binding_mutex in bind_group.lock().unwrap().bufferbindings.iter() {
-                let mut buffer_binding = buffer_binding_mutex.lock().unwrap();
-                buffer_binding.bindgroups.push(Arc::downgrade(&bind_group));
-                buffer_binding
-                    .buffer
-                    .lock()
-                    .unwrap()
-                    .add_buffer_binding(Arc::downgrade(buffer_binding_mutex));
-            }
-            return bind_group;
+        let bind_group = Arc::new(Mutex::new(BindGroup {
+            externref: None,
+            label,
+            layout,
+            bufferbindings,
+            rawbuffers,
+        }));
+        for buffer_binding_mutex in bind_group.lock().unwrap().bufferbindings.iter() {
+            let mut buffer_binding = buffer_binding_mutex.lock().unwrap();
+            buffer_binding.bindgroups.push(Arc::downgrade(&bind_group));
+            buffer_binding
+                .buffer
+                .lock()
+                .unwrap()
+                .add_buffer_binding(Arc::downgrade(buffer_binding_mutex));
         }
+        return bind_group;
     }
     pub fn get_bind_group(&mut self, device: &Resource<JSDevice>) -> &Resource<JSBindGroup> {
-        if self.dirty {
+        self.externref.get_or_insert_with(|| {
             self.rawbuffers.clear();
             for binding in self.bufferbindings.iter() {
                 let buffer_binding = binding.lock().unwrap();
-                self.rawbuffers.push(buffer_binding.buffer.lock().unwrap().externref_arc());
+                self.rawbuffers
+                    .push(buffer_binding.buffer.lock().unwrap().externref_arc());
             }
 
             let bindings_iterator = Box::new(self.bufferbindings.iter());
@@ -107,15 +92,13 @@ impl BindGroup {
                 MULTIVALUE_USIZE[0] = self.label.as_ptr() as usize;
                 MULTIVALUE_USIZE[1] = self.label.len();
                 MULTIVALUE_USIZE[2] = self.label.capacity();
-                self.externref = create_bind_group(
+                create_bind_group(
                     device,
                     &self.layout,
                     MULTIVALUE_USIZE.as_ptr(),
                     Box::into_raw(bindings_iterator),
-                );
+                )
             }
-            self.dirty = false;
-        }
-        return &self.externref;
+        })
     }
 }

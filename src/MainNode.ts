@@ -144,8 +144,8 @@ export abstract class MainNode implements Destroyable {
   get scale_y(): number {
     return engine.rust.scale_y(this.id);
   }
-  get scale_z(): number {
-    return engine.rust.scale_z(this.id);
+  getScaleZ(enginelock: rust_mutex<'locked', 'enginelock'>): number {
+    return engine.rust.scale_z(enginelock, this.id);
   }
 
   get_positions_count(engine_lock: rust_mutex<'locked', 'enginelock'>) {

@@ -59,12 +59,7 @@ impl Lights {
             buffer.resize_zeroed(device, self.lights.capacity() * 4);
         }
         swap_buffer.get(device, buffer.size, |mapped_buffer| {
-            mapped_buffer.set_mapped_range(
-                self.lights.as_ptr() as usize,
-                self.lights.len() * 4,
-                0,
-                self.lights.len() * 4,
-            );
+            mapped_buffer.set_mapped_range(self.lights.as_ptr() as usize, self.lights.len() * 4, 0);
             command_encoder.copy_buffer_to_buffer(&**mapped_buffer, &*buffer, 0, 0, buffer.size);
         });
     }
@@ -81,13 +76,12 @@ fn test_lights() {
         let layout = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         let mut lights = Lights::new(&device, String::from("GPUPointLights"));
         let bindgroup = BindGroup::new(
-            &device,
             String::from("test"),
             layout,
             vec![BufferBinding::new(lights.buffer.clone(), 0, None)],
         );
         bindgroup.lock().unwrap().get_bind_group(&device);
-        assert_eq!(bindgroup.lock().unwrap().dirty, false);
+        assert_eq!(bindgroup.lock().unwrap().externref.is_none(), false);
         let mut swapbuffers = SwapBuffers::new();
 
         assert_eq!(swapbuffers.queue_submited(), false);
@@ -104,7 +98,7 @@ fn test_lights() {
         lights.push(FreeIndexIndex(4));
         lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.buffer.lock().as_ref().unwrap().size, 32);
-        assert_eq!(bindgroup.lock().unwrap().dirty, true);
+        assert_eq!(bindgroup.lock().unwrap().externref.is_none(), true);
         let queue = Queue {
             externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
         };

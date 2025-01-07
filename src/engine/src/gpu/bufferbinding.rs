@@ -29,7 +29,7 @@ impl BufferBinding {
     pub fn make_dirty(&mut self) {
         for somebindgroup in self.bindgroups.iter() {
             if let Some(bind_group) = somebindgroup.upgrade() {
-                bind_group.lock().unwrap().dirty = true;
+                bind_group.lock().unwrap().externref.take();
             }
         }
     }
