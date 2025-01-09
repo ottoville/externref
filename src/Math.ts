@@ -373,42 +373,6 @@ export class Angle {
 }
 
 export class Triangle {
-  updatePlane() {
-    const vectors = this.vectors;
-    const v0 = vectors[0];
-    const v1 = vectors[1];
-    const v2 = vectors[2];
-    const x1 = v1[0] - v2[0];
-    const y1 = v1[1] - v2[1];
-    const z1 = v1[2] - v2[2];
-    const x2 = v0[0] - v2[0];
-    const y2 = v0[1] - v2[1];
-    const z2 = v0[2] - v2[2];
-    const yz = y1 * z2 - z1 * y2;
-    const xz = z1 * x2 - x1 * z2;
-    const xy = x1 * y2 - y1 * x2;
-    const pyth = Math.sqrt(yz * yz + xz * xz + xy * xy);
-
-    if (pyth !== 0) {
-      var invPyth = 1.0 / pyth;
-    } else {
-      var invPyth = 0.0;
-    }
-    const normal_x = yz * invPyth;
-    const normal_y = xz * invPyth;
-    const normal_z = xy * invPyth;
-    //Plane struct in rust
-    this.planeCollider.set([
-      normal_x,
-      normal_y,
-      normal_z,
-      -(
-        normal_x * vectors[2][0] +
-        normal_y * vectors[2][1] +
-        normal_z * vectors[2][2]
-      ),
-    ]);
-  }
   #planeCollider: TerraVector4;
   get planeCollider() {
     if (this.#planeCollider.byteLength === 0) {
@@ -440,7 +404,7 @@ export class Triangle {
       pointerToVec4: number,
       pointerToVec4: number,
     ],
-    private PlanePtrToVector4: rust_pointer<'Plane'>,
+    public PlanePtrToVector4: rust_pointer<'colliderplane'>,
   ) {
     this.#vectors = this.#initializeVectors();
     this.#planeCollider = new TerraVector4(

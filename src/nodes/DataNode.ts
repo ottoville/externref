@@ -285,9 +285,11 @@ export class DataNode extends MainNode {
       this.#triangleFaces.push(
         new Triangle(
           this.#vectorsVec4 as [number, number, number],
-          (collider_faces_pointer + faceIndex * 4 * 7) as rust_pointer<'Plane'>,
+          (collider_faces_pointer +
+            faceIndex * 4 * 7) as rust_pointer<'colliderplane'>,
         ),
       ); // ColliderPlane size is 7
+
       new Uint32Array(
         engine.rust.memory.buffer,
         collider_faces_pointer +
@@ -362,7 +364,7 @@ export class DataNode extends MainNode {
   #updateColliderPlanes(engine_lock: rust_mutex<'locked', 'enginelock'>) {
     engine.rust.update_collider_planes(this.geometry);
     this.#triangleFaces.forEach((face) => {
-      face.updatePlane();
+      engine.rust.update_colliderplane(face.PlanePtrToVector4);
     });
     const collider_planes_parallel_pointer =
       engine.rust.collider_planes_parallel_pointer(engine_lock, this.id);

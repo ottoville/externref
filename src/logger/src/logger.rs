@@ -47,6 +47,17 @@ impl Logger for Vec<usize> {
         log_string.log();
     }
 }
+impl Logger for [f32; 3] {
+    fn log(&self) {
+        let mut log_string = String::new();
+        log_string.push_str(&self[0].to_string());
+        log_string.push(',');
+        log_string.push_str(&self[1].to_string());
+        log_string.push(',');
+        log_string.push_str(&self[2].to_string());
+        log_string.log();
+    }
+}
 impl Logger for [[f32; 4]; 4] {
     fn log(&self) {
         let mut log_string = String::new();

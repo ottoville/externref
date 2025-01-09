@@ -184,9 +184,17 @@ pub unsafe extern "C" fn create_ui_geometry(position_count: usize) -> *mut Geome
     geometry.set_vertices(VertexKind::Position2DAndUV(vertices));
     Box::into_raw(geometry)
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn update_colliderplane(collider_plane: *mut ColliderPlane) {
+    let v0 = (*((*collider_plane).vectors[0] as *mut Vec3wgslF32)).0;
+    let v1 = (*((*collider_plane).vectors[1] as *mut Vec3wgslF32)).0;
+    let v2 = (*((*collider_plane).vectors[2] as *mut Vec3wgslF32)).0;
+    (*collider_plane).plane.update_from_triangle([v0, v1, v2]);
+}
 pub struct ColliderPlane {
-    _plane: Plane,
-    _vectors: [f32; 3],
+    plane: Plane,
+    vectors: [usize; 3],
 }
 pub struct Geometry {
     pub bounding_box: BoundingBox,

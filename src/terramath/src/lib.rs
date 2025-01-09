@@ -2,6 +2,16 @@ pub struct Plane {
     pub norm: [f32; 3],
     pub d: f32,
 }
+impl Plane {
+    pub fn update_from_triangle(&mut self, vectors: [[f32; 3]; 3]) {
+        let v1v2 = vectors[1].sub_vec(&vectors[2]);
+        let v0v2 = vectors[0].sub_vec(&vectors[2]);
+        let mut cross: [f32; 3] = v1v2.cross(&v0v2);
+        cross.normalize_in_place();
+        self.norm = cross;
+        self.d = -self.norm.dot(&vectors[2]);
+    }
+}
 pub struct Quaternion {
     pub i: f32,
     pub j: f32,

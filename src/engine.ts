@@ -528,6 +528,7 @@ export type rustWasm = {
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<'matrix'>;
   update_collider_planes(geometry: rust_pointer<'geometry'>): void;
+  update_colliderplane(colliderplane: rust_pointer<'colliderplane'>): void;
 } & BufferInterface &
   DevToolsInterface;
 
