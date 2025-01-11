@@ -24,7 +24,7 @@ export type SimpleIndexedMeshProps = {
 export class SimpleIndexedMesh extends BoundableNodeIndexed {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: MainNodeProps,
+    mainNodeProps: MainNodeProps | number,
     createRenderPipeline: RenderPipelineProps0<
       typeof vertexShaderBuilder,
       typeof fragmentShaderBuilder

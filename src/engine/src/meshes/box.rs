@@ -121,7 +121,7 @@ pub const BOX_INDICES: [usize; 36] = [
 ];
 
 #[no_mangle]
-pub unsafe extern "C" fn create_box_geometry() -> *const Geometry {
+pub unsafe extern "C" fn create_box_geometry() -> *mut Geometry {
     let mut geometry = Box::new(Geometry::new(
         true,
         true,

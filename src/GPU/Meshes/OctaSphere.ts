@@ -1,4 +1,4 @@
-﻿import type { Scene } from '../../Scene.js';
+﻿import type { MainNodeProps } from 'MainNode.js';
 import type { Engine } from '../../engine.js';
 import { IndexedColoredMesh } from '../AbstractMeshes/IndexedColoredMesh.js';
 declare const engine: Engine;
@@ -8,11 +8,6 @@ export type OctaSphereProps = {
   height?: number;
   depth?: number;
 };
-export type MeshProperties = {
-  label?: string;
-  fixed?: boolean;
-  scenes?: Scene[] | undefined;
-};
 let uid = 0;
 export class OctaSphere extends IndexedColoredMesh {
   protected width: number;
@@ -21,7 +16,7 @@ export class OctaSphere extends IndexedColoredMesh {
 
   constructor(
     { width = 0, height = 0, depth = 0 }: OctaSphereProps,
-    meshProperties: MeshProperties,
+    mainNodeProps: Partial<MainNodeProps>,
     can_collide = false,
   ) {
     const geometry = engine.rust.create_octasphere(2, width, height, depth);
@@ -41,9 +36,8 @@ export class OctaSphere extends IndexedColoredMesh {
         vertices: geometry,
       },
       {
-        fixed: false,
         label: 'OctaSphere' + uid++,
-        ...meshProperties,
+        ...mainNodeProps,
       },
     );
 

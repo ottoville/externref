@@ -10,7 +10,7 @@ export abstract class BoundableNodeIndexed
 {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: MainNodeProps,
+    mainNodeProps: MainNodeProps | number,
     onIndicesChange?: () => void,
   ) {
     super(dataNodeProps, mainNodeProps);

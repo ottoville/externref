@@ -1,5 +1,6 @@
-import { MeshProperties, OctaSphere } from './OctaSphere.js';
+import { OctaSphere } from './OctaSphere.js';
 import type { Engine } from '../../engine.js';
+import type { MainNodeProps } from 'MainNode.js';
 declare const engine: Engine;
 
 let uid = 0;
@@ -13,7 +14,7 @@ export class Capsule extends OctaSphere {
     can_collide = false,
     orientation: CAPSULE_ORIENTATION,
     length: number,
-    meshProperties: MeshProperties,
+    mainNodeProps: Partial<MainNodeProps>,
   ) {
     super(
       {
@@ -22,9 +23,8 @@ export class Capsule extends OctaSphere {
         width: orientation === CAPSULE_ORIENTATION.x ? length : 0,
       },
       {
-        fixed: false,
         label: 'Capsule' + uid++,
-        ...meshProperties,
+        ...mainNodeProps,
       },
       can_collide,
     );

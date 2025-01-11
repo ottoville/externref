@@ -13,7 +13,7 @@ declare const engine: Engine;
 export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: MainNodeProps,
+    mainNodeProps: MainNodeProps | number,
     simpleIndexedMeshProps?: SimpleIndexedMeshProps,
   ) {
     super(

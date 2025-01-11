@@ -529,6 +529,17 @@ export type rustWasm = {
   ): rust_pointer<'matrix'>;
   update_collider_planes(geometry: rust_pointer<'geometry'>): void;
   update_colliderplane(colliderplane: rust_pointer<'colliderplane'>): void;
+  move_character(dt: number): void;
+  new_character_mesh(
+    scenes: number,
+    label_ptr: number,
+    label_len: number,
+    label_cap: number,
+  ): number;
+  set_mesh_externref(
+    mesh_id: number,
+    externref: Externref<false, MainNode>,
+  ): void;
 } & BufferInterface &
   DevToolsInterface;
 

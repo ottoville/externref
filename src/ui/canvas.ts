@@ -224,6 +224,7 @@ export class Canvas {
 
         const capsule = new Capsule(true, CAPSULE_ORIENTATION.x, 3, {
           label: 'capsule1',
+          point_light: 400,
         });
         const engine_lock2 = engine.rust.get_engine();
 
@@ -263,7 +264,6 @@ export class Canvas {
             borderRadius: 10,
           },
           {
-            fixed: true,
             label: 'roundCuboid',
           },
         );

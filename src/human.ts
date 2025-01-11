@@ -1,14 +1,16 @@
 ﻿import { TerraMatrix } from './Math.js';
 import { MeshCamera } from './controllers/MeshCamera.js';
 import type { Engine } from './engine.js';
-import { Box } from './GPU/Meshes/Box.js';
 import type { Scene } from './Scene.js';
 import { ARROW_KEYS } from './controllers/CameraController.js';
+import { create_rust_label } from './utils.js';
+import { Externref } from './externref.js';
+import { IndexedSingleColoredMesh } from './GPU/AbstractMeshes/IndexedSingleColoredMesh.js';
 declare const engine: Engine;
 const maxAcceleration = 10;
 const closeDistance = 0.0022;
 const maxSpeedSquared = 1.4 * 1.4;
-export class Human extends Box {
+export class Human extends IndexedSingleColoredMesh {
   inputManager: MeshCamera;
   radius: { 0: number; 1: number; 2: number };
   readonly #radius: [x: number, y: number, z: number] = [2, 2, 2];
@@ -36,14 +38,28 @@ export class Human extends Box {
     closeDistance / this.#radius[2],
   ];
 
-  constructor(properties: { scenes: Scene[]; inputEnabled: boolean }) {
-    super({
-      ...properties,
-      can_collide: false,
-      color: [0, 0, 1, 0],
-      label: 'human',
-      point_light: 400,
-    });
+  constructor({
+    scenes,
+    inputEnabled,
+  }: {
+    scenes: Scene[];
+    inputEnabled: boolean;
+  }) {
+    const sceneids = scenes
+      ? scenes.reduce((acc, scene) => acc | scene.id, 0)
+      : 1;
+    const mesh = engine.rust.new_character_mesh(
+      sceneids,
+      ...create_rust_label('human'),
+    );
+    super(
+      {
+        can_collide: false,
+        vertices: engine.rust.get_geometry(mesh),
+      },
+      mesh,
+    );
+    engine.rust.set_mesh_externref(this.id, new Externref(false, this));
     engine.physics.tickables.push(this);
     this.hasGravity = true;
     //this.velocity=[0,-5,0];
@@ -51,7 +67,7 @@ export class Human extends Box {
     // engine.inputManager?.destroy();
 
     this.inputManager = new MeshCamera(engine.gpu!.mainCamera);
-    if (properties.inputEnabled) {
+    if (inputEnabled) {
       engine.gpu!.mainCamera.attachControllerForCamera(this.inputManager);
     }
 

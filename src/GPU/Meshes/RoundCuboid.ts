@@ -1,9 +1,6 @@
-import {
-  MeshProperties,
-  OctaSphere,
-  type OctaSphereProps,
-} from './OctaSphere.js';
+import { OctaSphere, type OctaSphereProps } from './OctaSphere.js';
 import type { Engine } from '../../engine.js';
+import type { MainNodeProps } from 'MainNode.js';
 declare const engine: Engine;
 
 let uid = 0;
@@ -18,7 +15,7 @@ export class RoundCuboid extends OctaSphere {
       can_collide?: boolean;
       borderRadius?: number;
     },
-    meshProperties: MeshProperties,
+    mainNodeProps: Partial<MainNodeProps>,
   ) {
     super(
       {
@@ -28,7 +25,7 @@ export class RoundCuboid extends OctaSphere {
       },
       {
         label: 'RoundCuboid' + uid++,
-        ...meshProperties,
+        ...mainNodeProps,
       },
       can_collide,
     );
