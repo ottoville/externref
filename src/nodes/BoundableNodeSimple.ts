@@ -8,12 +8,14 @@ export abstract class BoundableNodeSimple
 {
   rebuildTrianglePlanes() {
     if (!this.initCollider()) return;
+    throw new Error('Todo');
     const engine_lock = engine.rust.get_engine();
     const collider_faces_pointer = engine.rust.collider_faces_pointer(
       engine_lock,
       this.id,
     );
     engine.rust.drop_engine_lock(engine_lock);
+    //@ts-expect-error todo
     this.colliderVerticesV4.forEach((position) =>
       this.pushVertice(position, collider_faces_pointer),
     );

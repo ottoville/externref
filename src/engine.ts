@@ -528,7 +528,6 @@ export type rustWasm = {
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<'matrix'>;
   update_collider_planes(geometry: rust_pointer<'geometry'>): void;
-  update_colliderplane(colliderplane: rust_pointer<'colliderplane'>): void;
   move_character(dt: number): void;
   new_character_mesh(
     scenes: number,
@@ -540,6 +539,7 @@ export type rustWasm = {
     mesh_id: number,
     externref: Externref<false, MainNode>,
   ): void;
+  rebuild_triangle_planes(geometry: rust_pointer<'geometry'>): void;
 } & BufferInterface &
   DevToolsInterface;
 

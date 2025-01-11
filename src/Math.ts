@@ -383,30 +383,8 @@ export class Triangle {
     }
     return this.#planeCollider;
   }
-  #vectors: readonly [TerraVector4, TerraVector4, TerraVector4];
 
-  get vectors(): readonly [TerraVector4, TerraVector4, TerraVector4] {
-    if (this.#vectors[0].byteLength === 0) {
-      this.#vectors = this.#initializeVectors();
-    }
-    return this.#vectors;
-  }
-  #initializeVectors() {
-    return [
-      new TerraVector4(engine.rust.memory.buffer, this.vectorsPointers[0]),
-      new TerraVector4(engine.rust.memory.buffer, this.vectorsPointers[1]),
-      new TerraVector4(engine.rust.memory.buffer, this.vectorsPointers[2]),
-    ] as const;
-  }
-  constructor(
-    private vectorsPointers: [
-      pointerToVec4: number,
-      pointerToVec4: number,
-      pointerToVec4: number,
-    ],
-    public PlanePtrToVector4: rust_pointer<'colliderplane'>,
-  ) {
-    this.#vectors = this.#initializeVectors();
+  constructor(private PlanePtrToVector4: rust_pointer<'colliderplane'>) {
     this.#planeCollider = new TerraVector4(
       engine.rust.memory.buffer,
       this.PlanePtrToVector4,

@@ -27,6 +27,15 @@ impl Logger for usize {
         }
     }
 }
+impl Logger for [&str] {
+    fn log(&self) {
+        let mut log_string = String::new();
+        for str in self.iter() {
+            log_string.push(' ');
+            log_string.push_str(str);
+        }
+        log_string.log();    }
+}
 impl Logger for Vec<u32> {
     fn log(&self) {
         let mut log_string = String::new();

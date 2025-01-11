@@ -1,3 +1,4 @@
+#[derive(Debug, Copy, Clone)]
 pub struct Plane {
     pub norm: [f32; 3],
     pub d: f32,

@@ -1,5 +1,6 @@
 use std::num::NonZeroUsize;
 
+use logger::Logger;
 use rapier3d::{
     geometry::{Collider, ColliderBuilder},
     math::Point,
@@ -73,7 +74,16 @@ pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usiz
     let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);
     let engine = &mut ENGINE.engine2.lock().unwrap();
     let geometry = engine.meshes[mesh_id].get_geometry_mut();
-    geometry.collider_planes = Vec::with_capacity(planes.len());
+    geometry.collider_planes = vec![
+        ColliderPlane {
+            plane: Plane {
+                norm: [0.0;3],
+                d: 0.0
+            },
+            vectors: [0;3]
+        };
+        planes.len()
+    ];
     geometry.collider_planes_parallel = Vec::with_capacity(planes.len());
     geometry.planes.planes = planes;
 }
@@ -185,13 +195,7 @@ pub unsafe extern "C" fn create_ui_geometry(position_count: usize) -> *mut Geome
     Box::into_raw(geometry)
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn update_colliderplane(collider_plane: *mut ColliderPlane) {
-    let v0 = (*((*collider_plane).vectors[0] as *mut Vec3wgslF32)).0;
-    let v1 = (*((*collider_plane).vectors[1] as *mut Vec3wgslF32)).0;
-    let v2 = (*((*collider_plane).vectors[2] as *mut Vec3wgslF32)).0;
-    (*collider_plane).plane.update_from_triangle([v0, v1, v2]);
-}
+#[derive(Debug, Copy, Clone)]
 pub struct ColliderPlane {
     plane: Plane,
     vectors: [usize; 3],
@@ -475,7 +479,16 @@ impl<'vert> Geometry {
             }
             let faces_count = self.faces_count();
             self.planes = Faces::new(faces_count);
-            self.collider_planes = Vec::with_capacity(faces_count);
+            self.collider_planes = vec![
+                ColliderPlane {
+                    plane: Plane {
+                        norm: [0.0;3],
+                        d: 0.0
+                    },
+                    vectors: [0;3]
+                };
+                faces_count
+            ];
             self.collider_planes_parallel = Vec::with_capacity(faces_count * 4usize);
         }
     }
@@ -483,6 +496,21 @@ impl<'vert> Geometry {
         let positions = self.vertices.get_positions();
         for (position, col_pos) in positions.zip(&mut self.last_collider_world_vertices) {
             col_pos.0 = position.0.transform(self.collisions_transform_matrix);
+        }
+        for collider_plane in self.collider_planes.iter_mut() {
+            unsafe {
+                let v0 = (*(collider_plane.vectors[0] as *mut Vec3wgslF32)).0;
+                let v1 = (*(collider_plane.vectors[1] as *mut Vec3wgslF32)).0;
+                let v2 = (*(collider_plane.vectors[2] as *mut Vec3wgslF32)).0;
+                collider_plane.plane.update_from_triangle([v0, v1, v2]);
+            }
+        }
+    }
+    pub fn rebuild_triangle_planes(&mut self) {
+        //TODO: use this
+        //Todo: handle geometry with no indices and strip
+        for (face_index, triangle) in self.indices.indices.chunks_exact(3).enumerate() {
+            self.collider_planes[face_index].vectors = [triangle[0], triangle[1], triangle[2]];
         }
     }
     pub fn update_bounding_box(&mut self, transformation: &[[f32; 4]; 4]) {

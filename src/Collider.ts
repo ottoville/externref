@@ -251,6 +251,7 @@ export class ColliderJS {
     point: [x: number, y: number, z: number],
     triangle: Triangle,
   ): boolean {
+    //@ts-expect-error todo
     const vectors = triangle.vectors;
     const v1 = vectors[1];
     const v2 = vectors[2];
@@ -375,6 +376,7 @@ export class ColliderJS {
              this.#points[1] = p3a;
              this.#points[2] = p1a;*/
       let i = 0;
+      //@ts-expect-error todo
       const vectors = triangle.vectors;
       while (i < 3) {
         // for (let i = 0; i < 3; i++) {
