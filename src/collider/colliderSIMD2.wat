@@ -2,6 +2,7 @@
   (import "rust" "collision_found" (func $collision_found (param i32 f32 f32 i32 i32)))
   (import "rust" "get_lowest_root" (func $getLowestRoot (param f32 f32 f32 f32) (result f32)))
   (import "rust" "collision_point_pointer" (func $get_collision_point_pointer(param i32) (result i32)))
+  (import "rust" "check_for_lowest_root0" (func $check_for_lowest_root0(param i32 v128 f32) (result f32)))
   (import "rust" "check_for_lowest_root" (func $check_for_lowest_root(param i32 v128 v128 v128 f32 v128) (result i32)))
   (import "rust" "check_point_in_triangle" (func $check_point_in_triangle(param v128 v128 v128 v128 v128) (result i32)))
   (import "rust" "v3_dot" (func $v3_dot (param v128 v128) (result f32)))
@@ -437,8 +438,10 @@
     i32.eqz
     if
       (local.tee $curLowestRoot
-        (call $checkForLowestRoot
+        (call $check_for_lowest_root0
+          (global.get $rust_collider_ptr)
           (local.get $triangle0)  
+          (global.get $velocitySquared)
         )
       )
       f32.const 0
@@ -454,8 +457,10 @@
         v128.store
       end
       (local.tee $curLowestRoot
-        (call $checkForLowestRoot
-          (local.get $triangle1)
+        (call $check_for_lowest_root0
+          (global.get $rust_collider_ptr)
+          (local.get $triangle1)  
+          (global.get $velocitySquared)
         )
       )
       f32.const 0
@@ -471,8 +476,11 @@
         v128.store
       end
       (local.tee $curLowestRoot
-        (call $checkForLowestRoot
-          (local.get $triangle2)
+        (call $check_for_lowest_root0
+          (global.get $rust_collider_ptr)
+          (local.get $triangle2)  
+          (global.get $velocitySquared)
+
         )
       )
       f32.const 0

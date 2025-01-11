@@ -156,22 +156,73 @@ pub unsafe extern "C" fn check_point_in_triangle(
         plane_collider,
     ) > 0.0;
 }
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
+pub unsafe extern "C" fn check_for_lowest_root0(
+    collider: *mut Collider,
+    triangle: v128,
+    velocity_squared: f32,
+) -> f32 {
+    use std::arch::wasm32::{f32x4_sub, v128_load};
+    let base_point = v128_load((*collider).scaled_position.as_ptr() as *const v128);
+    let velocity = v128_load((*collider).scaled_velocity.as_ptr() as *const v128);
+    let temp_v = f32x4_sub(triangle, base_point);
+    get_lowest_root(
+        velocity_squared,
+        2.0 * v3_dot(velocity, temp_v),
+        v3_dot(temp_v, temp_v) - 1.0,
+        (*collider).lowest_root,
+    )
+}
 //TODO finish this
 #[cfg(target_arch = "wasm32")]
 #[no_mangle]
 pub unsafe extern "C" fn test_triangle(
     collider: *mut Collider,
     embedded_in_plane: bool,
-    planePosition: i32,
+    planePosition: *const v128,
     triangle0: v128,
     triangle1: v128,
     triangle2: v128,
     meshID: i32,
     t0: f32,
 ) -> bool {
-    let found = false;
+    use std::arch::wasm32::{f32x4_add, f32x4_mul, f32x4_splat, f32x4_sub, v128_load, v128_store};
+
+    let mut found = false;
     (*collider).lowest_root = 1.0;
-    if !embedded_in_plane {}
+    if !embedded_in_plane {
+        let base_point = v128_load((*collider).scaled_position.as_ptr() as *const v128);
+
+        let plane_collider = v128_load(planePosition);
+        //planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
+
+        let plane_intersection_point = f32x4_add(
+            f32x4_sub(base_point, plane_collider),
+            f32x4_mul(
+                *((*collider).scaled_velocity.as_ptr() as *const v128),
+                f32x4_splat(t0.max(0.0)),
+            ),
+        );
+        let collided_point_in_triangle = check_point_in_triangle(
+            plane_intersection_point,
+            plane_collider,
+            triangle0,
+            triangle1,
+            triangle2,
+        );
+        if collided_point_in_triangle {
+            (*collider).lowest_root = t0;
+            v128_store(
+                (*collider).collision_point.as_mut_ptr() as *mut v128,
+                plane_intersection_point,
+            );
+            found = true;
+        }
+    }
+    if !found {
+        //TODO: continue from here
+    }
     return found;
 }
 #[cfg(target_arch = "wasm32")]
@@ -342,9 +393,9 @@ impl Collider {
 #[test]
 #[wasm_bindgen_test::wasm_bindgen_test]
 fn test_check_for_lowest_root() {
+    use std::arch::wasm32::f32x4;
     use std::arch::wasm32::i32x4;
     use std::arch::wasm32::u32x4;
-    use std::arch::wasm32::f32x4;
 
     let mut collider = Box::new(Collider::new());
     collider.lowest_root = 1.0;
@@ -353,9 +404,19 @@ fn test_check_for_lowest_root() {
         use mem;
         use std::arch::wasm32::f32x4;
         //let v1 = u32x4(0x439C4000, 0x426C2C2B, 0xC3C35000, 0x00000010);
-        let v1 = f32x4(312.5, 59.043133, -390.625, 0.000000000000000000000000000000000000000000022);
+        let v1 = f32x4(
+            312.5,
+            59.043133,
+            -390.625,
+            0.000000000000000000000000000000000000000000022,
+        );
         //let v2 = u32x4(0x439C4000, 0x428BBDBE, 0xC39C4000, 0x00000010);
-        let v2 = f32x4(312.5, 69.87059, -312.5, 0.000000000000000000000000000000000000000000022);
+        let v2 = f32x4(
+            312.5,
+            69.87059,
+            -312.5,
+            0.000000000000000000000000000000000000000000022,
+        );
         //let v3 = u32x4(0xC0821D40, 0xC05A36A0, 0x3D8DD000, 0x00000000);
         let v3 = f32x4(-4.0660706, -3.409584, 0.069244385, 0.0);
         let velocity_squared = 28.162988662719727;

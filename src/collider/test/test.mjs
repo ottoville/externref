@@ -11,6 +11,7 @@ let instanceRust;
 const exportObj = {
   console: {
     log(ptr) {},
+    log_str(ptr) {},
     warn(ptr) {},
     error(ptr) {},
   },
@@ -79,7 +80,7 @@ const exportObj = {
 };
 
 const wasmRust = await WebAssembly.compile(
-  fs.readFileSync('./wwwroot/engine.wasm'),
+  fs.readFileSync('../../wwwroot/engine.wasm'),
 );
 instanceRust = await WebAssembly.instantiate(wasmRust, exportObj);
 
@@ -100,7 +101,7 @@ const importObject = {
   },
 };
 const wasm = await WebAssembly.compile(
-  fs.readFileSync('./wwwroot/collider/colliderSIMD.wasm'),
+  fs.readFileSync('../../wwwroot/collider/colliderSimd.wasm'),
 );
 const instance = await WebAssembly.instantiate(wasm, importObject);
 
@@ -262,14 +263,11 @@ const intersectionPointWasm = new Float32Array(
   instanceRust.exports.intersection_point_pointer(collider_ptr),
   4,
 );
-if (
-  intersectionPointWasm[0] !== 3386.90673828125 ||
-  intersectionPointWasm[1] !== 10.731124877929688 ||
-  intersectionPointWasm[2] !== -5874.72216796875
-) {
-  console.error('faulty intersectionPointWasm', intersectionPointWasm);
-  process.exit(1);
-}
+assert.deepEqual(
+  [...intersectionPointWasm],
+  [3386.90673828125, 10.731124877929688, -5874.72216796875, 0],
+);
+
 if (nearestDistanceSquared[0] !== 17312.142578125) {
   console.error('faulty nearesDistanceSquared', nearestDistanceSquared[0]);
   process.exit(1);
@@ -279,11 +277,13 @@ if (nearestDistanceSquared[0] !== 17312.142578125) {
 instance.exports.test_checkForLowestRoot2();
 
 assert.deepEqual(
-  [...new Float32Array(
-    memory.buffer,
-    instanceRust.exports.collision_point_pointer(collider_ptr),
-    4,
-  )],
+  [
+    ...new Float32Array(
+      memory.buffer,
+      instanceRust.exports.collision_point_pointer(collider_ptr),
+      4,
+    ),
+  ],
   [312.5, 65.6070785522461, -343.26318359375, 2.2420775429197073e-44],
 );
 

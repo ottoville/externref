@@ -48,6 +48,43 @@ pub enum VertexKind {
 }
 
 impl VertexKind {
+    pub fn get_position(&self, index: usize) -> &Vec3wgslF32 {
+        match self {
+            VertexKind::PositionAndNormalAndUV(vector) => &vector[index].position,
+            VertexKind::PositionAndNormalAndColor(vector) => &vector[index].position,
+            VertexKind::PositionAndNormal(vector) => &vector[index].position,
+            VertexKind::Position2DAndUV(_) => {
+                todo!()
+            }
+            VertexKind::Position(vector) => &vector[index].0,
+            VertexKind::None => todo!(),
+        }
+    }
+    pub fn get_position_mut(&mut self, index: usize) -> &mut Vec3wgslF32 {
+        match self {
+            VertexKind::PositionAndNormalAndUV(vector) => &mut vector[index].position,
+            VertexKind::PositionAndNormalAndColor(vector) => &mut vector[index].position,
+            VertexKind::PositionAndNormal(vector) => &mut vector[index].position,
+            VertexKind::Position2DAndUV(_) => {
+                todo!()
+            }
+            VertexKind::Position(vector) => &mut vector[index].0,
+            VertexKind::None => todo!(),
+        }
+    }
+    pub fn get_normal_mut(&mut self, index: usize) -> &mut Vec3wgslF32 {
+        match self {
+            VertexKind::PositionAndNormalAndUV(vector) => &mut vector[index].normal,
+            VertexKind::PositionAndNormalAndColor(vector) => &mut vector[index].normal,
+            VertexKind::PositionAndNormal(vector) => &mut vector[index].normal,
+            VertexKind::Position2DAndUV(_) => {
+                todo!()
+            }
+            VertexKind::Position(vector) =>                todo!()
+            ,
+            VertexKind::None => todo!(),
+        }
+    }
     pub fn get_positions(&self) -> Box<dyn Iterator<Item = &Vec3wgslF32> + '_> {
         match &self {
             VertexKind::PositionAndNormalAndUV(vector) => {
@@ -94,7 +131,24 @@ impl VertexKind {
             VertexKind::None => todo!(),
         }
     }
-
+    pub fn get_normals_mut(&mut self) -> Box<dyn Iterator<Item = &mut Vec3wgslF32> + '_> {
+        match self {
+            VertexKind::PositionAndNormalAndUV(vector) => {
+                Box::new(vector.iter_mut().map(|v| &mut v.normal))
+            }
+            VertexKind::PositionAndNormalAndColor(vector) => {
+                Box::new(vector.iter_mut().map(|v| &mut v.normal))
+            }
+            VertexKind::PositionAndNormal(vector) => {
+                Box::new(vector.iter_mut().map(|v| &mut v.normal))
+            }
+            VertexKind::Position2DAndUV(_) => {
+                todo!()
+            }
+            VertexKind::Position(vector) => Box::new(vector.iter_mut().map(|v| &mut v.0)),
+            VertexKind::None => todo!(),
+        }
+    }
     pub fn have_vertices(&self) -> bool {
         match self {
             VertexKind::None => false,

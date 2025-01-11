@@ -16,9 +16,8 @@ pub struct Elevator {
 
 #[no_mangle]
 pub unsafe extern "C" fn create_elevator(mesh_id: usize) -> *mut Elevator {
-    
     let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
-    Box::into_raw(Box::new(Elevator::new(&mut mesh.get_geometry_mut())))
+    Box::into_raw(Box::new(Elevator::new(mesh.get_geometry_mut())))
 }
 
 #[no_mangle]
@@ -132,17 +131,16 @@ impl Elevator {
         }
         let half = geometry.planes.planes.len() / 2;
 
-        let mut vertices: Vec<_> = geometry.vertices.get_positions_mut().collect();
-
         for sv in self.selected_vertices.iter() {
-            let mut positiony = vertices[sv.0].0[1];
+            let vertice = geometry.vertices.get_position_mut(sv.0);
+            let mut positiony = vertice.0[1];
             if sv.1 < radius_near {
                 positiony += full_height;
             } else {
                 positiony += full_height * (1.0 - (sv.1 - radius_near) / radius_far);
             }
 
-            vertices[sv.0].0[1] = f32::clamp(positiony, height_min, height_max);
+            vertice.0[1] = f32::clamp(positiony, height_min, height_max);
             if new_position {
                 let face_of_vertices = &self.faces_of_vertices[sv.0];
                 for index in face_of_vertices {
@@ -160,18 +158,28 @@ impl Elevator {
                 self.selected_indices
                     .insert(geometry.indices.indices[face_index * 3 + 2]);
             }
-            let v1_ptr = std::slice::from_ref(&vertices[geometry.indices.indices[face_index * 3]])
-                .as_ptr() as *mut v128;
+            let v1_ptr = std::slice::from_ref(
+                geometry
+                    .vertices
+                    .get_position(geometry.indices.indices[face_index * 3]),
+            )
+            .as_ptr() as *mut v128;
             let v1 = v128_load(v1_ptr);
 
-            let v2_ptr =
-                std::slice::from_ref(&vertices[geometry.indices.indices[face_index * 3 + 1]])
-                    .as_ptr() as *mut v128;
+            let v2_ptr = std::slice::from_ref(
+                geometry
+                    .vertices
+                    .get_position(geometry.indices.indices[face_index * 3 + 1]),
+            )
+            .as_ptr() as *mut v128;
             let v2 = v128_load(v2_ptr);
 
-            let v3_ptr =
-                std::slice::from_ref(&vertices[geometry.indices.indices[face_index * 3 + 2]])
-                    .as_ptr() as *mut v128;
+            let v3_ptr = std::slice::from_ref(
+                geometry
+                    .vertices
+                    .get_position(geometry.indices.indices[face_index * 3 + 2]),
+            )
+            .as_ptr() as *mut v128;
             let v3 = v128_load(v3_ptr);
 
             let v1v2 = f32x4_sub(v1, v2);
@@ -202,7 +210,8 @@ impl Elevator {
         }
         for vertex_index in self.selected_indices.iter() {
             let faces = &self.faces_of_vertices[*vertex_index];
-            let norm_ptr = std::slice::from_ref(&vertices[*vertex_index + 4]).as_ptr() as *mut v128;
+            let norm_ptr = std::slice::from_ref(geometry.vertices.get_position(*vertex_index + 4))
+                .as_ptr() as *mut v128;
 
             let mut norm_v = f32x4_splat(0.0);
             for face_index in faces.iter() {

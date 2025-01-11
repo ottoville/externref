@@ -297,88 +297,39 @@ impl<'vert> Geometry {
     }
     pub fn calculate_normals(&mut self) {
         self.create_faces(Option::None);
-        if let VertexKind::Position(_) = &self.vertices {
-        } else if let VertexKind::None = &self.vertices {
-        } else {
-            //self.create_faces(None);
-            match &mut self.vertices {
-                VertexKind::PositionAndNormalAndUV(positions) => {
-                    for position in &mut *positions {
-                        position.normal.0.clear();
-                    }
-                    for triangle in self.faces.iter() {
-                        let ia = &positions[triangle[0]].position.0;
-                        let ib = &positions[triangle[1]].position.0;
-                        let ic = &positions[triangle[2]].position.0;
 
-                        //TODO: check if frontface is cw or ccw
-                        let e1 = ia.sub_vec(&ib);
-                        let e2 = ic.sub_vec(&ib);
+        for normal in self.vertices.get_normals_mut() {
+            normal.0.clear();
+        }
+        for triangle in self.faces.iter() {
+            let ia = self.vertices.get_position(triangle[0]).0;
+            let ib = self.vertices.get_position(triangle[1]).0;
+            let ic = self.vertices.get_position(triangle[2]).0;
 
-                        let no = e1.cross(&e2);
+            //TODO: check if frontface is cw or ccw
+            let e1 = ia.sub_vec(&ib);
+            let e2 = ic.sub_vec(&ib);
 
-                        positions[triangle[0]].normal.0.add_vec_in_place(&no);
-                        positions[triangle[1]].normal.0.add_vec_in_place(&no);
-                        positions[triangle[2]].normal.0.add_vec_in_place(&no);
-                    }
-                    for position in positions {
-                        position.normal.0.normalize_in_place();
-                    }
-                }
-                VertexKind::PositionAndNormalAndColor(positions) => {
-                    for position in &mut *positions {
-                        position.normal.0.clear();
-                    }
-                    for triangle in self.faces.iter() {
-                        let ia = &positions[triangle[0]].position.0;
-                        let ib = &positions[triangle[1]].position.0;
-                        let ic = &positions[triangle[2]].position.0;
+            let no = e1.cross(&e2);
 
-                        //TODO: check if frontface is cw or ccw
-                        let e1 = ia.sub_vec(&ib);
-                        let e2 = ic.sub_vec(&ib);
-
-                        let no = e1.cross(&e2);
-
-                        positions[triangle[0]].normal.0.add_vec_in_place(&no);
-                        positions[triangle[1]].normal.0.add_vec_in_place(&no);
-                        positions[triangle[2]].normal.0.add_vec_in_place(&no);
-                    }
-                    for position in positions {
-                        position.normal.0.normalize_in_place();
-                    }
-                }
-                VertexKind::PositionAndNormal(positions) => {
-                    for position in &mut *positions {
-                        position.normal.0.clear();
-                    }
-                    for triangle in self.faces.iter() {
-                        let ia = &positions[triangle[0]].position.0;
-                        let ib = &positions[triangle[1]].position.0;
-                        let ic = &positions[triangle[2]].position.0;
-
-                        //TODO: check if frontface is cw or ccw
-                        let e1 = ia.sub_vec(&ib);
-                        let e2 = ic.sub_vec(&ib);
-
-                        let no = e1.cross(&e2);
-
-                        positions[triangle[0]].normal.0.add_vec_in_place(&no);
-                        positions[triangle[1]].normal.0.add_vec_in_place(&no);
-                        positions[triangle[2]].normal.0.add_vec_in_place(&no);
-                    }
-                    for position in positions {
-                        position.normal.0.normalize_in_place();
-                    }
-                }
-                VertexKind::Position(_) => {
-                    panic!("Guard should prevent executing this line")
-                }
-                VertexKind::None => panic!("Guard should prevent executing this line"),
-                VertexKind::Position2DAndUV(_) => todo!(),
-            };
+            self.vertices
+                .get_normal_mut(triangle[0])
+                .0
+                .add_vec_in_place(&no);
+            self.vertices
+                .get_normal_mut(triangle[1])
+                .0
+                .add_vec_in_place(&no);
+            self.vertices
+                .get_normal_mut(triangle[2])
+                .0
+                .add_vec_in_place(&no);
+        }
+        for normal in self.vertices.get_normals_mut() {
+            normal.0.normalize_in_place();
         }
     }
+
     /**
        Removes duplicated positions
     **/
