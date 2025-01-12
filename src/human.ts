@@ -306,6 +306,7 @@ export class Human extends IndexedSingleColoredMesh {
     }
   }
   override checkCollide(
+    dt: number,
     velocityPerDelta: readonly [number, number, number],
     engine_lock: rust_mutex<'locked', 'enginelock'>,
   ) {
@@ -321,7 +322,16 @@ export class Human extends IndexedSingleColoredMesh {
     scaledVelocity[2] = velocityPerDelta[2] / this.radius[2];
     engine.collider.collidedMesh = undefined;
     engine.collider._retry = 0;
+    //TODO: remove this line and rest of legacy collider check from character
     engine.collideWithWorld(engine_lock, this, scaledPosition, scaledVelocity);
+    engine.rust.move_character(
+      engine_lock,
+      dt,
+      velocityPerDelta[0],
+      velocityPerDelta[1],
+      velocityPerDelta[2],
+    );
+
     if (!engine.collider.collision_resolved) {
       //console.log('cant solve collision', this.label)
     }

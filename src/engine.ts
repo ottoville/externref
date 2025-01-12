@@ -528,7 +528,13 @@ export type rustWasm = {
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<'matrix'>;
   update_collider_planes(geometry: rust_pointer<'geometry'>): void;
-  move_character(dt: number): void;
+  move_character(
+    engine: rust_mutex<'locked', 'enginelock'>,
+    dt: number,
+    x: number,
+    y: number,
+    z: number,
+  ): void;
   new_character_mesh(
     scenes: number,
     label_ptr: number,

@@ -152,6 +152,7 @@ export class DataNode extends MainNode {
 
   #vectorsVec4: number[] = [];
   checkCollide(
+    _dt: number,
     _velocityPerDelta: [number, number, number],
     engine_lock: rust_mutex<'locked', 'enginelock'>,
   ): TerraVector3 {

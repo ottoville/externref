@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::{panic, usize};
 
@@ -17,6 +18,7 @@ use nalgebra::{Isometry3, Vector3};
 use rapier3d::control::KinematicCharacterController;
 use rapier3d::parry::shape::Ball;
 use rapier3d::{crossbeam, prelude::*};
+use terramath::VectorMath;
 
 #[link(wasm_import_module = "console")]
 #[cfg(target_arch = "wasm32")]
@@ -73,12 +75,7 @@ pub unsafe extern "C" fn physic_tick(delta: u32) {
     let engine = &mut ENGINE.engine2.lock().unwrap();
     engine.physic_tick(delta);
 }
-#[no_mangle]
-#[cfg(target_arch = "wasm32")]
-pub unsafe extern "C" fn move_character(dt: f32) {
-    let engine = &mut ENGINE.engine2.lock().unwrap();
-    engine.move_character(dt);
-}
+
 const INTEGRATION_PARAMETERS: IntegrationParameters = IntegrationParameters {
     dt: 1.0 / 60.0,
     min_ccd_dt: 1.0 / 60.0 / 100.0,
@@ -116,6 +113,7 @@ pub struct Engine {
     pub rigid_body_set: Mutex<RigidBodySet>,
     event_handler: ChannelEventCollector,
     character_controller: KinematicCharacterController,
+    pub character_mesh_id: AtomicUsize,
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
@@ -155,6 +153,7 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
         event_handler: ChannelEventCollector::new(collision_send, contact_send),
 
         character_controller: KinematicCharacterController::default(),
+        character_mesh_id: AtomicUsize::new(0),
     };
 });
 
@@ -239,15 +238,26 @@ pub fn js_error<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
 }*/
 
 impl Engine2 {
-    pub fn move_character(&self, dt: f32) {
+    pub fn move_character(&self, dt: f32, x: f32, y: f32, z: f32) {
+        let character_mesh_id = &ENGINE.character_mesh_id.load(Ordering::Relaxed);
         let mut rigid_body_set = ENGINE.rigid_body_set.lock().unwrap();
         let query_pipeline = QueryPipeline::new();
         let character_shape = Ball::new(1.8);
+        let mesh = self.find_mesh_by_id(*character_mesh_id);
+
         let character_pos = Isometry3::new(
-            Vector3::new(1.0, 2.0, 3.0),
+            Vector3::from(mesh.mesh_property.lock().unwrap().translation.0),
             Vector3::y() * std::f32::consts::FRAC_PI_2,
         );
-        let desired_translation = Vector3::new(1.0, 2.0, 3.0);
+
+        let desired_translation = Vector3::from(
+            mesh.mesh_property
+                .lock()
+                .unwrap()
+                .translation
+                .0
+                .add_vec(&[x, y, z]),
+        );
         let filter = QueryFilter::default();
         ENGINE.character_controller.move_shape(
             dt,

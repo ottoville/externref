@@ -144,6 +144,7 @@ export class Physics {
         wantedVelocityPerDelta[2] !== 0
       ) {
         const finalPosition = tickable.checkCollide(
+          dt,
           [
             wantedVelocityPerDelta[0],
             wantedVelocityPerDelta[1],
