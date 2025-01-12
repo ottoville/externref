@@ -35,10 +35,11 @@ export abstract class BoundableNodeIndexed
       engine_lock,
       this.id,
     );
+    engine.rust.drop_engine_lock(engine_lock);
+
     const last_collider_world_vertices_pointer =
       this.last_collider_world_vertices_pointer;
 
-    engine.rust.drop_engine_lock(engine_lock);
     this.indices.forEach((indice: number) => {
       const position =
         last_collider_world_vertices_pointer +
@@ -50,6 +51,6 @@ export abstract class BoundableNodeIndexed
 
       this.pushVertice(position, collider_faces_pointer);
     });
-    this.buildFaces();
+    engine.rust.update_collider_planes(this.geometry);
   }
 }

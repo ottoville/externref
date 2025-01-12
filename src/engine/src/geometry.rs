@@ -11,6 +11,7 @@ use terramath::{CrossProduct, Plane, VectorMath};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
+    engine::js_warn,
     indices::Indices,
     math2::{Vec2wgslF32, Vec3wgslF32},
     mesh::ENGINE,
@@ -77,14 +78,14 @@ pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usiz
     geometry.collider_planes = vec![
         ColliderPlane {
             plane: Plane {
-                norm: [0.0;3],
+                norm: [0.0; 3],
                 d: 0.0
             },
-            vectors: [0;3]
+            vectors: [0; 3]
         };
         planes.len()
     ];
-    geometry.collider_planes_parallel = Vec::with_capacity(planes.len());
+    geometry.collider_planes_parallel = vec![[[0.0; 4]; 4]; planes.len() / 4];
     geometry.planes.planes = planes;
 }
 #[no_mangle]
@@ -210,7 +211,7 @@ pub struct Geometry {
     pub strip: bool,
     pub label: String,
     pub collider_planes: Vec<ColliderPlane>,
-    pub collider_planes_parallel: Vec<[f32; 4]>, //lanes for x,y,z,d
+    pub collider_planes_parallel: Vec<[[f32; 4]; 4]>, //lanes for x,y,z,d
     pub last_collider_world_vertices: Vec<Vec3wgslF32>,
     pub collisions_transform_matrix: [[f32; 4]; 4],
 
@@ -482,14 +483,14 @@ impl<'vert> Geometry {
             self.collider_planes = vec![
                 ColliderPlane {
                     plane: Plane {
-                        norm: [0.0;3],
+                        norm: [0.0; 3],
                         d: 0.0
                     },
-                    vectors: [0;3]
+                    vectors: [0; 3]
                 };
                 faces_count
             ];
-            self.collider_planes_parallel = Vec::with_capacity(faces_count * 4usize);
+            self.collider_planes_parallel = vec![[[0.0; 4]; 4]; faces_count / 4];
         }
     }
     pub fn update_collider_planes(&mut self) {
@@ -504,6 +505,36 @@ impl<'vert> Geometry {
                 let v2 = (*(collider_plane.vectors[2] as *mut Vec3wgslF32)).0;
                 collider_plane.plane.update_from_triangle([v0, v1, v2]);
             }
+        }
+        if self.faces_count() % 4 == 0 {
+            //Todo: merge with upper loop?
+            for (quatro, parallel) in self
+                .collider_planes
+                .chunks_exact_mut(4)
+                .zip(&mut self.collider_planes_parallel)
+            {
+                parallel[0][0] = quatro[0].plane.norm[0];
+                parallel[0][1] = quatro[1].plane.norm[0];
+                parallel[0][2] = quatro[2].plane.norm[0];
+                parallel[0][3] = quatro[3].plane.norm[0];
+
+                parallel[1][0] = quatro[0].plane.norm[1];
+                parallel[1][1] = quatro[1].plane.norm[1];
+                parallel[1][2] = quatro[2].plane.norm[1];
+                parallel[1][3] = quatro[3].plane.norm[1];
+
+                parallel[2][0] = quatro[0].plane.norm[2];
+                parallel[2][1] = quatro[1].plane.norm[2];
+                parallel[2][2] = quatro[2].plane.norm[2];
+                parallel[2][3] = quatro[3].plane.norm[2];
+
+                parallel[3][0] = quatro[0].plane.d;
+                parallel[3][1] = quatro[1].plane.d;
+                parallel[3][2] = quatro[2].plane.d;
+                parallel[3][3] = quatro[3].plane.d;
+            }
+        } else {
+            js_warn([&"Mesh facescount is not dividable by 4, cant check collisions"]);
         }
     }
     pub fn rebuild_triangle_planes(&mut self) {

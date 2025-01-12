@@ -167,8 +167,6 @@ export class DataNode extends MainNode {
   readonly #triangleFaces: Triangle[] = [];
   #lastColliderTransformMatrix = new TerraMatrix();
 
-  #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
-
   get_faces_count(engine_lock: rust_mutex<'locked', 'enginelock'>) {
     return engine.rust.faces_count(engine_lock, this.id);
   }
@@ -348,37 +346,6 @@ export class DataNode extends MainNode {
     this.#vectorsVec4 = [];
     return true;
   }
-
-  #updateColliderPlanes(engine_lock: rust_mutex<'locked', 'enginelock'>) {
-    engine.rust.update_collider_planes(this.geometry);
-    const collider_planes_parallel_pointer =
-      engine.rust.collider_planes_parallel_pointer(engine_lock, this.id);
-
-    this.#faceQuatros.forEach((quatro, i) => {
-      new Float32Array(
-        engine.rust.memory.buffer,
-        collider_planes_parallel_pointer + i * 4 * 16,
-        16,
-      ).set([
-        quatro[0].planeCollider[0],
-        quatro[1].planeCollider[0],
-        quatro[2].planeCollider[0],
-        quatro[3].planeCollider[0], //x
-        quatro[0].planeCollider[1],
-        quatro[1].planeCollider[1],
-        quatro[2].planeCollider[1],
-        quatro[3].planeCollider[1], //y
-        quatro[0].planeCollider[2],
-        quatro[1].planeCollider[2],
-        quatro[2].planeCollider[2],
-        quatro[3].planeCollider[2], //z
-        quatro[0].planeCollider[3],
-        quatro[1].planeCollider[3],
-        quatro[2].planeCollider[3],
-        quatro[3].planeCollider[3], //d
-      ]);
-    });
-  }
   //collisionsScalingMatrix = new TerraMatrix();
   get #myCollisionsTransformMatrix(): TerraMatrix {
     return new TerraMatrix(
@@ -414,7 +381,7 @@ export class DataNode extends MainNode {
     ) {
       this.#lastColliderTransformMatrix =
         this.#myCollisionsTransformMatrix.clone();
-      this.#updateColliderPlanes(engine_lock);
+      engine.rust.update_collider_planes(this.geometry);
     }
     const facesCount = this.get_faces_count(engine_lock);
     if (facesCount % 4 != 0) {
@@ -446,22 +413,5 @@ export class DataNode extends MainNode {
                collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
            }*/
     }
-  }
-  protected buildFaces() {
-    const engine_lock = engine.rust.get_engine();
-    if (this.get_faces_count(engine_lock) % 4 === 0) {
-      this.#faceQuatros.length = 0;
-      let faceQuatro: Triangle[] = [];
-      this.#triangleFaces.forEach((face) => {
-        if (faceQuatro.push(face) === 4) {
-          this.#faceQuatros.push(
-            faceQuatro as [Triangle, Triangle, Triangle, Triangle],
-          );
-          faceQuatro = [];
-        }
-      });
-    }
-    this.#updateColliderPlanes(engine_lock);
-    engine.rust.drop_engine_lock(engine_lock);
   }
 }

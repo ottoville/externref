@@ -245,7 +245,7 @@ pub unsafe extern "C" fn strip(mesh_id: usize) -> bool {
 pub unsafe extern "C" fn collider_planes_parallel_pointer(
     engine: *const MutexGuard<'_, Engine2>,
     mesh_id: usize,
-) -> *const [f32; 4] {
+) -> *const [[f32; 4];4] {
     (*engine)
         .find_mesh_by_id(mesh_id)
         .get_geometry()

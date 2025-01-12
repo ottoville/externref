@@ -19,6 +19,7 @@ export abstract class BoundableNodeSimple
     this.colliderVerticesV4.forEach((position) =>
       this.pushVertice(position, collider_faces_pointer),
     );
+    //@ts-expect-error todo
     this.buildFaces();
   }
 }
