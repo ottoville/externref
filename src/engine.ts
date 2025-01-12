@@ -141,8 +141,6 @@ export type rustWasm = {
     collided_point_in_triangle: boolean,
     collided_plane: number,
   ): void;
-  get_lowest_root(a: number, b: number, c: number, maxR: number): number;
-  v3_dot(v1: number, v2: number): number;
   set_speed(collider_ptr: rust_pointer<'legacy_collider'>, speed: number): void;
   basepoint_world_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,

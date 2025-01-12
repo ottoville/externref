@@ -94,8 +94,7 @@ pub extern "C" fn v3_dot(a: v128, b: v128) -> f32 {
     f32x4_extract_lane::<0>(temp1) + f32x4_extract_lane::<1>(temp1) + f32x4_extract_lane::<2>(temp1)
 }
 #[cfg(target_arch = "wasm32")]
-#[no_mangle]
-pub unsafe extern "C" fn check_point_in_triangle(
+pub fn check_point_in_triangle(
     point: v128,
     plane_collider: v128,
     v0: v128,
@@ -180,31 +179,29 @@ pub unsafe extern "C" fn check_for_lowest_root0(
 pub unsafe extern "C" fn test_triangle(
     collider: *mut Collider,
     embedded_in_plane: bool,
-    planePosition: *const v128,
+    plane_position: *const Plane,
     triangle0: v128,
     triangle1: v128,
     triangle2: v128,
-    meshID: i32,
     t0: f32,
-) -> bool {
+    velocity: v128,
+    velocity_squared: f32,
+) {
     use std::arch::wasm32::{f32x4_add, f32x4_mul, f32x4_splat, f32x4_sub, v128_load, v128_store};
 
     let mut found = false;
     (*collider).lowest_root = 1.0;
+    let base_point = v128_load((*collider).scaled_position.as_ptr() as *const v128);
+    let mut collided_point_in_triangle = false;
     if !embedded_in_plane {
-        let base_point = v128_load((*collider).scaled_position.as_ptr() as *const v128);
-
-        let plane_collider = v128_load(planePosition);
+        let plane_collider = v128_load(plane_position as *const v128);
         //planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
 
         let plane_intersection_point = f32x4_add(
             f32x4_sub(base_point, plane_collider),
-            f32x4_mul(
-                *((*collider).scaled_velocity.as_ptr() as *const v128),
-                f32x4_splat(t0.max(0.0)),
-            ),
+            f32x4_mul(velocity, f32x4_splat(t0.max(0.0))),
         );
-        let collided_point_in_triangle = check_point_in_triangle(
+        collided_point_in_triangle = check_point_in_triangle(
             plane_intersection_point,
             plane_collider,
             triangle0,
@@ -221,51 +218,60 @@ pub unsafe extern "C" fn test_triangle(
         }
     }
     if !found {
-        //TODO: continue from here
-    }
-    return found;
-}
-#[cfg(target_arch = "wasm32")]
-#[no_mangle]
-pub unsafe extern "C" fn check_for_lowest_root(
-    collider: *mut Collider,
-    triangle1: v128,
-    triangle2: v128,
-    velocity: v128,
-    velocity_squared: f32,
-    basepoint: v128,
-) -> bool {
-    use std::arch::wasm32::{f32x4_add, f32x4_mul, f32x4_splat, f32x4_sub, v128_store};
-
-    let edge: v128 = f32x4_sub(triangle1, triangle2);
-    let edge_dot_velocity = v3_dot(edge, velocity);
-    let edge_squared_length = v3_dot(edge, edge);
-
-    let base_to_vertex = f32x4_sub(triangle2, basepoint);
-    let edge_dot_base_to_vertex = v3_dot(edge, base_to_vertex);
-    let cur_lowest_root = get_lowest_root(
-        edge_dot_velocity * edge_dot_velocity - edge_squared_length * velocity_squared,
-        2.0 * (edge_squared_length * v3_dot(velocity, base_to_vertex)
-            - edge_dot_velocity * edge_dot_base_to_vertex),
-        edge_squared_length * (1.0 - v3_dot(base_to_vertex, base_to_vertex))
-            + edge_dot_base_to_vertex * edge_dot_base_to_vertex,
-        (*collider).lowest_root,
-    );
-    if cur_lowest_root > 0.0 {
-        let f = (edge_dot_velocity * (*collider).lowest_root - edge_dot_base_to_vertex)
-            / edge_squared_length;
-        if f < 0.0 || f > 1.0 {
-            return false;
+        let mut cur_lowest_root = check_for_lowest_root0(collider, triangle0, velocity_squared);
+        if cur_lowest_root > 0.0 {
+            (*collider).lowest_root = cur_lowest_root;
+            v128_store(
+                (*collider).collision_point.as_mut_ptr() as *mut v128,
+                triangle0,
+            );
+            found = true
         }
-        (*collider).lowest_root = cur_lowest_root;
-
-        v128_store(
-            (*collider).collision_point.as_mut_ptr() as *mut v128,
-            f32x4_add(triangle2, f32x4_mul(edge, f32x4_splat(f))),
+        cur_lowest_root = check_for_lowest_root0(collider, triangle1, velocity_squared);
+        if cur_lowest_root > 0.0 {
+            (*collider).lowest_root = cur_lowest_root;
+            v128_store(
+                (*collider).collision_point.as_mut_ptr() as *mut v128,
+                triangle1,
+            );
+            found = true
+        }
+        cur_lowest_root = check_for_lowest_root0(collider, triangle2, velocity_squared);
+        if cur_lowest_root > 0.0 {
+            (*collider).lowest_root = cur_lowest_root;
+            v128_store(
+                (*collider).collision_point.as_mut_ptr() as *mut v128,
+                triangle2,
+            );
+            found = true
+        }
+        if (*collider).check_for_lowest_root(
+            triangle0,
+            triangle1,
+            velocity,
+            velocity_squared,
+            base_point,
+        ) {
+            found = true;
+        }
+        if (*collider).check_for_lowest_root(
+            triangle2,
+            triangle0,
+            velocity,
+            velocity_squared,
+            base_point,
+        ) {
+            found = true;
+        }
+    }
+    if found {
+        (*collider).collision_found(
+            (*collider).lowest_root,
+            velocity_squared,
+            collided_point_in_triangle,
+            plane_position,
         );
-        return true;
-    };
-    return false;
+    }
 }
 
 #[no_mangle]
@@ -329,7 +335,7 @@ fn lowest_root() {
     );
     assert_eq!(result, 0.0);
 }
-
+/*
 #[no_mangle]
 pub unsafe extern "C" fn collision_found(
     collider_ptr: *mut Collider,
@@ -344,7 +350,7 @@ pub unsafe extern "C" fn collision_found(
         collided_point_in_triangle,
         collided_plane,
     )
-}
+}*/
 impl Collider {
     pub fn new() -> Self {
         unsafe {
@@ -363,13 +369,54 @@ impl Collider {
             }
         }
     }
+    #[cfg(target_arch = "wasm32")]
+    pub fn check_for_lowest_root(
+        &mut self,
+        triangle1: v128,
+        triangle2: v128,
+        velocity: v128,
+        velocity_squared: f32,
+        basepoint: v128,
+    ) -> bool {
+        use std::arch::wasm32::{f32x4_add, f32x4_mul, f32x4_splat, f32x4_sub, v128_store};
 
+        let edge: v128 = f32x4_sub(triangle1, triangle2);
+        let edge_dot_velocity = v3_dot(edge, velocity);
+        let edge_squared_length = v3_dot(edge, edge);
+
+        let base_to_vertex = f32x4_sub(triangle2, basepoint);
+        let edge_dot_base_to_vertex = v3_dot(edge, base_to_vertex);
+        let cur_lowest_root = get_lowest_root(
+            edge_dot_velocity * edge_dot_velocity - edge_squared_length * velocity_squared,
+            2.0 * (edge_squared_length * v3_dot(velocity, base_to_vertex)
+                - edge_dot_velocity * edge_dot_base_to_vertex),
+            edge_squared_length * (1.0 - v3_dot(base_to_vertex, base_to_vertex))
+                + edge_dot_base_to_vertex * edge_dot_base_to_vertex,
+            self.lowest_root,
+        );
+        if cur_lowest_root > 0.0 {
+            let f = (edge_dot_velocity * self.lowest_root - edge_dot_base_to_vertex)
+                / edge_squared_length;
+            if f < 0.0 || f > 1.0 {
+                return false;
+            }
+            self.lowest_root = cur_lowest_root;
+            unsafe {
+                v128_store(
+                    self.collision_point.as_mut_ptr() as *mut v128,
+                    f32x4_add(triangle2, f32x4_mul(edge, f32x4_splat(f))),
+                );
+            }
+            return true;
+        };
+        return false;
+    }
     fn collision_found(
         &mut self,
         t: f32,
         velocity_squared_length: f32,
         collided_point_in_triangle: bool,
-        collided_plane: &'static Plane,
+        collided_plane: *const Plane,
     ) {
         let dist_to_collision_squared = t * t * velocity_squared_length;
         if self.collision_resolved == 1 || dist_to_collision_squared < self.nearest_distance_squared
@@ -379,10 +426,10 @@ impl Collider {
             self.intersection_point[2] = self.collision_point[2];
             self.nearest_distance_squared = dist_to_collision_squared;
             self.collision_resolved = 0;
-            if collided_point_in_triangle {
-                self.collided_point_in_triangle = collided_plane;
-            } else {
-                unsafe {
+            unsafe {
+                if collided_point_in_triangle {
+                    self.collided_point_in_triangle = &*(collided_plane);
+                } else {
                     self.collided_point_in_triangle = *(0 as *const &'static Plane);
                 }
             }
@@ -423,7 +470,7 @@ fn test_check_for_lowest_root() {
         //let basepoint = u32x4(0x439CD56E, 0x4284E862, 0xC3ABAC5D, 0x00000000);
         let basepoint = f32x4(313.66742, 66.45387, -343.3466, 0.0);
         assert_eq!(
-            check_for_lowest_root(collider_ptr, v1, v2, v3, velocity_squared, basepoint),
+            (*collider_ptr).check_for_lowest_root(v1, v2, v3, velocity_squared, basepoint),
             true
         );
         assert_eq!(

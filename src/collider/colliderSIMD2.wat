@@ -1,10 +1,10 @@
 (module
-  (import "rust" "collision_found" (func $collision_found (param i32 f32 f32 i32 i32)))
+  (import "rust" "test_triangle" (func $test_triangle (param i32 i32 i32 v128 v128 v128 f32 v128 f32)))
+  ;;(import "rust" "collision_found" (func $collision_found (param i32 f32 f32 i32 i32)))
   (import "rust" "get_lowest_root" (func $getLowestRoot (param f32 f32 f32 f32) (result f32)))
   (import "rust" "collision_point_pointer" (func $get_collision_point_pointer(param i32) (result i32)))
   (import "rust" "check_for_lowest_root0" (func $check_for_lowest_root0(param i32 v128 f32) (result f32)))
-  (import "rust" "check_for_lowest_root" (func $check_for_lowest_root(param i32 v128 v128 v128 f32 v128) (result i32)))
-  (import "rust" "check_point_in_triangle" (func $check_point_in_triangle(param v128 v128 v128 v128 v128) (result i32)))
+  ;;(import "rust" "check_for_lowest_root" (func $check_for_lowest_root(param i32 v128 v128 v128 f32 v128) (result i32)))
   (import "rust" "v3_dot" (func $v3_dot (param v128 v128) (result f32)))
   (import "console" "log" (func $log (param f32)))
   (import "console" "error" (func $console.error (param i32)))
@@ -390,7 +390,7 @@
     (if
       (then
         (local.tee $collidedPointInTriangle
-          (call $check_point_in_triangle
+          (call $checkPointInTriangle
             ;;planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
             (local.tee $planeIntersectionPoint
               (f32x4.add
@@ -495,57 +495,57 @@
         local.get $triangle2
         v128.store
       end
-      (call $check_for_lowest_root
-        (global.get $rust_collider_ptr)
-        (local.get $triangle1)
-        (local.get $triangle2)
-        (global.get $velocity)
-        (global.get $velocitySquared)
-        (global.get $basePoint)
-      )
-      if
-        i32.const 1
-        global.set $found
-      end
-      (call $check_for_lowest_root
-        (global.get $rust_collider_ptr)
-        (local.get $triangle0)
-        (local.get $triangle1)
-        (global.get $velocity)
-        (global.get $velocitySquared)
-        (global.get $basePoint)
-      )
-      if
-        i32.const 1
-        global.set $found
-      end
-      (call $check_for_lowest_root
-        (global.get $rust_collider_ptr)
-        (local.get $triangle2)
-        (local.get $triangle0)
-        (global.get $velocity)
-        (global.get $velocitySquared)
-        (global.get $basePoint)
-      )
-      if
-        i32.const 1
-        global.set $found
-      end
+      ;;(call $check_for_lowest_root
+      ;;  (global.get $rust_collider_ptr)
+      ;;  (local.get $triangle1)
+      ;;  (local.get $triangle2)
+      ;;  (global.get $velocity)
+      ;;  (global.get $velocitySquared)
+      ;;  (global.get $basePoint)
+      ;;)
+     ;; if
+     ;;   i32.const 1
+     ;;   global.set $found
+    ;;  end
+     ;; (call $check_for_lowest_root
+     ;;   (global.get $rust_collider_ptr)
+     ;;   (local.get $triangle0)
+      ;;  (local.get $triangle1)
+      ;;  (global.get $velocity)
+      ;;  (global.get $velocitySquared)
+      ;;  (global.get $basePoint)
+      ;;)
+      ;;if
+      ;;  i32.const 1
+      ;;  global.set $found
+     ;; end
+     ;; (call $check_for_lowest_root
+      ;;  (global.get $rust_collider_ptr)
+      ;;  (local.get $triangle2)
+      ;;  (local.get $triangle0)
+      ;;  (global.get $velocity)
+     ;;   (global.get $velocitySquared)
+     ;;   (global.get $basePoint)
+     ;; )
+     ;; if
+     ;;   i32.const 1
+     ;;   global.set $found
+     ;; end
     end
 
 
     global.get $found
     if
-      (call $collision_found
-        (global.get $rust_collider_ptr)
-        (
-          f32.load
-           (global.get $lowest_root_ptr)
-        )
-        (global.get $velocitySquared)
-        (local.get $collidedPointInTriangle)
-        (local.get $planePosition)
-      )
+    ;;  (call $collision_found
+    ;;    (global.get $rust_collider_ptr)
+    ;;    (
+    ;;      f32.load
+    ;;       (global.get $lowest_root_ptr)
+    ;;    )
+    ;;    (global.get $velocitySquared)
+    ;;    (local.get $collidedPointInTriangle)
+    ;;    (local.get $planePosition)
+    ;;  )
 
 
 
@@ -1017,7 +1017,8 @@
         )
         i32.eqz
         if
-          (call $testTriangle
+          (call $test_triangle
+            (global.get $rust_collider_ptr)
             (i32x4.extract_lane 0
               (local.get $embeddedInPlane)
             )
@@ -1041,10 +1042,11 @@
                 )
             )
 
-            (local.get $meshID)
             (f32x4.extract_lane 0
               (local.get $t0)
             )
+            (global.get $velocity)
+            (global.get $velocitySquared)
           )
         end
         (i32x4.extract_lane 1
@@ -1052,7 +1054,8 @@
         )
         i32.eqz
         if
-          (call $testTriangle
+          (call $test_triangle
+            (global.get $rust_collider_ptr)
             (i32x4.extract_lane 1
               (local.get $embeddedInPlane)
             )
@@ -1079,10 +1082,12 @@
                 )
             )
 
-            (local.get $meshID)
             (f32x4.extract_lane 1
-            (local.get $t0)
+              (local.get $t0)
             )
+            (global.get $velocity)
+            (global.get $velocitySquared)
+
           )
         end
         (i32x4.extract_lane 2
@@ -1090,7 +1095,8 @@
         )
         i32.eqz
         if
-          (call $testTriangle
+          (call $test_triangle
+            (global.get $rust_collider_ptr)
             (i32x4.extract_lane 2
               (local.get $embeddedInPlane)
             )
@@ -1115,10 +1121,12 @@
                   (local.get $planePosition)
                 )
             )
-            (local.get $meshID)
             (f32x4.extract_lane 2
-            (local.get $t0)
+              (local.get $t0)
             )
+            (global.get $velocity)
+            (global.get $velocitySquared)
+
           )
         end
         (i32x4.extract_lane 3
@@ -1126,7 +1134,8 @@
         )
         i32.eqz
         if
-          (call $testTriangle
+          (call $test_triangle
+            (global.get $rust_collider_ptr)
             (i32x4.extract_lane 3
               (local.get $embeddedInPlane)
             )
@@ -1151,10 +1160,11 @@
                     (local.get $planePosition)
                 )
             )
-            (local.get $meshID)
             (f32x4.extract_lane 3
-            (local.get $t0)
+              (local.get $t0)
             )
+            (global.get $velocity)
+            (global.get $velocitySquared)
           )
         end
         )
