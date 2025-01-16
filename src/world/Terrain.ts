@@ -73,7 +73,7 @@ TODO
     Uint32Array.BYTES_PER_ELEMENT *
     (TerrainSubdivisions[0] * TerrainSubdivisions[1] * 6);
 
-  #autosave = 0;
+  #autosave?: ReturnType<typeof setTimeout>;
 
   public static fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
     return cachedvertices.arrayBuffer();

@@ -6,6 +6,7 @@
   (import "rust" "check_for_lowest_root0" (func $check_for_lowest_root0(param i32 v128 f32) (result f32)))
   ;;(import "rust" "check_for_lowest_root" (func $check_for_lowest_root(param i32 v128 v128 v128 f32 v128) (result i32)))
   (import "rust" "v3_dot" (func $v3_dot (param v128 v128) (result f32)))
+  (import "rust" "simd_dot" (func $simd_dot (param v128 v128 v128 v128 v128 v128) (result v128)))
   (import "console" "log" (func $log (param f32)))
   (import "console" "error" (func $console.error (param i32)))
   (import "env" "memory" (memory 16))
@@ -495,42 +496,18 @@
         local.get $triangle2
         v128.store
       end
-      ;;(call $check_for_lowest_root
-      ;;  (global.get $rust_collider_ptr)
-      ;;  (local.get $triangle1)
-      ;;  (local.get $triangle2)
-      ;;  (global.get $velocity)
-      ;;  (global.get $velocitySquared)
-      ;;  (global.get $basePoint)
-      ;;)
-     ;; if
-     ;;   i32.const 1
-     ;;   global.set $found
-    ;;  end
-     ;; (call $check_for_lowest_root
-     ;;   (global.get $rust_collider_ptr)
-     ;;   (local.get $triangle0)
-      ;;  (local.get $triangle1)
-      ;;  (global.get $velocity)
-      ;;  (global.get $velocitySquared)
-      ;;  (global.get $basePoint)
-      ;;)
-      ;;if
-      ;;  i32.const 1
-      ;;  global.set $found
-     ;; end
-     ;; (call $check_for_lowest_root
-      ;;  (global.get $rust_collider_ptr)
-      ;;  (local.get $triangle2)
-      ;;  (local.get $triangle0)
-      ;;  (global.get $velocity)
-     ;;   (global.get $velocitySquared)
-     ;;   (global.get $basePoint)
-     ;; )
-     ;; if
-     ;;   i32.const 1
-     ;;   global.set $found
-     ;; end
+      (call $checkForLowestRoot2
+        (local.get $triangle1)
+        (local.get $triangle2)
+      )
+      (call $checkForLowestRoot2
+        (local.get $triangle0)
+        (local.get $triangle1)
+      )
+      (call $checkForLowestRoot2
+        (local.get $triangle2)
+        (local.get $triangle0)
+      )
     end
 
 
@@ -784,7 +761,7 @@
       )
     )
   )
-  (func $simd_dot
+  (func $simddot
     (param $x1 v128)
     (param $x2 v128)
     (param $y1 v128)

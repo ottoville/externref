@@ -63,10 +63,10 @@ module.exports = {
   // forceCoverageMatch: [],
 
   // A path to a module which exports an async function that is triggered once before all test suites
-  globalSetup: './setup.js',
+  globalSetup: './setup.cjs',
 
   // A path to a module which exports an async function that is triggered once after all test suites
-  globalTeardown: './teardown.js',
+  globalTeardown: './teardown.cjs',
 
   // A set of global variables that need to be available in all test environments
   globals: {},
@@ -150,7 +150,7 @@ module.exports = {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  testEnvironment: './puppeteer_environment.js',
+  testEnvironment: './puppeteer_environment.cjs',
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
@@ -181,7 +181,7 @@ module.exports = {
       'ts-jest',
       {
         // ts-jest configuration goes here
-        tsconfig: 'tsconfig.jest.json',
+        tsconfig: './src/tsconfig.jest.json',
         useESM: true,
       },
     ],

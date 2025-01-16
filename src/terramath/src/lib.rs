@@ -1,3 +1,6 @@
+#[cfg(target_arch = "wasm32")]
+use std::arch::wasm32::v128;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Plane {
     pub norm: [f32; 3],
@@ -152,6 +155,34 @@ fn test_quaternion() {
     assert_eq!(euler[0], 1.4363245);
     assert_eq!(euler[1], 2.2365434);
     assert_eq!(euler[2], 0.32591859);
+}
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
+pub extern "C" fn simd_dot(x1: v128, x2: v128, y1: v128, y2: v128, z1: v128, z2: v128) -> v128 {
+    use std::arch::wasm32::{f32x4_add, f32x4_mul};
+    f32x4_add(
+        f32x4_add(f32x4_mul(x1, x2), f32x4_mul(y1, y2)),
+        f32x4_mul(z1, z2),
+    )
+}
+#[cfg(target_arch = "wasm32")]
+fn vec4_transform_simd(vec: &[f32; 4], matrix: [v128; 4], result: *mut v128) {
+    use std::arch::wasm32::{f32x4_add, f32x4_mul, f32x4_splat, v128_store};
+    unsafe {
+        v128_store(
+            result,
+            f32x4_add(
+                f32x4_add(
+                    f32x4_mul(f32x4_splat(vec[0]), matrix[0]),
+                    f32x4_mul(f32x4_splat(vec[1]), matrix[1]),
+                ),
+                f32x4_add(
+                    f32x4_mul(f32x4_splat(vec[2]), matrix[2]),
+                    f32x4_mul(f32x4_splat(vec[3]), matrix[3]),
+                ),
+            ),
+        );
+    }
 }
 pub trait CrossProduct<T> {
     fn cross(&self, other: &Self) -> Self;
@@ -497,9 +528,21 @@ impl VectorMath<f32, 4> for [f32; 4] {
     fn transform(&self, _matrix: [[f32; 4]; 4]) -> Self {
         todo!()
     }
-
-    fn transform_to_ref(&self, _matrix: [[f32; 4]; 4], other: &mut Self) {
+    #[cfg(not(target_arch = "wasm32"))]
+    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], result: &mut Self) {
         todo!()
+    }
+    #[cfg(target_arch = "wasm32")]
+    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], result: &mut Self) {
+        use std::arch::wasm32::*;
+        unsafe {
+            let v0 = v128_load(&matrix[0] as *const f32 as *const v128);
+            let v1 = v128_load(&matrix[1] as *const f32 as *const v128);
+            let v2 = v128_load(&matrix[2] as *const f32 as *const v128);
+            let v3 = v128_load(&matrix[3] as *const f32 as *const v128);
+            let matrixarr = [v0, v1, v2, v3];
+            vec4_transform_simd(self, matrixarr, &mut result[0] as *mut f32 as *mut v128);
+        }
     }
 }
 
@@ -826,59 +869,11 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
             let v1 = v128_load(&other[1] as *const f32 as *const v128);
             let v2 = v128_load(&other[2] as *const f32 as *const v128);
             let v3 = v128_load(&other[3] as *const f32 as *const v128);
-
-            v128_store(
-                &mut result[0] as *mut f32 as *mut v128,
-                f32x4_add(
-                    f32x4_add(
-                        f32x4_mul(f32x4_splat(self[0][0]), v0),
-                        f32x4_mul(f32x4_splat(self[0][1]), v1),
-                    ),
-                    f32x4_add(
-                        f32x4_mul(f32x4_splat(self[0][2]), v2),
-                        f32x4_mul(f32x4_splat(self[0][3]), v3),
-                    ),
-                ),
-            );
-            v128_store(
-                &mut result[1] as *mut f32 as *mut v128,
-                f32x4_add(
-                    f32x4_add(
-                        f32x4_mul(f32x4_splat(self[1][0]), v0),
-                        f32x4_mul(f32x4_splat(self[1][1]), v1),
-                    ),
-                    f32x4_add(
-                        f32x4_mul(f32x4_splat(self[1][2]), v2),
-                        f32x4_mul(f32x4_splat(self[1][3]), v3),
-                    ),
-                ),
-            );
-            v128_store(
-                &mut result[2] as *mut f32 as *mut v128,
-                f32x4_add(
-                    f32x4_add(
-                        f32x4_mul(f32x4_splat(self[2][0]), v0),
-                        f32x4_mul(f32x4_splat(self[2][1]), v1),
-                    ),
-                    f32x4_add(
-                        f32x4_mul(f32x4_splat(self[2][2]), v2),
-                        f32x4_mul(f32x4_splat(self[2][3]), v3),
-                    ),
-                ),
-            );
-            v128_store(
-                &mut result[3] as *mut f32 as *mut v128,
-                f32x4_add(
-                    f32x4_add(
-                        f32x4_mul(f32x4_splat(self[3][0]), v0),
-                        f32x4_mul(f32x4_splat(self[3][1]), v1),
-                    ),
-                    f32x4_add(
-                        f32x4_mul(f32x4_splat(self[3][2]), v2),
-                        f32x4_mul(f32x4_splat(self[3][3]), v3),
-                    ),
-                ),
-            )
+            let matrix = [v0, v1, v2, v3];
+            vec4_transform_simd(&self[0], matrix, &mut result[0] as *mut f32 as *mut v128);
+            vec4_transform_simd(&self[1], matrix, &mut result[1] as *mut f32 as *mut v128);
+            vec4_transform_simd(&self[2], matrix, &mut result[2] as *mut f32 as *mut v128);
+            vec4_transform_simd(&self[3], matrix, &mut result[3] as *mut f32 as *mut v128);
         }
     }
     fn determinant(&self) -> f32 {

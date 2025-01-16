@@ -13,10 +13,10 @@ describe('Physic time ', function () {
     await page.goto('https://localhost:4280');
   }, 10000);
   it('should load without error', async () => {
-    const elem = await page.waitForSelector('button');
+    const elem = await page.waitForSelector('game-container >>> button');
     await elem?.click();
-    await page.waitForSelector('progress');
-    await page.waitForFunction(() => !document.querySelector('progress'));
+    await page.waitForSelector('game-container >>> progress');
+    await page.waitForSelector('game-container >>> progress', {hidden: true});
   }, 10000);
   it('Delta has changed', async function () {
     const [value0, value1] = await page.evaluate(async function () {

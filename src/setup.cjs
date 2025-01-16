@@ -14,9 +14,9 @@ module.exports = async function () {
       '--remote-debugging-port=9222',
       '--enable-features=SharedArrayBuffer',
     ],
-    channel: 'chrome-canary',
-    executablePath:
-      'C:/Users/ottov/AppData/Local/Google/Chrome SxS/Application/chrome.exe',
+    channel: 'chrome',
+  /*  executablePath:
+      'C:/Users/ottov/AppData/Local/Google/Chrome/Application/chrome.exe',*/
     headless: false,
     product: 'chrome',
   });

@@ -14,7 +14,7 @@
  */
 export class LazyEval {
   #timerStart: number | null = null;
-  #timeoutID = 0;
+  #timeoutID?: ReturnType<typeof setTimeout>;
   constructor(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private callback: (...args: any[]) => void,

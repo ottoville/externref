@@ -3,6 +3,7 @@ import { describe, beforeAll, it, expect, jest } from '@jest/globals';
 import { Box } from '../GPU/Meshes/Box.js';
 import { Engine } from '../engine.js';
 import fs from 'fs';
+import { RigidBody } from '../MainNode.js';
 jest.setTimeout(16000);
 
 describe('Physics Has gravity and collision', function () {
@@ -20,35 +21,55 @@ describe('Physics Has gravity and collision', function () {
         ),
       },
     );
-    const slope = new Box({
-      can_collide: true,
-      fixed: true,
-      label: 'gravitybixbox2',
-    });
+    const slope = new Box(
+      {
+        can_collide: true,
+      },
+      {
+        label: 'gravitybixbox2',
+        rigid_body: RigidBody.fixed,
+      },
+    );
     slope.update_scale(200, 5, 200);
     slope.rotation = [Math.sin(1.4), 0, 0, Math.cos(1.4)];
-    slope.translation = [23, 500, 23];
+    const engine_lock = engine.rust.get_engine();
+    slope.setTranslation(engine_lock, [23, 500, 23]);
+    engine.rust.drop_engine_lock(engine_lock);
   }, 10000);
 
   it('Flat ground', async function () {
-    const b = new Box({
-      can_collide: true,
-      fixed: true,
-      label: 'gravitybixbox',
-    });
+    const b = new Box(
+      {
+        can_collide: true,
+      },
+      {
+        label: 'gravitybixbox',
+        rigid_body: RigidBody.fixed,
+      },
+    );
     b.update_scale(100, 5, 100);
-    b.translation = [123, 300, 123];
+    const engine_lock = engine.rust.get_engine();
+    b.setTranslation(engine_lock, [123, 300, 123]);
+    engine.rust.drop_engine_lock(engine_lock);
 
-    const b2 = new Box({
-      can_collide: true,
-      color: [0, 1, 0, 0],
-      label: 'gravitygreenbox',
-      point_light: 400,
-    });
-    b2.translation = [123, 320, 123];
+    const b2 = new Box(
+      {
+        can_collide: true,
+        color: [0, 1, 0, 0],
+      },
+      {
+        label: 'gravitygreenbox',
+        point_light: 400,
+      },
+    );
+    const engine_lock = engine.rust.get_engine();
+    b2.setTranslation(engine_lock, [123, 320, 123]);
+
     b2.hasGravity = true;
     let ticks = 0;
-    const translation = b2.translation;
+    const translation = b2.getTranslation(engine_lock);
+    engine.rust.drop_engine_lock(engine_lock);
+
     //@ts-expect-error
     let oldTranslation: [number, number, number] = [...translation];
     let collided = false;

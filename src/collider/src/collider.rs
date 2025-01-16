@@ -173,7 +173,6 @@ pub unsafe extern "C" fn check_for_lowest_root0(
         (*collider).lowest_root,
     )
 }
-//TODO finish this
 #[cfg(target_arch = "wasm32")]
 #[no_mangle]
 pub unsafe extern "C" fn test_triangle(
@@ -366,6 +365,30 @@ impl Collider {
                 collided_point_in_triangle: *(0 as *const &'static Plane),
                 lowest_root: 0.0,
                 collision_point: [0.0; 4],
+            }
+        }
+    }
+    //TODO finish this
+    #[cfg(target_arch = "wasm32")]
+    pub fn test_triangles(
+        &self,
+        planePosition: i32,
+        mut planePositionHorizontal: usize,
+        length: i32,
+        meshID: i32,
+    ) {
+        use std::arch::wasm32::v128_load;
+        if length == 0 {
+            return;
+        }
+        let end = planePosition + length;
+        planePositionHorizontal -= 64;
+        loop {
+            planePositionHorizontal += 64;
+            unsafe {
+                let planeX = v128_load(planePositionHorizontal as *const v128);
+                let planeY = v128_load((planePositionHorizontal + 16) as *const v128);
+                let planeZ = v128_load((planePositionHorizontal + 32) as *const v128);
             }
         }
     }

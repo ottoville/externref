@@ -16,7 +16,7 @@ describe('/ (Home Page)', () => {
   }, 10000);
 
   it('should load without error', async () => {
-    const elem = await page.waitForSelector('#loginmethods a');
+    const elem = await page.waitForSelector('game-container >>> a');
     await elem?.click();
   });
   it('should fill the form', async () => {
@@ -33,7 +33,7 @@ describe('/ (Home Page)', () => {
   });
   it('should have logged in', async () => {
     //  page.screenshot({path:'./sreenshot2.jpg'});
-    const elem2 = await page.waitForSelector('#loginmethods button');
+    const elem2 = await page.waitForSelector('game-container >>> button');
     const r = await elem2?.evaluate(
       (node) => (node as HTMLButtonElement).textContent,
     );

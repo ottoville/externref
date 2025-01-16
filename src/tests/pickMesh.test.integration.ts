@@ -20,10 +20,10 @@ describe('Pick box ', function () {
     await page.goto('https://localhost:4280');
   }, 10000);
   it('should load without error', async () => {
-    const elem = await page.waitForSelector('button');
+    const elem = await page.waitForSelector('game-container >>> button');
     await elem?.click();
-    await page.waitForSelector('progress');
-    await page.waitForFunction(() => !document.querySelector('progress'));
+    await page.waitForSelector('game-container >>> progress');
+    await page.waitForSelector('game-container >>> progress', { hidden: true });
   });
   it('should pick', async () => {
     const [pickInfo0, pickInfo, boxId] = await page.evaluate(async function () {
@@ -32,19 +32,24 @@ describe('Pick box ', function () {
       const Box: typeof Box2 = (await import('/js/GPU/Meshes/Box.js')).Box;
       //@ts-expect-error
       const engine: Engine = window.engine;
-      const b = new Box({
-        can_collide: false,
-        label: 'PickGreenbox',
-      });
-      b.translation = [0, 400, 0];
+      const b = new Box(
+        {
+          can_collide: false,
+        },
+        { label: 'PickGreenbox' },
+      );
+      const engine_lock = engine.rust.get_engine();
+      b.setTranslation(engine_lock, [0, 400, 0]);
+      engine.rust.drop_engine_lock(engine_lock);
+
       b.update_scale(500, 500, 500);
       //@ts-expect-error
-      const control = engine!.mainCamera.attachControllerForCamera({
+      const control = engine!.gpu.mainCamera.attachControllerForCamera({
         attachCameraController: () => undefined,
         deAttachCameraController: () => undefined,
       });
-      control.updatePosition((position) => position.set([5000, 400, 0]));
-      control.updateDirection((direction) => direction.set([1, 0, 0]));
+      control.updatePosition(5000, 400, 0);
+      control.updateDirection(1, 0, 0);
 
       const [pickedPosition, pickedMesh] = await new Promise<
         [
@@ -63,7 +68,7 @@ describe('Pick box ', function () {
           engine.gpu!.mousePosition[1] = (engine.canvas!.height / 2) | 0;
           res([
             await engine.gpu!.renderPassScreen.pickPosition(true),
-            await engine.gpu!.renderPassScreen.pickMesh(undefined),
+            await engine.gpu!.renderPassScreen.pickMesh([b]),
           ]);
         });
       });

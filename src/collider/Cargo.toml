@@ -13,6 +13,6 @@ path = "src/collider.rs"
 terramath = { path = "../terramath" }
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.49"
+wasm-bindgen-test = "0.3.50"
 
 
