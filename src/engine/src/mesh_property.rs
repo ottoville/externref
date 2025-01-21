@@ -16,13 +16,13 @@ use crate::{
 
 #[no_mangle]
 pub unsafe extern "C" fn remove_onchange_callback(mesh_id: usize, cb: ExplicitFreeListIndex) {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     mesh_property.on_change.remove(cb);
 }
 #[no_mangle]
 pub unsafe extern "C" fn add_onchange_callback(mesh_id: usize) -> ExplicitFreeListIndex {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     let id = mesh_property.on_change.insert(Box::new(|mesh_property| {
         let mut devtools = DEVTOOLS.write().unwrap();
@@ -132,7 +132,7 @@ impl MeshProperty {
         }
         return &self.transformation;
     }
-    pub fn update_translation(&mut self, x: f32, y: f32, z: f32) {
+    fn update_translation(&mut self, x: f32, y: f32, z: f32) {
         self.translation.0 = [x, y, z];
     }
     pub fn update_scale(&mut self, x: f32, y: f32, z: f32) {

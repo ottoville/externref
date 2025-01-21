@@ -40,41 +40,32 @@ pub unsafe extern "C" fn get_point_lights_count() -> usize {
 }
 #[no_mangle]
 pub extern "C" fn get_mesh_directional_light(mesh_id: usize) -> f32 {
-    ENGINE
-        .engine2
-        .lock()
-        .unwrap()
-        .find_mesh_by_id(mesh_id).mesh_property.lock().unwrap()
-        .gpu_memory
-        .directional_light
+    let meshes = &ENGINE.meshes.lock().unwrap();
+    let mesh = &meshes[mesh_id];
+    let mesh_property = mesh.mesh_property.lock().unwrap();
+    mesh_property.gpu_memory.directional_light
 }
 #[no_mangle]
 pub extern "C" fn get_mesh_point_light(mesh_id: usize) -> f32 {
-    ENGINE
-        .engine2
-        .lock()
-        .unwrap()
-        .find_mesh_by_id(mesh_id).mesh_property.lock().unwrap()
-        .gpu_memory
-        .point_light_squared
+    let meshes = &ENGINE.meshes.lock().unwrap();
+    let mesh = &meshes[mesh_id];
+    let mesh_property = mesh.mesh_property.lock().unwrap();
+
+    mesh_property.gpu_memory.point_light_squared
 }
 #[no_mangle]
 pub extern "C" fn set_mesh_directional_light(mesh_id: usize, light: f32) {
-    ENGINE
-        .engine2
-        .lock()
-        .unwrap()
-        .find_mesh_by_id_mut(mesh_id).mesh_property.lock().unwrap()
-        .set_directional_light(light);
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mut mesh_property = mesh.mesh_property.lock().unwrap();
+
+    mesh_property.set_directional_light(light);
 }
 #[no_mangle]
 pub extern "C" fn set_mesh_point_light(mesh_id: usize, light: f32) {
-    ENGINE
-        .engine2
-        .lock()
-        .unwrap()
-        .find_mesh_by_id_mut(mesh_id).mesh_property.lock().unwrap()
-        .set_point_light(light);
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mut mesh_property = mesh.mesh_property.lock().unwrap();
+
+    mesh_property.set_point_light(light);
 }
 pub struct DevTools {
     pub euler_angles: [f32; 3],

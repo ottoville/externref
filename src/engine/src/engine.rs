@@ -37,14 +37,14 @@ extern "C" {
 
 }
 #[cfg(test)]
-unsafe fn mesh_on_physic_tick(_engine: *const Engine2, _delta: u32, _externref: &Resource<JSMesh>) {
+unsafe fn mesh_on_physic_tick(mesh: *const Mesh, _delta: u32, _externref: &Resource<JSMesh>) {
 }
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "env")]
 extern "C" {
-    fn mesh_on_physic_tick(engine: *const Engine2, delta: u32, externref: &Resource<JSMesh>);
+    fn mesh_on_physic_tick(mesh: *const Mesh, delta: u32, externref: &Resource<JSMesh>);
 }
 
 #[no_mangle]
@@ -110,14 +110,13 @@ const GRAVITY: nalgebra::Matrix<
 pub struct Engine {
     pub engine2: Mutex<Engine2>,
     pub gpu: Mutex<Option<GPU>>,
-    pub rigid_body_set: Mutex<RigidBodySet>,
     event_handler: ChannelEventCollector,
     character_controller: KinematicCharacterController,
     pub character_mesh_id: AtomicUsize,
+    pub meshes: Mutex<Vec<Mesh>>,
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
-    pub meshes: Vec<Mesh>,
     pub rigid_bodies: HashMap<RigidBodyHandle, usize>,
     pub gpu_allocated: FreeIndex,
     pub collider_set: ColliderSet,
@@ -127,6 +126,7 @@ pub struct Engine2 {
     pub joint_set: ImpulseJointSet,
     pub narrow_phase: NarrowPhase,
     pub multi_joint_set: MultibodyJointSet,
+    pub rigid_body_set: RigidBodySet,
 }
 
 pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
@@ -137,7 +137,6 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
     return Engine {
         engine2: Mutex::new(Engine2 {
             physic_pipeline: PhysicsPipeline::new(),
-            meshes: Vec::with_capacity(100),
             rigid_bodies: HashMap::new(),
             gpu_allocated: FreeIndex::new(),
             collider_set: ColliderSet::new(),
@@ -147,9 +146,11 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
             joint_set: ImpulseJointSet::new(),
             narrow_phase: NarrowPhase::new(),
             multi_joint_set: MultibodyJointSet::new(),
+            rigid_body_set: RigidBodySet::new(),
         }),
         gpu: Mutex::new(None),
-        rigid_body_set: Mutex::new(RigidBodySet::new()),
+        meshes: Mutex::new(Vec::with_capacity(100)),
+
         event_handler: ChannelEventCollector::new(collision_send, contact_send),
 
         character_controller: KinematicCharacterController::default(),
@@ -240,10 +241,9 @@ pub fn js_error<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
 impl Engine2 {
     pub fn move_character(&self, dt: f32, x: f32, y: f32, z: f32) {
         let character_mesh_id = &ENGINE.character_mesh_id.load(Ordering::Relaxed);
-        let mut rigid_body_set = ENGINE.rigid_body_set.lock().unwrap();
         let query_pipeline = QueryPipeline::new();
         let character_shape = Ball::new(1.8);
-        let mesh = self.find_mesh_by_id(*character_mesh_id);
+        let mesh = &mut ENGINE.meshes.lock().unwrap()[*character_mesh_id];
 
         let character_pos = Isometry3::new(
             Vector3::from(mesh.mesh_property.lock().unwrap().translation.0),
@@ -259,9 +259,9 @@ impl Engine2 {
                 .add_vec(&[x, y, z]),
         );
         let filter = QueryFilter::default();
-        ENGINE.character_controller.move_shape(
+        let corrected_movement = ENGINE.character_controller.move_shape(
             dt,
-            &mut rigid_body_set,
+            &self.rigid_body_set,
             &self.collider_set,
             &query_pipeline,
             &character_shape,
@@ -270,22 +270,27 @@ impl Engine2 {
             filter,
             |collision| { /* Handle or collect the collision in this closure. */ },
         );
+        mesh.update_translation(
+            corrected_movement.translation.x,
+            corrected_movement.translation.y,
+            corrected_movement.translation.z,
+            true,
+        );
     }
     pub fn physic_tick(&mut self, delta: u32) {
         let physics_hooks = ();
-        for mesh in &self.meshes {
+        for mesh in ENGINE.meshes.lock().unwrap().iter() {
             if let Some(externref) = mesh.externref.as_ref() {
-                unsafe { mesh_on_physic_tick(self, delta, externref) }
+                unsafe { mesh_on_physic_tick(mesh, delta, externref) }
             }
         }
-        let mut rigid_body_set = ENGINE.rigid_body_set.lock().unwrap();
         self.physic_pipeline.step(
             &GRAVITY,
             &INTEGRATION_PARAMETERS,
             &mut self.island_manager,
             &mut self.broad_phase,
             &mut self.narrow_phase,
-            &mut rigid_body_set,
+            &mut self.rigid_body_set,
             &mut self.collider_set,
             &mut self.joint_set,
             &mut self.multi_joint_set,
@@ -315,10 +320,10 @@ impl Engine2 {
             let mesh = self.rigid_bodies.get_mut(rigid_body_handle);
             match mesh {
                 Some(m_id) => {
-                    let rigid_body = &rigid_body_set[*rigid_body_handle];
+                    let rigid_body = &self.rigid_body_set[*rigid_body_handle];
                     let newrot = rigid_body.rotation().as_vector();
                     let mesh_id = *m_id;
-                    let mesh = &mut self.meshes[mesh_id];
+                    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
                     {
                         let mut mesh_property = mesh.mesh_property.lock().unwrap();
                         mesh_property.rotation.i = newrot.x;
@@ -338,31 +343,24 @@ impl Engine2 {
             }
         }
     }
-    pub fn find_mesh_by_id(&self, mesh_id: usize) -> &Mesh {
-        &self.meshes[mesh_id]
-    }
-    pub fn find_mesh_by_id_mut(&mut self, mesh_id: usize) -> &mut Mesh {
-        &mut self.meshes[mesh_id]
-    }
     pub fn add_collider_to_mesh<'a>(&mut self, collider: Collider, mesh_id: usize) {
-        let mesh = &mut self.meshes[mesh_id];
+        let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
         let collider_set = &mut self.collider_set;
         match mesh.rigid_body_handle {
             Some(rigid_body_handle) => {
-                let mut rigid_body_set = ENGINE.rigid_body_set.lock().unwrap();
                 let old = mesh
                     .collider_handle
                     .replace(collider_set.insert_with_parent(
                         collider,
                         rigid_body_handle,
-                        &mut rigid_body_set,
+                        &mut self.rigid_body_set,
                     ));
                 match old {
                     Some(handle) => {
                         collider_set.remove(
                             handle,
                             &mut self.island_manager,
-                            &mut rigid_body_set,
+                            &mut self.rigid_body_set,
                             true,
                         );
                     }

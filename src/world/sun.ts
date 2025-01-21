@@ -11,6 +11,7 @@ import {
   type SunVertShader,
 } from '../GPU/Shaders/Sun.vert.js';
 import { createSingleColorFragShader } from '../GPU/Shaders/SingleColor.frag.js';
+import { DataNode } from '../nodes/DataNode.js';
 declare const engine: Engine;
 
 const zAngle = Math.cos(Math.PI * 0.2);
@@ -23,10 +24,7 @@ export class Sun extends MainNode {
     return Math.min(Math.max(value, min), max);
   };
 
-  override onPhysicTick = (
-    _delta: number,
-    engine_lock: rust_pointer<'engine'>,
-  ) => {
+  override onPhysicTick = (_delta: number, mesh: rust_pointer<'mesh'>) => {
     const secondsOfDay = engine.physics.tickTime % 86400;
     const minutesOfDay = secondsOfDay / 60;
     const sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
@@ -37,8 +35,8 @@ export class Sun extends MainNode {
     const sunPositionZ = sin * zAngle;
     const sunPositionY = sin * yAngle;
 
-    const translation = this.getTranslation(engine_lock);
-    this.setVelocity(engine_lock, [
+    const translation = DataNode.getTranslation(mesh);
+    DataNode.setVelocity(mesh, [
       sunPositionX - translation[0],
       sunPositionY - translation[1],
       sunPositionZ - translation[2],
@@ -47,11 +45,11 @@ export class Sun extends MainNode {
     const ambientR = this.#clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
     const ambientGB = this.#clamp((sunPositionY + 0.1) * 0.4 - 0.1, 0.05, 0.3);
 
-    this.setColor(engine_lock, [1, 1, 1, 1]);
+    engine.rust.set_color(mesh, 1, 1, 1, 1);
     //earth shadow
-    this.setAmbient(engine_lock, [ambientR, ambientGB, ambientGB]);
-    this.setShadow(engine_lock, this.#clamp(sunPositionY * 8 + 1, 0, 1)); // <<3 == * 8
-    this.update_dynamic_buffer(engine_lock);
+    engine.rust.set_ambient(mesh, ambientR, ambientGB, ambientGB);
+    engine.rust.set_shadow(mesh, this.#clamp(sunPositionY * 8 + 1, 0, 1)); // <<3 == * 8
+    engine.rust.update_dynamic_buffer(mesh);
   };
   drawable: DrawableSimple<RenderPipelineProps<SunVertShader>> | undefined;
   constructor(gpu: GPU, scenes: Scene[]) {

@@ -301,13 +301,11 @@ export class TerrainTool extends MainNode {
             this.#pick.position[0] = pickInfo.position[0];
             this.#pick.position[1] = pickInfo.position[1];
             this.#pick.position[2] = pickInfo.position[2];
-            const engine_lock = engine.rust.get_engine();
-            this.setTranslation(engine_lock, [
+            this.setTranslation([
               pickInfo.position[0],
               0,
               pickInfo.position[2],
             ]);
-            engine.rust.drop_engine_lock(engine_lock);
           }
         })
         .catch((err) => engine.showError(err));

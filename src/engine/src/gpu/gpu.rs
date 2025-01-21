@@ -123,15 +123,20 @@ pub unsafe extern "C" fn drop_gpu_lock(gpu: *mut MutexGuard<'static, Option<GPU>
     let gpu = Box::from_raw(gpu);
     drop(gpu);
 }
+/**
+ * Initialize new gpu.
+ * on device lost new device can be forced with force-argiment
+ */
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn init_gpu(
     device: Resource<JSDevice>,
     queue: Resource<JSQueue>,
     layout: Resource<JSBindGroupLayout>,
+    force: bool,
 ) {
     let mut gpu = ENGINE.gpu.lock().unwrap();
-    if gpu.is_none() {
+    if force || gpu.is_none() {
         let gpu_buffer = Arc::new(Mutex::new(
             GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
                 &device,
@@ -300,8 +305,8 @@ impl GPU {
         // Meshes
         // Place for frustum culling
         {
-            let engine = ENGINE.engine2.lock().unwrap();
-            for mesh in engine.meshes.iter() {
+            let meshes = ENGINE.meshes.lock().unwrap();
+            for mesh in meshes.iter() {
                 if mesh.on_gpu_queue {
                     self.update_queue.push(mesh.id);
                 }
@@ -313,11 +318,10 @@ impl GPU {
                 &self.device,
                 std::mem::size_of::<GPUMesh>() * self.update_queue.len(),
                 |temp_buffer| {
-                    let mut engine = ENGINE.engine2.lock().unwrap();
                     let mut wanted_size = self.gpu_buffer.lock().unwrap().size;
 
                     for (i, mesh_id) in self.update_queue.iter().enumerate() {
-                        let mesh = &mut engine.meshes[*mesh_id];
+                        let mesh = &mut ENGINE.meshes.lock().unwrap()[*mesh_id];
                         let mut mesh_property = mesh.mesh_property.lock().unwrap();
                         for cb in mesh_property.on_change.iter() {
                             cb(&mesh_property);
@@ -350,7 +354,7 @@ impl GPU {
                         gpu_buffer.resize(&self.device, &mut command_encoder, wanted_size);
                     }
                     for (i, mesh_id) in self.update_queue.drain(..).enumerate() {
-                        let mesh = &engine.meshes[mesh_id];
+                        let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
                         let mesh_property = mesh.mesh_property.lock().unwrap();
                         command_encoder.copy_buffer_to_buffer(
                             &**temp_buffer,
@@ -413,6 +417,7 @@ fn test_gpu_queue() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            false,
         );
         process_gpu_queue(&Resource::new_non_null(std::mem::transmute::<
             usize,
@@ -426,7 +431,7 @@ fn test_gpu_queue() {
         let mesh_id = Mesh::new(0.0, 1.0, 0.0, 0, String::from("sun"), None, None);
         {
             let engine = ENGINE.engine2.lock().unwrap();
-            let mesh = engine.find_mesh_by_id(mesh_id);
+            let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
             assert_eq!(mesh.on_gpu_queue, true);
         }
         process_gpu_queue(&Resource::new_non_null(std::mem::transmute::<
@@ -435,7 +440,7 @@ fn test_gpu_queue() {
         >(1)));
         {
             let engine = ENGINE.engine2.lock().unwrap();
-            let mesh = engine.find_mesh_by_id(mesh_id);
+            let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
             assert_eq!(mesh.on_gpu_queue, false);
         }
     }
@@ -454,6 +459,7 @@ fn test_gpu_lights() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            false,
         );
         {
             let mut maybegpu = ENGINE.gpu.lock().unwrap();

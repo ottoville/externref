@@ -73,8 +73,9 @@ pub unsafe extern "C" fn last_collider_world_vertices_pointer(
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize, cap: usize) {
     let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);
-    let engine = &mut ENGINE.engine2.lock().unwrap();
-    let geometry = engine.meshes[mesh_id].get_geometry_mut();
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+
+    let geometry = mesh.get_geometry_mut();
     geometry.collider_planes = vec![
         ColliderPlane {
             plane: Plane {
@@ -117,7 +118,7 @@ pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry) -> usize 
 }
 #[no_mangle]
 pub unsafe extern "C" fn have_vertices(mesh_id: usize) -> bool {
-    let mesh = &ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
     mesh.get_geometry().vertices.have_vertices()
 }
 #[no_mangle]
@@ -132,9 +133,9 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
 ) {
     let indices = Vec::from_raw_parts(indices_ptr, indices_length, indices_cap);
     let vertices = Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_cap);
-    let engine = &mut ENGINE.engine2.lock().unwrap();
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 
-    let geometry = engine.meshes[mesh_id].get_geometry_mut();
+    let geometry = mesh.get_geometry_mut();
     geometry.indices = Indices {
         indices,
         gpu_buffer: None,

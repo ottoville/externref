@@ -297,6 +297,7 @@ export class GPU {
    */
   destroy() {
     this.destroyed = true;
+    cancelAnimationFrame(this.#renderFrame);
     this.device.destroy();
   }
   /**
@@ -343,6 +344,7 @@ export class GPU {
       new Externref(true, device),
       device.queue,
       this.pipelineLayouts.updateViewLayout,
+      true,
     );
     this.shaders = createShaderBuilders(this);
     this.updateViewShader = createUpdateViewShader(this);
@@ -703,7 +705,7 @@ export class GPU {
             this.#renderLoop(time, updateViewPipeline),
           );
         } catch (e) {
-          engine.showError(e, this);
+          engine.showError(e);
         }
       }, 500);
     });

@@ -34,8 +34,6 @@ export class RightTriangularPrism extends IndexedSingleColoredMesh {
         scenes,
       },
     );
-    const engine_lock = engine.rust.get_engine();
-    this.setColorFromMutex(engine_lock, color);
-    engine.rust.drop_engine_lock(engine_lock);
+    this.setColorFromId(color);
   }
 }

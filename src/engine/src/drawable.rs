@@ -6,7 +6,7 @@ pub struct DrawableDirect {
 }
 #[no_mangle]
 pub extern "C" fn get_instance_count(mesh_id: usize) -> u32 {
-    let mesh = &ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
 
     mesh.draw_command
         .as_ref()
@@ -18,7 +18,7 @@ pub extern "C" fn get_instance_count(mesh_id: usize) -> u32 {
 }
 #[no_mangle]
 pub extern "C" fn get_first_instance(mesh_id: usize) -> u32 {
-    let mesh = &ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
 
     mesh.draw_command
         .as_ref()
@@ -30,7 +30,7 @@ pub extern "C" fn get_first_instance(mesh_id: usize) -> u32 {
 }
 #[no_mangle]
 pub extern "C" fn set_instance_count(mesh_id: usize, instance_count: u32) {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 
     match mesh.draw_command {
         Some(ref mut draw_command) => match &mut (draw_command.direct) {
@@ -46,7 +46,7 @@ pub extern "C" fn set_instance_count(mesh_id: usize, instance_count: u32) {
 }
 #[no_mangle]
 pub extern "C" fn set_first_instance(mesh_id: usize, first_instance: u32) {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 
     match mesh.draw_command {
         Some(ref mut draw_command) => match &mut (draw_command.direct) {
@@ -62,7 +62,7 @@ pub extern "C" fn set_first_instance(mesh_id: usize, first_instance: u32) {
 }
 #[no_mangle]
 pub extern "C" fn add_drawble(mesh_id: usize) {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 
     let d = DrawCommand {
         draw_type: DrawType::Indexed,
@@ -80,7 +80,7 @@ pub extern "C" fn set_drawble_direct(mesh_id: usize, instance_count: u32, first_
     if instance_count == 0 {
         js_warn(["Added drawable with 0 instances, nothing will be drawn"])
     }
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 
     match mesh.draw_command {
         Some(ref mut draw_command) => {

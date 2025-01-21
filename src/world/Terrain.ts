@@ -114,10 +114,8 @@ TODO
       byteLength,
     );
     if (!nofaces) {
-      const engine_lock = engine.rust.get_engine();
-      const facesCount = this.mesh.get_faces_count(engine_lock);
+      const facesCount = this.mesh.get_faces_count();
       const facesByteLength = facesCount * 4 * Float32Array.BYTES_PER_ELEMENT;
-      engine.rust.drop_engine_lock(engine_lock);
       const b2 = new Buffer({
         gpu: engine.gpu.device,
         label: 'terrain_b2',
@@ -323,10 +321,10 @@ TODO
 
       const cache = await cacheP;
       cache.put(new Request('/terrain'), response).catch((err) => {
-        engine.showError(err, this.gpu);
+        engine.showError(err);
       });
       cache.put(new Request('/indices'), response2).catch((err) => {
-        engine.showError(err, this.gpu);
+        engine.showError(err);
       });
     } else {
       /* const c = new OffscreenCanvas((Terrain.subdivisions[0] + 1) * 3, (Terrain.subdivisions[1] + 1));
@@ -582,7 +580,7 @@ TODO
               ]);
             })
             .catch((err) => {
-              engine.showError(err, gpu);
+              engine.showError(err);
             });
         }
 
@@ -598,7 +596,7 @@ TODO
             this.mesh.faces = new Float32Array(buff);
           })
           .catch((err) => {
-            engine.showError(err, gpu);
+            engine.showError(err);
           });
         gpuReadBufferPositions
           .readAndDestroy((readbuff) => {
@@ -609,14 +607,14 @@ TODO
               );
               this.updateSwap2(0, readbuff.byteLength, true);
               this.#serialize().catch((err) => {
-                engine.showError(err, this.gpu);
+                engine.showError(err);
               });
             });
           })
           .catch((err) => {
-            engine.showError(err, gpu);
+            engine.showError(err);
           });
       })
-      .catch((err) => engine.showError(err, gpu));
+      .catch((err) => engine.showError(err));
   }
 }

@@ -264,6 +264,6 @@ export class Plants extends MainNode {
           }),
         );
       })
-      .catch((err) => engine.showError(err, scene.gpu));
+      .catch((err) => engine.showError(err));
   }
 }

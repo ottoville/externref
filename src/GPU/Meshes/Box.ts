@@ -6,9 +6,7 @@ declare const engine: Engine;
 let uid = 0;
 export class Box extends IndexedSingleColoredMesh {
   override create_collider() {
-    const engine_lock = engine.rust.get_engine();
-    const scaleZ = this.getScaleZ(engine_lock);
-    engine.rust.drop_engine_lock(engine_lock);
+    const scaleZ = this.getScaleZ();
 
     //TODO do not automaticly set collision events
     return engine.rust.create_cuboid_collider(
@@ -42,8 +40,6 @@ export class Box extends IndexedSingleColoredMesh {
             ...mainNodeProps,
           },
     );
-    const engine_lock = engine.rust.get_engine();
-    this.setColorFromMutex(engine_lock, color);
-    engine.rust.drop_engine_lock(engine_lock);
+    this.setColorFromId(color);
   }
 }

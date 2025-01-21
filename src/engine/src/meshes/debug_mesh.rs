@@ -11,8 +11,8 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
     label_cap: usize,
 ) -> usize {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let engine = &mut ENGINE.engine2.lock().unwrap();
-    let target = &engine.meshes[target_mesh_id];
+    let target = &ENGINE.meshes.lock().unwrap()[target_mesh_id];
+
     let target_indices = &target.get_geometry().indices;
     let mut indices: Vec<usize> = vec![0; target_indices.indices.len() * 2];
     for (i, target_triangle) in target_indices.indices.chunks_exact(3).enumerate() {
@@ -33,7 +33,7 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
         None,
         Some(target.mesh_property.clone()),
     );
-    let mesh = &mut engine.meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
     let mut geometry = Geometry::new(
         false,
         false,
@@ -54,9 +54,9 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
     label_cap: usize,
 ) -> usize {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let engine = &mut ENGINE.engine2.lock().unwrap();
 
-    let target = &engine.meshes[target_mesh_id];
+    let target = &ENGINE.meshes.lock().unwrap()[target_mesh_id];
+
     let target_vertices = &target.get_geometry().vertices;
     let positions_count = target_vertices.length() * 2;
     let mesh_id = Mesh::new(
@@ -68,7 +68,7 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
         None,
         Some(target.mesh_property.clone()),
     );
-    let mesh = &mut engine.meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 
     mesh.positions_count = Some(positions_count);
     let geometry = Geometry::new(

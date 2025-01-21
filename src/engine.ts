@@ -245,10 +245,7 @@ export type rustWasm = {
   ): number;
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: number): boolean;
-  faces_count(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-  ): number;
+  faces_count(mesh_id: number): number;
   alloc_vector_f32(size: Word<'dword'>): rust_pointer<rust_vec_ptr<'f32'>>;
   alloc_vector_u8(size: number): rust_pointer<rust_vec_ptr<'u8'>>;
   alloc_vector_usize(size: number): rust_pointer<rust_vec_ptr<'usize'>>;
@@ -271,80 +268,46 @@ export type rustWasm = {
     w: number,
   ): void;
   update_euler_angles(mesh_id: number, x: number, y: number, z: number): void;
-  update_translation(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-    x: number,
-    y: number,
-    z: number,
-  ): void;
+  update_translation(mesh_id: number, x: number, y: number, z: number): void;
   apply_impulse(mesh_id: number, x: number, y: number, z: number): void;
-  update_dynamic_buffer(engine: rust_pointer<'engine'>, mesh_id: number): void;
-  update_dynamic_buffer_from_mutex(
-    engine: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-  ): void;
+  update_dynamic_buffer(mesh: rust_pointer<'mesh'>): void;
+  update_dynamic_buffer_from_id(mesh_id: number): void;
 
   gpu_alignment(mesh_id: number): number;
-  positions_count(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-  ): number;
+  positions_count(mesh_id: number): number;
   set_positions_count(mesh_id: number, positions_count: number): number;
   strip(mesh_id: number): number;
   collider_planes_parallel_pointer(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
   ): rust_pointer<'collider_planes_parallel_pointer'>;
-  gpu_pointer(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-  ): number;
+  gpu_pointer(mesh_id: number): number;
   label_field_pointer(mesh_id: number): rust_pointer<'label_field'>;
-  translation_pointer(
-    engine: rust_pointer<'engine'>,
-    mesh_id: number,
-  ): rust_pointer<'translation'>;
-  translation_pointer_from_mutex(
-    engine: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-  ): rust_pointer<'translation'>;
+  translation_pointer(mesh: rust_pointer<'mesh'>): rust_pointer<'translation'>;
+  translation_pointer_from_id(mesh_id: number): rust_pointer<'translation'>;
   rotation_pointer(mesh_id: number): rust_pointer<'rotation'>;
   rotation_pointer_euler(mesh_id: number): rust_pointer<'f32'>;
   scale_pointer(mesh_id: number): rust_pointer<'scale'>;
-  velocity_pointer(
-    engine: rust_pointer<'engine'>,
-    mesh_id: number,
-  ): rust_pointer<'velocity'>;
-  velocity_pointer_from_mutex(
-    engine: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-  ): rust_pointer<'velocity'>;
+  velocity_pointer(mesh: rust_pointer<'mesh'>): rust_pointer<'velocity'>;
+  velocity_pointer_from_id(mesh_id: number): rust_pointer<'velocity'>;
 
   intersect_box_aa_sphere(
-    engine: rust_mutex<'locked', 'enginelock'>,
     mesh_id: number,
     collider_ptr: number,
     radius: number,
   ): boolean;
   scale_x(mesh_id: number): number;
   scale_y(mesh_id: number): number;
-  scale_z(
-    enginelock: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-  ): number;
+  scale_z(mesh_id: number): number;
   vertices_stride(geometry: rust_pointer<'geometry'>): Word<'dword'>;
   set_faces(mesh_id: number, ptr: number, length: number, cap: number): void;
   set_color(
-    engine_lock: rust_pointer<'engine'>,
-    mesh_id: number,
+    mesh: rust_pointer<'mesh'>,
     d0: number,
     d1: number,
     d2: number,
     d3: number,
   ): void;
-  set_color_from_mutex(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
+  set_color_from_id(
     mesh_id: number,
     d0: number,
     d1: number,
@@ -352,33 +315,15 @@ export type rustWasm = {
     d3: number,
   ): void;
   set_ambient(
-    engine_lock: rust_pointer<'engine'>,
-    mesh_id: number,
+    mesh: rust_pointer<'mesh'>,
     r: number,
     g: number,
     b: number,
   ): void;
-  set_ambient_from_mutex(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-    r: number,
-    g: number,
-    b: number,
-  ): void;
-  set_shadow(
-    engine_lock: rust_pointer<'engine'>,
-    mesh_id: number,
-    shadow: number,
-  ): void;
-  set_shadow_from_mutex(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-    shadow: number,
-  ): void;
-  collider_faces_pointer(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
-    mesh_id: number,
-  ): rust_pointer<'collider_faces'>;
+  set_ambient_from_id(mesh_id: number, r: number, g: number, b: number): void;
+  set_shadow(mesh: rust_pointer<'mesh'>, shadow: number): void;
+  set_shadow_from_id(mesh_id: number, shadow: number): void;
+  collider_faces_pointer(mesh_id: number): rust_pointer<'collider_faces'>;
   set_scenes(mesh_id: number, scenes: number): void;
   calculate_normals(mesh_id: number): void;
   update_scale_and_rotation(
@@ -453,6 +398,7 @@ export type rustWasm = {
     device: Externref<true, GPUDevice>,
     queue: GPUQueue,
     layout: GPU['pipelineLayouts']['updateViewLayout'],
+    force: boolean,
   ): void;
   push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
   drain_command_buffers(
@@ -832,13 +778,13 @@ export class Engine {
           mesh.externref.onMeshChange.forEach((cb) => cb());
         },
         mesh_on_physic_tick(
-          engine_lock: rust_pointer<'engine'>,
+          mesh: rust_pointer<'mesh'>,
           delta: number,
           externref: Externref<false, MainNode>,
         ) {
           const cb = externref.externref.onPhysicTick;
           if (cb) {
-            cb(delta, engine_lock);
+            cb(delta, mesh);
           }
         },
         now() {
@@ -923,10 +869,9 @@ export class Engine {
     );
   }
 
-  showError(e: unknown, gpu?: GPU) {
-    if (e instanceof Error) {
+  showError(e: unknown) {
+    if (e instanceof Error && e.name === 'OperationError') {
       if (
-        gpu?.destroyed ||
         (e.message.includes('Device') && e.message.includes('is lost')) ||
         (e.cause instanceof Error &&
           e.cause.message.includes('Device') &&
@@ -941,12 +886,7 @@ export class Engine {
           engine.gpu?.device.label,
           'destroyed:',
           engine.gpu?.destroyed,
-          'error GPU:',
-          gpu?.device.label,
-          'destroyed:',
-          gpu?.destroyed,
           e,
-          gpu,
         );
         return;
       }
@@ -1220,7 +1160,6 @@ export class Engine {
     );
   }
   #getFinalPosition(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
     sphere: Ellipsoid,
     scaledPosition: TerraVector3,
     scaledVelocity: TerraVector3,
@@ -1243,12 +1182,11 @@ export class Engine {
       // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
       if (sphere instanceof DataNode) {
         DataNode.CharacterCanCollideMeshes.forEach((mesh) => {
-          if (sphere !== mesh)
-            mesh.checkCollision(engine_lock, this.collider, sphere);
+          if (sphere !== mesh) mesh.checkCollision(this.collider, sphere);
         });
       } else {
         DataNode.CharacterCanCollideMeshes.forEach((mesh) => {
-          mesh.checkCollision(engine_lock, this.collider, sphere);
+          mesh.checkCollision(this.collider, sphere);
         });
       }
       this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
@@ -1378,7 +1316,6 @@ export class Engine {
     return scaledPosition;
   }
   collideWithWorld(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
     sphere: Ellipsoid,
     scaledPosition: TerraVector3,
     scaledVelocity: TerraVector3,
@@ -1386,12 +1323,7 @@ export class Engine {
     if (sphere instanceof DataNode) sphere.colliding_character = false;
     //TODO: Call only when camera position change
     this.collider.finalPosition.set(
-      this.#getFinalPosition(
-        engine_lock,
-        sphere,
-        scaledPosition,
-        scaledVelocity,
-      ),
+      this.#getFinalPosition(sphere, scaledPosition, scaledVelocity),
     );
     this.collider.finalPosition[0] *= sphere.radius[0];
     this.collider.finalPosition[1] *= sphere.radius[1];

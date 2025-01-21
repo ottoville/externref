@@ -546,6 +546,7 @@ fn test_child_camera() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            false
         );
         let mut camera = Camera::new(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),

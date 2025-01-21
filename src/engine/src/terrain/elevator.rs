@@ -16,7 +16,7 @@ pub struct Elevator {
 
 #[no_mangle]
 pub unsafe extern "C" fn create_elevator(mesh_id: usize) -> *mut Elevator {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
     Box::into_raw(Box::new(Elevator::new(mesh.get_geometry_mut())))
 }
 
@@ -37,7 +37,7 @@ pub unsafe extern "C" fn elevate(
     radius: f32,
     height: f32,
 ) {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 
     (*elevator_ptr)._elevate(mesh, radius, height)
 }

@@ -34,9 +34,7 @@ export class DrawableSimple<
       renderEncoder instanceof RenderBundleEncoder
         ? renderEncoder.renderBundleEncoder
         : renderEncoder;
-    const engine_lock = engine.rust.get_engine();
-    const positionsCount = this.node.get_positions_count(engine_lock);
-    engine.rust.drop_engine_lock(engine_lock);
+    const positionsCount = this.node.get_positions_count();
     console.debug(
       'drawSimple',
       this.node.label,

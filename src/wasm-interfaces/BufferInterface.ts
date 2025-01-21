@@ -37,7 +37,13 @@ export const BufferExports = {
     offset: number,
     size: number,
   ) {
-    buffer.map_write(offset, size).catch((err) => engine.showError(err));
+    buffer.map_write(offset, size).catch((err) => {
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.warn(err);
+      } else {
+        engine.showError(err);
+      }
+    });
   },
   set_mapped_range(
     { externref: buffer }: Externref<boolean, Buffer<BufferUsageEnums, true>>,

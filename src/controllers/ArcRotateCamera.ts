@@ -311,9 +311,7 @@ export class ArcRotateCamera extends CameraController {
 
     //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
     //let starttime=performance.now();
-    const engine_lock = engine.rust.get_engine();
-    engine.collideWithWorld(engine_lock, this, scaledPosition, scaledVelocity);
-    engine.rust.drop_engine_lock(engine_lock);
+    engine.collideWithWorld(this, scaledPosition, scaledVelocity);
 
     //run the callback
     // if (!this.engine.collider.collidedMesh) {

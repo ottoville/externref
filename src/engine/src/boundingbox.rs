@@ -22,7 +22,7 @@ pub const BOUNDING_BOX_INDICES: [usize; 26] = [
 ];
 #[no_mangle]
 pub unsafe extern "C" fn create_bounding_box_geometry(mesh_id: usize) -> *mut Geometry {
-    let mesh = &mut ENGINE.engine2.lock().unwrap().meshes[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     if let Some(geometry) = &mut mesh.geometry {
         geometry.update_bounding_box(&mesh_property.get_transformation());
@@ -104,14 +104,14 @@ fn test_bounding_box() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            true,
         );
         let len = {
-            let engine2 = ENGINE.engine2.lock().unwrap();
-            engine2.meshes.len()
+            ENGINE.meshes.lock().unwrap().len()
         };
         Mesh::new(0.0, 0.0, 0.0, 0, String::from("box"), None, None);
         let mut engine2 = ENGINE.engine2.lock().unwrap();
-        let m = &mut engine2.meshes[len];
+        let m = &mut ENGINE.meshes.lock().unwrap()[len];
         let mut geometry = Geometry::new(true, false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());
         geometry.set_vertices(vertices);

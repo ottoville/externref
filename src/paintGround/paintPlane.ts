@@ -93,11 +93,9 @@ export class paintPlane extends paintGround {
       5,
       this.#startingPoint[1] + this.drawVector[1] * 0.5,
     ];
-    const engine_lock = engine.rust.get_engine();
-    this.#mesh.setTranslation(engine_lock, this.#meshPosition);
-    const scaleZ = this.#mesh.getScaleZ(engine_lock);
+    this.#mesh.setTranslation(this.#meshPosition);
+    const scaleZ = this.#mesh.getScaleZ();
 
-    engine.rust.drop_engine_lock(engine_lock);
     engine.rust.update_scale_and_rotation(
       this.#mesh.id,
       height * 0.5,
@@ -113,13 +111,11 @@ export class paintPlane extends paintGround {
   onAreaDraw(width: number) {
     const halfWidth = width * 0.5;
     this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, halfWidth);
-    const engine_lock = engine.rust.get_engine();
 
-    this.#mesh.setTranslation(engine_lock, [
+    this.#mesh.setTranslation([
       this.#meshPosition[0] - halfWidth * this.#widthVector[0],
       this.#meshPosition[1],
       this.#meshPosition[2] - halfWidth * this.#widthVector[1],
     ]);
-    engine.rust.drop_engine_lock(engine_lock);
   }
 }

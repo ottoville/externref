@@ -3,7 +3,6 @@ import {
   MutableTerraVector3,
   ReadOnlyFloat32Array,
   TerraMatrix,
-  TerraVector3,
   Triangle,
 } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
@@ -117,16 +116,16 @@ export class DataNode extends MainNode {
   last_acceleration: [number, number, number] = [0, 0, 0];
   // Shortcut property to avoid calls to rust
   #strip: boolean;
-  getSpeedSquared(engine_lock: rust_pointer<'engine'>) {
-    const velocity = this.getVelocity(engine_lock);
+  static getSpeedSquared(mesh: rust_pointer<'mesh'>) {
+    const velocity = this.getVelocity(mesh);
     return (
       velocity[0] * velocity[0] +
       velocity[1] * velocity[1] +
       velocity[2] * velocity[2]
     );
   }
-  getSpeedSquaredFromMutex(engine_lock: rust_mutex<'locked', 'enginelock'>) {
-    const velocity = this.getVelocityFromMutex(engine_lock);
+  getSpeedSquaredFromId() {
+    const velocity = this.getVelocityFromId();
     return (
       velocity[0] * velocity[0] +
       velocity[1] * velocity[1] +
@@ -151,24 +150,16 @@ export class DataNode extends MainNode {
   colliding_character = false;
 
   #vectorsVec4: number[] = [];
-  checkCollide(
-    _dt: number,
-    _velocityPerDelta: [number, number, number],
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
-  ): TerraVector3 {
-    return this.getTranslationFromMutex(engine_lock);
+  checkCollide(_dt: number, _velocityPerDelta: [number, number, number]): void {
     // TODO: Generic collision check, object shape is not known
   }
-  onCollideCharacter(
-    _started: boolean,
-    _engine_lock: rust_mutex<'locked', 'enginelock'>,
-  ) {}
+  onCollideCharacter(_started: boolean) {}
   readonly pickInfo = new pickInfo();
   readonly #triangleFaces: Triangle[] = [];
   #lastColliderTransformMatrix = new TerraMatrix();
 
-  get_faces_count(engine_lock: rust_mutex<'locked', 'enginelock'>) {
-    return engine.rust.faces_count(engine_lock, this.id);
+  get_faces_count() {
+    return engine.rust.faces_count(this.id);
   }
   set faces(faces: Float32Array) {
     const vec_ptr = create_rust_vec_ptr(
@@ -337,9 +328,7 @@ export class DataNode extends MainNode {
   initCollider() {
     if (!this.#character_can_collide_to) return false;
     //TODO: Calculate on demand
-    const engine_lock = engine.rust.get_engine();
-    const facesCount = this.get_faces_count(engine_lock);
-    engine.rust.drop_engine_lock(engine_lock);
+    const facesCount = this.get_faces_count();
 
     if (facesCount === 0 || this.vertices_count === 0) return false;
     this.#triangleFaces.length = 0;
@@ -353,11 +342,7 @@ export class DataNode extends MainNode {
       engine.rust.collisions_transform_matrix_ptr(this.geometry),
     );
   }
-  public checkCollision(
-    engine_lock: rust_mutex<'locked', 'enginelock'>,
-    _collider: ColliderJS,
-    sphere: Ellipsoid,
-  ) {
+  public checkCollision(_collider: ColliderJS, sphere: Ellipsoid) {
     //TODO: When there is support for bounding sphere.
     //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
 
@@ -366,11 +351,11 @@ export class DataNode extends MainNode {
     /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
                return false;
            }*/
-    if (!this.intersect_box_aa_sphere(engine_lock, engine.collider, max)) {
+    if (!this.intersect_box_aa_sphere(engine.collider, max)) {
       return;
     }
     // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix
-    this.get_transformation(engine_lock).multiplyToRef(
+    this.get_transformation().multiplyToRef(
       sphere.collisionsScalingMatrix,
       this.#myCollisionsTransformMatrix,
     );
@@ -383,7 +368,7 @@ export class DataNode extends MainNode {
         this.#myCollisionsTransformMatrix.clone();
       engine.rust.update_collider_planes(this.geometry);
     }
-    const facesCount = this.get_faces_count(engine_lock);
+    const facesCount = this.get_faces_count();
     if (facesCount % 4 != 0) {
       /* const scaledPosition=collider.scaledPosition;
              const scaledVelocity=collider.scaledVelocity
@@ -400,8 +385,8 @@ export class DataNode extends MainNode {
     } else {
       //   TODO: Use wasm when this.faces_count % 4 == 0
       engine.wasm.testTriangles(
-        engine.rust.collider_faces_pointer(engine_lock, this.id),
-        engine.rust.collider_planes_parallel_pointer(engine_lock, this.id),
+        engine.rust.collider_faces_pointer(this.id),
+        engine.rust.collider_planes_parallel_pointer(this.id),
         facesCount * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
         this.id,
       );

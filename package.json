@@ -48,7 +48,7 @@
     "@azure/static-web-apps-cli": "2.0.1",
     "@eslint/js": "9.15.0",
     "@frsource/cypress-plugin-visual-regression-diff": "3.3.10",
-    "cypress": "13.6.2",
+    "cypress": "13.17.0",
     "eslint": "9.15.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-prettier": "5.2.1",

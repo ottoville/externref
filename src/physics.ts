@@ -98,19 +98,20 @@ export class Physics {
 
         */
     this.engine.rust.physic_tick(delta);
-    const engine_lock = this.engine.rust.get_engine();
     this.movables.forEach((movable) => {
       //if (movable.onPhysicTick) movable.onPhysicTick(delta, engine_lock);
-      const velocity = movable.getVelocityFromMutex(engine_lock);
+
+      const velocity = movable.getVelocityFromId();
       if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
-        const currentTranslation = movable.getTranslationFromMutex(engine_lock);
-        movable.setTranslation(engine_lock, [
+        const currentTranslation = movable.getTranslationFromId();
+        movable.setTranslation([
           currentTranslation[0] + velocity[0],
           currentTranslation[1] + velocity[1],
           currentTranslation[2] + velocity[2],
         ]);
       }
     });
+
     /*
             TODO:
              - acceleration etc setters update dynamic buffer. So it is updated multiple times on loop.
@@ -118,17 +119,7 @@ export class Physics {
     for (let i = 0; i < this.tickables.length; i++) {
       const tickable = this.tickables[i]!;
 
-      const velocity = tickable.getVelocityFromMutex(engine_lock);
-      /* if(velocity[0] > 0 || velocity[1] > 0 || velocity[2] > 0) {
-                 // TODO: take account to Y axis also.
-                 let speed = Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
-                 if(speed > 0)
-                 tickable.velocity = [
-                     velocity[0] - 0.1,
-                     velocity[1],
-                     velocity[2] - 0.1
-                 ]
-             }*/
+      const velocity = tickable.getVelocityFromId();
       const wantedVelocityPerDelta = tmp_vector;
       wantedVelocityPerDelta[0] =
         velocity[0] * dt + tickable.acceleration2[0] * dt_half_sqrt;
@@ -137,56 +128,39 @@ export class Physics {
       wantedVelocityPerDelta[2] =
         velocity[2] * dt + tickable.acceleration2[2] * dt_half_sqrt;
       const motionFrictionAcceleration: [number, number, number] = [0, 0, 0];
-      const translation = tickable.getTranslationFromMutex(engine_lock);
+      const oldTanslation = [
+        ...tickable.getTranslationFromId(),
+      ] as unknown as readonly [number, number, number];
       if (
         wantedVelocityPerDelta[0] !== 0 ||
         wantedVelocityPerDelta[1] !== 0 ||
         wantedVelocityPerDelta[2] !== 0
       ) {
-        const finalPosition = tickable.checkCollide(
-          dt,
-          [
-            wantedVelocityPerDelta[0],
-            wantedVelocityPerDelta[1],
-            wantedVelocityPerDelta[2],
-          ],
-          engine_lock,
-        );
+        tickable.checkCollide(dt, [
+          wantedVelocityPerDelta[0],
+          wantedVelocityPerDelta[1],
+          wantedVelocityPerDelta[2],
+        ]);
+        const finalPosition = [
+          ...tickable.getTranslationFromId(),
+        ] as unknown as readonly [number, number, number];
+
         if (tickable.colliding_character) {
-          tickable.onCollideCharacter(false, engine_lock);
+          tickable.onCollideCharacter(false);
+
           const newVelocityDelta: [number, number, number] = [
-            finalPosition[0] - translation[0],
-            finalPosition[1] - translation[1],
-            finalPosition[2] - translation[2],
+            finalPosition[0] - oldTanslation[0],
+            finalPosition[1] - oldTanslation[1],
+            finalPosition[2] - oldTanslation[2],
           ];
           if (
             newVelocityDelta[0] !== 0 ||
             newVelocityDelta[1] !== 0 ||
             newVelocityDelta[2] !== 0
           ) {
-            if (
-              tickable.last_velocity[0] === 0 ||
-              tickable.last_velocity[1] === 0 ||
-              tickable.last_velocity[2] === 0
-            ) {
-              // Apply friction when object is not moving
-              // friction=true;
-            }
             tickable.last_velocity[0] = newVelocityDelta[0] * delta_multiplier;
             tickable.last_velocity[1] = newVelocityDelta[1] * delta_multiplier;
             tickable.last_velocity[2] = newVelocityDelta[2] * delta_multiplier;
-            /*if(friction) {
-                            if(tickable.speed < tickable.grip*1.8) {
-                                console.log('stop')
-                                //Friction prevents object from start moving.
-                                tickable.last_velocity[0]=0;
-                                tickable.last_velocity[1]=0;
-                                tickable.last_velocity[2]=0;
-                                newVelocityDelta[0]=0;
-                                newVelocityDelta[1]=0;
-                                newVelocityDelta[2]=0;
-                            }
-                        }*/
           } else {
             tickable.last_velocity[0] = 0;
             tickable.last_velocity[1] = 0;
@@ -200,9 +174,6 @@ export class Physics {
           tickable.acceleration2[2] =
             (newVelocityDelta[2] - velocity[2] * dt) / dt_half_sqrt;
 
-          /*
-                        TODO: friction is now set higher in x and z because human cannot brake otherwise.
-                    */
           motionFrictionAcceleration[0] =
             -tickable.last_velocity[0] * tickable.grip;
           motionFrictionAcceleration[1] =
@@ -217,11 +188,6 @@ export class Physics {
           tickable.last_velocity[2] =
             wantedVelocityPerDelta[2] * delta_multiplier;
         }
-        tickable.setTranslation(engine_lock, [
-          finalPosition[0],
-          finalPosition[1],
-          finalPosition[2],
-        ]);
       }
       tickable.last_acceleration[0] = tickable.acceleration2[0];
       tickable.last_acceleration[1] = tickable.acceleration2[1];
@@ -240,7 +206,7 @@ export class Physics {
       tickable.impulse[1] = 0;
       tickable.impulse[2] = 0;
 
-      tickable.setVelocityFromMutex(engine_lock, [
+      tickable.setVelocityFromId([
         velocity[0] +
           (tickable.last_acceleration[0] + tickable.acceleration2[0]) * dt_half,
         velocity[1] +
@@ -249,7 +215,6 @@ export class Physics {
           (tickable.last_acceleration[2] + tickable.acceleration2[2]) * dt_half,
       ]);
     }
-    this.engine.rust.drop_engine_lock(engine_lock);
     if (realDeltaInGameTime > MIN_TICK_DELTA) {
       // Withtimeout execution is returned to event loop, allowing inputs before next tick
       // TODO: nested timeout forces 4ms delay

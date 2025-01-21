@@ -29,13 +29,8 @@ export abstract class BoundableNodeIndexed
       return;
     //TODO: use this
     //engine.rust.rebuild_triangle_planes(this.geometry);
-    const engine_lock = engine.rust.get_engine();
 
-    const collider_faces_pointer = engine.rust.collider_faces_pointer(
-      engine_lock,
-      this.id,
-    );
-    engine.rust.drop_engine_lock(engine_lock);
+    const collider_faces_pointer = engine.rust.collider_faces_pointer(this.id);
 
     const last_collider_world_vertices_pointer =
       this.last_collider_world_vertices_pointer;

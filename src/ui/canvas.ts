@@ -149,16 +149,12 @@ export class Canvas {
             inputEnabled: false,
             scenes: [terrascene],
           });
-          const engine_lock = engine.rust.get_engine();
-          human.setTranslation(engine_lock, [403.4, 1000, 23]);
-          engine.rust.drop_engine_lock(engine_lock);
+          human.setTranslation([403.4, 1000, 23]);
 
           const prism = new RightTriangularPrism({
             can_collide: false,
           });
-          const engine_lock2 = engine.rust.get_engine();
-          prism.setTranslation(engine_lock2, [403.4, 1000, 30]);
-          engine.rust.drop_engine_lock(engine_lock2);
+          prism.setTranslation([403.4, 1000, 30]);
 
           document.addEventListener('keydown', (e) => {
             if (e.key === 'Tab') {
@@ -195,11 +191,9 @@ export class Canvas {
         // This scene is used to draw zones. It is referred by its label
         new Scene('static', terraEngine.gpu!, (scene) => {
           const sun = new Light(scene);
-          const engine_lock = engine.rust.get_engine();
-          sun.setTranslation(engine_lock, [0, 1, 0]);
-          sun.setAmbientFromMutex(engine_lock, [0, 0, 0]);
-          sun.setShadowFromMutex(engine_lock, 1); // shadow to 1 (no shadow)
-          engine.rust.drop_engine_lock(engine_lock);
+          sun.setTranslation([0, 1, 0]);
+          sun.setAmbientFromId([0, 0, 0]);
+          sun.setShadowFromId(1); // shadow to 1 (no shadow)
           return undefined;
         });
         /* const slope = new Box(
@@ -215,10 +209,8 @@ export class Canvas {
           true,
         );
         cone.euler_angles = [90, 0, 0];
-        const engine_lock = engine.rust.get_engine();
-        cone.setTranslation(engine_lock, [0, 900, -70]);
-        cone.setColorFromMutex(engine_lock, [1, 0, 0, 0]);
-        engine.rust.drop_engine_lock(engine_lock);
+        cone.setTranslation([0, 900, -70]);
+        cone.setColorFromId([1, 0, 0, 0]);
         cone.update_scale(50, 50, 50);
         cone.radius = 50;
 
@@ -226,32 +218,25 @@ export class Canvas {
           label: 'capsule1',
           point_light: 400,
         });
-        const engine_lock2 = engine.rust.get_engine();
 
-        capsule.setTranslation(engine_lock2, [60, 900, -70]);
-
-        capsule.setColorFromMutex(engine_lock2, [0, 0, 1, 0]);
-        engine.rust.drop_engine_lock(engine_lock2);
+        capsule.setTranslation([60, 900, -70]);
+        capsule.setColorFromId([0, 0, 1, 0]);
         capsule.radius = 30;
 
         const capsule2 = new Capsule(true, CAPSULE_ORIENTATION.y, 3, {
           label: 'capsule2',
         });
-        const engine_lock3 = engine.rust.get_engine();
 
-        capsule2.setTranslation(engine_lock3, [100, 900, -70]);
-        capsule2.setColorFromMutex(engine_lock3, [0, 0, 1, 0]);
-        engine.rust.drop_engine_lock(engine_lock3);
+        capsule2.setTranslation([100, 900, -70]);
+        capsule2.setColorFromId([0, 0, 1, 0]);
         capsule2.radius = 30;
 
         const capsule3 = new Capsule(true, CAPSULE_ORIENTATION.z, 3, {
           label: 'capsule3',
         });
-        const engine_lock4 = engine.rust.get_engine();
 
-        capsule3.setTranslation(engine_lock4, [140, 900, -70]);
-        capsule3.setColorFromMutex(engine_lock4, [0, 0, 1, 0]);
-        engine.rust.drop_engine_lock(engine_lock4);
+        capsule3.setTranslation([140, 900, -70]);
+        capsule3.setColorFromId([0, 0, 1, 0]);
         capsule3.radius = 30;
 
         const roundCuboid = new RoundCuboid(
@@ -267,12 +252,9 @@ export class Canvas {
             label: 'roundCuboid',
           },
         );
-        const engine_lock5 = engine.rust.get_engine();
 
-        roundCuboid.setTranslation(engine_lock5, [200, 900, -70]);
-
-        roundCuboid.setColorFromMutex(engine_lock5, [0, 0, 1, 0]);
-        engine.rust.drop_engine_lock(engine_lock5);
+        roundCuboid.setTranslation([200, 900, -70]);
+        roundCuboid.setColorFromId([0, 0, 1, 0]);
 
         const sphere4 = new IcoSphere({
           can_collide: true,
@@ -280,12 +262,10 @@ export class Canvas {
           order: 1,
           rigid_body: RigidBody.fixed,
         });
-        const engine_lock6 = engine.rust.get_engine();
 
-        sphere4.setTranslation(engine_lock6, [-100, 900, -70]);
+        sphere4.setTranslation([-100, 900, -70]);
 
-        sphere4.setColorFromMutex(engine_lock6, [1, 0, 1, 0]);
-        engine.rust.drop_engine_lock(engine_lock6);
+        sphere4.setColorFromId([1, 0, 1, 0]);
         sphere4.update_scale(30, 30, 30);
 
         /*const b = new Box(

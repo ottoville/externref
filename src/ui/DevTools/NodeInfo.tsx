@@ -50,15 +50,13 @@ export const NodeInfo = memo(function NodeInfo({
           X:
           <input
             onChange={(evt) => {
-              const engine_lock = engine.rust.get_engine();
-              const currentTranslation =
-                drawable.node.getTranslationFromMutex(engine_lock);
-              drawable.node.setTranslation(engine_lock, [
+              const currentTranslation = drawable.node.getTranslationFromId();
+
+              drawable.node.setTranslation([
                 evt.target.valueAsNumber,
                 currentTranslation[1],
                 currentTranslation[2],
               ]);
-              engine.rust.drop_engine_lock(engine_lock);
             }}
             title="translation X"
             type="number"
@@ -71,16 +69,13 @@ export const NodeInfo = memo(function NodeInfo({
           Y:
           <input
             onChange={(evt) => {
-              const engine_lock = engine.rust.get_engine();
-              const currentTranslation =
-                drawable.node.getTranslationFromMutex(engine_lock);
+              const currentTranslation = drawable.node.getTranslationFromId();
 
-              drawable.node.setTranslation(engine_lock, [
+              drawable.node.setTranslation([
                 currentTranslation[0],
                 evt.target.valueAsNumber,
                 currentTranslation[2],
               ]);
-              engine.rust.drop_engine_lock(engine_lock);
             }}
             title="translation Y"
             type="number"
@@ -93,16 +88,13 @@ export const NodeInfo = memo(function NodeInfo({
           Z:
           <input
             onChange={(evt) => {
-              const engine_lock = engine.rust.get_engine();
-              const currentTranslation =
-                drawable.node.getTranslationFromMutex(engine_lock);
+              const currentTranslation = drawable.node.getTranslationFromId();
 
-              drawable.node.setTranslation(engine_lock, [
+              drawable.node.setTranslation([
                 currentTranslation[0],
                 currentTranslation[1],
                 evt.target.valueAsNumber,
               ]);
-              engine.rust.drop_engine_lock(engine_lock);
             }}
             title="translation Z"
             type="number"
