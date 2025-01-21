@@ -85,31 +85,6 @@ export class TerraMatrix extends Float32Array {
     result[15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
     return result;
   }
-  equals(om: TerraMatrix) {
-    return (
-      this[0] == om[0] &&
-      this[1] == om[1] &&
-      this[2] == om[2] &&
-      this[3] == om[3] &&
-      this[4] == om[4] &&
-      this[5] == om[5] &&
-      this[6] == om[6] &&
-      this[7] == om[7] &&
-      this[8] == om[8] &&
-      this[9] == om[9] &&
-      this[10] == om[10] &&
-      this[11] == om[11] &&
-      this[12] == om[12] &&
-      this[13] == om[13] &&
-      this[14] == om[14] &&
-      this[15] == om[15]
-    );
-  }
-  clone() {
-    return new TerraMatrix(
-      this.buffer.slice(this.byteOffset, this.byteOffset + 64),
-    );
-  }
   invertToRef(other: TerraMatrix): TerraMatrix {
     // the inverse of a Matrix is the transpose of cofactor matrix divided by the determinant
 
@@ -369,25 +344,5 @@ export class Angle {
   distance(rad: number): Angle {
     const phi = (rad - this.rad) % fullRad; // This is either the distance or 360 - distance
     return new Angle(phi > Math.PI ? fullRad - phi : phi);
-  }
-}
-
-export class Triangle {
-  #planeCollider: TerraVector4;
-  get planeCollider() {
-    if (this.#planeCollider.byteLength === 0) {
-      this.#planeCollider = new TerraVector4(
-        engine.rust.memory.buffer,
-        this.PlanePtrToVector4,
-      );
-    }
-    return this.#planeCollider;
-  }
-
-  constructor(private PlanePtrToVector4: rust_pointer<'colliderplane'>) {
-    this.#planeCollider = new TerraVector4(
-      engine.rust.memory.buffer,
-      this.PlanePtrToVector4,
-    );
   }
 }

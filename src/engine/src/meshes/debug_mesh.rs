@@ -11,7 +11,9 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
     label_cap: usize,
 ) -> usize {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let target = &ENGINE.meshes.lock().unwrap()[target_mesh_id];
+    let meshes= ENGINE.meshes.lock().unwrap();
+
+    let target = &meshes[target_mesh_id];
 
     let target_indices = &target.get_geometry().indices;
     let mut indices: Vec<usize> = vec![0; target_indices.indices.len() * 2];
@@ -32,6 +34,7 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
         label,
         None,
         Some(target.mesh_property.clone()),
+        meshes
     );
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
     let mut geometry = Geometry::new(
@@ -54,8 +57,8 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
     label_cap: usize,
 ) -> usize {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-
-    let target = &ENGINE.meshes.lock().unwrap()[target_mesh_id];
+    let meshes= ENGINE.meshes.lock().unwrap();
+    let target = &meshes[target_mesh_id];
 
     let target_vertices = &target.get_geometry().vertices;
     let positions_count = target_vertices.length() * 2;
@@ -67,8 +70,11 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
         label,
         None,
         Some(target.mesh_property.clone()),
+        meshes
     );
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mut meshes= ENGINE.meshes.lock().unwrap();
+
+    let mesh = &mut meshes[mesh_id];
 
     mesh.positions_count = Some(positions_count);
     let geometry = Geometry::new(

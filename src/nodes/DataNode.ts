@@ -3,7 +3,6 @@ import {
   MutableTerraVector3,
   ReadOnlyFloat32Array,
   TerraMatrix,
-  Triangle,
 } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
 import type { Engine } from '../engine.js';
@@ -155,8 +154,7 @@ export class DataNode extends MainNode {
   }
   onCollideCharacter(_started: boolean) {}
   readonly pickInfo = new pickInfo();
-  readonly #triangleFaces: Triangle[] = [];
-  #lastColliderTransformMatrix = new TerraMatrix();
+  #triangleFaces = 0;
 
   get_faces_count() {
     return engine.rust.faces_count(this.id);
@@ -270,13 +268,8 @@ export class DataNode extends MainNode {
       newLen = this.#vectorsVec4.push(position);
     }
     if (newLen === 3) {
-      const faceIndex = this.#triangleFaces.length;
-      this.#triangleFaces.push(
-        new Triangle(
-          (collider_faces_pointer +
-            faceIndex * 4 * 7) as rust_pointer<'colliderplane'>,
-        ),
-      ); // ColliderPlane size is 7
+      const faceIndex = this.#triangleFaces;
+      this.#triangleFaces += 1; // ColliderPlane size is 7
 
       new Uint32Array(
         engine.rust.memory.buffer,
@@ -331,7 +324,7 @@ export class DataNode extends MainNode {
     const facesCount = this.get_faces_count();
 
     if (facesCount === 0 || this.vertices_count === 0) return false;
-    this.#triangleFaces.length = 0;
+    this.#triangleFaces = 0;
     this.#vectorsVec4 = [];
     return true;
   }
@@ -359,15 +352,8 @@ export class DataNode extends MainNode {
       sphere.collisionsScalingMatrix,
       this.#myCollisionsTransformMatrix,
     );
-    if (
-      !this.#lastColliderTransformMatrix.equals(
-        this.#myCollisionsTransformMatrix,
-      )
-    ) {
-      this.#lastColliderTransformMatrix =
-        this.#myCollisionsTransformMatrix.clone();
-      engine.rust.update_collider_planes(this.geometry);
-    }
+    engine.rust.check_collision(this.geometry);
+
     const facesCount = this.get_faces_count();
     if (facesCount % 4 != 0) {
       /* const scaledPosition=collider.scaledPosition;

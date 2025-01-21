@@ -428,7 +428,7 @@ fn test_gpu_queue() {
             let gpu = maybegpu.as_mut().unwrap();
             assert_eq!(gpu.update_queue.len(), 0);
         }
-        let mesh_id = Mesh::new(0.0, 1.0, 0.0, 0, String::from("sun"), None, None);
+        let mesh_id = Mesh::new(0.0, 1.0, 0.0, 0, String::from("sun"), None, None, ENGINE.meshes.lock().unwrap());
         {
             let engine = ENGINE.engine2.lock().unwrap();
             let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
@@ -477,7 +477,7 @@ fn test_gpu_lights() {
             ExternRef,
         >(2)));
         assert_eq!(mapping, false);
-        Mesh::new(0.0, 1.0, 0.0, 0, String::from("sun"), None, None);
+        Mesh::new(0.0, 1.0, 0.0, 0, String::from("sun"), None, None, ENGINE.meshes.lock().unwrap());
         let mapping2 = process_gpu_queue(&Resource::new_non_null(std::mem::transmute::<
             usize,
             ExternRef,

@@ -36,7 +36,7 @@ pub unsafe extern "C" fn new_character_mesh(
 ) -> usize {
     let geometry = create_box_geometry();
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let mesh_id = Mesh::new(0.0, 0.0, scenes, 0, label, None, None);
+    let mesh_id = Mesh::new(0.0, 0.0, scenes, 0, label, None, None, ENGINE.meshes.lock().unwrap());
     ENGINE.character_mesh_id.store(mesh_id, Ordering::Relaxed);
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
     mesh.geometry = Some(Box::from_raw(geometry));

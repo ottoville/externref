@@ -68,6 +68,7 @@ pub unsafe extern "C" fn new_mesh_from_js(
         label,
         Some(externref),
         None,
+        ENGINE.meshes.lock().unwrap()
     );
 }
 #[no_mangle]
@@ -452,9 +453,10 @@ impl Mesh {
         label: String,
         externref: Option<Resource<JSMesh>>,
         mesh_property_opt: Option<Arc<Mutex<MeshProperty>>>,
+        mut meshes: MutexGuard<'_, Vec<Mesh>>
     ) -> usize {
         let engine = &mut ENGINE.engine2.lock().unwrap();
-        let id = ENGINE.meshes.lock().unwrap().len();
+        let id = meshes.len();
         let mesh_property = mesh_property_opt.unwrap_or_else(|| {
             let gpu_mesh_alignment = engine.gpu_allocated.allocate();
             let maybegpu = &mut ENGINE.gpu.lock().unwrap();
@@ -508,7 +510,6 @@ impl Mesh {
             on_gpu_queue: false,
             externref,
         };
-        let meshes = &mut ENGINE.meshes.lock().unwrap();
         meshes.push(m);
         meshes[id].update_dynamic_buffer();
         if rigid_body > 0 {

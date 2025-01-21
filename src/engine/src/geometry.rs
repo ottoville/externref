@@ -61,6 +61,10 @@ pub unsafe extern "C" fn collisions_transform_matrix_ptr(
     &(*geometry).collisions_transform_matrix
 }
 #[no_mangle]
+pub unsafe extern "C" fn check_collision(geometry: *mut Geometry) {
+    (*geometry).check_collision();
+}
+#[no_mangle]
 pub unsafe extern "C" fn update_collider_planes(geometry: *mut Geometry) {
     (*geometry).update_collider_planes();
 }
@@ -215,6 +219,7 @@ pub struct Geometry {
     pub collider_planes_parallel: Vec<[[f32; 4]; 4]>, //lanes for x,y,z,d
     pub last_collider_world_vertices: Vec<Vec3wgslF32>,
     pub collisions_transform_matrix: [[f32; 4]; 4],
+    pub last_collider_transform_matrix: [[f32; 4]; 4],
 
     pub static_faces: bool, // Used for terrain
     pub character_can_collide_to: bool,
@@ -405,6 +410,7 @@ impl<'vert> Geometry {
             character_can_collide_to,
             label,
             collisions_transform_matrix: [[0.0; 4]; 4],
+            last_collider_transform_matrix: [[0.0; 4]; 4],
         }
     }
     pub fn create_faces(&mut self, override_positions_count: Option<NonZeroUsize>) {
@@ -492,6 +498,12 @@ impl<'vert> Geometry {
                 faces_count
             ];
             self.collider_planes_parallel = vec![[[0.0; 4]; 4]; faces_count / 4];
+        }
+    }
+    pub fn check_collision(&mut self) {
+        if !self.last_collider_transform_matrix.eq(&self.collisions_transform_matrix) {
+            self.last_collider_transform_matrix = self.collisions_transform_matrix.clone();
+            self.update_collider_planes();
         }
     }
     pub fn update_collider_planes(&mut self) {

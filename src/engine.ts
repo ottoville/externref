@@ -471,6 +471,7 @@ export type rustWasm = {
   collisions_transform_matrix_ptr(
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<'matrix'>;
+  check_collision(geometry: rust_pointer<'geometry'>): void;
   update_collider_planes(geometry: rust_pointer<'geometry'>): void;
   move_character(
     engine: rust_mutex<'locked', 'enginelock'>,

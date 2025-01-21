@@ -3,12 +3,7 @@
 
 import type { Ellipsoid } from './nodes/DataNode.js';
 import type { Engine, rustWasm } from './engine.js';
-import {
-  MutableTerraVector3,
-  TerraVector3,
-  TerraVector4,
-  Triangle,
-} from './Math.js';
+import { MutableTerraVector3, TerraVector3, TerraVector4 } from './Math.js';
 declare const engine: Engine;
 
 // TODO: change to readonlyTerraVector
@@ -249,9 +244,9 @@ export class ColliderJS {
   /** @hidden */
   public _checkPointInTriangle(
     point: [x: number, y: number, z: number],
-    triangle: Triangle,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    triangle: any,
   ): boolean {
-    //@ts-expect-error todo
     const vectors = triangle.vectors;
     const v1 = vectors[1];
     const v2 = vectors[2];
@@ -293,7 +288,8 @@ export class ColliderJS {
   //#points: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()];
   /** @hidden */
   public _testTriangle(
-    triangle: Triangle,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    triangle: any,
     scaledPosition: TerraVector3,
     scaledVelocity: TerraVector3,
   ): void {
@@ -376,7 +372,6 @@ export class ColliderJS {
              this.#points[1] = p3a;
              this.#points[2] = p1a;*/
       let i = 0;
-      //@ts-expect-error todo
       const vectors = triangle.vectors;
       while (i < 3) {
         // for (let i = 0; i < 3; i++) {
