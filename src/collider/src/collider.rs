@@ -186,93 +186,17 @@ pub unsafe extern "C" fn test_triangle(
     velocity: v128,
     velocity_squared: f32,
 ) {
-    use std::arch::wasm32::{f32x4_add, f32x4_mul, f32x4_splat, f32x4_sub, v128_load, v128_store};
-
-    let mut found = false;
-    (*collider).lowest_root = 1.0;
-    let base_point = v128_load((*collider).scaled_position.as_ptr() as *const v128);
-    let mut collided_point_in_triangle = false;
-    if !embedded_in_plane {
-        let plane_collider = v128_load(plane_position as *const v128);
-        //planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
-
-        let plane_intersection_point = f32x4_add(
-            f32x4_sub(base_point, plane_collider),
-            f32x4_mul(velocity, f32x4_splat(t0.max(0.0))),
-        );
-        collided_point_in_triangle = check_point_in_triangle(
-            plane_intersection_point,
-            plane_collider,
-            triangle0,
-            triangle1,
-            triangle2,
-        );
-        if collided_point_in_triangle {
-            (*collider).lowest_root = t0;
-            v128_store(
-                (*collider).collision_point.as_mut_ptr() as *mut v128,
-                plane_intersection_point,
-            );
-            found = true;
-        }
-    }
-    if !found {
-        let mut cur_lowest_root = check_for_lowest_root0(collider, triangle0, velocity_squared);
-        if cur_lowest_root > 0.0 {
-            (*collider).lowest_root = cur_lowest_root;
-            v128_store(
-                (*collider).collision_point.as_mut_ptr() as *mut v128,
-                triangle0,
-            );
-            found = true
-        }
-        cur_lowest_root = check_for_lowest_root0(collider, triangle1, velocity_squared);
-        if cur_lowest_root > 0.0 {
-            (*collider).lowest_root = cur_lowest_root;
-            v128_store(
-                (*collider).collision_point.as_mut_ptr() as *mut v128,
-                triangle1,
-            );
-            found = true
-        }
-        cur_lowest_root = check_for_lowest_root0(collider, triangle2, velocity_squared);
-        if cur_lowest_root > 0.0 {
-            (*collider).lowest_root = cur_lowest_root;
-            v128_store(
-                (*collider).collision_point.as_mut_ptr() as *mut v128,
-                triangle2,
-            );
-            found = true
-        }
-        if (*collider).check_for_lowest_root(
-            triangle0,
-            triangle1,
-            velocity,
-            velocity_squared,
-            base_point,
-        ) {
-            found = true;
-        }
-        if (*collider).check_for_lowest_root(
-            triangle2,
-            triangle0,
-            velocity,
-            velocity_squared,
-            base_point,
-        ) {
-            found = true;
-        }
-    }
-    if found {
-        (*collider).collision_found(
-            (*collider).lowest_root,
-            velocity_squared,
-            collided_point_in_triangle,
-            plane_position,
-        );
-    }
+    (*collider).test_triangle(
+        embedded_in_plane,
+        plane_position,
+        triangle0,
+        triangle1,
+        triangle2,
+        t0,
+        velocity,
+        velocity_squared,
+    );
 }
-
 #[no_mangle]
 pub extern "C" fn get_lowest_root(a: f32, b: f32, c: f32, max_r: f32) -> f32 {
     let determinant = b * b - 4.0 * a * c;
@@ -334,7 +258,7 @@ fn lowest_root() {
     );
     assert_eq!(result, 0.0);
 }
-/*
+
 #[no_mangle]
 pub unsafe extern "C" fn collision_found(
     collider_ptr: *mut Collider,
@@ -349,7 +273,45 @@ pub unsafe extern "C" fn collision_found(
         collided_point_in_triangle,
         collided_plane,
     )
-}*/
+}
+
+#[no_mangle]
+#[cfg(target_arch = "wasm32")]
+pub unsafe extern "C" fn test_triangles(
+    collider_ptr: *mut Collider,
+    plane_position: i32,
+    plane_position_horizontal: usize,
+    length: i32,
+    normalized_velocity_x: v128,
+    normalized_velocity_y: v128,
+    normalized_velocity_z: v128,
+    base_point_x: v128,
+    base_point_y: v128,
+    base_point_z: v128,
+    velocity_x: v128,
+    velocity_y: v128,
+    velocity_z: v128,
+    velocity: v128,
+    velocity_squared: f32,
+) {
+    (*collider_ptr).test_triangles(
+        plane_position,
+        plane_position_horizontal,
+        length,
+        normalized_velocity_x,
+        normalized_velocity_y,
+        normalized_velocity_z,
+        base_point_x,
+        base_point_y,
+        base_point_z,
+        velocity_x,
+        velocity_y,
+        velocity_z,
+        velocity,
+        velocity_squared,
+    );
+}
+
 impl Collider {
     pub fn new() -> Self {
         unsafe {
@@ -369,27 +331,270 @@ impl Collider {
         }
     }
     //TODO finish this
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn _initialize() {}
+    //TODO finish this
     #[cfg(target_arch = "wasm32")]
     pub fn test_triangles(
-        &self,
-        planePosition: i32,
-        mut planePositionHorizontal: usize,
+        &mut self,
+        mut plane_position: i32,
+        mut plane_position_horizontal: usize,
         length: i32,
-        meshID: i32,
+        normalized_velocity_x: v128,
+        normalized_velocity_y: v128,
+        normalized_velocity_z: v128,
+        base_point_x: v128,
+        base_point_y: v128,
+        base_point_z: v128,
+        velocity_x: v128,
+        velocity_y: v128,
+        velocity_z: v128,
+        velocity: v128,
+        velocity_squared: f32,
     ) {
-        use std::arch::wasm32::v128_load;
+        use std::arch::wasm32::{
+            f32x4, f32x4_abs, f32x4_add, f32x4_div, f32x4_extract_lane, f32x4_ge, f32x4_gt,
+            f32x4_lt, f32x4_max, f32x4_min, f32x4_sub, i32x4_all_true, i32x4_extract_lane,
+            v128_any_true, v128_bitselect, v128_load, v128_or,
+        };
+        use terramath::simd_dot;
         if length == 0 {
             return;
         }
-        let end = planePosition + length;
-        planePositionHorizontal -= 64;
+        let end = plane_position + length;
+        plane_position_horizontal -= 64;
         loop {
-            planePositionHorizontal += 64;
+            plane_position_horizontal += 64;
             unsafe {
-                let planeX = v128_load(planePositionHorizontal as *const v128);
-                let planeY = v128_load((planePositionHorizontal + 16) as *const v128);
-                let planeZ = v128_load((planePositionHorizontal + 32) as *const v128);
+                let plane_x = v128_load(plane_position_horizontal as *const v128);
+                let plane_y = v128_load((plane_position_horizontal + 16) as *const v128);
+                let plane_z = v128_load((plane_position_horizontal + 32) as *const v128);
+                let dot_over_zero = f32x4_gt(
+                    simd_dot(
+                        plane_x,
+                        normalized_velocity_x,
+                        plane_y,
+                        normalized_velocity_y,
+                        plane_z,
+                        normalized_velocity_z,
+                    ),
+                    f32x4(0.0, 0.0, 0.0, 0.0),
+                );
+                if !i32x4_all_true(dot_over_zero) {
+                    let signed_dist_to_triangle_plane = f32x4_add(
+                        v128_load((plane_position_horizontal + 48) as *const v128),
+                        simd_dot(
+                            base_point_x,
+                            plane_x,
+                            base_point_y,
+                            plane_y,
+                            base_point_z,
+                            plane_z,
+                        ),
+                    );
+
+                    // Calculate dot angle between velocity and normal
+                    let normal_dot_velocity = simd_dot(
+                        plane_x, velocity_x, plane_y, velocity_y, plane_z, velocity_z,
+                    );
+
+                    let mut t0 = f32x4(0.0, 0.0, 0.0, 0.0);
+                    let mut returnvalue = f32x4(0.0, 0.0, 0.0, 0.0);
+                    //Todo: use constant for 0.0009 vec
+                    let embedded_in_plane = f32x4_lt(
+                        f32x4_abs(normal_dot_velocity),
+                        f32x4(0.0009, 0.0009, 0.0009, 0.0009),
+                    );
+                    if !i32x4_all_true(embedded_in_plane) {
+                        //Some is not embedded in plane
+                        //var t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity
+                        t0 = f32x4_div(
+                            f32x4_sub(f32x4(-1.0, -1.0, -1.0, -1.0), signed_dist_to_triangle_plane),
+                            normal_dot_velocity,
+                        );
+
+                        //var t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+                        let mut t1 = f32x4_div(
+                            f32x4_sub(f32x4(1.0, 1.0, 1.0, 1.0), signed_dist_to_triangle_plane),
+                            normal_dot_velocity,
+                        );
+                        let max = f32x4_max(t0, t1);
+                        let min = f32x4_min(t0, t1);
+                        t0 = min;
+                        t1 = max;
+
+                        returnvalue = v128_or(
+                            f32x4_gt(t0, f32x4(1.0, 1.0, 1.0, 1.0)),
+                            f32x4_lt(t1, f32x4(0.0, 0.0, 0.0, 0.0)),
+                        );
+
+                        t0 = f32x4_max(t0, f32x4(0.0, 0.0, 0.0, 0.0));
+                    }
+                    // Check if movement is not at 90 degree angle with plane
+                    if v128_any_true(embedded_in_plane) {
+                        //Set t0 to zero when embedded in plane
+                        t0 = v128_bitselect(f32x4(0.0, 0.0, 0.0, 0.0), t0, embedded_in_plane);
+                        returnvalue = v128_bitselect(
+                            f32x4_ge(
+                                f32x4_abs(signed_dist_to_triangle_plane),
+                                f32x4(1.0, 1.0, 1.0, 1.0),
+                            ),
+                            returnvalue,
+                            embedded_in_plane,
+                        );
+                    }
+                    returnvalue = v128_or(dot_over_zero, returnvalue);
+                    //  plane_position.to_string().log();
+                    if i32x4_extract_lane::<0>(returnvalue) == 0 {
+                        self.test_triangle(
+                            i32x4_extract_lane::<0>(embedded_in_plane) == 1,
+                            plane_position as *const Plane,
+                            v128_load(*((plane_position + 16) as *const &v128)),
+                            v128_load(*((plane_position + 20) as *const &v128)),
+                            v128_load(*((plane_position + 24) as *const &v128)),
+                            f32x4_extract_lane::<0>(t0),
+                            velocity,
+                            velocity_squared,
+                        );
+                    }
+                    if i32x4_extract_lane::<1>(returnvalue) == 0 {
+                        self.test_triangle(
+                            i32x4_extract_lane::<1>(embedded_in_plane) == 1,
+                            (plane_position + 28) as *const Plane,
+                            v128_load(*((plane_position + 44) as *const &v128)),
+                            v128_load(*((plane_position + 48) as *const &v128)),
+                            v128_load(*((plane_position + 52) as *const &v128)),
+                            f32x4_extract_lane::<1>(t0),
+                            velocity,
+                            velocity_squared,
+                        );
+                    }
+
+                    if i32x4_extract_lane::<2>(returnvalue) == 0 {
+                        self.test_triangle(
+                            i32x4_extract_lane::<2>(embedded_in_plane) == 1,
+                            (plane_position + 56) as *const Plane,
+                            v128_load(*((plane_position + 72) as *const &v128)),
+                            v128_load(*((plane_position + 76) as *const &v128)),
+                            v128_load(*((plane_position + 80) as *const &v128)),
+                            f32x4_extract_lane::<2>(t0),
+                            velocity,
+                            velocity_squared,
+                        );
+                    }
+                    if i32x4_extract_lane::<3>(returnvalue) == 0 {
+                        self.test_triangle(
+                            i32x4_extract_lane::<3>(embedded_in_plane) == 1,
+                            (plane_position + 84) as *const Plane,
+                            v128_load(*((plane_position + 100) as *const &v128)),
+                            v128_load(*((plane_position + 104) as *const &v128)),
+                            v128_load(*((plane_position + 108) as *const &v128)),
+                            f32x4_extract_lane::<3>(t0),
+                            velocity,
+                            velocity_squared,
+                        );
+                    }
+                }
+                plane_position += 112;
+                if plane_position >= end {
+                    break;
+                }
             }
+        }
+    }
+    #[cfg(target_arch = "wasm32")]
+    pub fn test_triangle(
+        &mut self,
+        embedded_in_plane: bool,
+        plane_position: *const Plane,
+        triangle0: v128,
+        triangle1: v128,
+        triangle2: v128,
+        t0: f32,
+        velocity: v128,
+        velocity_squared: f32,
+    ) {
+        use std::arch::wasm32::{
+            f32x4_add, f32x4_mul, f32x4_splat, f32x4_sub, v128_load, v128_store,
+        };
+        let mut found = false;
+        self.lowest_root = 1.0;
+        let base_point = unsafe { v128_load(self.scaled_position.as_ptr() as *const v128) };
+        let mut collided_point_in_triangle = false;
+        if !embedded_in_plane {
+            let plane_collider = unsafe { v128_load(plane_position as *const v128) };
+            //planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
+
+            let plane_intersection_point = f32x4_add(
+                f32x4_sub(base_point, plane_collider),
+                f32x4_mul(velocity, f32x4_splat(t0.max(0.0))),
+            );
+            collided_point_in_triangle = check_point_in_triangle(
+                plane_intersection_point,
+                plane_collider,
+                triangle0,
+                triangle1,
+                triangle2,
+            );
+            if collided_point_in_triangle {
+                self.lowest_root = t0;
+                unsafe {
+                    v128_store(
+                        self.collision_point.as_mut_ptr() as *mut v128,
+                        plane_intersection_point,
+                    );
+                }
+                found = true;
+            }
+        }
+        if !found {
+            unsafe {
+                let mut cur_lowest_root = check_for_lowest_root0(self, triangle0, velocity_squared);
+                if cur_lowest_root > 0.0 {
+                    self.lowest_root = cur_lowest_root;
+                    v128_store(self.collision_point.as_mut_ptr() as *mut v128, triangle0);
+                    found = true
+                }
+                cur_lowest_root = check_for_lowest_root0(self, triangle1, velocity_squared);
+                if cur_lowest_root > 0.0 {
+                    self.lowest_root = cur_lowest_root;
+                    v128_store(self.collision_point.as_mut_ptr() as *mut v128, triangle1);
+                    found = true
+                }
+                cur_lowest_root = check_for_lowest_root0(self, triangle2, velocity_squared);
+                if cur_lowest_root > 0.0 {
+                    self.lowest_root = cur_lowest_root;
+                    v128_store(self.collision_point.as_mut_ptr() as *mut v128, triangle2);
+                    found = true
+                }
+            }
+            if self.check_for_lowest_root(
+                triangle0,
+                triangle1,
+                velocity,
+                velocity_squared,
+                base_point,
+            ) {
+                found = true;
+            }
+            if self.check_for_lowest_root(
+                triangle2,
+                triangle0,
+                velocity,
+                velocity_squared,
+                base_point,
+            ) {
+                found = true;
+            }
+        }
+        if found {
+            self.collision_found(
+                self.lowest_root,
+                velocity_squared,
+                collided_point_in_triangle,
+                plane_position,
+            );
         }
     }
     #[cfg(target_arch = "wasm32")]

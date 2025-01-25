@@ -8,12 +8,7 @@ import { TerraCamera } from './TerraCamera.js';
 import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
 //@ts-expect-error todo
 import { MeshCamera } from './controllers/MeshCamera.js';
-import {
-  closeDistance,
-  closeDistanceSquared,
-  DataNode,
-  Ellipsoid,
-} from './nodes/DataNode.js';
+import { closeDistanceSquared, DataNode, Ellipsoid } from './nodes/DataNode.js';
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
@@ -1169,12 +1164,12 @@ export class Engine {
     for (let i = 0; i < 3; i++) {
       //TODO: really, here inside the loop?
       //TODO: Remove this JS initialize
-      this.collider._initialize(
+      /*this.collider._initialize(
         scaledPosition,
         scaledVelocity,
         closeDistance,
         sphere,
-      );
+      );*/
 
       //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
       this.wasm._initialize();

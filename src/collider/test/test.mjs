@@ -8,10 +8,33 @@ const wasi = new WASI.WASI({
 });
 
 let instanceRust;
+const textDecoder = new TextDecoder();
+
+export function stringFromPtr(
+  memory,
+  ptr,
+) {
+  if (!(memory instanceof WebAssembly.Memory)) {
+    throw new Error('Webassembly module does not have memory');
+  }
+  const [s_ptr, len] = new Uint32Array(memory.buffer, ptr, 2);
+  return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
+}
 const exportObj = {
   console: {
-    log(ptr) {},
-    log_str(ptr) {},
+    log(ptr) {
+      console.log(stringFromPtr(instanceRust.exports.memory, ptr));
+    },
+    log_str(ptr, length) {
+      console.log(
+        textDecoder.decode(
+          new Uint8Array(
+            (instanceRust.exports.memory).buffer,
+            ptr,
+            length,
+          ),
+        ),
+      );    },
     warn(ptr) {},
     error(ptr) {},
   },

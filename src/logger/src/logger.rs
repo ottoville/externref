@@ -20,6 +20,13 @@ impl Logger for String {
         }
     }
 }
+impl Logger for &str {
+    fn log(&self) {
+        unsafe {
+            log_str(self.as_ptr() as usize, self.len());
+        }
+    }
+}
 impl Logger for usize {
     fn log(&self) {
         unsafe {

@@ -1,13 +1,14 @@
 (module
+  (import "rust" "test_triangles" (func $test_triangles (param i32 i32 i32 i32 v128 v128 v128 v128 v128 v128 v128 v128 v128 v128 f32)))
   (import "rust" "test_triangle" (func $test_triangle (param i32 i32 i32 v128 v128 v128 f32 v128 f32)))
-  ;;(import "rust" "collision_found" (func $collision_found (param i32 f32 f32 i32 i32)))
+  (import "rust" "collision_found" (func $collision_found (param i32 f32 f32 i32 i32)))
   (import "rust" "get_lowest_root" (func $getLowestRoot (param f32 f32 f32 f32) (result f32)))
   (import "rust" "collision_point_pointer" (func $get_collision_point_pointer(param i32) (result i32)))
   (import "rust" "check_for_lowest_root0" (func $check_for_lowest_root0(param i32 v128 f32) (result f32)))
   ;;(import "rust" "check_for_lowest_root" (func $check_for_lowest_root(param i32 v128 v128 v128 f32 v128) (result i32)))
   (import "rust" "v3_dot" (func $v3_dot (param v128 v128) (result f32)))
   (import "rust" "simd_dot" (func $simd_dot (param v128 v128 v128 v128 v128 v128) (result v128)))
-  (import "console" "log" (func $log (param f32)))
+  (import "console" "log" (func $log (param i32)))
   (import "console" "error" (func $console.error (param i32)))
   (import "env" "memory" (memory 16))
   (export "memory" (memory 0))
@@ -367,7 +368,6 @@
     (param $triangle0 v128)
     (param $triangle1 v128)
     (param $triangle2 v128)
-    (param $meshID i32)
     (param $t0 f32)
 
     (local $planeCollider v128)
@@ -513,16 +513,16 @@
 
     global.get $found
     if
-    ;;  (call $collision_found
-    ;;    (global.get $rust_collider_ptr)
-    ;;    (
-    ;;      f32.load
-    ;;       (global.get $lowest_root_ptr)
-    ;;    )
-    ;;    (global.get $velocitySquared)
-    ;;    (local.get $collidedPointInTriangle)
-    ;;    (local.get $planePosition)
-    ;;  )
+      (call $collision_found
+        (global.get $rust_collider_ptr)
+        (
+          f32.load
+           (global.get $lowest_root_ptr)
+        )
+        (global.get $velocitySquared)
+        (local.get $collidedPointInTriangle)
+        (local.get $planePosition)
+      )
 
 
 
@@ -809,6 +809,25 @@
     (local $embeddedInPlane v128)
     (local $dotOverZero v128)
     (local $return v128)
+
+    (call $test_triangles
+      (global.get $rust_collider_ptr)
+      (local.get $planePosition)
+      (local.get $planePositionHorizontal)
+      (local.get $length)
+      (global.get $normalizedVelocityX)
+      (global.get $normalizedVelocityY)
+      (global.get $normalizedVelocityZ)
+      (global.get $basePointX)
+      (global.get $basePointY)
+      (global.get $basePointZ)
+      (global.get $velocityX)
+      (global.get $velocityY)
+      (global.get $velocityZ)
+      (global.get $velocity)
+      (global.get $velocitySquared)
+    )
+    return
 
     local.get $length
     i32.eqz

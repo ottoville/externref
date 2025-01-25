@@ -1,16 +1,16 @@
-import type { Engine } from '../../engine';
+import type { Engine } from "../../src/engine.js";
 
 describe('wireframe', () => {
   it('tests wireframe', () => {
     cy.viewport(900, 320);
     cy.visit(Cypress.env('host'));
-    cy.get('button').click();
-    cy.get('canvas', {
+    cy.get("game-container").shadow().find("button").first().click();
+    cy.get("game-container").shadow().find("canvas", {
       timeout: 10000,
     });
-    cy.get('#progressBarContainer', {
+    cy.get("game-container").shadow().find("#progressBarContainer", {
       timeout: 10000,
-    }).should('not.exist');
+    }).should("not.exist");
     cy.window()
       .then((w) => {
         //@ts-expect-error
@@ -29,10 +29,10 @@ describe('wireframe', () => {
         cy.get('body').type('{downArrow}');
         cy.get('body').type('{enter}');
 
-        cy.get('li:nth-of-type(7) li').click();
-        cy.get('button:nth-of-type(2)').click();
+        cy.get("game-container").shadow().find('dev-tools').shadow().find('li:nth-of-type(7) li').click();
+        cy.get("game-container").shadow().find('dev-tools').shadow().find('button:nth-child(12)').click();
         cy.wait(4000).then(() => {
-          cy.get('canvas').matchImage();
+          cy.get("game-container").shadow().find('canvas').matchImage();
         });
       });
   });
