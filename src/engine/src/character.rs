@@ -18,13 +18,12 @@ pub unsafe extern "C" fn set_mesh_externref(mesh_id: usize, externref: Resource<
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn move_character(
-    engine: *const MutexGuard<'_, Engine2>,
     dt: f32,
     x: f32,
     y: f32,
     z: f32,
 ) {
-    (*engine).move_character(dt, x, y, z);
+    ENGINE.engine2.lock().unwrap().move_character(dt, x, y, z);
 }
 #[externref]
 #[no_mangle]

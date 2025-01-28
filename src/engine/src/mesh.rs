@@ -550,6 +550,13 @@ impl Mesh {
         }
         self.on_update(physics);
     }
+    pub fn update_translation_vec(&mut self, vec: [f32;3], physics: bool) {
+        {
+            let mut mesh_property = self.mesh_property.lock().unwrap();
+            mesh_property.translation.0 = vec;
+        }
+        self.on_update(physics);
+    }
     pub unsafe fn apply_impulse(&mut self, x: f32, y: f32, z: f32) {
         match self.rigid_body_handle {
             Some(rigid_body_handle) => {

@@ -149,7 +149,7 @@ export class Canvas {
             inputEnabled: false,
             scenes: [terrascene],
           });
-          human.setTranslation([403.4, 1000, 23]);
+          human.setTranslation([403.4, 600, 23]);
 
           const prism = new RightTriangularPrism({
             can_collide: false,

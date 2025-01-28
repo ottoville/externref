@@ -39,7 +39,7 @@ describe('Pick box ', function () {
         { label: 'PickGreenbox' },
       );
       const engine_lock = engine.rust.get_engine();
-      b.setTranslation(engine_lock, [0, 400, 0]);
+      b.setTranslation([0, 400, 0]);
       engine.rust.drop_engine_lock(engine_lock);
 
       b.update_scale(500, 500, 500);

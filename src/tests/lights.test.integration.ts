@@ -1,9 +1,11 @@
-import { describe, beforeAll, it, jest, expect } from '@jest/globals';
+import { describe, beforeAll, it, jest } from '@jest/globals';
 import { Page, Browser } from 'puppeteer-core';
 
 import { Box as Box2 } from '../GPU/Meshes/Box.js';
 
 import type { Engine } from '../engine.js';
+import { CameraController } from '../controllers/CameraController.js';
+import assert from 'assert';
 //@ts-ignore
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 
@@ -18,10 +20,10 @@ describe('Lights ', function () {
     await page.goto('https://localhost:4280');
   }, 10000);
   it('should load without error', async () => {
-    const elem = await page.waitForSelector('button');
+    const elem = await page.waitForSelector('game-container >>> button');
     await elem?.click();
-    await page.waitForSelector('progress');
-    await page.waitForFunction(() => !document.querySelector('progress'));
+    await page.waitForSelector('game-container >>> progress');
+    await page.waitForSelector('game-container >>> progress', { hidden: true });
   });
   it('should render boxes', async () => {
     const [greenPixel, redPixel] = await page.evaluate(async function () {
@@ -48,22 +50,17 @@ describe('Lights ', function () {
         },
       );
       //green on left, red on right
-      b.translation = [0, 400, -300];
-      b2.translation = [0, 400, 300];
+      b.setTranslation([0, 400, -300]);
+      b2.setTranslation([0, 400, 300]);
       b.update_scale(200, 200, 200);
       b2.update_scale(200, 200, 200);
-      //@ts-expect-error
-      const control = engine!.mainCamera.attachControllerForCamera({
+      const control = engine!.gpu!.mainCamera.attachControllerForCamera({
         attachCameraController: () => undefined,
         deAttachCameraController: () => undefined,
         serialize: () => undefined,
-      });
-      control.updatePosition((position) => position.set([5000, 400, 0]));
-      control.updateDirection((direction) => {
-        direction[0] = 1;
-        direction[1] = 0;
-        direction[2] = 0;
-      });
+      } as unknown as CameraController);
+      control.updatePosition(5000, 400, 0);
+      control.updateDirection(1, 0, 0);
       await new Promise<void>((res) => {
         requestAnimationFrame(() => res());
       });
@@ -76,17 +73,12 @@ describe('Lights ', function () {
       const renderTarget =
         engine.gpu!.renderPassScreen.props.colorRenderTargets
           .gRenderTargetDiffuse.resolveTexture!;
+      renderTarget.renderTarget.texture.print_bitmap();
 
-      const data = await renderTarget.renderTarget.texture.toBitmap();
+      const { bytesPerRow, data } =
+        await renderTarget.renderTarget.texture.toBitmap();
       const bytes_per_pixel = renderTarget.renderTarget.texture.bytes_per_fixel;
 
-      let bytesPerRow =
-        renderTarget.renderTarget.texture.props.size.width * bytes_per_pixel;
-      const missAlignment = bytesPerRow % 256;
-
-      if (missAlignment !== 0) {
-        bytesPerRow = bytesPerRow - missAlignment + 256;
-      }
       return [
         new Uint8ClampedArray(
           data.buffer,
@@ -100,18 +92,8 @@ describe('Lights ', function () {
         ),
       ] as const;
     });
-    // Data is in BGR format.
-    expect(redPixel).toEqual({
-      0: 0,
-      1: 0,
-      2: 76,
-      3: 255,
-    });
-    expect(greenPixel).toEqual({
-      0: 0,
-      1: 13,
-      2: 0,
-      3: 255,
-    });
+    // Data is in BGR format
+    assert.deepEqual(Object.values(greenPixel), [0, 255, 0, 255]);
+    assert.deepEqual(Object.values(redPixel), [0, 0, 255, 255]);
   });
 });

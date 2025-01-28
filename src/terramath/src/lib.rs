@@ -222,7 +222,7 @@ pub trait VectorMath<T, const N: usize> {
      */
     fn add_vec_in_place(&mut self, other: &Self);
     fn add_vec_to_ref(&mut self, other: &Self, result: &mut Self);
-    fn add_vec(&mut self, other: &Self) -> Self;
+    fn add_vec(&self, other: &Self) -> Self;
     fn divide_vec_in_place(&mut self, other: &Self);
     fn divide_in_place(&mut self, dividor: T);
     fn normalize_in_place(&mut self);
@@ -309,7 +309,7 @@ impl VectorMath<f32, 3> for [f32; 3] {
         result[1] = self[1] + other[1];
         result[2] = self[2] + other[2];
     }
-    fn add_vec(&mut self, other: &Self) -> Self {
+    fn add_vec(&self, other: &Self) -> Self {
         [self[0] + other[0], self[1] + other[1], self[2] + other[2]]
     }
     fn divide_vec_in_place(&mut self, other: &Self) {
@@ -484,7 +484,7 @@ impl VectorMath<f32, 4> for [f32; 4] {
         result[2] = self[2] + other[2];
         result[3] = self[3] + other[3];
     }
-    fn add_vec(&mut self, other: &Self) -> Self {
+    fn add_vec(&self, other: &Self) -> Self {
         [
             self[0] + other[0],
             self[1] + other[1],

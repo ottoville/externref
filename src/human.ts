@@ -319,13 +319,12 @@ export class Human extends IndexedSingleColoredMesh {
     //TODO: remove this line and rest of legacy collider check from character
     engine.collideWithWorld(this, scaledPosition, scaledVelocity);
     /*engine.rust.move_character(
-      engine_lock,
       dt,
       velocityPerDelta[0],
       velocityPerDelta[1],
       velocityPerDelta[2],
-    );*/
-
+    );
+    */
     if (!engine.collider.collision_resolved) {
       //console.log('cant solve collision', this.label)
     }

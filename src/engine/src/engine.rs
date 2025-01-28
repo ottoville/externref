@@ -37,8 +37,7 @@ extern "C" {
 
 }
 #[cfg(test)]
-unsafe fn mesh_on_physic_tick(mesh: *const Mesh, _delta: u32, _externref: &Resource<JSMesh>) {
-}
+unsafe fn mesh_on_physic_tick(mesh: *const Mesh, _delta: u32, _externref: &Resource<JSMesh>) {}
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
@@ -114,12 +113,15 @@ pub struct Engine {
     character_controller: KinematicCharacterController,
     pub character_mesh_id: AtomicUsize,
     pub meshes: Mutex<Vec<Mesh>>,
+    character_shape: Box<dyn Shape>,
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
     pub rigid_bodies: HashMap<RigidBodyHandle, usize>,
     pub gpu_allocated: FreeIndex,
     pub collider_set: ColliderSet,
+    pub modified_colliders: Vec<ColliderHandle>,
+    pub removed_colliders: Vec<ColliderHandle>,
     pub broad_phase: DefaultBroadPhase,
     pub ccd_solver: CCDSolver,
     pub island_manager: IslandManager,
@@ -127,6 +129,7 @@ pub struct Engine2 {
     pub narrow_phase: NarrowPhase,
     pub multi_joint_set: MultibodyJointSet,
     pub rigid_body_set: RigidBodySet,
+    pub query_pipeline: QueryPipeline,
 }
 
 pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
@@ -140,6 +143,8 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
             rigid_bodies: HashMap::new(),
             gpu_allocated: FreeIndex::new(),
             collider_set: ColliderSet::new(),
+            modified_colliders: Vec::with_capacity(32),
+            removed_colliders: Vec::with_capacity(32),
             broad_phase: DefaultBroadPhase::new(),
             ccd_solver: CCDSolver::new(),
             island_manager: IslandManager::new(),
@@ -147,6 +152,7 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
             narrow_phase: NarrowPhase::new(),
             multi_joint_set: MultibodyJointSet::new(),
             rigid_body_set: RigidBodySet::new(),
+            query_pipeline: QueryPipeline::new(),
         }),
         gpu: Mutex::new(None),
         meshes: Mutex::new(Vec::with_capacity(100)),
@@ -155,6 +161,7 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
 
         character_controller: KinematicCharacterController::default(),
         character_mesh_id: AtomicUsize::new(0),
+        character_shape: Box::new(Ball::new(3.0)),
     };
 });
 
@@ -239,41 +246,47 @@ pub fn js_error<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
 }*/
 
 impl Engine2 {
-    pub fn move_character(&self, dt: f32, x: f32, y: f32, z: f32) {
+    pub fn move_character(&mut self, dt: f32, x: f32, y: f32, z: f32) {
+        /**
+         * BUGS:
+         * when tab is inactive dt grow too much shape will penetrate ground
+         * modified eg moved or rotated collider does not get updated?
+         * movement with keyboard does not work
+         */
         let character_mesh_id = &ENGINE.character_mesh_id.load(Ordering::Relaxed);
-        let query_pipeline = QueryPipeline::new();
-        let character_shape = Ball::new(1.8);
         let mesh = &mut ENGINE.meshes.lock().unwrap()[*character_mesh_id];
 
+        let cur_pos = mesh.mesh_property.lock().unwrap().translation.0;
+
         let character_pos = Isometry3::new(
-            Vector3::from(mesh.mesh_property.lock().unwrap().translation.0),
+            Vector3::from(cur_pos),
             Vector3::y() * std::f32::consts::FRAC_PI_2,
         );
-
-        let desired_translation = Vector3::from(
-            mesh.mesh_property
-                .lock()
-                .unwrap()
-                .translation
-                .0
-                .add_vec(&[x, y, z]),
-        );
+        let desired_translation = Vector3::from([x, y, z]);
         let filter = QueryFilter::default();
+        self.query_pipeline.update_incremental(
+            &self.collider_set,
+            &self.modified_colliders,
+            &self.removed_colliders,
+            true,
+        );
+        self.modified_colliders.clear();
+        self.removed_colliders.clear();
+
         let corrected_movement = ENGINE.character_controller.move_shape(
             dt,
             &self.rigid_body_set,
             &self.collider_set,
-            &query_pipeline,
-            &character_shape,
+            &self.query_pipeline,
+            &*ENGINE.character_shape,
             &character_pos,
             desired_translation,
             filter,
             |collision| { /* Handle or collect the collision in this closure. */ },
         );
-        mesh.update_translation(
-            corrected_movement.translation.x,
-            corrected_movement.translation.y,
-            corrected_movement.translation.z,
+
+        mesh.update_translation_vec(
+            cur_pos.add_vec(&corrected_movement.translation.data.0[0]),
             true,
         );
     }
@@ -345,30 +358,28 @@ impl Engine2 {
     }
     pub fn add_collider_to_mesh<'a>(&mut self, collider: Collider, mesh_id: usize) {
         let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
-        let collider_set = &mut self.collider_set;
         match mesh.rigid_body_handle {
             Some(rigid_body_handle) => {
-                let old = mesh
-                    .collider_handle
-                    .replace(collider_set.insert_with_parent(
-                        collider,
-                        rigid_body_handle,
+                let collider_handle = self.collider_set.insert_with_parent(
+                    collider,
+                    rigid_body_handle,
+                    &mut self.rigid_body_set,
+                );
+                self.modified_colliders.push(collider_handle);
+                if let Some(old) = mesh.collider_handle.replace(collider_handle) {
+                    self.collider_set.remove(
+                        old,
+                        &mut self.island_manager,
                         &mut self.rigid_body_set,
-                    ));
-                match old {
-                    Some(handle) => {
-                        collider_set.remove(
-                            handle,
-                            &mut self.island_manager,
-                            &mut self.rigid_body_set,
-                            true,
-                        );
-                    }
-                    _ => (),
-                };
+                        true,
+                    );
+                    self.removed_colliders.push(old);
+                }
             }
             None => {
-                mesh.collider_handle.replace(collider_set.insert(collider));
+                let collider_handle = self.collider_set.insert(collider);
+                mesh.collider_handle.replace(collider_handle);
+                self.modified_colliders.push(collider_handle);
             }
         }
     }
