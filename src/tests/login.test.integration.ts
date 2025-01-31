@@ -1,6 +1,7 @@
-import { describe, beforeAll, it, expect } from '@jest/globals';
+import { describe, beforeAll, it } from '@jest/globals';
 import type { Page, Browser } from 'puppeteer-core';
 import { jest } from '@jest/globals';
+import assert from 'assert';
 
 //@ts-ignore
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
@@ -32,11 +33,24 @@ describe('/ (Home Page)', () => {
     await submit?.click();
   });
   it('should have logged in', async () => {
-    //  page.screenshot({path:'./sreenshot2.jpg'});
-    const elem2 = await page.waitForSelector('game-container >>> button');
-    const r = await elem2?.evaluate(
-      (node) => (node as HTMLButtonElement).textContent,
+    await page.waitForNavigation({
+      waitUntil: 'domcontentloaded',
+    });
+    //page.screenshot({path:'./sreenshot2.jpg'});
+    await new Promise((res) => setTimeout(res, 5000));
+    const playoffline = await page.waitForSelector(
+      'game-container >>> #loginmethods1 button',
     );
-    expect(r).toContain('Play');
+    const playofflinevisibiltity = await playoffline?.evaluate((node) =>
+      (node as HTMLButtonElement).checkVisibility(),
+    );
+    assert.equal(playofflinevisibiltity, false);
+    const playonline = await page.waitForSelector(
+      'game-container >>> #loginmethods2 button',
+    );
+    const playonlinevisibiltity = await playonline?.evaluate((node) =>
+      (node as HTMLButtonElement).checkVisibility(),
+    );
+    assert.equal(playonlinevisibiltity, true);
   });
 });

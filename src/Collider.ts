@@ -139,19 +139,11 @@ export class ColliderJS {
   get nearest_distance_squared() {
     return engine.rust.get_nearest_distance_squared(this.collider_ptr);
   }
-  set collision_resolved(val: number) {
-    new Float32Array(
-      engine.rust.memory.buffer,
-      engine.rust.collision_resolved_pointer(this.collider_ptr),
-      1,
-    ).set([val]);
+  set collision_resolved(val: boolean) {
+    engine.rust.set_collision_resolved(this.collider_ptr, val);
   }
   get collision_resolved() {
-    return new Float32Array(
-      engine.rust.memory.buffer,
-      engine.rust.collision_resolved_pointer(this.collider_ptr),
-      1,
-    )[0]!;
+    return engine.rust.get_collision_resolved(this.collider_ptr);
   }
   constructor(rustExports: rustWasm) {
     this.collider_ptr = rustExports.collider();
@@ -237,7 +229,7 @@ export class ColliderJS {
     );
     this.epsilon = e;
     // this.collisionFound = false;
-    this.collision_resolved = 1;
+    this.collision_resolved = true;
     //console.log('set collisionNotFound true')
   }
 

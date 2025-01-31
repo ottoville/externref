@@ -95,6 +95,7 @@ export type rustWasm = {
   ): rust_pointer<'geometry'>;
   create_icosphere_geometry(order: number): rust_pointer<'geometry'>;
   collider(): rust_pointer<'legacy_collider'>;
+  initialize_collider(collider: rust_pointer<'legacy_collider'>): void;
   intersection_point_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
@@ -105,12 +106,13 @@ export type rustWasm = {
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): rust_pointer<'collissionpoint'>;
 
-  collision_resolved_pointer(
+  set_collision_resolved(
     collider_ptr: rust_pointer<'legacy_collider'>,
-  ): number;
-  nearest_distance_squared_pointer(
+    val: boolean,
+  ): void;
+  get_collision_resolved(
     collider_ptr: rust_pointer<'legacy_collider'>,
-  ): number;
+  ): boolean;
   set_nearest_distance_squared(
     collider_ptr: rust_pointer<'legacy_collider'>,
     distance: number,
@@ -124,7 +126,6 @@ export type rustWasm = {
   scaled_velocity_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
-  collided_mesh_pointer(collider_ptr: rust_pointer<'legacy_collider'>): number;
   collided_point_in_triangle_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): rust_pointer<'Plane'>;
@@ -575,12 +576,8 @@ interface EarthDatabase extends IDBDatabase {
 }
 interface ColliderWasm {
   construct(
-    collisionFound: number,
-    nearestDistanceSquaredPointer: number,
-    collidedMeshPointer: number,
     velocity: number,
     basePoint: number,
-    collidedPointInTrianglePointer: number,
     rust_collider_ptr: rust_pointer<'legacy_collider'>,
     lowest_root_ptr: rust_pointer<'lowestroot'>,
   ): void;
@@ -617,8 +614,6 @@ export class Engine {
   readonly physics: Physics;
   readonly scenes: Map<string, Scene> = new Map();
   // readonly collisionNotFound:DataView
-  //@ts-expect-error todo
-  readonly #collidedMesh: DataView;
   readonly collider: ColliderJS;
 
   readonly #destinationPoint: [number, number, number] = [0, 0, 0];
@@ -1130,21 +1125,9 @@ export class Engine {
 
     this.collider = new ColliderJS(rust);
 
-    //TODO: this does not work after memory grow
-    this.#collidedMesh = new DataView(
-      this.rust.memory.buffer,
-      engine.rust.collided_mesh_pointer(this.collider.collider_ptr),
-      4,
-    );
     wasm.construct(
-      engine.rust.collision_resolved_pointer(this.collider.collider_ptr),
-      engine.rust.nearest_distance_squared_pointer(this.collider.collider_ptr),
-      engine.rust.collided_mesh_pointer(this.collider.collider_ptr),
       engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),
       engine.rust.scaled_position_pointer(this.collider.collider_ptr),
-      engine.rust.collided_point_in_triangle_pointer(
-        this.collider.collider_ptr,
-      ),
       this.collider.collider_ptr,
       engine.rust.lowest_root_pointer(this.collider.collider_ptr),
     );
@@ -1167,6 +1150,7 @@ export class Engine {
 
       //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
       this.wasm._initialize();
+      this.rust.initialize_collider(this.collider.collider_ptr);
       // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
       // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();

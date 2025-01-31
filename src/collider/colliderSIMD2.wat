@@ -16,7 +16,6 @@
   ;;(import "env" "memory" (memory $mem 31 32))
 
   (global $collision_point_ptr (mut i32) (i32.const 0))
-  (global $nearestDistanceSquaredPointer (mut i32) (i32.const 0))
 
   (global $velocity (mut v128) (v128.const i32x4 0 0 0 0))
   (global $velocitySquared (mut f32) (f32.const 0))
@@ -35,10 +34,6 @@
   (global $velocityY (mut v128) (v128.const i32x4 0 0 0 0))
   (global $velocityZ (mut v128) (v128.const i32x4 0 0 0 0))
 
-
-  (global $collisionNotFoundPointer (mut i32) (i32.const 1))
-  (global $collidedMeshPointer (mut i32) (i32.const 0))
-
   (global $found (mut i32) (i32.const 0))
 
   (global $basePoint (mut v128) (v128.const i32x4 0 0 0 0))
@@ -50,14 +45,9 @@
 
   (global $rust_collider_ptr (mut i32) (i32.const 0))
 
-  (global $collidedPointInTrianglePointer (mut i32) (i32.const 0))
   (func $construct
-      (param $collisionNotFoundPointer i32)
-      (param $nearestDistanceSquared i32)
-      (param $collidedMesh i32)
       (param $velocityPointer i32)
       (param $basePointPointer i32)
-      (param $collidedPointInTrianglePointer i32)
       (param $rust_collider_ptr i32)
       (param $lowest_root_ptr i32)
       
@@ -77,29 +67,12 @@
         (i32.const 1)  
       )
 
-     (global.set $collisionNotFoundPointer
-        (local.get $collisionNotFoundPointer)
-      )
-      (global.set $nearestDistanceSquaredPointer
-        (local.get $nearestDistanceSquared)
-      )
-      (global.set $collidedMeshPointer
-        (local.get $collidedMesh)
-      )
-      global.get $nearestDistanceSquaredPointer
-      f32.const 9999999
-      f32.store
-
       (global.set $velocityPointer
           (local.get $velocityPointer)
       )
       
       (global.set $basePointPointer
         (local.get $basePointPointer)
-      )
-
-      (global.set $collidedPointInTrianglePointer
-        (local.get $collidedPointInTrianglePointer)
       )
   )
 
@@ -124,11 +97,7 @@
       (v128.load
         (global.get $basePointPointer)
       )
-    )      
-
-    global.get $collisionNotFoundPointer
-    i32.const 1
-    i32.store
+    )
 
     (local.tee $temp
       (f32x4.mul
@@ -221,11 +190,6 @@
     f32x4.extract_lane 2
     f32x4.splat
     global.set $velocityZ
-
-
-    global.get $collidedPointInTrianglePointer
-    i32.const 0
-    i32.store
   )
 
   ;;(func $v3_dot

@@ -159,28 +159,14 @@ const position = new Float32Array(
 position.set([3384.10498046875, 143.2760772705078, -5874.26806640625]);
 
 instance.exports.construct(
-  instanceRust.exports.collision_resolved_pointer(collider_ptr),
-  instanceRust.exports.nearest_distance_squared_pointer(collider_ptr),
-  instanceRust.exports.collided_mesh_pointer(collider_ptr),
   velocity.byteOffset,
   position.byteOffset,
-  instanceRust.exports.collided_point_in_triangle_pointer(collider_ptr),
   collider_ptr,
   instanceRust.exports.lowest_root_pointer(collider_ptr),
 );
 
 instance.exports._initialize();
-
-const collisionNotFound = new Uint32Array(
-  memory.buffer,
-  instanceRust.exports.collision_resolved_pointer(collider_ptr),
-  1,
-);
-const nearestDistanceSquared = new Float32Array(
-  memory.buffer,
-  instanceRust.exports.nearest_distance_squared_pointer(collider_ptr),
-  1,
-);
+instanceRust.exports.initialize_collider();
 
 new Float32Array(memory.buffer, 7872, 4).set([
   0, 31.435291290283203, -10000, 0,
@@ -277,10 +263,8 @@ instance.exports.testTriangles(
   facesBufferCollider.byteLength,
   8 * 7 * 4,
 );
-if (!collisionNotFound[0] === 0) {
-  console.error('faulty collisionNotFound', collisionNotFound);
-  process.exit(1);
-}
+const collisionNotFound = instanceRust.exports.get_collision_resolved(collider_ptr)
+assert.equal(collisionNotFound, 0)
 const intersectionPointWasm = new Float32Array(
   instanceRust.exports.memory.buffer,
   instanceRust.exports.intersection_point_pointer(collider_ptr),
@@ -290,11 +274,9 @@ assert.deepEqual(
   [...intersectionPointWasm],
   [3386.90673828125, 10.731124877929688, -5874.72216796875, 0],
 );
+const nearestDistanceSquared = instanceRust.exports.get_nearest_distance_squared(collider_ptr)
+assert.equal(nearestDistanceSquared, 17312.142578125)
 
-if (nearestDistanceSquared[0] !== 17312.142578125) {
-  console.error('faulty nearesDistanceSquared', nearestDistanceSquared[0]);
-  process.exit(1);
-}
 ///////////////////////////////////////////////
 
 instance.exports.test_checkForLowestRoot2();

@@ -7,11 +7,10 @@ use terramath::Plane;
 pub struct Collider {
     pub basepoint_world: [f32; 4],
     intersection_point: [f32; 4],
-    pub collision_resolved: u32,
+    pub collision_resolved: bool,
     pub nearest_distance_squared: f32,
     scaled_position: [f32; 4],
     scaled_velocity: [f32; 4],
-    collided_mesh: u32,
     pub speed: f32,
     collided_point_in_triangle: &'static Plane,
     // TODO: move to stack
@@ -24,6 +23,10 @@ pub struct Collider {
 pub extern "C" fn collider() -> *const Collider {
     let coll = Box::new(Collider::new());
     Box::leak(coll)
+}
+#[no_mangle]
+pub unsafe extern "C" fn initialize_collider(collider_ptr: *mut Collider) {
+    (*collider_ptr)._initialize();
 }
 #[no_mangle]
 pub unsafe extern "C" fn intersection_point_pointer(collider_ptr: *const Collider) -> *const f32 {
@@ -39,14 +42,12 @@ pub unsafe extern "C" fn collision_point_pointer(collider_ptr: *const Collider) 
     &raw const (*collider_ptr).collision_point as *const v128
 }
 #[no_mangle]
-pub unsafe extern "C" fn collision_resolved_pointer(collider_ptr: *const Collider) -> &'static u32 {
-    &((*collider_ptr).collision_resolved)
+pub unsafe extern "C" fn set_collision_resolved(collider_ptr: *mut Collider, val: bool) {
+    (*collider_ptr).collision_resolved = val
 }
 #[no_mangle]
-pub unsafe extern "C" fn nearest_distance_squared_pointer(
-    collider_ptr: *const Collider,
-) -> &'static f32 {
-    &((*collider_ptr).nearest_distance_squared)
+pub unsafe extern "C" fn get_collision_resolved(collider_ptr: *const Collider) -> bool {
+    (*collider_ptr).collision_resolved
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_nearest_distance_squared(collider_ptr: *mut Collider, distance: f32) {
@@ -69,10 +70,6 @@ pub unsafe extern "C" fn collided_point_in_triangle_pointer(
     collider_ptr: *const Collider,
 ) -> &'static &'static Plane {
     &(*collider_ptr).collided_point_in_triangle
-}
-#[no_mangle]
-pub unsafe extern "C" fn collided_mesh_pointer(collider_ptr: *const Collider) -> &'static u32 {
-    &((*collider_ptr).collided_mesh)
 }
 #[no_mangle]
 pub unsafe extern "C" fn speed_squared(collider_ptr: *const Collider) -> &'static f32 {
@@ -318,11 +315,10 @@ impl Collider {
             Collider {
                 basepoint_world: [0.0, 0.0, 0.0, 0.0],
                 intersection_point: [0.0, 0.0, 0.0, 0.0],
-                collision_resolved: 1u32,
-                nearest_distance_squared: 0.0,
+                collision_resolved: true,
+                nearest_distance_squared: 9999999.0,
                 scaled_position: [0.0, 0.0, 0.0, 0.0],
                 scaled_velocity: [0.0, 0.0, 0.0, 0.0],
-                collided_mesh: 0u32,
                 speed: 0.0,
                 collided_point_in_triangle: *(0 as *const &'static Plane),
                 lowest_root: 0.0,
@@ -330,10 +326,12 @@ impl Collider {
             }
         }
     }
-    //TODO finish this
-
-    #[cfg(target_arch = "wasm32")]
-    pub fn _initialize() {}
+    pub fn _initialize(&mut self) {
+        self.collision_resolved = true;
+        unsafe {
+            self.collided_point_in_triangle = *(0 as *const &'static Plane);
+        }
+    }
     //TODO finish this
     #[cfg(target_arch = "wasm32")]
     pub fn test_triangles(
@@ -647,13 +645,12 @@ impl Collider {
         collided_plane: *const Plane,
     ) {
         let dist_to_collision_squared = t * t * velocity_squared_length;
-        if self.collision_resolved == 1 || dist_to_collision_squared < self.nearest_distance_squared
-        {
+        if self.collision_resolved || dist_to_collision_squared < self.nearest_distance_squared {
             self.intersection_point[0] = self.collision_point[0];
             self.intersection_point[1] = self.collision_point[1];
             self.intersection_point[2] = self.collision_point[2];
             self.nearest_distance_squared = dist_to_collision_squared;
-            self.collision_resolved = 0;
+            self.collision_resolved = false;
             unsafe {
                 if collided_point_in_triangle {
                     self.collided_point_in_triangle = &*(collided_plane);
