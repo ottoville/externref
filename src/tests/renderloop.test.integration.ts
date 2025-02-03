@@ -1,7 +1,8 @@
 import type { Engine } from '../engine.js';
 import type { Page, Browser } from 'puppeteer-core';
 
-import { describe, beforeAll, it, expect } from '@jest/globals';
+import { describe, beforeAll, it } from '@jest/globals';
+import assert from 'assert';
 
 //@ts-ignore
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
@@ -13,7 +14,7 @@ describe('Physic time ', function () {
     await page.goto('https://localhost:4280');
   }, 10000);
   it('should load without error', async () => {
-    const elem = await page.waitForSelector('game-container >>> button');
+    const elem = await page.waitForSelector('game-container >>> button', {visible: true});
     await elem?.click();
     await page.waitForSelector('game-container >>> progress');
     await page.waitForSelector('game-container >>> progress', {hidden: true});
@@ -31,7 +32,7 @@ describe('Physic time ', function () {
       const value1_ = deltaView[0];
       return [value0_, value1_];
     });
-    expect(Number.isFinite(value1)).toBe(true);
-    expect(value0).not.toBe(value1);
+    assert.equal(Number.isFinite(value1), true)
+    assert.notEqual(value0, value1)
   });
 });

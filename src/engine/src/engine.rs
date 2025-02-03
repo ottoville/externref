@@ -14,24 +14,14 @@ pub use crate::GPUMesh;
 use crate::MULTIVALUE_USIZE;
 use externref::externref;
 use externref::Resource;
+use logger::Logger;
 use nalgebra::{Isometry3, Vector3};
 use rapier3d::control::KinematicCharacterController;
 use rapier3d::parry::shape::Ball;
 use rapier3d::{crossbeam, prelude::*};
 use terramath::VectorMath;
 
-#[link(wasm_import_module = "console")]
-#[cfg(target_arch = "wasm32")]
 extern "C" {
-    fn log(number: *const usize);
-    pub fn log_u32(number: u32);
-    fn warn(number: *const usize);
-    fn error(number: *const usize);
-}
-
-extern "C" {
-    #[cfg(target_arch = "wasm32")]
-    fn jspanic(number: *const u8);
     #[cfg(target_arch = "wasm32")]
     pub fn verticesChange(mesh_id: usize);
 
@@ -62,7 +52,7 @@ pub extern "C" fn init_engine2() -> usize {
     use logger::Logger;
     String::from("Init engine").log();
     panic::set_hook(Box::new(|panic_info| unsafe {
-        jspanic(create_js_string(panic_info.to_string()));
+        panic_info.to_string().error();
     }));
     debug_assert!(std::mem::size_of::<GPUMesh>() % 8 == 0, "GPUMesh offset must be multiple of 8 https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange");
     std::mem::size_of::<GPUMesh>()
@@ -184,29 +174,6 @@ unsafe fn str_ptr_from_arr<const N: usize>(strings: [&(impl ToString + ?Sized); 
     MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
     MULTIVALUE_USIZE[1] = LOG_STRING.len();
     MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-}
-
-pub fn js_log<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
-    unsafe {
-        str_ptr_from_arr(strings);
-        #[cfg(target_arch = "wasm32")]
-        log(MULTIVALUE_USIZE.as_ptr());
-    }
-}
-
-pub fn js_warn<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
-    unsafe {
-        str_ptr_from_arr(strings);
-        #[cfg(target_arch = "wasm32")]
-        warn(MULTIVALUE_USIZE.as_ptr());
-    }
-}
-pub fn js_error<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
-    unsafe {
-        str_ptr_from_arr(strings);
-        #[cfg(target_arch = "wasm32")]
-        error(MULTIVALUE_USIZE.as_ptr());
-    }
 }
 
 // MESH ON COLLIDE JAVASCRIPT EVENT REMOVED
@@ -352,7 +319,7 @@ impl Engine2 {
                         false,
                     );
                 }
-                None => js_warn(["Mesh not found for rigid body"]),
+                None => "Mesh not found for rigid body".warn(),
             }
         }
     }

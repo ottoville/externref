@@ -1,4 +1,6 @@
-use crate::{engine::js_warn, mesh::ENGINE};
+use logger::Logger;
+
+use crate::mesh::ENGINE;
 
 pub struct DrawableDirect {
     instance_count: u32,
@@ -78,7 +80,7 @@ pub extern "C" fn add_drawble(mesh_id: usize) {
 #[no_mangle]
 pub extern "C" fn set_drawble_direct(mesh_id: usize, instance_count: u32, first_instance: u32) {
     if instance_count == 0 {
-        js_warn(["Added drawable with 0 instances, nothing will be drawn"])
+        "Added drawable with 0 instances, nothing will be drawn".warn();
     }
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 

@@ -17,7 +17,7 @@ import {
   BufferExports,
   type BufferInterface,
 } from './wasm-interfaces/BufferInterface.js';
-import { Rust_Iterator, stringFromPtr } from './utils.js';
+import { Rust_Iterator } from './utils.js';
 import { CommandEncoderInterface } from './wasm-interfaces/CommandEncoderInterface.js';
 import { Externref } from './externref.js';
 import { ComputePassEncoderInterface } from './wasm-interfaces/ComputePassEncoder.js';
@@ -95,7 +95,18 @@ export type rustWasm = {
   ): rust_pointer<'geometry'>;
   create_icosphere_geometry(order: number): rust_pointer<'geometry'>;
   collider(): rust_pointer<'legacy_collider'>;
-  initialize_collider(collider: rust_pointer<'legacy_collider'>): void;
+  initialize_collider(
+    collider: rust_pointer<'legacy_collider'>,
+    position_world_x: number,
+    position_world_y: number,
+    position_world_z: number,
+    velocity_world_x: number,
+    velocity_world_y: number,
+    velocity_world_z: number,
+    radius_x: number,
+    radius_y: number,
+    radius_z: number,
+  ): void;
   intersection_point_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
@@ -137,10 +148,6 @@ export type rustWasm = {
     collided_point_in_triangle: boolean,
     collided_plane: number,
   ): void;
-  set_speed(collider_ptr: rust_pointer<'legacy_collider'>, speed: number): void;
-  basepoint_world_pointer(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-  ): number;
   process_gpu_queue(updateViewPipeline: GPUComputePipeline): boolean;
 
   new_mesh_from_js(
@@ -709,11 +716,16 @@ export class Engine {
       commandencoder: CommandEncoderInterface,
       computepassencoder: ComputePassEncoderInterface,
       console: {
-        error(ptr: number) {
-          console.error(stringFromPtr(rust.instance.exports.memory, ptr));
-        },
-        log(ptr: number) {
-          console.log(stringFromPtr(rust.instance.exports.memory, ptr));
+        error_str(ptr: number, length: number) {
+          console.error(
+            textDecoder.decode(
+              new Uint8Array(
+                (rust.instance.exports.memory as WebAssembly.Memory).buffer,
+                ptr,
+                length,
+              ),
+            ),
+          );
         },
         log_str(ptr: number, length: number) {
           console.log(
@@ -726,14 +738,16 @@ export class Engine {
             ),
           );
         },
-        log_u32(n: number) {
-          console.log(n);
-        },
-        log_usize(n: number) {
-          console.log(n);
-        },
-        warn(ptr: number) {
-          console.warn(stringFromPtr(rust.instance.exports.memory, ptr));
+        warn_str(ptr: number, length: number) {
+          console.warn(
+            textDecoder.decode(
+              new Uint8Array(
+                (rust.instance.exports.memory as WebAssembly.Memory).buffer,
+                ptr,
+                length,
+              ),
+            ),
+          );
         },
       },
       device: DeviceExports,
@@ -746,18 +760,6 @@ export class Engine {
           if (ref instanceof Externref && !ref.ownedByJS) {
             ref.externref.destroy();
           }
-        },
-        jspanic(ptr: number) {
-          if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
-            throw new Error('Webassembly module does not have memory');
-          }
-          console.error(
-            textDecoder
-              .decode(
-                new Uint8Array(rust.instance.exports.memory.buffer, ptr, 512),
-              )
-              .trimEnd(),
-          );
         },
         mesh_on_change(mesh: Externref<false, MainNode>) {
           mesh.externref.onMeshChange.forEach((cb) => cb());
@@ -1136,6 +1138,8 @@ export class Engine {
     sphere: Ellipsoid,
     scaledPosition: TerraVector3,
     scaledVelocity: TerraVector3,
+    worldPosition: readonly [number, number, number],
+    worldVelocity: readonly [number, number, number],
   ): [number, number, number] | TerraVector3 {
     this.collider.didCollide = false;
     for (let i = 0; i < 3; i++) {
@@ -1150,7 +1154,18 @@ export class Engine {
 
       //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
       this.wasm._initialize();
-      this.rust.initialize_collider(this.collider.collider_ptr);
+      this.rust.initialize_collider(
+        this.collider.collider_ptr,
+        worldPosition[0],
+        worldPosition[1],
+        worldPosition[2],
+        worldVelocity[0],
+        worldVelocity[1],
+        worldVelocity[2],
+        sphere.radius[0],
+        sphere.radius[1],
+        sphere.radius[2],
+      );
       // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
       // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
@@ -1293,11 +1308,19 @@ export class Engine {
     sphere: Ellipsoid,
     scaledPosition: TerraVector3,
     scaledVelocity: TerraVector3,
+    worldPosition: readonly [number, number, number],
+    worldVelocity: readonly [number, number, number],
   ): void {
     if (sphere instanceof DataNode) sphere.colliding_character = false;
     //TODO: Call only when camera position change
     this.collider.finalPosition.set(
-      this.#getFinalPosition(sphere, scaledPosition, scaledVelocity),
+      this.#getFinalPosition(
+        sphere,
+        scaledPosition,
+        scaledVelocity,
+        worldPosition,
+        worldVelocity,
+      ),
     );
     this.collider.finalPosition[0] *= sphere.radius[0];
     this.collider.finalPosition[1] *= sphere.radius[1];

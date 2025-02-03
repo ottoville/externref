@@ -7,11 +7,10 @@ use rapier3d::{
     na::{Const, OPoint},
     pipeline::ActiveEvents,
 };
-use terramath::{CrossProduct, Plane, VectorMath};
+use terramath::{CrossProduct, Plane, VectorMath, VectorMathF32};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
-    engine::js_warn,
     indices::Indices,
     math2::{Vec2wgslF32, Vec3wgslF32},
     mesh::ENGINE,
@@ -547,7 +546,7 @@ impl<'vert> Geometry {
                 parallel[3][3] = quatro[3].plane.d;
             }
         } else {
-            js_warn([&"Mesh facescount is not dividable by 4, cant check collisions"]);
+            ["Mesh facescount is not dividable by 4, cant check collisions for geometry:", &self.label].warn();
         }
     }
     pub fn rebuild_triangle_planes(&mut self) {

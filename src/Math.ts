@@ -206,7 +206,7 @@ export abstract class TerraVector3 extends Float32Array {
     return `x: ${this[0]}, y: ${this[1]}, z: ${this[2]}`;
   }
   LerpToRef(
-    end: TerraVector3,
+    end: readonly [number, number, number],
     amount: number,
     result: MutableTerraVector3,
   ): void {
@@ -214,7 +214,10 @@ export abstract class TerraVector3 extends Float32Array {
     result[1] = this[1] + (end[1] - this[1]) * amount;
     result[2] = this[2] + (end[2] - this[2]) * amount;
   }
-  multiply2Ref(m: TerraMatrix, ref: TerraVector3 | TerraVector4): void {
+  multiply2Ref(
+    m: TerraMatrix,
+    ref: TerraVector3 | TerraVector4 | [number, number, number],
+  ): void {
     var rx = this[0] * m[0] + this[1] * m[4] + this[2] * m[8] + m[12];
     var ry = this[0] * m[1] + this[1] * m[5] + this[2] * m[9] + m[13];
     var rz = this[0] * m[2] + this[1] * m[6] + this[2] * m[10] + m[14];

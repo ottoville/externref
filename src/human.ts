@@ -317,7 +317,13 @@ export class Human extends IndexedSingleColoredMesh {
     engine.collider.collidedMesh = undefined;
     engine.collider._retry = 0;
     //TODO: remove this line and rest of legacy collider check from character
-    engine.collideWithWorld(this, scaledPosition, scaledVelocity);
+    engine.collideWithWorld(
+      this,
+      scaledPosition,
+      scaledVelocity,
+      translation,
+      velocityPerDelta,
+    );
     /*engine.rust.move_character(
       dt,
       velocityPerDelta[0],

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use terramath::VectorMath;
+use terramath::VectorMathF32;
 
 use crate::{
     vertices::{PositionAndNormal, VertexKind},

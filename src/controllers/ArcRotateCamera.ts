@@ -51,7 +51,7 @@ export class ArcRotateCamera extends CameraController {
     };
   }
 
-  #computationVector = new MutableTerraVector3();
+  #computationVector: [number, number, number] = [0, 0, 0];
 
   #cameraTransformMatrix = new TerraMatrix();
 
@@ -173,14 +173,14 @@ export class ArcRotateCamera extends CameraController {
     }
     return false;
   };
-  moveto(destination: ReadOnlyTerraVector3) {
+  moveto(destination: readonly [number, number, number]) {
     this.#targetMovingfrom = new ReadOnlyTerraVector3([
       this.#target[0],
       this.#target[1],
       this.#target[2],
     ]);
     // Clone destination to survive Wasm memory grow.
-    this.#targetMovingTo = destination.clone();
+    this.#targetMovingTo = [...destination];
     this.#targetLerpPosition = 0;
     const moveWithTimeout = () => {
       if (!this.MoveToPlace()) {
@@ -311,7 +311,11 @@ export class ArcRotateCamera extends CameraController {
 
     //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
     //let starttime=performance.now();
-    engine.collideWithWorld(this, scaledPosition, scaledVelocity);
+    engine.collideWithWorld(this, scaledPosition, scaledVelocity, newPosition, [
+      newPosition[0] - this.camera.position[0],
+      newPosition[1] - this.camera.position[1],
+      newPosition[2] - this.camera.position[2],
+    ]);
 
     //run the callback
     // if (!this.engine.collider.collidedMesh) {
@@ -359,7 +363,7 @@ export class ArcRotateCamera extends CameraController {
     this.cameraControl?.updateDirection(...direction);
   }
   #targetMovingfrom: ReadOnlyTerraVector3 | null = null;
-  #targetMovingTo: ReadOnlyTerraVector3 | null = null;
+  #targetMovingTo: readonly [number, number, number] | null = null;
   #targetLerpPosition = 0;
   checkInputs = () => {
     if (this.#collisionTriggered) {

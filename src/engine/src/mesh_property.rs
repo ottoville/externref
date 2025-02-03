@@ -1,5 +1,6 @@
 use std::sync::MutexGuard;
 
+use logger::Logger;
 use terramath::{MatrixMath, Quaternion};
 
 use crate::{
@@ -8,7 +9,6 @@ use crate::{
         freeindex::FreeIndexIndex,
     },
     devtools::DEVTOOLS,
-    engine::js_warn,
     math2::Vec3wgslF32,
     mesh::ENGINE,
     GPUMesh,
@@ -117,7 +117,7 @@ impl MeshProperty {
         if !uniform_scaling {
             sub_3x3.transpose();
             if !sub_3x3.invert_in_place() {
-                js_warn([&"Cannot invert normal matrix for a mesh"]);
+                "Cannot invert normal matrix for a mesh".warn();
             }
         }
         gpu_mesh.transformation_normals.x = sub_3x3[0];

@@ -1,8 +1,4 @@
-import {
-  MutableTerraVector3,
-  ReadOnlyTerraVector3,
-  TerraVector3,
-} from '../../Math.js';
+import { MutableTerraVector3 } from '../../Math.js';
 import { MainNode } from '../../MainNode.js';
 import { RenderPassProps } from './RenderPass.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
@@ -136,21 +132,26 @@ export class PickableRenderPass<
     }
   }
 
-  pickPromise: Promise<{ position: TerraVector3 } | null> | null = null;
+  pickPromise: Promise<{
+    position: readonly [number, number, number];
+  } | null> | null = null;
   pickPromiseMesh: Promise<{
-    position: TerraVector3;
+    position: readonly [number, number, number];
     meshId: number;
   } | null> | null = null;
   #zAndIDPromise: Promise<[z: number, id: number]> | null = null;
-  async pickPosition(): Promise<{ position: ReadOnlyTerraVector3 } | null>;
-  async pickPosition(
-    mesh: true,
-  ): Promise<{ position: TerraVector3; meshId: number } | null>;
+  async pickPosition(): Promise<{
+    position: readonly [number, number, number];
+  } | null>;
+  async pickPosition(mesh: true): Promise<{
+    position: readonly [number, number, number];
+    meshId: number;
+  } | null>;
   async pickPosition(
     mesh = false,
   ): Promise<
-    | { position: TerraVector3 }
-    | { position: TerraVector3; meshId: number }
+    | { position: readonly [number, number, number] }
+    | { position: readonly [number, number, number]; meshId: number }
     | null
   > {
     if (mesh && this.pickPromiseMesh) {
@@ -289,7 +290,7 @@ export class PickableRenderPass<
         this.pickPromiseMesh = null;
         return null;
       }
-      const result = new MutableTerraVector3();
+      const result: [number, number, number] = [0, 0, 0];
       const x = (engine.gpu!.mousePosition[0] / this.size.width) * 2 - 1;
       const y = -((engine.gpu!.mousePosition[1] / this.size.height) * 2 - 1);
       new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(
@@ -311,7 +312,7 @@ export class PickableRenderPass<
     camera.update_camera_projection_view_inverted();
     if (mesh) {
       this.pickPromiseMesh = promise as Promise<{
-        position: TerraVector3;
+        position: readonly [number, number, number];
         meshId: number;
       }>;
       return this.pickPromiseMesh;
@@ -325,9 +326,10 @@ export class PickableRenderPass<
    * @param wantedMeshes List of meshes to test pick against
    * @returns
    */
-  async pickMesh(
-    wantedMeshes: MainNode[],
-  ): Promise<{ position: TerraVector3; mesh: MainNode } | null> {
+  async pickMesh(wantedMeshes: MainNode[]): Promise<{
+    position: readonly [number, number, number];
+    mesh: MainNode;
+  } | null> {
     const pickInfo = await this.pickPosition(true);
     if (!pickInfo) {
       return null;

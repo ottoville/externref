@@ -2,10 +2,10 @@
 use std::arch::wasm32::v128;
 use std::mem;
 
-use terramath::Plane;
+use terramath::{Plane, VectorMath, VectorMathF32};
 
 pub struct Collider {
-    pub basepoint_world: [f32; 4],
+    pub basepoint_world: [f32; 3],
     intersection_point: [f32; 4],
     pub collision_resolved: bool,
     pub nearest_distance_squared: f32,
@@ -25,8 +25,29 @@ pub extern "C" fn collider() -> *const Collider {
     Box::leak(coll)
 }
 #[no_mangle]
-pub unsafe extern "C" fn initialize_collider(collider_ptr: *mut Collider) {
-    (*collider_ptr)._initialize();
+pub unsafe extern "C" fn initialize_collider(
+    collider_ptr: *mut Collider,
+    world_position_x: f32,
+    world_position_y: f32,
+    world_position_z: f32,
+    world_velocity_x: f32,
+    world_velocity_y: f32,
+    world_velocity_z: f32,
+    radius_x: f32,
+    radius_y: f32,
+    radius_z: f32,
+) {
+    (*collider_ptr)._initialize(
+        world_position_x,
+        world_position_y,
+        world_position_z,
+        world_velocity_x,
+        world_velocity_y,
+        world_velocity_z,
+        radius_x,
+        radius_y,
+        radius_z,
+    );
 }
 #[no_mangle]
 pub unsafe extern "C" fn intersection_point_pointer(collider_ptr: *const Collider) -> *const f32 {
@@ -71,18 +92,7 @@ pub unsafe extern "C" fn collided_point_in_triangle_pointer(
 ) -> &'static &'static Plane {
     &(*collider_ptr).collided_point_in_triangle
 }
-#[no_mangle]
-pub unsafe extern "C" fn speed_squared(collider_ptr: *const Collider) -> &'static f32 {
-    &((*collider_ptr).speed)
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_speed(collider_ptr: *mut Collider, speed: f32) {
-    (*collider_ptr).speed = speed;
-}
-#[no_mangle]
-pub unsafe extern "C" fn basepoint_world_pointer(collider_ptr: *const Collider) -> *const f32 {
-    (*collider_ptr).basepoint_world.as_ptr()
-}
+
 #[cfg(target_arch = "wasm32")]
 #[no_mangle]
 pub extern "C" fn v3_dot(a: v128, b: v128) -> f32 {
@@ -288,7 +298,6 @@ pub unsafe extern "C" fn test_triangles(
     velocity_x: v128,
     velocity_y: v128,
     velocity_z: v128,
-    velocity: v128,
     velocity_squared: f32,
 ) {
     (*collider_ptr).test_triangles(
@@ -304,7 +313,6 @@ pub unsafe extern "C" fn test_triangles(
         velocity_x,
         velocity_y,
         velocity_z,
-        velocity,
         velocity_squared,
     );
 }
@@ -313,7 +321,7 @@ impl Collider {
     pub fn new() -> Self {
         unsafe {
             Collider {
-                basepoint_world: [0.0, 0.0, 0.0, 0.0],
+                basepoint_world: [0.0; 3],
                 intersection_point: [0.0, 0.0, 0.0, 0.0],
                 collision_resolved: true,
                 nearest_distance_squared: 9999999.0,
@@ -326,17 +334,33 @@ impl Collider {
             }
         }
     }
-    pub fn _initialize(&mut self) {
+    pub fn _initialize(
+        &mut self,
+        world_position_x: f32,
+        world_position_y: f32,
+        world_position_z: f32,
+        world_velocity_x: f32,
+        world_velocity_y: f32,
+        world_velocity_z: f32,
+        radius_x: f32,
+        radius_y: f32,
+        radius_z: f32,
+    ) {
         self.collision_resolved = true;
+        let velocity_world = [world_velocity_x, world_velocity_y, world_velocity_z]
+            .multiply_vec(&[radius_x, radius_y, radius_z]);
+        self.speed = velocity_world.length();
         unsafe {
             self.collided_point_in_triangle = *(0 as *const &'static Plane);
         }
+        self.basepoint_world = [world_position_x, world_position_y, world_position_z];
     }
     //TODO finish this
     #[cfg(target_arch = "wasm32")]
     pub fn test_triangles(
         &mut self,
         mut plane_position: i32,
+        // TODO: refer to geometry.collider_planes_parallel
         mut plane_position_horizontal: usize,
         length: i32,
         normalized_velocity_x: v128,
@@ -348,7 +372,6 @@ impl Collider {
         velocity_x: v128,
         velocity_y: v128,
         velocity_z: v128,
-        velocity: v128,
         velocity_squared: f32,
     ) {
         use std::arch::wasm32::{
@@ -360,6 +383,7 @@ impl Collider {
         if length == 0 {
             return;
         }
+        let scaled_velocity = unsafe { v128_load(self.scaled_velocity.as_ptr() as *const v128) };
         let end = plane_position + length;
         plane_position_horizontal -= 64;
         loop {
@@ -452,7 +476,7 @@ impl Collider {
                             v128_load(*((plane_position + 20) as *const &v128)),
                             v128_load(*((plane_position + 24) as *const &v128)),
                             f32x4_extract_lane::<0>(t0),
-                            velocity,
+                            scaled_velocity,
                             velocity_squared,
                         );
                     }
@@ -464,7 +488,7 @@ impl Collider {
                             v128_load(*((plane_position + 48) as *const &v128)),
                             v128_load(*((plane_position + 52) as *const &v128)),
                             f32x4_extract_lane::<1>(t0),
-                            velocity,
+                            scaled_velocity,
                             velocity_squared,
                         );
                     }
@@ -477,7 +501,7 @@ impl Collider {
                             v128_load(*((plane_position + 76) as *const &v128)),
                             v128_load(*((plane_position + 80) as *const &v128)),
                             f32x4_extract_lane::<2>(t0),
-                            velocity,
+                            scaled_velocity,
                             velocity_squared,
                         );
                     }
@@ -489,7 +513,7 @@ impl Collider {
                             v128_load(*((plane_position + 104) as *const &v128)),
                             v128_load(*((plane_position + 108) as *const &v128)),
                             f32x4_extract_lane::<3>(t0),
-                            velocity,
+                            scaled_velocity,
                             velocity_squared,
                         );
                     }

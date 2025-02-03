@@ -10,47 +10,33 @@ const wasi = new WASI.WASI({
 let instanceRust;
 const textDecoder = new TextDecoder();
 
-export function stringFromPtr(
-  memory,
-  ptr,
-) {
-  if (!(memory instanceof WebAssembly.Memory)) {
-    throw new Error('Webassembly module does not have memory');
-  }
-  const [s_ptr, len] = new Uint32Array(memory.buffer, ptr, 2);
-  return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
-}
 const exportObj = {
   console: {
-    log(ptr) {
-      console.log(stringFromPtr(instanceRust.exports.memory, ptr));
-    },
     log_str(ptr, length) {
       console.log(
         textDecoder.decode(
-          new Uint8Array(
-            (instanceRust.exports.memory).buffer,
-            ptr,
-            length,
-          ),
+          new Uint8Array(instanceRust.exports.memory.buffer, ptr, length),
         ),
-      );    },
-    warn(ptr) {},
-    error(ptr) {},
+      );
+    },
+    error_str(ptr, length) {
+      console.error(
+        textDecoder.decode(
+          new Uint8Array(instanceRust.exports.memory.buffer, ptr, length),
+        ),
+      );
+    },
+    warn_str(ptr, length) {
+      console.warn(
+        textDecoder.decode(
+          new Uint8Array(instanceRust.exports.memory.buffer, ptr, length),
+        ),
+      );
+    },
   },
   env: {
     now() {
       return performance.now();
-    },
-    jspanic(ptr) {
-      if (!(instanceRust.exports.memory instanceof WebAssembly.Memory)) {
-        throw new Error('Webassembly module does not have memory');
-      }
-      console.error(
-        new TextDecoder()
-          .decode(new Uint8Array(instanceRust.exports.memory.buffer, ptr, 512))
-          .trimEnd(),
-      );
     },
     jslog(ptr) {
       if (!(instanceRust.exports.memory instanceof WebAssembly.Memory)) {
@@ -166,7 +152,7 @@ instance.exports.construct(
 );
 
 instance.exports._initialize();
-instanceRust.exports.initialize_collider();
+instanceRust.exports.initialize_collider(collider_ptr);
 
 new Float32Array(memory.buffer, 7872, 4).set([
   0, 31.435291290283203, -10000, 0,
@@ -263,8 +249,9 @@ instance.exports.testTriangles(
   facesBufferCollider.byteLength,
   8 * 7 * 4,
 );
-const collisionNotFound = instanceRust.exports.get_collision_resolved(collider_ptr)
-assert.equal(collisionNotFound, 0)
+const collisionNotFound =
+  instanceRust.exports.get_collision_resolved(collider_ptr);
+assert.equal(collisionNotFound, 0);
 const intersectionPointWasm = new Float32Array(
   instanceRust.exports.memory.buffer,
   instanceRust.exports.intersection_point_pointer(collider_ptr),
@@ -274,8 +261,9 @@ assert.deepEqual(
   [...intersectionPointWasm],
   [3386.90673828125, 10.731124877929688, -5874.72216796875, 0],
 );
-const nearestDistanceSquared = instanceRust.exports.get_nearest_distance_squared(collider_ptr)
-assert.equal(nearestDistanceSquared, 17312.142578125)
+const nearestDistanceSquared =
+  instanceRust.exports.get_nearest_distance_squared(collider_ptr);
+assert.equal(nearestDistanceSquared, 17312.142578125);
 
 ///////////////////////////////////////////////
 

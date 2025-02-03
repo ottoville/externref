@@ -1,4 +1,4 @@
-import { describe, beforeAll, it, jest, expect } from '@jest/globals';
+import { describe, beforeAll, it, jest } from '@jest/globals';
 import type { Page, Browser } from 'puppeteer-core';
 
 import { Box as Box2 } from '../GPU/Meshes/Box.js';
@@ -6,6 +6,7 @@ import { Box as Box2 } from '../GPU/Meshes/Box.js';
 import type { Engine } from '../engine.js';
 import type { TerraVector3 } from '../Math.js';
 import type { MainNode } from '../MainNode.js';
+import assert from 'assert';
 //@ts-ignore
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 
@@ -20,7 +21,7 @@ describe('Pick box ', function () {
     await page.goto('https://localhost:4280');
   }, 10000);
   it('should load without error', async () => {
-    const elem = await page.waitForSelector('game-container >>> button');
+    const elem = await page.waitForSelector('game-container >>> button', {visible: true});
     await elem?.click();
     await page.waitForSelector('game-container >>> progress');
     await page.waitForSelector('game-container >>> progress', { hidden: true });
@@ -38,9 +39,7 @@ describe('Pick box ', function () {
         },
         { label: 'PickGreenbox' },
       );
-      const engine_lock = engine.rust.get_engine();
       b.setTranslation([0, 400, 0]);
-      engine.rust.drop_engine_lock(engine_lock);
 
       b.update_scale(500, 500, 500);
       //@ts-expect-error
@@ -81,14 +80,14 @@ describe('Pick box ', function () {
         b.id,
       ] as const;
     });
-    expect(pickInfo0).not.toBeNull();
-    expect(pickInfo.label).not.toBeNull();
+    assert.notEqual(pickInfo0, null);
+    assert.notEqual(pickInfo.label, null);
     //window.printRenderTarget2()
     //window.printRenderTarget3()
-    expect(pickInfo0!.meshId).toStrictEqual(boxId);
-    expect(Math.round(pickInfo0!.position[0]!)).toStrictEqual(500);
-    expect(Math.round(pickInfo0!.position[1]!)).toStrictEqual(400);
-    expect(Math.floor(pickInfo0!.position[2]!)).toStrictEqual(0);
-    expect(pickInfo!.label).toStrictEqual('PickGreenbox');
+    assert.strictEqual(pickInfo0!.meshId, boxId);
+    assert.strictEqual(Math.round(pickInfo0!.position[0]!), 500);
+    assert.strictEqual(Math.round(pickInfo0!.position[1]!), 400);
+    assert.strictEqual(Math.floor(pickInfo0!.position[2]!), 0);
+    assert.strictEqual(pickInfo!.label, 'PickGreenbox');
   });
 });

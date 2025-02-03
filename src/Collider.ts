@@ -208,6 +208,7 @@ export class ColliderJS {
 
     new Float32Array(
       engine.rust.memory.buffer,
+      //@ts-expect-error removed
       engine.rust.basepoint_world_pointer(this.collider_ptr),
       3,
     ).set([
@@ -219,6 +220,7 @@ export class ColliderJS {
     this.#velocityWorld[0] = dir[0] * sphere.radius[0];
     this.#velocityWorld[1] = dir[1] * sphere.radius[1];
     this.#velocityWorld[2] = dir[2] * sphere.radius[2];
+    //@ts-ignore removed
     engine.rust.set_speed(
       this.collider_ptr,
       Math.hypot(

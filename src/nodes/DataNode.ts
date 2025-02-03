@@ -370,12 +370,17 @@ export class DataNode extends MainNode {
                }*/
     } else {
       //   TODO: Use wasm when this.faces_count % 4 == 0
-      engine.wasm.testTriangles(
-        engine.rust.collider_faces_pointer(this.id),
-        engine.rust.collider_planes_parallel_pointer(this.id),
-        facesCount * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
-        this.id,
-      );
+      const collider_planes_parallel_pointer =
+        engine.rust.collider_planes_parallel_pointer(this.id);
+      // this is to check that ptr is not null ptr
+      if (collider_planes_parallel_pointer !== 4) {
+        engine.wasm.testTriangles(
+          engine.rust.collider_faces_pointer(this.id),
+          collider_planes_parallel_pointer,
+          facesCount * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
+          this.id,
+        );
+      }
       /*
            const scaledPosition=collider.scaledPosition;
            const scaledVelocity=collider.scaledVelocity

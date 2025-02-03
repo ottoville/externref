@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use terramath::{CrossProduct, Quaternion, VectorMath};
+use terramath::{CrossProduct, Quaternion, VectorMath, VectorMathF32};
 
 use crate::{
     math2::Vec3wgslF32,

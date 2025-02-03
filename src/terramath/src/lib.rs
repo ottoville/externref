@@ -225,11 +225,30 @@ pub trait VectorMath<T, const N: usize> {
     fn add_vec(&self, other: &Self) -> Self;
     fn divide_vec_in_place(&mut self, other: &Self);
     fn divide_in_place(&mut self, dividor: T);
-    fn normalize_in_place(&mut self);
     fn to_scaling_matrix(&self) -> [[T; N]; N];
     fn transform(&self, matrix: [[f32; 4]; 4]) -> Self;
     fn transform_to_ref(&self, matrix: [[f32; 4]; 4], other: &mut Self);
 }
+pub trait VectorMathF32<const N: usize>: VectorMath<f32, N> {
+    fn length(&self) -> f32 {
+        let len_sqrt = self.dot(&self);
+        if len_sqrt == 0.0 || len_sqrt == 1.0 {
+            return len_sqrt;
+        }
+        len_sqrt.sqrt()
+    }
+    fn normalize_in_place(&mut self) {
+        let len_sqrt = self.dot(&self);
+        if len_sqrt == 0.0 || len_sqrt == 1.0 {
+            return;
+        }
+        let scale = 1.0 / len_sqrt.sqrt();
+        self.multiply_in_place(scale);
+    }
+}
+impl VectorMathF32<3> for [f32; 3] {}
+impl VectorMathF32<4> for [f32; 4] {}
+
 pub trait MatrixMath<T> {
     fn identity() -> Self;
     fn determinant(&self) -> T;
@@ -321,14 +340,6 @@ impl VectorMath<f32, 3> for [f32; 3] {
         self[0] /= dividor;
         self[1] /= dividor;
         self[2] /= dividor;
-    }
-    fn normalize_in_place(&mut self) {
-        let len_sqrt = self[0] * self[0] + self[1] * self[1] + self[2] * self[2];
-        if len_sqrt == 0.0 || len_sqrt == 1.0 {
-            return;
-        }
-        let scale = 1.0 / len_sqrt.sqrt();
-        self.multiply_in_place(scale);
     }
     fn to_scaling_matrix(&self) -> [[f32; 3]; 3] {
         [
@@ -503,18 +514,6 @@ impl VectorMath<f32, 4> for [f32; 4] {
         self[1] /= dividor;
         self[2] /= dividor;
         self[3] /= dividor;
-    }
-    fn normalize_in_place(&mut self) {
-        let len_sqrt =
-            self[0] * self[0] + self[1] * self[1] + self[2] * self[2] + self[3] * self[3];
-        if len_sqrt == 0.0 || len_sqrt == 1.0 {
-            return;
-        }
-        let scale = 1.0 / len_sqrt.sqrt();
-        self[0] *= scale;
-        self[1] *= scale;
-        self[2] *= scale;
-        self[3] *= scale;
     }
     fn to_scaling_matrix(&self) -> [[f32; 4]; 4] {
         [

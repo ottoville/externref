@@ -1,6 +1,5 @@
 use crate::allocators::explicit_freelist::ExplicitFreeList;
 pub use crate::drawable::DrawCommand;
-use crate::engine::js_error;
 #[cfg(target_arch = "wasm32")]
 use crate::engine::verticesChange;
 pub use crate::engine::ENGINE;
@@ -194,7 +193,6 @@ pub unsafe extern "C" fn strip(mesh_id: usize) -> bool {
 #[no_mangle]
 pub unsafe extern "C" fn collider_planes_parallel_pointer(mesh_id: usize) -> *const [[f32; 4]; 4] {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
-
     mesh.get_geometry().collider_planes_parallel.as_ptr()
 }
 #[no_mangle]
@@ -531,16 +529,14 @@ impl Mesh {
         if let Some(g) = &self.geometry {
             g
         } else {
-            js_error([&format!("Mesh {} has no geometry", self.label)]);
-            panic!("Mesh has no geometry")
+            panic!("Mesh {} has no geometry", self.label)
         }
     }
     pub fn get_geometry_mut(&mut self) -> &mut Geometry {
         if let Some(g) = &mut self.geometry {
             g
         } else {
-            js_error([&format!("Mesh {} has no geometry", self.label)]);
-            panic!("Mesh has no geometry")
+            panic!("Mesh {} has no geometry", self.label)
         }
     }
     pub fn update_translation(&mut self, x: f32, y: f32, z: f32, physics: bool) {
@@ -626,8 +622,7 @@ impl Mesh {
             g.update_bounding_box(&transformation);
             g.bounding_box.intersect_box_aa_sphere(collider, radius)
         } else {
-            js_error([&format!("Mesh {} has no geometry", self.label)]);
-            panic!("Mesh has no geometry")
+            panic!("Mesh {} has no geometry", self.label)
         }
     }
     pub fn calculate_normals(&mut self) {

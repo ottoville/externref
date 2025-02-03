@@ -1,6 +1,5 @@
 use terramath::VectorMath;
 
-use crate::engine::js_error;
 use crate::math2::Vec3wgslF32;
 use crate::mesh::ENGINE;
 use crate::vertices::{Position, VertexKind};
@@ -82,8 +81,7 @@ pub unsafe extern "C" fn create_bounding_box_geometry(mesh_id: usize) -> *mut Ge
         bb_geometry.set_indices(BOUNDING_BOX_INDICES.to_vec());
         return Box::into_raw(bb_geometry);
     } else {
-        js_error([&format!("Mesh {} has no geometry", mesh.label)]);
-        panic!("Mesh has no geometry")
+        panic!("Mesh {} has no geometry", mesh.label)
     }
 }
 

@@ -124,11 +124,11 @@ export abstract class MainNode implements Destroyable {
       engine.rust.translation_pointer(mesh),
     );
   }
-  getTranslationFromId(): ReadOnlyTerraVector3 {
-    return new ReadOnlyTerraVector3(
+  getTranslationFromId() {
+    return new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.translation_pointer_from_id(this.id),
-    );
+    ) as unknown as readonly [number, number, number];
   }
   setTranslation(value: [number, number, number] | ReadOnlyTerraVector3) {
     engine.rust.update_translation(this.id, value[0], value[1], value[2]);

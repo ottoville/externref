@@ -1,5 +1,5 @@
 (module
-  (import "rust" "test_triangles" (func $test_triangles (param i32 i32 i32 i32 v128 v128 v128 v128 v128 v128 v128 v128 v128 v128 f32)))
+  (import "rust" "test_triangles" (func $test_triangles (param i32 i32 i32 i32 v128 v128 v128 v128 v128 v128 v128 v128 v128 f32)))
   (import "rust" "test_triangle" (func $test_triangle (param i32 i32 i32 v128 v128 v128 f32 v128 f32)))
   (import "rust" "collision_found" (func $collision_found (param i32 f32 f32 i32 i32)))
   (import "rust" "get_lowest_root" (func $getLowestRoot (param f32 f32 f32 f32) (result f32)))
@@ -20,7 +20,6 @@
   (global $velocity (mut v128) (v128.const i32x4 0 0 0 0))
   (global $velocitySquared (mut f32) (f32.const 0))
   (global $lowest_root_ptr (mut i32) (i32.const 0))
-  (global $normalizedVelocity (mut v128) (v128.const i32x4 0 0 0 0))
   
   (global $normalizedVelocityX (mut v128) (v128.const i32x4 0 0 0 0))
   (global $normalizedVelocityY (mut v128) (v128.const i32x4 0 0 0 0))
@@ -79,7 +78,7 @@
   (func $_initialize
     (local $temp v128)
     (local $len f32)
-
+    (local $normalizedVelocity v128)
     global.get $isConstructed
     i32.eqz
     if
@@ -125,14 +124,14 @@
     )
     if
       global.get $velocity
-      global.set $normalizedVelocity
+      local.set $normalizedVelocity
     else
       local.get $len
       f32.const 1
       f32.eq
         if
           global.get $velocity
-          global.set $normalizedVelocity
+          local.set $normalizedVelocity
         else
           f32.const 1
           local.get $len
@@ -140,21 +139,21 @@
           f32x4.splat
           global.get $velocity
           f32x4.mul
-          global.set $normalizedVelocity
+          local.set $normalizedVelocity
         end
     end
 
-    global.get $normalizedVelocity
+    local.get $normalizedVelocity
     f32x4.extract_lane 0
     f32x4.splat
     global.set $normalizedVelocityX
 
-    global.get $normalizedVelocity
+    local.get $normalizedVelocity
     f32x4.extract_lane 1
     f32x4.splat
     global.set $normalizedVelocityY
 
-    global.get $normalizedVelocity
+    local.get $normalizedVelocity
     f32x4.extract_lane 2
     f32x4.splat
     global.set $normalizedVelocityZ
@@ -788,7 +787,6 @@
       (global.get $velocityX)
       (global.get $velocityY)
       (global.get $velocityZ)
-      (global.get $velocity)
       (global.get $velocitySquared)
     )
     return
