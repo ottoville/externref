@@ -304,9 +304,6 @@ export class ArcRotateCamera extends CameraController {
     scaledVelocity[2] =
       (newPosition[2] - this.camera.position[2]) / this.radius[2];
 
-    engine.collider.collidedMesh = undefined;
-    engine.collider._retry = 0;
-
     // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
 
     //  terraEngine.collider._initialPosition = coordinator._scaledPosition;

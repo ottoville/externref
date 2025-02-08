@@ -51,7 +51,7 @@ pub unsafe extern "C" fn drop_engine_lock(engine: *mut MutexGuard<'static, Engin
 pub extern "C" fn init_engine2() -> usize {
     use logger::Logger;
     String::from("Init engine").log();
-    panic::set_hook(Box::new(|panic_info| unsafe {
+    panic::set_hook(Box::new(|panic_info| {
         panic_info.to_string().error();
     }));
     debug_assert!(std::mem::size_of::<GPUMesh>() % 8 == 0, "GPUMesh offset must be multiple of 8 https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange");
@@ -61,8 +61,13 @@ pub extern "C" fn init_engine2() -> usize {
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn physic_tick(delta: u32) {
+    for mesh in ENGINE.meshes.lock().unwrap().iter() {
+        if let Some(externref) = mesh.externref.as_ref() {
+            unsafe { mesh_on_physic_tick(mesh, delta, externref) }
+        }
+    }
     let engine = &mut ENGINE.engine2.lock().unwrap();
-    engine.physic_tick(delta);
+    engine.physic_tick();
 }
 
 const INTEGRATION_PARAMETERS: IntegrationParameters = IntegrationParameters {
@@ -213,12 +218,11 @@ unsafe fn str_ptr_from_arr<const N: usize>(strings: [&(impl ToString + ?Sized); 
 }*/
 
 impl Engine2 {
-    pub fn move_character(&mut self, dt: f32, x: f32, y: f32, z: f32) {
+    pub fn move_character(&mut self, dt: f32, x: f32, y: f32, z: f32) -> bool {
         /**
          * BUGS:
          * when tab is inactive dt grow too much shape will penetrate ground
          * modified eg moved or rotated collider does not get updated?
-         * movement with keyboard does not work
          */
         let character_mesh_id = &ENGINE.character_mesh_id.load(Ordering::Relaxed);
         let mesh = &mut ENGINE.meshes.lock().unwrap()[*character_mesh_id];
@@ -239,7 +243,6 @@ impl Engine2 {
         );
         self.modified_colliders.clear();
         self.removed_colliders.clear();
-
         let corrected_movement = ENGINE.character_controller.move_shape(
             dt,
             &self.rigid_body_set,
@@ -249,21 +252,16 @@ impl Engine2 {
             &character_pos,
             desired_translation,
             filter,
-            |collision| { /* Handle or collect the collision in this closure. */ },
+            |collision| {},
         );
-
         mesh.update_translation_vec(
             cur_pos.add_vec(&corrected_movement.translation.data.0[0]),
             true,
         );
+        return corrected_movement.grounded;
     }
-    pub fn physic_tick(&mut self, delta: u32) {
+    pub fn physic_tick(&mut self) {
         let physics_hooks = ();
-        for mesh in ENGINE.meshes.lock().unwrap().iter() {
-            if let Some(externref) = mesh.externref.as_ref() {
-                unsafe { mesh_on_physic_tick(mesh, delta, externref) }
-            }
-        }
         self.physic_pipeline.step(
             &GRAVITY,
             &INTEGRATION_PARAMETERS,
@@ -304,8 +302,10 @@ impl Engine2 {
                     let newrot = rigid_body.rotation().as_vector();
                     let mesh_id = *m_id;
                     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+
                     {
                         let mut mesh_property = mesh.mesh_property.lock().unwrap();
+
                         mesh_property.rotation.i = newrot.x;
                         mesh_property.rotation.j = newrot.y;
                         mesh_property.rotation.k = newrot.z;

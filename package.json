@@ -21,7 +21,7 @@
     "test-cypress-dev": "npx cypress open --env host=https://localhost:4280 --browser chrome",
     "test-cypress": "npx cypress run --env host=https://localhost:4280 --headed --browser chrome",
     "test-cypress-ci": "npx cypress run -C ./cypress.ci.config.ts --env host=https://nice-bush-07e6f7d03.1.azurestaticapps.net/ --browser chrome",
-    "test-unit": "node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js --forceExit --detectOpenHandles --runInBand --silent=false",
+    "test-unit": "node --inspect --experimental-vm-modules node_modules/jest/bin/jest.js --forceExit --detectOpenHandles --runInBand --silent=false --config=./src/jest.config.cjs",
     "test-integration": "npm run buildRust && start npx swa start && node --experimental-vm-modules node_modules/jest/bin/jest.js  --forceExit --detectOpenHandles --runInBand --silent=false --config=./src/jest.integration.config.cjs",
     "test-rust": "set RUST_BACKTRACE=\"1\"&&cargo test --lib --workspace --manifest-path ./src/engine/Cargo.toml && cargo install wasm-bindgen-cli && cd src/terramath && cargo test --target wasm32-unknown-unknown && cd ../collider && cargo test --target wasm32-unknown-unknown",
     "test-wasm": "npm run test-wasm --prefix ./src/collider",

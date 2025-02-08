@@ -314,8 +314,6 @@ export class Human extends IndexedSingleColoredMesh {
     scaledVelocity[0] = velocityPerDelta[0] / this.radius[0];
     scaledVelocity[1] = velocityPerDelta[1] / this.radius[1];
     scaledVelocity[2] = velocityPerDelta[2] / this.radius[2];
-    engine.collider.collidedMesh = undefined;
-    engine.collider._retry = 0;
     //TODO: remove this line and rest of legacy collider check from character
     engine.collideWithWorld(
       this,
@@ -324,13 +322,13 @@ export class Human extends IndexedSingleColoredMesh {
       translation,
       velocityPerDelta,
     );
-    /*engine.rust.move_character(
+    /*this.colliding_character = engine.rust.move_character(
       dt,
       velocityPerDelta[0],
       velocityPerDelta[1],
       velocityPerDelta[2],
-    );
-    */
+    );*/
+
     if (!engine.collider.collision_resolved) {
       //console.log('cant solve collision', this.label)
     }

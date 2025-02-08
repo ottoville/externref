@@ -19,14 +19,19 @@ export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
     super(
       dataNodeProps,
       mainNodeProps,
-      {
-        connections: {
-          main: 'main',
-          pick: 'pick',
-        },
-      },
-      engine.gpu!.shaders.simpleVertShader,
-      engine.gpu!.shaders.simpleFragShader,
+      engine.gpu
+        ? {
+            createRenderPipeline: {
+              connections: {
+                main: 'main',
+                pick: 'pick',
+              },
+            },
+            fragmentShaderBuilder: engine.gpu.shaders.simpleFragShader,
+            gpu: engine.gpu,
+            vertexShaderBuilder: engine.gpu.shaders.simpleVertShader,
+          }
+        : undefined,
       simpleIndexedMeshProps,
     );
   }

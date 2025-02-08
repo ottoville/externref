@@ -62,11 +62,6 @@ export class ColliderJS {
    */
   // public intersectionPoint = this.engine.callocVector3()//[0, 0, 0]
 
-  /**
-   * Define last collided mesh
-   */
-  public collidedMesh: string | undefined;
-
   get #collisionPoint() {
     return new Float32Array(
       engine.rust.memory.buffer,
@@ -150,8 +145,6 @@ export class ColliderJS {
     this.finalPosition = new MutableTerraVector3();
   }
 
-  /** @hidden */
-  public _retry = 0;
   //#velocity!:Vector3;
   // basePoint!: Vector3;
   epsilon = 0;

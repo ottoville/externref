@@ -12,6 +12,7 @@ import {
   FragmentShaderFunction,
 } from '../../webgpu-ts/index.js';
 import { MainNodeProps } from 'MainNode.js';
+import { GPU } from 'GPU.js';
 declare const engine: Engine;
 
 export type SimpleIndexedMeshProps = {
@@ -21,20 +22,28 @@ export type SimpleIndexedMeshProps = {
   topology?: GPUPrimitiveTopology;
   staticVertices?: boolean;
 };
+interface GPUProps<
+  V extends VertexShaderBuilder<{
+    [index: string]: VertexShaderFunction;
+  }> = VertexShaderBuilder<{
+    [index: string]: VertexShaderFunction;
+  }>,
+  F extends FragmentShaderBuilder<{
+    [index: string]: FragmentShaderFunction;
+  }> = FragmentShaderBuilder<{
+    [index: string]: FragmentShaderFunction;
+  }>,
+> {
+  gpu: GPU;
+  createRenderPipeline: RenderPipelineProps0<V, F>;
+  vertexShaderBuilder: V;
+  fragmentShaderBuilder: F;
+}
 export class SimpleIndexedMesh extends BoundableNodeIndexed {
   constructor(
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps | number,
-    createRenderPipeline: RenderPipelineProps0<
-      typeof vertexShaderBuilder,
-      typeof fragmentShaderBuilder
-    >,
-    vertexShaderBuilder: VertexShaderBuilder<{
-      [index: string]: VertexShaderFunction;
-    }>,
-    fragmentShaderBuilder: FragmentShaderBuilder<{
-      [index: string]: FragmentShaderFunction;
-    }>,
+    gpuProps?: GPUProps,
     {
       vBufferGPU,
       topology = 'triangle-list',
@@ -50,7 +59,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
       );
     }
     super(dataNodeProps, mainNodeProps);
-    if (engine.gpu) {
+    if (gpuProps) {
       if (!vBufferGPU) {
         let usages:
           | (typeof BufferUsageEnums)['VERTEX|COPY_DST']
@@ -70,7 +79,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
           usages |= BufferUsageEnums.STORAGE;
         }
         const vBufferGPUMapped = new Buffer({
-          gpu: engine.gpu.device,
+          gpu: gpuProps.gpu.device,
           label: 'SimpleIndexedMeshVertex_' + this.label,
           mappedAtCreation: true,
           size: vertices_len * Float32Array.BYTES_PER_ELEMENT,
@@ -86,31 +95,31 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         vBufferGPU = vBufferGPUMapped.unmap();
       }
       if (topology === 'triangle-strip' || topology === 'line-strip') {
-        var renderPipeline = engine.gpu.createRenderPipelineBuilder(
+        var renderPipeline = gpuProps.gpu.createRenderPipelineBuilder(
           {
             desc: {
-              ...createRenderPipeline,
+              ...gpuProps.createRenderPipeline,
               primitive: {
                 frontFace: dataNodeProps.frontFace ?? 'cw',
                 topology,
               },
             },
-            fragmentShaderBuilder: fragmentShaderBuilder,
-            vertexShaderBuilder: vertexShaderBuilder,
+            fragmentShaderBuilder: gpuProps.fragmentShaderBuilder,
+            vertexShaderBuilder: gpuProps.vertexShaderBuilder,
           },
           'uint32',
         );
       } else {
-        var renderPipeline = engine.gpu.createRenderPipelineBuilder({
+        var renderPipeline = gpuProps.gpu.createRenderPipelineBuilder({
           desc: {
-            ...createRenderPipeline,
+            ...gpuProps.createRenderPipeline,
             primitive: {
               frontFace: dataNodeProps.frontFace ?? 'cw',
               topology,
             },
           },
-          fragmentShaderBuilder: fragmentShaderBuilder,
-          vertexShaderBuilder: vertexShaderBuilder,
+          fragmentShaderBuilder: gpuProps.fragmentShaderBuilder,
+          vertexShaderBuilder: gpuProps.vertexShaderBuilder,
         });
       }
 
@@ -118,9 +127,9 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
         bindGroups: [],
         node: this,
         renderPasses: new Set([
-          engine.gpu.renderPassScreen,
-          engine.gpu.pickRenderPass,
-          engine.gpu.renderPassWater,
+          gpuProps.gpu.renderPassScreen,
+          gpuProps.gpu.pickRenderPass,
+          gpuProps.gpu.renderPassWater,
         ]),
         renderPipeline,
         vertexBuffers: [vBufferGPU],

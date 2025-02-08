@@ -51,7 +51,6 @@ export class Physics {
 
     return this.tickTime + delta / this.#realMSingameSecond;
   }
-  onPhysicTick: Set<(delta: number) => void> = new Set();
   /*
         There is a flaw in #tick function.
         When tab is background its not getting called and delta is growing very large.
@@ -99,8 +98,6 @@ export class Physics {
         */
     this.engine.rust.physic_tick(delta);
     this.movables.forEach((movable) => {
-      //if (movable.onPhysicTick) movable.onPhysicTick(delta, engine_lock);
-
       const velocity = movable.getVelocityFromId();
       if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
         const currentTranslation = movable.getTranslationFromId();
@@ -128,9 +125,12 @@ export class Physics {
       wantedVelocityPerDelta[2] =
         velocity[2] * dt + tickable.acceleration2[2] * dt_half_sqrt;
       const motionFrictionAcceleration: [number, number, number] = [0, 0, 0];
-      const oldTanslation = [
-        ...tickable.getTranslationFromId(),
-      ] as unknown as readonly [number, number, number];
+      const oldT = tickable.getTranslationFromId();
+      const oldTanslation = [oldT[0], oldT[1], oldT[2]] as unknown as readonly [
+        number,
+        number,
+        number,
+      ];
       if (
         wantedVelocityPerDelta[0] !== 0 ||
         wantedVelocityPerDelta[1] !== 0 ||
@@ -141,9 +141,7 @@ export class Physics {
           wantedVelocityPerDelta[1],
           wantedVelocityPerDelta[2],
         ]);
-        const finalPosition = [
-          ...tickable.getTranslationFromId(),
-        ] as unknown as readonly [number, number, number];
+        const finalPosition = tickable.getTranslationFromId();
 
         if (tickable.colliding_character) {
           tickable.onCollideCharacter(false);

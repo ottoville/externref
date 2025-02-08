@@ -272,7 +272,6 @@ export type rustWasm = {
   ): void;
   update_euler_angles(mesh_id: number, x: number, y: number, z: number): void;
   update_translation(mesh_id: number, x: number, y: number, z: number): void;
-  apply_impulse(mesh_id: number, x: number, y: number, z: number): void;
   update_dynamic_buffer(mesh: rust_pointer<'mesh'>): void;
   update_dynamic_buffer_from_id(mesh_id: number): void;
 
@@ -476,7 +475,7 @@ export type rustWasm = {
   ): rust_pointer<'matrix'>;
   check_collision(geometry: rust_pointer<'geometry'>): void;
   update_collider_planes(geometry: rust_pointer<'geometry'>): void;
-  move_character(dt: number, x: number, y: number, z: number): void;
+  move_character(dt: number, x: number, y: number, z: number): boolean;
   new_character_mesh(
     scenes: number,
     label_ptr: number,

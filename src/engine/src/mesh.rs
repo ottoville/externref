@@ -67,7 +67,7 @@ pub unsafe extern "C" fn new_mesh_from_js(
         label,
         Some(externref),
         None,
-        ENGINE.meshes.lock().unwrap()
+        ENGINE.meshes.lock().unwrap(),
     );
 }
 #[no_mangle]
@@ -152,11 +152,6 @@ pub unsafe extern "C" fn update_translation(mesh_id: usize, x: f32, y: f32, z: f
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
     // No onupdate is called here because it is called inside set_translation.
     mesh.update_translation(x, y, z, true);
-}
-#[no_mangle]
-pub unsafe extern "C" fn apply_impulse(mesh_id: usize, x: f32, y: f32, z: f32) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
-    mesh.apply_impulse(x, y, z)
 }
 #[no_mangle]
 pub unsafe extern "C" fn label_field_pointer(mesh_id: usize) -> *const usize {
@@ -451,21 +446,21 @@ impl Mesh {
         label: String,
         externref: Option<Resource<JSMesh>>,
         mesh_property_opt: Option<Arc<Mutex<MeshProperty>>>,
-        mut meshes: MutexGuard<'_, Vec<Mesh>>
+        mut meshes: MutexGuard<'_, Vec<Mesh>>,
     ) -> usize {
         let engine = &mut ENGINE.engine2.lock().unwrap();
         let id = meshes.len();
         let mesh_property = mesh_property_opt.unwrap_or_else(|| {
             let gpu_mesh_alignment = engine.gpu_allocated.allocate();
             let maybegpu = &mut ENGINE.gpu.lock().unwrap();
-            let gpu = maybegpu.as_mut().unwrap();
-
-            if point_light > 0.0 {
-                gpu.point_lights.push(gpu_mesh_alignment);
-            }
-            if directional_light > 0.0 {
-                gpu.directional_lights.push(gpu_mesh_alignment);
-            }
+            if let Some(gpu) = maybegpu.as_mut() {
+                if point_light > 0.0 {
+                    gpu.point_lights.push(gpu_mesh_alignment);
+                }
+                if directional_light > 0.0 {
+                    gpu.directional_lights.push(gpu_mesh_alignment);
+                }
+            };
             Arc::new(Mutex::new(MeshProperty {
                 gpu_memory: GPUMesh {
                     transformation: MatrixMath::identity(),
@@ -546,7 +541,7 @@ impl Mesh {
         }
         self.on_update(physics);
     }
-    pub fn update_translation_vec(&mut self, vec: [f32;3], physics: bool) {
+    pub fn update_translation_vec(&mut self, vec: [f32; 3], physics: bool) {
         {
             let mut mesh_property = self.mesh_property.lock().unwrap();
             mesh_property.translation.0 = vec;

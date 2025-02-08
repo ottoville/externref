@@ -1,9 +1,12 @@
-import { describe, beforeAll, it, expect, jest } from '@jest/globals';
+import { describe, beforeAll, it, jest } from '@jest/globals';
 
 import { Box } from '../GPU/Meshes/Box.js';
 import { Engine } from '../engine.js';
 import fs from 'fs';
-import { RigidBody } from '../MainNode.js';
+import { MainNode, RigidBody } from '../MainNode.js';
+import assert from 'assert';
+import { Ellipsoid } from '../nodes/DataNode.js';
+import { TerraMatrix } from '../Math.js';
 jest.setTimeout(16000);
 
 describe('Physics Has gravity and collision', function () {
@@ -15,10 +18,8 @@ describe('Physics Has gravity and collision', function () {
         console.log('error', e.message);
       },
       {
-        collider: fs.readFileSync('../wwwroot/collider/colliderSimd.wasm'),
-        rust: fs.readFileSync(
-          '../node/wasm32-unknown-unknown/debug/engine.wasm',
-        ),
+        collider: fs.readFileSync('./wwwroot/collider/colliderSimd.wasm'),
+        rust: fs.readFileSync('./wwwroot/engine.wasm'),
       },
     );
     const slope = new Box(
@@ -32,9 +33,7 @@ describe('Physics Has gravity and collision', function () {
     );
     slope.update_scale(200, 5, 200);
     slope.rotation = [Math.sin(1.4), 0, 0, Math.cos(1.4)];
-    const engine_lock = engine.rust.get_engine();
-    slope.setTranslation(engine_lock, [23, 500, 23]);
-    engine.rust.drop_engine_lock(engine_lock);
+    slope.setTranslation([23, 500, 23]);
   }, 10000);
 
   it('Flat ground', async function () {
@@ -48,73 +47,129 @@ describe('Physics Has gravity and collision', function () {
       },
     );
     b.update_scale(100, 5, 100);
-    const engine_lock = engine.rust.get_engine();
-    b.setTranslation(engine_lock, [123, 300, 123]);
-    engine.rust.drop_engine_lock(engine_lock);
-
-    const b2 = new Box(
+    b.setTranslation([123, 600, 123]);
+    //@ts-expect-error ellipsoid
+    const b2: Box & Ellipsoid = new Box(
       {
-        can_collide: true,
+        can_collide: false,
         color: [0, 1, 0, 0],
       },
       {
         label: 'gravitygreenbox',
         point_light: 400,
+        rigid_body: RigidBody.off,
       },
     );
-    const engine_lock = engine.rust.get_engine();
-    b2.setTranslation(engine_lock, [123, 320, 123]);
+    engine!.physics.tickables.push(b2);
+    b2.setTranslation([123, 620, 123]);
 
     b2.hasGravity = true;
-    let ticks = 0;
-    const translation = b2.getTranslation(engine_lock);
-    engine.rust.drop_engine_lock(engine_lock);
+    const closeDistance = 0.0022;
+    b2.grip = 0;
+    b2.radius = {
+      0: 1,
+      1: 1,
+      2: 1,
+    };
+    //@ts-expect-error ellipsoid
+    b2.closeDistanceVector = [
+      closeDistance / b2.radius[0],
+      closeDistance / b2.radius[1],
+      closeDistance / b2.radius[2],
+    ];
+    b2.collisionsScalingMatrix = new TerraMatrix([
+      1.0 / b2.radius[0],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0 / b2.radius[1],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0 / b2.radius[2],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+    ]);
+    b2.checkCollide = (
+      _dt: number,
+      velocityPerDelta: readonly [number, number, number],
+    ) => {
+      const translation = b2.getTranslationFromId();
+      const scaledPosition = engine!.collider.scaledPosition;
+      scaledPosition[0] = translation[0] / b2.radius[0];
+      scaledPosition[1] = translation[1] / b2.radius[1];
+      scaledPosition[2] = translation[2] / b2.radius[2];
+      const scaledVelocity = engine!.collider.scaledVelocity;
+      scaledVelocity[0] = velocityPerDelta[0] / b2.radius[0];
+      scaledVelocity[1] = velocityPerDelta[1] / b2.radius[1];
+      scaledVelocity[2] = velocityPerDelta[2] / b2.radius[2];
 
-    //@ts-expect-error
-    let oldTranslation: [number, number, number] = [...translation];
+      engine!.collideWithWorld(
+        b2,
+        scaledPosition,
+        scaledVelocity,
+        translation,
+        velocityPerDelta,
+      );
+      b2.setTranslation([
+        engine!.collider.finalPosition[0],
+        engine!.collider.finalPosition[1],
+        engine!.collider.finalPosition[2],
+      ]);
+    };
+    let ticks = 0;
+    const translation0 = [...b2.getTranslationFromId()] as [
+      number,
+      number,
+      number,
+    ];
+
+    let oldTranslation: [number, number, number] = [...translation0];
     let collided = false;
     let falling = false;
     await new Promise<void>((res) => {
-      console.log('creating physictick');
+      b2.onPhysicTick = (_dt, mesh) => {
+        const translation = MainNode.getTranslation(mesh);
 
-      engine!.physics.onPhysicTick.add(() => {
-        b2.apply_impulse([0, 0, -1]);
-        //b2.force = [0, 0, -1];
+        b2.impulse = [0, 0, -1];
         if (ticks < 3) {
-          //@ts-expect-error
-          oldTranslation = [...translation];
+          oldTranslation = [translation[0], translation[1], translation[2]];
           ticks++;
           return;
         }
         // console.log('height', translation[1])
         //Force not applied
-        expect(translation[2]).toBeLessThan(oldTranslation[2]);
+        assert.equal(translation[2] < oldTranslation[2], true);
 
         if (translation[1] === oldTranslation[1]) {
           //Collide too early
-          expect(ticks).toBeGreaterThan(9);
+          assert.equal(ticks > 9, true);
 
           if (!collided) {
             collided = true;
           }
           //Gravity is broken
-          expect(falling).not.toBeFalsy();
+          assert.equal(falling, true);
         } else {
           falling = true;
           //jumping on floor
-          expect(collided).toBeFalsy();
+          assert.equal(collided, false);
         }
-        //@ts-expect-error
-        oldTranslation = [...translation];
+        oldTranslation = [translation[0], translation[1], translation[2]];
         //console.log('tick', ticks)
         ticks++;
         if (ticks > 250) {
           res();
-          engine!.physics.onPhysicTick.clear();
+          delete b2.onPhysicTick;
         }
-      });
+      };
     });
-    expect(collided).not.toBeFalsy();
+    assert.notEqual(collided, false);
   }, 10000);
   /*it('Uphill', async function() {
       const b2 = new Box(undefined, 400, true, 'gravitygreenbox2', [0, 1, 0, 0]);

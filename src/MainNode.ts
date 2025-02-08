@@ -139,10 +139,6 @@ export abstract class MainNode implements Destroyable {
       engine.rust.scale_pointer(this.id),
     );
   }
-  // TODO force per ms?
-  apply_impulse(value: [number, number, number] | TerraVector3) {
-    engine.rust.apply_impulse(this.id, value[0], value[1], value[2]);
-  }
   static getVelocity(mesh: rust_pointer<'mesh'>): ReadOnlyTerraVector3 {
     return new ReadOnlyTerraVector3(
       engine.rust.memory.buffer,

@@ -24,6 +24,13 @@ pub unsafe extern "C" fn remove_onchange_callback(mesh_id: usize, cb: ExplicitFr
 pub unsafe extern "C" fn add_onchange_callback(mesh_id: usize) -> ExplicitFreeListIndex {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
+    let mut devtools = DEVTOOLS.write().unwrap();
+    mesh_property
+        .rotation
+        .to_euler_angles(&mut devtools.euler_angles);
+    devtools.translation = mesh_property.translation.0.clone();
+    devtools.scale = mesh_property.scaling.clone();
+
     let id = mesh_property.on_change.insert(Box::new(|mesh_property| {
         let mut devtools = DEVTOOLS.write().unwrap();
         mesh_property

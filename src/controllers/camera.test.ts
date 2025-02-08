@@ -17,21 +17,21 @@ describe('Camera controllers', () => {
         console.log('error', e.message);
       },
       {
-        collider: fs.readFileSync('../wwwroot/collider/colliderSimd.wasm'),
+        collider: fs.readFileSync('./wwwroot/collider/colliderSimd.wasm'),
         rust: fs.readFileSync(
-          '../node/wasm32-unknown-unknown/debug/engine.wasm',
+          './wwwroot/engine.wasm',
         ),
       },
     );
     //@ts-expect-error
-    const control = engine!.mainCamera.attachControllerForCamera({
+    const control = engine!.gpu!.mainCamera.attachControllerForCamera({
       attachCameraController: () => undefined,
       deAttachCameraController: () => undefined,
     });
-    control.updatePosition((position) => position.set([100, 100, 100]));
-    originalPosition = new Float32Array(engine!.mainCamera.position);
+    control.updatePosition(100, 100, 100);
+    originalPosition = new Float32Array(engine!.gpu!.mainCamera.position);
     originalDirection = new Float32Array(
-      engine!.mainCamera.direction as [number, number, number],
+      engine!.gpu!.mainCamera.direction as unknown as [number, number, number],
     );
     cameraControllers = [ArcRotateCamera, MeshCamera];
   }, 10000);
@@ -41,13 +41,17 @@ describe('Camera controllers', () => {
   });
   it('position should be same', function () {
     for (let i = 0; i < cameraControllers!.length; i++) {
-      const controller = new cameraControllers![i]!(engine!.mainCamera);
-      engine!.mainCamera.attachControllerForCamera(controller);
+      const controller = new cameraControllers![i]!(engine!.gpu!.mainCamera);
+      engine!.gpu!.mainCamera.attachControllerForCamera(controller);
 
       controller.calculateCameraPositionAndTarget();
-      const newPosition = new Float32Array(engine!.mainCamera.position);
+      const newPosition = new Float32Array(engine!.gpu!.mainCamera.position);
       const newDirection = new Float32Array(
-        engine!.mainCamera.direction as [number, number, number],
+        engine!.gpu!.mainCamera.direction as unknown as [
+          number,
+          number,
+          number,
+        ],
       );
       expect(originalPosition[0]!.toFixed(6)).toBe(newPosition[0]!.toFixed(6));
       expect(originalPosition[1]!.toFixed(6)).toBe(newPosition[1]!.toFixed(6));
