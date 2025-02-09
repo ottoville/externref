@@ -1151,8 +1151,6 @@ export class Engine {
         sphere,
       );*/
 
-      //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
-      this.wasm._initialize();
       this.rust.initialize_collider(
         this.collider.collider_ptr,
         worldPosition[0],

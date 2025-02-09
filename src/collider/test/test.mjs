@@ -151,7 +151,7 @@ instance.exports.construct(
   instanceRust.exports.lowest_root_pointer(collider_ptr),
 );
 
-instance.exports._initialize();
+//instance.exports._initialize();
 instanceRust.exports.initialize_collider(collider_ptr);
 
 new Float32Array(memory.buffer, 7872, 4).set([

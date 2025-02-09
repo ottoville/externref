@@ -35,7 +35,6 @@ describe('Physics Has gravity and collision', function () {
     slope.rotation = [Math.sin(1.4), 0, 0, Math.cos(1.4)];
     slope.setTranslation([23, 500, 23]);
   }, 10000);
-
   it('Flat ground', async function () {
     const b = new Box(
       {
@@ -142,7 +141,6 @@ describe('Physics Has gravity and collision', function () {
           ticks++;
           return;
         }
-        // console.log('height', translation[1])
         //Force not applied
         assert.equal(translation[2] < oldTranslation[2], true);
 
@@ -161,7 +159,6 @@ describe('Physics Has gravity and collision', function () {
           assert.equal(collided, false);
         }
         oldTranslation = [translation[0], translation[1], translation[2]];
-        //console.log('tick', ticks)
         ticks++;
         if (ticks > 250) {
           res();
@@ -171,52 +168,123 @@ describe('Physics Has gravity and collision', function () {
     });
     assert.notEqual(collided, false);
   }, 10000);
-  /*it('Uphill', async function() {
-      const b2 = new Box(undefined, 400, true, 'gravitygreenbox2', [0, 1, 0, 0]);
-      b2.translation = [23, 500, -100];
-      b2.hasGravity = true;
-      let ticks = 0;
-      const translation = b2.translation;
-      //@ts-expect-error
-      let oldTranslation: [number, number, number] = [...translation]
-      let collided = false;
-      await new Promise<void>((res, rej) => {
-        console.log('listening oncollide for',b2.id)
-        b2.onCollide = () => {
-          console.log('oncollide')
-          b2.apply_impulse([0,0,10]);
-         // b2.force[2] = 10
-        }
-        engine!.physics.onPhysicTick.add(() => {
-          if (ticks < 3) {
-            //@ts-expect-error
-            oldTranslation = [...translation];
-            ticks++;
-            return;
-          }
-          if (translation[1] > oldTranslation[1]) {
-            //Collide too early
-            expect(ticks).toBeGreaterThan(9)
-            collided = true;
-          } else {
-            //Went throught plane
-            expect(collided).toBeFalsy();
-          }
-          //Jumped on plane
-        //  expect(collided && !b2.is_colliding).toBeFalsy()
-          //@ts-expect-error
-          oldTranslation = [...translation];
+  it('Uphill', async function () {
+    //@ts-expect-error ellipsoid
+    const b2: Box & Ellipsoid = new Box(
+      {
+        can_collide: false,
+        color: [0, 1, 0, 0],
+      },
+      {
+        label: 'gravitygreenbox2',
+        point_light: 400,
+        rigid_body: RigidBody.off,
+      },
+    );
+    engine!.physics.tickables.push(b2);
 
+    b2.setTranslation([23, 500, -100]);
+    b2.hasGravity = true;
+    const closeDistance = 0.0022;
+    b2.grip = 0;
+    b2.radius = {
+      0: 1,
+      1: 1,
+      2: 1,
+    };
+    //@ts-expect-error ellipsoid
+    b2.closeDistanceVector = [
+      closeDistance / b2.radius[0],
+      closeDistance / b2.radius[1],
+      closeDistance / b2.radius[2],
+    ];
+    b2.collisionsScalingMatrix = new TerraMatrix([
+      1.0 / b2.radius[0],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0 / b2.radius[1],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0 / b2.radius[2],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+    ]);
+    b2.checkCollide = (
+      _dt: number,
+      velocityPerDelta: readonly [number, number, number],
+    ) => {
+      const translation = b2.getTranslationFromId();
+      const scaledPosition = engine!.collider.scaledPosition;
+      scaledPosition[0] = translation[0] / b2.radius[0];
+      scaledPosition[1] = translation[1] / b2.radius[1];
+      scaledPosition[2] = translation[2] / b2.radius[2];
+      const scaledVelocity = engine!.collider.scaledVelocity;
+      scaledVelocity[0] = velocityPerDelta[0] / b2.radius[0];
+      scaledVelocity[1] = velocityPerDelta[1] / b2.radius[1];
+      scaledVelocity[2] = velocityPerDelta[2] / b2.radius[2];
+
+      engine!.collideWithWorld(
+        b2,
+        scaledPosition,
+        scaledVelocity,
+        translation,
+        velocityPerDelta,
+      );
+      b2.setTranslation([
+        engine!.collider.finalPosition[0],
+        engine!.collider.finalPosition[1],
+        engine!.collider.finalPosition[2],
+      ]);
+    };
+    let ticks = 0;
+    const translation0 = [...b2.getTranslationFromId()] as [
+      number,
+      number,
+      number,
+    ];
+    let oldTranslation: [number, number, number] = [...translation0];
+    let collided = false;
+    await new Promise<void>((res) => {
+      b2.onCollideCharacter = () => {
+        b2.impulse = [0, 0, 10];
+      };
+      b2.onPhysicTick = (_dt, mesh) => {
+        const translation = MainNode.getTranslation(mesh);
+
+        if (ticks < 3) {
+          oldTranslation = [translation[0], translation[1], translation[2]];
           ticks++;
-          if (ticks > 300) {
-            res();
-            engine!.physics.onPhysicTick.clear();
-          }
-        })
-      });
-      expect(collided).toBeTruthy();
-    }, 12000);
-    it('Downhill', function (done) {
+          return;
+        }
+        if (translation[1] > oldTranslation[1]) {
+          //Collide too early
+          assert.equal(ticks > 9, true);
+          collided = true;
+        } else {
+          //Went throught plane
+          assert.equal(collided, false);
+        }
+        //Jumped on plane
+        //  expect(collided && !b2.is_colliding).toBeFalsy()
+        oldTranslation = [translation[0], translation[1], translation[2]];
+
+        ticks++;
+        if (ticks > 300) {
+          res();
+          delete b2.onPhysicTick;
+        }
+      };
+    });
+    assert.equal(collided, true);
+  }, 12000);
+  /*it('Downhill', function (done) {
       const b2 = new Box(undefined, 400, true, 'gravitygreenbox3', [0, 1, 0, 0]);
       b2.translation = [30, 600, 120];
       b2.hasGravity = true;

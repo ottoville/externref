@@ -11,6 +11,8 @@ pub struct Collider {
     pub nearest_distance_squared: f32,
     scaled_position: [f32; 4],
     scaled_velocity: [f32; 4],
+    // TODO: move to stack
+    scaled_speed_squared: f32,
     pub speed: f32,
     collided_point_in_triangle: &'static Plane,
     // TODO: move to stack
@@ -18,6 +20,15 @@ pub struct Collider {
     // TODO: move to stack
     // TODO: when on stack use v128 type
     pub collision_point: [f32; 4],
+    velocity_x: [f32; 4],
+    velocity_y: [f32; 4],
+    velocity_z: [f32; 4],
+    normalized_velocity_x: [f32; 4],
+    normalized_velocity_y: [f32; 4],
+    normalized_velocity_z: [f32; 4],
+    scaled_position_x: [f32; 4],
+    scaled_position_y: [f32; 4],
+    scaled_position_z: [f32; 4],
 }
 #[no_mangle]
 pub extern "C" fn collider() -> *const Collider {
@@ -289,31 +300,11 @@ pub unsafe extern "C" fn test_triangles(
     plane_position: i32,
     plane_position_horizontal: usize,
     length: i32,
-    normalized_velocity_x: v128,
-    normalized_velocity_y: v128,
-    normalized_velocity_z: v128,
-    base_point_x: v128,
-    base_point_y: v128,
-    base_point_z: v128,
-    velocity_x: v128,
-    velocity_y: v128,
-    velocity_z: v128,
-    velocity_squared: f32,
 ) {
     (*collider_ptr).test_triangles(
         plane_position,
         plane_position_horizontal,
         length,
-        normalized_velocity_x,
-        normalized_velocity_y,
-        normalized_velocity_z,
-        base_point_x,
-        base_point_y,
-        base_point_z,
-        velocity_x,
-        velocity_y,
-        velocity_z,
-        velocity_squared,
     );
 }
 
@@ -322,15 +313,25 @@ impl Collider {
         unsafe {
             Collider {
                 basepoint_world: [0.0; 3],
-                intersection_point: [0.0, 0.0, 0.0, 0.0],
+                intersection_point: [0.0; 4],
                 collision_resolved: true,
                 nearest_distance_squared: 9999999.0,
-                scaled_position: [0.0, 0.0, 0.0, 0.0],
-                scaled_velocity: [0.0, 0.0, 0.0, 0.0],
+                scaled_position: [0.0; 4],
+                scaled_speed_squared: 0.0,
+                scaled_velocity: [0.0; 4],
                 speed: 0.0,
                 collided_point_in_triangle: *(0 as *const &'static Plane),
                 lowest_root: 0.0,
                 collision_point: [0.0; 4],
+                velocity_x: [0.0; 4],
+                velocity_y: [0.0; 4],
+                velocity_z: [0.0; 4],
+                normalized_velocity_x: [0.0; 4],
+                normalized_velocity_y: [0.0; 4],
+                normalized_velocity_z: [0.0; 4],
+                scaled_position_x: [0.0; 4],
+                scaled_position_y: [0.0; 4],
+                scaled_position_z: [0.0; 4],
             }
         }
     }
@@ -354,6 +355,27 @@ impl Collider {
             self.collided_point_in_triangle = *(0 as *const &'static Plane);
         }
         self.basepoint_world = [world_position_x, world_position_y, world_position_z];
+        self.scaled_speed_squared = self.scaled_velocity.dot(&self.scaled_velocity);
+        let len = self.scaled_speed_squared.sqrt();
+        let mut normalized_velocity = [0.0; 4];
+        if len == 0.0 {
+            normalized_velocity = self.scaled_velocity;
+        } else {
+            if len == 1.0 {
+                normalized_velocity = self.scaled_velocity;
+            } else {
+                normalized_velocity = self.scaled_velocity.multiply(1.0 / len)
+            }
+        }
+        self.normalized_velocity_x = [normalized_velocity[0]; 4];
+        self.normalized_velocity_y = [normalized_velocity[1]; 4];
+        self.normalized_velocity_z = [normalized_velocity[2]; 4];
+        self.scaled_position_x = [self.scaled_position[0]; 4];
+        self.scaled_position_y = [self.scaled_position[1]; 4];
+        self.scaled_position_z = [self.scaled_position[2]; 4];
+        self.velocity_x = [self.scaled_velocity[0]; 4];
+        self.velocity_y = [self.scaled_velocity[1]; 4];
+        self.velocity_z = [self.scaled_velocity[2]; 4];
     }
     //TODO finish this
     #[cfg(target_arch = "wasm32")]
@@ -363,16 +385,6 @@ impl Collider {
         // TODO: refer to geometry.collider_planes_parallel
         mut plane_position_horizontal: usize,
         length: i32,
-        normalized_velocity_x: v128,
-        normalized_velocity_y: v128,
-        normalized_velocity_z: v128,
-        base_point_x: v128,
-        base_point_y: v128,
-        base_point_z: v128,
-        velocity_x: v128,
-        velocity_y: v128,
-        velocity_z: v128,
-        velocity_squared: f32,
     ) {
         use std::arch::wasm32::{
             f32x4, f32x4_abs, f32x4_add, f32x4_div, f32x4_extract_lane, f32x4_ge, f32x4_gt,
@@ -384,6 +396,18 @@ impl Collider {
             return;
         }
         let scaled_velocity = unsafe { v128_load(self.scaled_velocity.as_ptr() as *const v128) };
+        let normalized_velocity_x =
+            unsafe { v128_load(self.normalized_velocity_x.as_ptr() as *const v128) };
+        let normalized_velocity_y =
+            unsafe { v128_load(self.normalized_velocity_y.as_ptr() as *const v128) };
+        let normalized_velocity_z =
+            unsafe { v128_load(self.normalized_velocity_z.as_ptr() as *const v128) };
+        let base_point_x = unsafe { v128_load(self.scaled_position_x.as_ptr() as *const v128) };
+        let base_point_y = unsafe { v128_load(self.scaled_position_y.as_ptr() as *const v128) };
+        let base_point_z = unsafe { v128_load(self.scaled_position_z.as_ptr() as *const v128) };
+        let velocity_x = unsafe { v128_load(self.velocity_x.as_ptr() as *const v128) };
+        let velocity_y = unsafe { v128_load(self.velocity_y.as_ptr() as *const v128) };
+        let velocity_z = unsafe { v128_load(self.velocity_z.as_ptr() as *const v128) };
         let end = plane_position + length;
         plane_position_horizontal -= 64;
         loop {
@@ -477,7 +501,7 @@ impl Collider {
                             v128_load(*((plane_position + 24) as *const &v128)),
                             f32x4_extract_lane::<0>(t0),
                             scaled_velocity,
-                            velocity_squared,
+                            self.scaled_speed_squared,
                         );
                     }
                     if i32x4_extract_lane::<1>(returnvalue) == 0 {
@@ -489,7 +513,7 @@ impl Collider {
                             v128_load(*((plane_position + 52) as *const &v128)),
                             f32x4_extract_lane::<1>(t0),
                             scaled_velocity,
-                            velocity_squared,
+                            self.scaled_speed_squared,
                         );
                     }
 
@@ -502,7 +526,7 @@ impl Collider {
                             v128_load(*((plane_position + 80) as *const &v128)),
                             f32x4_extract_lane::<2>(t0),
                             scaled_velocity,
-                            velocity_squared,
+                            self.scaled_speed_squared,
                         );
                     }
                     if i32x4_extract_lane::<3>(returnvalue) == 0 {
@@ -514,7 +538,7 @@ impl Collider {
                             v128_load(*((plane_position + 108) as *const &v128)),
                             f32x4_extract_lane::<3>(t0),
                             scaled_velocity,
-                            velocity_squared,
+                            self.scaled_speed_squared,
                         );
                     }
                 }

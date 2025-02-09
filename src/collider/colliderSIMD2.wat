@@ -1,5 +1,5 @@
 (module
-  (import "rust" "test_triangles" (func $test_triangles (param i32 i32 i32 i32 v128 v128 v128 v128 v128 v128 v128 v128 v128 f32)))
+  (import "rust" "test_triangles" (func $test_triangles (param i32 i32 i32 i32)))
   (import "rust" "test_triangle" (func $test_triangle (param i32 i32 i32 v128 v128 v128 f32 v128 f32)))
   (import "rust" "collision_found" (func $collision_found (param i32 f32 f32 i32 i32)))
   (import "rust" "get_lowest_root" (func $getLowestRoot (param f32 f32 f32 f32) (result f32)))
@@ -110,7 +110,6 @@
     f32.add
     local.get $temp
     f32x4.extract_lane 2
-    
     (global.set $velocitySquared
       (f32.add)
     )
@@ -778,16 +777,6 @@
       (local.get $planePosition)
       (local.get $planePositionHorizontal)
       (local.get $length)
-      (global.get $normalizedVelocityX)
-      (global.get $normalizedVelocityY)
-      (global.get $normalizedVelocityZ)
-      (global.get $basePointX)
-      (global.get $basePointY)
-      (global.get $basePointZ)
-      (global.get $velocityX)
-      (global.get $velocityY)
-      (global.get $velocityZ)
-      (global.get $velocitySquared)
     )
     return
 
