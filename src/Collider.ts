@@ -65,6 +65,7 @@ export class ColliderJS {
   get #collisionPoint() {
     return new Float32Array(
       engine.rust.memory.buffer,
+      //@ts-expect-error removed
       engine.rust.collision_point_pointer(this.collider_ptr),
       4,
     ) as unknown as [x: number, y: number, z: number];
@@ -446,6 +447,7 @@ export class ColliderJS {
       }
     }
     if (found) {
+      //@ts-expect-error removed
       engine.rust.collision_found(
         this.collider_ptr,
         t,

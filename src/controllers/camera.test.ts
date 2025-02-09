@@ -17,10 +17,7 @@ describe('Camera controllers', () => {
         console.log('error', e.message);
       },
       {
-        collider: fs.readFileSync('./wwwroot/collider/colliderSimd.wasm'),
-        rust: fs.readFileSync(
-          './wwwroot/engine.wasm',
-        ),
+        rust: fs.readFileSync('./wwwroot/engine.wasm'),
       },
     );
     //@ts-expect-error

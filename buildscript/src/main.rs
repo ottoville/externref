@@ -19,7 +19,6 @@ fn main() {
                             if !cfg!(debug_assertions) {
                                 println!("running wasm-opt");
                                 optimize("../wwwroot/engine.wasm");
-                                optimize("../wwwroot/collider/colliderSimd.wasm");
                             }
                         }
                         Err(e) => panic!("Error when writing output: {e:?}"),

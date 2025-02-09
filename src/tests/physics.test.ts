@@ -18,7 +18,6 @@ describe('Physics Has gravity and collision', function () {
         console.log('error', e.message);
       },
       {
-        collider: fs.readFileSync('./wwwroot/collider/colliderSimd.wasm'),
         rust: fs.readFileSync('./wwwroot/engine.wasm'),
       },
     );
@@ -284,36 +283,103 @@ describe('Physics Has gravity and collision', function () {
     });
     assert.equal(collided, true);
   }, 12000);
-  /*it('Downhill', function (done) {
-      const b2 = new Box(undefined, 400, true, 'gravitygreenbox3', [0, 1, 0, 0]);
-      b2.translation = [30, 600, 120];
-      b2.hasGravity = true;
-      let ticks = 0;
-      let collided = false;
-      new Promise<void>((res, rej) => {
-        b2.onPhysicTick = () => {
-          if (ticks < 3) {
-            ticks++;
-            return;
-          }
-          if (b2.is_colliding && !collided) {
-            collided = true;
-            if (ticks < 10)
-              done(new Error('Collide too early'));
-          } else if (!b2.is_colliding && collided) {
-            done(new Error('Jumped on plane'));
-          }
+  it('Downhill', async function () {
+    //@ts-expect-error ellipsoid
+    const b2: Box & Ellipsoid = new Box(
+      {
+        can_collide: false,
+        color: [0, 1, 0, 0],
+      },
+      {
+        label: 'gravitygreenbox3',
+        point_light: 400,
+        rigid_body: RigidBody.off,
+      },
+    );
+    engine!.physics.tickables.push(b2);
+    b2.setTranslation([30, 600, 120]);
+    b2.hasGravity = true;
+    const closeDistance = 0.0022;
+    b2.grip = 0;
+    b2.radius = {
+      0: 1,
+      1: 1,
+      2: 1,
+    };
+    //@ts-expect-error ellipsoid
+    b2.closeDistanceVector = [
+      closeDistance / b2.radius[0],
+      closeDistance / b2.radius[1],
+      closeDistance / b2.radius[2],
+    ];
+    b2.collisionsScalingMatrix = new TerraMatrix([
+      1.0 / b2.radius[0],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0 / b2.radius[1],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0 / b2.radius[2],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+    ]);
+    b2.checkCollide = (
+      _dt: number,
+      velocityPerDelta: readonly [number, number, number],
+    ) => {
+      const translation = b2.getTranslationFromId();
+      const scaledPosition = engine!.collider.scaledPosition;
+      scaledPosition[0] = translation[0] / b2.radius[0];
+      scaledPosition[1] = translation[1] / b2.radius[1];
+      scaledPosition[2] = translation[2] / b2.radius[2];
+      const scaledVelocity = engine!.collider.scaledVelocity;
+      scaledVelocity[0] = velocityPerDelta[0] / b2.radius[0];
+      scaledVelocity[1] = velocityPerDelta[1] / b2.radius[1];
+      scaledVelocity[2] = velocityPerDelta[2] / b2.radius[2];
 
+      engine!.collideWithWorld(
+        b2,
+        scaledPosition,
+        scaledVelocity,
+        translation,
+        velocityPerDelta,
+      );
+      b2.setTranslation([
+        engine!.collider.finalPosition[0],
+        engine!.collider.finalPosition[1],
+        engine!.collider.finalPosition[2],
+      ]);
+    };
+    let ticks = 0;
+    let collided = false;
+    await new Promise<void>((res) => {
+      b2.onPhysicTick = () => {
+        if (ticks < 3) {
           ticks++;
-          if (ticks > 250) {
-            res();
-            delete b2.onPhysicTick;
-          }
+          return;
         }
-      })
-      if (!collided)
-        done(new Error('Did not collide'));
-      else
-        done();
-    }, 5000)*/
+        if (b2.colliding_character && !collided) {
+          collided = true;
+          assert.equal(ticks < 10, false);
+        } else {
+          //Jumped on plane
+          assert.equal(!b2.colliding_character && collided, false);
+        }
+
+        ticks++;
+        if (ticks > 250) {
+          res();
+          delete b2.onPhysicTick;
+        }
+      };
+    });
+    assert.equal(collided, true);
+  }, 12000);
 });

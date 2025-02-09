@@ -110,13 +110,6 @@ export type rustWasm = {
   intersection_point_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
-  lowest_root_pointer(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-  ): rust_pointer<'lowestroot'>;
-  collision_point_pointer(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-  ): rust_pointer<'collissionpoint'>;
-
   set_collision_resolved(
     collider_ptr: rust_pointer<'legacy_collider'>,
     val: boolean,
@@ -140,14 +133,7 @@ export type rustWasm = {
   collided_point_in_triangle_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): rust_pointer<'Plane'>;
-  //set_collided_point_in_triangle_pointer(collider_ptr: rust_pointer<"legacy_collider">, plane: rust_pointer<'Plane'>): void
-  collision_found(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-    t: number,
-    velocitySquaredLength: number,
-    collided_point_in_triangle: boolean,
-    collided_plane: number,
-  ): void;
+
   process_gpu_queue(updateViewPipeline: GPUComputePipeline): boolean;
 
   new_mesh_from_js(
@@ -487,6 +473,12 @@ export type rustWasm = {
     externref: Externref<false, MainNode>,
   ): void;
   rebuild_triangle_planes(geometry: rust_pointer<'geometry'>): void;
+  test_triangles(
+    rust_collider_ptr: rust_pointer<'legacy_collider'>,
+    plane_position: number,
+    plane_position_horizontal: number,
+    length: number,
+  ): void;
 } & BufferInterface &
   DevToolsInterface;
 
@@ -580,22 +572,6 @@ interface EarthDatabase extends IDBDatabase {
     optionalParameters?: IDBObjectStoreParameters,
   ): IDBObjectStore;
 }
-interface ColliderWasm {
-  construct(
-    velocity: number,
-    basePoint: number,
-    rust_collider_ptr: rust_pointer<'legacy_collider'>,
-    lowest_root_ptr: rust_pointer<'lowestroot'>,
-  ): void;
-  memory: WebAssembly.Memory;
-  testTriangles: (
-    position: rust_pointer<'collider_faces'>,
-    positionParallel: rust_pointer<'collider_planes_parallel_pointer'>,
-    length: number,
-    meshID: number,
-  ) => void;
-  _initialize: () => void;
-}
 let deviceId = 0;
 type Events =
   | 'pointerdown'
@@ -656,7 +632,6 @@ export class Engine {
     showError: (e: Error) => void,
     wasmBinaries: {
       rust: Response | PromiseLike<Response> | BufferSource;
-      collider: Response | PromiseLike<Response> | BufferSource;
     },
   ): Promise<Engine | void> {
     let DB: Promise<EarthDatabase> | undefined = undefined;
@@ -708,7 +683,6 @@ export class Engine {
     }
 
     let rust: WebAssembly.WebAssemblyInstantiatedSource;
-    let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
     const exportObj: WebAssembly.Imports = {
       buffer: BufferExports,
       camera: CameraInterface,
@@ -811,48 +785,11 @@ export class Engine {
         throw new Error('no webgpu support');
       }
 
-      const colliderExportObj = {
-        console: {
-          error: function (line: number) {
-            console.error('Some error in webassembly on line', line);
-            throw new Error('Some error in webassembly on line ' + line);
-          },
-          log: function (arg: string) {
-            console.log(arg);
-          },
-        },
-        env: {
-          memory: rust.instance.exports.memory,
-        },
-        rust: rust.instance.exports,
-      };
-      if (
-        wasmBinaries.collider instanceof ArrayBuffer ||
-        ArrayBuffer.isView(wasmBinaries.collider)
-      ) {
-        colliderWasm = await WebAssembly.instantiate(
-          wasmBinaries.collider,
-          colliderExportObj,
-        );
-      } else {
-        colliderWasm = await WebAssembly.instantiateStreaming(
-          wasmBinaries.collider,
-          colliderExportObj,
-        );
-      }
-
       //Init rust wasm
     } catch (e) {
       return showError(createError(e));
     }
-    const wasm = colliderWasm.instance.exports as unknown as ColliderWasm;
-    return new Engine(
-      DB ? await DB : undefined,
-      nodes,
-      wasm,
-      rustWasm,
-      showError,
-    );
+    return new Engine(DB ? await DB : undefined, nodes, rustWasm, showError);
   }
 
   showError(e: unknown) {
@@ -1023,7 +960,6 @@ export class Engine {
           canvas: HTMLCanvasElement;
         }
       | undefined,
-    public wasm: ColliderWasm,
     public rust: rustWasm,
     public showErrorError: (e: Error) => void,
   ) {
@@ -1125,13 +1061,6 @@ export class Engine {
     this.physics = new Physics(this);
 
     this.collider = new ColliderJS(rust);
-
-    wasm.construct(
-      engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),
-      engine.rust.scaled_position_pointer(this.collider.collider_ptr),
-      this.collider.collider_ptr,
-      engine.rust.lowest_root_pointer(this.collider.collider_ptr),
-    );
   }
   #getFinalPosition(
     sphere: Ellipsoid,

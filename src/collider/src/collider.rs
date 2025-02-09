@@ -65,15 +65,6 @@ pub unsafe extern "C" fn intersection_point_pointer(collider_ptr: *const Collide
     (*collider_ptr).intersection_point.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn lowest_root_pointer(collider_ptr: *const Collider) -> *const f32 {
-    &raw const (*collider_ptr).lowest_root
-}
-#[cfg(target_arch = "wasm32")]
-#[no_mangle]
-pub unsafe extern "C" fn collision_point_pointer(collider_ptr: *const Collider) -> *const v128 {
-    &raw const (*collider_ptr).collision_point as *const v128
-}
-#[no_mangle]
 pub unsafe extern "C" fn set_collision_resolved(collider_ptr: *mut Collider, val: bool) {
     (*collider_ptr).collision_resolved = val
 }
@@ -275,22 +266,6 @@ fn lowest_root() {
         1.0,
     );
     assert_eq!(result, 0.0);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn collision_found(
-    collider_ptr: *mut Collider,
-    t: f32,
-    velocity_squared_length: f32,
-    collided_point_in_triangle: bool,
-    collided_plane: &'static Plane,
-) {
-    (*collider_ptr).collision_found(
-        t,
-        velocity_squared_length,
-        collided_point_in_triangle,
-        collided_plane,
-    )
 }
 
 #[no_mangle]

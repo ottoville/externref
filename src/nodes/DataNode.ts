@@ -374,11 +374,11 @@ export class DataNode extends MainNode {
         engine.rust.collider_planes_parallel_pointer(this.id);
       // this is to check that ptr is not null ptr
       if (collider_planes_parallel_pointer !== 4) {
-        engine.wasm.testTriangles(
+        engine.rust.test_triangles(
+          engine.collider.collider_ptr,
           engine.rust.collider_faces_pointer(this.id),
           collider_planes_parallel_pointer,
           facesCount * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
-          this.id,
         );
       }
       /*
