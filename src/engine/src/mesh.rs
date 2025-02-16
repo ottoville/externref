@@ -1,4 +1,5 @@
 use crate::allocators::explicit_freelist::ExplicitFreeList;
+use crate::character::Character;
 pub use crate::drawable::DrawCommand;
 #[cfg(target_arch = "wasm32")]
 use crate::engine::verticesChange;
@@ -40,10 +41,11 @@ pub struct Mesh {
     pub rigid_body_handle: Option<RigidBodyHandle>,
     pub collider_handle: Option<ColliderHandle>,
     pub label: String,
-    velocity: [f32; 4],
+    kinematic_velocity: [f32; 4],
     drawable: Option<DrawCommand>,
     pub on_gpu_queue: bool,
     pub externref: Option<Resource<JSMesh>>,
+    pub character: Option<Character>,
 }
 
 #[externref]
@@ -243,11 +245,11 @@ pub unsafe extern "C" fn rotation_pointer_euler(mesh_id: usize) -> *const f32 {
 }
 #[no_mangle]
 pub unsafe extern "C" fn velocity_pointer(mesh: *const Mesh) -> *const [f32; 4] {
-    &(*mesh).velocity
+    &(*mesh).kinematic_velocity
 }
 #[no_mangle]
 pub unsafe extern "C" fn velocity_pointer_from_id(mesh_id: usize) -> *const [f32; 4] {
-    &ENGINE.meshes.lock().unwrap()[mesh_id].velocity
+    &ENGINE.meshes.lock().unwrap()[mesh_id].kinematic_velocity
 }
 #[no_mangle]
 pub unsafe extern "C" fn intersect_box_aa_sphere(
@@ -493,7 +495,7 @@ impl Mesh {
             id,
             mesh_property,
             geometry: None,
-            velocity: [0.0, 0.0, 0.0, 0.0],
+            kinematic_velocity: [0.0, 0.0, 0.0, 0.0],
             positions_count: Option::None,
             draw_command: Option::None,
             rigid_body_handle: None,
@@ -502,6 +504,7 @@ impl Mesh {
             drawable: Option::None,
             on_gpu_queue: false,
             externref,
+            character: None,
         };
         meshes.push(m);
         meshes[id].update_dynamic_buffer();

@@ -461,7 +461,13 @@ export type rustWasm = {
   ): rust_pointer<'matrix'>;
   check_collision(geometry: rust_pointer<'geometry'>): void;
   update_collider_planes(geometry: rust_pointer<'geometry'>): void;
-  move_character(dt: number, x: number, y: number, z: number): boolean;
+  move_character(
+    character_mesh_id: number,
+    dt: number,
+    x: number,
+    y: number,
+    z: number,
+  ): boolean;
   new_character_mesh(
     scenes: number,
     label_ptr: number,
@@ -479,6 +485,7 @@ export type rustWasm = {
     plane_position_horizontal: number,
     length: number,
   ): void;
+  get_impulse_from_id(mesh_id: number): rust_pointer<'impulse'>;
 } & BufferInterface &
   DevToolsInterface;
 

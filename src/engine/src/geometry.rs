@@ -219,7 +219,6 @@ pub struct Geometry {
     pub last_collider_world_vertices: Vec<Vec3wgslF32>,
     pub collisions_transform_matrix: [[f32; 4]; 4],
     pub last_collider_transform_matrix: [[f32; 4]; 4],
-
     pub static_faces: bool, // Used for terrain
     pub character_can_collide_to: bool,
 }

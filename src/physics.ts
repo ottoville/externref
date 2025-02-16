@@ -2,20 +2,20 @@
 import type { MainNode } from './MainNode.js';
 import type { Engine } from './engine.js';
 
-const MIN_TICK_DELTA = 110;
+const MIN_TICK_DELTA = 100;
 const GRAVITY = 9.80665;
 
-const gameSecondsPerMs = 60 / 1000;
+/**
+ * One second real life is 60 second in game
+ */
+const gameSecondsPerMs = 0.06; //60 / 1000;
 
 const tmp_vector: [number, number, number] = [0, 0, 0];
 export class Physics {
   #lastTickTimeMsInGameTime: number = Date.now();
   #lastTickTimeMs: number = Date.now();
-  #lastStateChangeTime = Date.now();
-  #gameSpeed = 1;
-  #interval: null | ReturnType<typeof setTimeout> = null;
-  #timeUntillTick = 0;
-  #tickDeltaWhenStateChange = 0;
+  #gameSpeed = -1;
+  #newGameSpeed = 1;
   /**
    * Stuff that moves without physic, eg. sun.
    */
@@ -35,19 +35,9 @@ export class Physics {
   get physicTime() {
     if (this.#gameSpeed >= 0) {
       const timestamp = Date.now();
-      if (this.#lastStateChangeTime > this.#lastTickTimeMsInGameTime) {
-        var delta =
-          timestamp -
-          this.#lastStateChangeTime * this.#gameSpeed +
-          this.#tickDeltaWhenStateChange;
-      } else {
-        var delta =
-          (timestamp - this.#lastTickTimeMsInGameTime) * this.#gameSpeed; // get the delta time since last tick
-      }
-    } else
       var delta =
-        (this.#lastStateChangeTime - this.#lastTickTimeMsInGameTime) *
-        this.#gameSpeed;
+        (timestamp - this.#lastTickTimeMsInGameTime) * this.#gameSpeed; // get the delta time since last tick
+    } else var delta = 0;
 
     return this.tickTime + delta / this.#realMSingameSecond;
   }
@@ -57,37 +47,30 @@ export class Physics {
         Large delta results large gravity, collision detector will see bigger impact.
     */
   #tick = () => {
+    if (this.#newGameSpeed !== this.#gameSpeed) {
+      // Change the gamespeed only inside tick to prevent multiple ticks executing after pause if user repeatly put on pause and back
+      this.#gameSpeed = this.#newGameSpeed;
+      if (this.#gameSpeed === -1) {
+        // Game has paused
+        return;
+      }
+    }
     const timestamp = Date.now();
-    if (this.#lastStateChangeTime > this.#lastTickTimeMsInGameTime) {
-      var realDeltaInGameTime =
-        (timestamp - this.#lastStateChangeTime) * this.#gameSpeed +
-        this.#tickDeltaWhenStateChange;
-      if (realDeltaInGameTime < 0) {
-        throw new Error('Delta cannot be negative');
-      }
-    } else {
-      var realDeltaInGameTime =
-        (timestamp - this.#lastTickTimeMs) * this.#gameSpeed; // get the delta time since last tick
-      if (realDeltaInGameTime < 0) {
-        throw new Error('Delta cannot be negative');
-      }
-    }
-    if (realDeltaInGameTime > MIN_TICK_DELTA) {
-      var delta = 100;
-      this.#lastTickTimeMsInGameTime += delta;
-      //const queueLength = realDeltaInGameTime / 100;
-      /*if(queueLength > 100) {
-                delta = realDeltaInGameTime;
-            }*/
-    } else {
-      var delta = realDeltaInGameTime;
-      this.#lastTickTimeMsInGameTime += realDeltaInGameTime;
-    }
+    const delta0 = timestamp - this.#lastTickTimeMs;
     this.#lastTickTimeMs = timestamp;
+    var deltaWithGameSpeed = delta0 * this.#gameSpeed;
+    if (delta0 < 0) {
+      throw new Error('Delta cannot be negative');
+    }
 
-    this.tickTime += delta * gameSecondsPerMs;
-    const dt = delta / 1000;
-    const delta_multiplier = 1000 / delta;
+    if (deltaWithGameSpeed > MIN_TICK_DELTA) {
+      deltaWithGameSpeed = MIN_TICK_DELTA;
+    }
+    this.#lastTickTimeMsInGameTime += deltaWithGameSpeed;
+
+    this.tickTime += deltaWithGameSpeed * gameSecondsPerMs;
+    const dt = deltaWithGameSpeed / 1000;
+    const delta_multiplier = 1000 / deltaWithGameSpeed;
     const dt_half_sqrt = dt * dt * 0.5;
     const dt_half = dt * 0.5;
     /*
@@ -96,7 +79,7 @@ export class Physics {
             otherwise gravity will pull objects that are ground causing jumping.
 
         */
-    this.engine.rust.physic_tick(delta);
+    this.engine.rust.physic_tick(deltaWithGameSpeed);
     this.movables.forEach((movable) => {
       const velocity = movable.getVelocityFromId();
       if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
@@ -190,19 +173,17 @@ export class Physics {
       tickable.last_acceleration[0] = tickable.acceleration2[0];
       tickable.last_acceleration[1] = tickable.acceleration2[1];
       tickable.last_acceleration[2] = tickable.acceleration2[2];
-
-      tickable.acceleration2[0] =
-        motionFrictionAcceleration[0] + tickable.impulse[0];
+      const impulse = tickable.impulse;
+      tickable.acceleration2[0] = motionFrictionAcceleration[0] + impulse[0]!;
       tickable.acceleration2[1] =
         motionFrictionAcceleration[1] +
-        tickable.impulse[1] -
+        impulse[1]! -
         (tickable.hasGravity ? GRAVITY : 0);
-      tickable.acceleration2[2] =
-        motionFrictionAcceleration[2] + tickable.impulse[2];
+      tickable.acceleration2[2] = motionFrictionAcceleration[2] + impulse[2]!;
 
-      tickable.impulse[0] = 0;
-      tickable.impulse[1] = 0;
-      tickable.impulse[2] = 0;
+      impulse[0] = 0;
+      impulse[1] = 0;
+      impulse[2] = 0;
 
       tickable.setVelocityFromId([
         velocity[0] +
@@ -213,39 +194,21 @@ export class Physics {
           (tickable.last_acceleration[2] + tickable.acceleration2[2]) * dt_half,
       ]);
     }
-    if (realDeltaInGameTime > MIN_TICK_DELTA) {
+    if (deltaWithGameSpeed === MIN_TICK_DELTA) {
       // Withtimeout execution is returned to event loop, allowing inputs before next tick
       // TODO: nested timeout forces 4ms delay
       setTimeout(this.#tick, 0);
     } else {
-      this.#interval = setTimeout(
-        this.#tick,
-        this.tickIntervalMs - (Date.now() - timestamp),
-      );
+      setTimeout(this.#tick, this.tickIntervalMs - (Date.now() - timestamp));
     }
   };
 
-  private createLoop(timeToFirstTick = this.tickIntervalMs) {
-    if (timeToFirstTick != this.tickIntervalMs) {
-      setTimeout(() => {
-        this.#tick();
-      }, timeToFirstTick);
-    } else this.#interval = setTimeout(this.#tick, timeToFirstTick);
-  }
   set gameSpeed(value: number) {
     if (Number.isNaN(value)) throw new Error('gameSpeed must be number');
-    this.#lastStateChangeTime = Date.now();
-
-    if (this.#interval) {
-      clearTimeout(this.#interval);
+    this.#newGameSpeed = value;
+    if (this.#gameSpeed === -1 && value >= 0) {
+      this.#tick(); //for now psysic is always run on constant speed
     }
-    this.#timeUntillTick = this.tickIntervalMs - this.#tickDeltaWhenStateChange;
-    if (this.#gameSpeed >= 0) {
-      this.#tickDeltaWhenStateChange =
-        (Date.now() - this.#lastTickTimeMs) * this.#gameSpeed;
-    }
-    this.#gameSpeed = value;
-    if (value >= 0) this.createLoop(this.#timeUntillTick); //for now psysic is always run on constant speed
   }
   get gameSpeed() {
     return this.#gameSpeed;

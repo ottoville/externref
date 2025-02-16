@@ -7,6 +7,9 @@ import { MainNode, RigidBody } from '../MainNode.js';
 import assert from 'assert';
 import { Ellipsoid } from '../nodes/DataNode.js';
 import { TerraMatrix } from '../Math.js';
+import { create_rust_label } from '../utils.js';
+import { IndexedSingleColoredMesh } from '../GPU/AbstractMeshes/IndexedSingleColoredMesh.js';
+import { Externref } from '../externref.js';
 jest.setTimeout(16000);
 
 describe('Physics Has gravity and collision', function () {
@@ -46,18 +49,21 @@ describe('Physics Has gravity and collision', function () {
     );
     b.update_scale(100, 5, 100);
     b.setTranslation([123, 600, 123]);
-    //@ts-expect-error ellipsoid
-    const b2: Box & Ellipsoid = new Box(
-      {
-        can_collide: false,
-        color: [0, 1, 0, 0],
-      },
-      {
-        label: 'gravitygreenbox',
-        point_light: 400,
-        rigid_body: RigidBody.off,
-      },
+    const mesh = engine!.rust.new_character_mesh(
+      1,
+      ...create_rust_label('human'),
     );
+    //@ts-expect-error ellipsoid
+    const b2: IndexedSingleColoredMesh & Ellipsoid =
+      new IndexedSingleColoredMesh(
+        {
+          can_collide: false,
+          vertices: engine!.rust.get_geometry(mesh),
+        },
+        mesh,
+      );
+    engine!.rust.set_mesh_externref(mesh, new Externref(false, b2));
+
     engine!.physics.tickables.push(b2);
     b2.setTranslation([123, 620, 123]);
 
@@ -131,10 +137,12 @@ describe('Physics Has gravity and collision', function () {
     let collided = false;
     let falling = false;
     await new Promise<void>((res) => {
+      const impulse = b2.impulse;
       b2.onPhysicTick = (_dt, mesh) => {
         const translation = MainNode.getTranslation(mesh);
-
-        b2.impulse = [0, 0, -1];
+        impulse[0] = 0;
+        impulse[1] = 0;
+        impulse[2] = -1;
         if (ticks < 3) {
           oldTranslation = [translation[0], translation[1], translation[2]];
           ticks++;
@@ -167,19 +175,23 @@ describe('Physics Has gravity and collision', function () {
     });
     assert.notEqual(collided, false);
   }, 10000);
+
   it('Uphill', async function () {
-    //@ts-expect-error ellipsoid
-    const b2: Box & Ellipsoid = new Box(
-      {
-        can_collide: false,
-        color: [0, 1, 0, 0],
-      },
-      {
-        label: 'gravitygreenbox2',
-        point_light: 400,
-        rigid_body: RigidBody.off,
-      },
+    const mesh = engine!.rust.new_character_mesh(
+      1,
+      ...create_rust_label('human'),
     );
+    //@ts-expect-error ellipsoid
+    const b2: IndexedSingleColoredMesh & Ellipsoid =
+      new IndexedSingleColoredMesh(
+        {
+          can_collide: false,
+          vertices: engine!.rust.get_geometry(mesh),
+        },
+        mesh,
+      );
+    engine!.rust.set_mesh_externref(mesh, new Externref(false, b2));
+
     engine!.physics.tickables.push(b2);
 
     b2.setTranslation([23, 500, -100]);
@@ -251,8 +263,11 @@ describe('Physics Has gravity and collision', function () {
     let oldTranslation: [number, number, number] = [...translation0];
     let collided = false;
     await new Promise<void>((res) => {
+      const impulse = b2.impulse;
       b2.onCollideCharacter = () => {
-        b2.impulse = [0, 0, 10];
+        impulse[0] = 0;
+        impulse[1] = 0;
+        impulse[2] = 10;
       };
       b2.onPhysicTick = (_dt, mesh) => {
         const translation = MainNode.getTranslation(mesh);
@@ -283,19 +298,23 @@ describe('Physics Has gravity and collision', function () {
     });
     assert.equal(collided, true);
   }, 12000);
+
   it('Downhill', async function () {
-    //@ts-expect-error ellipsoid
-    const b2: Box & Ellipsoid = new Box(
-      {
-        can_collide: false,
-        color: [0, 1, 0, 0],
-      },
-      {
-        label: 'gravitygreenbox3',
-        point_light: 400,
-        rigid_body: RigidBody.off,
-      },
+    const mesh = engine!.rust.new_character_mesh(
+      1,
+      ...create_rust_label('human'),
     );
+    //@ts-expect-error ellipsoid
+    const b2: IndexedSingleColoredMesh & Ellipsoid =
+      new IndexedSingleColoredMesh(
+        {
+          can_collide: false,
+          vertices: engine!.rust.get_geometry(mesh),
+        },
+        mesh,
+      );
+    engine!.rust.set_mesh_externref(mesh, new Externref(false, b2));
+
     engine!.physics.tickables.push(b2);
     b2.setTranslation([30, 600, 120]);
     b2.hasGravity = true;

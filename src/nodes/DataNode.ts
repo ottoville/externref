@@ -133,7 +133,10 @@ export class DataNode extends MainNode {
   }
   //coefficient of friction
   grip = 1;
-  impulse: [number, number, number] = [0, 0, 0];
+  get impulse() {
+    const ptr = engine.rust.get_impulse_from_id(this.id);
+    return new Float32Array(engine.rust.memory.buffer, ptr, 3);
+  }
   hasGravity = false;
 
   onVerticesChangeListeners: Set<() => void> = new Set();

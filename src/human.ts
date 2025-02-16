@@ -239,7 +239,7 @@ export class Human extends IndexedSingleColoredMesh {
     const speedSquared = this.getSpeedSquaredFromId();
 
     if (speedSquared < maxSpeedSquared) {
-      const impulse = [0, 0, 0] as [number, number, number];
+      const impulse = this.impulse;
       const direction = this.inputManager.camera.direction;
 
       if (
@@ -286,18 +286,15 @@ export class Human extends IndexedSingleColoredMesh {
         (this.inputManager.arrowKeysDown & ARROW_KEYS.LEFT) ===
         ARROW_KEYS.LEFT
       ) {
-        impulse[0] -= direction[2] * maxAcceleration;
-        impulse[2] -= direction[0] * -1 * maxAcceleration;
+        impulse[0] = direction[2] * -1 * maxAcceleration;
+        impulse[2] = direction[0] * maxAcceleration;
       } else if (
         (this.inputManager.arrowKeysDown & ARROW_KEYS.RIGHT) ===
         ARROW_KEYS.RIGHT
       ) {
-        impulse[0] -= direction[2] * -1 * maxAcceleration;
-        impulse[2] -= direction[0] * maxAcceleration;
+        impulse[0] = direction[2] * maxAcceleration;
+        impulse[2] = direction[0] * -1 * maxAcceleration;
       }
-      this.impulse[0] = impulse[0];
-      this.impulse[1] = impulse[1];
-      this.impulse[2] = impulse[2];
     }
   }
   override checkCollide(
@@ -323,6 +320,7 @@ export class Human extends IndexedSingleColoredMesh {
       velocityPerDelta,
     );
     /*this.colliding_character = engine.rust.move_character(
+      this.id,
       dt,
       velocityPerDelta[0],
       velocityPerDelta[1],

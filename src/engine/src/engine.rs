@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::AtomicUsize;
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::{panic, usize};
 
 use crate::allocators::freeindex::FreeIndex;
 
+use crate::character::Character;
 use crate::gpu::gpu::GPU;
 
 use crate::mesh::JSMesh;
@@ -15,11 +16,8 @@ use crate::MULTIVALUE_USIZE;
 use externref::externref;
 use externref::Resource;
 use logger::Logger;
-use nalgebra::{Isometry3, Vector3};
 use rapier3d::control::KinematicCharacterController;
-use rapier3d::parry::shape::Ball;
 use rapier3d::{crossbeam, prelude::*};
-use terramath::VectorMath;
 
 extern "C" {
     #[cfg(target_arch = "wasm32")]
@@ -27,13 +25,13 @@ extern "C" {
 
 }
 #[cfg(test)]
-unsafe fn mesh_on_physic_tick(mesh: *const Mesh, _delta: u32, _externref: &Resource<JSMesh>) {}
+unsafe fn mesh_on_physic_tick(mesh: *const Mesh, _delta: f32, _externref: &Resource<JSMesh>) {}
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "env")]
 extern "C" {
-    fn mesh_on_physic_tick(mesh: *const Mesh, delta: u32, externref: &Resource<JSMesh>);
+    fn mesh_on_physic_tick(mesh: *const Mesh, delta: f32, externref: &Resource<JSMesh>);
 }
 
 #[no_mangle]
@@ -60,40 +58,17 @@ pub extern "C" fn init_engine2() -> usize {
 
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
-pub unsafe extern "C" fn physic_tick(delta: u32) {
+pub unsafe extern "C" fn physic_tick(delta: f32) {
     for mesh in ENGINE.meshes.lock().unwrap().iter() {
         if let Some(externref) = mesh.externref.as_ref() {
             unsafe { mesh_on_physic_tick(mesh, delta, externref) }
         }
     }
     let engine = &mut ENGINE.engine2.lock().unwrap();
-    engine.physic_tick();
+    engine.physic_tick(delta/1000.0);
 }
 
-const INTEGRATION_PARAMETERS: IntegrationParameters = IntegrationParameters {
-    dt: 1.0 / 60.0,
-    min_ccd_dt: 1.0 / 60.0 / 100.0,
-    contact_natural_frequency: 30.0,
-    contact_damping_ratio: 5.0,
-    joint_natural_frequency: 1.0e6,
-    joint_damping_ratio: 1.0,
-    warmstart_coefficient: 1.0,
-    num_internal_pgs_iterations: 1,
-    num_internal_stabilization_iterations: 2,
-    num_additional_friction_iterations: 0,
-    num_solver_iterations: unsafe { NonZeroUsize::new_unchecked(4) },
-    // TODO: what is the optimal value for min_island_size?
-    // It should not be too big so that we don't end up with
-    // huge islands that don't fit in cache.
-    // However we don't want it to be too small and end up with
-    // tons of islands, reducing SIMD parallelism opportunities.
-    min_island_size: 128,
-    normalized_allowed_linear_error: 0.001,
-    normalized_max_corrective_velocity: 10.0,
-    normalized_prediction_distance: 0.002,
-    max_ccd_substeps: 2,
-    length_unit: 1.0,
-};
+
 const GRAVITY: nalgebra::Matrix<
     f32,
     nalgebra::Const<3>,
@@ -105,10 +80,8 @@ pub struct Engine {
     pub engine2: Mutex<Engine2>,
     pub gpu: Mutex<Option<GPU>>,
     event_handler: ChannelEventCollector,
-    character_controller: KinematicCharacterController,
-    pub character_mesh_id: AtomicUsize,
+    pub character_controller: KinematicCharacterController,
     pub meshes: Mutex<Vec<Mesh>>,
-    character_shape: Box<dyn Shape>,
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
@@ -155,8 +128,6 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
         event_handler: ChannelEventCollector::new(collision_send, contact_send),
 
         character_controller: KinematicCharacterController::default(),
-        character_mesh_id: AtomicUsize::new(0),
-        character_shape: Box::new(Ball::new(3.0)),
     };
 });
 
@@ -218,53 +189,35 @@ unsafe fn str_ptr_from_arr<const N: usize>(strings: [&(impl ToString + ?Sized); 
 }*/
 
 impl Engine2 {
-    pub fn move_character(&mut self, dt: f32, x: f32, y: f32, z: f32) -> bool {
-        /**
-         * BUGS:
-         * when tab is inactive dt grow too much shape will penetrate ground
-         * modified eg moved or rotated collider does not get updated?
-         */
-        let character_mesh_id = &ENGINE.character_mesh_id.load(Ordering::Relaxed);
-        let mesh = &mut ENGINE.meshes.lock().unwrap()[*character_mesh_id];
-
-        let cur_pos = mesh.mesh_property.lock().unwrap().translation.0;
-
-        let character_pos = Isometry3::new(
-            Vector3::from(cur_pos),
-            Vector3::y() * std::f32::consts::FRAC_PI_2,
-        );
-        let desired_translation = Vector3::from([x, y, z]);
-        let filter = QueryFilter::default();
-        self.query_pipeline.update_incremental(
-            &self.collider_set,
-            &self.modified_colliders,
-            &self.removed_colliders,
-            true,
-        );
-        self.modified_colliders.clear();
-        self.removed_colliders.clear();
-        let corrected_movement = ENGINE.character_controller.move_shape(
+    pub fn physic_tick(&mut self, dt: f32) {
+        let integration_parameters: IntegrationParameters = IntegrationParameters {
             dt,
-            &self.rigid_body_set,
-            &self.collider_set,
-            &self.query_pipeline,
-            &*ENGINE.character_shape,
-            &character_pos,
-            desired_translation,
-            filter,
-            |collision| {},
-        );
-        mesh.update_translation_vec(
-            cur_pos.add_vec(&corrected_movement.translation.data.0[0]),
-            true,
-        );
-        return corrected_movement.grounded;
-    }
-    pub fn physic_tick(&mut self) {
+            min_ccd_dt: 1.0 / 60.0 / 100.0,
+            contact_natural_frequency: 30.0,
+            contact_damping_ratio: 5.0,
+            joint_natural_frequency: 1.0e6,
+            joint_damping_ratio: 1.0,
+            warmstart_coefficient: 1.0,
+            num_internal_pgs_iterations: 1,
+            num_internal_stabilization_iterations: 2,
+            num_additional_friction_iterations: 0,
+            num_solver_iterations: unsafe { NonZeroUsize::new_unchecked(4) },
+            // TODO: what is the optimal value for min_island_size?
+            // It should not be too big so that we don't end up with
+            // huge islands that don't fit in cache.
+            // However we don't want it to be too small and end up with
+            // tons of islands, reducing SIMD parallelism opportunities.
+            min_island_size: 128,
+            normalized_allowed_linear_error: 0.001,
+            normalized_max_corrective_velocity: 10.0,
+            normalized_prediction_distance: 0.002,
+            max_ccd_substeps: 2,
+            length_unit: 1.0,
+        };
         let physics_hooks = ();
         self.physic_pipeline.step(
             &GRAVITY,
-            &INTEGRATION_PARAMETERS,
+            &integration_parameters,
             &mut self.island_manager,
             &mut self.broad_phase,
             &mut self.narrow_phase,
