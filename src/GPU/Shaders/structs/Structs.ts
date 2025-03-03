@@ -44,8 +44,7 @@ export const Scene = new Struct('Scene', {
   viewPosition: new StructProperty('', 'vec3<f32>'),
 });
 export const Time = new Struct('Time', {
-  time: new StructProperty('', 'u32'),
-  delta: new StructProperty('', 'f32'),
+  time: new StructProperty('', 'f32'),
 });
 
 const vec2f32 = new StructProperty('', 'vec2<f32>');

@@ -55,9 +55,9 @@ export function createGrassVertShader(gpu: GPU) {
            //How fast wind direction and intensivy change
          
          
-           var windIntensivy:f32 =(cos((f32(${time.prop(
+           var windIntensivy:f32 =(cos((${time.prop(
              'time',
-           )})*0.01 + ${position}.x)*0.1)+1.0)*0.5;
+           )}*0.01 + ${position}.x)*0.1)+1.0)*0.5;
          //  float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
          
            //var leanAndBaseCurve:f32 = ${shape}.y + vertice.y*${shape}.z;

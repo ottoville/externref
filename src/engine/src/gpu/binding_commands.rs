@@ -16,11 +16,7 @@ unsafe fn set_bindgroup(_resource: usize, _index: u32, _bindgroup: &Resource<JSB
 #[link(wasm_import_module = "bindcommands")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    fn set_bindgroup(
-        resource: usize,
-        index: u32,
-        bindgroup: &Resource<JSBindGroup>,
-    );
+    fn set_bindgroup(resource: usize, index: u32, bindgroup: &Resource<JSBindGroup>);
 }
 pub trait BindingCommands<T> {
     fn externref(&self) -> &Resource<T>;
@@ -32,9 +28,7 @@ pub trait BindingCommands<T> {
         bindgroup: &mut BindGroup,
     ) {
         let externref = self.externref();
-        let ptr = unsafe {
-            ptr::read(externref as *const Resource<T> as *const usize)
-        };
+        let ptr = unsafe { ptr::read(externref as *const Resource<T> as *const usize) };
         unsafe { set_bindgroup(ptr, index, bindgroup.get_bind_group(device)) };
         self.after_set_bindgroup(bindgroup);
     }

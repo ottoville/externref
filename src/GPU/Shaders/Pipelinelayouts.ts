@@ -82,7 +82,7 @@ export function createPipelineLayouts(gpu: GPU) {
       time: new BufLayout(
         {
           buffer: {
-            minBindingSize: 8,
+            minBindingSize: 4,
             type: 'uniform',
           },
           visibility: ShaderStage.VERTEX,

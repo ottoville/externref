@@ -21,6 +21,7 @@ impl CopySrc for GPUBuffer<COPYSRC_USAGE> {}
 // CopyDst
 pub const COPYDST_USAGE: u32 = 8;
 impl CopyDst for GPUBuffer<COPYDST_USAGE> {}
+impl CopyDst for GPUBuffer<UNIFORM_COPYDST_USAGE> {}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Index
@@ -37,7 +38,7 @@ impl BindGroupBindable for GPUBuffer<VERTEX_STORAGE_COPYSRC_COPYDSST_USAGE> {}
 // Uniform
 pub const UNIFORM_USAGE: u32 = 64;
 pub const UNIFORM_COPYDST_USAGE: u32 = UNIFORM_USAGE | COPYDST_USAGE;
-impl CopyDst for GPUBuffer<UNIFORM_COPYDST_USAGE> {}
+impl BindGroupBindable for GPUBuffer<UNIFORM_USAGE> {}
 impl BindGroupBindable for GPUBuffer<UNIFORM_COPYDST_USAGE> {}
 
 /////////////////////////////////////////////////////////////////////////////////////

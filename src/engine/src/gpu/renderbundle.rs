@@ -71,6 +71,20 @@ pub unsafe extern "C" fn new_renderbundle(
     }))
 }
 #[no_mangle]
+pub unsafe extern "C" fn renderbundle_set_bindgroup(
+    renderbundle: *mut RenderBundleEncoder,
+    index: u32,
+    gpu_lock: *mut &'static mut GPU,
+    camera_id: u32,
+) {
+    let camera = (*gpu_lock).get_camera_by_id(camera_id);
+    (*renderbundle).set_bindgroup(
+        &(*gpu_lock).device,
+        index,
+        &mut *camera.uniform_bindgroup.lock().unwrap(),
+    );
+}
+#[no_mangle]
 pub unsafe extern "C" fn renderbundle_make_dirty(renderbundle: *mut RenderBundleEncoder) {
     (*renderbundle).make_dirty();
 }

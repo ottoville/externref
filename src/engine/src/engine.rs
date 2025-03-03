@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
-use std::sync::atomic::AtomicUsize;
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::{panic, usize};
 
 use crate::allocators::freeindex::FreeIndex;
 
-use crate::character::Character;
 use crate::gpu::gpu::GPU;
 
 use crate::mesh::JSMesh;
@@ -25,7 +23,7 @@ extern "C" {
 
 }
 #[cfg(test)]
-unsafe fn mesh_on_physic_tick(mesh: *const Mesh, _delta: f32, _externref: &Resource<JSMesh>) {}
+unsafe fn mesh_on_physic_tick(_mesh: *const Mesh, _delta: f32, _externref: &Resource<JSMesh>) {}
 
 #[cfg(target_arch = "wasm32")]
 #[externref]

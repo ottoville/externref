@@ -87,7 +87,7 @@ impl Engine2 {
         y: f32,
         z: f32,
     ) -> bool {
-        /**
+        /*
          * BUGS:
          * modified eg moved or rotated collider does not get updated?
          */
@@ -118,7 +118,7 @@ impl Engine2 {
             &character_pos,
             desired_translation,
             filter,
-            |collision| {},
+            |_collision| {},
         );
         mesh.update_translation_vec(
             cur_pos.add_vec(&corrected_movement.translation.data.0[0]),

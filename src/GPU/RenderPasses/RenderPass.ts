@@ -1,6 +1,5 @@
 ﻿import type { TerraCamera } from '../../TerraCamera.js';
 import {
-  RenderBundleEncoder,
   type ColorRenderTarget,
   Buffer,
   BufferUsageEnums,
@@ -71,36 +70,66 @@ export class RenderPass<
     renderTargersArray.forEach((rt) => {
       rt.resize(this.size, this.props.sampleCount);
     });
-    const renderBundle = new RenderBundleEncoder(
-      this,
-      gpu.device,
-      GPURenderBundleEncoderDescriptor,
-      (renderBundleEncoder) => {
-        let drawedMeshes = 0;
-        if (this.perspectiveCameras.length === 0) {
-          // Draw UI
-          this.#rootLayouts.forEach((layout) => {
-            drawedMeshes += layout.render(renderBundleEncoder, this, 0);
-          });
-        } else {
-          renderBundleEncoder.renderBundleEncoder.setBindGroup(
-            0,
-            this.createSizeBindGroup().getForRenderBundle(renderBundleEncoder),
-          );
 
-          this.perspectiveCameras.forEach((camera) => {
-            renderBundleEncoder.renderBundleEncoder.setBindGroup(
-              1,
-              camera.uniformBindGroup!.getForRenderBundle(renderBundleEncoder),
-            );
-            this.#rootLayouts.forEach((layout) => {
-              drawedMeshes += layout.render(renderBundleEncoder, this, 2);
-            });
-          });
-        }
-      },
+    const GPURenderBundleEncoderDescriptor2 = {
+      colorFormats: Object.values(this.props.colorRenderTargets).map((rt) => {
+        return rt.renderTargetOptions.context.format;
+      }),
+      label: this.props.label,
+      sampleCount: this.props.sampleCount ?? 1,
+      ...GPURenderBundleEncoderDescriptor,
+    };
+
+    const rust_renderbundle = engine.rust.new_renderbundle(
+      GPURenderBundleEncoderDescriptor2,
     );
-    this.bundles.push(renderBundle);
+    const recorder = (renderBundleEncoder2: GPURenderBundleEncoder) => {
+      renderBundle2.renderBundleEncoder = renderBundleEncoder2;
+      let drawedMeshes = 0;
+      if (this.perspectiveCameras.length === 0) {
+        // Draw UI
+        this.#rootLayouts.forEach((layout) => {
+          drawedMeshes += layout.render(renderBundle2, this, 0);
+        });
+      } else {
+        renderBundleEncoder2.setBindGroup(
+          0,
+          this.createSizeBindGroup().getForRenderBundle(renderBundle2),
+        );
+
+        this.perspectiveCameras.forEach((camera) => {
+          engine.rust.renderbundle_set_bindgroup(
+            rust_renderbundle,
+            1,
+            gpu.gpu_lock!,
+            camera.id,
+          );
+          this.#rootLayouts.forEach((layout) => {
+            drawedMeshes += layout.render(renderBundle2, this, 2);
+          });
+        });
+      }
+    };
+    const renderBundle2 = {
+      destroy: () => {
+        engine.rust.renderbundle_make_dirty(rust_renderbundle);
+      },
+      render: () => {
+        const index = engine.rust.record_renderbundle(
+          rust_renderbundle,
+          engine.gpu!.gpu_lock!,
+          recorder,
+        );
+        const rb = engine.rust.externrefs.get(index) as GPURenderBundle;
+        return rb;
+      },
+    } as {
+      destroy: () => void;
+      render: () => GPURenderBundle;
+      renderBundleEncoder: GPURenderBundleEncoder;
+    };
+    this.bundles.push(renderBundle2);
+
     this.#screenDimensionsBuffer = this.#updateSizeBindGroup(gpu, true);
     this.createSizeBindGroup = () => {
       this.sizeBindGroup = new BindGroup(

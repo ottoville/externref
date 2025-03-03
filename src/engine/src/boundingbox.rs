@@ -107,7 +107,6 @@ fn test_bounding_box() {
         let meshes = ENGINE.meshes.lock().unwrap();
         let len = meshes.len();
         Mesh::new(0.0, 0.0, 0.0, 0, String::from("box"), None, None, meshes);
-        let mut engine2 = ENGINE.engine2.lock().unwrap();
         let m = &mut ENGINE.meshes.lock().unwrap()[len];
         let mut geometry = Geometry::new(true, false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());

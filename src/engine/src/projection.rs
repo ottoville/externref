@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use externref::Resource;
 use terramath::MatrixMath;
 
@@ -25,7 +27,7 @@ pub struct InnerProjection {
 pub struct Projection {
     pub cameras: Cameras,
     pub inner_projection: InnerProjection,
-    pub buffer: GPUBuffer<UNIFORM_USAGE>,
+    pub buffer: Arc<Mutex<GPUBuffer<UNIFORM_USAGE>>>,
 }
 impl InnerProjection {
     fn create_buffer(
@@ -83,7 +85,7 @@ impl Projection {
             far_plane: 100000.0,
             fow: 0.4,
         };
-        let buffer = inner_projection.create_buffer(device, 1.0);
+        let buffer = Arc::new(Mutex::new(inner_projection.create_buffer(device, 1.0)));
         Projection {
             inner_projection,
             buffer,
@@ -103,7 +105,9 @@ impl Projection {
         swap_buffer: &mut SwapBuffers,
         pending_command_buffers: &mut Vec<CommandBuffer>,
     ) {
-        self.buffer = self.inner_projection.create_buffer(device, aspect_ratio);
+        self.buffer = Arc::new(Mutex::new(
+            self.inner_projection.create_buffer(device, aspect_ratio),
+        ));
         self.update_views(
             device,
             command_encoder,

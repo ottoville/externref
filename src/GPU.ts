@@ -75,8 +75,6 @@ export class GPU {
   readonly BindGroupPosition: BindGroup<
     typeof this.pipelineLayouts.BindGroupLayoutPosition
   >;
-  readonly timeBuffer: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
-
   readonly #renderPasses: RenderPass[];
 
   readonly scale = {
@@ -619,15 +617,6 @@ export class GPU {
       this.pickRenderPass,
     ];
 
-    const timeAndDeltaBuffer = new ArrayBuffer(8);
-
-    this.timeBuffer = new Buffer({
-      gpu: this.device,
-      label: 'timeBuffer',
-      size: timeAndDeltaBuffer.byteLength,
-      usages: BufferUsageEnums['UNIFORM|COPY_DST'],
-    });
-
     const ClustersShader = createClustersCompShader(this);
     const computePipelineClustersP =
       ClustersShader[1].createComputePipeline('main');
@@ -714,9 +703,6 @@ export class GPU {
     }
     this.#ro.observe(canvas.parentElement);
   }
-  readonly timeAndDeltaBuffer = new ArrayBuffer(8);
-  readonly deltaView = new Float32Array(this.timeAndDeltaBuffer, 4, 1);
-  readonly #timeView = new Uint32Array(this.timeAndDeltaBuffer, 0, 1);
   #renderStarted = false;
   onceAfterRender: (() => void)[] = [];
   afterRenderStart(cb: () => void) {
@@ -757,18 +743,7 @@ export class GPU {
     if (engine.inputManager?.checkInputs) {
       engine.inputManager?.checkInputs();
     }
-
-    this.#timeView.set([time]);
-    let physicDelta: number | null;
-    if (engine.physics.gameSpeed == -1) physicDelta = null;
-    else
-      physicDelta =
-        (engine.physics.physicTime - engine.physics.tickTime) /
-        engine.physics.tickIntervalMs;
-    if (physicDelta !== null) this.deltaView.set([physicDelta]);
-    this.timeBuffer.write(0, this.timeAndDeltaBuffer);
-
-    if (engine.rust.process_gpu_queue(updateViewPipeline)) {
+    if (engine.rust.process_gpu_queue(time, updateViewPipeline)) {
       // Some buffers did move from onqueue to pending, execute runtime later on
       this.executeRuntime = true;
     }

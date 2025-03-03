@@ -12,7 +12,7 @@ import { closeDistanceSquared, DataNode, Ellipsoid } from './nodes/DataNode.js';
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
-import { Buffer, BufferUsageEnums, INDEX_BUFFER } from './webgpu-ts/index.js';
+import { Buffer, INDEX_BUFFER } from './webgpu-ts/index.js';
 import {
   BufferExports,
   type BufferInterface,
@@ -136,7 +136,10 @@ export type rustWasm = {
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): rust_pointer<'Plane'>;
 
-  process_gpu_queue(updateViewPipeline: GPUComputePipeline): boolean;
+  process_gpu_queue(
+    time: number,
+    updateViewPipeline: GPUComputePipeline,
+  ): boolean;
 
   new_mesh_from_js(
     point_light: number,
@@ -379,11 +382,7 @@ export type rustWasm = {
   get_gpu_mesh_buffer(engine: rust_pointer<'gpu'>): number;
   get_gpu_projection_buffer_from_mutex(
     engine: rust_mutex<'locked', 'gpulock'>,
-  ): Externref<false, Buffer<(typeof BufferUsageEnums)['UNIFORM']>>;
-  get_gpu_projection_buffer(
-    engine: rust_pointer<'gpu'>,
-  ): Externref<false, Buffer<(typeof BufferUsageEnums)['UNIFORM']>>;
-
+  ): number;
   init_gpu(
     device: Externref<true, GPUDevice>,
     queue: GPUQueue,
@@ -398,6 +397,7 @@ export type rustWasm = {
   add_camera(
     device: Externref<true, GPUDevice>,
     layout: GPU['pipelineLayouts']['updateClustersLayout'],
+    layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -407,6 +407,7 @@ export type rustWasm = {
     camera_id: number,
     device: Externref<true, GPUDevice>,
     layout: GPU['pipelineLayouts']['updateClustersLayout'],
+    layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -416,6 +417,7 @@ export type rustWasm = {
     camera_id: number,
     device: Externref<true, GPUDevice>,
     layout: GPU['pipelineLayouts']['updateClustersLayout'],
+    layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -433,7 +435,6 @@ export type rustWasm = {
   get_camera_projection_inverted_ptr(
     camera_id: number,
   ): rust_pointer<'camera_projection_inverted'>;
-  get_camera_buffer(cameras: rust_pointer<'gpu'>, camera_id: number): number;
   get_camera_cluster_buffer_from_mutex(
     cameras: rust_mutex<'locked', 'gpulock'>,
     camera_id: number,
@@ -492,6 +493,12 @@ export type rustWasm = {
   new_renderbundle(
     descriptor: GPURenderBundleEncoderDescriptor,
   ): rust_pointer<'renderbundleencoder'>;
+  renderbundle_set_bindgroup(
+    renderbundle: rust_pointer<'renderbundleencoder'>,
+    index: number,
+    gpu_lock: rust_pointer<'gpu'>,
+    camera_id: number,
+  ): void;
   renderbundle_make_dirty(
     renderbundle: rust_pointer<'renderbundleencoder'>,
   ): void;

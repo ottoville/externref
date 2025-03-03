@@ -29,7 +29,7 @@ const shaderFunction = new VertexShaderFunction(
     ] /* wgsl */,
   ) => WGSLcode/* wgsl */ `
   var output:Output;
-  var angle:f32 = (f32(${time.prop('time')}) * 0.001) + f32(${
+  var angle:f32 = (${time.prop('time')} * 0.001) + f32(${
     VertexBuildin.instance_index
   }) * angleStep;
 var c:f32 = cos(angle);

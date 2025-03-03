@@ -80,7 +80,7 @@ impl VertexKind {
             VertexKind::Position2DAndUV(_) => {
                 todo!()
             }
-            VertexKind::Position(vector) =>                todo!()
+            VertexKind::Position(_vector) =>                todo!()
             ,
             VertexKind::None => todo!(),
         }
