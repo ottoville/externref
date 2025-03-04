@@ -6,8 +6,8 @@ import {
 import { MainNode } from '../../MainNode.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import { DrawableProps } from './Drawable.js';
-import { RenderBundleEncoder } from '../../webgpu-ts/index.js';
 import type { Engine } from '../../engine.js';
+import type { IRenderBundleEncoder } from 'webgpu-ts/index.js';
 declare const engine: Engine;
 
 export class DrawableSimple<
@@ -29,11 +29,11 @@ export class DrawableSimple<
     super(drawableProps, drawableDirectProps);
     this.#firstVertex = firstVertex;
   }
-  render(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder) {
+  render(renderEncoder: IRenderBundleEncoder | GPURenderPassEncoder) {
     const encoder =
-      renderEncoder instanceof RenderBundleEncoder
-        ? renderEncoder.renderBundleEncoder
-        : renderEncoder;
+      renderEncoder instanceof GPURenderPassEncoder
+        ? renderEncoder
+        : renderEncoder.renderBundleEncoder;
     const positionsCount = this.node.get_positions_count();
     console.debug(
       'drawSimple',

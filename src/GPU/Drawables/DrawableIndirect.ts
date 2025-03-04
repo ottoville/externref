@@ -4,8 +4,8 @@ import type { MainNode } from '../../MainNode.js';
 import { MappedVertexBuffers } from './DrawableDirect.js';
 import {
   type INDIRECT_BUFFER,
-  RenderBundleEncoder,
   type Buffer,
+  type IRenderBundleEncoder,
 } from '../../webgpu-ts/index.js';
 
 export class DrawableIndirect<
@@ -21,15 +21,15 @@ export class DrawableIndirect<
   ) {
     super(drawableProps);
   }
-  render(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder) {
+  render(renderEncoder: IRenderBundleEncoder | GPURenderPassEncoder) {
     const encoder =
-      renderEncoder instanceof RenderBundleEncoder
-        ? renderEncoder.renderBundleEncoder
-        : renderEncoder;
+      renderEncoder instanceof GPURenderPassEncoder
+        ? renderEncoder
+        : renderEncoder.renderBundleEncoder;
     encoder.drawIndirect(
-      renderEncoder instanceof RenderBundleEncoder
-        ? this.buffer.getIndirectBinding(renderEncoder)
-        : this.buffer.getIndirectBinding(),
+      renderEncoder instanceof GPURenderPassEncoder
+        ? this.buffer.getIndirectBinding()
+        : this.buffer.getIndirectBinding(renderEncoder),
       0,
     );
   }

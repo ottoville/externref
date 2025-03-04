@@ -9,7 +9,7 @@ import type { DrawableProps } from './Drawable.js';
 import {
   Buffer,
   BufferUsageEnums,
-  RenderBundleEncoder,
+  type IRenderBundleEncoder,
   type INDEX_BUFFER,
 } from '../../webgpu-ts/index.js';
 import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
@@ -96,20 +96,20 @@ export class DrawableIndexed<
       }
     }
   }
-  render(renderEncoder: RenderBundleEncoder | GPURenderPassEncoder) {
+  render(renderEncoder: IRenderBundleEncoder | GPURenderPassEncoder) {
     if (this.#indexBuffer) {
       let encoder: GPURenderBundleEncoder | GPURenderPassEncoder;
       console.debug('set inxedBuffer', this.#indexBuffer.props.label);
-      if (renderEncoder instanceof RenderBundleEncoder) {
-        encoder = renderEncoder.renderBundleEncoder;
-        encoder.setIndexBuffer(
-          this.#indexBuffer.getIndexBinding(renderEncoder),
-          this.#GPUIndexFormat,
-        );
-      } else {
+      if (renderEncoder instanceof GPURenderPassEncoder) {
         encoder = renderEncoder;
         encoder.setIndexBuffer(
           this.#indexBuffer.getIndexBinding(),
+          this.#GPUIndexFormat,
+        );
+      } else {
+        encoder = renderEncoder.renderBundleEncoder;
+        encoder.setIndexBuffer(
+          this.#indexBuffer.getIndexBinding(renderEncoder),
           this.#GPUIndexFormat,
         );
       }

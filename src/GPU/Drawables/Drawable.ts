@@ -8,9 +8,9 @@ import {
   Buffer,
   BufferUsageEnums,
   type VERTEX_BUFFER,
-  RenderBundleEncoder,
   type RenderPipelineBuilderDesc,
   Drawable as DrawableType,
+  type IRenderBundleEncoder,
 } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
@@ -214,6 +214,6 @@ export abstract class Drawable<N extends MainNode = MainNode>
     return Tbuffer;
   }
   abstract render(
-    renderEncoder: RenderBundleEncoder | GPURenderPassEncoder,
+    renderEncoder: IRenderBundleEncoder | GPURenderPassEncoder,
   ): void;
 }
