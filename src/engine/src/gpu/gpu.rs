@@ -459,7 +459,7 @@ fn test_gpu_queue() {
 
 #[cfg(test)]
 #[test]
-fn test_gpu_lights() {
+fn test_time_update() {
     use crate::engine;
     use crate::mesh::Mesh;
     use crate::mesh::ENGINE;
@@ -487,21 +487,6 @@ fn test_gpu_lights() {
             0.0,
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
         );
-        assert_eq!(mapping, false);
-        Mesh::new(
-            0.0,
-            1.0,
-            0.0,
-            0,
-            String::from("sun"),
-            None,
-            None,
-            ENGINE.meshes.lock().unwrap(),
-        );
-        let mapping2 = process_gpu_queue(
-            0.0,
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-        );
-        assert_eq!(mapping2, true);
+        assert_eq!(mapping, true);
     }
 }

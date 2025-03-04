@@ -45,11 +45,7 @@ impl SwapBuffers {
         }
         return buffer;
     }
-    pub fn get<
-        F: FnOnce(
-            &MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
-        ),
-    >(
+    pub fn get<F: FnOnce(&MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>)>(
         &mut self,
         device: &Resource<JSDevice>,
         size: usize,
@@ -98,5 +94,27 @@ impl SwapBuffers {
             }
         }
         return self.pending.len() > 0;
+    }
+}
+#[cfg(test)]
+#[test]
+fn test_swap_buffers() {
+    use externref::ExternRef;
+    unsafe {
+        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
+        let mut swap = SwapBuffers::new();
+        swap.get(&device, 110, |buffer| {});
+        swap.get(&device, 110, |buffer| {});
+        assert_eq!(swap.onqueue.len(), 2);
+        assert_eq!(swap.queue_submited(), true);
+        assert_eq!(swap.onqueue.len(), 0);
+        assert_eq!(swap.pending.len(), 2);
+        assert_eq!(swap.check_mapped_buffers(), false);
+        assert_eq!(swap.pending.len(), 0);
+        let buffers = swap.mapped.get(&110usize).unwrap();
+        assert_eq!(buffers.len(), 2);
+        swap.get(&device, 105, |buffer| {});
+        let buffers = swap.mapped.get(&110usize).unwrap();
+        assert_eq!(buffers.len(), 1);
     }
 }
