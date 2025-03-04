@@ -24,7 +24,8 @@ import { ComputePassEncoderInterface } from './wasm-interfaces/ComputePassEncode
 import { CameraInterface } from './wasm-interfaces/CameraInterface.js';
 import { QueueInterface } from './wasm-interfaces/QueueInterface.js';
 import { DeviceExports } from './wasm-interfaces/DeviceInterface.js';
-import { DevToolsInterface } from 'wasm-interfaces/DevToolsInterface.js';
+import { DevToolsInterface } from './wasm-interfaces/DevToolsInterface.js';
+import { RenderbundleEncoderInterface } from './wasm-interfaces/RenderBundleEncoderInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -373,7 +374,7 @@ export type rustWasm = {
   get_engine(): rust_mutex<'locked', 'enginelock'>;
   get_gpu(): rust_mutex<'locked', 'gpulock'>;
   drop_engine_lock(engine: rust_mutex<'locked', 'enginelock'>): void;
-  drop_gpu_lock(engine: rust_mutex<'locked', 'gpulock'>): void;
+  drop_gpu_lock(gpu: rust_mutex<'locked', 'gpulock'>): void;
   get_gpu_mesh_buffer(engine: rust_pointer<'gpu'>): number;
   get_gpu_projection_buffer_from_mutex(
     engine: rust_mutex<'locked', 'gpulock'>,
@@ -486,6 +487,19 @@ export type rustWasm = {
     length: number,
   ): void;
   get_impulse_from_id(mesh_id: number): rust_pointer<'impulse'>;
+
+  new_renderbundle(
+    externref: GPURenderBundleEncoder,
+  ): rust_pointer<'renderbundleencoder'>;
+  renderbundle_make_dirty(
+    renderbundle: rust_pointer<'renderbundleencoder'>,
+  ): void;
+  record_renderbundle(
+    renderbundle: rust_pointer<'renderbundleencoder'>,
+    gpu: rust_pointer<'gpu'>,
+    descriptor: GPURenderBundleEncoderDescriptor,
+    cb: (renderBundleEncoder: GPURenderBundleEncoder) => void,
+  ): number;
 } & BufferInterface &
   DevToolsInterface;
 
@@ -771,6 +785,7 @@ export class Engine {
         },
       },
       queue: QueueInterface,
+      renderbundleencoder: RenderbundleEncoderInterface,
     };
     try {
       if (

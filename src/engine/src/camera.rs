@@ -11,6 +11,7 @@ use std::{
 use externref::{externref, Resource};
 use terramath::MatrixMath;
 
+use crate::gpu::binding_commands::BindingCommands;
 use crate::gpu::command_buffer::CommandBuffer;
 use crate::gpu::gpu::GPU;
 use crate::{

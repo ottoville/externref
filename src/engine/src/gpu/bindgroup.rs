@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use std::{rc::Rc, sync::Mutex};
 
 use externref::Resource;
@@ -9,6 +9,7 @@ use super::buffer::buffer::JSBuffer;
 use super::bufferbinding::BufferBinding;
 use super::gpu::create_bind_group;
 use super::gpu::JSDevice;
+use super::renderbundle::JSRenderBundle;
 
 #[no_mangle]
 pub unsafe extern "C" fn iterate_bindings(
@@ -47,6 +48,7 @@ pub struct BindGroup {
     layout: Resource<JSBindGroupLayout>,
     bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
     pub rawbuffers: Vec<Arc<Resource<JSBuffer>>>,
+    pub renderbundles: Vec<Weak<Mutex<Option<Resource<JSRenderBundle>>>>>,
 }
 
 impl BindGroup {
@@ -66,6 +68,7 @@ impl BindGroup {
             layout,
             bufferbindings,
             rawbuffers,
+            renderbundles: Vec::new(),
         }));
         for buffer_binding_mutex in bind_group.lock().unwrap().bufferbindings.iter() {
             let mut buffer_binding = buffer_binding_mutex.lock().unwrap();
@@ -100,5 +103,13 @@ impl BindGroup {
                 )
             }
         })
+    }
+    pub fn make_dirty(&mut self) {
+        self.externref.take();
+        for somerenderbundle in self.renderbundles.iter() {
+            if let Some(renderbundle) = somerenderbundle.upgrade() {
+                renderbundle.lock().unwrap().take();
+            }
+        }
     }
 }

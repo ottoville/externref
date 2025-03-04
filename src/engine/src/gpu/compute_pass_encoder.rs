@@ -2,6 +2,7 @@ use externref::{externref, Resource};
 
 use super::{
     bindgroup::{BindGroup, JSBindGroup},
+    binding_commands::BindingCommands,
     command_encoder::GPUCommandEncoder,
     gpu::JSDevice,
 };
@@ -57,13 +58,8 @@ pub struct ComputePassEncoder {
     pub command_encoder: GPUCommandEncoder,
     pub externref: Resource<JSComputePassEncoder>,
 }
-impl ComputePassEncoder {
-    pub fn set_pipeline(&self, pipeline: &Resource<JSComputePipeline>) {
-        unsafe {
-            set_pipeline(&self.externref, pipeline);
-        }
-    }
-    pub fn set_bindgroup(
+impl BindingCommands for ComputePassEncoder {
+    fn set_bindgroup(
         &mut self,
         device: &Resource<JSDevice>,
         index: u32,
@@ -74,6 +70,13 @@ impl ComputePassEncoder {
         }
         for rawbuffer in bindgroup.rawbuffers.iter() {
             self.command_encoder.buffers.push(rawbuffer.clone());
+        }
+    }
+}
+impl ComputePassEncoder {
+    pub fn set_pipeline(&self, pipeline: &Resource<JSComputePipeline>) {
+        unsafe {
+            set_pipeline(&self.externref, pipeline);
         }
     }
     pub fn dispatch_workgroups(

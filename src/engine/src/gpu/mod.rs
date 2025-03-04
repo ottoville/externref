@@ -7,3 +7,5 @@ pub mod queue;
 pub mod bindgroup;
 pub mod bufferbinding;
 pub mod command_buffer;
+pub mod renderbundle;
+pub mod binding_commands;

@@ -12,6 +12,7 @@ use crate::swapbuffers::SwapBuffers;
 use crate::GPUMesh;
 
 use super::bindgroup::{BindGroup, JSBindGroup, JSBindGroupLayout};
+use super::binding_commands::BindingCommands;
 use super::buffer::buffer::JSBuffer;
 use super::buffer::copy_src::CopySrc;
 use super::buffer::usages::COPYSRC_USAGE;
