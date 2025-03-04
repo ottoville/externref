@@ -41,7 +41,7 @@ describe('Camera controllers', () => {
       const controller = new cameraControllers![i]!(engine!.gpu!.mainCamera);
       engine!.gpu!.mainCamera.attachControllerForCamera(controller);
 
-      controller.calculateCameraPositionAndTarget();
+      controller.checkInputs(true);
       const newPosition = new Float32Array(engine!.gpu!.mainCamera.position);
       const newDirection = new Float32Array(
         engine!.gpu!.mainCamera.direction as unknown as [

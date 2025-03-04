@@ -1,4 +1,5 @@
-﻿import type { Engine, ListenerObj } from '../engine.js';
+﻿import { closeDistance } from '../nodes/DataNode.js';
+import type { Engine, ListenerObj } from '../engine.js';
 import {
   MutableTerraVector3,
   ReadOnlyTerraVector3,
@@ -84,12 +85,65 @@ export class ArcRotateCamera extends CameraController {
   #alpha = 0;
   #beta = 0;
   #radius = 10;
-
+  radius: { 0: number; 1: number; 2: number };
+  private readonly collisionRadius: [number, number, number] = [2, 2, 2];
+  readonly collisionsScalingMatrix = new TerraMatrix([
+    1.0 / this.collisionRadius[0],
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0 / this.collisionRadius[1],
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0 / this.collisionRadius[2],
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+  ]);
+  readonly closeDistanceVector: [number, number, number] = [
+    closeDistance / this.collisionRadius[0],
+    closeDistance / this.collisionRadius[1],
+    closeDistance / this.collisionRadius[2],
+  ];
   constructor(
     private camera: TerraCamera,
     initial = false,
   ) {
     super();
+    const collisionRadius = this.collisionRadius;
+    const collisionsScalingMatrix = this.collisionsScalingMatrix;
+    const myCloseDistance = this.closeDistanceVector;
+    this.radius = {
+      get 0() {
+        return collisionRadius[0];
+      },
+      set 0(v: number) {
+        collisionRadius[0] = v;
+        collisionsScalingMatrix[0] = 1.0 / v;
+        myCloseDistance[0] = closeDistance / v;
+      },
+      get 1() {
+        return collisionRadius[1];
+      },
+      set 1(v: number) {
+        collisionRadius[1] = v;
+        collisionsScalingMatrix[5] = 1.0 / v;
+        myCloseDistance[1] = closeDistance / v;
+      },
+      get 2() {
+        return collisionRadius[2];
+      },
+      set 2(v: number) {
+        collisionRadius[2] = v;
+        collisionsScalingMatrix[10] = 1.0 / v;
+        myCloseDistance[2] = closeDistance / v;
+      },
+    };
     if (initial && engine.DB) {
       engine.DB.transaction('save')
         .objectStore('save')
@@ -362,11 +416,11 @@ export class ArcRotateCamera extends CameraController {
   #targetMovingfrom: ReadOnlyTerraVector3 | null = null;
   #targetMovingTo: readonly [number, number, number] | null = null;
   #targetLerpPosition = 0;
-  checkInputs = () => {
+  checkInputs = (force_recalculate = false) => {
     if (this.#collisionTriggered) {
-      return false;
+      return;
     }
-    let updateView = false;
+    let updateView = force_recalculate;
     // Inertia
     if (
       this.#inertialAlphaOffset !== 0 ||
@@ -447,7 +501,9 @@ export class ArcRotateCamera extends CameraController {
     // Limits
     this.checkLimits();
 
-    return updateView;
+    if (updateView) {
+      this.calculateCameraPositionAndTarget();
+    }
   };
   // Rebuilds angles (alpha, beta) and radius from the give position and target
   #rebuildAnglesAndRadius(): void {

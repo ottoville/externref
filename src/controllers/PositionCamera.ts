@@ -198,7 +198,4 @@ export class PositionCamera extends CameraController {
     }
     return true;
   }
-  calculateCameraPositionAndTarget() {
-    // TODO?
-  }
 }

@@ -754,12 +754,8 @@ export class GPU {
     framecount++;
     //performance.mark('renderloopStart');
 
-    if (
-      engine.inputManager?.checkInputs &&
-      engine.inputManager?.checkInputs()
-    ) {
-      if (engine.inputManager.calculateCameraPositionAndTarget)
-        engine.inputManager.calculateCameraPositionAndTarget();
+    if (engine.inputManager?.checkInputs) {
+      engine.inputManager?.checkInputs();
     }
 
     this.#timeView.set([time]);

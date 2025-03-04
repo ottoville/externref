@@ -103,44 +103,6 @@ export class Human extends IndexedSingleColoredMesh {
     };
   }
   override onPhysicTick = (_delta: number, mesh: rust_pointer<'mesh'>) => {
-    let updateCameraDirection = false;
-    if (
-      this.inputManager.pointerMovement.x ||
-      this.inputManager.pointerMovement.y
-    ) {
-      if (this.inputManager.pointerMovement.x) {
-        this.inputManager.angle +=
-          (Math.PI * this.inputManager.pointerMovement.x) /
-          engine.canvas!.width;
-        this.inputManager.pointerMovement.x = 0;
-      }
-      if (this.inputManager.pointerMovement.y) {
-        this.inputManager.verticalAngle -=
-          (Math.PI * this.inputManager.pointerMovement.y) /
-          engine.canvas!.width;
-        this.inputManager.pointerMovement.y = 0;
-      }
-      updateCameraDirection = true;
-    }
-    if (updateCameraDirection) {
-      if (this.inputManager.angle < 0) {
-        this.inputManager.angle = Math.PI * 2 + this.inputManager.angle;
-      }
-      if (this.inputManager.angle < 0) {
-        throw new Error('negative angle');
-      }
-      this.inputManager.angle = this.inputManager.angle % (Math.PI * 2);
-      this.inputManager.verticalAngle =
-        this.inputManager.verticalAngle % (Math.PI * 2);
-      const ang = this.inputManager.angle - Math.PI;
-      const vang = this.inputManager.verticalAngle;
-
-      this.inputManager.cameraControl?.updateDirection(
-        Math.cos(ang) * Math.sin(vang),
-        Math.cos(vang),
-        Math.sin(ang) * Math.sin(vang),
-      );
-    }
     if (
       this.colliding_character &&
       DataNode.getSpeedSquared(mesh) > maxSpeedSquared

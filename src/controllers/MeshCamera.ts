@@ -26,11 +26,34 @@ export class MeshCamera extends CameraController {
     super();
     this.angle = Math.acos(this.camera.direction[0]);
   }
-  calculateCameraPositionAndTarget() {
-    // TODO
-  }
   checkInputs() {
-    //TODO
+    if (this.pointerMovement.x || this.pointerMovement.y) {
+      if (this.pointerMovement.x) {
+        this.angle += (Math.PI * this.pointerMovement.x) / engine.canvas!.width;
+        this.pointerMovement.x = 0;
+      }
+      if (this.pointerMovement.y) {
+        this.verticalAngle -=
+          (Math.PI * this.pointerMovement.y) / engine.canvas!.width;
+        this.pointerMovement.y = 0;
+      }
+      if (this.angle < 0) {
+        this.angle = Math.PI * 2 + this.angle;
+      }
+      if (this.angle < 0) {
+        throw new Error('negative angle');
+      }
+      this.angle = this.angle % (Math.PI * 2);
+      this.verticalAngle = this.verticalAngle % (Math.PI * 2);
+      const ang = this.angle - Math.PI;
+      const vang = this.verticalAngle;
+
+      this.cameraControl?.updateDirection(
+        Math.cos(ang) * Math.sin(vang),
+        Math.cos(vang),
+        Math.sin(ang) * Math.sin(vang),
+      );
+    }
     return true;
   }
   deAttachCameraController() {
