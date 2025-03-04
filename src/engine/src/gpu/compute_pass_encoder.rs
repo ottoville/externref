@@ -1,10 +1,7 @@
 use externref::{externref, Resource};
 
 use super::{
-    bindgroup::{BindGroup, JSBindGroup},
-    binding_commands::BindingCommands,
-    command_encoder::GPUCommandEncoder,
-    gpu::JSDevice,
+    bindgroup::BindGroup, binding_commands::BindingCommands, command_encoder::GPUCommandEncoder,
 };
 
 #[cfg(test)]
@@ -13,13 +10,6 @@ unsafe fn dispatch_workgroups(
     _workgroup_count_x: u32,
     _workgroup_count_y: u32,
     _workgroup_count_z: u32,
-) {
-}
-#[cfg(test)]
-unsafe fn set_bindgroup(
-    _computepassencoder: &Resource<JSComputePassEncoder>,
-    _index: u32,
-    _bindgroup: &Resource<JSBindGroup>,
 ) {
 }
 #[cfg(test)]
@@ -38,11 +28,6 @@ extern "C" {
         computepassencoder: &Resource<JSComputePassEncoder>,
         pipeline: &Resource<JSComputePipeline>,
     );
-    fn set_bindgroup(
-        computepassencoder: &Resource<JSComputePassEncoder>,
-        index: u32,
-        bindgroup: &Resource<JSBindGroup>,
-    );
     fn dispatch_workgroups(
         computepassencoder: &Resource<JSComputePassEncoder>,
         workgroupCountX: u32,
@@ -58,16 +43,11 @@ pub struct ComputePassEncoder {
     pub command_encoder: GPUCommandEncoder,
     pub externref: Resource<JSComputePassEncoder>,
 }
-impl BindingCommands for ComputePassEncoder {
-    fn set_bindgroup(
-        &mut self,
-        device: &Resource<JSDevice>,
-        index: u32,
-        bindgroup: &mut BindGroup,
-    ) {
-        unsafe {
-            set_bindgroup(&self.externref, index, bindgroup.get_bind_group(device));
-        }
+impl BindingCommands<JSComputePassEncoder> for ComputePassEncoder {
+    fn externref(&self) -> &Resource<JSComputePassEncoder> {
+        &self.externref
+    }
+    fn after_set_bindgroup(&mut self, bindgroup: &mut BindGroup) {
         for rawbuffer in bindgroup.rawbuffers.iter() {
             self.command_encoder.buffers.push(rawbuffer.clone());
         }

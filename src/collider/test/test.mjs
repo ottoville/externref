@@ -71,7 +71,6 @@ const exportObj = {
   },
   computepassencoder: {
     set_pipeline() {},
-    set_bindgroup() {},
     dispatch_workgroups() {},
     end() {},
   },

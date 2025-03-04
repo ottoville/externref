@@ -26,6 +26,7 @@ import { QueueInterface } from './wasm-interfaces/QueueInterface.js';
 import { DeviceExports } from './wasm-interfaces/DeviceInterface.js';
 import { DevToolsInterface } from './wasm-interfaces/DevToolsInterface.js';
 import { RenderbundleEncoderInterface } from './wasm-interfaces/RenderBundleEncoderInterface.js';
+import { BindCommandsInterface } from './wasm-interfaces/BindCommandsInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -489,7 +490,7 @@ export type rustWasm = {
   get_impulse_from_id(mesh_id: number): rust_pointer<'impulse'>;
 
   new_renderbundle(
-    externref: GPURenderBundleEncoder,
+    descriptor: GPURenderBundleEncoderDescriptor,
   ): rust_pointer<'renderbundleencoder'>;
   renderbundle_make_dirty(
     renderbundle: rust_pointer<'renderbundleencoder'>,
@@ -497,7 +498,6 @@ export type rustWasm = {
   record_renderbundle(
     renderbundle: rust_pointer<'renderbundleencoder'>,
     gpu: rust_pointer<'gpu'>,
-    descriptor: GPURenderBundleEncoderDescriptor,
     cb: (renderBundleEncoder: GPURenderBundleEncoder) => void,
   ): number;
 } & BufferInterface &
@@ -705,6 +705,7 @@ export class Engine {
 
     let rust: WebAssembly.WebAssemblyInstantiatedSource;
     const exportObj: WebAssembly.Imports = {
+      bindcommands: BindCommandsInterface,
       buffer: BufferExports,
       camera: CameraInterface,
       commandencoder: CommandEncoderInterface,
