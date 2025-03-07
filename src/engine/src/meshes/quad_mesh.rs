@@ -9,10 +9,12 @@ use crate::{
 pub unsafe extern "C" fn create_tiled_mesh_geometry(
     width: usize,
     height: usize,
+    has_bounding: bool,
+    character_can_collide_to: bool,
 ) -> *const Geometry {
     let mut geometry = Box::new(Geometry::new(
-        true,
-        true,
+        has_bounding,
+        character_can_collide_to,
         false,
         false,
         "quad_mesh_geometry".to_string(),

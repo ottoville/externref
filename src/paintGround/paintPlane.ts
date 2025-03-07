@@ -21,8 +21,13 @@ class PlaneMesh extends IndexedDataNode {
   constructor(
     renderPipeline: RenderPipelineProps<PlaneAtGroundHeightVertShader>,
   ) {
-    const geometry = engine.rust.create_tiled_mesh_geometry(100, 100);
-    const pos_ptr = engine.rust.vertices_pointer(geometry);
+    const geometry = engine.rust.create_tiled_mesh_geometry(
+      100,
+      100,
+      false,
+      false,
+    );
+    const pos_ptr = engine.rust.vertices_pointer(geometry, false);
     const pos_len =
       engine.rust.vertices_stride(geometry) *
       engine.rust.vertices_count(geometry);

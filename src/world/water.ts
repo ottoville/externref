@@ -74,7 +74,7 @@ export class Sea extends BoundableNodeSimple {
         renderPipeline,
         vertexBuffers: [
           [
-            engine.rust.vertices_pointer(this.geometry),
+            engine.rust.vertices_pointer(this.geometry, false),
             this.vertices_count * this.vertices_stride,
           ],
         ],

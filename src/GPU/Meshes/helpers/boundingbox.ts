@@ -28,7 +28,7 @@ export class BoundingBoxMesh extends IndexedDataNode {
     const geometry = engine.rust.create_bounding_box_geometry(
       targetNode.node.id,
     );
-    const vertices_view = engine.rust.vertices_pointer(geometry);
+    const vertices_view = engine.rust.vertices_pointer(geometry, false);
     const vertices_len = engine.rust.vertices_count(geometry) * 4;
 
     const debug_render_boundingbox_vertexBuffer = new Buffer({

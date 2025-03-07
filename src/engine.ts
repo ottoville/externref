@@ -87,6 +87,8 @@ export type rustWasm = {
   create_tiled_mesh_geometry(
     width: number,
     height: number,
+    has_bounding: boolean,
+    camera_can_collide_to: boolean,
   ): rust_pointer<'geometry'>;
 
   create_octasphere(
@@ -188,26 +190,10 @@ export type rustWasm = {
   create_cone_geometry(faces: number): rust_pointer<'geometry'>;
   add_collider(mesh_id: number, collider: rust_pointer<'collider'>): void;
   memory: WebAssembly.Memory;
-  set_vertices(
+  vertices_pointer(
     geometry: rust_pointer<'geometry'>,
-    ptr: rust_pointer<'f32'>,
-    length: number,
-    cap: number,
-    vertices_stride: Word<'dword'>,
-  ): void;
-  set_position_vertices(
-    geometry: rust_pointer<'geometry'>,
-    ptr: rust_pointer<'position'>,
-    length: number,
-    cap: number,
-  ): void;
-  set_position_and_normal_vertices(
-    geometry: rust_pointer<'geometry'>,
-    ptr: rust_pointer<'position_and_normal'>,
-    length: number,
-    cap: number,
-  ): void;
-  vertices_pointer(geometry: rust_pointer<'geometry'>): rust_pointer<'f32'>;
+    make_dirty: boolean,
+  ): rust_pointer<'f32'>;
   set_indices_and_vertices_PositionAndNormalAndUV(
     mesh_id: number,
     indices: rust_pointer<'usize'>,

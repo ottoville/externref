@@ -177,7 +177,7 @@ export class DataNode extends MainNode {
   get vertices() {
     return new ReadOnlyFloat32Array(
       engine.rust.memory.buffer,
-      engine.rust.vertices_pointer(this.geometry),
+      engine.rust.vertices_pointer(this.geometry, false),
       this.vertices_count * this.vertices_stride,
     );
   }
@@ -200,7 +200,7 @@ export class DataNode extends MainNode {
   update_vertices(cb: (view: Float32Array) => void) {
     const view = new Float32Array(
       engine.rust.memory.buffer,
-      engine.rust.vertices_pointer(this.geometry),
+      engine.rust.vertices_pointer(this.geometry, true),
       this.vertices_count * this.vertices_stride,
     );
     cb(view);
@@ -294,7 +294,7 @@ export class DataNode extends MainNode {
   };
   get verticesArray() {
     const arr: Float32Array[] = [];
-    const vertices_pointer = engine.rust.vertices_pointer(this.geometry);
+    const vertices_pointer = engine.rust.vertices_pointer(this.geometry, false);
     for (let i = 0; i < this.vertices_count; i++) {
       arr.push(
         new Float32Array(

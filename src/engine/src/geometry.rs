@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 
-use logger::Logger;
+use logger::LoggerArray;
 use rapier3d::{
     geometry::{Collider, ColliderBuilder},
     math::Point,
@@ -14,7 +14,7 @@ use crate::{
     indices::Indices,
     math2::{Vec2wgslF32, Vec3wgslF32},
     mesh::ENGINE,
-    vertices::{Position, Position2DAndUV, PositionAndNormal, PositionAndNormalAndUV, VertexKind},
+    vertices::{Position2DAndUV, PositionAndNormalAndUV, VertexKind},
     MULTIVALUE_USIZE,
 };
 #[no_mangle]
@@ -34,7 +34,14 @@ pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry) ->
     MULTIVALUE_USIZE.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn vertices_pointer(geometry: *const Geometry) -> *const f32 {
+pub unsafe extern "C" fn vertices_pointer(
+    geometry: *mut Geometry,
+    // If vertices are modified, the BB needs to be inited
+    need_init: bool,
+) -> *const f32 {
+    if need_init {
+        (*geometry).bounding_box.need_init = need_init;
+    }
     let vertices = &(*geometry).vertices;
     match vertices {
         VertexKind::PositionAndNormalAndUV(vector) => vector.as_ptr() as *const f32,
@@ -91,28 +98,6 @@ pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usiz
     ];
     geometry.collider_planes_parallel = vec![[[0.0; 4]; 4]; planes.len() / 4];
     geometry.planes.planes = planes;
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_position_vertices(
-    geometry_ptr: *mut Geometry,
-    ptr: *mut Position,
-    length: usize,
-    cap: usize,
-) {
-    let vertices: Vec<Position> = Vec::from_raw_parts(ptr, length, cap);
-    let geometry = &mut (*geometry_ptr);
-    geometry.set_vertices(VertexKind::Position(vertices));
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_position_and_normal_vertices(
-    geometry_ptr: *mut Geometry,
-    ptr: *mut PositionAndNormal,
-    length: usize,
-    cap: usize,
-) {
-    let vertices: Vec<PositionAndNormal> = Vec::from_raw_parts(ptr, length, cap);
-    let geometry = &mut (*geometry_ptr);
-    geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry) -> usize {

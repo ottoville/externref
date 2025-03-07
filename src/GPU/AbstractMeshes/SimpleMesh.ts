@@ -29,6 +29,7 @@ export class SimpleMesh extends BoundableNodeSimple {
         }
         const vertices_view = engine.rust.vertices_pointer(
           dataNodeProps.vertices,
+          false,
         );
         const vertices_len = this.vertices_count * this.vertices_stride;
 

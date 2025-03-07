@@ -22,7 +22,7 @@ export class OctaSphere extends IndexedColoredMesh {
     const geometry = engine.rust.create_octasphere(2, width, height, depth);
     const vertices = new Float32Array(
       engine.rust.memory.buffer,
-      engine.rust.vertices_pointer(geometry),
+      engine.rust.vertices_pointer(geometry, false),
       engine.rust.vertices_count(geometry) * 12,
     );
     for (let i = 0; i < vertices.length; i += 12) {

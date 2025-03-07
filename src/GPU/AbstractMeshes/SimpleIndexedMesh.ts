@@ -72,6 +72,7 @@ export class SimpleIndexedMesh extends BoundableNodeIndexed {
 
         const vertices_view = engine.rust.vertices_pointer(
           dataNodeProps.vertices,
+          false,
         );
         const vertices_len = this.vertices_count * this.vertices_stride;
         // Add storage bit in order to pull vertices for debugging normals

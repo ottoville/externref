@@ -10,7 +10,6 @@ use crate::gpu::gpu::GPU;
 use crate::mesh::JSMesh;
 pub use crate::mesh::Mesh;
 pub use crate::GPUMesh;
-use crate::MULTIVALUE_USIZE;
 use externref::externref;
 use externref::Resource;
 use logger::Logger;
@@ -45,7 +44,7 @@ pub unsafe extern "C" fn drop_engine_lock(engine: *mut MutexGuard<'static, Engin
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub extern "C" fn init_engine2() -> usize {
-    use logger::Logger;
+
     String::from("Init engine").log();
     panic::set_hook(Box::new(|panic_info| {
         panic_info.to_string().error();
@@ -128,27 +127,6 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
         character_controller: KinematicCharacterController::default(),
     };
 });
-
-// TODO, remove and use "str_ptr_from_arr" syntax
-pub fn create_js_string(mut str: String) -> *const u8 {
-    str.truncate(512);
-    let log_str = format!("{: <512}", str);
-    let ptr = log_str.as_ptr();
-    std::mem::forget(log_str);
-    return ptr;
-}
-static mut LOG_STRING: String = String::new();
-
-unsafe fn str_ptr_from_arr<const N: usize>(strings: [&(impl ToString + ?Sized); N]) {
-    LOG_STRING.clear();
-    for str in strings.iter() {
-        LOG_STRING.push(' ');
-        LOG_STRING.push_str(&str.to_string());
-    }
-    MULTIVALUE_USIZE[0] = LOG_STRING.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = LOG_STRING.len();
-    MULTIVALUE_USIZE[2] = LOG_STRING.capacity();
-}
 
 // MESH ON COLLIDE JAVASCRIPT EVENT REMOVED
 // TODO: create rust event for that

@@ -303,6 +303,7 @@ export abstract class UIRectangle<
     const vertices_ptr: rust_array_ptr<'position2d_and_uv'> = [
       engine.rust.vertices_pointer(
         this.#node.geometry,
+        false,
       ) as unknown as rust_pointer<'position2d_and_uv'>,
       this.#node.vertices_count,
     ];
@@ -470,7 +471,10 @@ export abstract class UIRectangle<
           renderPasses: new Set([renderPass]),
           renderPipeline: canvaspipeline as GPU['UIPipeline'],
           vertexBuffers: [
-            [engine.rust.vertices_pointer(geometry), positionsCount * stride],
+            [
+              engine.rust.vertices_pointer(geometry, false),
+              positionsCount * stride,
+            ],
           ],
         },
         {
@@ -485,7 +489,7 @@ export abstract class UIRectangle<
       renderPass.onResize.set(this, () => {
         this.#updateBoundingBoxAndVerticesSuper();
         drawable.setVertexBuffer(0, [
-          engine.rust.vertices_pointer(this.#node.geometry),
+          engine.rust.vertices_pointer(this.#node.geometry, false),
           this.#node.vertices_count * this.#node.vertices_stride,
         ]);
       });
