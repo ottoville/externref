@@ -11,11 +11,6 @@ steps:
   inputs:
     key: 'cargoregistry'
     path: /home/vsts/.cargo/registry
-- task: Cache@2
-  displayName: Restore cargo bin
-  inputs:
-    key: 'cargobin'
-    path: /home/vsts/.cargo/bin
 - task: Cargo@1
   displayName: Rust unit test
   inputs:
