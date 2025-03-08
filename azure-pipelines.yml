@@ -36,6 +36,25 @@ stages:
               csmFile: '$(Build.SourcesDirectory)/infrastructure/main.bicep'
               deploymentMode: 'Incremental'
           - task: AzureCLI@2 #This tasks needs Microsoft.Web/locations/operationResults/read permission in subscription level, which can be archieved by giving contributor role
+            displayName: 'echo SourceBranchName'
+            inputs:
+              azureSubscription: $(service-connection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              arguments: $(Build.SourceBranchName)
+              inlineScript: "echo \"hello world:$*\""
+              addSpnToEnvironment: true
+
+          - task: AzureCLI@2 #This tasks needs Microsoft.Web/locations/operationResults/read permission in subscription level, which can be archieved by giving contributor role
+            displayName: 'echo SourceVersionMessage'
+            inputs:
+              azureSubscription: $(service-connection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              arguments: $(Build.SourceVersionMessage)
+              inlineScript: "echo \"hello world:$*\""
+              addSpnToEnvironment: true
+          - task: AzureCLI@2 #This tasks needs Microsoft.Web/locations/operationResults/read permission in subscription level, which can be archieved by giving contributor role
             displayName: 'Delete PR environment'
             inputs:
               azureSubscription: $(service-connection)

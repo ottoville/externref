@@ -101,7 +101,21 @@ stages:
         command: custom
         workingDir: src
         verbose: false
-        customCommand: run build
+        customCommand: run build-pr
+    - task: Npm@1
+      displayName: npm build rust
+      inputs:
+        command: custom
+        workingDir: src
+        verbose: false
+        customCommand: run buildRust
+    - task: Npm@1
+      displayName: npm build rollup
+      inputs:
+        command: custom
+        workingDir: src
+        verbose: false
+        customCommand: run build-rollup-debug
     - task: CopyFiles@2
       inputs:
         SourceFolder: './wwwroot'
