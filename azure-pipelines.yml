@@ -115,6 +115,19 @@ stages:
         command: custom
         verbose: false
         customCommand: run build-prod
+    - task: Bash@3
+      displayName: 'Build rust'
+      inputs:
+        targetType: 'inline'
+        script: |
+          cargo rustc --features webgpu --release --lib --manifest-path ./src/engine/Cargo.toml --target wasm32-unknown-unknown -- -C target-feature=+simd128,+atomics,+bulk-memory,+mutable-globals && cd ./buildscript && cargo run --release
+    - task: Npm@1
+      displayName: npm build rollup
+      inputs:
+        command: custom
+        workingDir: src
+        verbose: false
+        customCommand: run build-rollup-prod
     - task: CopyFiles@2
       inputs:
         SourceFolder: './wwwroot'

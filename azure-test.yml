@@ -7,11 +7,15 @@ steps:
     key: 'rust'
     path: './src/engine/target'
 - task: Cache@2
-  displayName: Restore rust cache wasm-bindgen-cli
+  displayName: Restore cargo registry
   inputs:
-    key: 'wasmbindgen'
-    path: $(Agent.HomeDirectory)/.cargo/bin
-
+    key: 'cargoregistry'
+    path: /home/vsts/.cargo/registry
+- task: Cache@2
+  displayName: Restore cargo bin
+  inputs:
+    key: 'cargobin'
+    path: /home/vsts/.cargo/bin
 - task: Cargo@1
   displayName: Rust unit test
   inputs:
@@ -29,24 +33,6 @@ steps:
   displayName: Add wasm32-unknown-unknown target
   inputs:
     rustupCommand: target add wasm32-unknown-unknown
-    - task: CmdLine@2
-      inputs:
-        script: |
-          echo "Structure of work folder of this pipeline:"
-          tree $(Agent.WorkFolder)/1
-
-          echo "home folder of this pipeline:"
-          tree $(Agent.HomeDirectory)
-
-
-          echo "Build.ArtifactStagingDirectory:" 
-          echo "$(Build.ArtifactStagingDirectory)"
-
-          echo "Build.BinariesDirectory:" 
-          echo "$(Build.BinariesDirectory)"
-
-          echo "Build.SourcesDirectory:"
-          echo "$(Build.SourcesDirectory)"
 - task: Cache@2
   displayName: Restore rust terramath cache
   inputs:

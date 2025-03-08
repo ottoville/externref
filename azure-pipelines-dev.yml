@@ -102,13 +102,12 @@ stages:
         workingDir: src
         verbose: false
         customCommand: run build-pr
-    - task: Npm@1
-      displayName: npm build rust
+    - task: Bash@3
+      displayName: 'Build rust'
       inputs:
-        command: custom
-        workingDir: src
-        verbose: false
-        customCommand: run buildRust
+        targetType: 'inline'
+        script: |
+          cargo rustc --features webgpu  --lib --manifest-path ./src/engine/Cargo.toml --target wasm32-unknown-unknown -- -C target-feature=+simd128,+atomics,+bulk-memory,+mutable-globals && cd ./buildscript && cargo run
     - task: Npm@1
       displayName: npm build rollup
       inputs:
