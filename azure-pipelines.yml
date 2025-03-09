@@ -36,32 +36,13 @@ stages:
               csmFile: '$(Build.SourcesDirectory)/infrastructure/main.bicep'
               deploymentMode: 'Incremental'
           - task: AzureCLI@2 #This tasks needs Microsoft.Web/locations/operationResults/read permission in subscription level, which can be archieved by giving contributor role
-            displayName: 'echo SourceBranchName'
-            inputs:
-              azureSubscription: $(service-connection)
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              arguments: $(Build.SourceBranchName)
-              inlineScript: "echo \"hello world:$*\""
-              addSpnToEnvironment: true
-
-          - task: AzureCLI@2 #This tasks needs Microsoft.Web/locations/operationResults/read permission in subscription level, which can be archieved by giving contributor role
-            displayName: 'echo SourceVersionMessage'
-            inputs:
-              azureSubscription: $(service-connection)
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              arguments: $(Build.SourceVersionMessage)
-              inlineScript: "echo \"hello world:$*\""
-              addSpnToEnvironment: true
-          - task: AzureCLI@2 #This tasks needs Microsoft.Web/locations/operationResults/read permission in subscription level, which can be archieved by giving contributor role
             displayName: 'Delete PR environment'
             inputs:
               azureSubscription: $(service-connection)
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               arguments: $(Build.SourceVersionMessage)
-              inlineScript: "az staticwebapp environment delete -n TerraSim --resource-group terrasim-rg --environment-name $(echo \"$*\" | head -n 1 | cut -d':' -f1 | cut -d' ' -f3) --yes"
+              inlineScript: "az staticwebapp environment delete -n TerraSim --resource-group terrasim-rg --environment-name $(echo \"$*\" | head -n 1 | cut -d':' -f1 | cut -d' ' -f3) --yes || echo \"Could not remove PR environment. Either it does not exist or PR number cant be parsed from merge commit message. You might need to manually remove the PR environment\""
               addSpnToEnvironment: true
 - stage: BuildSwa
   displayName: Build SWA
