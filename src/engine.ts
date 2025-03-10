@@ -107,9 +107,7 @@ export type rustWasm = {
     velocity_world_x: number,
     velocity_world_y: number,
     velocity_world_z: number,
-    radius_x: number,
-    radius_y: number,
-    radius_z: number,
+    radius: number,
   ): void;
   intersection_point_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
@@ -1104,9 +1102,7 @@ export class Engine {
         worldVelocity[0],
         worldVelocity[1],
         worldVelocity[2],
-        sphere.radius[0],
-        sphere.radius[1],
-        sphere.radius[2],
+        sphere.collisionRadius,
       );
       // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
@@ -1190,11 +1186,11 @@ export class Engine {
         }
 
         this.#displacementVector[0] =
-          this.collider._slidePlaneNormal[0] * sphere.closeDistanceVector[0];
+          this.collider._slidePlaneNormal[0] * sphere.closeDistanceVector;
         this.#displacementVector[1] =
-          this.collider._slidePlaneNormal[1] * sphere.closeDistanceVector[1];
+          this.collider._slidePlaneNormal[1] * sphere.closeDistanceVector;
         this.#displacementVector[2] =
-          this.collider._slidePlaneNormal[2] * sphere.closeDistanceVector[2];
+          this.collider._slidePlaneNormal[2] * sphere.closeDistanceVector;
         // pos.addInPlace(this._displacementVector);
         /*
                     displacementVector is a constraint added to position, so eg. objects that are colliding
@@ -1229,9 +1225,9 @@ export class Engine {
       }
 
       const unScaledVelocity = [
-        scaledVelocity[0] * sphere.radius[0],
-        scaledVelocity[1] * sphere.radius[1],
-        scaledVelocity[2] * sphere.radius[2],
+        scaledVelocity[0] * sphere.collisionRadius,
+        scaledVelocity[1] * sphere.collisionRadius,
+        scaledVelocity[2] * sphere.collisionRadius,
       ] as const;
       // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
       if (
@@ -1264,8 +1260,8 @@ export class Engine {
         worldVelocity,
       ),
     );
-    this.collider.finalPosition[0] *= sphere.radius[0];
-    this.collider.finalPosition[1] *= sphere.radius[1];
-    this.collider.finalPosition[2] *= sphere.radius[2];
+    this.collider.finalPosition[0] *= sphere.collisionRadius;
+    this.collider.finalPosition[1] *= sphere.collisionRadius;
+    this.collider.finalPosition[2] *= sphere.collisionRadius;
   }
 }

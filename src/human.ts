@@ -13,31 +13,26 @@ const closeDistance = 0.0022;
 const maxSpeedSquared = 1.4 * 1.4;
 export class Human extends IndexedSingleColoredMesh {
   inputManager: MeshCamera;
-  radius: { 0: number; 1: number; 2: number };
-  readonly #radius: [x: number, y: number, z: number] = [2, 2, 2];
+  collisionRadius = 2;
   readonly collisionsScalingMatrix: TerraMatrix = new TerraMatrix([
-    1.0 / this.#radius[0],
+    1.0 / this.collisionRadius,
     0.0,
     0.0,
     0.0,
     0.0,
-    1.0 / this.#radius[1],
+    1.0 / this.collisionRadius,
     0.0,
     0.0,
     0.0,
     0.0,
-    1.0 / this.#radius[2],
+    1.0 / this.collisionRadius,
     0.0,
     0.0,
     0.0,
     0.0,
     1.0,
   ]);
-  readonly closeDistanceVector: [number, number, number] = [
-    closeDistance / this.#radius[0],
-    closeDistance / this.#radius[1],
-    closeDistance / this.#radius[2],
-  ];
+  readonly closeDistanceVector = closeDistance / this.collisionRadius;
 
   constructor({
     scenes,
@@ -71,36 +66,6 @@ export class Human extends IndexedSingleColoredMesh {
     if (inputEnabled) {
       engine.gpu!.mainCamera.attachControllerForCamera(this.inputManager);
     }
-
-    const radius = this.#radius;
-    const collisionsScalingMatrix = this.collisionsScalingMatrix;
-    const myCloseDistance = this.closeDistanceVector;
-    this.radius = {
-      get 0() {
-        return radius[0];
-      },
-      set 0(v: number) {
-        radius[0] = v;
-        collisionsScalingMatrix[0] = 1.0 / v;
-        myCloseDistance[0] = closeDistance / v;
-      },
-      get 1() {
-        return radius[1];
-      },
-      set 1(v: number) {
-        radius[1] = v;
-        collisionsScalingMatrix[5] = 1.0 / v;
-        myCloseDistance[1] = closeDistance / v;
-      },
-      get 2() {
-        return radius[2];
-      },
-      set 2(v: number) {
-        radius[2] = v;
-        collisionsScalingMatrix[10] = 1.0 / v;
-        myCloseDistance[2] = closeDistance / v;
-      },
-    };
   }
   override onPhysicTick = (_delta: number, mesh: rust_pointer<'mesh'>) => {
     if (
@@ -266,13 +231,13 @@ export class Human extends IndexedSingleColoredMesh {
     this.grip = this.inputManager.arrowKeysDown ? 0 : 1;
     const translation = this.getTranslationFromId();
     const scaledPosition = engine.collider.scaledPosition;
-    scaledPosition[0] = translation[0] / this.radius[0];
-    scaledPosition[1] = translation[1] / this.radius[1];
-    scaledPosition[2] = translation[2] / this.radius[2];
+    scaledPosition[0] = translation[0] / this.collisionRadius;
+    scaledPosition[1] = translation[1] / this.collisionRadius;
+    scaledPosition[2] = translation[2] / this.collisionRadius;
     const scaledVelocity = engine.collider.scaledVelocity;
-    scaledVelocity[0] = velocityPerDelta[0] / this.radius[0];
-    scaledVelocity[1] = velocityPerDelta[1] / this.radius[1];
-    scaledVelocity[2] = velocityPerDelta[2] / this.radius[2];
+    scaledVelocity[0] = velocityPerDelta[0] / this.collisionRadius;
+    scaledVelocity[1] = velocityPerDelta[1] / this.collisionRadius;
+    scaledVelocity[2] = velocityPerDelta[2] / this.collisionRadius;
     //TODO: remove this line and rest of legacy collider check from character
     engine.collideWithWorld(
       this,

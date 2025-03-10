@@ -206,14 +206,14 @@ export class ColliderJS {
       engine.rust.basepoint_world_pointer(this.collider_ptr),
       3,
     ).set([
-      source[0] * sphere.radius[0],
-      source[1] * sphere.radius[1],
-      source[2] * sphere.radius[2],
+      source[0] * sphere.collisionRadius,
+      source[1] * sphere.collisionRadius,
+      source[2] * sphere.collisionRadius,
     ]);
 
-    this.#velocityWorld[0] = dir[0] * sphere.radius[0];
-    this.#velocityWorld[1] = dir[1] * sphere.radius[1];
-    this.#velocityWorld[2] = dir[2] * sphere.radius[2];
+    this.#velocityWorld[0] = dir[0] * sphere.collisionRadius;
+    this.#velocityWorld[1] = dir[1] * sphere.collisionRadius;
+    this.#velocityWorld[2] = dir[2] * sphere.collisionRadius;
     //@ts-ignore removed
     engine.rust.set_speed(
       this.collider_ptr,

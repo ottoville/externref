@@ -25,12 +25,8 @@ class pickInfo {
 
 export interface Ellipsoid {
   collisionsScalingMatrix: TerraMatrix;
-  radius: {
-    0: number;
-    1: number;
-    2: number;
-  };
-  readonly closeDistanceVector: [number, number, number];
+  collisionRadius: number;
+  readonly closeDistanceVector: number;
 }
 
 export type DataNodeProps = {
@@ -342,12 +338,12 @@ export class DataNode extends MainNode {
     //TODO: When there is support for bounding sphere.
     //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
 
-    var max = Math.max(sphere.radius[0], sphere.radius[1], sphere.radius[2]);
-
     /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
                return false;
            }*/
-    if (!this.intersect_box_aa_sphere(engine.collider, max)) {
+    if (
+      !this.intersect_box_aa_sphere(engine.collider, sphere.collisionRadius)
+    ) {
       return;
     }
     // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix

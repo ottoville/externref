@@ -85,65 +85,31 @@ export class ArcRotateCamera extends CameraController {
   #alpha = 0;
   #beta = 0;
   #radius = 10;
-  radius: { 0: number; 1: number; 2: number };
-  private readonly collisionRadius: [number, number, number] = [2, 2, 2];
+  readonly collisionRadius = 2;
   readonly collisionsScalingMatrix = new TerraMatrix([
-    1.0 / this.collisionRadius[0],
+    1.0 / this.collisionRadius,
     0.0,
     0.0,
     0.0,
     0.0,
-    1.0 / this.collisionRadius[1],
+    1.0 / this.collisionRadius,
     0.0,
     0.0,
     0.0,
     0.0,
-    1.0 / this.collisionRadius[2],
+    1.0 / this.collisionRadius,
     0.0,
     0.0,
     0.0,
     0.0,
     1.0,
   ]);
-  readonly closeDistanceVector: [number, number, number] = [
-    closeDistance / this.collisionRadius[0],
-    closeDistance / this.collisionRadius[1],
-    closeDistance / this.collisionRadius[2],
-  ];
+  readonly closeDistanceVector = closeDistance / this.collisionRadius;
   constructor(
     private camera: TerraCamera,
     initial = false,
   ) {
     super();
-    const collisionRadius = this.collisionRadius;
-    const collisionsScalingMatrix = this.collisionsScalingMatrix;
-    const myCloseDistance = this.closeDistanceVector;
-    this.radius = {
-      get 0() {
-        return collisionRadius[0];
-      },
-      set 0(v: number) {
-        collisionRadius[0] = v;
-        collisionsScalingMatrix[0] = 1.0 / v;
-        myCloseDistance[0] = closeDistance / v;
-      },
-      get 1() {
-        return collisionRadius[1];
-      },
-      set 1(v: number) {
-        collisionRadius[1] = v;
-        collisionsScalingMatrix[5] = 1.0 / v;
-        myCloseDistance[1] = closeDistance / v;
-      },
-      get 2() {
-        return collisionRadius[2];
-      },
-      set 2(v: number) {
-        collisionRadius[2] = v;
-        collisionsScalingMatrix[10] = 1.0 / v;
-        myCloseDistance[2] = closeDistance / v;
-      },
-    };
     if (initial && engine.DB) {
       engine.DB.transaction('save')
         .objectStore('save')
@@ -344,19 +310,19 @@ export class ArcRotateCamera extends CameraController {
 
     // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
     const scaledPosition = engine.collider.scaledPosition;
-    scaledPosition[0] = this.camera.position[0] / this.radius[0];
-    scaledPosition[1] = this.camera.position[1] / this.radius[1];
-    scaledPosition[2] = this.camera.position[2] / this.radius[2];
+    scaledPosition[0] = this.camera.position[0] / this.collisionRadius;
+    scaledPosition[1] = this.camera.position[1] / this.collisionRadius;
+    scaledPosition[2] = this.camera.position[2] / this.collisionRadius;
     //this._newPosition.subtractToRef(this._position, this._collisionVelocity);
     // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
     const scaledVelocity = engine.collider.scaledVelocity;
     const newPosition = this.#calculatePosition();
     scaledVelocity[0] =
-      (newPosition[0] - this.camera.position[0]) / this.radius[0];
+      (newPosition[0] - this.camera.position[0]) / this.collisionRadius;
     scaledVelocity[1] =
-      (newPosition[1] - this.camera.position[1]) / this.radius[1];
+      (newPosition[1] - this.camera.position[1]) / this.collisionRadius;
     scaledVelocity[2] =
-      (newPosition[2] - this.camera.position[2]) / this.radius[2];
+      (newPosition[2] - this.camera.position[2]) / this.collisionRadius;
 
     // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
 
