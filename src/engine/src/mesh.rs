@@ -4,15 +4,13 @@ pub use crate::drawable::DrawCommand;
 #[cfg(target_arch = "wasm32")]
 use crate::engine::verticesChange;
 pub use crate::engine::ENGINE;
-pub use crate::geometry::ColliderPlane;
 pub use crate::geometry::Geometry;
 use crate::math2::Mat3wgslF32;
-use crate::math2::Vec3wgslF32;
 use crate::mesh_property::MeshProperty;
-use crate::Collider;
 pub use crate::GPUMesh;
 use crate::MULTIVALUE_F32;
 use crate::MULTIVALUE_USIZE;
+use collider::ColliderPlane;
 use core::panic;
 use externref::externref;
 use externref::Resource;
@@ -23,6 +21,7 @@ use std::sync::MutexGuard;
 use terramath::MatrixMath;
 use terramath::Plane;
 use terramath::Quaternion;
+use terramath::Vec3wgslF32;
 
 pub struct JSMesh(());
 
@@ -186,11 +185,6 @@ pub unsafe extern "C" fn strip(mesh_id: usize) -> bool {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 
     mesh.get_geometry().strip
-}
-#[no_mangle]
-pub unsafe extern "C" fn collider_planes_parallel_pointer(mesh_id: usize) -> *const [[f32; 4]; 4] {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
-    mesh.get_geometry().collider_planes_parallel.as_ptr()
 }
 #[no_mangle]
 pub unsafe extern "C" fn gpu_pointer(mesh_id: usize) -> *const [[f32; 4]; 4] {
@@ -376,10 +370,17 @@ pub unsafe extern "C" fn set_shadow_from_id(mesh_id: usize, shadow: f32) {
     mesh_property.gpu_memory.shadow = shadow;
 }
 #[no_mangle]
-pub unsafe extern "C" fn collider_faces_pointer(mesh_id: usize) -> *const ColliderPlane {
+#[cfg(target_arch = "wasm32")]
+pub unsafe extern "C" fn test_triangles(mesh_id: usize, collider_ptr: *mut collider::Collider) {
     let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
-
-    mesh.get_geometry().collider_planes.as_ptr()
+    let geometry = mesh.get_geometry();
+    if geometry.collider_planes_parallel.len() == 0 {
+        return;
+    }
+    (*collider_ptr).test_triangles(
+        &geometry.collider_planes,
+        &geometry.collider_planes_parallel,
+    );
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_scenes(mesh_id: usize, scenes: u32) {
@@ -479,7 +480,7 @@ impl Mesh {
                 gpu_mesh_alignment,
                 transformation: MatrixMath::identity(),
                 transformation_is_dirty: true,
-                translation: Vec3wgslF32::new_zero(),
+                translation: Vec3wgslF32([0.0; 3]),
                 rotation: Quaternion {
                     i: 0.0,
                     j: 0.0,
@@ -603,9 +604,7 @@ impl Mesh {
                 };
             }
             if let Some(geometry) = &mut self.geometry {
-                if geometry.bounding_box.has_bounding {
-                    geometry.bounding_box.dirty = true;
-                }
+                geometry.bounding_box.dirty = true;
             }
         }
     }
@@ -617,7 +616,8 @@ impl Mesh {
         let mesh_property = &mut self.mesh_property.lock().unwrap();
         let transformation = mesh_property.get_transformation();
         if let Some(g) = &mut self.geometry {
-            g.update_bounding_box(&transformation);
+            g.bounding_box
+                .update_bounding_box(&g.vertices, &transformation);
             g.bounding_box.intersect_box_aa_sphere(collider, radius)
         } else {
             panic!("Mesh {} has no geometry", self.label)

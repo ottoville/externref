@@ -87,7 +87,6 @@ export type rustWasm = {
   create_tiled_mesh_geometry(
     width: number,
     height: number,
-    has_bounding: boolean,
     camera_can_collide_to: boolean,
   ): rust_pointer<'geometry'>;
 
@@ -164,14 +163,7 @@ export type rustWasm = {
     label_cap: number,
   ): number;
   have_rigid_body(mesh_id: number): boolean;
-  create_geometry(
-    has_bounding: boolean,
-    character_can_collide_to: boolean,
-    static_faces: boolean,
-    strip: boolean,
-  ): rust_pointer<'geometry'>;
   create_legacy_terrain_geometry(
-    has_bounding: boolean,
     character_can_collide_to: boolean,
     static_faces: boolean,
     strip: boolean,
@@ -217,10 +209,6 @@ export type rustWasm = {
   get_indices_pointer(
     indices: rust_pointer<'indices'>,
   ): rust_pointer<rust_vec_ptr<'usize'>>;
-
-  last_collider_world_vertices_pointer(
-    geometry: rust_pointer<'geometry'>,
-  ): number;
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: number): boolean;
   faces_count(mesh_id: number): number;
@@ -254,9 +242,6 @@ export type rustWasm = {
   positions_count(mesh_id: number): number;
   set_positions_count(mesh_id: number, positions_count: number): number;
   strip(mesh_id: number): number;
-  collider_planes_parallel_pointer(
-    mesh_id: number,
-  ): rust_pointer<'collider_planes_parallel_pointer'>;
   gpu_pointer(mesh_id: number): number;
   label_field_pointer(mesh_id: number): rust_pointer<'label_field'>;
   translation_pointer(mesh: rust_pointer<'mesh'>): rust_pointer<'translation'>;
@@ -300,7 +285,6 @@ export type rustWasm = {
   set_ambient_from_id(mesh_id: number, r: number, g: number, b: number): void;
   set_shadow(mesh: rust_pointer<'mesh'>, shadow: number): void;
   set_shadow_from_id(mesh_id: number, shadow: number): void;
-  collider_faces_pointer(mesh_id: number): rust_pointer<'collider_faces'>;
   set_scenes(mesh_id: number, scenes: number): void;
   calculate_normals(mesh_id: number): void;
   update_scale_and_rotation(
@@ -447,7 +431,6 @@ export type rustWasm = {
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<'matrix'>;
   check_collision(geometry: rust_pointer<'geometry'>): void;
-  update_collider_planes(geometry: rust_pointer<'geometry'>): void;
   move_character(
     character_mesh_id: number,
     dt: number,
@@ -467,10 +450,8 @@ export type rustWasm = {
   ): void;
   rebuild_triangle_planes(geometry: rust_pointer<'geometry'>): void;
   test_triangles(
+    mesh_id: number,
     rust_collider_ptr: rust_pointer<'legacy_collider'>,
-    plane_position: number,
-    plane_position_horizontal: number,
-    length: number,
   ): void;
   get_impulse_from_id(mesh_id: number): rust_pointer<'impulse'>;
 

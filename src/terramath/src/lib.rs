@@ -2,18 +2,28 @@
 use std::arch::wasm32::v128;
 
 #[derive(Debug, Copy, Clone)]
+#[repr(C, align(16))]
+pub struct Vec3wgslF32(pub [f32; 3]);
+
+impl Vec3wgslF32 {
+    pub fn clone(&self) -> Vec3wgslF32 {
+        Vec3wgslF32(self.0.clone())
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub struct Plane {
     pub norm: [f32; 3],
     pub d: f32,
 }
 impl Plane {
-    pub fn update_from_triangle(&mut self, vectors: [[f32; 3]; 3]) {
-        let v1v2 = vectors[1].sub_vec(&vectors[2]);
-        let v0v2 = vectors[0].sub_vec(&vectors[2]);
+    pub fn update_from_triangle(&mut self, v0: &[f32; 3], v1: &[f32; 3], v2: &[f32; 3]) {
+        let v1v2 = v1.sub_vec(v2);
+        let v0v2 = v0.sub_vec(v2);
         let mut cross: [f32; 3] = v1v2.cross(&v0v2);
         cross.normalize_in_place();
         self.norm = cross;
-        self.d = -self.norm.dot(&vectors[2]);
+        self.d = -self.norm.dot(v2);
     }
 }
 pub struct Quaternion {

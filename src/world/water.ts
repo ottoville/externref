@@ -24,6 +24,7 @@ export class Sea extends BoundableNodeSimple {
     super(
       {
         can_collide: false,
+        character_can_collide_to: false,
         vertices: geometry,
       },
       {

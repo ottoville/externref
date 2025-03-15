@@ -89,6 +89,22 @@ impl LoggerString for [f32] {
         }
     }
 }
+impl LoggerString for [i32] {
+    fn make_string(&self, log_string: &mut String) {
+        for str in self.iter() {
+            log_string.push(' ');
+            log_string.push_str(&str.to_string());
+        }
+    }
+}
+impl LoggerString for [usize] {
+    fn make_string(&self, log_string: &mut String) {
+        for str in self.iter() {
+            log_string.push(' ');
+            log_string.push_str(&str.to_string());
+        }
+    }
+}
 impl LoggerString for [[f32; 4]; 4] {
     fn make_string(&self, log_string: &mut String) {
         for i in 0..4 {
@@ -115,4 +131,6 @@ impl LoggerArray for [String] {}
 impl LoggerArray for Vec<u32> {}
 impl LoggerArray for Vec<usize> {}
 impl LoggerArray for [f32] {}
+impl LoggerArray for [i32] {}
+impl LoggerArray for [usize] {}
 impl LoggerArray for [[f32; 4]; 4] {}

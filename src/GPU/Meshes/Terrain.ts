@@ -37,12 +37,12 @@ export class TerrainMesh extends BoundableNodeIndexed {
     const geometry = engine.rust.create_legacy_terrain_geometry(
       true,
       true,
-      true,
       false,
     );
     super(
       {
         can_collide: true,
+        character_can_collide_to: true,
         vertices: geometry,
       },
       {

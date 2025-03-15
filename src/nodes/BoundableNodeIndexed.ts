@@ -16,9 +16,9 @@ export abstract class BoundableNodeIndexed
     super(dataNodeProps, mainNodeProps);
     this.onIndicesChange.push(() => {
       if (onIndicesChange) onIndicesChange();
-      this.rebuildTrianglePlanes();
+      if (dataNodeProps.character_can_collide_to) this.rebuildTrianglePlanes();
     });
-    this.rebuildTrianglePlanes();
+    if (dataNodeProps.character_can_collide_to) this.rebuildTrianglePlanes();
   }
   rebuildTrianglePlanes() {
     if (
@@ -27,25 +27,6 @@ export abstract class BoundableNodeIndexed
         .indices_count /* This function is called from super constructor when indices are not initialized yet */
     )
       return;
-    //TODO: use this
-    //engine.rust.rebuild_triangle_planes(this.geometry);
-
-    const collider_faces_pointer = engine.rust.collider_faces_pointer(this.id);
-
-    const last_collider_world_vertices_pointer =
-      this.last_collider_world_vertices_pointer;
-
-    this.indices.forEach((indice: number) => {
-      const position =
-        last_collider_world_vertices_pointer +
-        indice * 4 * Float32Array.BYTES_PER_ELEMENT;
-
-      if (typeof position === 'undefined') {
-        throw new Error('position ' + indice + ' not found');
-      }
-
-      this.pushVertice(position, collider_faces_pointer);
-    });
-    engine.rust.update_collider_planes(this.geometry);
+    engine.rust.rebuild_triangle_planes(this.geometry);
   }
 }

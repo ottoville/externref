@@ -1,4 +1,6 @@
-use crate::math2::{Vec2wgslF32, Vec3wgslF32};
+use terramath::Vec3wgslF32;
+
+use crate::math2::Vec2wgslF32;
 
 #[repr(C, align(16))]
 pub struct Position(pub Vec3wgslF32);
@@ -16,8 +18,8 @@ pub struct PositionAndNormal {
 impl PositionAndNormal {
     pub fn new() -> PositionAndNormal {
         PositionAndNormal {
-            position: Vec3wgslF32::new_zero(),
-            normal: Vec3wgslF32::new_zero(),
+            position: Vec3wgslF32([0.0; 3]),
+            normal: Vec3wgslF32([0.0; 3]),
         }
     }
 }
@@ -80,8 +82,7 @@ impl VertexKind {
             VertexKind::Position2DAndUV(_) => {
                 todo!()
             }
-            VertexKind::Position(_vector) =>                todo!()
-            ,
+            VertexKind::Position(_vector) => todo!(),
             VertexKind::None => todo!(),
         }
     }

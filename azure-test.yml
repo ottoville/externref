@@ -4,7 +4,7 @@ steps:
 - task: Cache@2
   displayName: Restore rust cache
   inputs:
-    key: 'rust'
+    key: 'rust-test'
     path: './src/engine/target'
 - task: Cache@2
   displayName: Restore cargo registry

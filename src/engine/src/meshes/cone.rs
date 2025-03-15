@@ -112,7 +112,7 @@ pub unsafe extern "C" fn create_cone_geometry(bottom_faces: usize) -> *mut Geome
     // Close the circle by setting last indice to first
     side_indices[side_faces * 3 - 1] = side_faces;
 
-    let mut geometry = Box::new(Geometry::new(true, false, false, false, "Cone".to_string()));
+    let mut geometry = Box::new(Geometry::new(false, false, false, "Cone".to_string()));
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     geometry.set_indices(indices);
     return Box::into_raw(geometry);

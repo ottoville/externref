@@ -1,5 +1,7 @@
+use terramath::Vec3wgslF32;
+
 pub use crate::mesh::Mesh;
-use crate::{math2::Vec3wgslF32, mesh::ENGINE, Geometry};
+use crate::{mesh::ENGINE, Geometry};
 use std::collections::HashSet;
 
 pub struct Elevator {

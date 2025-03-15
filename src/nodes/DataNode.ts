@@ -109,8 +109,6 @@ export class DataNode extends MainNode {
   //Actual velocity that occured last tick
   last_velocity: [number, number, number] = [0, 0, 0];
   last_acceleration: [number, number, number] = [0, 0, 0];
-  // Shortcut property to avoid calls to rust
-  #strip: boolean;
   static getSpeedSquared(mesh: rust_pointer<'mesh'>) {
     const velocity = this.getVelocity(mesh);
     return (
@@ -147,13 +145,13 @@ export class DataNode extends MainNode {
   //Used for character
   colliding_character = false;
 
-  #vectorsVec4: number[] = [];
+  vectorsVec4: number[] = [];
   checkCollide(_dt: number, _velocityPerDelta: [number, number, number]): void {
     // TODO: Generic collision check, object shape is not known
   }
   onCollideCharacter(_started: boolean) {}
   readonly pickInfo = new pickInfo();
-  #triangleFaces = 0;
+  triangleFaces = 0;
 
   get_faces_count() {
     return engine.rust.faces_count(this.id);
@@ -215,15 +213,12 @@ export class DataNode extends MainNode {
       engine.rust.add_collider(this.id, collider_ptr);
     }
   }
-  get last_collider_world_vertices_pointer() {
-    return engine.rust.last_collider_world_vertices_pointer(this.geometry);
-  }
   create_collider() {
     return engine.rust.create_trimesh_collider(this.id);
   }
   static Meshes: Map<number, DataNode> = new Map();
   static CharacterCanCollideMeshes: Set<DataNode> = new Set();
-  #frontFace: GPUFrontFace;
+  frontFace: GPUFrontFace;
   #character_can_collide_to: boolean;
   geometry: rust_pointer<'geometry'>;
   constructor(props: DataNodeProps, mainNodeProps: MainNodeProps | number) {
@@ -237,7 +232,7 @@ export class DataNode extends MainNode {
       character_can_collide_to = true,
     } = props;
 
-    this.#frontFace = frontFace;
+    this.frontFace = frontFace;
     this.#character_can_collide_to = character_can_collide_to;
 
     DataNode.Meshes.set(this.id, this);
@@ -254,40 +249,7 @@ export class DataNode extends MainNode {
     if (character_can_collide_to) {
       DataNode.CharacterCanCollideMeshes.add(this);
     }
-    this.#strip = this.strip;
   }
-  protected pushVertice = (
-    position: number,
-    collider_faces_pointer: rust_pointer<'collider_faces'>,
-  ) => {
-    let newLen = 0;
-    if (this.#frontFace === 'ccw') {
-      newLen = this.#vectorsVec4.unshift(position);
-    } else {
-      newLen = this.#vectorsVec4.push(position);
-    }
-    if (newLen === 3) {
-      const faceIndex = this.#triangleFaces;
-      this.#triangleFaces += 1; // ColliderPlane size is 7
-
-      new Uint32Array(
-        engine.rust.memory.buffer,
-        collider_faces_pointer +
-          faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 +
-          4 * Float32Array.BYTES_PER_ELEMENT,
-        3,
-      ).set(this.#vectorsVec4); //4 is from plane
-
-      if (this.#strip) {
-        this.#vectorsVec4 = [
-          (this.#vectorsVec4 as [number, number, number])[1],
-          (this.#vectorsVec4 as [number, number, number])[2],
-        ];
-      } else {
-        this.#vectorsVec4 = [];
-      }
-    }
-  };
   get verticesArray() {
     const arr: Float32Array[] = [];
     const vertices_pointer = engine.rust.vertices_pointer(this.geometry, false);
@@ -323,8 +285,8 @@ export class DataNode extends MainNode {
     const facesCount = this.get_faces_count();
 
     if (facesCount === 0 || this.vertices_count === 0) return false;
-    this.#triangleFaces = 0;
-    this.#vectorsVec4 = [];
+    this.triangleFaces = 0;
+    this.vectorsVec4 = [];
     return true;
   }
   //collisionsScalingMatrix = new TerraMatrix();
@@ -369,17 +331,7 @@ export class DataNode extends MainNode {
                }*/
     } else {
       //   TODO: Use wasm when this.faces_count % 4 == 0
-      const collider_planes_parallel_pointer =
-        engine.rust.collider_planes_parallel_pointer(this.id);
-      // this is to check that ptr is not null ptr
-      if (collider_planes_parallel_pointer !== 4) {
-        engine.rust.test_triangles(
-          engine.collider.collider_ptr,
-          engine.rust.collider_faces_pointer(this.id),
-          collider_planes_parallel_pointer,
-          facesCount * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
-        );
-      }
+      engine.rust.test_triangles(this.id, engine.collider.collider_ptr);
       /*
            const scaledPosition=collider.scaledPosition;
            const scaledVelocity=collider.scaledVelocity

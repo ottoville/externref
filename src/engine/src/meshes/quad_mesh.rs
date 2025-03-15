@@ -1,5 +1,7 @@
+use terramath::Vec3wgslF32;
+
 use crate::{
-    math2::{Vec2wgslF32, Vec3wgslF32},
+    math2::Vec2wgslF32,
     vertices::{PositionAndNormalAndUV, VertexKind},
     Geometry,
 };
@@ -9,11 +11,9 @@ use crate::{
 pub unsafe extern "C" fn create_tiled_mesh_geometry(
     width: usize,
     height: usize,
-    has_bounding: bool,
     character_can_collide_to: bool,
 ) -> *const Geometry {
     let mut geometry = Box::new(Geometry::new(
-        has_bounding,
         character_can_collide_to,
         false,
         false,

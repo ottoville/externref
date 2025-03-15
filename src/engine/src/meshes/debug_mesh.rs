@@ -41,7 +41,6 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
         false,
         false,
         false,
-        false,
         String::from("debugmesh_geometry_wireframe"),
     );
     geometry.set_indices(indices);
@@ -78,7 +77,6 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
 
     mesh.positions_count = Some(positions_count);
     let geometry = Geometry::new(
-        false,
         false,
         false,
         false,

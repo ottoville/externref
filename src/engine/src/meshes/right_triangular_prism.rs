@@ -1,5 +1,6 @@
+use terramath::Vec3wgslF32;
+
 use crate::{
-    math2::Vec3wgslF32,
     vertices::{PositionAndNormal, VertexKind},
     Geometry,
 };
@@ -97,7 +98,6 @@ pub const RTP_INDICES: [usize; 24] = [
 #[no_mangle]
 pub unsafe extern "C" fn create_rtp_geometry() -> *const Geometry {
     let mut geometry = Box::new(Geometry::new(
-        true,
         true,
         false,
         false,

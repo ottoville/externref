@@ -2,8 +2,11 @@
 use std::arch::wasm32::v128;
 use std::mem;
 
-use terramath::{Plane, VectorMath, VectorMathF32};
-
+use terramath::{Plane, Vec3wgslF32, VectorMath, VectorMathF32};
+pub struct ColliderPlane {
+    pub plane: Plane,
+    pub vectors: [&'static Vec3wgslF32; 3],
+}
 pub struct Collider {
     pub basepoint_world: [f32; 3],
     intersection_point: [f32; 4],
@@ -239,17 +242,6 @@ fn lowest_root() {
     assert_eq!(result, 0.0);
 }
 
-#[no_mangle]
-#[cfg(target_arch = "wasm32")]
-pub unsafe extern "C" fn test_triangles(
-    collider_ptr: *mut Collider,
-    plane_position: i32,
-    plane_position_horizontal: usize,
-    length: i32,
-) {
-    (*collider_ptr).test_triangles(plane_position, plane_position_horizontal, length);
-}
-
 impl Collider {
     pub fn new() -> Self {
         unsafe {
@@ -317,24 +309,18 @@ impl Collider {
         self.velocity_y = [self.scaled_velocity[1]; 4];
         self.velocity_z = [self.scaled_velocity[2]; 4];
     }
-    //TODO finish this
     #[cfg(target_arch = "wasm32")]
     pub fn test_triangles(
         &mut self,
-        mut plane_position: i32,
-        // TODO: refer to geometry.collider_planes_parallel
-        mut plane_position_horizontal: usize,
-        length: i32,
+        plane_position: &Vec<ColliderPlane>,
+        plane_positions_horizontal: &Vec<[[f32; 4]; 4]>,
     ) {
         use std::arch::wasm32::{
-            f32x4, f32x4_abs, f32x4_add, f32x4_div, f32x4_extract_lane, f32x4_ge, f32x4_gt,
-            f32x4_lt, f32x4_max, f32x4_min, f32x4_sub, i32x4_all_true, i32x4_extract_lane,
-            v128_any_true, v128_bitselect, v128_load, v128_or,
+            f32x4, f32x4_abs, f32x4_add, f32x4_div, f32x4_ge, f32x4_gt, f32x4_lt, f32x4_max,
+            f32x4_min, f32x4_sub, i32x4_all_true, v128_any_true, v128_bitselect, v128_load,
+            v128_or,
         };
         use terramath::simd_dot;
-        if length == 0 {
-            return;
-        }
         let scaled_velocity = unsafe { v128_load(self.scaled_velocity.as_ptr() as *const v128) };
         let normalized_velocity_x =
             unsafe { v128_load(self.normalized_velocity_x.as_ptr() as *const v128) };
@@ -349,15 +335,12 @@ impl Collider {
         let velocity_y = unsafe { v128_load(self.velocity_y.as_ptr() as *const v128) };
         let velocity_z = unsafe { v128_load(self.velocity_z.as_ptr() as *const v128) };
         let base_point = unsafe { v128_load(self.scaled_position.as_ptr() as *const v128) };
-
-        let end = plane_position + length;
-        plane_position_horizontal -= 64;
-        loop {
-            plane_position_horizontal += 64;
+        let mut plane_index = 0;
+        for plane_position_horizontal in plane_positions_horizontal {
             unsafe {
-                let plane_x = v128_load(plane_position_horizontal as *const v128);
-                let plane_y = v128_load((plane_position_horizontal + 16) as *const v128);
-                let plane_z = v128_load((plane_position_horizontal + 32) as *const v128);
+                let plane_x = v128_load(plane_position_horizontal[0].as_ptr() as *const v128);
+                let plane_y = v128_load(plane_position_horizontal[1].as_ptr() as *const v128);
+                let plane_z = v128_load(plane_position_horizontal[2].as_ptr() as *const v128);
                 let dot_over_zero = f32x4_gt(
                     simd_dot(
                         plane_x,
@@ -371,7 +354,7 @@ impl Collider {
                 );
                 if !i32x4_all_true(dot_over_zero) {
                     let signed_dist_to_triangle_plane = f32x4_add(
-                        v128_load((plane_position_horizontal + 48) as *const v128),
+                        v128_load(plane_position_horizontal[3].as_ptr() as *const v128),
                         simd_dot(
                             base_point_x,
                             plane_x,
@@ -434,89 +417,91 @@ impl Collider {
                     }
                     returnvalue = v128_or(dot_over_zero, returnvalue);
 
-                    //  plane_position.to_string().log();
-                    if i32x4_extract_lane::<0>(returnvalue) == 0 {
-                        self.test_triangle(
-                            i32x4_extract_lane::<0>(embedded_in_plane) == 1,
-                            plane_position as *const Plane,
-                            v128_load(*((plane_position + 16) as *const &v128)),
-                            v128_load(*((plane_position + 20) as *const &v128)),
-                            v128_load(*((plane_position + 24) as *const &v128)),
-                            f32x4_extract_lane::<0>(t0),
-                            scaled_velocity,
-                            self.scaled_speed_squared,
-                            base_point,
-                        );
-                    }
-                    if i32x4_extract_lane::<1>(returnvalue) == 0 {
-                        self.test_triangle(
-                            i32x4_extract_lane::<1>(embedded_in_plane) == 1,
-                            (plane_position + 28) as *const Plane,
-                            v128_load(*((plane_position + 44) as *const &v128)),
-                            v128_load(*((plane_position + 48) as *const &v128)),
-                            v128_load(*((plane_position + 52) as *const &v128)),
-                            f32x4_extract_lane::<1>(t0),
-                            scaled_velocity,
-                            self.scaled_speed_squared,
-                            base_point,
-                        );
-                    }
+                    self.test_triangle::<0>(
+                        returnvalue,
+                        embedded_in_plane,
+                        &plane_position,
+                        plane_index,
+                        t0,
+                        scaled_velocity,
+                        self.scaled_speed_squared,
+                        base_point,
+                    );
+                    self.test_triangle::<1>(
+                        returnvalue,
+                        embedded_in_plane,
+                        &plane_position,
+                        plane_index,
+                        t0,
+                        scaled_velocity,
+                        self.scaled_speed_squared,
+                        base_point,
+                    );
 
-                    if i32x4_extract_lane::<2>(returnvalue) == 0 {
-                        self.test_triangle(
-                            i32x4_extract_lane::<2>(embedded_in_plane) == 1,
-                            (plane_position + 56) as *const Plane,
-                            v128_load(*((plane_position + 72) as *const &v128)),
-                            v128_load(*((plane_position + 76) as *const &v128)),
-                            v128_load(*((plane_position + 80) as *const &v128)),
-                            f32x4_extract_lane::<2>(t0),
-                            scaled_velocity,
-                            self.scaled_speed_squared,
-                            base_point,
-                        );
-                    }
-                    if i32x4_extract_lane::<3>(returnvalue) == 0 {
-                        self.test_triangle(
-                            i32x4_extract_lane::<3>(embedded_in_plane) == 1,
-                            (plane_position + 84) as *const Plane,
-                            v128_load(*((plane_position + 100) as *const &v128)),
-                            v128_load(*((plane_position + 104) as *const &v128)),
-                            v128_load(*((plane_position + 108) as *const &v128)),
-                            f32x4_extract_lane::<3>(t0),
-                            scaled_velocity,
-                            self.scaled_speed_squared,
-                            base_point,
-                        );
-                    }
+                    self.test_triangle::<2>(
+                        returnvalue,
+                        embedded_in_plane,
+                        &plane_position,
+                        plane_index,
+                        t0,
+                        scaled_velocity,
+                        self.scaled_speed_squared,
+                        base_point,
+                    );
+
+                    self.test_triangle::<3>(
+                        returnvalue,
+                        embedded_in_plane,
+                        &plane_position,
+                        plane_index,
+                        t0,
+                        scaled_velocity,
+                        self.scaled_speed_squared,
+                        base_point,
+                    );
                 }
-                plane_position += 112;
-                if plane_position >= end {
-                    break;
-                }
+                plane_index += 4;
             }
         }
     }
     #[cfg(target_arch = "wasm32")]
-    pub fn test_triangle(
+    pub fn test_triangle<const N: usize>(
         &mut self,
-        embedded_in_plane: bool,
-        plane_position: *const Plane,
-        triangle0: v128,
-        triangle1: v128,
-        triangle2: v128,
-        t0: f32,
+        returnvalue: v128,
+        embedded_in_plane_vec: v128,
+        plane_positions: &Vec<ColliderPlane>,
+        plane_index: usize,
+        t0_vec: v128,
         velocity: v128,
         velocity_squared: f32,
         base_point: v128,
     ) {
         use std::arch::wasm32::{
-            f32x4_add, f32x4_mul, f32x4_splat, f32x4_sub, v128_load, v128_store,
+            f32x4_add, f32x4_extract_lane, f32x4_mul, f32x4_splat, f32x4_sub, i32x4_extract_lane,
+            v128_load, v128_store,
         };
+        if unsafe { i32x4_extract_lane::<N>(returnvalue) } != 0 {
+            return;
+        }
+
+        let embedded_in_plane = unsafe { i32x4_extract_lane::<N>(embedded_in_plane_vec) == 1 };
+        let plane = &plane_positions[plane_index + N];
+        let plane_position = &plane.plane;
+        let triangle0 =
+            unsafe { v128_load(*((&plane.vectors[0] as *const &Vec3wgslF32) as *const &v128)) };
+        let triangle1 =
+            unsafe { v128_load(*((&plane.vectors[1] as *const &Vec3wgslF32) as *const &v128)) };
+
+        let triangle2 =
+            unsafe { v128_load(*((&plane.vectors[2] as *const &Vec3wgslF32) as *const &v128)) };
+
         let mut found = false;
         self.lowest_root = 1.0;
         let mut collided_point_in_triangle = false;
         if !embedded_in_plane {
-            let plane_collider: v128 = unsafe { v128_load(plane_position as *const v128) };
+            let t0 = unsafe { f32x4_extract_lane::<N>(t0_vec) };
+            let plane_collider: v128 =
+                unsafe { v128_load(plane_position as *const Plane as *const v128) };
             //planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
 
             let plane_intersection_point = f32x4_add(

@@ -1,5 +1,6 @@
+use terramath::Vec3wgslF32;
+
 use crate::{
-    math2::Vec3wgslF32,
     vertices::{PositionAndNormal, VertexKind},
     Geometry,
 };
@@ -124,7 +125,6 @@ pub const BOX_INDICES: [usize; 36] = [
 pub unsafe extern "C" fn create_box_geometry() -> *mut Geometry {
     let mut geometry = Box::new(Geometry::new(
         true,
-        true,
         false,
         false,
         "box_geometry".to_string(),
@@ -137,7 +137,7 @@ pub unsafe extern "C" fn create_box_geometry() -> *mut Geometry {
 #[cfg(test)]
 #[test]
 fn test_calculate_normals() {
-    let mut geometry = Geometry::new(true, true, false, false, "box_geometry".to_string());
+    let mut geometry = Geometry::new(true, false, false, "box_geometry".to_string());
     geometry.set_indices(BOX_INDICES.to_vec());
     let vertices = create_box_vertices();
     let vertices2 = create_box_vertices();

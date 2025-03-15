@@ -105,13 +105,7 @@ pub unsafe extern "C" fn create_icosphere_geometry(order: usize) -> *mut Geometr
         vertice.position.0.normalize_in_place();
         vertice.normal.0 = vertice.position.0.clone();
     }
-    let mut geometry = Box::new(Geometry::new(
-        true,
-        false,
-        false,
-        false,
-        "Icosphere".to_string(),
-    ));
+    let mut geometry = Box::new(Geometry::new(false, false, false, "Icosphere".to_string()));
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     let flattened = indices.as_flattened_mut().to_vec();
     geometry.set_indices(flattened);

@@ -1,9 +1,8 @@
 use std::cell::RefCell;
 
-use terramath::{CrossProduct, Quaternion, VectorMath, VectorMathF32};
+use terramath::{CrossProduct, Quaternion, Vec3wgslF32, VectorMath, VectorMathF32};
 
 use crate::{
-    math2::Vec3wgslF32,
     vertices::{PositionAndNormalAndColor, VertexKind},
     Geometry,
 };
@@ -58,9 +57,9 @@ pub unsafe extern "C" fn create_octasphere(
     let indices_per_path = cells_per_patch * 3;
     let mut indices_count = indices_per_path * 8;
     vertices_and_normals.resize_with(total_vertices_count, || PositionAndNormalAndColor {
-        position: Vec3wgslF32::new_zero(),
-        normal: Vec3wgslF32::new_zero(),
-        color: Vec3wgslF32::new_zero(),
+        position: Vec3wgslF32([0.0;3]),
+        normal: Vec3wgslF32([0.0;3]),
+        color: Vec3wgslF32([0.0;3]),
     });
 
     // First patch tessellation
@@ -428,7 +427,7 @@ pub unsafe extern "C" fn create_octasphere(
             }
         }
     }
-    let mut geometry = Geometry::new(true, false, true, false, "octasphere_geometry".to_string());
+    let mut geometry = Geometry::new(false, true, false, "octasphere_geometry".to_string());
     geometry.set_vertices(VertexKind::PositionAndNormalAndColor(vertices_and_normals));
     geometry.set_indices(indices);
     Box::into_raw(Box::new(geometry))

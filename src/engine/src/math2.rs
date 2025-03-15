@@ -7,19 +7,6 @@ pub struct Mat3wgslF32 {
     pub z: [f32; 3],
     _padding2: f32,
 }
-#[derive(Debug, Copy, Clone)]
-#[repr(C, align(16))]
-pub struct Vec3wgslF32(pub [f32; 3]);
-
-impl Vec3wgslF32 {
-    pub fn new_zero() -> Vec3wgslF32 {
-        Vec3wgslF32([0.0, 0.0, 0.0])
-    }
-    pub fn clone(&self) -> Vec3wgslF32 {
-        Vec3wgslF32(self.0.clone())
-    }
-}
-
 impl Mat3wgslF32 {
     pub fn identity() -> Mat3wgslF32 {
         Mat3wgslF32 {

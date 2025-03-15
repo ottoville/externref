@@ -1,7 +1,7 @@
 use std::sync::MutexGuard;
 
 use logger::Logger;
-use terramath::{MatrixMath, Quaternion};
+use terramath::{MatrixMath, Quaternion, Vec3wgslF32};
 
 use crate::{
     allocators::{
@@ -9,7 +9,6 @@ use crate::{
         freeindex::FreeIndexIndex,
     },
     devtools::DEVTOOLS,
-    math2::Vec3wgslF32,
     mesh::ENGINE,
     GPUMesh,
 };
