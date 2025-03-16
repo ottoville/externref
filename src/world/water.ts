@@ -1,5 +1,4 @@
-﻿import { BoundableNodeSimple } from '../nodes/BoundableNodeSimple.js';
-import type { Scene } from '../Scene.js';
+﻿import type { Scene } from '../Scene.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import type { Engine } from '../engine.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
@@ -11,8 +10,9 @@ declare const engine: Engine;
 import { BindGroup } from '../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
 import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
+import { DataNode } from '../nodes/DataNode.js';
 
-export class Sea extends BoundableNodeSimple {
+export class Sea extends DataNode {
   override drawable:
     | DrawableSimple<RenderPipelineProps<WaterVertShader>>
     | undefined = undefined;
@@ -23,8 +23,8 @@ export class Sea extends BoundableNodeSimple {
     const geometry = engine.rust.create_water_geometry();
     super(
       {
+        camera_can_collide_to: false,
         can_collide: false,
-        character_can_collide_to: false,
         vertices: geometry,
       },
       {

@@ -437,7 +437,7 @@ export abstract class UIRectangle<
 
     this.#node = new DataNode(
       {
-        character_can_collide_to: false,
+        camera_can_collide_to: false,
         vertices: geometry,
       },
       {

@@ -164,7 +164,7 @@ export type rustWasm = {
   ): number;
   have_rigid_body(mesh_id: number): boolean;
   create_legacy_terrain_geometry(
-    character_can_collide_to: boolean,
+    camera_can_collide_to: boolean,
     static_faces: boolean,
     strip: boolean,
   ): rust_pointer<'geometry'>;
@@ -427,10 +427,6 @@ export type rustWasm = {
   ): void;
   on_resize(aspect_ratio: number): void;
   iterate_bindings(iterator: Rust_Iterator<number>): number;
-  collisions_transform_matrix_ptr(
-    geometry: rust_pointer<'geometry'>,
-  ): rust_pointer<'matrix'>;
-  check_collision(geometry: rust_pointer<'geometry'>): void;
   move_character(
     character_mesh_id: number,
     dt: number,
@@ -452,6 +448,7 @@ export type rustWasm = {
   test_triangles(
     mesh_id: number,
     rust_collider_ptr: rust_pointer<'legacy_collider'>,
+    collider_sphere: rust_pointer<'collider_sphere'>,
   ): void;
   get_impulse_from_id(mesh_id: number): rust_pointer<'impulse'>;
 
@@ -472,6 +469,9 @@ export type rustWasm = {
     gpu: rust_pointer<'gpu'>,
     cb: (renderBundleEncoder: GPURenderBundleEncoder) => void,
   ): number;
+  create_collider_sphere(
+    collision_radius: number,
+  ): rust_pointer<'collider_sphere'>;
 } & BufferInterface &
   DevToolsInterface;
 

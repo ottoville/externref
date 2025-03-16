@@ -1,4 +1,4 @@
-﻿import { BoundableNodeSimple } from '../../nodes/BoundableNodeSimple.js';
+﻿import { DataNode } from '../../nodes/DataNode.js';
 import { DrawableSimple } from '../Drawables/DrawableSimple.js';
 import type { Engine } from '../../engine.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
@@ -12,7 +12,7 @@ import {
 } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
-export class SimpleMesh extends BoundableNodeSimple {
+export class SimpleMesh extends DataNode {
   override drawable:
     | DrawableSimple<RenderPipelineProps<SimpleVertShader>>
     | undefined = undefined;

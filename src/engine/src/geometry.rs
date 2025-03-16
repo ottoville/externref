@@ -65,16 +65,6 @@ pub unsafe extern "C" fn rebuild_triangle_planes(geometry: *mut Geometry) {
     (*geometry).rebuild_triangle_planes();
 }
 #[no_mangle]
-pub unsafe extern "C" fn collisions_transform_matrix_ptr(
-    geometry: *const Geometry,
-) -> *const [[f32; 4]; 4] {
-    &(*geometry).collisions_transform_matrix
-}
-#[no_mangle]
-pub unsafe extern "C" fn check_collision(geometry: *mut Geometry) {
-    (*geometry).check_collision();
-}
-#[no_mangle]
 pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize, cap: usize) {
     let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
@@ -122,12 +112,12 @@ pub unsafe extern "C" fn dedup_positions(geometry_ptr: *mut Geometry) {
 }
 #[no_mangle]
 pub extern "C" fn create_legacy_terrain_geometry(
-    character_can_collide_to: bool,
+    camera_can_collide_to: bool,
     static_faces: bool,
     strip: bool,
 ) -> *mut Geometry {
     let mut geometry = Box::new(Geometry::new(
-        character_can_collide_to,
+        camera_can_collide_to,
         static_faces,
         strip,
         "legacy_terrain".to_string(),
@@ -167,7 +157,7 @@ pub struct Geometry {
     pub collisions_transform_matrix: [[f32; 4]; 4],
     pub last_collider_transform_matrix: [[f32; 4]; 4],
     pub static_faces: bool, // Used for terrain
-    pub character_can_collide_to: bool,
+    pub camera_can_collide_to: bool,
 }
 
 fn dedup_index(old: usize, new: usize, indices: &mut Vec<usize>) {
@@ -207,7 +197,7 @@ impl<'vert> Geometry {
             .restitution(0.5)
             .build(),
         );
-        Box::leak(collider)
+        Box::into_raw(collider)
     }
     pub fn create_convex_collider(
         &mut self,
@@ -244,7 +234,7 @@ impl<'vert> Geometry {
                 if collision_events {
                     builder = builder.active_events(ActiveEvents::COLLISION_EVENTS);
                 }
-                Box::leak(Box::new(builder.build()))
+                Box::into_raw(Box::new(builder.build()))
             }
             None => {
                 panic!("Failure to create convex collider")
@@ -331,7 +321,7 @@ impl<'vert> Geometry {
         }
     }
     pub fn new(
-        character_can_collide_to: bool,
+        camera_can_collide_to: bool,
         static_faces: bool,
         strip: bool,
         label: String,
@@ -351,7 +341,7 @@ impl<'vert> Geometry {
             last_collider_world_vertices: Vec::new(),
             static_faces,
             strip,
-            character_can_collide_to,
+            camera_can_collide_to,
             label,
             collisions_transform_matrix: [[0.0; 4]; 4],
             last_collider_transform_matrix: [[0.0; 4]; 4],
@@ -434,7 +424,11 @@ impl<'vert> Geometry {
             self.collider_planes_parallel = vec![[[0.0; 4]; 4]; faces_count / 4];
         }
     }
-    pub fn check_collision(&mut self) {
+    #[cfg(target_arch = "wasm32")]
+    pub fn check_collision(&mut self, collider: &mut collider::Collider) {
+        if self.faces_count() % 4 != 0 {
+            return;
+        }
         if !self
             .last_collider_transform_matrix
             .eq(&self.collisions_transform_matrix)
@@ -442,6 +436,10 @@ impl<'vert> Geometry {
             self.last_collider_transform_matrix = self.collisions_transform_matrix.clone();
             self.update_collider_planes();
         }
+        if self.collider_planes_parallel.len() == 0 {
+            return;
+        }
+        collider.test_triangles(&self.collider_planes, &self.collider_planes_parallel);
     }
     pub fn update_collider_planes(&mut self) {
         let positions = self.vertices.get_positions();
@@ -490,6 +488,9 @@ impl<'vert> Geometry {
         }
     }
     pub fn rebuild_triangle_planes(&'static mut self) {
+        if !self.camera_can_collide_to || self.vertices.length() == 0 || self.faces_count() == 0 {
+            return;
+        }
         //Todo: handle geometry with no indices and strip
         for triangle in self.indices.indices.chunks_exact(3) {
             let position0 = &self.last_collider_world_vertices[triangle[0]];
@@ -497,10 +498,10 @@ impl<'vert> Geometry {
             let position2 = &self.last_collider_world_vertices[triangle[2]];
             self.collider_planes.push(ColliderPlane {
                 plane: Plane {
-                    norm: [0.0;3],
-                    d: 0.0
+                    norm: [0.0; 3],
+                    d: 0.0,
                 },
-                vectors: [position0, position1, position2]
+                vectors: [position0, position1, position2],
             });
         }
         //invalidate last_collider_transform_matrix to get update_collider_planes called again
@@ -513,7 +514,7 @@ impl<'vert> Geometry {
     pub fn set_vertices(&mut self, vertices: VertexKind) {
         self.vertices = vertices;
         self.bounding_box.need_init = true;
-        if self.character_can_collide_to {
+        if self.camera_can_collide_to {
             self.allocate_collider_planes();
         }
     }
@@ -526,7 +527,7 @@ impl<'vert> Geometry {
             gpu_buffer: None,
         };
         self.bounding_box.need_init = true;
-        if self.character_can_collide_to {
+        if self.camera_can_collide_to {
             self.allocate_collider_planes();
         }
     }

@@ -3,6 +3,23 @@ use std::arch::wasm32::v128;
 use std::mem;
 
 use terramath::{Plane, Vec3wgslF32, VectorMath, VectorMathF32};
+pub struct ColliderSphere {
+    collision_radius: f32,
+    pub collisions_scaling_matrix: [[f32; 4]; 4],
+}
+#[no_mangle]
+pub extern "C" fn create_collider_sphere(collision_radius: f32) -> *mut ColliderSphere {
+    let sphere = Box::new(ColliderSphere {
+        collision_radius,
+        collisions_scaling_matrix: [
+            [1.0 / collision_radius, 0.0, 0.0, 0.0],
+            [0.0, 1.0 / collision_radius, 0.0, 0.0],
+            [0.0, 0.0, 1.0 / collision_radius, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+    });
+    Box::into_raw(sphere)
+}
 pub struct ColliderPlane {
     pub plane: Plane,
     pub vectors: [&'static Vec3wgslF32; 3],
@@ -34,9 +51,9 @@ pub struct Collider {
     scaled_position_z: [f32; 4],
 }
 #[no_mangle]
-pub extern "C" fn collider() -> *const Collider {
+pub extern "C" fn collider() -> *mut Collider {
     let coll = Box::new(Collider::new());
-    Box::leak(coll)
+    Box::into_raw(coll)
 }
 #[no_mangle]
 pub unsafe extern "C" fn initialize_collider(

@@ -10,7 +10,7 @@ use crate::mesh_property::MeshProperty;
 pub use crate::GPUMesh;
 use crate::MULTIVALUE_F32;
 use crate::MULTIVALUE_USIZE;
-use collider::ColliderPlane;
+use collider::ColliderSphere;
 use core::panic;
 use externref::externref;
 use externref::Resource;
@@ -87,13 +87,13 @@ pub unsafe extern "C" fn set_geometry<'frame>(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *const Collider) {
-    let coll = std::ptr::read(collider);
+pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *mut Collider) {
+    let coll = Box::from_raw(collider);
     ENGINE
         .engine2
         .lock()
         .unwrap()
-        .add_collider_to_mesh(coll, mesh_id);
+        .add_collider_to_mesh(*coll, mesh_id);
 }
 
 #[no_mangle]
@@ -371,16 +371,13 @@ pub unsafe extern "C" fn set_shadow_from_id(mesh_id: usize, shadow: f32) {
 }
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
-pub unsafe extern "C" fn test_triangles(mesh_id: usize, collider_ptr: *mut collider::Collider) {
-    let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
-    let geometry = mesh.get_geometry();
-    if geometry.collider_planes_parallel.len() == 0 {
-        return;
-    }
-    (*collider_ptr).test_triangles(
-        &geometry.collider_planes,
-        &geometry.collider_planes_parallel,
-    );
+pub unsafe extern "C" fn test_triangles(
+    mesh_id: usize,
+    collider_ptr: *mut collider::Collider,
+    collider_sphere: *mut ColliderSphere,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    mesh.check_collision(collider_ptr, collider_sphere);
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_scenes(mesh_id: usize, scenes: u32) {
@@ -427,6 +424,26 @@ impl Mesh {
 }
 
 impl Mesh {
+    #[cfg(target_arch = "wasm32")]
+    pub fn check_collision(
+        &mut self,
+        collider: *mut collider::Collider,
+        collider_sphere: *mut ColliderSphere,
+    ) {
+        if let Some(geometry) = &mut self.geometry {
+            unsafe {
+                let transformation = self.mesh_property.lock().unwrap().gpu_memory.transformation;
+                // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix
+                transformation.multiply(
+                    &(*collider_sphere).collisions_scaling_matrix,
+                    &mut geometry.collisions_transform_matrix,
+                );
+                geometry.check_collision(&mut *collider);
+            }
+        } else {
+            panic!("Mesh {} has no geometry", self.label)
+        };
+    }
     /**
      * Get positions count if set, otherwise fallback to vertices count.
      * This is because vertex buffr can hold extra vertices that are not drawn.

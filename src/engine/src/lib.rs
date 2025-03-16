@@ -88,7 +88,7 @@ pub unsafe extern "C" fn alloc_vector_u8(size: usize) -> *const usize {
 #[no_mangle]
 pub extern "C" fn create_ball_collider(radius: f32) -> *mut Collider {
     let collider = Box::new(ColliderBuilder::ball(radius).restitution(0.0).build());
-    Box::leak(collider)
+    Box::into_raw(collider)
 }
 
 #[no_mangle]
@@ -109,7 +109,7 @@ pub extern "C" fn create_capsule_collider(
     if collision_events {
         colliderbuilder = colliderbuilder.active_events(ActiveEvents::COLLISION_EVENTS);
     }
-    Box::leak(Box::new(colliderbuilder.build()))
+    Box::into_raw(Box::new(colliderbuilder.build()))
 }
 #[no_mangle]
 pub extern "C" fn create_cuboid_collider(
@@ -127,7 +127,7 @@ pub extern "C" fn create_cuboid_collider(
     if collision_events {
         colliderbuilder = colliderbuilder.active_events(ActiveEvents::COLLISION_EVENTS);
     }
-    Box::leak(Box::new(colliderbuilder.build()))
+    Box::into_raw(Box::new(colliderbuilder.build()))
 }
 #[no_mangle]
 pub extern "C" fn create_cone_collider(half_height: f32, radius: f32) -> *mut Collider {
@@ -136,7 +136,7 @@ pub extern "C" fn create_cone_collider(half_height: f32, radius: f32) -> *mut Co
             .restitution(0.0)
             .build(),
     );
-    Box::leak(collider)
+    Box::into_raw(collider)
 }
 #[repr(C)]
 pub struct GPUMesh {

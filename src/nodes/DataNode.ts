@@ -1,18 +1,10 @@
 import { MainNode, MainNodeProps } from '../MainNode.js';
-import {
-  MutableTerraVector3,
-  ReadOnlyFloat32Array,
-  TerraMatrix,
-} from '../Math.js';
+import { MutableTerraVector3, ReadOnlyFloat32Array } from '../Math.js';
 import type { ColliderJS } from '../Collider.js';
 import type { Engine } from '../engine.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
 import { create_rust_vec_ptr } from '../utils.js';
 declare const engine: Engine;
-
-export interface canCollideCharacter {
-  rebuildTrianglePlanes(): void;
-}
 
 class pickInfo {
   buffer = new SharedArrayBuffer(6 * 4);
@@ -24,8 +16,8 @@ class pickInfo {
 }
 
 export interface Ellipsoid {
-  collisionsScalingMatrix: TerraMatrix;
-  collisionRadius: number;
+  readonly colliderSphere: rust_pointer<'collider_sphere'>;
+  readonly collisionRadius: number;
   readonly closeDistanceVector: number;
 }
 
@@ -36,7 +28,7 @@ export type DataNodeProps = {
    */
   can_collide?: boolean;
   frontFace?: GPUFrontFace;
-  character_can_collide_to?: boolean;
+  camera_can_collide_to?: boolean;
 };
 /*
     TODO: Calculate closeDistance on every collision to take account angle between upVector and collided slope,
@@ -145,13 +137,11 @@ export class DataNode extends MainNode {
   //Used for character
   colliding_character = false;
 
-  vectorsVec4: number[] = [];
   checkCollide(_dt: number, _velocityPerDelta: [number, number, number]): void {
     // TODO: Generic collision check, object shape is not known
   }
   onCollideCharacter(_started: boolean) {}
   readonly pickInfo = new pickInfo();
-  triangleFaces = 0;
 
   get_faces_count() {
     return engine.rust.faces_count(this.id);
@@ -219,7 +209,6 @@ export class DataNode extends MainNode {
   static Meshes: Map<number, DataNode> = new Map();
   static CharacterCanCollideMeshes: Set<DataNode> = new Set();
   frontFace: GPUFrontFace;
-  #character_can_collide_to: boolean;
   geometry: rust_pointer<'geometry'>;
   constructor(props: DataNodeProps, mainNodeProps: MainNodeProps | number) {
     super(mainNodeProps);
@@ -229,11 +218,10 @@ export class DataNode extends MainNode {
       vertices,
       can_collide = false,
       frontFace = 'cw',
-      character_can_collide_to = true,
+      camera_can_collide_to = true,
     } = props;
 
     this.frontFace = frontFace;
-    this.#character_can_collide_to = character_can_collide_to;
 
     DataNode.Meshes.set(this.id, this);
     if (typeof mainNodeProps !== 'number') {
@@ -246,7 +234,7 @@ export class DataNode extends MainNode {
       const collider_ptr = this.create_collider();
       engine.rust.add_collider(this.id, collider_ptr);
     }
-    if (character_can_collide_to) {
+    if (camera_can_collide_to) {
       DataNode.CharacterCanCollideMeshes.add(this);
     }
   }
@@ -279,23 +267,6 @@ export class DataNode extends MainNode {
     DataNode.CharacterCanCollideMeshes.delete(this);
     super.destroy();
   }
-  initCollider() {
-    if (!this.#character_can_collide_to) return false;
-    //TODO: Calculate on demand
-    const facesCount = this.get_faces_count();
-
-    if (facesCount === 0 || this.vertices_count === 0) return false;
-    this.triangleFaces = 0;
-    this.vectorsVec4 = [];
-    return true;
-  }
-  //collisionsScalingMatrix = new TerraMatrix();
-  get #myCollisionsTransformMatrix(): TerraMatrix {
-    return new TerraMatrix(
-      engine.rust.memory.buffer,
-      engine.rust.collisions_transform_matrix_ptr(this.geometry),
-    );
-  }
   public checkCollision(_collider: ColliderJS, sphere: Ellipsoid) {
     //TODO: When there is support for bounding sphere.
     //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
@@ -308,37 +279,10 @@ export class DataNode extends MainNode {
     ) {
       return;
     }
-    // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix
-    this.get_transformation().multiplyToRef(
-      sphere.collisionsScalingMatrix,
-      this.#myCollisionsTransformMatrix,
+    engine.rust.test_triangles(
+      this.id,
+      engine.collider.collider_ptr,
+      sphere.colliderSphere,
     );
-    engine.rust.check_collision(this.geometry);
-
-    const facesCount = this.get_faces_count();
-    if (facesCount % 4 != 0) {
-      /* const scaledPosition=collider.scaledPosition;
-             const scaledVelocity=collider.scaledVelocity
-             const trLength=this.#triangleFaces.length;
-             for(let i=0; i<trLength; i++) {
-                 collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
-             }*/
-      /*   const scaledPosition=collider.scaledPosition;
-               const scaledVelocity=collider.scaledVelocity
-               const trLength=this.#triangleFaces.length;
-               for(let i=0; i<trLength; i++) {
-                   collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
-               }*/
-    } else {
-      //   TODO: Use wasm when this.faces_count % 4 == 0
-      engine.rust.test_triangles(this.id, engine.collider.collider_ptr);
-      /*
-           const scaledPosition=collider.scaledPosition;
-           const scaledVelocity=collider.scaledVelocity
-           const trLength=this.#triangleFaces.length;
-           for(let i=0; i<trLength; i++) {
-               collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
-           }*/
-    }
   }
 }

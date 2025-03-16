@@ -86,25 +86,9 @@ export class ArcRotateCamera extends CameraController {
   #beta = 0;
   #radius = 10;
   readonly collisionRadius = 2;
-  readonly collisionsScalingMatrix = new TerraMatrix([
-    1.0 / this.collisionRadius,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0 / this.collisionRadius,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0 / this.collisionRadius,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-  ]);
+  readonly colliderSphere = engine.rust.create_collider_sphere(2);
   readonly closeDistanceVector = closeDistance / this.collisionRadius;
+
   constructor(
     private camera: TerraCamera,
     initial = false,
