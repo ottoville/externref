@@ -79,7 +79,6 @@ export class ArcRotateCamera extends CameraController {
    * The bigger this number the longer it will take for the camera to stop.
    */
   #inertialBetaOffset = 0;
-  #collisionTriggered = false;
 
   #target = new MutableTerraVector3([100, 0, 1000]);
   #alpha = 0;
@@ -161,39 +160,30 @@ export class ArcRotateCamera extends CameraController {
     type: 'wheel',
   };
   MoveToPlace = () => {
-    if (this.#targetMovingfrom && this.#targetMovingTo) {
-      this.#targetMovingfrom.LerpToRef(
-        this.#targetMovingTo,
-        this.#targetLerpPosition,
+    if (this.#movement) {
+      this.#movement.targetMovingfrom.LerpToRef(
+        this.#movement.targetMovingTo,
+        this.#movement.targetLerpPosition,
         this.#target,
       );
-      this.#targetLerpPosition += 0.01;
-      if (this.#targetLerpPosition > 1) {
-        this.#targetMovingfrom = null;
-        this.#targetMovingTo = null;
-        this.#targetLerpPosition = 0;
-        return true;
+      this.#movement.targetLerpPosition += 0.01;
+      if (this.#movement.targetLerpPosition > 1) {
+        this.#movement = null;
       }
     }
-    return false;
   };
   moveto(destination: readonly [number, number, number]) {
-    this.#targetMovingfrom = new ReadOnlyTerraVector3([
-      this.#target[0],
-      this.#target[1],
-      this.#target[2],
-    ]);
-    // Clone destination to survive Wasm memory grow.
-    this.#targetMovingTo = [...destination];
-    this.#targetLerpPosition = 0;
-    const moveWithTimeout = () => {
-      if (!this.MoveToPlace()) {
-        setTimeout(moveWithTimeout, 16);
-      }
-      this.calculateCameraPositionAndTarget();
+    this.#movement = {
+      kinematic: true,
+      targetLerpPosition: 0,
+      // Clone destination to survive Wasm memory grow.
+      targetMovingTo: [...destination],
+      targetMovingfrom: new ReadOnlyTerraVector3([
+        this.#target[0],
+        this.#target[1],
+        this.#target[2],
+      ]),
     };
-
-    setTimeout(moveWithTimeout, 16);
   }
   pointerDown = false;
   #cameraPointerDown: ListenerObj<'pointerdown'> = {
@@ -205,13 +195,16 @@ export class ArcRotateCamera extends CameraController {
           .pickPosition()
           .then((position) => {
             if (position) {
-              this.#targetMovingfrom = new MutableTerraVector3([
-                this.#target[0],
-                this.#target[1],
-                this.#target[2],
-              ]);
-              this.#targetMovingTo = position.position;
-              this.#targetLerpPosition = 0;
+              this.#movement = {
+                kinematic: false,
+                targetLerpPosition: 0,
+                targetMovingTo: position.position,
+                targetMovingfrom: new MutableTerraVector3([
+                  this.#target[0],
+                  this.#target[1],
+                  this.#target[2],
+                ]),
+              };
             }
           })
           .catch((err) => engine.showError(err));
@@ -288,7 +281,6 @@ export class ArcRotateCamera extends CameraController {
     if (!this.cameraControl) {
       throw new Error('no cameracontrol');
     }
-    this.#collisionTriggered = true;
 
     // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
@@ -335,7 +327,6 @@ export class ArcRotateCamera extends CameraController {
       }
       this.#rebuildAnglesAndRadius();
     }
-    this.#collisionTriggered = false;
     // Recompute because of constraints
     const calculatedPosition = this.#calculatePosition();
     this.cameraControl?.updatePosition(
@@ -363,11 +354,17 @@ export class ArcRotateCamera extends CameraController {
     }
     this.cameraControl?.updateDirection(...direction);
   }
-  #targetMovingfrom: ReadOnlyTerraVector3 | null = null;
-  #targetMovingTo: readonly [number, number, number] | null = null;
-  #targetLerpPosition = 0;
+  #movement: {
+    kinematic: boolean;
+    targetMovingfrom: ReadOnlyTerraVector3;
+    targetMovingTo: readonly [number, number, number];
+    targetLerpPosition: number;
+  } | null = null;
   checkInputs = (force_recalculate = false) => {
-    if (this.#collisionTriggered) {
+    if (this.#movement?.kinematic) {
+      //Todo: use delta as t increase
+      this.MoveToPlace();
+      this.calculateCameraPositionAndTarget();
       return;
     }
     let updateView = force_recalculate;
@@ -406,8 +403,7 @@ export class ArcRotateCamera extends CameraController {
 
     // Panning inertia
     if (this.#inertialPanning[0] !== 0 || this.#inertialPanning[2] !== 0) {
-      this.#targetMovingfrom = null;
-      this.#targetMovingTo = null;
+      this.#movement = null;
 
       this.camera.viewArr.invertToRef(this.#cameraTransformMatrix);
       this.#transformedDirection.set([

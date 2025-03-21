@@ -152,12 +152,12 @@ export abstract class TerraVector3 extends Float32Array {
   }
   LerpToRef(
     end: readonly [number, number, number],
-    amount: number,
+    t: number,
     result: MutableTerraVector3,
   ): void {
-    result[0] = this[0] + (end[0] - this[0]) * amount;
-    result[1] = this[1] + (end[1] - this[1]) * amount;
-    result[2] = this[2] + (end[2] - this[2]) * amount;
+    result[0] = this[0] + (end[0] - this[0]) * t;
+    result[1] = this[1] + (end[1] - this[1]) * t;
+    result[2] = this[2] + (end[2] - this[2]) * t;
   }
   multiply2Ref(
     m: TerraMatrix,

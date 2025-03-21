@@ -4,7 +4,7 @@ use std::mem;
 
 use terramath::{Plane, Vec3wgslF32, VectorMath, VectorMathF32};
 pub struct ColliderSphere {
-    collision_radius: f32,
+    pub collision_radius: f32,
     pub collisions_scaling_matrix: [[f32; 4]; 4],
 }
 #[no_mangle]

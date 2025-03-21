@@ -6,6 +6,7 @@ use externref::{externref, Resource};
 
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::camera::Camera;
+use crate::cameracontroller::CameraController;
 use crate::cameras::search_camera_by_id_mut;
 use crate::mesh::ENGINE;
 use crate::projection::Projection;
@@ -180,6 +181,7 @@ pub unsafe extern "C" fn init_gpu(
             update_queue: Vec::with_capacity(128),
             timebuffer,
             time: 0.0,
+            camera_controller: None
         });
     }
 }
@@ -245,6 +247,7 @@ pub struct GPU {
     pub update_queue: Vec<usize>,
     pub timebuffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
     pub time: f32,
+    camera_controller: Option<Box<dyn CameraController + Send>>
 }
 impl GPU {
     pub unsafe fn get_camera_by_id(&self, camera_id: u32) -> &Camera {
@@ -274,6 +277,9 @@ impl GPU {
         time: f32,
         update_view_pipeline: &Resource<JSComputePipeline>,
     ) -> bool {
+        if let Some(camera_controller) = &mut self.camera_controller {
+            camera_controller.check_inputs(false);
+        }
         self.time = time;
         let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
         self.swap_buffers.get(&self.device, 8, |temp_buffer| {

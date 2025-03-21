@@ -8,13 +8,9 @@ import { IndexedSingleColoredMesh } from './GPU/AbstractMeshes/IndexedSingleColo
 import { DataNode } from './nodes/DataNode.js';
 declare const engine: Engine;
 const maxAcceleration = 10;
-const closeDistance = 0.0022;
 const maxSpeedSquared = 1.4 * 1.4;
 export class Human extends IndexedSingleColoredMesh {
   inputManager: MeshCamera;
-  collisionRadius = 2;
-  readonly colliderSphere = engine.rust.create_collider_sphere(2);
-  readonly closeDistanceVector = closeDistance / this.collisionRadius;
 
   constructor({
     scenes,
@@ -207,42 +203,16 @@ export class Human extends IndexedSingleColoredMesh {
     }
   }
   override checkCollide(
-    _dt: number,
+    dt: number,
     velocityPerDelta: readonly [number, number, number],
   ) {
     this.grip = this.inputManager.arrowKeysDown ? 0 : 1;
-    const translation = this.getTranslationFromId();
-    const scaledPosition = engine.collider.scaledPosition;
-    scaledPosition[0] = translation[0] / this.collisionRadius;
-    scaledPosition[1] = translation[1] / this.collisionRadius;
-    scaledPosition[2] = translation[2] / this.collisionRadius;
-    const scaledVelocity = engine.collider.scaledVelocity;
-    scaledVelocity[0] = velocityPerDelta[0] / this.collisionRadius;
-    scaledVelocity[1] = velocityPerDelta[1] / this.collisionRadius;
-    scaledVelocity[2] = velocityPerDelta[2] / this.collisionRadius;
-    //TODO: remove this line and rest of legacy collider check from character
-    engine.collideWithWorld(
-      this,
-      scaledPosition,
-      scaledVelocity,
-      translation,
-      velocityPerDelta,
-    );
-    /*this.colliding_character = engine.rust.move_character(
+    this.colliding_character = engine.rust.move_character(
       this.id,
       dt,
       velocityPerDelta[0],
       velocityPerDelta[1],
       velocityPerDelta[2],
-    );*/
-
-    if (!engine.collider.collision_resolved) {
-      //console.log('cant solve collision', this.label)
-    }
-    this.setTranslation([
-      engine.collider.finalPosition[0],
-      engine.collider.finalPosition[1],
-      engine.collider.finalPosition[2],
-    ]);
+    );
   }
 }

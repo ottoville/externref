@@ -9,7 +9,7 @@ use super::buffer::buffer::JSBuffer;
 use super::bufferbinding::BufferBinding;
 use super::gpu::create_bind_group;
 use super::gpu::JSDevice;
-use super::renderbundle::JSRenderBundle;
+use super::renderbundle::RenderBundle;
 
 #[no_mangle]
 pub unsafe extern "C" fn iterate_bindings(
@@ -48,7 +48,7 @@ pub struct BindGroup {
     layout: Resource<JSBindGroupLayout>,
     bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
     pub rawbuffers: Vec<Arc<Resource<JSBuffer>>>,
-    pub renderbundles: Vec<Weak<Mutex<Option<Resource<JSRenderBundle>>>>>,
+    pub renderbundles: Vec<Weak<Mutex<Option<RenderBundle>>>>,
 }
 
 impl BindGroup {

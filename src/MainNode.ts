@@ -7,7 +7,6 @@
 } from './Math.js';
 import type { Scene } from './Scene.js';
 import type { Engine } from './engine.js';
-import type { ColliderJS } from './Collider.js';
 import type { Drawable } from './GPU/Drawables/Drawable.js';
 import { Destroyable } from 'webgpu-ts/index.js';
 import { create_rust_label, stringFromPtr } from './utils.js';
@@ -167,13 +166,6 @@ export abstract class MainNode implements Destroyable {
       engine.rust.velocity_pointer_from_id(this.id),
     ).set(value);
     this.update_dynamic_buffer_from_id();
-  }
-  intersect_box_aa_sphere(collider: ColliderJS, radius: number) {
-    return engine.rust.intersect_box_aa_sphere(
-      this.id,
-      collider.collider_ptr,
-      radius,
-    );
   }
   get have_rigid_body() {
     return engine.rust.have_rigid_body(this.id);

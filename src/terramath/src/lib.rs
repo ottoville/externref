@@ -238,6 +238,7 @@ pub trait VectorMath<T, const N: usize> {
     fn to_scaling_matrix(&self) -> [[T; N]; N];
     fn transform(&self, matrix: [[f32; 4]; 4]) -> Self;
     fn transform_to_ref(&self, matrix: [[f32; 4]; 4], other: &mut Self);
+    fn lerp_to_ref(&self, to: &Self, t: f32, result: &mut Self);
 }
 pub trait VectorMathF32<const N: usize>: VectorMath<f32, N> {
     fn length(&self) -> f32 {
@@ -408,6 +409,12 @@ impl VectorMath<f32, 3> for [f32; 3] {
         other[1] = ry * rw;
         other[2] = rz * rw;
     }
+
+    fn lerp_to_ref(&self, to: &Self, t: f32, result: &mut Self) {
+        result[0] = t.mul_add(to[0] - self[0], self[0]);
+        result[1] = t.mul_add(to[1] - self[1], self[1]);
+        result[2] = t.mul_add(to[2] - self[2], self[2]);
+    }
 }
 impl VectorMath<f32, 4> for [f32; 4] {
     fn dot(&self, other: &Self) -> f32 {
@@ -552,6 +559,12 @@ impl VectorMath<f32, 4> for [f32; 4] {
             let matrixarr = [v0, v1, v2, v3];
             vec4_transform_simd(self, matrixarr, &mut result[0] as *mut f32 as *mut v128);
         }
+    }
+    fn lerp_to_ref(&self, to: &Self, t: f32, result: &mut Self) {
+        result[0] = t.mul_add(to[0] - self[0], self[0]);
+        result[1] = t.mul_add(to[1] - self[1], self[1]);
+        result[2] = t.mul_add(to[2] - self[2], self[2]);
+        result[3] = t.mul_add(to[3] - self[3], self[3]);
     }
 }
 

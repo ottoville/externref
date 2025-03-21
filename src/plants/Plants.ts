@@ -217,7 +217,6 @@ export class Plants extends MainNode {
               data2.byteLength,
               ...create_rust_label('_swap'),
             );
-            engine.rust.push_to_temp_gpu_buffers(swapBuffer2);
             const srcOffset = 0;
             const rawSwapBuffer = engine.rust.get_raw_buffer<
               BufferUsageEnums.COPY_SRC,
@@ -231,6 +230,7 @@ export class Plants extends MainNode {
               ),
             );
             indirectBuffer.copyFrom(commandEncoder, rawSwapBuffer.unmap());
+            engine.rust.push_to_temp_gpu_buffers(swapBuffer2);
 
             engine.rust.push_to_pending_command_buffers(
               commandEncoder.finish(),

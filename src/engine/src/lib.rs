@@ -18,6 +18,8 @@ mod swapbuffers;
 mod terrain;
 mod vertices;
 pub mod character;
+mod cameracontroller;
+mod ArcRotateCamera;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;

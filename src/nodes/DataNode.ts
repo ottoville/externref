@@ -1,6 +1,5 @@
 import { MainNode, MainNodeProps } from '../MainNode.js';
 import { MutableTerraVector3, ReadOnlyFloat32Array } from '../Math.js';
-import type { ColliderJS } from '../Collider.js';
 import type { Engine } from '../engine.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
 import { create_rust_vec_ptr } from '../utils.js';
@@ -266,23 +265,5 @@ export class DataNode extends MainNode {
     DataNode.Meshes.delete(this.id);
     DataNode.CharacterCanCollideMeshes.delete(this);
     super.destroy();
-  }
-  public checkCollision(_collider: ColliderJS, sphere: Ellipsoid) {
-    //TODO: When there is support for bounding sphere.
-    //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
-
-    /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
-               return false;
-           }*/
-    if (
-      !this.intersect_box_aa_sphere(engine.collider, sphere.collisionRadius)
-    ) {
-      return;
-    }
-    engine.rust.test_triangles(
-      this.id,
-      engine.collider.collider_ptr,
-      sphere.colliderSphere,
-    );
   }
 }

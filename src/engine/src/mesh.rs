@@ -245,14 +245,7 @@ pub unsafe extern "C" fn velocity_pointer(mesh: *const Mesh) -> *const [f32; 4] 
 pub unsafe extern "C" fn velocity_pointer_from_id(mesh_id: usize) -> *const [f32; 4] {
     &ENGINE.meshes.lock().unwrap()[mesh_id].kinematic_velocity
 }
-#[no_mangle]
-pub unsafe extern "C" fn intersect_box_aa_sphere(
-    mesh_id: usize,
-    collider: *const collider::Collider,
-    radius: f32,
-) -> bool {
-    ENGINE.meshes.lock().unwrap()[mesh_id].intersect_box_aa_sphere(&(*collider), radius)
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn create_trimesh_collider(mesh_id: usize) -> *mut Collider {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
@@ -377,7 +370,7 @@ pub unsafe extern "C" fn test_triangles(
     collider_sphere: *mut ColliderSphere,
 ) {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
-    mesh.check_collision(collider_ptr, collider_sphere);
+    mesh.check_collision(&mut *collider_ptr, &*collider_sphere);
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_scenes(mesh_id: usize, scenes: u32) {
@@ -427,19 +420,26 @@ impl Mesh {
     #[cfg(target_arch = "wasm32")]
     pub fn check_collision(
         &mut self,
-        collider: *mut collider::Collider,
-        collider_sphere: *mut ColliderSphere,
+        collider: &mut collider::Collider,
+        collider_sphere: &ColliderSphere,
     ) {
+        //TODO: When there is support for bounding sphere.
+        //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
+        /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
+            return false;
+        }*/
+
+        if !self.intersect_box_aa_sphere(collider, collider_sphere.collision_radius) {
+            return;
+        }
         if let Some(geometry) = &mut self.geometry {
-            unsafe {
-                let transformation = self.mesh_property.lock().unwrap().gpu_memory.transformation;
-                // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix
-                transformation.multiply(
-                    &(*collider_sphere).collisions_scaling_matrix,
-                    &mut geometry.collisions_transform_matrix,
-                );
-                geometry.check_collision(&mut *collider);
-            }
+            let transformation = self.mesh_property.lock().unwrap().gpu_memory.transformation;
+            // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix
+            transformation.multiply(
+                &collider_sphere.collisions_scaling_matrix,
+                &mut geometry.collisions_transform_matrix,
+            );
+            geometry.check_collision(collider);
         } else {
             panic!("Mesh {} has no geometry", self.label)
         };
@@ -625,11 +625,7 @@ impl Mesh {
             }
         }
     }
-    pub unsafe fn intersect_box_aa_sphere(
-        &mut self,
-        collider: &collider::Collider,
-        radius: f32,
-    ) -> bool {
+    pub fn intersect_box_aa_sphere(&mut self, collider: &collider::Collider, radius: f32) -> bool {
         let mesh_property = &mut self.mesh_property.lock().unwrap();
         let transformation = mesh_property.get_transformation();
         if let Some(g) = &mut self.geometry {

@@ -252,11 +252,6 @@ export type rustWasm = {
   velocity_pointer(mesh: rust_pointer<'mesh'>): rust_pointer<'velocity'>;
   velocity_pointer_from_id(mesh_id: number): rust_pointer<'velocity'>;
 
-  intersect_box_aa_sphere(
-    mesh_id: number,
-    collider_ptr: number,
-    radius: number,
-  ): boolean;
   scale_x(mesh_id: number): number;
   scale_y(mesh_id: number): number;
   scale_z(mesh_id: number): number;
@@ -1085,18 +1080,13 @@ export class Engine {
         worldVelocity[2],
         sphere.collisionRadius,
       );
-      // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
-
-      // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-      if (sphere instanceof DataNode) {
-        DataNode.CharacterCanCollideMeshes.forEach((mesh) => {
-          if (sphere !== mesh) mesh.checkCollision(this.collider, sphere);
-        });
-      } else {
-        DataNode.CharacterCanCollideMeshes.forEach((mesh) => {
-          mesh.checkCollision(this.collider, sphere);
-        });
-      }
+      DataNode.CharacterCanCollideMeshes.forEach((mesh) => {
+        engine.rust.test_triangles(
+          mesh.id,
+          engine.collider.collider_ptr,
+          sphere.colliderSphere,
+        );
+      });
       this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
       this.#destinationPoint[1] = scaledPosition[1] + scaledVelocity[1];
       this.#destinationPoint[2] = scaledPosition[2] + scaledVelocity[2];

@@ -10,6 +10,7 @@ use crate::{mesh::ENGINE, MULTIVALUE_USIZE};
 use super::{
     bindgroup::BindGroup,
     binding_commands::BindingCommands,
+    buffer::buffer::JSBuffer,
     gpu::{JSDevice, GPU},
 };
 
@@ -68,6 +69,7 @@ pub unsafe extern "C" fn new_renderbundle(
         externref,
         renderbundle: Arc::new(Mutex::new(None)),
         descriptor,
+        buffers: Vec::new(),
     }))
 }
 #[no_mangle]
@@ -97,22 +99,27 @@ pub unsafe extern "C" fn record_renderbundle(
 ) -> usize {
     let rb = (*renderbundle).record_renderbundle(gpu_lock, record);
     let m = rb.lock();
-    let externref = m.as_ref().unwrap().as_ref().unwrap();
+    let externref = &m.as_ref().unwrap().as_ref().unwrap().externref;
     ptr::read(externref as *const Resource<JSRenderBundle> as *const usize)
 }
 pub struct RenderBundleEncoder {
     pub externref: Arc<Resource<JSRenderBundleEncoder>>,
-    renderbundle: Arc<Mutex<Option<Resource<JSRenderBundle>>>>,
+    renderbundle: Arc<Mutex<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
+    pub buffers: Vec<Arc<Resource<JSBuffer>>>,
+}
+pub struct RenderBundle {
+    buffers: Vec<Arc<Resource<JSBuffer>>>,
+    externref: Resource<JSRenderBundle>,
 }
 impl RenderBundleEncoder {
     pub fn record_renderbundle(
         &mut self,
         gpu_lock: *mut &'static mut GPU,
         record: Resource<JSFunction>,
-    ) -> Arc<Mutex<Option<Resource<JSRenderBundle>>>> {
-        let mut renderbundle = self.renderbundle.lock().unwrap();
-        if Option::is_none(&renderbundle) {
+    ) -> Arc<Mutex<Option<RenderBundle>>> {
+        let renderbundle = &mut self.renderbundle.lock().unwrap();
+        if Option::is_none(renderbundle) {
             let label = String::from("TODO");
             unsafe {
                 do_record(&record, &*self.externref);
@@ -120,8 +127,11 @@ impl RenderBundleEncoder {
                 MULTIVALUE_USIZE[1] = label.len();
                 MULTIVALUE_USIZE[2] = label.capacity();
 
-                let b = finish(&*self.externref, MULTIVALUE_USIZE.as_ptr());
-                let _ = renderbundle.insert(b);
+                let externref = finish(&*self.externref, MULTIVALUE_USIZE.as_ptr());
+                let _ = renderbundle.insert(RenderBundle {
+                    buffers: Vec::from_iter(self.buffers.drain(..)),
+                    externref,
+                });
                 // Create bundeEncoder ready for next time it is called
                 // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.
                 self.externref = Arc::new(create_renderbundle_encoder(
@@ -146,5 +156,9 @@ impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
         bindgroup
             .renderbundles
             .push(Arc::downgrade(&self.renderbundle));
+    }
+
+    fn buffers(&mut self) -> &mut Vec<Arc<Resource<JSBuffer>>> {
+        &mut self.buffers
     }
 }
