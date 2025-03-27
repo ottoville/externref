@@ -173,7 +173,7 @@ export abstract class TerraVector3 extends Float32Array {
   }
   override set(
     arr:
-      | [number, number, number]
+      | readonly [number, number, number]
       | TerraVector3
       | ({ 0: number; 1: number; 2: number } & Float32Array),
   ) {

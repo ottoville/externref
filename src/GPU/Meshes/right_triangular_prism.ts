@@ -29,6 +29,7 @@ export class RightTriangularPrism extends IndexedSingleColoredMesh {
         vertices: geometry,
       },
       {
+        camera_can_collide_do: false,
         label,
         point_light,
         scenes,

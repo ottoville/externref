@@ -3,6 +3,7 @@ use std::num::NonZeroUsize;
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::{panic, usize};
 
+use crate::allocators::explicit_generational_freelist::{ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex};
 use crate::allocators::freeindex::FreeIndex;
 
 use crate::gpu::gpu::GPU;
@@ -16,11 +17,6 @@ use logger::Logger;
 use rapier3d::control::KinematicCharacterController;
 use rapier3d::{crossbeam, prelude::*};
 
-extern "C" {
-    #[cfg(target_arch = "wasm32")]
-    pub fn verticesChange(mesh_id: usize);
-
-}
 #[cfg(test)]
 unsafe fn mesh_on_physic_tick(_mesh: *const Mesh, _delta: f32, _externref: &Resource<JSMesh>) {}
 
@@ -29,6 +25,8 @@ unsafe fn mesh_on_physic_tick(_mesh: *const Mesh, _delta: f32, _externref: &Reso
 #[link(wasm_import_module = "env")]
 extern "C" {
     fn mesh_on_physic_tick(mesh: *const Mesh, delta: f32, externref: &Resource<JSMesh>);
+    pub fn vertices_change(mesh: &Resource<JSMesh>);
+
 }
 
 #[no_mangle]
@@ -78,11 +76,11 @@ pub struct Engine {
     pub gpu: Mutex<Option<GPU>>,
     event_handler: ChannelEventCollector,
     pub character_controller: KinematicCharacterController,
-    pub meshes: Mutex<Vec<Mesh>>,
+    pub meshes: Mutex<ExplicitGenerationalFreeList<Mesh>>,
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
-    pub rigid_bodies: HashMap<RigidBodyHandle, usize>,
+    pub rigid_bodies: HashMap<RigidBodyHandle, ExplicitGenerationalFreeListIndex<Mesh>>,
     pub gpu_allocated: FreeIndex,
     pub collider_set: ColliderSet,
     pub modified_colliders: Vec<ColliderHandle>,
@@ -95,6 +93,7 @@ pub struct Engine2 {
     pub multi_joint_set: MultibodyJointSet,
     pub rigid_body_set: RigidBodySet,
     pub query_pipeline: QueryPipeline,
+    pub camera_can_collide_meshes: Vec<ExplicitGenerationalFreeListIndex<Mesh>>
 }
 
 pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
@@ -118,9 +117,10 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
             multi_joint_set: MultibodyJointSet::new(),
             rigid_body_set: RigidBodySet::new(),
             query_pipeline: QueryPipeline::new(),
+            camera_can_collide_meshes: Vec::new()
         }),
         gpu: Mutex::new(None),
-        meshes: Mutex::new(Vec::with_capacity(100)),
+        meshes: Mutex::new(ExplicitGenerationalFreeList::new(100)),
 
         event_handler: ChannelEventCollector::new(collision_send, contact_send),
 
@@ -229,8 +229,7 @@ impl Engine2 {
                 Some(m_id) => {
                     let rigid_body = &self.rigid_body_set[*rigid_body_handle];
                     let newrot = rigid_body.rotation().as_vector();
-                    let mesh_id = *m_id;
-                    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+                    let mesh = &mut ENGINE.meshes.lock().unwrap()[m_id];
 
                     {
                         let mut mesh_property = mesh.mesh_property.lock().unwrap();
@@ -252,7 +251,7 @@ impl Engine2 {
             }
         }
     }
-    pub fn add_collider_to_mesh<'a>(&mut self, collider: Collider, mesh_id: usize) {
+    pub fn add_collider_to_mesh<'a>(&mut self, collider: Collider, mesh_id: &ExplicitGenerationalFreeListIndex<Mesh>) {
         let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
         match mesh.rigid_body_handle {
             Some(rigid_body_handle) => {

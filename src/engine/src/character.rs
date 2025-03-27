@@ -1,4 +1,5 @@
 use crate::{
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     engine::Engine2,
     mesh::{JSMesh, Mesh, ENGINE},
     meshes::r#box::create_box_geometry,
@@ -12,15 +13,18 @@ use terramath::VectorMath;
 
 #[externref]
 #[no_mangle]
-pub unsafe extern "C" fn set_mesh_externref(mesh_id: usize, externref: Resource<JSMesh>) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn set_mesh_externref(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    externref: Resource<JSMesh>,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     mesh.externref = Some(externref);
 }
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn move_character(
-    character_mesh_id: usize,
+    character_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     dt: f32,
     x: f32,
     y: f32,
@@ -30,7 +34,7 @@ pub unsafe extern "C" fn move_character(
         .engine2
         .lock()
         .unwrap()
-        .move_character(character_mesh_id, dt/1000.0, x, y, z)
+        .move_character(&*character_mesh_id, dt / 1000.0, x, y, z)
 }
 #[externref]
 #[no_mangle]
@@ -39,7 +43,7 @@ pub unsafe extern "C" fn new_character_mesh(
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
-) -> usize {
+) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
     let geometry = create_box_geometry();
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     let mesh_id = Mesh::new(
@@ -51,8 +55,9 @@ pub unsafe extern "C" fn new_character_mesh(
         None,
         None,
         ENGINE.meshes.lock().unwrap(),
+        false
     );
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
     mesh.character = Some(Character {
         impulse: [0.0; 3],
         shape: Box::new(Ball::new(3.0)),
@@ -62,12 +67,14 @@ pub unsafe extern "C" fn new_character_mesh(
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.update_color(0.0, 0.9, 1.0, 0.0);
     }
-    return mesh_id;
+    return Box::into_raw(Box::new(mesh_id));
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn get_impulse_from_id(mesh_id: usize) -> *const f32 {
-    ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn get_impulse_from_id(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const f32 {
+    ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .character
         .as_mut()
         .unwrap()
@@ -81,7 +88,7 @@ pub struct Character {
 impl Engine2 {
     pub fn move_character(
         &mut self,
-        character_mesh_id: usize,
+        character_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
         dt: f32,
         x: f32,
         y: f32,
@@ -91,7 +98,7 @@ impl Engine2 {
          * BUGS:
          * modified eg moved or rotated collider does not get updated?
          */
-        let mesh = &mut ENGINE.meshes.lock().unwrap()[character_mesh_id];
+        let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*character_mesh_id }];
 
         let cur_pos = mesh.mesh_property.lock().unwrap().translation.0;
 

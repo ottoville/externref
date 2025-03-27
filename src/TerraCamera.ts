@@ -1,8 +1,4 @@
-﻿import {
-  MutableTerraVector3,
-  ReadOnlyTerraVector3,
-  TerraMatrix,
-} from './Math.js';
+﻿import { ReadOnlyTerraVector3, TerraMatrix } from './Math.js';
 import type { Engine } from './engine.js';
 import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
@@ -36,10 +32,11 @@ export class TerraCamera {
     );
   }
   get position() {
-    return new MutableTerraVector3(
+    return new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.get_camera_position_ptr(this.id),
-    );
+      3,
+    ) as unknown as readonly [number, number, number];
   }
   readonly controls: CameraControl;
   #cameraController?: TerraCamera;

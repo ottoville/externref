@@ -23,12 +23,13 @@ export type MainNodeProps = {
   label: string;
   scenes?: Scene[] | undefined;
   rigid_body?: RigidBody | undefined;
+  camera_can_collide_do: boolean;
 };
 
 export abstract class MainNode implements Destroyable {
   abstract drawable?: Drawable | undefined;
 
-  readonly id: number;
+  readonly id: rust_pointer<'mesh_id'>;
   get label(): string {
     const label_field_pointer = engine.rust.label_field_pointer(this.id);
     return stringFromPtr(engine.rust.memory, label_field_pointer);
@@ -127,6 +128,7 @@ export abstract class MainNode implements Destroyable {
     return new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.translation_pointer_from_id(this.id),
+      3,
     ) as unknown as readonly [number, number, number];
   }
   setTranslation(value: [number, number, number] | ReadOnlyTerraVector3) {
@@ -170,7 +172,7 @@ export abstract class MainNode implements Destroyable {
   get have_rigid_body() {
     return engine.rust.have_rigid_body(this.id);
   }
-  constructor(props: MainNodeProps | number) {
+  constructor(props: MainNodeProps | rust_pointer<'mesh_id'>) {
     if (typeof props === 'number') {
       this.id = props;
     } else {
@@ -180,6 +182,7 @@ export abstract class MainNode implements Destroyable {
         label,
         scenes,
         rigid_body = RigidBody.default,
+        camera_can_collide_do,
       } = props;
       const sceneids = scenes
         ? scenes.reduce((acc, scene) => acc | scene.id, 0)
@@ -191,6 +194,7 @@ export abstract class MainNode implements Destroyable {
         rigid_body,
         ...create_rust_label(label),
         new Externref(false, this),
+        camera_can_collide_do,
       );
     }
   }

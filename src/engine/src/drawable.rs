@@ -1,14 +1,19 @@
 use logger::Logger;
 
-use crate::mesh::ENGINE;
+use crate::{
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
+    mesh::{Mesh, ENGINE},
+};
 
 pub struct DrawableDirect {
     instance_count: u32,
     first_instance: u32,
 }
 #[no_mangle]
-pub extern "C" fn get_instance_count(mesh_id: usize) -> u32 {
-    let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
+pub extern "C" fn get_instance_count(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> u32 {
+    let mesh = &ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
 
     mesh.draw_command
         .as_ref()
@@ -19,8 +24,10 @@ pub extern "C" fn get_instance_count(mesh_id: usize) -> u32 {
         .instance_count
 }
 #[no_mangle]
-pub extern "C" fn get_first_instance(mesh_id: usize) -> u32 {
-    let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
+pub extern "C" fn get_first_instance(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> u32 {
+    let mesh = &ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
 
     mesh.draw_command
         .as_ref()
@@ -31,8 +38,11 @@ pub extern "C" fn get_first_instance(mesh_id: usize) -> u32 {
         .first_instance
 }
 #[no_mangle]
-pub extern "C" fn set_instance_count(mesh_id: usize, instance_count: u32) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub extern "C" fn set_instance_count(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    instance_count: u32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
 
     match mesh.draw_command {
         Some(ref mut draw_command) => match &mut (draw_command.direct) {
@@ -47,8 +57,11 @@ pub extern "C" fn set_instance_count(mesh_id: usize, instance_count: u32) {
     }
 }
 #[no_mangle]
-pub extern "C" fn set_first_instance(mesh_id: usize, first_instance: u32) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub extern "C" fn set_first_instance(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    first_instance: u32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
 
     match mesh.draw_command {
         Some(ref mut draw_command) => match &mut (draw_command.direct) {
@@ -63,8 +76,8 @@ pub extern "C" fn set_first_instance(mesh_id: usize, first_instance: u32) {
     }
 }
 #[no_mangle]
-pub extern "C" fn add_drawble(mesh_id: usize) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub extern "C" fn add_drawble(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
 
     let d = DrawCommand {
         draw_type: DrawType::Indexed,
@@ -78,11 +91,15 @@ pub extern "C" fn add_drawble(mesh_id: usize) {
     mesh.draw_command = Some(d);
 }
 #[no_mangle]
-pub extern "C" fn set_drawble_direct(mesh_id: usize, instance_count: u32, first_instance: u32) {
+pub extern "C" fn set_drawble_direct(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    instance_count: u32,
+    first_instance: u32,
+) {
     if instance_count == 0 {
         "Added drawable with 0 instances, nothing will be drawn".warn();
     }
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
 
     match mesh.draw_command {
         Some(ref mut draw_command) => {

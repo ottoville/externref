@@ -7,7 +7,7 @@ declare const engine: Engine;
 export abstract class BoundableNodeIndexed extends IndexedDataNode {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: MainNodeProps | number,
+    mainNodeProps: MainNodeProps | rust_pointer<'mesh_id'>,
     onIndicesChange?: () => void,
   ) {
     super(dataNodeProps, mainNodeProps);

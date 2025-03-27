@@ -73,16 +73,22 @@ type ListenerOptions = {
 };
 export type rustWasm = {
   externrefs: WebAssembly.Table;
-  add_drawble(mesh_id: number): void;
+  add_drawble(mesh_id: rust_pointer<'mesh_id'>): void;
   set_drawble_direct(
-    mesh_id: number,
+    mesh_id: rust_pointer<'mesh_id'>,
     instance_count: number,
     first_instance: number,
   ): void;
-  get_instance_count(mesh_id: number): number;
-  get_first_instance(mesh_id: number): number;
-  set_instance_count(mesh_id: number, instance_count: number): void;
-  set_first_instance(mesh_id: number, first_instance: number): void;
+  get_instance_count(mesh_id: rust_pointer<'mesh_id'>): number;
+  get_first_instance(mesh_id: rust_pointer<'mesh_id'>): number;
+  set_instance_count(
+    mesh_id: rust_pointer<'mesh_id'>,
+    instance_count: number,
+  ): void;
+  set_first_instance(
+    mesh_id: rust_pointer<'mesh_id'>,
+    first_instance: number,
+  ): void;
 
   create_tiled_mesh_geometry(
     width: number,
@@ -149,20 +155,21 @@ export type rustWasm = {
     label_len: number,
     label_cap: number,
     externref: Externref<false, MainNode>,
-  ): number;
+    camera_can_collide_to: boolean,
+  ): rust_pointer<'mesh_id'>;
   create_debug_mesh_wireframe(
-    target_mesh_id: number,
+    target_mesh_id: rust_pointer<'mesh_id'>,
     label_ptr: number,
     label_len: number,
     label_cap: number,
-  ): number;
+  ): rust_pointer<'mesh_id'>;
   create_debug_mesh_normals(
-    target_mesh_id: number,
+    target_mesh_id: rust_pointer<'mesh_id'>,
     label_ptr: number,
     label_len: number,
     label_cap: number,
-  ): number;
-  have_rigid_body(mesh_id: number): boolean;
+  ): rust_pointer<'mesh_id'>;
+  have_rigid_body(mesh_id: rust_pointer<'mesh_id'>): boolean;
   create_legacy_terrain_geometry(
     camera_can_collide_to: boolean,
     static_faces: boolean,
@@ -171,21 +178,24 @@ export type rustWasm = {
   create_ui_geometry(positions_count: number): rust_pointer<'geometry'>;
   create_water_geometry(): rust_pointer<'geometry'>;
   set_geometry(
-    mesh_id: number,
+    mesh_id: rust_pointer<'mesh_id'>,
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<'geometry'>;
-  get_geometry(mesh_id: number): rust_pointer<'geometry'>;
+  get_geometry(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'geometry'>;
   create_box_geometry(): rust_pointer<'geometry'>;
   create_rtp_geometry(): rust_pointer<'geometry'>;
   create_cone_geometry(faces: number): rust_pointer<'geometry'>;
-  add_collider(mesh_id: number, collider: rust_pointer<'collider'>): void;
+  add_collider(
+    mesh_id: rust_pointer<'mesh_id'>,
+    collider: rust_pointer<'collider'>,
+  ): void;
   memory: WebAssembly.Memory;
   vertices_pointer(
     geometry: rust_pointer<'geometry'>,
     make_dirty: boolean,
   ): rust_pointer<'f32'>;
   set_indices_and_vertices_PositionAndNormalAndUV(
-    mesh_id: number,
+    mesh_id: rust_pointer<'mesh_id'>,
     indices: rust_pointer<'usize'>,
     indices_length: number,
     indices_cap: number,
@@ -210,8 +220,8 @@ export type rustWasm = {
     indices: rust_pointer<'indices'>,
   ): rust_pointer<rust_vec_ptr<'usize'>>;
   vertices_count(geometry: rust_pointer<'geometry'>): number;
-  have_vertices(mesh_id: number): boolean;
-  faces_count(mesh_id: number): number;
+  have_vertices(mesh_id: rust_pointer<'mesh_id'>): boolean;
+  faces_count(mesh_id: rust_pointer<'mesh_id'>): number;
   alloc_vector_f32(size: Word<'dword'>): rust_pointer<rust_vec_ptr<'f32'>>;
   alloc_vector_u8(size: number): rust_pointer<rust_vec_ptr<'u8'>>;
   alloc_vector_usize(size: number): rust_pointer<rust_vec_ptr<'usize'>>;
@@ -227,36 +237,60 @@ export type rustWasm = {
   ): rust_pointer<rust_vec_ptr<'position2d_and_uv'>>;
   update_scale(mesh_id: number, x: number, y: number, z: number): void;
   update_rotation(
-    mesh_id: number,
+    mesh_id: rust_pointer<'mesh_id'>,
     x: number,
     y: number,
     z: number,
     w: number,
   ): void;
-  update_euler_angles(mesh_id: number, x: number, y: number, z: number): void;
-  update_translation(mesh_id: number, x: number, y: number, z: number): void;
+  update_euler_angles(
+    mesh_id: rust_pointer<'mesh_id'>,
+    x: number,
+    y: number,
+    z: number,
+  ): void;
+  update_translation(
+    mesh_id: rust_pointer<'mesh_id'>,
+    x: number,
+    y: number,
+    z: number,
+  ): void;
   update_dynamic_buffer(mesh: rust_pointer<'mesh'>): void;
-  update_dynamic_buffer_from_id(mesh_id: number): void;
+  update_dynamic_buffer_from_id(mesh_id: rust_pointer<'mesh_id'>): void;
 
-  gpu_alignment(mesh_id: number): number;
-  positions_count(mesh_id: number): number;
-  set_positions_count(mesh_id: number, positions_count: number): number;
-  strip(mesh_id: number): number;
-  gpu_pointer(mesh_id: number): number;
-  label_field_pointer(mesh_id: number): rust_pointer<'label_field'>;
+  gpu_alignment(mesh_id: rust_pointer<'mesh_id'>): number;
+  positions_count(mesh_id: rust_pointer<'mesh_id'>): number;
+  set_positions_count(
+    mesh_id: rust_pointer<'mesh_id'>,
+    positions_count: number,
+  ): number;
+  strip(mesh_id: rust_pointer<'mesh_id'>): number;
+  gpu_pointer(mesh_id: rust_pointer<'mesh_id'>): number;
+  label_field_pointer(
+    mesh_id: rust_pointer<'mesh_id'>,
+  ): rust_pointer<'label_field'>;
   translation_pointer(mesh: rust_pointer<'mesh'>): rust_pointer<'translation'>;
-  translation_pointer_from_id(mesh_id: number): rust_pointer<'translation'>;
-  rotation_pointer(mesh_id: number): rust_pointer<'rotation'>;
-  rotation_pointer_euler(mesh_id: number): rust_pointer<'f32'>;
-  scale_pointer(mesh_id: number): rust_pointer<'scale'>;
+  translation_pointer_from_id(
+    mesh_id: rust_pointer<'mesh_id'>,
+  ): rust_pointer<'translation'>;
+  rotation_pointer(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'rotation'>;
+  rotation_pointer_euler(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'f32'>;
+  scale_pointer(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'scale'>;
   velocity_pointer(mesh: rust_pointer<'mesh'>): rust_pointer<'velocity'>;
-  velocity_pointer_from_id(mesh_id: number): rust_pointer<'velocity'>;
+  velocity_pointer_from_id(
+    mesh_id: rust_pointer<'mesh_id'>,
+  ): rust_pointer<'velocity'>;
 
-  scale_x(mesh_id: number): number;
-  scale_y(mesh_id: number): number;
-  scale_z(mesh_id: number): number;
+  scale_x(mesh_id: rust_pointer<'mesh_id'>): number;
+  scale_y(mesh_id: rust_pointer<'mesh_id'>): number;
+  scale_z(mesh_id: rust_pointer<'mesh_id'>): number;
   vertices_stride(geometry: rust_pointer<'geometry'>): Word<'dword'>;
-  set_faces(mesh_id: number, ptr: number, length: number, cap: number): void;
+  set_faces(
+    mesh_id: rust_pointer<'mesh_id'>,
+    ptr: number,
+    length: number,
+    cap: number,
+  ): void;
   set_color(
     mesh: rust_pointer<'mesh'>,
     d0: number,
@@ -265,7 +299,7 @@ export type rustWasm = {
     d3: number,
   ): void;
   set_color_from_id(
-    mesh_id: number,
+    mesh_id: rust_pointer<'mesh_id'>,
     d0: number,
     d1: number,
     d2: number,
@@ -277,13 +311,18 @@ export type rustWasm = {
     g: number,
     b: number,
   ): void;
-  set_ambient_from_id(mesh_id: number, r: number, g: number, b: number): void;
+  set_ambient_from_id(
+    mesh_id: rust_pointer<'mesh_id'>,
+    r: number,
+    g: number,
+    b: number,
+  ): void;
   set_shadow(mesh: rust_pointer<'mesh'>, shadow: number): void;
-  set_shadow_from_id(mesh_id: number, shadow: number): void;
-  set_scenes(mesh_id: number, scenes: number): void;
-  calculate_normals(mesh_id: number): void;
+  set_shadow_from_id(mesh_id: rust_pointer<'mesh_id'>, shadow: number): void;
+  set_scenes(mesh_id: rust_pointer<'mesh_id'>, scenes: number): void;
+  calculate_normals(mesh_id: rust_pointer<'mesh_id'>): void;
   update_scale_and_rotation(
-    mesh_id: number,
+    mesh_id: rust_pointer<'mesh_id'>,
     x: number,
     y: number,
     z: number,
@@ -292,15 +331,17 @@ export type rustWasm = {
     rz: number,
     rw: number,
   ): void;
-  faces_pointer(mesh_id: number): number;
-  create_bounding_box_geometry(mesh_id: number): rust_pointer<'geometry'>;
+  faces_pointer(mesh_id: rust_pointer<'mesh_id'>): number;
+  create_bounding_box_geometry(
+    mesh_id: rust_pointer<'mesh_id'>,
+  ): rust_pointer<'geometry'>;
 
-  create_elevator(mesh_id: number): rust_pointer<'elevator'>;
+  create_elevator(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'elevator'>;
   destroy_elevator(elevator_ptr: rust_pointer<'elevator'>): void;
   mouse_position_pointer(elevator_ptr: rust_pointer<'elevator'>): number;
   elevate(
     elevator_ptr: rust_pointer<'elevator'>,
-    mesh_id: number,
+    mesh_id: rust_pointer<'mesh_id'>,
     radius: number,
     height: number,
   ): void;
@@ -319,7 +360,7 @@ export type rustWasm = {
   ): rust_pointer<'collider'>;
   create_trimesh_collider(mesh_id: number): rust_pointer<'collider'>;
   create_convex_collider(
-    mesh_id: number,
+    mesh_id: rust_pointer<'mesh_id'>,
     collision_events: boolean,
   ): rust_pointer<'collider'>;
   create_cuboid_collider(
@@ -336,8 +377,8 @@ export type rustWasm = {
   dedup_positions(geometry: rust_pointer<'geometry'>): void;
   push_to_temp_gpu_buffers(buffer: rust_pointer<'GPUBuffer'>): void;
   devtools_pointer(): rust_pointer<'devtools'>;
-  add_onchange_callback(mesh_id: number): number;
-  remove_onchange_callback(mesh_id: number, cb: number): void;
+  add_onchange_callback(mesh_id: rust_pointer<'mesh_id'>): number;
+  remove_onchange_callback(mesh_id: rust_pointer<'mesh_id'>, cb: number): void;
   get_engine(): rust_mutex<'locked', 'enginelock'>;
   get_gpu(): rust_mutex<'locked', 'gpulock'>;
   drop_engine_lock(engine: rust_mutex<'locked', 'enginelock'>): void;
@@ -423,7 +464,7 @@ export type rustWasm = {
   on_resize(aspect_ratio: number): void;
   iterate_bindings(iterator: Rust_Iterator<number>): number;
   move_character(
-    character_mesh_id: number,
+    character_mesh_id: rust_pointer<'mesh_id'>,
     dt: number,
     x: number,
     y: number,
@@ -434,18 +475,19 @@ export type rustWasm = {
     label_ptr: number,
     label_len: number,
     label_cap: number,
-  ): number;
+  ): rust_pointer<'mesh_id'>;
   set_mesh_externref(
-    mesh_id: number,
+    mesh_id: rust_pointer<'mesh_id'>,
     externref: Externref<false, MainNode>,
   ): void;
   rebuild_triangle_planes(geometry: rust_pointer<'geometry'>): void;
   test_triangles(
-    mesh_id: number,
     rust_collider_ptr: rust_pointer<'legacy_collider'>,
     collider_sphere: rust_pointer<'collider_sphere'>,
   ): void;
-  get_impulse_from_id(mesh_id: number): rust_pointer<'impulse'>;
+  get_impulse_from_id(
+    mesh_id: rust_pointer<'mesh_id'>,
+  ): rust_pointer<'impulse'>;
 
   new_renderbundle(
     descriptor: GPURenderBundleEncoderDescriptor,
@@ -745,11 +787,8 @@ export class Engine {
         ) {
           engine.gpu!.renderRenderPasses(renderloop_commandEncoder, rust_gpu);
         },
-        verticesChange(mesh_id: number) {
-          const mesh = DataNode.Meshes.get(mesh_id);
-          if (mesh) {
-            mesh.onVerticesChange();
-          }
+        vertices_change({ externref: mesh }: Externref<false, DataNode>) {
+          mesh.onVerticesChange();
         },
       },
       queue: QueueInterface,
@@ -1052,24 +1091,17 @@ export class Engine {
 
     this.collider = new ColliderJS(rust);
   }
-  #getFinalPosition(
+  collideWithWorld(
     sphere: Ellipsoid,
-    scaledPosition: TerraVector3,
+    scaledPosition: [number, number, number],
     scaledVelocity: TerraVector3,
     worldPosition: readonly [number, number, number],
     worldVelocity: readonly [number, number, number],
-  ): [number, number, number] | TerraVector3 {
+  ): void {
+    if (sphere instanceof DataNode) sphere.colliding_character = false;
     this.collider.didCollide = false;
     for (let i = 0; i < 3; i++) {
       //TODO: really, here inside the loop?
-      //TODO: Remove this JS initialize
-      /*this.collider._initialize(
-        scaledPosition,
-        scaledVelocity,
-        closeDistance,
-        sphere,
-      );*/
-
       this.rust.initialize_collider(
         this.collider.collider_ptr,
         worldPosition[0],
@@ -1080,20 +1112,18 @@ export class Engine {
         worldVelocity[2],
         sphere.collisionRadius,
       );
-      DataNode.CharacterCanCollideMeshes.forEach((mesh) => {
-        engine.rust.test_triangles(
-          mesh.id,
-          engine.collider.collider_ptr,
-          sphere.colliderSphere,
-        );
-      });
+      engine.rust.test_triangles(
+        engine.collider.collider_ptr,
+        sphere.colliderSphere,
+      );
       this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
       this.#destinationPoint[1] = scaledPosition[1] + scaledVelocity[1];
       this.#destinationPoint[2] = scaledPosition[2] + scaledVelocity[2];
 
       if (this.collider.collision_resolved) {
         //this.collider.finalPosition.set(scaledPosition);
-        return this.#destinationPoint;
+        scaledPosition = this.#destinationPoint;
+        break;
       }
       this.collider.didCollide = true;
       if (sphere instanceof DataNode) sphere.colliding_character = true;
@@ -1207,30 +1237,11 @@ export class Engine {
           unScaledVelocity[2] * unScaledVelocity[2] <=
         closeDistanceSquared
       ) {
-        //finalPosition.copyFrom(position);
-        return scaledPosition;
+        break;
       }
     }
-    return scaledPosition;
-  }
-  collideWithWorld(
-    sphere: Ellipsoid,
-    scaledPosition: TerraVector3,
-    scaledVelocity: TerraVector3,
-    worldPosition: readonly [number, number, number],
-    worldVelocity: readonly [number, number, number],
-  ): void {
-    if (sphere instanceof DataNode) sphere.colliding_character = false;
     //TODO: Call only when camera position change
-    this.collider.finalPosition.set(
-      this.#getFinalPosition(
-        sphere,
-        scaledPosition,
-        scaledVelocity,
-        worldPosition,
-        worldVelocity,
-      ),
-    );
+    this.collider.finalPosition.set(scaledPosition);
     this.collider.finalPosition[0] *= sphere.collisionRadius;
     this.collider.finalPosition[1] *= sphere.collisionRadius;
     this.collider.finalPosition[2] *= sphere.collisionRadius;

@@ -1,8 +1,10 @@
 use crate::allocators::explicit_freelist::ExplicitFreeList;
+use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
+use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use crate::character::Character;
 pub use crate::drawable::DrawCommand;
 #[cfg(target_arch = "wasm32")]
-use crate::engine::verticesChange;
+use crate::engine::vertices_change;
 pub use crate::engine::ENGINE;
 pub use crate::geometry::Geometry;
 use crate::math2::Mat3wgslF32;
@@ -15,6 +17,8 @@ use core::panic;
 use externref::externref;
 use externref::Resource;
 use rapier3d::prelude::*;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
@@ -24,9 +28,8 @@ use terramath::Quaternion;
 use terramath::Vec3wgslF32;
 
 pub struct JSMesh(());
-
+static MESH_ID: AtomicUsize = AtomicUsize::new(0);
 pub struct Mesh {
-    pub id: usize,
     pub mesh_property: Arc<Mutex<MeshProperty>>,
     pub geometry: Option<Box<Geometry>>,
 
@@ -45,6 +48,7 @@ pub struct Mesh {
     pub on_gpu_queue: bool,
     pub externref: Option<Resource<JSMesh>>,
     pub character: Option<Character>,
+    id: usize,
 }
 
 #[externref]
@@ -58,9 +62,10 @@ pub unsafe extern "C" fn new_mesh_from_js(
     label_len: usize,
     label_cap: usize,
     externref: Resource<JSMesh>,
-) -> usize {
+    camera_can_collide_to: bool,
+) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    return Mesh::new(
+    return Box::into_raw(Box::new(Mesh::new(
         point_light,
         directional_light,
         scenes,
@@ -69,41 +74,54 @@ pub unsafe extern "C" fn new_mesh_from_js(
         Some(externref),
         None,
         ENGINE.meshes.lock().unwrap(),
-    );
+        camera_can_collide_to,
+    )));
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_geometry<'frame>(mesh_id: usize) -> *const Geometry {
-    let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn get_geometry<'frame>(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const Geometry {
+    let mesh = &ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.geometry.as_ref().unwrap().as_ref() as *const Geometry
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_geometry<'frame>(
-    mesh_id: usize,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     geometry: *mut Geometry,
 ) -> *mut Geometry {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.geometry = Some(Box::from_raw(geometry));
     mesh.geometry.as_mut().unwrap().as_mut() as *mut Geometry
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn add_collider(mesh_id: usize, collider: *mut Collider) {
+pub unsafe extern "C" fn add_collider(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    collider: *mut Collider,
+) {
     let coll = Box::from_raw(collider);
     ENGINE
         .engine2
         .lock()
         .unwrap()
-        .add_collider_to_mesh(*coll, mesh_id);
+        .add_collider_to_mesh(*coll, &*mesh_id);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn faces_count(mesh_id: usize) -> usize {
-    let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn faces_count(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> usize {
+    let mesh = &ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.get_geometry().faces_count()
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn update_scale(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    x: f32,
+    y: f32,
+    z: f32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.update_scale(x, y, z);
@@ -111,8 +129,10 @@ pub unsafe extern "C" fn update_scale(mesh_id: usize, x: f32, y: f32, z: f32) {
     mesh.on_update(true);
 }
 #[no_mangle]
-pub unsafe extern "C" fn calculate_normals(mesh_id: usize) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn calculate_normals(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.calculate_normals();
 }
 #[no_mangle]
@@ -120,19 +140,28 @@ pub unsafe extern "C" fn update_dynamic_buffer(mesh: *mut Mesh) {
     (*mesh).update_dynamic_buffer();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_dynamic_buffer_from_id(mesh_id: usize) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn update_dynamic_buffer_from_id(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.update_dynamic_buffer();
 }
 #[no_mangle]
-pub unsafe extern "C" fn have_rigid_body(mesh_id: usize) -> bool {
-    ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn have_rigid_body(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> bool {
+    ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .rigid_body_handle
         .is_some()
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_euler_angles(mesh_id: usize, x: f32, y: f32, z: f32) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn update_euler_angles(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    x: f32,
+    y: f32,
+    z: f32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.update_euler_angles(x, y, z);
@@ -140,8 +169,14 @@ pub unsafe extern "C" fn update_euler_angles(mesh_id: usize, x: f32, y: f32, z: 
     mesh.on_update(true);
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_rotation(mesh_id: usize, x: f32, y: f32, z: f32, w: f32) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn update_rotation(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    x: f32,
+    y: f32,
+    z: f32,
+    w: f32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.update_rotation(x, y, z, w);
@@ -149,22 +184,31 @@ pub unsafe extern "C" fn update_rotation(mesh_id: usize, x: f32, y: f32, z: f32,
     mesh.on_update(true);
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_translation(mesh_id: usize, x: f32, y: f32, z: f32) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn update_translation(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    x: f32,
+    y: f32,
+    z: f32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     // No onupdate is called here because it is called inside set_translation.
     mesh.update_translation(x, y, z, true);
 }
 #[no_mangle]
-pub unsafe extern "C" fn label_field_pointer(mesh_id: usize) -> *const usize {
-    let label = &ENGINE.meshes.lock().unwrap()[mesh_id].label;
+pub unsafe extern "C" fn label_field_pointer(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const usize {
+    let label = &ENGINE.meshes.lock().unwrap()[&*mesh_id].label;
     MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
     MULTIVALUE_USIZE[1] = label.len();
     MULTIVALUE_USIZE[2] = label.capacity();
     MULTIVALUE_USIZE.as_ptr()
 }
 #[no_mangle]
-pub extern "C" fn gpu_alignment(mesh_id: usize) -> usize {
-    ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn gpu_alignment(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> usize {
+    ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
         .unwrap()
@@ -172,23 +216,30 @@ pub extern "C" fn gpu_alignment(mesh_id: usize) -> usize {
         .0
 }
 #[no_mangle]
-pub unsafe extern "C" fn positions_count(mesh_id: usize) -> usize {
-    ENGINE.meshes.lock().unwrap()[mesh_id].get_positions_count()
+pub unsafe extern "C" fn positions_count(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> usize {
+    ENGINE.meshes.lock().unwrap()[&*mesh_id].get_positions_count()
 }
 #[no_mangle]
-pub extern "C" fn set_positions_count(mesh_id: usize, positions_count: usize) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn set_positions_count(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    positions_count: usize,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.positions_count = Some(positions_count);
 }
 #[no_mangle]
-pub unsafe extern "C" fn strip(mesh_id: usize) -> bool {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn strip(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) -> bool {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     mesh.get_geometry().strip
 }
 #[no_mangle]
-pub unsafe extern "C" fn gpu_pointer(mesh_id: usize) -> *const [[f32; 4]; 4] {
-    &ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn gpu_pointer(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const [[f32; 4]; 4] {
+    &ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
         .unwrap()
@@ -200,33 +251,41 @@ pub unsafe extern "C" fn translation_pointer(mesh: *const Mesh) -> *const Vec3wg
     &(*mesh).mesh_property.lock().unwrap().translation
 }
 #[no_mangle]
-pub unsafe extern "C" fn translation_pointer_from_id(mesh_id: usize) -> *const Vec3wgslF32 {
-    &ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn translation_pointer_from_id(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const Vec3wgslF32 {
+    &ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
         .unwrap()
         .translation
 }
 #[no_mangle]
-pub unsafe extern "C" fn rotation_pointer(mesh_id: usize) -> *const Quaternion {
-    &(ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn rotation_pointer(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const Quaternion {
+    &(ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
         .unwrap()
         .rotation)
 }
 #[no_mangle]
-pub unsafe extern "C" fn scale_pointer(mesh_id: usize) -> *const [f32; 3] {
-    &ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn scale_pointer(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const [f32; 3] {
+    &ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
         .unwrap()
         .scaling
 }
 #[no_mangle]
-pub unsafe extern "C" fn rotation_pointer_euler(mesh_id: usize) -> *const f32 {
+pub unsafe extern "C" fn rotation_pointer_euler(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const f32 {
     let mut euler = [0.0, 0.0, 0.0];
-    ENGINE.meshes.lock().unwrap()[mesh_id]
+    ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
         .unwrap()
@@ -242,47 +301,51 @@ pub unsafe extern "C" fn velocity_pointer(mesh: *const Mesh) -> *const [f32; 4] 
     &(*mesh).kinematic_velocity
 }
 #[no_mangle]
-pub unsafe extern "C" fn velocity_pointer_from_id(mesh_id: usize) -> *const [f32; 4] {
-    &ENGINE.meshes.lock().unwrap()[mesh_id].kinematic_velocity
+pub unsafe extern "C" fn velocity_pointer_from_id(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const [f32; 4] {
+    &ENGINE.meshes.lock().unwrap()[&*mesh_id].kinematic_velocity
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_trimesh_collider(mesh_id: usize) -> *mut Collider {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn create_trimesh_collider(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *mut Collider {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     let scaling = mesh.mesh_property.lock().unwrap().scaling.clone();
     let geometry = mesh.get_geometry_mut();
     geometry.create_trimesh_collider(scaling)
 }
 #[no_mangle]
 pub unsafe extern "C" fn create_convex_collider(
-    mesh_id: usize,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     collision_events: bool,
 ) -> *mut Collider {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     let scaling = mesh.mesh_property.lock().unwrap().scaling.clone();
     let geometry = mesh.get_geometry_mut();
     geometry.create_convex_collider(collision_events, scaling)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn scale_x(mesh_id: usize) -> f32 {
-    ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn scale_x(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) -> f32 {
+    ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
         .unwrap()
         .scaling[0]
 }
 #[no_mangle]
-pub unsafe extern "C" fn scale_y(mesh_id: usize) -> f32 {
-    ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn scale_y(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) -> f32 {
+    ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
         .unwrap()
         .scaling[1]
 }
 #[no_mangle]
-pub unsafe extern "C" fn scale_z(mesh_id: usize) -> f32 {
-    ENGINE.meshes.lock().unwrap()[mesh_id]
+pub unsafe extern "C" fn scale_z(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) -> f32 {
+    ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
         .unwrap()
@@ -305,13 +368,13 @@ pub unsafe extern "C" fn set_color(
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_color_from_id(
-    mesh_id: usize,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     data_0: f32,
     data_1: f32,
     data_2: f32,
     data_3: f32,
 ) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.update_color(data_0, data_1, data_2, data_3);
@@ -335,12 +398,12 @@ pub unsafe extern "C" fn set_ambient(
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_ambient_from_id(
-    mesh_id: usize,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     ambient_r: f32,
     ambient_g: f32,
     ambient_b: f32,
 ) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
 
@@ -356,8 +419,11 @@ pub unsafe extern "C" fn set_shadow(mesh_ptr: *mut Mesh, shadow: f32) {
     mesh_property.gpu_memory.shadow = shadow;
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_shadow_from_id(mesh_id: usize, shadow: f32) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn set_shadow_from_id(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    shadow: f32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     mesh_property.gpu_memory.shadow = shadow;
@@ -365,16 +431,29 @@ pub unsafe extern "C" fn set_shadow_from_id(mesh_id: usize, shadow: f32) {
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn test_triangles(
-    mesh_id: usize,
     collider_ptr: *mut collider::Collider,
     collider_sphere: *mut ColliderSphere,
 ) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
-    mesh.check_collision(&mut *collider_ptr, &*collider_sphere);
+    let meshes = &mut ENGINE.meshes.lock().unwrap();
+    ENGINE
+        .engine2
+        .lock()
+        .unwrap()
+        .camera_can_collide_meshes
+        .retain(|mesh_id| match meshes.get_mut(&mesh_id) {
+            Some(mesh) => {
+                mesh.check_collision(&mut *collider_ptr, &*collider_sphere);
+                return true;
+            }
+            None => return false,
+        });
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_scenes(mesh_id: usize, scenes: u32) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn set_scenes(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    scenes: u32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.set_scenes(scenes);
@@ -383,7 +462,7 @@ pub unsafe extern "C" fn set_scenes(mesh_id: usize, scenes: u32) {
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_scale_and_rotation(
-    mesh_id: usize,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     x: f32,
     y: f32,
     z: f32,
@@ -392,7 +471,7 @@ pub unsafe extern "C" fn update_scale_and_rotation(
     rz: f32,
     rw: f32,
 ) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.update_scale_and_rotation(x, y, z, rx, ry, rz, rw);
@@ -400,9 +479,11 @@ pub unsafe extern "C" fn update_scale_and_rotation(
     mesh.on_update(true);
 }
 #[no_mangle]
-pub unsafe extern "C" fn faces_pointer(mesh_id: usize) -> *const Plane {
+pub unsafe extern "C" fn faces_pointer(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *const Plane {
     let meshes = ENGINE.meshes.lock().unwrap();
-    let geometry = meshes[mesh_id].get_geometry();
+    let geometry = meshes[&*mesh_id].get_geometry();
     if !geometry.static_faces && geometry.planes.planes.len() == 0 {
         panic!("Not implemented yet, TODO: Generate faces");
         //Remember to allocate memory for collider planes also and other collider stuff also
@@ -466,10 +547,11 @@ impl Mesh {
         label: String,
         externref: Option<Resource<JSMesh>>,
         mesh_property_opt: Option<Arc<Mutex<MeshProperty>>>,
-        mut meshes: MutexGuard<'_, Vec<Mesh>>,
-    ) -> usize {
+        mut meshes: MutexGuard<'_, ExplicitGenerationalFreeList<Mesh>>,
+        camera_can_collide_to: bool,
+    ) -> ExplicitGenerationalFreeListIndex<Mesh> {
         let engine = &mut ENGINE.engine2.lock().unwrap();
-        let id = meshes.len();
+        let mesh_id = MESH_ID.fetch_add(1, Ordering::Relaxed);
         let mesh_property = mesh_property_opt.unwrap_or_else(|| {
             let gpu_mesh_alignment = engine.gpu_allocated.allocate();
             let maybegpu = &mut ENGINE.gpu.lock().unwrap();
@@ -489,7 +571,7 @@ impl Mesh {
                     shadow: 0.0,
                     color: [0.0, 0.0, 0.0, 0.0],
                     spotlight: [0.0, 0.0, 0.0, 0.0],
-                    _id: id,
+                    _id: mesh_id,
                     point_light_squared: point_light * point_light,
                     directional_light,
                     scenes: scenes as u32,
@@ -510,7 +592,6 @@ impl Mesh {
             }))
         });
         let m = Mesh {
-            id,
             mesh_property,
             geometry: None,
             kinematic_velocity: [0.0, 0.0, 0.0, 0.0],
@@ -523,9 +604,13 @@ impl Mesh {
             on_gpu_queue: false,
             externref,
             character: None,
+            id: mesh_id,
         };
-        meshes.push(m);
-        meshes[id].update_dynamic_buffer();
+        let id = meshes.insert(m);
+        if camera_can_collide_to {
+            engine.camera_can_collide_meshes.push(id.clone());
+        }
+        meshes[&id].update_dynamic_buffer();
         if rigid_body > 0 {
             let rigid_body_builder: RigidBodyBuilder;
             if rigid_body == 2 {
@@ -536,8 +621,8 @@ impl Mesh {
             let rigid_body = rigid_body_builder.build();
 
             let rigid_body_handle = engine.rigid_body_set.insert(rigid_body);
-            meshes[id].rigid_body_handle = Some(rigid_body_handle);
-            engine.rigid_bodies.insert(rigid_body_handle, id);
+            meshes[&id].rigid_body_handle = Some(rigid_body_handle);
+            engine.rigid_bodies.insert(rigid_body_handle, id.clone());
         }
         return id;
     }
@@ -640,7 +725,9 @@ impl Mesh {
         self.get_geometry_mut().calculate_normals();
         #[cfg(target_arch = "wasm32")]
         unsafe {
-            verticesChange(self.id);
+            if let Some(externref) = &self.externref {
+                vertices_change(externref);
+            }
         }
     }
 }

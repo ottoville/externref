@@ -25,7 +25,7 @@ export class Box extends IndexedSingleColoredMesh {
       can_collide?: boolean;
       color?: [number, number, number, number];
     },
-    mainNodeProps: Partial<MainNodeProps> | number,
+    mainNodeProps: Partial<MainNodeProps> | rust_pointer<'mesh_id'>,
   ) {
     const geometry = engine.rust.create_box_geometry();
     super(
@@ -36,6 +36,7 @@ export class Box extends IndexedSingleColoredMesh {
       typeof mainNodeProps === 'number'
         ? mainNodeProps
         : {
+            camera_can_collide_do: false,
             label: 'box' + uid++,
             ...mainNodeProps,
           },

@@ -29,10 +29,10 @@ class PlaneMesh extends IndexedDataNode {
 
     super(
       {
-        camera_can_collide_to: false,
         vertices: geometry,
       },
       {
+        camera_can_collide_do: false,
         label: 'plane',
         rigid_body: RigidBody.off,
       },

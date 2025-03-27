@@ -1,12 +1,22 @@
 use std::{
+    marker::PhantomData,
     mem,
-    ops::{Index, IndexMut},
+    ops::{Deref, Index, IndexMut},
 };
 
 // Guard for not referencing index with only type that was returned from allocator.
-#[derive(Debug, Copy, Clone)]
 #[repr(transparent)]
-pub struct ExplicitFreeListIndex(pub usize);
+pub struct ExplicitFreeListIndex<T> {
+    idx: usize,
+    phantom: PhantomData<T>,
+}
+impl<T> Deref for ExplicitFreeListIndex<T> {
+    type Target = usize;
+
+    fn deref(&self) -> &Self::Target {
+        &self.idx
+    }
+}
 
 enum Slot<T> {
     Item(T),
@@ -31,7 +41,7 @@ impl<T> ExplicitFreeList<T> {
             next_free: 0,
         }
     }
-    pub fn insert(&mut self, value: T) -> ExplicitFreeListIndex {
+    pub fn insert(&mut self, value: T) -> ExplicitFreeListIndex<T> {
         let idx = self.next_free;
         if idx == self.entries.len() {
             self.next_free += 1;
@@ -50,11 +60,14 @@ impl<T> ExplicitFreeList<T> {
                 }
             }
         }
-        return ExplicitFreeListIndex(idx);
+        return ExplicitFreeListIndex::<T> {
+            idx,
+            phantom: PhantomData,
+        };
     }
-    pub fn remove(&mut self, idx: ExplicitFreeListIndex) {
-        self.entries[idx.0] = Slot::NextFree(self.next_free);
-        self.next_free = idx.0;
+    pub fn remove(&mut self, idx: ExplicitFreeListIndex<T>) {
+        self.entries[idx.idx] = Slot::NextFree(self.next_free);
+        self.next_free = idx.idx;
     }
     pub fn used_space(&self) -> usize {
         self.entries.len()
@@ -77,11 +90,11 @@ impl<T> ExplicitFreeList<T> {
         })
     }
 }
-impl<T> Index<ExplicitFreeListIndex> for ExplicitFreeList<T> {
+impl<T> Index<&ExplicitFreeListIndex<T>> for ExplicitFreeList<T> {
     type Output = T;
-    fn index(&self, index: ExplicitFreeListIndex) -> &Self::Output {
+    fn index(&self, index: &ExplicitFreeListIndex<T>) -> &Self::Output {
         unsafe {
-            match &self.entries.get_unchecked(index.0) {
+            match &self.entries.get_unchecked(index.idx) {
                 Slot::Item(item) => item,
                 Slot::NextFree(_) => {
                     std::hint::unreachable_unchecked();
@@ -90,10 +103,10 @@ impl<T> Index<ExplicitFreeListIndex> for ExplicitFreeList<T> {
         }
     }
 }
-impl<T> IndexMut<ExplicitFreeListIndex> for ExplicitFreeList<T> {
-    fn index_mut(&mut self, index: ExplicitFreeListIndex) -> &mut Self::Output {
+impl<T> IndexMut<&ExplicitFreeListIndex<T>> for ExplicitFreeList<T> {
+    fn index_mut(&mut self, index: &ExplicitFreeListIndex<T>) -> &mut Self::Output {
         unsafe {
-            match self.entries.get_unchecked_mut(index.0) {
+            match self.entries.get_unchecked_mut(index.idx) {
                 Slot::Item(item) => item,
                 Slot::NextFree(_) => {
                     std::hint::unreachable_unchecked();
@@ -126,26 +139,26 @@ fn test_explicit_freelist() {
         freelist.remove(first_6); // empty
         let first_0 = freelist.insert(TestEntry(0)); //0
         let second_1 = freelist.insert(TestEntry(1)); //0,1
-        let second_idx = second_1.0;
+        let second_idx = *second_1;
         let third_2 = freelist.insert(TestEntry(2)); //0,1,2
         assert_eq!(freelist.used_space(), 3);
         freelist.remove(second_1); //0,empty,2
         assert_eq!(freelist.used_space(), 3);
         let forth_3 = freelist.insert(TestEntry(3)); //0,3,2
         assert_eq!(freelist.used_space(), 3);
-        assert_eq!(second_idx, forth_3.0);
+        assert_eq!(second_idx, *forth_3);
         let fifth_4 = freelist.insert(TestEntry(4)); //0,3,2,4
         assert_eq!(freelist.used_space(), 4);
-        assert_eq!(freelist[first_0].0, 0);
-        assert_eq!(freelist[third_2].0, 2);
-        assert_eq!(freelist[forth_3].0, 3);
-        assert_eq!(freelist[fifth_4].0, 4);
+        assert_eq!(freelist[&first_0].0, 0);
+        assert_eq!(freelist[&third_2].0, 2);
+        assert_eq!(freelist[&forth_3].0, 3);
+        assert_eq!(freelist[&fifth_4].0, 4);
         freelist.remove(forth_3); //0,empty,2,4
 
         let mut items = freelist.iter();
-        assert_eq!(items.next().unwrap().0, freelist[first_0].0);
-        assert_eq!(items.next().unwrap().0, freelist[third_2].0);
-        assert_eq!(items.next().unwrap().0, freelist[fifth_4].0);
+        assert_eq!(items.next().unwrap().0, freelist[&first_0].0);
+        assert_eq!(items.next().unwrap().0, freelist[&third_2].0);
+        assert_eq!(items.next().unwrap().0, freelist[&fifth_4].0);
         unsafe {
             DROPPED.clear();
         }

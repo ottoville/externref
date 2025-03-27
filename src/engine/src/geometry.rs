@@ -12,11 +12,7 @@ use terramath::{CrossProduct, Plane, Vec3wgslF32, VectorMath, VectorMathF32};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
-    indices::Indices,
-    math2::Vec2wgslF32,
-    mesh::ENGINE,
-    vertices::{Position2DAndUV, PositionAndNormalAndUV, VertexKind},
-    MULTIVALUE_USIZE,
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex, indices::Indices, math2::Vec2wgslF32, mesh::{Mesh, ENGINE}, vertices::{Position2DAndUV, PositionAndNormalAndUV, VertexKind}, MULTIVALUE_USIZE
 };
 #[no_mangle]
 pub unsafe extern "C" fn indices_pointer_from_geometry(
@@ -65,9 +61,9 @@ pub unsafe extern "C" fn rebuild_triangle_planes(geometry: *mut Geometry) {
     (*geometry).rebuild_triangle_planes();
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_faces(mesh_id: usize, ptr: *mut Plane, length: usize, cap: usize) {
+pub unsafe extern "C" fn set_faces(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>, ptr: *mut Plane, length: usize, cap: usize) {
     let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     let geometry = mesh.get_geometry_mut();
     geometry.collider_planes = Vec::with_capacity(planes.len());
@@ -80,13 +76,13 @@ pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry) -> usize 
     geometry.vertices.length()
 }
 #[no_mangle]
-pub unsafe extern "C" fn have_vertices(mesh_id: usize) -> bool {
-    let mesh = &ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn have_vertices(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) -> bool {
+    let mesh = &ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.get_geometry().vertices.have_vertices()
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
-    mesh_id: usize,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     indices_ptr: *mut usize,
     indices_length: usize,
     indices_cap: usize,
@@ -96,7 +92,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
 ) {
     let indices = Vec::from_raw_parts(indices_ptr, indices_length, indices_cap);
     let vertices = Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_cap);
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     let geometry = mesh.get_geometry_mut();
     geometry.indices = Indices {

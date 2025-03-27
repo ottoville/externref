@@ -23,11 +23,11 @@ export class Sea extends DataNode {
     const geometry = engine.rust.create_water_geometry();
     super(
       {
-        camera_can_collide_to: false,
         can_collide: false,
         vertices: geometry,
       },
       {
+        camera_can_collide_do: false,
         label: 'water',
         rigid_body: RigidBody.off,
         scenes,

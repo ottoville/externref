@@ -13,7 +13,7 @@ declare const engine: Engine;
 export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: MainNodeProps | number,
+    mainNodeProps: MainNodeProps | rust_pointer<'mesh_id'>,
     simpleIndexedMeshProps?: SimpleIndexedMeshProps,
   ) {
     super(

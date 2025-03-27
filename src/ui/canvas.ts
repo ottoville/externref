@@ -33,6 +33,7 @@ class Light extends MainNode {
   drawable = undefined;
   constructor(scene: Scene) {
     super({
+      camera_can_collide_do: false,
       directional_light: 1,
       label: 'Light',
       point_light: 0,
@@ -195,6 +196,7 @@ export class Canvas {
         });
         const cone = new Cone(
           {
+            camera_can_collide_do: false,
             label: 'cone',
           },
           true,

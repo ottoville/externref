@@ -42,7 +42,7 @@ interface GPUProps<
 export class SimpleIndexedMesh extends BoundableNodeIndexed {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: MainNodeProps | number,
+    mainNodeProps: MainNodeProps | rust_pointer<'mesh_id'>,
     gpuProps?: GPUProps,
     {
       vBufferGPU,

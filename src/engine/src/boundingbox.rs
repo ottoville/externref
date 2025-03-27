@@ -1,6 +1,7 @@
 use terramath::{Vec3wgslF32, VectorMath};
 
-use crate::mesh::ENGINE;
+use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+use crate::mesh::{Mesh, ENGINE};
 use crate::vertices::{Position, VertexKind};
 use crate::Geometry;
 
@@ -18,63 +19,61 @@ pub const BOUNDING_BOX_INDICES: [usize; 26] = [
     0, 1, 2, 3, 4, 5, 6, 7, 4, 6, 1, 5, 2, 0, 3, 7, 0, 6, 2, 4, 0, 7, 1, 3, 5, 7,
 ];
 #[no_mangle]
-pub unsafe extern "C" fn create_bounding_box_geometry(mesh_id: usize) -> *mut Geometry {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn create_bounding_box_geometry(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *mut Geometry {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
-    let mut bb_geometry: Box<Geometry> = Box::new(Geometry::new(
-        false,
-        false,
-        true,
-        "boundingbox".to_string(),
-    ));
+    let mut bb_geometry: Box<Geometry> =
+        Box::new(Geometry::new(false, false, true, "boundingbox".to_string()));
     if let Some(geometry) = &mut mesh.geometry {
         geometry.update_bounding_box(&mesh_property.get_transformation());
-            /*
-               Convert SIMD lanes to XYZ
-            */
-            let vectors: Vec<Position> = vec![
-                Position::new([
-                    geometry.bounding_box.vectors_simd[0][0][0],
-                    geometry.bounding_box.vectors_simd[0][1][0],
-                    geometry.bounding_box.vectors_simd[0][2][0],
-                ]),
-                Position::new([
-                    geometry.bounding_box.vectors_simd[0][0][1],
-                    geometry.bounding_box.vectors_simd[0][1][1],
-                    geometry.bounding_box.vectors_simd[0][2][1],
-                ]),
-                Position::new([
-                    geometry.bounding_box.vectors_simd[0][0][2],
-                    geometry.bounding_box.vectors_simd[0][1][2],
-                    geometry.bounding_box.vectors_simd[0][2][2],
-                ]),
-                Position::new([
-                    geometry.bounding_box.vectors_simd[0][0][3],
-                    geometry.bounding_box.vectors_simd[0][1][3],
-                    geometry.bounding_box.vectors_simd[0][2][3],
-                ]),
-                Position::new([
-                    geometry.bounding_box.vectors_simd[1][0][0],
-                    geometry.bounding_box.vectors_simd[1][1][0],
-                    geometry.bounding_box.vectors_simd[1][2][0],
-                ]),
-                Position::new([
-                    geometry.bounding_box.vectors_simd[1][0][1],
-                    geometry.bounding_box.vectors_simd[1][1][1],
-                    geometry.bounding_box.vectors_simd[1][2][1],
-                ]),
-                Position::new([
-                    geometry.bounding_box.vectors_simd[1][0][2],
-                    geometry.bounding_box.vectors_simd[1][1][2],
-                    geometry.bounding_box.vectors_simd[1][2][2],
-                ]),
-                Position::new([
-                    geometry.bounding_box.vectors_simd[1][0][3],
-                    geometry.bounding_box.vectors_simd[1][1][3],
-                    geometry.bounding_box.vectors_simd[1][2][3],
-                ]),
-            ];
-            bb_geometry.set_vertices(VertexKind::Position(vectors));
+        /*
+           Convert SIMD lanes to XYZ
+        */
+        let vectors: Vec<Position> = vec![
+            Position::new([
+                geometry.bounding_box.vectors_simd[0][0][0],
+                geometry.bounding_box.vectors_simd[0][1][0],
+                geometry.bounding_box.vectors_simd[0][2][0],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[0][0][1],
+                geometry.bounding_box.vectors_simd[0][1][1],
+                geometry.bounding_box.vectors_simd[0][2][1],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[0][0][2],
+                geometry.bounding_box.vectors_simd[0][1][2],
+                geometry.bounding_box.vectors_simd[0][2][2],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[0][0][3],
+                geometry.bounding_box.vectors_simd[0][1][3],
+                geometry.bounding_box.vectors_simd[0][2][3],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[1][0][0],
+                geometry.bounding_box.vectors_simd[1][1][0],
+                geometry.bounding_box.vectors_simd[1][2][0],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[1][0][1],
+                geometry.bounding_box.vectors_simd[1][1][1],
+                geometry.bounding_box.vectors_simd[1][2][1],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[1][0][2],
+                geometry.bounding_box.vectors_simd[1][1][2],
+                geometry.bounding_box.vectors_simd[1][2][2],
+            ]),
+            Position::new([
+                geometry.bounding_box.vectors_simd[1][0][3],
+                geometry.bounding_box.vectors_simd[1][1][3],
+                geometry.bounding_box.vectors_simd[1][2][3],
+            ]),
+        ];
+        bb_geometry.set_vertices(VertexKind::Position(vectors));
 
         bb_geometry.set_indices(BOUNDING_BOX_INDICES.to_vec());
         return Box::into_raw(bb_geometry);
@@ -103,9 +102,8 @@ fn test_bounding_box() {
             true,
         );
         let meshes = ENGINE.meshes.lock().unwrap();
-        let len = meshes.len();
-        Mesh::new(0.0, 0.0, 0.0, 0, String::from("box"), None, None, meshes);
-        let m = &mut ENGINE.meshes.lock().unwrap()[len];
+        let id = Mesh::new(0.0, 0.0, 0.0, 0, String::from("box"), None, None, meshes, false);
+        let m = &mut ENGINE.meshes.lock().unwrap()[&id];
         let mut geometry = Geometry::new(false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());
         geometry.set_vertices(vertices);

@@ -41,11 +41,11 @@ export class TerrainMesh extends BoundableNodeIndexed {
     );
     super(
       {
-        camera_can_collide_to: true,
         can_collide: true,
         vertices: geometry,
       },
       {
+        camera_can_collide_do: true,
         label: 'terrain',
         rigid_body: RigidBody.off,
         scenes,

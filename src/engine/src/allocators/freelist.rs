@@ -57,6 +57,9 @@ impl<T> FreeList<T> {
 }
 impl<T> Drop for FreeList<T> {
     fn drop(&mut self) {
+        if !core::mem::needs_drop::<T>() {
+            return;
+        }
         let mut free_slots: Vec<usize> = Vec::with_capacity(self.used_space());
         let mut next_free_id = self.next_free;
         // Follow free slots path to list all free list

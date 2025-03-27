@@ -27,7 +27,6 @@ export type DataNodeProps = {
    */
   can_collide?: boolean;
   frontFace?: GPUFrontFace;
-  camera_can_collide_to?: boolean;
 };
 /*
     TODO: Calculate closeDistance on every collision to take account angle between upVector and collided slope,
@@ -205,24 +204,19 @@ export class DataNode extends MainNode {
   create_collider() {
     return engine.rust.create_trimesh_collider(this.id);
   }
-  static Meshes: Map<number, DataNode> = new Map();
-  static CharacterCanCollideMeshes: Set<DataNode> = new Set();
   frontFace: GPUFrontFace;
   geometry: rust_pointer<'geometry'>;
-  constructor(props: DataNodeProps, mainNodeProps: MainNodeProps | number) {
+  constructor(
+    props: DataNodeProps,
+    mainNodeProps: MainNodeProps | rust_pointer<'mesh_id'>,
+  ) {
     super(mainNodeProps);
     this.#props = Object.freeze(props);
 
-    const {
-      vertices,
-      can_collide = false,
-      frontFace = 'cw',
-      camera_can_collide_to = true,
-    } = props;
+    const { vertices, can_collide = false, frontFace = 'cw' } = props;
 
     this.frontFace = frontFace;
 
-    DataNode.Meshes.set(this.id, this);
     if (typeof mainNodeProps !== 'number') {
       this.geometry = engine.rust.set_geometry(this.id, vertices);
     } else {
@@ -232,9 +226,6 @@ export class DataNode extends MainNode {
     if (can_collide) {
       const collider_ptr = this.create_collider();
       engine.rust.add_collider(this.id, collider_ptr);
-    }
-    if (camera_can_collide_to) {
-      DataNode.CharacterCanCollideMeshes.add(this);
     }
   }
   get verticesArray() {
@@ -262,8 +253,6 @@ export class DataNode extends MainNode {
     if (idx >= 0) {
       engine.physics.movables.splice(idx, 1);
     }
-    DataNode.Meshes.delete(this.id);
-    DataNode.CharacterCanCollideMeshes.delete(this);
     super.destroy();
   }
 }

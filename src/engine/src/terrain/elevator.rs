@@ -1,5 +1,6 @@
 use terramath::Vec3wgslF32;
 
+use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 pub use crate::mesh::Mesh;
 use crate::{mesh::ENGINE, Geometry};
 use std::collections::HashSet;
@@ -17,8 +18,10 @@ pub struct Elevator {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_elevator(mesh_id: usize) -> *mut Elevator {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+pub unsafe extern "C" fn create_elevator(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *mut Elevator {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     Box::into_raw(Box::new(Elevator::new(mesh.get_geometry_mut())))
 }
 
@@ -35,11 +38,11 @@ pub unsafe extern "C" fn mouse_position_pointer(elevator_ptr: *const Elevator) -
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn elevate(
     elevator_ptr: *mut Elevator,
-    mesh_id: usize,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     radius: f32,
     height: f32,
 ) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     (*elevator_ptr)._elevate(mesh, radius, height)
 }

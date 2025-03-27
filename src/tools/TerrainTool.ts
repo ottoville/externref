@@ -177,6 +177,7 @@ export class TerrainTool extends MainNode {
 
   constructor(public terrain: Terrain) {
     super({
+      camera_can_collide_do: false,
       label: 'TerrainTool',
     });
     engine.addInputListener(this.#pointerdownf);

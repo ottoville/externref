@@ -49,7 +49,6 @@ export function createWireFrameMesh(
     );
     const node = new IndexedDataNode(
       {
-        camera_can_collide_to: false,
         can_collide: false,
         vertices: engine.rust.get_geometry(mesh),
       },

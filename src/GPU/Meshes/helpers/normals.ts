@@ -32,7 +32,6 @@ export class NormalsMesh extends DataNode {
     );
     super(
       {
-        camera_can_collide_to: false,
         vertices: engine.rust.get_geometry(mesh),
       },
       mesh,

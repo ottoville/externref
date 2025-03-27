@@ -1,5 +1,4 @@
 import type { Engine } from '../engine.js';
-import { MutableTerraVector3, TerraVector3 } from '../Math.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import { ARROW_KEYS, CameraController } from './CameraController.js';
 
@@ -13,7 +12,7 @@ export class PositionCamera extends CameraController {
   name = 'PositionCamera';
   #angle = Math.PI;
   #vAngle = Math.PI * 0.5;
-  #position = new MutableTerraVector3([-3000, 300, 0]);
+  #position: readonly [number, number, number] = [-3000, 300, 0];
   #velocity = 0.5 as const;
   #arrowKeysDown = 0;
 
@@ -45,13 +44,13 @@ export class PositionCamera extends CameraController {
               angle: number;
             };
           };
-          this.#position.set(restored.data.position);
+          this.#position = [...restored.data.position];
           this.#angle = restored.data.angle;
           syncCamera();
         }
       };
     } else {
-      this.#position.set(this.camera.position as TerraVector3);
+      this.#position = [...this.camera.position];
       this.#angle = Math.acos(this.camera.direction[0]);
     }
   }
@@ -149,7 +148,7 @@ export class PositionCamera extends CameraController {
           oldPos[2] + direction[2] * this.#velocity,
         );
       }
-      this.#position = this.camera.position.clone();
+      this.#position = [...this.camera.position];
     }
 
     if (this.#arrowKeysDown) {
