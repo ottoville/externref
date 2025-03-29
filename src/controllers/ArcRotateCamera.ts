@@ -282,38 +282,14 @@ export class ArcRotateCamera extends CameraController {
       throw new Error('no cameracontrol');
     }
 
-    // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
-
     // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
-    const scaledPosition = engine.collider.scaledPosition;
-    scaledPosition[0] = this.camera.position[0] / this.collisionRadius;
-    scaledPosition[1] = this.camera.position[1] / this.collisionRadius;
-    scaledPosition[2] = this.camera.position[2] / this.collisionRadius;
-    //this._newPosition.subtractToRef(this._position, this._collisionVelocity);
     // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
-    const scaledVelocity = engine.collider.scaledVelocity;
     const newPosition = this.#calculatePosition();
-    scaledVelocity[0] =
-      (newPosition[0] - this.camera.position[0]) / this.collisionRadius;
-    scaledVelocity[1] =
-      (newPosition[1] - this.camera.position[1]) / this.collisionRadius;
-    scaledVelocity[2] =
-      (newPosition[2] - this.camera.position[2]) / this.collisionRadius;
-
-    // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
-
-    //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
     //let starttime=performance.now();
     engine.collideWithWorld(
       this,
-      scaledPosition,
-      scaledVelocity,
-      this.camera.position,
-      [
-        newPosition[0] - this.camera.position[0],
-        newPosition[1] - this.camera.position[1],
-        newPosition[2] - this.camera.position[2],
-      ],
+      newPosition,
+      engine.rust.get_camera_position_ptr(this.camera.id),
     );
 
     //run the callback

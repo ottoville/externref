@@ -56,27 +56,6 @@ pub extern "C" fn collider() -> *mut Collider {
     Box::into_raw(coll)
 }
 #[no_mangle]
-pub unsafe extern "C" fn initialize_collider(
-    collider_ptr: *mut Collider,
-    world_position_x: f32,
-    world_position_y: f32,
-    world_position_z: f32,
-    world_velocity_x: f32,
-    world_velocity_y: f32,
-    world_velocity_z: f32,
-    radius: f32,
-) {
-    (*collider_ptr)._initialize(
-        world_position_x,
-        world_position_y,
-        world_position_z,
-        world_velocity_x,
-        world_velocity_y,
-        world_velocity_z,
-        radius,
-    );
-}
-#[no_mangle]
 pub unsafe extern "C" fn intersection_point_pointer(collider_ptr: *const Collider) -> *const f32 {
     (*collider_ptr).intersection_point.as_ptr()
 }
@@ -288,9 +267,7 @@ impl Collider {
     }
     pub fn _initialize(
         &mut self,
-        world_position_x: f32,
-        world_position_y: f32,
-        world_position_z: f32,
+        world_position: &[f32;3],
         world_velocity_x: f32,
         world_velocity_y: f32,
         world_velocity_z: f32,
@@ -303,7 +280,7 @@ impl Collider {
         unsafe {
             self.collided_point_in_triangle = *(0 as *const &'static Plane);
         }
-        self.basepoint_world = [world_position_x, world_position_y, world_position_z];
+        self.basepoint_world = world_position.clone();
         self.scaled_speed_squared = self.scaled_velocity.dot(&self.scaled_velocity);
         let len = self.scaled_speed_squared.sqrt();
         let mut normalized_velocity = [0.0; 4];

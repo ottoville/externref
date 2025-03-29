@@ -433,7 +433,19 @@ pub unsafe extern "C" fn set_shadow_from_id(
 pub unsafe extern "C" fn test_triangles(
     collider_ptr: *mut collider::Collider,
     collider_sphere: *mut ColliderSphere,
+    world_position: *const [f32;3],
+    world_velocity_x: f32,
+    world_velocity_y: f32,
+    world_velocity_z: f32,
 ) {
+    //TODO: really, here inside the loop?
+    (*collider_ptr)._initialize(
+        &*world_position,
+        world_velocity_x,
+        world_velocity_y,
+        world_velocity_z,
+        (*collider_sphere).collision_radius
+    );
     let meshes = &mut ENGINE.meshes.lock().unwrap();
     ENGINE
         .engine2

@@ -94,7 +94,7 @@ export class ColliderJS {
       engine.rust.memory.buffer,
       engine.rust.scaled_velocity_pointer(this.collider_ptr),
       4,
-    ) as TerraVector3;
+    ) as unknown as [number, number, number];
   }
   get intersectionPointWasm() {
     return new Float32Array(

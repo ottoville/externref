@@ -104,16 +104,6 @@ export type rustWasm = {
   ): rust_pointer<'geometry'>;
   create_icosphere_geometry(order: number): rust_pointer<'geometry'>;
   collider(): rust_pointer<'legacy_collider'>;
-  initialize_collider(
-    collider: rust_pointer<'legacy_collider'>,
-    position_world_x: number,
-    position_world_y: number,
-    position_world_z: number,
-    velocity_world_x: number,
-    velocity_world_y: number,
-    velocity_world_z: number,
-    radius: number,
-  ): void;
   intersection_point_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
@@ -484,6 +474,10 @@ export type rustWasm = {
   test_triangles(
     rust_collider_ptr: rust_pointer<'legacy_collider'>,
     collider_sphere: rust_pointer<'collider_sphere'>,
+    position_world: rust_pointer<'position'>,
+    velocity_world_x: number,
+    velocity_world_y: number,
+    velocity_world_z: number,
   ): void;
   get_impulse_from_id(
     mesh_id: rust_pointer<'mesh_id'>,
@@ -1093,28 +1087,40 @@ export class Engine {
   }
   collideWithWorld(
     sphere: Ellipsoid,
-    scaledPosition: [number, number, number],
-    scaledVelocity: TerraVector3,
-    worldPosition: readonly [number, number, number],
-    worldVelocity: readonly [number, number, number],
+    newPosition: [number, number, number],
+    worldPosition: rust_pointer<'position'>,
   ): void {
     if (sphere instanceof DataNode) sphere.colliding_character = false;
+    const pos_arr = new Float32Array(
+      engine.rust.memory.buffer,
+      worldPosition,
+      3,
+    ) as unknown as readonly [number, number, number];
+    const worldVelocity = [
+      newPosition[0] - pos_arr[0],
+      newPosition[1] - pos_arr[1],
+      newPosition[2] - pos_arr[2],
+    ] as const;
+
+    const scaledVelocity = engine.collider.scaledVelocity;
+    scaledVelocity[0] = worldVelocity[0] / sphere.collisionRadius;
+    scaledVelocity[1] = worldVelocity[1] / sphere.collisionRadius;
+    scaledVelocity[2] = worldVelocity[2] / sphere.collisionRadius;
+
+    let scaledPosition = engine.collider.scaledPosition;
+    scaledPosition[0] = pos_arr[0] / sphere.collisionRadius;
+    scaledPosition[1] = pos_arr[1] / sphere.collisionRadius;
+    scaledPosition[2] = pos_arr[2] / sphere.collisionRadius;
+
     this.collider.didCollide = false;
     for (let i = 0; i < 3; i++) {
-      //TODO: really, here inside the loop?
-      this.rust.initialize_collider(
-        this.collider.collider_ptr,
-        worldPosition[0],
-        worldPosition[1],
-        worldPosition[2],
-        worldVelocity[0],
-        worldVelocity[1],
-        worldVelocity[2],
-        sphere.collisionRadius,
-      );
       engine.rust.test_triangles(
         engine.collider.collider_ptr,
         sphere.colliderSphere,
+        worldPosition,
+        worldVelocity[0],
+        worldVelocity[1],
+        worldVelocity[2],
       );
       this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
       this.#destinationPoint[1] = scaledPosition[1] + scaledVelocity[1];
