@@ -29,8 +29,8 @@ pub struct Collider {
     intersection_point: [f32; 4],
     pub collision_resolved: bool,
     pub nearest_distance_squared: f32,
-    scaled_position: [f32; 4],
-    scaled_velocity: [f32; 4],
+    pub scaled_position: [f32; 4],
+    pub scaled_velocity: [f32; 4],
     // TODO: move to stack
     scaled_speed_squared: f32,
     pub speed: f32,
@@ -49,6 +49,9 @@ pub struct Collider {
     scaled_position_x: [f32; 4],
     scaled_position_y: [f32; 4],
     scaled_position_z: [f32; 4],
+    // TODO: move to stack
+    pub destination_point: [f32; 4],
+    pub did_collide: bool
 }
 #[no_mangle]
 pub extern "C" fn collider() -> *mut Collider {
@@ -60,12 +63,24 @@ pub unsafe extern "C" fn intersection_point_pointer(collider_ptr: *const Collide
     (*collider_ptr).intersection_point.as_ptr()
 }
 #[no_mangle]
+pub unsafe extern "C" fn destination_point_ptr(collider_ptr: *const Collider) -> *const f32 {
+    (*collider_ptr).destination_point.as_ptr()
+}
+#[no_mangle]
 pub unsafe extern "C" fn set_collision_resolved(collider_ptr: *mut Collider, val: bool) {
     (*collider_ptr).collision_resolved = val
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_collision_resolved(collider_ptr: *const Collider) -> bool {
     (*collider_ptr).collision_resolved
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_did_collide(collider_ptr: *mut Collider, value: bool) {
+    (*collider_ptr).did_collide = value
+}
+#[no_mangle]
+pub unsafe extern "C" fn get_did_collide(collider_ptr: *const Collider) -> bool {
+    (*collider_ptr).did_collide
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_nearest_distance_squared(collider_ptr: *mut Collider, distance: f32) {
@@ -262,12 +277,14 @@ impl Collider {
                 scaled_position_x: [0.0; 4],
                 scaled_position_y: [0.0; 4],
                 scaled_position_z: [0.0; 4],
+                destination_point: [0.0; 4],
+                did_collide: false
             }
         }
     }
     pub fn _initialize(
         &mut self,
-        world_position: &[f32;3],
+        world_position: &[f32; 3],
         world_velocity_x: f32,
         world_velocity_y: f32,
         world_velocity_z: f32,
@@ -623,6 +640,7 @@ impl Collider {
         collided_plane: *const Plane,
     ) {
         let dist_to_collision_squared = t * t * velocity_squared_length;
+        self.did_collide = true;
         if self.collision_resolved || dist_to_collision_squared < self.nearest_distance_squared {
             self.intersection_point[0] = self.collision_point[0];
             self.intersection_point[1] = self.collision_point[1];

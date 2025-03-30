@@ -107,6 +107,7 @@ export type rustWasm = {
   intersection_point_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
+  destination_point_ptr(collider_ptr: rust_pointer<'legacy_collider'>): number;
   set_collision_resolved(
     collider_ptr: rust_pointer<'legacy_collider'>,
     val: boolean,
@@ -114,6 +115,11 @@ export type rustWasm = {
   get_collision_resolved(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): boolean;
+  set_did_collide(
+    collider_ptr: rust_pointer<'legacy_collider'>,
+    value: boolean,
+  ): void;
+  get_did_collide(collider_ptr: rust_pointer<'legacy_collider'>): boolean;
   set_nearest_distance_squared(
     collider_ptr: rust_pointer<'legacy_collider'>,
     distance: number,
@@ -478,7 +484,7 @@ export type rustWasm = {
     velocity_world_x: number,
     velocity_world_y: number,
     velocity_world_z: number,
-  ): void;
+  ): boolean;
   get_impulse_from_id(
     mesh_id: rust_pointer<'mesh_id'>,
   ): rust_pointer<'impulse'>;
@@ -622,7 +628,6 @@ export class Engine {
   // readonly collisionNotFound:DataView
   readonly collider: ColliderJS;
 
-  readonly #destinationPoint: [number, number, number] = [0, 0, 0];
   readonly #displacementVector: [number, number, number] = [0, 0, 0];
 
   inputManager: CameraController | null = null;
@@ -1107,32 +1112,26 @@ export class Engine {
     scaledVelocity[1] = worldVelocity[1] / sphere.collisionRadius;
     scaledVelocity[2] = worldVelocity[2] / sphere.collisionRadius;
 
-    let scaledPosition = engine.collider.scaledPosition;
+    const scaledPosition = engine.collider.scaledPosition;
     scaledPosition[0] = pos_arr[0] / sphere.collisionRadius;
     scaledPosition[1] = pos_arr[1] / sphere.collisionRadius;
     scaledPosition[2] = pos_arr[2] / sphere.collisionRadius;
 
-    this.collider.didCollide = false;
+    engine.rust.set_did_collide(this.collider.collider_ptr, false);
+    const destinationPoint = this.collider.destinationPointWasm;
     for (let i = 0; i < 3; i++) {
-      engine.rust.test_triangles(
-        engine.collider.collider_ptr,
-        sphere.colliderSphere,
-        worldPosition,
-        worldVelocity[0],
-        worldVelocity[1],
-        worldVelocity[2],
-      );
-      this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
-      this.#destinationPoint[1] = scaledPosition[1] + scaledVelocity[1];
-      this.#destinationPoint[2] = scaledPosition[2] + scaledVelocity[2];
-
-      if (this.collider.collision_resolved) {
-        //this.collider.finalPosition.set(scaledPosition);
-        scaledPosition = this.#destinationPoint;
+      if (
+        engine.rust.test_triangles(
+          engine.collider.collider_ptr,
+          sphere.colliderSphere,
+          worldPosition,
+          worldVelocity[0],
+          worldVelocity[1],
+          worldVelocity[2],
+        )
+      ) {
         break;
       }
-      this.collider.didCollide = true;
-      if (sphere instanceof DataNode) sphere.colliding_character = true;
       const intersectionPoint = this.collider.intersectionPointWasm;
       //console.log('collision found')
       if (
@@ -1218,17 +1217,16 @@ export class Engine {
           this.collider._slidePlaneNormal[1] * intersectionPoint[1] +
           this.collider._slidePlaneNormal[2] * intersectionPoint[2]
         );
-        scale =
-          Dot(this.#destinationPoint, this.collider._slidePlaneNormal) + d;
+        scale = Dot(destinationPoint, this.collider._slidePlaneNormal) + d;
 
-        this.#destinationPoint[0] -= this.collider._slidePlaneNormal[0] * scale;
-        this.#destinationPoint[1] -= this.collider._slidePlaneNormal[1] * scale;
-        this.#destinationPoint[2] -= this.collider._slidePlaneNormal[2] * scale;
+        destinationPoint[0] -= this.collider._slidePlaneNormal[0] * scale;
+        destinationPoint[1] -= this.collider._slidePlaneNormal[1] * scale;
+        destinationPoint[2] -= this.collider._slidePlaneNormal[2] * scale;
 
         //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
-        scaledVelocity[0] = this.#destinationPoint[0] - intersectionPoint[0];
-        scaledVelocity[1] = this.#destinationPoint[1] - intersectionPoint[1];
-        scaledVelocity[2] = this.#destinationPoint[2] - intersectionPoint[2];
+        scaledVelocity[0] = destinationPoint[0] - intersectionPoint[0];
+        scaledVelocity[1] = destinationPoint[1] - intersectionPoint[1];
+        scaledVelocity[2] = destinationPoint[2] - intersectionPoint[2];
       }
 
       const unScaledVelocity = [

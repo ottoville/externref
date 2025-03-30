@@ -433,32 +433,21 @@ pub unsafe extern "C" fn set_shadow_from_id(
 pub unsafe extern "C" fn test_triangles(
     collider_ptr: *mut collider::Collider,
     collider_sphere: *mut ColliderSphere,
-    world_position: *const [f32;3],
+    world_position: *const [f32; 3],
     world_velocity_x: f32,
     world_velocity_y: f32,
     world_velocity_z: f32,
-) {
+) -> bool {
+    let collider = (&mut *collider_ptr);
     //TODO: really, here inside the loop?
-    (*collider_ptr)._initialize(
+    return ENGINE.engine2.lock().unwrap().check_collisions(
+        collider,
+        &*collider_sphere,
         &*world_position,
         world_velocity_x,
         world_velocity_y,
         world_velocity_z,
-        (*collider_sphere).collision_radius
     );
-    let meshes = &mut ENGINE.meshes.lock().unwrap();
-    ENGINE
-        .engine2
-        .lock()
-        .unwrap()
-        .camera_can_collide_meshes
-        .retain(|mesh_id| match meshes.get_mut(&mesh_id) {
-            Some(mesh) => {
-                mesh.check_collision(&mut *collider_ptr, &*collider_sphere);
-                return true;
-            }
-            None => return false,
-        });
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_scenes(

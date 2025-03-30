@@ -3,7 +3,9 @@ use std::num::NonZeroUsize;
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::{panic, usize};
 
-use crate::allocators::explicit_generational_freelist::{ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex};
+use crate::allocators::explicit_generational_freelist::{
+    ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
+};
 use crate::allocators::freeindex::FreeIndex;
 
 use crate::gpu::gpu::GPU;
@@ -11,6 +13,7 @@ use crate::gpu::gpu::GPU;
 use crate::mesh::JSMesh;
 pub use crate::mesh::Mesh;
 pub use crate::GPUMesh;
+use collider::ColliderSphere;
 use externref::externref;
 use externref::Resource;
 use logger::Logger;
@@ -42,7 +45,6 @@ pub unsafe extern "C" fn drop_engine_lock(engine: *mut MutexGuard<'static, Engin
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub extern "C" fn init_engine2() -> usize {
-
     String::from("Init engine").log();
     panic::set_hook(Box::new(|panic_info| {
         panic_info.to_string().error();
@@ -60,9 +62,8 @@ pub unsafe extern "C" fn physic_tick(delta: f32) {
         }
     }
     let engine = &mut ENGINE.engine2.lock().unwrap();
-    engine.physic_tick(delta/1000.0);
+    engine.physic_tick(delta / 1000.0);
 }
-
 
 const GRAVITY: nalgebra::Matrix<
     f32,
@@ -93,7 +94,7 @@ pub struct Engine2 {
     pub multi_joint_set: MultibodyJointSet,
     pub rigid_body_set: RigidBodySet,
     pub query_pipeline: QueryPipeline,
-    pub camera_can_collide_meshes: Vec<ExplicitGenerationalFreeListIndex<Mesh>>
+    pub camera_can_collide_meshes: Vec<ExplicitGenerationalFreeListIndex<Mesh>>,
 }
 
 pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
@@ -117,7 +118,7 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
             multi_joint_set: MultibodyJointSet::new(),
             rigid_body_set: RigidBodySet::new(),
             query_pipeline: QueryPipeline::new(),
-            camera_can_collide_meshes: Vec::new()
+            camera_can_collide_meshes: Vec::new(),
         }),
         gpu: Mutex::new(None),
         meshes: Mutex::new(ExplicitGenerationalFreeList::new(100)),
@@ -251,7 +252,51 @@ impl Engine2 {
             }
         }
     }
-    pub fn add_collider_to_mesh<'a>(&mut self, collider: Collider, mesh_id: &ExplicitGenerationalFreeListIndex<Mesh>) {
+    pub fn check_collisions(
+        &mut self,
+        collider: &mut collider::Collider,
+        collider_sphere: &ColliderSphere,
+        world_position: &[f32; 3],
+        world_velocity_x: f32,
+        world_velocity_y: f32,
+        world_velocity_z: f32,
+    ) -> bool {
+        //TODO: really, here inside the loop?
+
+        use terramath::VectorMath;
+        collider._initialize(
+            &*world_position,
+            world_velocity_x,
+            world_velocity_y,
+            world_velocity_z,
+            collider_sphere.collision_radius,
+        );
+        collider.destination_point = collider
+            .scaled_position
+            .add_vec(&mut collider.scaled_velocity);
+        let meshes = &mut ENGINE.meshes.lock().unwrap();
+        self.camera_can_collide_meshes
+            .retain(|mesh_id| match meshes.get_mut(&mesh_id) {
+                Some(mesh) => {
+                    #[cfg(target_arch = "wasm32")]
+                    mesh.check_collision(collider, &*collider_sphere);
+                    return true;
+                }
+                None => return false,
+            });
+
+        if collider.collision_resolved {
+            collider.scaled_position = collider.destination_point;
+            return true;
+        }
+        return false;
+    }
+
+    pub fn add_collider_to_mesh<'a>(
+        &mut self,
+        collider: Collider,
+        mesh_id: &ExplicitGenerationalFreeListIndex<Mesh>,
+    ) {
         let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
         match mesh.rigid_body_handle {
             Some(rigid_body_handle) => {

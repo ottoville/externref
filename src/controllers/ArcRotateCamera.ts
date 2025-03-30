@@ -294,7 +294,7 @@ export class ArcRotateCamera extends CameraController {
 
     //run the callback
     // if (!this.engine.collider.collidedMesh) {
-    if (engine.collider.didCollide) {
+    if (engine.rust.get_did_collide(engine.collider.collider_ptr)) {
       //this._position.copyFrom(position);
       if (
         this.camera.position[0] != engine.collider.finalPosition[0] ||

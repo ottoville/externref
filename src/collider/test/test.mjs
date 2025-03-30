@@ -48,12 +48,9 @@ const exportObj = {
           .trimEnd(),
       );
     },
-    jslog_number(number) {
-      console.log(number);
-    },
     mesh_on_physic_tick(mesh_id) {},
     mesh_on_change() {},
-    verticesChange() {},
+    vertices_change() {},
     render_renderpasses() {},
     drop_ref() {},
   },
@@ -85,6 +82,14 @@ const exportObj = {
     create_bind_group() {},
     create_gpu_buffer() {},
   },
+  renderbundleencoder: {
+    create_renderbundle_encoder() {},
+    finish() {},
+    do_record() {}
+  },
+  bindcommands: {
+    set_bindgroup() {}
+  }
 };
 
 const wasmRust = await WebAssembly.compile(
@@ -119,9 +124,6 @@ const position = new Float32Array(
 );
 
 position.set([3384.10498046875, 143.2760772705078, -5874.26806640625]);
-
-//instance.exports._initialize();
-instanceRust.exports.initialize_collider(collider_ptr);
 
 new Float32Array(instanceRust.exports.memory.buffer, 7872, 4).set([
   0, 31.435291290283203, -10000, 0,
@@ -211,9 +213,11 @@ facesBufferColliderParallel.set([
   facesBufferColliderFloats[45],
   facesBufferColliderFloats[52],
 ]);
+const colliderSphere = instanceRust.exports.create_collider_sphere(2);
 
 instanceRust.exports.test_triangles(
   collider_ptr,
+  colliderSphere,
   facesBufferCollider.byteOffset,
   facesBufferColliderParallel.byteOffset,
   facesBufferCollider.byteLength,

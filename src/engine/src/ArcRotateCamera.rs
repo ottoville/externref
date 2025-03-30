@@ -47,11 +47,24 @@ impl CameraController for ArcRotateCamera {
             if movement.kinematic {
                 if movement.move_to_place(&mut self.target) {
                     self.movement = None;
-                }    
+                }
                 //this.calculateCameraPositionAndTarget();
-                return
+                return;
             }
         }
         todo!()
+    }
+}
+impl ArcRotateCamera {
+    fn calculate_camera_position_and_target(&mut self) {}
+    fn calculate_position(&mut self, result: &mut [f32; 3]) {
+        let mut sinb = self.beta.sin();
+        if sinb == 0.0 {
+            sinb = 0.0001;
+        }
+        //this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
+        result[0] = self.target[0] + self.radius * self.alpha.cos() * sinb;
+        result[1] = self.target[1] + self.radius * self.beta.cos();
+        result[2] = self.target[2] + self.radius * self.alpha.sin() * sinb;
     }
 }

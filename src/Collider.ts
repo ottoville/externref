@@ -26,7 +26,6 @@ export class ColliderJS {
   #velocitySquaredLength!: number;
   finalPosition: MutableTerraVector3;
   collider_ptr: rust_pointer<'legacy_collider'>;
-  didCollide = false;
   getLowestRoot(a: number, b: number, c: number, maxR: number) {
     //TODO: This will give false negative if determinant is zero
     var determinant = b * b - 4.0 * a * c;
@@ -78,7 +77,6 @@ export class ColliderJS {
   #tempVector4: [x: number, y: number, z: number] = [0, 0, 0];
   private _edge: [x: number, y: number, z: number] = [0, 0, 0];
   private _baseToVertex: [x: number, y: number, z: number] = [0, 0, 0];
-  _destinationPoint: [x: number, y: number, z: number] = [0, 0, 0];
   _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
   _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
 
@@ -101,7 +99,14 @@ export class ColliderJS {
       engine.rust.memory.buffer,
       engine.rust.intersection_point_pointer(this.collider_ptr),
       4,
-    ) as TerraVector3;
+    ) as unknown as [number, number, number];
+  }
+  get destinationPointWasm() {
+    return new Float32Array(
+      engine.rust.memory.buffer,
+      engine.rust.destination_point_ptr(this.collider_ptr),
+      4,
+    ) as unknown as [number, number, number];
   }
   get collided_point_in_triangle() {
     const ptr = engine.rust.collided_point_in_triangle_pointer(
