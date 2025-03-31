@@ -2,13 +2,12 @@ import { Physics } from './physics.js';
 import { GPU } from './GPU.js';
 import { ColliderJS } from './Collider.js';
 import type { Scene } from './Scene.js';
-import type { TerraVector3 } from './Math.js';
 import { TerraCamera } from './TerraCamera.js';
 //@ts-expect-error todo
 import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
 //@ts-expect-error todo
 import { MeshCamera } from './controllers/MeshCamera.js';
-import { closeDistanceSquared, DataNode, Ellipsoid } from './nodes/DataNode.js';
+import { DataNode, Ellipsoid } from './nodes/DataNode.js';
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
@@ -104,38 +103,13 @@ export type rustWasm = {
   ): rust_pointer<'geometry'>;
   create_icosphere_geometry(order: number): rust_pointer<'geometry'>;
   collider(): rust_pointer<'legacy_collider'>;
-  intersection_point_pointer(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-  ): number;
-  destination_point_ptr(collider_ptr: rust_pointer<'legacy_collider'>): number;
-  set_collision_resolved(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-    val: boolean,
-  ): void;
-  get_collision_resolved(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-  ): boolean;
-  set_did_collide(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-    value: boolean,
-  ): void;
   get_did_collide(collider_ptr: rust_pointer<'legacy_collider'>): boolean;
-  set_nearest_distance_squared(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-    distance: number,
-  ): void;
-  get_nearest_distance_squared(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-  ): number;
   scaled_position_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
   scaled_velocity_pointer(
     collider_ptr: rust_pointer<'legacy_collider'>,
   ): number;
-  collided_point_in_triangle_pointer(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-  ): rust_pointer<'Plane'>;
 
   process_gpu_queue(
     time: number,
@@ -512,12 +486,6 @@ export type rustWasm = {
 } & BufferInterface &
   DevToolsInterface;
 
-function Dot(
-  left: readonly [number, number, number] | Float32Array | TerraVector3,
-  right: readonly [number, number, number] | Float32Array | TerraVector3,
-): number {
-  return left[0] * right[0] + left[1] * right[1] + left[2] * right[2];
-}
 const ObjectStores = {
   maps: <ObjStoreDetails>{
     parameters: {
@@ -627,8 +595,6 @@ export class Engine {
   readonly scenes: Map<string, Scene> = new Map();
   // readonly collisionNotFound:DataView
   readonly collider: ColliderJS;
-
-  readonly #displacementVector: [number, number, number] = [0, 0, 0];
 
   inputManager: CameraController | null = null;
 
@@ -1117,133 +1083,14 @@ export class Engine {
     scaledPosition[1] = pos_arr[1] / sphere.collisionRadius;
     scaledPosition[2] = pos_arr[2] / sphere.collisionRadius;
 
-    engine.rust.set_did_collide(this.collider.collider_ptr, false);
-    const destinationPoint = this.collider.destinationPointWasm;
-    for (let i = 0; i < 3; i++) {
-      if (
-        engine.rust.test_triangles(
-          engine.collider.collider_ptr,
-          sphere.colliderSphere,
-          worldPosition,
-          worldVelocity[0],
-          worldVelocity[1],
-          worldVelocity[2],
-        )
-      ) {
-        break;
-      }
-      const intersectionPoint = this.collider.intersectionPointWasm;
-      //console.log('collision found')
-      if (
-        scaledVelocity[0] !== 0 ||
-        scaledVelocity[1] !== 0 ||
-        scaledVelocity[2] !== 0
-      ) {
-        //this.collider._getResponse(position, velocity);
-        // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
-        // vel.scaleInPlace((this._nearestDistance / vel.length()));
-        let scale = Math.sqrt(
-          this.collider.nearest_distance_squared /
-            (scaledVelocity[0] * scaledVelocity[0] +
-              scaledVelocity[1] * scaledVelocity[1] +
-              scaledVelocity[2] * scaledVelocity[2]),
-        );
-        // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
-        scaledVelocity[0] *= scale;
-        scaledVelocity[1] *= scale;
-        scaledVelocity[2] *= scale;
-
-        scaledPosition[0] += scaledVelocity[0];
-        scaledPosition[1] += scaledVelocity[1];
-        scaledPosition[2] += scaledVelocity[2];
-
-        //pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
-
-        if (this.collider.collided_point_in_triangle) {
-          //TODO: this does not work on ellipsoid space.
-          this.collider._slidePlaneNormal[0] =
-            this.collider.collided_point_in_triangle[0];
-          this.collider._slidePlaneNormal[1] =
-            this.collider.collided_point_in_triangle[1];
-          this.collider._slidePlaneNormal[2] =
-            this.collider.collided_point_in_triangle[2];
-        } else {
-          this.collider._slidePlaneNormal[0] =
-            scaledPosition[0] - intersectionPoint[0];
-          this.collider._slidePlaneNormal[1] =
-            scaledPosition[1] - intersectionPoint[1];
-          this.collider._slidePlaneNormal[2] =
-            scaledPosition[2] - intersectionPoint[2];
-
-          // this._slidePlaneNormal.normalize();
-          // const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
-          const length = Math.hypot(
-            this.collider._slidePlaneNormal[0],
-            this.collider._slidePlaneNormal[1],
-            this.collider._slidePlaneNormal[2],
-          );
-
-          if (!(length === 0 || length === 1.0)) {
-            const norm = 1 / length;
-            this.collider._slidePlaneNormal[0] *= norm;
-            this.collider._slidePlaneNormal[1] *= norm;
-            this.collider._slidePlaneNormal[2] *= norm;
-          }
-        }
-
-        this.#displacementVector[0] =
-          this.collider._slidePlaneNormal[0] * sphere.closeDistanceVector;
-        this.#displacementVector[1] =
-          this.collider._slidePlaneNormal[1] * sphere.closeDistanceVector;
-        this.#displacementVector[2] =
-          this.collider._slidePlaneNormal[2] * sphere.closeDistanceVector;
-        // pos.addInPlace(this._displacementVector);
-        /*
-                    displacementVector is a constraint added to position, so eg. objects that are colliding
-                    ground because of gravity, will "flow" of amount of displacementVector.
-                    It must be small enought so same force applied from displacement position would cause collide.
-                    Otherwise object would constantry jumping on ground.
-                */
-        scaledPosition[0] += this.#displacementVector[0];
-        scaledPosition[1] += this.#displacementVector[1];
-        scaledPosition[2] += this.#displacementVector[2];
-        //this.intersectionPoint.addInPlace(this._displacementVector);
-        intersectionPoint[0] += this.#displacementVector[0];
-        intersectionPoint[1] += this.#displacementVector[1];
-        intersectionPoint[2] += this.#displacementVector[2];
-
-        const d = -(
-          this.collider._slidePlaneNormal[0] * intersectionPoint[0] +
-          this.collider._slidePlaneNormal[1] * intersectionPoint[1] +
-          this.collider._slidePlaneNormal[2] * intersectionPoint[2]
-        );
-        scale = Dot(destinationPoint, this.collider._slidePlaneNormal) + d;
-
-        destinationPoint[0] -= this.collider._slidePlaneNormal[0] * scale;
-        destinationPoint[1] -= this.collider._slidePlaneNormal[1] * scale;
-        destinationPoint[2] -= this.collider._slidePlaneNormal[2] * scale;
-
-        //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
-        scaledVelocity[0] = destinationPoint[0] - intersectionPoint[0];
-        scaledVelocity[1] = destinationPoint[1] - intersectionPoint[1];
-        scaledVelocity[2] = destinationPoint[2] - intersectionPoint[2];
-      }
-
-      const unScaledVelocity = [
-        scaledVelocity[0] * sphere.collisionRadius,
-        scaledVelocity[1] * sphere.collisionRadius,
-        scaledVelocity[2] * sphere.collisionRadius,
-      ] as const;
-      // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
-      if (
-        unScaledVelocity[0] * unScaledVelocity[0] +
-          unScaledVelocity[1] * unScaledVelocity[1] +
-          unScaledVelocity[2] * unScaledVelocity[2] <=
-        closeDistanceSquared
-      ) {
-        break;
-      }
-    }
+    engine.rust.test_triangles(
+      engine.collider.collider_ptr,
+      sphere.colliderSphere,
+      worldPosition,
+      worldVelocity[0],
+      worldVelocity[1],
+      worldVelocity[2],
+    );
     //TODO: Call only when camera position change
     this.collider.finalPosition.set(scaledPosition);
     this.collider.finalPosition[0] *= sphere.collisionRadius;

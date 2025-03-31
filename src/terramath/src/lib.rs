@@ -212,10 +212,11 @@ pub trait VectorMath<T, const N: usize> {
      * Returns new vector which is sub of two vectors
      */
     fn sub_vec(&self, other: &Self) -> Self;
+    fn sub_vec_in_place(&mut self, other: &Self);
     /**
      * Returns new vector which is multiplied with scalar
      */
-    fn multiply(&mut self, multiplier: f32) -> Self;
+    fn multiply(&self, multiplier: f32) -> Self;
 
     /**
      * multiply vector with scalar
@@ -314,7 +315,12 @@ impl VectorMath<f32, 3> for [f32; 3] {
     fn sub_vec(&self, other: &Self) -> Self {
         [self[0] - other[0], self[1] - other[1], self[2] - other[2]]
     }
-    fn multiply(&mut self, multiplier: f32) -> Self {
+    fn sub_vec_in_place(&mut self, other: &Self) {
+        self[0] -= other[0];
+        self[1] -= other[1];
+        self[2] -= other[2];
+    }
+    fn multiply(&self, multiplier: f32) -> Self {
         [
             self[0] * multiplier,
             self[1] * multiplier,
@@ -478,7 +484,13 @@ impl VectorMath<f32, 4> for [f32; 4] {
             self[3] - other[3],
         ]
     }
-    fn multiply(&mut self, multiplier: f32) -> Self {
+    fn sub_vec_in_place(&mut self, other: &Self) {
+        self[0] -= other[0];
+        self[1] -= other[1];
+        self[2] -= other[2];
+        self[3] -= other[3];
+    }
+    fn multiply(&self, multiplier: f32) -> Self {
         [
             self[0] * multiplier,
             self[1] * multiplier,

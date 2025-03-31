@@ -435,7 +435,7 @@ impl<'vert> Geometry {
         if self.collider_planes_parallel.len() == 0 {
             return;
         }
-        collider.test_triangles(&self.collider_planes, &self.collider_planes_parallel);
+        collider.test_triangles(& self.collider_planes, &self.collider_planes_parallel);
     }
     pub fn update_collider_planes(&mut self) {
         let positions = self.vertices.get_positions();

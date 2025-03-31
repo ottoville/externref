@@ -3,7 +3,7 @@
 
 import type { Ellipsoid } from './nodes/DataNode.js';
 import type { Engine, rustWasm } from './engine.js';
-import { MutableTerraVector3, TerraVector3, TerraVector4 } from './Math.js';
+import { MutableTerraVector3, TerraVector3 } from './Math.js';
 declare const engine: Engine;
 
 // TODO: change to readonlyTerraVector
@@ -94,58 +94,6 @@ export class ColliderJS {
       4,
     ) as unknown as [number, number, number];
   }
-  get intersectionPointWasm() {
-    return new Float32Array(
-      engine.rust.memory.buffer,
-      engine.rust.intersection_point_pointer(this.collider_ptr),
-      4,
-    ) as unknown as [number, number, number];
-  }
-  get destinationPointWasm() {
-    return new Float32Array(
-      engine.rust.memory.buffer,
-      engine.rust.destination_point_ptr(this.collider_ptr),
-      4,
-    ) as unknown as [number, number, number];
-  }
-  get collided_point_in_triangle() {
-    const ptr = engine.rust.collided_point_in_triangle_pointer(
-      this.collider_ptr,
-    );
-    const trianglePtr = new Uint32Array(engine.rust.memory.buffer, ptr, 1)[0];
-    if (trianglePtr === 0) return undefined;
-    return new Float32Array(
-      engine.rust.memory.buffer,
-      trianglePtr,
-      4,
-    ) as TerraVector4;
-  }
-  set collided_point_in_triangle(val: TerraVector4 | undefined) {
-    if (!val)
-      new Uint32Array(
-        engine.rust.memory.buffer,
-        engine.rust.collided_point_in_triangle_pointer(this.collider_ptr),
-        1,
-      )[0] = 0;
-    else
-      new Uint32Array(
-        engine.rust.memory.buffer,
-        engine.rust.collided_point_in_triangle_pointer(this.collider_ptr),
-        1,
-      )[0] = val.byteOffset;
-  }
-  set nearest_distance_squared(val: number) {
-    engine.rust.set_nearest_distance_squared(this.collider_ptr, val);
-  }
-  get nearest_distance_squared() {
-    return engine.rust.get_nearest_distance_squared(this.collider_ptr);
-  }
-  set collision_resolved(val: boolean) {
-    engine.rust.set_collision_resolved(this.collider_ptr, val);
-  }
-  get collision_resolved() {
-    return engine.rust.get_collision_resolved(this.collider_ptr);
-  }
   constructor(rustExports: rustWasm) {
     this.collider_ptr = rustExports.collider();
     this.finalPosition = new MutableTerraVector3();
@@ -173,8 +121,7 @@ export class ColliderJS {
     e: number,
     sphere: Ellipsoid,
   ): void {
-    this.collided_point_in_triangle = undefined;
-    this.nearest_distance_squared = 9999999;
+    //this.nearest_distance_squared = 9999999;
     //this.#velocity = dir;
     const scaledVelocity = this.scaledVelocity;
     this.#velocitySquaredLength =
@@ -229,7 +176,7 @@ export class ColliderJS {
       ),
     );
     this.epsilon = e;
-    // this.collisionFound = false;
+    //@ts-ignore removed
     this.collision_resolved = true;
     //console.log('set collisionNotFound true')
   }
@@ -460,27 +407,6 @@ export class ColliderJS {
         collidedPointInTriangle,
         triangle.planeCollider.byteOffset,
       );
-
-      /*const ptr = engine.rust.collided_point_in_triangle_pointer(this.collider_ptr);
-
-            const trianglePtr = new Uint32Array(engine.memory.buffer, ptr, 1)[0];
-            console.log(trianglePtr, new Uint8Array(engine.memory.buffer,trianglePtr,1))*/
-      //var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
-      //  console.log(this.collisionFound);
-      /* var distToCollisionSquared = t * t * this.#velocitySquaredLength;
-             if (this.collision_resolved === 1 || distToCollisionSquared < this.nearest_distance_squared) {
-                 console.log('set collided_point_in_triangle', collidedPointInTriangle ? triangle.planeCollider : undefined)
-
-                 this.intersectionPointWasm.set(this.#collisionPoint);
-                 this.nearest_distance_squared = distToCollisionSquared;
-
-                 //  console.log('nearestDistanceSquared',this.#nearestDistanceSquared)
-                 //this.collisionFound = true;
-                 this.collision_resolved = 0;
-                 //console.log('set collisionNotFound 0', this.collisionNotFound.getUint32(0,true))
-                 this.collidedMesh = "hostMesh";
-                 this.collided_point_in_triangle = collidedPointInTriangle ? triangle.planeCollider : undefined;
-             }*/
     }
   }
 }

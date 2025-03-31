@@ -13,12 +13,13 @@ use crate::gpu::gpu::GPU;
 use crate::mesh::JSMesh;
 pub use crate::mesh::Mesh;
 pub use crate::GPUMesh;
-use collider::ColliderSphere;
+use collider::{ColliderSphere, CLOSE_DISTANCE_SQRT};
 use externref::externref;
 use externref::Resource;
 use logger::Logger;
 use rapier3d::control::KinematicCharacterController;
 use rapier3d::{crossbeam, prelude::*};
+use terramath::VectorMathF32;
 
 #[cfg(test)]
 unsafe fn mesh_on_physic_tick(_mesh: *const Mesh, _delta: f32, _externref: &Resource<JSMesh>) {}
@@ -260,36 +261,105 @@ impl Engine2 {
         world_velocity_x: f32,
         world_velocity_y: f32,
         world_velocity_z: f32,
-    ) -> bool {
-        //TODO: really, here inside the loop?
-
+    ) {
         use terramath::VectorMath;
-        collider._initialize(
-            &*world_position,
-            world_velocity_x,
-            world_velocity_y,
-            world_velocity_z,
-            collider_sphere.collision_radius,
-        );
-        collider.destination_point = collider
-            .scaled_position
-            .add_vec(&mut collider.scaled_velocity);
-        let meshes = &mut ENGINE.meshes.lock().unwrap();
-        self.camera_can_collide_meshes
-            .retain(|mesh_id| match meshes.get_mut(&mesh_id) {
-                Some(mesh) => {
-                    #[cfg(target_arch = "wasm32")]
-                    mesh.check_collision(collider, &*collider_sphere);
-                    return true;
-                }
-                None => return false,
-            });
+        collider.did_collide = false;
+        for _ in 0..3 {
+            //TODO: really, here inside the loop?
+            collider._initialize(
+                &*world_position,
+                world_velocity_x,
+                world_velocity_y,
+                world_velocity_z,
+                collider_sphere.collision_radius,
+            );
+            collider.destination_point = collider
+                .scaled_position
+                .add_vec(&mut collider.scaled_velocity);
+            let meshes: &mut MutexGuard<'_, ExplicitGenerationalFreeList<Mesh>> =
+                &mut ENGINE.meshes.lock().unwrap();
+            self.camera_can_collide_meshes
+                .retain(|mesh_id| match meshes.get_mut(&mesh_id) {
+                    Some(mesh) => {
+                        #[cfg(target_arch = "wasm32")]
+                        mesh.check_collision(collider, &*collider_sphere);
+                        return true;
+                    }
+                    None => return false,
+                });
 
-        if collider.collision_resolved {
-            collider.scaled_position = collider.destination_point;
-            return true;
+            if collider.collision_resolved {
+                collider.scaled_position = collider.destination_point;
+                break;
+            }
+            if collider.scaled_velocity[0] != 0.0
+                || collider.scaled_velocity[1] != 0.0
+                || collider.scaled_velocity[2] != 0.0
+            {
+                //this.collider._getResponse(position, velocity);
+                // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
+                // vel.scaleInPlace((this._nearestDistance / vel.length()));
+
+                let scale = (collider.nearest_distance_squared
+                    / collider.scaled_velocity.dot(&collider.scaled_velocity))
+                .sqrt();
+                // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+                collider.scaled_velocity.multiply_in_place(scale);
+                collider
+                    .scaled_position
+                    .add_vec_in_place(&collider.scaled_velocity);
+
+                //pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
+                let slide_plane_normal = match collider.collided_point_in_triangle {
+                    Some(collided_point_in_triangle) => collided_point_in_triangle,
+                    None => {
+                        let mut slide_plane_normal2 = collider
+                            .scaled_position
+                            .sub_vec(&collider.intersection_point);
+
+                        // this._slidePlaneNormal.normalize();
+                        // const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
+                        slide_plane_normal2.normalize_in_place();
+                        slide_plane_normal2
+                    }
+                };
+                let displacement_vector =
+                    slide_plane_normal.multiply(collider_sphere.close_distance_vector);
+                // pos.addInPlace(this._displacementVector);
+                /*
+                    displacementVector is a constraint added to position, so eg. objects that are colliding
+                    ground because of gravity, will "flow" of amount of displacementVector.
+                    It must be small enought so same force applied from displacement position would cause collide.
+                    Otherwise object would constantry jumping on ground.
+                */
+                collider
+                    .scaled_position
+                    .add_vec_in_place(&displacement_vector);
+                //this.intersectionPoint.addInPlace(this._displacementVector);
+                collider
+                    .intersection_point
+                    .add_vec_in_place(&displacement_vector);
+
+                let d = -(slide_plane_normal.dot(&collider.intersection_point));
+
+                let scale = collider.destination_point.dot(&slide_plane_normal) + d;
+
+                collider
+                    .destination_point
+                    .sub_vec_in_place(&slide_plane_normal.multiply(scale));
+                //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
+                collider.scaled_velocity = collider
+                    .destination_point
+                    .sub_vec(&collider.intersection_point);
+            }
+            let unscaled_velocity = collider
+                .scaled_velocity
+                .multiply(collider_sphere.collision_radius);
+            // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
+            if unscaled_velocity.dot(&unscaled_velocity) <= CLOSE_DISTANCE_SQRT {
+                break;
+            }
         }
-        return false;
     }
 
     pub fn add_collider_to_mesh<'a>(

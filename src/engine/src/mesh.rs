@@ -437,10 +437,9 @@ pub unsafe extern "C" fn test_triangles(
     world_velocity_x: f32,
     world_velocity_y: f32,
     world_velocity_z: f32,
-) -> bool {
+) {
     let collider = (&mut *collider_ptr);
-    //TODO: really, here inside the loop?
-    return ENGINE.engine2.lock().unwrap().check_collisions(
+    ENGINE.engine2.lock().unwrap().check_collisions(
         collider,
         &*collider_sphere,
         &*world_position,

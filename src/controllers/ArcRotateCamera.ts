@@ -1,5 +1,4 @@
-﻿import { closeDistance } from '../nodes/DataNode.js';
-import type { Engine, ListenerObj } from '../engine.js';
+﻿import type { Engine, ListenerObj } from '../engine.js';
 import {
   MutableTerraVector3,
   ReadOnlyTerraVector3,
@@ -86,7 +85,6 @@ export class ArcRotateCamera extends CameraController {
   #radius = 10;
   readonly collisionRadius = 2;
   readonly colliderSphere = engine.rust.create_collider_sphere(2);
-  readonly closeDistanceVector = closeDistance / this.collisionRadius;
 
   constructor(
     private camera: TerraCamera,

@@ -6,7 +6,11 @@ use terramath::{Plane, Vec3wgslF32, VectorMath, VectorMathF32};
 pub struct ColliderSphere {
     pub collision_radius: f32,
     pub collisions_scaling_matrix: [[f32; 4]; 4],
+    pub close_distance_vector: f32,
 }
+static CLOSE_DISTANCE: f32 = 0.0022;
+pub static CLOSE_DISTANCE_SQRT:f32 = CLOSE_DISTANCE * CLOSE_DISTANCE;
+
 #[no_mangle]
 pub extern "C" fn create_collider_sphere(collision_radius: f32) -> *mut ColliderSphere {
     let sphere = Box::new(ColliderSphere {
@@ -17,6 +21,7 @@ pub extern "C" fn create_collider_sphere(collision_radius: f32) -> *mut Collider
             [0.0, 0.0, 1.0 / collision_radius, 0.0],
             [0.0, 0.0, 0.0, 1.0],
         ],
+        close_distance_vector: CLOSE_DISTANCE / collision_radius,
     });
     Box::into_raw(sphere)
 }
@@ -26,7 +31,7 @@ pub struct ColliderPlane {
 }
 pub struct Collider {
     pub basepoint_world: [f32; 3],
-    intersection_point: [f32; 4],
+    pub intersection_point: [f32; 4],
     pub collision_resolved: bool,
     pub nearest_distance_squared: f32,
     pub scaled_position: [f32; 4],
@@ -34,7 +39,7 @@ pub struct Collider {
     // TODO: move to stack
     scaled_speed_squared: f32,
     pub speed: f32,
-    collided_point_in_triangle: &'static Plane,
+    pub collided_point_in_triangle: Option<[f32; 4]>,
     // TODO: move to stack
     pub lowest_root: f32,
     // TODO: move to stack
@@ -51,7 +56,7 @@ pub struct Collider {
     scaled_position_z: [f32; 4],
     // TODO: move to stack
     pub destination_point: [f32; 4],
-    pub did_collide: bool
+    pub did_collide: bool,
 }
 #[no_mangle]
 pub extern "C" fn collider() -> *mut Collider {
@@ -59,36 +64,8 @@ pub extern "C" fn collider() -> *mut Collider {
     Box::into_raw(coll)
 }
 #[no_mangle]
-pub unsafe extern "C" fn intersection_point_pointer(collider_ptr: *const Collider) -> *const f32 {
-    (*collider_ptr).intersection_point.as_ptr()
-}
-#[no_mangle]
-pub unsafe extern "C" fn destination_point_ptr(collider_ptr: *const Collider) -> *const f32 {
-    (*collider_ptr).destination_point.as_ptr()
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_collision_resolved(collider_ptr: *mut Collider, val: bool) {
-    (*collider_ptr).collision_resolved = val
-}
-#[no_mangle]
-pub unsafe extern "C" fn get_collision_resolved(collider_ptr: *const Collider) -> bool {
-    (*collider_ptr).collision_resolved
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_did_collide(collider_ptr: *mut Collider, value: bool) {
-    (*collider_ptr).did_collide = value
-}
-#[no_mangle]
 pub unsafe extern "C" fn get_did_collide(collider_ptr: *const Collider) -> bool {
     (*collider_ptr).did_collide
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_nearest_distance_squared(collider_ptr: *mut Collider, distance: f32) {
-    (*collider_ptr).nearest_distance_squared = distance;
-}
-#[no_mangle]
-pub unsafe extern "C" fn get_nearest_distance_squared(collider_ptr: *const Collider) -> f32 {
-    (*collider_ptr).nearest_distance_squared
 }
 #[no_mangle]
 pub unsafe extern "C" fn scaled_position_pointer(collider_ptr: *const Collider) -> *const f32 {
@@ -98,13 +75,6 @@ pub unsafe extern "C" fn scaled_position_pointer(collider_ptr: *const Collider) 
 pub unsafe extern "C" fn scaled_velocity_pointer(collider_ptr: *const Collider) -> *const f32 {
     (*collider_ptr).scaled_velocity.as_ptr()
 }
-#[no_mangle]
-pub unsafe extern "C" fn collided_point_in_triangle_pointer(
-    collider_ptr: *const Collider,
-) -> &'static &'static Plane {
-    &(*collider_ptr).collided_point_in_triangle
-}
-
 #[cfg(target_arch = "wasm32")]
 fn v3_dot(a: v128, b: v128) -> f32 {
     use std::arch::wasm32::{f32x4_extract_lane, f32x4_mul};
@@ -255,31 +225,29 @@ fn lowest_root() {
 
 impl Collider {
     pub fn new() -> Self {
-        unsafe {
-            Collider {
-                basepoint_world: [0.0; 3],
-                intersection_point: [0.0; 4],
-                collision_resolved: true,
-                nearest_distance_squared: 9999999.0,
-                scaled_position: [0.0; 4],
-                scaled_speed_squared: 0.0,
-                scaled_velocity: [0.0; 4],
-                speed: 0.0,
-                collided_point_in_triangle: *(0 as *const &'static Plane),
-                lowest_root: 0.0,
-                collision_point: [0.0; 4],
-                velocity_x: [0.0; 4],
-                velocity_y: [0.0; 4],
-                velocity_z: [0.0; 4],
-                normalized_velocity_x: [0.0; 4],
-                normalized_velocity_y: [0.0; 4],
-                normalized_velocity_z: [0.0; 4],
-                scaled_position_x: [0.0; 4],
-                scaled_position_y: [0.0; 4],
-                scaled_position_z: [0.0; 4],
-                destination_point: [0.0; 4],
-                did_collide: false
-            }
+        Collider {
+            basepoint_world: [0.0; 3],
+            intersection_point: [0.0; 4],
+            collision_resolved: true,
+            nearest_distance_squared: 9999999.0,
+            scaled_position: [0.0; 4],
+            scaled_speed_squared: 0.0,
+            scaled_velocity: [0.0; 4],
+            speed: 0.0,
+            collided_point_in_triangle: None,
+            lowest_root: 0.0,
+            collision_point: [0.0; 4],
+            velocity_x: [0.0; 4],
+            velocity_y: [0.0; 4],
+            velocity_z: [0.0; 4],
+            normalized_velocity_x: [0.0; 4],
+            normalized_velocity_y: [0.0; 4],
+            normalized_velocity_z: [0.0; 4],
+            scaled_position_x: [0.0; 4],
+            scaled_position_y: [0.0; 4],
+            scaled_position_z: [0.0; 4],
+            destination_point: [0.0; 4],
+            did_collide: false,
         }
     }
     pub fn _initialize(
@@ -294,13 +262,11 @@ impl Collider {
         let velocity_world =
             [world_velocity_x, world_velocity_y, world_velocity_z].multiply(radius);
         self.speed = velocity_world.length();
-        unsafe {
-            self.collided_point_in_triangle = *(0 as *const &'static Plane);
-        }
+        self.collided_point_in_triangle = None;
         self.basepoint_world = world_position.clone();
         self.scaled_speed_squared = self.scaled_velocity.dot(&self.scaled_velocity);
         let len = self.scaled_speed_squared.sqrt();
-        let mut normalized_velocity = [0.0; 4];
+        let normalized_velocity: [f32; 4];
         if len == 0.0 {
             normalized_velocity = self.scaled_velocity;
         } else {
@@ -637,7 +603,7 @@ impl Collider {
         t: f32,
         velocity_squared_length: f32,
         collided_point_in_triangle: bool,
-        collided_plane: *const Plane,
+        collided_plane: &Plane,
     ) {
         let dist_to_collision_squared = t * t * velocity_squared_length;
         self.did_collide = true;
@@ -647,12 +613,10 @@ impl Collider {
             self.intersection_point[2] = self.collision_point[2];
             self.nearest_distance_squared = dist_to_collision_squared;
             self.collision_resolved = false;
-            unsafe {
-                if collided_point_in_triangle {
-                    self.collided_point_in_triangle = &*(collided_plane);
-                } else {
-                    self.collided_point_in_triangle = *(0 as *const &'static Plane);
-                }
+            if collided_point_in_triangle {
+                self.collided_point_in_triangle = Some([collided_plane.norm[0], collided_plane.norm[1], collided_plane.norm[2], 0.0]);
+            } else {
+                self.collided_point_in_triangle = None;
             }
         }
     }

@@ -17,7 +17,6 @@ class pickInfo {
 export interface Ellipsoid {
   readonly colliderSphere: rust_pointer<'collider_sphere'>;
   readonly collisionRadius: number;
-  readonly closeDistanceVector: number;
 }
 
 export type DataNodeProps = {
@@ -88,8 +87,6 @@ export function allocate_vec(
   }
 }
 
-export const closeDistance = 0.0022;
-export const closeDistanceSquared = closeDistance * closeDistance;
 export class DataNode extends MainNode {
   override drawable?: Drawable<MainNode> | undefined;
   #props: Readonly<DataNodeProps>;
