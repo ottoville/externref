@@ -65,7 +65,24 @@ pub unsafe extern "C" fn physic_tick(delta: f32) {
     let engine = &mut ENGINE.engine2.lock().unwrap();
     engine.physic_tick(delta / 1000.0);
 }
-
+#[no_mangle]
+#[cfg(target_arch = "wasm32")]
+pub unsafe extern "C" fn test_triangles(
+    collider_ptr: *mut collider::Collider,
+    collider_sphere: *mut ColliderSphere,
+    new_position_x: f32,
+    new_position_y: f32,
+    new_position_z: f32,
+    camera_id: u32,
+) -> bool {
+    let collider = (&mut *collider_ptr);
+    return ENGINE.engine2.lock().unwrap().check_collisions(
+        collider,
+        &*collider_sphere,
+        [new_position_x, new_position_y, new_position_z, 0.0],
+        camera_id,
+    )
+}
 const GRAVITY: nalgebra::Matrix<
     f32,
     nalgebra::Const<3>,
@@ -257,21 +274,33 @@ impl Engine2 {
         &mut self,
         collider: &mut collider::Collider,
         collider_sphere: &ColliderSphere,
-        world_position: &[f32; 3],
-        world_velocity_x: f32,
-        world_velocity_y: f32,
-        world_velocity_z: f32,
-    ) {
+        new_position: [f32; 4],
+        camera_id: u32,
+    ) -> bool {
         use terramath::VectorMath;
+        let mut gpuoption = ENGINE.gpu.lock().unwrap();
+
+        let world_position = &gpuoption
+            .as_ref()
+            .unwrap()
+            .get_camera_by_id(camera_id)
+            .position;
+        let world_velocity = new_position.sub_vec(world_position);
+        world_velocity.divide_to_ref(
+            collider_sphere.collision_radius,
+            &mut collider.scaled_velocity,
+        );
+        world_position.divide_to_ref(
+            collider_sphere.collision_radius,
+            &mut collider.scaled_position,
+        );
+
         collider.did_collide = false;
         for _ in 0..3 {
             //TODO: really, here inside the loop?
             collider._initialize(
-                &*world_position,
-                world_velocity_x,
-                world_velocity_y,
-                world_velocity_z,
-                collider_sphere.collision_radius,
+                world_position,
+                collider.scaled_velocity.length() * collider_sphere.collision_radius,
             );
             collider.destination_point = collider
                 .scaled_position
@@ -360,6 +389,19 @@ impl Engine2 {
                 break;
             }
         }
+        if collider.did_collide {
+            gpuoption
+                .as_mut()
+                .unwrap()
+                .get_camera_by_id_mut(camera_id)
+                .update_position(
+                    collider
+                        .scaled_position
+                        .multiply(collider_sphere.collision_radius),
+                );
+            return true;
+        }
+        return false;
     }
 
     pub fn add_collider_to_mesh<'a>(

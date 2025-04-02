@@ -1,4 +1,4 @@
-import type { CameraControl } from '../TerraCamera.js';
+import type { TerraCamera } from '../TerraCamera.js';
 export const enum ARROW_KEYS {
   UP = 1,
   RIGHT = 2,
@@ -12,7 +12,7 @@ export const enum ARROW_KEYS {
   UP_OR_DOWN = ARROW_KEYS.UP | ARROW_KEYS.DOWN,
 }
 export abstract class CameraController {
-  cameraControl?: CameraControl;
+  cameraControl?: TerraCamera;
   abstract readonly name: string;
   abstract serialize(): void;
 

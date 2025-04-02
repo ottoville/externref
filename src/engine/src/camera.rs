@@ -63,7 +63,7 @@ pub unsafe extern "C" fn update_camera_position(camera_id: u32, x: f32, y: f32, 
         .as_mut()
         .unwrap()
         .get_camera_by_id_mut(camera_id)
-        .update_position([x, y, z]);
+        .update_position([x, y, z, 0.0]);
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_direction(camera_id: u32, x: f32, y: f32, z: f32) {
@@ -269,15 +269,15 @@ pub struct Camera {
     pub view: [[f32; 4]; 4],
     projection_view_inverted: [[f32; 4]; 4],
     direction: [f32; 3],
-    position: [f32; 3],
+    pub position: [f32; 4],
     externref: Resource<JSCamera>,
     pub updated: bool,
     pub label: String,
     pub children: Vec<Camera>,
     pub do_update_view: u32,
     pub id: u32,
-    before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 3]) + Send>>,
-    pub on_update_position: Vec<Box<dyn Fn(&[f32; 3], &mut Vec<CommandBuffer>) + Send>>,
+    before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 4]) + Send>>,
+    pub on_update_position: Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>) + Send>>,
     projection_view_inverted_is_dirty: bool,
     buffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
     cluster_array_buffer: Arc<Mutex<GPUBuffer<STORAGE_USAGE>>>,
@@ -378,7 +378,7 @@ impl Camera {
         camerauniform_buffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
         cluster_array_buffer: Arc<Mutex<GPUBuffer<STORAGE_USAGE>>>,
         update_view_bind_group: Arc<Mutex<BindGroup>>,
-        before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 3]) + Send>>,
+        before_view_update: Option<Box<dyn Fn(&mut [f32; 3], &mut [f32; 4]) + Send>>,
         externref: Resource<JSCamera>,
         label: String,
     ) -> Self {
@@ -420,7 +420,7 @@ impl Camera {
             ],
             projection_view: [[0.0; 4]; 4],
             projection_view_inverted: [[0.0; 4]; 4],
-            position: [0.0; 3],
+            position: [0.0; 4],
             direction: [1.0, 0.0, 0.0],
             externref,
             updated: false,
@@ -449,7 +449,7 @@ impl Camera {
             );
         }
     }
-    pub fn update_position(&mut self, position: [f32; 3]) {
+    pub fn update_position(&mut self, position: [f32; 4]) {
         if position[0] != self.position[0]
             || position[1] != self.position[1]
             || position[2] != self.position[2]
@@ -597,7 +597,7 @@ fn test_child_camera() {
             String::from("camera1.0"),
         );
         camera.children.push(child_1);
-        camera.update_position([1.0, 2.0, 3.0]);
+        camera.update_position([1.0, 2.0, 3.0, 0.0]);
         let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
         let mut projection = Projection::new(&Resource::new_non_null(std::mem::transmute::<
             usize,
@@ -614,7 +614,7 @@ fn test_child_camera() {
         );
         assert_eq!(
             projection.cameras.cameras[0].children[0].position,
-            [1.0, 2.0, 3.0]
+            [1.0, 2.0, 3.0, 0.0]
         );
     }
 }

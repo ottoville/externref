@@ -428,26 +428,7 @@ pub unsafe extern "C" fn set_shadow_from_id(
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     mesh_property.gpu_memory.shadow = shadow;
 }
-#[no_mangle]
-#[cfg(target_arch = "wasm32")]
-pub unsafe extern "C" fn test_triangles(
-    collider_ptr: *mut collider::Collider,
-    collider_sphere: *mut ColliderSphere,
-    world_position: *const [f32; 3],
-    world_velocity_x: f32,
-    world_velocity_y: f32,
-    world_velocity_z: f32,
-) {
-    let collider = (&mut *collider_ptr);
-    ENGINE.engine2.lock().unwrap().check_collisions(
-        collider,
-        &*collider_sphere,
-        &*world_position,
-        world_velocity_x,
-        world_velocity_y,
-        world_velocity_z,
-    );
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn set_scenes(
     mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,

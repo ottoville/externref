@@ -83,7 +83,6 @@ export class ArcRotateCamera extends CameraController {
   #alpha = 0;
   #beta = 0;
   #radius = 10;
-  readonly collisionRadius = 2;
   readonly colliderSphere = engine.rust.create_collider_sphere(2);
 
   constructor(
@@ -284,27 +283,17 @@ export class ArcRotateCamera extends CameraController {
     // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
     const newPosition = this.#calculatePosition();
     //let starttime=performance.now();
-    engine.collideWithWorld(
-      this,
-      newPosition,
-      engine.rust.get_camera_position_ptr(this.camera.id),
-    );
 
-    //run the callback
-    // if (!this.engine.collider.collidedMesh) {
-    if (engine.rust.get_did_collide(engine.collider.collider_ptr)) {
-      //this._position.copyFrom(position);
-      if (
-        this.camera.position[0] != engine.collider.finalPosition[0] ||
-        this.camera.position[1] != engine.collider.finalPosition[1] ||
-        this.camera.position[2] != engine.collider.finalPosition[2]
-      ) {
-        this.cameraControl?.updatePosition(
-          engine.collider.finalPosition[0],
-          engine.collider.finalPosition[1],
-          engine.collider.finalPosition[2],
-        );
-      }
+    if (
+      engine.rust.test_triangles(
+        engine.collider.collider_ptr,
+        this.colliderSphere,
+        newPosition[0],
+        newPosition[1],
+        newPosition[2],
+        this.camera.id,
+      )
+    ) {
       this.#rebuildAnglesAndRadius();
     }
     // Recompute because of constraints

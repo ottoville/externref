@@ -1,8 +1,4 @@
-﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
-// https://www.peroxide.dk/papers/collision/collision.pdf
-
-import type { Ellipsoid } from './nodes/DataNode.js';
-import type { Engine, rustWasm } from './engine.js';
+﻿import type { Engine, rustWasm } from './engine.js';
 import { MutableTerraVector3, TerraVector3 } from './Math.js';
 declare const engine: Engine;
 
@@ -24,7 +20,6 @@ function CrossToRef(
 }
 export class ColliderJS {
   #velocitySquaredLength!: number;
-  finalPosition: MutableTerraVector3;
   collider_ptr: rust_pointer<'legacy_collider'>;
   getLowestRoot(a: number, b: number, c: number, maxR: number) {
     //TODO: This will give false negative if determinant is zero
@@ -80,23 +75,8 @@ export class ColliderJS {
   _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
   _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
 
-  get scaledPosition() {
-    return new Float32Array(
-      engine.rust.memory.buffer,
-      engine.rust.scaled_position_pointer(this.collider_ptr),
-      4,
-    ) as unknown as [number, number, number];
-  }
-  get scaledVelocity() {
-    return new Float32Array(
-      engine.rust.memory.buffer,
-      engine.rust.scaled_velocity_pointer(this.collider_ptr),
-      4,
-    ) as unknown as [number, number, number];
-  }
   constructor(rustExports: rustWasm) {
     this.collider_ptr = rustExports.collider();
-    this.finalPosition = new MutableTerraVector3();
   }
 
   //#velocity!:Vector3;
@@ -119,10 +99,12 @@ export class ColliderJS {
     source: TerraVector3,
     dir: TerraVector3,
     e: number,
+    //@ts-expect-error removed
     sphere: Ellipsoid,
   ): void {
     //this.nearest_distance_squared = 9999999;
     //this.#velocity = dir;
+    //@ts-expect-error removed
     const scaledVelocity = this.scaledVelocity;
     this.#velocitySquaredLength =
       scaledVelocity[0] * scaledVelocity[0] +

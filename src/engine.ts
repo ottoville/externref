@@ -7,7 +7,7 @@ import { TerraCamera } from './TerraCamera.js';
 import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
 //@ts-expect-error todo
 import { MeshCamera } from './controllers/MeshCamera.js';
-import { DataNode, Ellipsoid } from './nodes/DataNode.js';
+import { DataNode } from './nodes/DataNode.js';
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
@@ -103,14 +103,6 @@ export type rustWasm = {
   ): rust_pointer<'geometry'>;
   create_icosphere_geometry(order: number): rust_pointer<'geometry'>;
   collider(): rust_pointer<'legacy_collider'>;
-  get_did_collide(collider_ptr: rust_pointer<'legacy_collider'>): boolean;
-  scaled_position_pointer(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-  ): number;
-  scaled_velocity_pointer(
-    collider_ptr: rust_pointer<'legacy_collider'>,
-  ): number;
-
   process_gpu_queue(
     time: number,
     updateViewPipeline: GPUComputePipeline,
@@ -454,10 +446,10 @@ export type rustWasm = {
   test_triangles(
     rust_collider_ptr: rust_pointer<'legacy_collider'>,
     collider_sphere: rust_pointer<'collider_sphere'>,
-    position_world: rust_pointer<'position'>,
-    velocity_world_x: number,
-    velocity_world_y: number,
-    velocity_world_z: number,
+    newPosition_x: number,
+    newPosition_y: number,
+    newPosition_z: number,
+    camera_id: number,
   ): boolean;
   get_impulse_from_id(
     mesh_id: rust_pointer<'mesh_id'>,
@@ -1055,46 +1047,5 @@ export class Engine {
     this.physics = new Physics(this);
 
     this.collider = new ColliderJS(rust);
-  }
-  collideWithWorld(
-    sphere: Ellipsoid,
-    newPosition: [number, number, number],
-    worldPosition: rust_pointer<'position'>,
-  ): void {
-    if (sphere instanceof DataNode) sphere.colliding_character = false;
-    const pos_arr = new Float32Array(
-      engine.rust.memory.buffer,
-      worldPosition,
-      3,
-    ) as unknown as readonly [number, number, number];
-    const worldVelocity = [
-      newPosition[0] - pos_arr[0],
-      newPosition[1] - pos_arr[1],
-      newPosition[2] - pos_arr[2],
-    ] as const;
-
-    const scaledVelocity = engine.collider.scaledVelocity;
-    scaledVelocity[0] = worldVelocity[0] / sphere.collisionRadius;
-    scaledVelocity[1] = worldVelocity[1] / sphere.collisionRadius;
-    scaledVelocity[2] = worldVelocity[2] / sphere.collisionRadius;
-
-    const scaledPosition = engine.collider.scaledPosition;
-    scaledPosition[0] = pos_arr[0] / sphere.collisionRadius;
-    scaledPosition[1] = pos_arr[1] / sphere.collisionRadius;
-    scaledPosition[2] = pos_arr[2] / sphere.collisionRadius;
-
-    engine.rust.test_triangles(
-      engine.collider.collider_ptr,
-      sphere.colliderSphere,
-      worldPosition,
-      worldVelocity[0],
-      worldVelocity[1],
-      worldVelocity[2],
-    );
-    //TODO: Call only when camera position change
-    this.collider.finalPosition.set(scaledPosition);
-    this.collider.finalPosition[0] *= sphere.collisionRadius;
-    this.collider.finalPosition[1] *= sphere.collisionRadius;
-    this.collider.finalPosition[2] *= sphere.collisionRadius;
   }
 }

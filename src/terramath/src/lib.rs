@@ -236,6 +236,7 @@ pub trait VectorMath<T, const N: usize> {
     fn add_vec(&self, other: &Self) -> Self;
     fn divide_vec_in_place(&mut self, other: &Self);
     fn divide_in_place(&mut self, dividor: T);
+    fn divide_to_ref(&self, dividor: f32, result: &mut Self);
     fn to_scaling_matrix(&self) -> [[T; N]; N];
     fn transform(&self, matrix: [[f32; 4]; 4]) -> Self;
     fn transform_to_ref(&self, matrix: [[f32; 4]; 4], other: &mut Self);
@@ -357,6 +358,11 @@ impl VectorMath<f32, 3> for [f32; 3] {
         self[0] /= dividor;
         self[1] /= dividor;
         self[2] /= dividor;
+    }
+    fn divide_to_ref(&self, dividor: f32, result: &mut Self) {
+        result[0] = self[0] / dividor;
+        result[1] = self[1] / dividor;
+        result[2] = self[2] / dividor;
     }
     fn to_scaling_matrix(&self) -> [[f32; 3]; 3] {
         [
@@ -543,6 +549,12 @@ impl VectorMath<f32, 4> for [f32; 4] {
         self[1] /= dividor;
         self[2] /= dividor;
         self[3] /= dividor;
+    }
+    fn divide_to_ref(&self, dividor: f32, result: &mut Self) {
+        result[0] = self[0] / dividor;
+        result[1] = self[1] / dividor;
+        result[2] = self[2] / dividor;
+        result[3] = self[3] / dividor;
     }
     fn to_scaling_matrix(&self) -> [[f32; 4]; 4] {
         [

@@ -14,11 +14,6 @@ class pickInfo {
   }
 }
 
-export interface Ellipsoid {
-  readonly colliderSphere: rust_pointer<'collider_sphere'>;
-  readonly collisionRadius: number;
-}
-
 export type DataNodeProps = {
   vertices: rust_pointer<'geometry'>;
   /**

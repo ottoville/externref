@@ -256,7 +256,7 @@ pub struct GPU {
     camera_controller: Option<Box<dyn CameraController + Send>>,
 }
 impl GPU {
-    pub unsafe fn get_camera_by_id(&self, camera_id: u32) -> &Camera {
+    pub fn get_camera_by_id(&self, camera_id: u32) -> &Camera {
         for projection in self.projections.iter() {
             if let Some(cam) = projection
                 .cameras

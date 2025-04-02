@@ -8,11 +8,6 @@ import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 import { Externref } from './externref.js';
 declare const engine: Engine;
 
-export type CameraControl = {
-  updatePosition(x: number, y: number, z: number): void;
-  updateDirection(x: number, y: number, z: number): void;
-};
-
 export class TerraCamera {
   updateClustersBindGroup?: BindGroup<GPU['pipelineLayouts']['clustersLayout']>;
 
@@ -38,8 +33,6 @@ export class TerraCamera {
       3,
     ) as unknown as readonly [number, number, number];
   }
-  readonly controls: CameraControl;
-  #cameraController?: TerraCamera;
   #inputController?: CameraController;
   public gpu?: GPU;
 
@@ -122,25 +115,12 @@ export class TerraCamera {
       );
       gpu2.cameras.push(this);
     });
-
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const me = this;
-    this.controls = {
-      updateDirection(x: number, y: number, z: number) {
-        engine.rust.update_camera_direction(me.id, x, y, z);
-      },
-      updatePosition(x: number, y: number, z: number) {
-        engine.rust.update_camera_position(me.id, x, y, z);
-      },
-    };
   }
-  getControlForCamera(owner: TerraCamera) {
-    if (this.#cameraController && this.#cameraController !== owner)
-      throw new Error('Camera is already controlled');
-    else {
-      this.#cameraController = owner;
-      return this.controls;
-    }
+  updateDirection(x: number, y: number, z: number) {
+    engine.rust.update_camera_direction(this.id, x, y, z);
+  }
+  updatePosition(x: number, y: number, z: number) {
+    engine.rust.update_camera_position(this.id, x, y, z);
   }
   attachControllerForCamera(controller: CameraController) {
     if (this.#inputController) {
@@ -148,15 +128,12 @@ export class TerraCamera {
         if (typeof document !== 'undefined')
           this.#inputController.deAttachCameraController();
         delete this.#inputController.cameraControl;
-      } else {
-        return this.controls;
       }
     }
     this.#inputController = controller;
     engine.inputManager = controller;
     if (typeof document !== 'undefined') controller.attachCameraController();
-    controller.cameraControl = this.controls;
-    return this.controls;
+    controller.cameraControl = this;
   }
   get direction() {
     return new ReadOnlyTerraVector3(

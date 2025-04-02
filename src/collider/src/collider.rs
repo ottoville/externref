@@ -1,3 +1,6 @@
+// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
+// https://www.peroxide.dk/papers/collision/collision.pdf
+
 #[cfg(target_arch = "wasm32")]
 use std::arch::wasm32::v128;
 use std::mem;
@@ -9,7 +12,7 @@ pub struct ColliderSphere {
     pub close_distance_vector: f32,
 }
 static CLOSE_DISTANCE: f32 = 0.0022;
-pub static CLOSE_DISTANCE_SQRT:f32 = CLOSE_DISTANCE * CLOSE_DISTANCE;
+pub static CLOSE_DISTANCE_SQRT: f32 = CLOSE_DISTANCE * CLOSE_DISTANCE;
 
 #[no_mangle]
 pub extern "C" fn create_collider_sphere(collision_radius: f32) -> *mut ColliderSphere {
@@ -30,7 +33,7 @@ pub struct ColliderPlane {
     pub vectors: [&'static Vec3wgslF32; 3],
 }
 pub struct Collider {
-    pub basepoint_world: [f32; 3],
+    pub basepoint_world: [f32; 4],
     pub intersection_point: [f32; 4],
     pub collision_resolved: bool,
     pub nearest_distance_squared: f32,
@@ -62,18 +65,6 @@ pub struct Collider {
 pub extern "C" fn collider() -> *mut Collider {
     let coll = Box::new(Collider::new());
     Box::into_raw(coll)
-}
-#[no_mangle]
-pub unsafe extern "C" fn get_did_collide(collider_ptr: *const Collider) -> bool {
-    (*collider_ptr).did_collide
-}
-#[no_mangle]
-pub unsafe extern "C" fn scaled_position_pointer(collider_ptr: *const Collider) -> *const f32 {
-    (*collider_ptr).scaled_position.as_ptr()
-}
-#[no_mangle]
-pub unsafe extern "C" fn scaled_velocity_pointer(collider_ptr: *const Collider) -> *const f32 {
-    (*collider_ptr).scaled_velocity.as_ptr()
 }
 #[cfg(target_arch = "wasm32")]
 fn v3_dot(a: v128, b: v128) -> f32 {
@@ -226,7 +217,7 @@ fn lowest_root() {
 impl Collider {
     pub fn new() -> Self {
         Collider {
-            basepoint_world: [0.0; 3],
+            basepoint_world: [0.0; 4],
             intersection_point: [0.0; 4],
             collision_resolved: true,
             nearest_distance_squared: 9999999.0,
@@ -252,16 +243,11 @@ impl Collider {
     }
     pub fn _initialize(
         &mut self,
-        world_position: &[f32; 3],
-        world_velocity_x: f32,
-        world_velocity_y: f32,
-        world_velocity_z: f32,
-        radius: f32,
+        world_position: &[f32; 4],
+        speed: f32,        
     ) {
         self.collision_resolved = true;
-        let velocity_world =
-            [world_velocity_x, world_velocity_y, world_velocity_z].multiply(radius);
-        self.speed = velocity_world.length();
+        self.speed = speed;
         self.collided_point_in_triangle = None;
         self.basepoint_world = world_position.clone();
         self.scaled_speed_squared = self.scaled_velocity.dot(&self.scaled_velocity);
@@ -614,7 +600,12 @@ impl Collider {
             self.nearest_distance_squared = dist_to_collision_squared;
             self.collision_resolved = false;
             if collided_point_in_triangle {
-                self.collided_point_in_triangle = Some([collided_plane.norm[0], collided_plane.norm[1], collided_plane.norm[2], 0.0]);
+                self.collided_point_in_triangle = Some([
+                    collided_plane.norm[0],
+                    collided_plane.norm[1],
+                    collided_plane.norm[2],
+                    0.0,
+                ]);
             } else {
                 self.collided_point_in_triangle = None;
             }
