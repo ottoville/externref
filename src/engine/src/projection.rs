@@ -3,16 +3,9 @@ use std::sync::{Arc, Mutex};
 use externref::Resource;
 use terramath::MatrixMath;
 
-use crate::{
-    camera::Camera,
-    cameras::Cameras,
-    gpu::{
-        buffer::{buffer::GPUBuffer, usages::UNIFORM_USAGE},
-        command_buffer::CommandBuffer,
-        command_encoder::GPUCommandEncoder,
-        gpu::JSDevice,
-    },
-    swapbuffers::SwapBuffers,
+use crate::gpu::{
+    buffer::{buffer::GPUBuffer, usages::UNIFORM_USAGE},
+    gpu::JSDevice,
 };
 
 const PROJECTION_BUFFER_SIZE: usize = 224; // 64+64+64+8+4+4+4+4 + ALIGN
@@ -25,12 +18,11 @@ pub struct InnerProjection {
     fow: f32,
 }
 pub struct Projection {
-    pub cameras: Cameras,
     pub inner_projection: InnerProjection,
     pub buffer: Arc<Mutex<GPUBuffer<UNIFORM_USAGE>>>,
 }
 impl InnerProjection {
-    fn create_buffer(
+    pub fn create_buffer(
         &mut self,
         device: &Resource<JSDevice>,
         aspect_ratio: f32,
@@ -89,65 +81,6 @@ impl Projection {
         Projection {
             inner_projection,
             buffer,
-            cameras: Cameras {
-                cameras: Vec::with_capacity(4),
-            },
         }
-    }
-    /**
-     * Called on window resize
-     */
-    pub fn update(
-        &mut self,
-        device: &Resource<JSDevice>,
-        aspect_ratio: f32,
-        command_encoder: &mut GPUCommandEncoder,
-        swap_buffer: &mut SwapBuffers,
-        pending_command_buffers: &mut Vec<CommandBuffer>,
-    ) {
-        self.buffer = Arc::new(Mutex::new(
-            self.inner_projection.create_buffer(device, aspect_ratio),
-        ));
-        self.update_views(
-            device,
-            command_encoder,
-            swap_buffer,
-            pending_command_buffers,
-            true,
-        );
-    }
-
-    pub fn update_views(
-        &mut self,
-        device: &Resource<JSDevice>,
-        command_encoder: &mut GPUCommandEncoder,
-        swap_buffer: &mut SwapBuffers,
-        pending_command_buffers: &mut Vec<CommandBuffer>,
-        force: bool,
-    ) -> bool {
-        let mut some_camera_updated = false;
-        let mut closure = |camera: &mut Camera| {
-            if force || camera.do_update_view != 0 {
-                camera.update_view(pending_command_buffers);
-                camera.view.multiply(
-                    &self.inner_projection.projection_reversed_z,
-                    &mut camera.projection_view,
-                );
-                camera.update_projection(&device, command_encoder, swap_buffer);
-                some_camera_updated = true;
-            } else {
-                camera.updated = false;
-            }
-        };
-        for camera in self.cameras.cameras.iter_mut() {
-            closure(camera);
-            for child_camera in camera.children.iter_mut() {
-                closure(child_camera);
-                for child_child_camera in child_camera.children.iter_mut() {
-                    closure(child_child_camera);
-                }
-            }
-        }
-        return some_camera_updated;
     }
 }

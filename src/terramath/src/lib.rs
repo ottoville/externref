@@ -267,10 +267,12 @@ pub trait MatrixMath<T> {
     fn determinant(&self) -> T;
     fn invert_in_place(&mut self) -> bool;
     fn invert_to_ref(&self, other: &mut Self) -> bool;
+    fn invert(&self) -> Self;
     fn transpose(&mut self);
     fn adjoint(&mut self);
     fn multiply_f32(&mut self, number: T);
-    fn multiply(&self, other: &Self, result: &mut Self);
+    fn multiply_to_ref(&self, other: &Self, result: &mut Self);
+    fn multiply(&self, other: &Self) -> Self;
 }
 impl CrossProduct<f32> for [f32; 3] {
     fn cross(&self, other: &[f32; 3]) -> Self {
@@ -615,7 +617,7 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
             }
         }
     }
-    fn multiply(&self, _other: &Self, _result: &mut Self) {
+    fn multiply_to_ref(&self, _other: &Self, _result: &mut Self) {
         panic!("Not implemented");
     }
     fn determinant(&self) -> f32 {
@@ -662,6 +664,14 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
     fn invert_to_ref(&self, _other: &mut Self) -> bool {
         todo!()
     }
+    fn invert(&self) -> Self {
+        todo!()
+    }
+    fn multiply(&self, other: &Self) -> Self {
+        todo!()
+    }
+    
+
 }
 
 impl MatrixMath<f32> for [[f32; 3]; 3] {
@@ -679,7 +689,7 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         self[2][1] = self[2][1] * number;
         self[2][2] = self[2][2] * number;
     }
-    fn multiply(&self, _other: &Self, _result: &mut Self) {
+    fn multiply_to_ref(&self, _other: &Self, _result: &mut Self) {
         panic!("not implemented");
     }
     fn determinant(&self) -> f32 {
@@ -803,6 +813,14 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
     fn invert_to_ref(&self, _other: &mut Self) -> bool {
         todo!()
     }
+    
+    fn multiply(&self, other: &Self) -> Self {
+        todo!()
+    }
+    
+    fn invert(&self) -> Self {
+        todo!()
+    }
 }
 
 impl MatrixMath<f32> for [[f32; 4]; 4] {
@@ -833,7 +851,7 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
         self[3][3] = self[3][3] * number;
     }
     #[cfg(not(target_arch = "wasm32"))]
-    fn multiply(&self, other: &Self, result: &mut Self) {
+    fn multiply_to_ref(&self, other: &Self, result: &mut Self) {
         result[0][0] = self[0][0] * other[0][0]
             + self[0][1] * other[1][0]
             + self[0][2] * other[2][0]
@@ -907,7 +925,7 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
     To multiply matrix in place, use std::ptr::addr_of! macro to give original pointer
     */
     #[cfg(target_arch = "wasm32")]
-    fn multiply(&self, other: &Self, result: &mut Self) {
+    fn multiply_to_ref(&self, other: &Self, result: &mut Self) {
         unsafe {
             use std::arch::wasm32::*;
 
@@ -921,6 +939,11 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
             vec4_transform_simd(&self[2], matrix, &mut result[2] as *mut f32 as *mut v128);
             vec4_transform_simd(&self[3], matrix, &mut result[3] as *mut f32 as *mut v128);
         }
+    }
+    fn multiply(&self, other: &Self) -> Self {
+        let mut result = [[0.0;4];4];
+        self.multiply_to_ref(other, &mut result);
+        return result;
     }
     fn determinant(&self) -> f32 {
         // Submatrices of transported matrix
@@ -1060,6 +1083,12 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
 
         return true;
     }
+    
+    fn invert(&self) -> Self {
+        let mut result = [[0.0;4];4];
+        self.invert_to_ref(&mut result);
+        return result;
+    }
 }
 #[cfg(test)]
 #[test]
@@ -1153,7 +1182,7 @@ fn test_multiply() {
         [-43.0, 8.0, -4.0, -435.6],
     ];
     let mut res = [[0.0; 4]; 4];
-    mat.multiply(&mat2, &mut res);
+    mat.multiply_to_ref(&mat2, &mut res);
     assert_eq!(
         res,
         [

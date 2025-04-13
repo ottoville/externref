@@ -1,5 +1,4 @@
-﻿import { ReadOnlyTerraVector3, TerraMatrix } from './Math.js';
-import type { Engine } from './engine.js';
+﻿import type { Engine } from './engine.js';
 import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
 import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
@@ -11,27 +10,8 @@ declare const engine: Engine;
 export class TerraCamera {
   updateClustersBindGroup?: BindGroup<GPU['pipelineLayouts']['clustersLayout']>;
 
-  get projectionViewInverted() {
-    return new TerraMatrix(
-      engine.rust.memory.buffer,
-      engine.rust.get_camera_projection_inverted_ptr(this.id),
-    );
-  }
   update_camera_projection_view_inverted() {
     engine.rust.update_camera_projection_view_inverted(this.id);
-  }
-  get viewArr() {
-    return new TerraMatrix(
-      engine.rust.memory.buffer,
-      engine.rust.get_camera_view_ptr(this.id),
-    );
-  }
-  get position() {
-    return new Float32Array(
-      engine.rust.memory.buffer,
-      engine.rust.get_camera_position_ptr(this.id),
-      3,
-    ) as unknown as readonly [number, number, number];
   }
   #inputController?: CameraController;
   public gpu?: GPU;
@@ -87,6 +67,8 @@ export class TerraCamera {
         'updateProjection',
         (bindGroup2) => {
           const gpu_lock = engine.rust.get_gpu();
+          const cameralock = engine.rust.get_camera(gpu_lock, this.id);
+
           const projection_buffer_index =
             engine.rust.get_gpu_projection_buffer_from_mutex(gpu_lock);
 
@@ -97,8 +79,9 @@ export class TerraCamera {
             >
           ).externref;
           const cluster_buffer_index =
-            engine.rust.get_camera_cluster_buffer_from_mutex(gpu_lock, this.id);
+            engine.rust.get_camera_cluster_buffer_from_mutex(cameralock);
 
+          engine.rust.drop_camera_lock(cameralock);
           engine.rust.drop_gpu_lock(gpu_lock);
 
           const group = {
@@ -116,11 +99,21 @@ export class TerraCamera {
       gpu2.cameras.push(this);
     });
   }
-  updateDirection(x: number, y: number, z: number) {
-    engine.rust.update_camera_direction(this.id, x, y, z);
+  updateDirection(
+    camera: rust_mutex<'locked', 'camera'>,
+    x: number,
+    y: number,
+    z: number,
+  ) {
+    engine.rust.update_camera_direction(camera, x, y, z);
   }
-  updatePosition(x: number, y: number, z: number) {
-    engine.rust.update_camera_position(this.id, x, y, z);
+  updatePosition(
+    camera: rust_mutex<'locked', 'camera'>,
+    x: number,
+    y: number,
+    z: number,
+  ) {
+    engine.rust.update_camera_position(camera, x, y, z);
   }
   attachControllerForCamera(controller: CameraController) {
     if (this.#inputController) {
@@ -134,11 +127,5 @@ export class TerraCamera {
     engine.inputManager = controller;
     if (typeof document !== 'undefined') controller.attachCameraController();
     controller.cameraControl = this;
-  }
-  get direction() {
-    return new ReadOnlyTerraVector3(
-      engine.rust.memory.buffer,
-      engine.rust.get_camera_direction_ptr(this.id),
-    );
   }
 }

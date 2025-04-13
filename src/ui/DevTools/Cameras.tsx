@@ -13,13 +13,19 @@ function Camera(props: { camera: TerraCamera }) {
       setCameraPosition([x, y, z] as const);
     };
     props.camera.onUpdatePosition.add(listener);
-    listener(
-      ...(props.camera.position as unknown as readonly [
-        number,
-        number,
-        number,
-      ]),
-    );
+    const gpulock = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(gpulock, props.camera.id);
+
+    const position = new Float32Array(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_position_ptr(cameralock),
+      3,
+    ) as unknown as readonly [number, number, number];
+
+    listener(...position);
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpulock);
+
     return () => {
       props.camera.onUpdatePosition.delete(listener);
     };
@@ -42,8 +48,13 @@ export function Cameras() {
     .fill(0)
     .map((_v, camera_id) => {
       const gpu_lock = engine.rust.get_gpu();
-      const camera = engine.rust.get_camera_externref(gpu_lock, camera_id);
+      const camera_index = engine.rust.get_camera_externref(
+        gpu_lock,
+        camera_id,
+      );
       engine.rust.drop_gpu_lock(gpu_lock);
+      const camera = engine.rust.externrefs.get(camera_index) as TerraCamera;
+
       return <Camera key={camera.label} camera={camera}></Camera>;
     });
 

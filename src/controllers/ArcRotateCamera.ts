@@ -27,15 +27,29 @@ export class ArcRotateCamera extends CameraController {
   serialize(): void {
     if (this.#serializeRequested || !engine.DB) return;
     this.#serializeRequested = true;
+    const gpulock = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(
+      gpulock,
+      engine.gpu!.mainCamera.id,
+    );
+
+    const position = new Float32Array(
+      new Float32Array(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_position_ptr(cameralock),
+        3,
+      ) as unknown as readonly [number, number, number],
+    ) as { 0: number; 1: number; 2: number } & Float32Array;
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpulock);
+
     const request = engine.DB.transaction('save', 'readwrite')
       .objectStore('save')
       .put({
         data: {
           alpha: this.#alpha,
           beta: this.#beta,
-          position: new Float32Array(
-            engine.gpu!.mainCamera.position as unknown as number[],
-          ) as { 0: number; 1: number; 2: number } & Float32Array,
+          position,
           radius: this.#radius,
           target: this.#target,
         } as serialized,
@@ -101,32 +115,59 @@ export class ArcRotateCamera extends CameraController {
             type: string;
           }>
         ).result;
+        const gpulock = engine.rust.get_gpu();
+        const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
         if (result) {
           this.#alpha = result.data.alpha;
           this.#beta = result.data.beta;
           this.#radius = result.data.radius;
           this.#target.set(result.data.target);
+
           this.cameraControl?.updatePosition(
+            cameralock,
             result.data.position[0],
             result.data.position[1],
             result.data.position[2],
           );
-          this.#calculateDirection();
+          this.#calculateDirection(cameralock);
         } else {
           // Use these default values for camera when there are no existing save
           this.#alpha = 0.4614110368395256;
           this.#beta = 1.4816457152012938;
           this.#radius = 457.55058783756886;
-          this.cameraControl?.updatePosition(952.791, 299.464, 587.233);
+          this.cameraControl?.updatePosition(
+            cameralock,
+            952.791,
+            299.464,
+            587.233,
+          );
+
           this.#target.set([544.716, 258.727, 384.335]);
         }
+        engine.rust.drop_camera_lock(cameralock);
+        engine.rust.drop_gpu_lock(gpulock);
       };
     } else {
+      const gpulock = engine.rust.get_gpu();
+      const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+
+      const position = new Float32Array(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_position_ptr(cameralock),
+        3,
+      ) as unknown as readonly [number, number, number];
+      const direction = new ReadOnlyTerraVector3(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_direction_ptr(cameralock),
+      );
       this.#target.set([
-        this.camera.position[0] - this.camera.direction[0] * 100,
-        this.camera.position[1] - this.camera.direction[1] * 100,
-        this.camera.position[2] - this.camera.direction[2] * 100,
+        position[0] - direction[0] * 100,
+        position[1] - direction[1] * 100,
+        position[2] - direction[2] * 100,
       ]);
+      engine.rust.drop_camera_lock(cameralock);
+      engine.rust.drop_gpu_lock(gpulock);
+
       this.#rebuildAnglesAndRadius();
     }
   }
@@ -298,20 +339,33 @@ export class ArcRotateCamera extends CameraController {
     }
     // Recompute because of constraints
     const calculatedPosition = this.#calculatePosition();
+    const gpulock = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+
     this.cameraControl?.updatePosition(
+      cameralock,
       calculatedPosition[0],
       calculatedPosition[1],
       calculatedPosition[2],
     );
 
-    this.#calculateDirection();
+    this.#calculateDirection(cameralock);
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpulock);
   }
-  #calculateDirection() {
+  #calculateDirection(cameralock: rust_mutex<'locked', 'camera'>) {
+    const position = new Float32Array(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_position_ptr(cameralock),
+      3,
+    ) as unknown as readonly [number, number, number];
+
     const direction = [
-      this.camera.position[0] - this.#target[0],
-      this.camera.position[1] - this.#target[1],
-      this.camera.position[2] - this.#target[2],
+      position[0] - this.#target[0],
+      position[1] - this.#target[1],
+      position[2] - this.#target[2],
     ] as [number, number, number];
+
     //Normalize direction
     const zLength = Math.hypot(direction[0], direction[1], direction[2]);
     if (!(zLength === 0 || zLength === 1)) {
@@ -321,7 +375,7 @@ export class ArcRotateCamera extends CameraController {
       direction[1] *= scale;
       direction[2] *= scale;
     }
-    this.cameraControl?.updateDirection(...direction);
+    this.cameraControl?.updateDirection(cameralock, ...direction);
   }
   #movement: {
     kinematic: boolean;
@@ -373,8 +427,16 @@ export class ArcRotateCamera extends CameraController {
     // Panning inertia
     if (this.#inertialPanning[0] !== 0 || this.#inertialPanning[2] !== 0) {
       this.#movement = null;
+      const gpulock = engine.rust.get_gpu();
+      const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
 
-      this.camera.viewArr.invertToRef(this.#cameraTransformMatrix);
+      const viewArr = new TerraMatrix(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_view_ptr(cameralock),
+      );
+
+      viewArr.invertToRef(this.#cameraTransformMatrix);
+
       this.#transformedDirection.set([
         this.#cameraTransformMatrix[0],
         this.#cameraTransformMatrix[1],
@@ -400,7 +462,10 @@ export class ArcRotateCamera extends CameraController {
       this.#target[2] += this.#transformedDirection[2];
       //Camera direction
       //for LHW this is target - position
-      this.#calculateDirection();
+      this.#calculateDirection(cameralock);
+      engine.rust.drop_camera_lock(cameralock);
+      engine.rust.drop_gpu_lock(gpulock);
+
       updateView = true;
       this.#inertialPanning[0] *= this.#panningInertia;
       this.#inertialPanning[2] *= this.#panningInertia;
@@ -422,10 +487,21 @@ export class ArcRotateCamera extends CameraController {
   };
   // Rebuilds angles (alpha, beta) and radius from the give position and target
   #rebuildAnglesAndRadius(): void {
+    const gpulock = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+
+    const position = new Float32Array(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_position_ptr(cameralock),
+      3,
+    ) as unknown as readonly [number, number, number];
+
     // this._position.subtractToRef(this._getTargetPosition(), this._computationVector);
-    this.#computationVector[0] = this.camera.position[0] - this.#target[0];
-    this.#computationVector[1] = this.camera.position[1] - this.#target[1];
-    this.#computationVector[2] = this.camera.position[2] - this.#target[2];
+    this.#computationVector[0] = position[0] - this.#target[0];
+    this.#computationVector[1] = position[1] - this.#target[1];
+    this.#computationVector[2] = position[2] - this.#target[2];
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpulock);
 
     // this.radius = this._computationVector.length();
     this.#radius = Math.sqrt(

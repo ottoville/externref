@@ -8,7 +8,6 @@ use externref::{externref, Resource};
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::camera::Camera;
 use crate::cameracontroller::CameraController;
-use crate::cameras::search_camera_by_id_mut;
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::Projection;
@@ -101,20 +100,32 @@ extern "C" {
 pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_USAGE>>) {
     TEMP_GPU_BUFFERS.lock().unwrap().push((*buffer).externref);
 }
-
+/**
+ * Called on window resize
+ */
 #[no_mangle]
 unsafe extern "C" fn on_resize(aspect_ratio: f32) {
     let gpuoption = &mut ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
     let mut command_encoder = GPUCommandEncoder::new(String::from("screen_resize"));
-    for projection in &mut gpu.projections {
-        projection.update(
+    for projection_m in &mut gpu.projections {
+        {
+            let projection = &mut projection_m.lock().unwrap();
+            projection.buffer = Arc::new(Mutex::new(
+                projection
+                    .inner_projection
+                    .create_buffer(&gpu.device, aspect_ratio),
+            ));
+        }
+    }
+    for camera in gpu.cameras.iter_mut() {
+        camera.update_view(
+            &mut gpu.pending_command_buffers,
             &gpu.device,
-            aspect_ratio,
             &mut command_encoder,
             &mut gpu.swap_buffers,
-            &mut gpu.pending_command_buffers,
-        )
+            true,
+        );
     }
     gpu.queue.submit(
         &mut vec![command_encoder.finish(String::from("screen_resize_commandbuffer"))].drain(..),
@@ -181,7 +192,8 @@ pub unsafe extern "C" fn init_gpu(
             queue: Queue { externref: queue },
             gpu_buffer,
             pending_command_buffers: Vec::with_capacity(8),
-            projections: vec![projection],
+            projections: vec![Arc::new(Mutex::new(projection))],
+            cameras: Vec::with_capacity(2),
             update_view_bindgroup,
             point_lights,
             directional_lights,
@@ -225,7 +237,8 @@ pub unsafe extern "C" fn get_gpu_projection_buffer_from_mutex(
     ptr: *mut MutexGuard<'static, Option<GPU>>,
 ) -> usize {
     let gpu = &(*ptr).as_ref().unwrap();
-    let externref = &*gpu.projections[0].buffer.lock().unwrap().externref;
+    let projection = gpu.projections[0].lock().unwrap();
+    let externref = &*projection.buffer.lock().unwrap().externref;
     ptr::read(externref as *const Resource<JSBuffer> as *const usize)
 }
 #[no_mangle]
@@ -246,7 +259,8 @@ pub struct GPU {
     pub queue: Queue,
     pub gpu_buffer: Arc<Mutex<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>>,
     pub pending_command_buffers: Vec<CommandBuffer>,
-    pub projections: Vec<Projection>,
+    pub projections: Vec<Arc<Mutex<Projection>>>,
+    pub cameras: Vec<Camera>,
     update_view_bindgroup: Arc<Mutex<BindGroup>>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
@@ -256,35 +270,37 @@ pub struct GPU {
     camera_controller: Option<Box<dyn CameraController + Send>>,
 }
 impl GPU {
-    pub fn get_camera_by_id(&self, camera_id: u32) -> &Camera {
-        for projection in self.projections.iter() {
-            if let Some(cam) = projection
-                .cameras
-                .iter()
-                .find(|camera| camera.id == camera_id)
-            {
-                return cam;
-            }
+    pub fn get_camera_by_id(&self, camera_id: usize) -> &Camera {
+        for camera in &self.cameras {
+            if camera.id == camera_id {
+                return camera;
+            } else {
+                if let Some(child_camera) = camera.find_child(camera_id) {
+                    return child_camera;
+                }
+            };
         }
         panic!("Camera not found");
     }
-    pub fn get_camera_by_id_mut(&'_ mut self, camera_id: u32) -> &mut Camera {
-        for projection in self.projections.iter_mut() {
-            let search_camera =
-                search_camera_by_id_mut(projection.cameras.cameras.iter_mut(), camera_id);
-            if let Some(camera) = search_camera {
+    pub fn get_camera_by_id_mut(&mut self, camera_id: usize) -> &mut Camera {
+        for camera in &mut self.cameras {
+            if camera.id == camera_id {
                 return camera;
-            }
+            } else {
+                if let Some(child_camera) = camera.find_child_mut(camera_id) {
+                    return child_camera;
+                }
+            };
         }
-        panic!("Camera {} not found", camera_id);
+        panic!("Camera not found");
     }
     pub fn process_gpu_queue(
         &mut self,
         time: f32,
         update_view_pipeline: &Resource<JSComputePipeline>,
     ) -> bool {
-        if let Some(camera_controller) = &mut self.camera_controller {
-            camera_controller.check_inputs(false);
+        for camera in &mut self.cameras {
+            camera.check_inputs();
         }
         self.time = time;
         let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
@@ -313,12 +329,12 @@ impl GPU {
         let mut update_lights = false;
         let mut some_camera_updated = false;
         //Cameras
-        for projection in &mut self.projections {
-            if projection.update_views(
+        for camera in &mut self.cameras.iter_mut() {
+            if camera.update_view(
+                &mut self.pending_command_buffers,
                 &self.device,
                 &mut command_encoder,
                 &mut self.swap_buffers,
-                &mut self.pending_command_buffers,
                 false,
             ) {
                 some_camera_updated = true;
@@ -406,10 +422,8 @@ impl GPU {
                 &mut self.update_view_bindgroup.lock().unwrap(),
             );
             //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
-            for projection in &self.projections {
-                for camera in projection.cameras.cameras.iter() {
-                    camera.update_camera(&self.device, update_lights, &mut lights_pass);
-                }
+            for camera in &mut self.cameras {
+                camera.update_camera(&self.device, update_lights, &mut lights_pass);
             }
 
             command_encoder = lights_pass.end();
@@ -465,7 +479,7 @@ fn test_gpu_queue() {
             None,
             None,
             ENGINE.meshes.lock().unwrap(),
-            false
+            false,
         );
         {
             let mesh = &ENGINE.meshes.lock().unwrap()[&mesh_id];

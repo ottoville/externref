@@ -497,7 +497,7 @@ impl Mesh {
         if let Some(geometry) = &mut self.geometry {
             let transformation = self.mesh_property.lock().unwrap().gpu_memory.transformation;
             // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix
-            transformation.multiply(
+            transformation.multiply_to_ref(
                 &collider_sphere.collisions_scaling_matrix,
                 &mut geometry.collisions_transform_matrix,
             );

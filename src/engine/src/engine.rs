@@ -8,6 +8,7 @@ use crate::allocators::explicit_generational_freelist::{
 };
 use crate::allocators::freeindex::FreeIndex;
 
+use crate::camera::Camera;
 use crate::gpu::gpu::GPU;
 
 use crate::mesh::JSMesh;
@@ -73,7 +74,7 @@ pub unsafe extern "C" fn test_triangles(
     new_position_x: f32,
     new_position_y: f32,
     new_position_z: f32,
-    camera_id: u32,
+    camera_id: usize,
 ) -> bool {
     let collider = (&mut *collider_ptr);
     return ENGINE.engine2.lock().unwrap().check_collisions(
@@ -81,7 +82,7 @@ pub unsafe extern "C" fn test_triangles(
         &*collider_sphere,
         [new_position_x, new_position_y, new_position_z, 0.0],
         camera_id,
-    )
+    );
 }
 const GRAVITY: nalgebra::Matrix<
     f32,
@@ -140,7 +141,6 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
         }),
         gpu: Mutex::new(None),
         meshes: Mutex::new(ExplicitGenerationalFreeList::new(100)),
-
         event_handler: ChannelEventCollector::new(collision_send, contact_send),
 
         character_controller: KinematicCharacterController::default(),
@@ -275,16 +275,15 @@ impl Engine2 {
         collider: &mut collider::Collider,
         collider_sphere: &ColliderSphere,
         new_position: [f32; 4],
-        camera_id: u32,
+        camera_id: usize,
     ) -> bool {
         use terramath::VectorMath;
         let mut gpuoption = ENGINE.gpu.lock().unwrap();
-
-        let world_position = &gpuoption
-            .as_ref()
+        let camera = &mut gpuoption
+            .as_mut()
             .unwrap()
-            .get_camera_by_id(camera_id)
-            .position;
+            .get_camera_by_id_mut(camera_id);
+        let world_position = &camera.position;
         let world_velocity = new_position.sub_vec(world_position);
         world_velocity.divide_to_ref(
             collider_sphere.collision_radius,
@@ -390,15 +389,11 @@ impl Engine2 {
             }
         }
         if collider.did_collide {
-            gpuoption
-                .as_mut()
-                .unwrap()
-                .get_camera_by_id_mut(camera_id)
-                .update_position(
-                    collider
-                        .scaled_position
-                        .multiply(collider_sphere.collision_radius),
-                );
+            camera.update_position(
+                collider
+                    .scaled_position
+                    .multiply(collider_sphere.collision_radius),
+            );
             return true;
         }
         return false;

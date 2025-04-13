@@ -1,3 +1,4 @@
+import { ReadOnlyTerraVector3 } from '../Math.js';
 import type { Engine } from '../engine.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import { ARROW_KEYS, CameraController } from './CameraController.js';
@@ -21,13 +22,18 @@ export class PositionCamera extends CameraController {
     initial = false,
   ) {
     super();
+    const gpulock = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+
     const syncCamera = () => {
       this.cameraControl?.updatePosition(
+        cameralock,
         this.#position[0],
         this.#position[1],
         this.#position[2],
       );
       this.cameraControl?.updateDirection(
+        cameralock,
         Math.cos(this.#angle),
         0,
         Math.sin(this.#angle),
@@ -50,9 +56,21 @@ export class PositionCamera extends CameraController {
         }
       };
     } else {
-      this.#position = [...this.camera.position];
-      this.#angle = Math.acos(this.camera.direction[0]);
+      const position = new Float32Array(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_position_ptr(cameralock),
+        3,
+      ) as unknown as readonly [number, number, number];
+
+      this.#position = [...position];
+      const direction = new ReadOnlyTerraVector3(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_direction_ptr(cameralock),
+      );
+      this.#angle = Math.acos(direction[0]);
     }
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpulock);
   }
   attachCameraController() {
     document?.addEventListener('keydown', this.#keydownfunction);
@@ -122,9 +140,19 @@ export class PositionCamera extends CameraController {
   };
   checkInputs() {
     if (this.#arrowKeysDown === 0 && this.#elevation === 0) return false;
+    const gpulock = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+
+    const position = new Float32Array(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_position_ptr(cameralock),
+      3,
+    ) as unknown as readonly [number, number, number];
+
     if (this.#elevation !== 0) {
-      const oldPos = this.camera.position;
+      const oldPos = position;
       this.cameraControl?.updatePosition(
+        cameralock,
         oldPos[0],
         oldPos[1] + this.#elevation * this.#velocity,
         oldPos[2],
@@ -132,23 +160,28 @@ export class PositionCamera extends CameraController {
     }
 
     if ((this.#arrowKeysDown & ARROW_KEYS.UP_OR_DOWN) > 0) {
-      const oldPos = this.camera.position;
-      const direction = this.camera.direction;
+      const oldPos = position;
+      const direction = new ReadOnlyTerraVector3(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_direction_ptr(cameralock),
+      );
 
       if ((this.#arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
         this.cameraControl?.updatePosition(
+          cameralock,
           oldPos[0] - direction[0] * this.#velocity,
           oldPos[1],
           oldPos[2] - direction[2] * this.#velocity,
         );
       } else {
         this.cameraControl?.updatePosition(
+          cameralock,
           oldPos[0] + direction[0] * this.#velocity,
           oldPos[1],
           oldPos[2] + direction[2] * this.#velocity,
         );
       }
-      this.#position = [...this.camera.position];
+      this.#position = [...position];
     }
 
     if (this.#arrowKeysDown) {
@@ -172,22 +205,27 @@ export class PositionCamera extends CameraController {
         this.#vAngle = this.#vAngle % (Math.PI * 2);
 
         this.cameraControl?.updateDirection(
+          cameralock,
           Math.cos(this.#angle) * Math.sin(this.#vAngle),
           Math.cos(this.#vAngle),
           Math.sin(this.#angle) * Math.sin(this.#vAngle),
         );
       } else if ((this.#arrowKeysDown & ARROW_KEYS.LEFT_OR_RIGHT) > 0) {
-        const oldPos = this.camera.position;
-        const direction = this.camera.direction;
-
+        const oldPos = position;
+        const direction = new ReadOnlyTerraVector3(
+          engine.rust.memory.buffer,
+          engine.rust.get_camera_direction_ptr(cameralock),
+        );
         if ((this.#arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
           this.cameraControl?.updatePosition(
+            cameralock,
             oldPos[0] + direction[2] * this.#velocity,
             oldPos[1],
             oldPos[2] - direction[0] * this.#velocity,
           );
         } else {
           this.cameraControl?.updatePosition(
+            cameralock,
             oldPos[0] - direction[2] * this.#velocity,
             oldPos[1],
             oldPos[2] + direction[0] * this.#velocity,
@@ -195,6 +233,9 @@ export class PositionCamera extends CameraController {
         }
       }
     }
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpulock);
+
     return true;
   }
 }

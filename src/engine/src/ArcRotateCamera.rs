@@ -1,6 +1,9 @@
 use terramath::VectorMath;
 
-use crate::cameracontroller::CameraController;
+use crate::{
+    camera::{VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
+    cameracontroller::CameraController,
+};
 
 struct CameraMovement {
     kinematic: bool,
@@ -42,14 +45,19 @@ pub struct ArcRotateCamera {
 }
 
 impl CameraController for ArcRotateCamera {
-    fn check_inputs(&mut self, force_recalculate: bool) {
+    fn check_inputs(
+        &mut self,
+        force_recalculate: bool,
+        position: &mut [f32; 4],
+        direction: &mut [f32; 3],
+    ) -> u32 {
         if let Some(movement) = &mut self.movement {
             if movement.kinematic {
                 if movement.move_to_place(&mut self.target) {
                     self.movement = None;
                 }
                 //this.calculateCameraPositionAndTarget();
-                return;
+                return VIEW_UPDATED_POSITION & VIEW_UPDATED_DIRECTION;
             }
         }
         todo!()

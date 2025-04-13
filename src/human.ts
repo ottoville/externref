@@ -6,6 +6,7 @@ import { create_rust_label } from './utils.js';
 import { Externref } from './externref.js';
 import { IndexedSingleColoredMesh } from './GPU/AbstractMeshes/IndexedSingleColoredMesh.js';
 import { DataNode } from './nodes/DataNode.js';
+import { ReadOnlyTerraVector3 } from './Math.js';
 declare const engine: Engine;
 const maxAcceleration = 10;
 const maxSpeedSquared = 1.4 * 1.4;
@@ -46,11 +47,19 @@ export class Human extends IndexedSingleColoredMesh {
     }
   }
   override onPhysicTick = (_delta: number, mesh: rust_pointer<'mesh'>) => {
+    const gpulock = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(
+      gpulock,
+      this.inputManager.camera.id,
+    );
     if (
       this.colliding_character &&
       DataNode.getSpeedSquared(mesh) > maxSpeedSquared
     ) {
-      const direction = this.inputManager.camera.direction;
+      const direction = new ReadOnlyTerraVector3(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_direction_ptr(cameralock),
+      );
       if (this.inputManager.arrowKeysDown) {
         const velocity = DataNode.getVelocity(mesh);
         const horizontalSpeed = Math.hypot(velocity[0], velocity[2]);
@@ -134,18 +143,28 @@ export class Human extends IndexedSingleColoredMesh {
     }
     const translation = DataNode.getTranslation(mesh);
     this.inputManager.cameraControl?.updatePosition(
+      cameralock,
       translation[0],
       translation[1],
       translation[2],
     );
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpulock);
   };
   directionUpdate = false;
   override onCollideCharacter(_started: boolean) {
     const speedSquared = this.getSpeedSquaredFromId();
-
+    const gpulock = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(
+      gpulock,
+      this.inputManager.camera.id,
+    );
     if (speedSquared < maxSpeedSquared) {
       const impulse = this.impulse;
-      const direction = this.inputManager.camera.direction;
+      const direction = new ReadOnlyTerraVector3(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_direction_ptr(cameralock),
+      );
 
       if (
         (this.inputManager.arrowKeysDown & ARROW_KEYS.UP_RIGHT) ===
@@ -201,6 +220,8 @@ export class Human extends IndexedSingleColoredMesh {
         impulse[2] = direction[0] * -1 * maxAcceleration;
       }
     }
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpulock);
   }
   override checkCollide(
     dt: number,

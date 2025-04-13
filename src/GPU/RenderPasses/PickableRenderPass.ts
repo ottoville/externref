@@ -1,4 +1,4 @@
-import { MutableTerraVector3 } from '../../Math.js';
+import { MutableTerraVector3, TerraMatrix } from '../../Math.js';
 import { MainNode } from '../../MainNode.js';
 import { RenderPassProps } from './RenderPass.js';
 import { DepthRenderPass } from './DepthRenderPass.js';
@@ -293,10 +293,18 @@ export class PickableRenderPass<
       const result: [number, number, number] = [0, 0, 0];
       const x = (engine.gpu!.mousePosition[0] / this.size.width) * 2 - 1;
       const y = -((engine.gpu!.mousePosition[1] / this.size.height) * 2 - 1);
+      const gpulock = engine.rust.get_gpu();
+      const cameralock = engine.rust.get_camera(gpulock, camera.id);
+      const projectionViewInverted = new TerraMatrix(
+        engine.rust.memory.buffer,
+        engine.rust.get_camera_projection_inverted_ptr(cameralock),
+      );
       new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(
-        camera.projectionViewInverted,
+        projectionViewInverted,
         result,
       );
+      engine.rust.drop_camera_lock(cameralock);
+      engine.rust.drop_gpu_lock(gpulock);
       if (mesh) {
         this.pickPromiseMesh = null;
         return {

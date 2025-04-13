@@ -343,8 +343,13 @@ export type rustWasm = {
   remove_onchange_callback(mesh_id: rust_pointer<'mesh_id'>, cb: number): void;
   get_engine(): rust_mutex<'locked', 'enginelock'>;
   get_gpu(): rust_mutex<'locked', 'gpulock'>;
+  get_camera(
+    gpu: rust_mutex<'locked', 'gpulock'>,
+    camera_id: number,
+  ): rust_mutex<'locked', 'camera'>;
   drop_engine_lock(engine: rust_mutex<'locked', 'enginelock'>): void;
   drop_gpu_lock(gpu: rust_mutex<'locked', 'gpulock'>): void;
+  drop_camera_lock(camera: rust_mutex<'locked', 'camera'>): void;
   get_gpu_mesh_buffer(engine: rust_pointer<'gpu'>): number;
   get_gpu_projection_buffer_from_mutex(
     engine: rust_mutex<'locked', 'gpulock'>,
@@ -393,32 +398,33 @@ export type rustWasm = {
   get_camera_externref(
     cameras: rust_mutex<'locked', 'gpulock'>,
     camera_id: number,
-  ): TerraCamera;
+  ): number;
   get_cameras_count(): number;
-  get_camera_direction_ptr(camera_id: number): rust_pointer<'direction'>;
-  get_camera_position_ptr(camera_id: number): rust_pointer<'position'>;
-  get_camera_view_ptr(camera_id: number): rust_pointer<'camera_view'>;
+  get_camera_direction_ptr(
+    camera: rust_mutex<'locked', 'camera'>,
+  ): rust_pointer<'direction'>;
+  get_camera_position_ptr(
+    camera: rust_mutex<'locked', 'camera'>,
+  ): rust_pointer<'position'>;
+  get_camera_view_ptr(
+    camera: rust_mutex<'locked', 'camera'>,
+  ): rust_pointer<'camera_view'>;
   get_camera_projection_inverted_ptr(
-    camera_id: number,
+    camera: rust_mutex<'locked', 'camera'>,
   ): rust_pointer<'camera_projection_inverted'>;
   get_camera_cluster_buffer_from_mutex(
-    cameras: rust_mutex<'locked', 'gpulock'>,
-    camera_id: number,
-  ): number;
-  get_camera_cluster_buffer(
-    cameras: rust_pointer<'gpu'>,
-    camera_id: number,
+    camera: rust_mutex<'locked', 'camera'>,
   ): number;
 
   update_camera_projection_view_inverted(camera_id: number): void;
   update_camera_position(
-    camera_id: number,
+    camera: rust_mutex<'locked', 'camera'>,
     x: number,
     y: number,
     z: number,
   ): void;
   update_camera_direction(
-    camera_id: number,
+    camera: rust_mutex<'locked', 'camera'>,
     x: number,
     y: number,
     z: number,

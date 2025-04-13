@@ -1,4 +1,4 @@
-import { MutableTerraVector3 } from '../Math.js';
+import { MutableTerraVector3, ReadOnlyTerraVector3 } from '../Math.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { ARROW_KEYS, CameraController } from './CameraController.js';
@@ -24,7 +24,15 @@ export class MeshCamera extends CameraController {
   cursor: UIRectangle | undefined = undefined;
   constructor(public camera: TerraCamera) {
     super();
-    this.angle = Math.acos(this.camera.direction[0]);
+    const gpulock = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+    const direction = new ReadOnlyTerraVector3(
+      engine.rust.memory.buffer,
+      engine.rust.get_camera_direction_ptr(cameralock),
+    );
+    this.angle = Math.acos(direction[0]);
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpulock);
   }
   checkInputs() {
     if (this.pointerMovement.x || this.pointerMovement.y) {
@@ -47,12 +55,17 @@ export class MeshCamera extends CameraController {
       this.verticalAngle = this.verticalAngle % (Math.PI * 2);
       const ang = this.angle - Math.PI;
       const vang = this.verticalAngle;
+      const gpulock = engine.rust.get_gpu();
+      const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
 
       this.cameraControl?.updateDirection(
+        cameralock,
         Math.cos(ang) * Math.sin(vang),
         Math.cos(vang),
         Math.sin(ang) * Math.sin(vang),
       );
+      engine.rust.drop_camera_lock(cameralock);
+      engine.rust.drop_gpu_lock(gpulock);
     }
     return true;
   }

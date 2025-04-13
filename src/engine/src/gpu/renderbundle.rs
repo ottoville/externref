@@ -77,7 +77,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup(
     renderbundle: *mut RenderBundleEncoder,
     index: u32,
     gpu_lock: *mut &'static mut GPU,
-    camera_id: u32,
+    camera_id: usize,
 ) {
     let camera = (*gpu_lock).get_camera_by_id(camera_id);
     (*renderbundle).set_bindgroup(
