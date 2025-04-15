@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 use externref::{externref, Resource};
 
 use crate::allocators::stack_allocator::StackAllocator;
-use crate::camera::Camera;
-use crate::cameracontroller::CameraController;
+use crate::cameras::camera::{Camera, CLUSTER_DISPATCH_SIZE};
+use crate::cameras::cameracontroller::CameraController;
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::Projection;
@@ -16,13 +16,13 @@ use crate::GPUMesh;
 
 use super::bindgroup::{BindGroup, JSBindGroup, JSBindGroupLayout};
 use super::binding_commands::BindingCommands;
-use super::buffer::buffer::JSBuffer;
+use super::buffer::buffer::{GpuBuffer, JSBuffer};
 use super::buffer::copy_src::CopySrc;
 use super::buffer::usages::{COPYSRC_USAGE, UNIFORM_COPYDST_USAGE};
 use super::bufferbinding::BufferBinding;
 use super::command_buffer::{CommandBuffer, JSCommandBuffer};
 use super::command_encoder::{GPUCommandEncoder, JSCommandEncoder};
-use super::compute_pass_encoder::JSComputePipeline;
+use super::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSComputePipeline};
 use super::lights::Lights;
 use super::queue::JSQueue;
 use super::{
@@ -104,18 +104,17 @@ pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_
  * Called on window resize
  */
 #[no_mangle]
-unsafe extern "C" fn on_resize(aspect_ratio: f32) {
+unsafe extern "C" fn on_resize(aspect_ratio: f32) -> *mut ComputePassEncoder {
     let gpuoption = &mut ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
     let mut command_encoder = GPUCommandEncoder::new(String::from("screen_resize"));
-    for projection_m in &mut gpu.projections {
+    for projection in &gpu.projections {
         {
-            let projection = &mut projection_m.lock().unwrap();
-            projection.buffer = Arc::new(Mutex::new(
+            let new_projection_buffer = 
                 projection
                     .inner_projection
-                    .create_buffer(&gpu.device, aspect_ratio),
-            ));
+                    .create_buffer(&gpu.device, aspect_ratio);
+            projection.buffer.lock().unwrap().replace_externref(new_projection_buffer.take_externref());
         }
     }
     for camera in gpu.cameras.iter_mut() {
@@ -127,9 +126,44 @@ unsafe extern "C" fn on_resize(aspect_ratio: f32) {
             true,
         );
     }
-    gpu.queue.submit(
-        &mut vec![command_encoder.finish(String::from("screen_resize_commandbuffer"))].drain(..),
+    Box::into_raw(Box::new(
+        command_encoder.begin_compute_pass(String::from("resizePassEncoder")),
+    ))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn end_and_submit(computepass: *mut ComputePassEncoder) {
+    let maybegpu = ENGINE.gpu.lock().unwrap();
+    maybegpu.as_ref().unwrap().queue.submit(
+        &mut vec![Box::from_raw(computepass)
+            .end()
+            .finish(String::from("resize"))]
+        .drain(..),
     );
+}
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn set_bindgroup_computepassencoder(
+    camera: *mut &mut Camera,
+    device: &Resource<JSDevice>,
+    index: u32,
+    computepass: *mut ComputePassEncoder,
+) {
+    let mut bindgroup = (*camera).update_clusters_bind_group.lock().unwrap();
+
+    (*computepass).set_bindgroup(device, index, &mut bindgroup);
+    (*computepass).dispatch_workgroups(
+        CLUSTER_DISPATCH_SIZE[0],
+        CLUSTER_DISPATCH_SIZE[1],
+        CLUSTER_DISPATCH_SIZE[2],
+    );
+}
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn get_raw_computepassencoder(
+    computepass: *mut ComputePassEncoder,
+) -> &'static Resource<JSComputePassEncoder> {
+    &(*computepass).externref
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_gpu() -> *mut MutexGuard<'static, Option<GPU>> {
@@ -192,7 +226,7 @@ pub unsafe extern "C" fn init_gpu(
             queue: Queue { externref: queue },
             gpu_buffer,
             pending_command_buffers: Vec::with_capacity(8),
-            projections: vec![Arc::new(Mutex::new(projection))],
+            projections: vec![Arc::new(projection)],
             cameras: Vec::with_capacity(2),
             update_view_bindgroup,
             point_lights,
@@ -232,16 +266,6 @@ pub unsafe extern "C" fn get_gpu_mesh_buffer(gpu: *mut &mut GPU) -> usize {
     ptr::read(externref as *const Resource<JSBuffer> as *const usize)
 }
 #[no_mangle]
-#[cfg(feature = "webgpu")]
-pub unsafe extern "C" fn get_gpu_projection_buffer_from_mutex(
-    ptr: *mut MutexGuard<'static, Option<GPU>>,
-) -> usize {
-    let gpu = &(*ptr).as_ref().unwrap();
-    let projection = gpu.projections[0].lock().unwrap();
-    let externref = &*projection.buffer.lock().unwrap().externref;
-    ptr::read(externref as *const Resource<JSBuffer> as *const usize)
-}
-#[no_mangle]
 #[externref]
 pub unsafe extern "C" fn process_gpu_queue(
     time: f32,
@@ -259,7 +283,7 @@ pub struct GPU {
     pub queue: Queue,
     pub gpu_buffer: Arc<Mutex<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>>,
     pub pending_command_buffers: Vec<CommandBuffer>,
-    pub projections: Vec<Arc<Mutex<Projection>>>,
+    pub projections: Vec<Arc<Projection>>,
     pub cameras: Vec<Camera>,
     update_view_bindgroup: Arc<Mutex<BindGroup>>,
     pub point_lights: Lights,

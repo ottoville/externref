@@ -1,7 +1,6 @@
 #!cfg(target_arch = "wasm32")
 mod allocators;
 mod boundingbox;
-pub mod camera;
 mod devtools;
 mod drawable;
 mod engine;
@@ -17,8 +16,7 @@ mod swapbuffers;
 mod terrain;
 mod vertices;
 pub mod character;
-mod cameracontroller;
-mod ArcRotateCamera;
+pub mod cameras;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;

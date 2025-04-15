@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use externref::Resource;
 
 use super::buffer::GpuBuffer;
@@ -40,7 +42,7 @@ pub trait CopySrc: GpuBuffer {
             self.set_size(size);
             command_encoder
                 .buffers
-                .push(self.replace_externref(new_externref));
+                .push(self.replace_externref(Arc::new(new_externref)));
         }
     }
 }

@@ -24,6 +24,7 @@ interface serialized {
 export class ArcRotateCamera extends CameraController {
   name = 'ArcRotateCamera';
   #serializeRequested = false;
+  id: rust_pointer<'cameracontroller'>;
   serialize(): void {
     if (this.#serializeRequested || !engine.DB) return;
     this.#serializeRequested = true;
@@ -104,6 +105,7 @@ export class ArcRotateCamera extends CameraController {
     initial = false,
   ) {
     super();
+    this.id = engine.rust.new_arc_rotate_camera();
     if (initial && engine.DB) {
       engine.DB.transaction('save')
         .objectStore('save')

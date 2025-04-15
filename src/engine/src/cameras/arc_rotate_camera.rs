@@ -1,9 +1,8 @@
 use terramath::VectorMath;
 
-use crate::{
-    camera::{VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
-    cameracontroller::CameraController,
-};
+use crate::cameras::camera::{VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION};
+
+use super::cameracontroller::CameraController;
 
 struct CameraMovement {
     kinematic: bool,
@@ -22,25 +21,30 @@ impl CameraMovement {
         return self.target_lerp_position > 1.0;
     }
 }
+#[no_mangle]
+pub unsafe extern "C" fn new_arc_rotate_camera() -> *mut ArcRotateCamera {
+    Box::into_raw(Box::new(ArcRotateCamera::new()))
+}
+
 pub struct ArcRotateCamera {
     alpha: f32,
     beta: f32,
     radius: f32,
-    /*
-     * Current inertia value on the longitudinal axis.
-     * The bigger this number the longer it will take for the camera to stop.
-     */
+
+    ///  Current inertia value on the longitudinal axis.
+    ///  The bigger this number the longer it will take for the camera to stop.
     inertial_alpha_offset: f32,
-    /**
-     * Current inertia value on the latitudinal axis.
-     * The bigger this number the longer it will take for the camera to stop.
-     */
+
+    /// Current inertia value on the latitudinal axis.
+    /// The bigger this number the longer it will take for the camera to stop.
     inertial_beta_offset: f32,
+    /// Current inertia value on the radius axis.
+    /// The bigger this number the longer it will take for the camera to stop.
     inertial_radius_offset: f32,
     inertia: f32,
     inertial_panning: [f32; 3],
     target: [f32; 3],
-    transformed_sirection: [[f32; 4]; 4],
+    transformed_direction: [f32; 3],
     movement: Option<CameraMovement>,
 }
 
@@ -51,7 +55,8 @@ impl CameraController for ArcRotateCamera {
         position: &mut [f32; 4],
         direction: &mut [f32; 3],
     ) -> u32 {
-        if let Some(movement) = &mut self.movement {
+        return 1;
+        /*if let Some(movement) = &mut self.movement {
             if movement.kinematic {
                 if movement.move_to_place(&mut self.target) {
                     self.movement = None;
@@ -60,10 +65,25 @@ impl CameraController for ArcRotateCamera {
                 return VIEW_UPDATED_POSITION & VIEW_UPDATED_DIRECTION;
             }
         }
-        todo!()
+        todo!()*/
     }
 }
 impl ArcRotateCamera {
+    pub fn new() -> Self {
+        ArcRotateCamera {
+            alpha: 0.0,
+            beta: 0.0,
+            radius: 10.0,
+            inertial_alpha_offset: 0.0,
+            inertial_beta_offset: 0.0,
+            inertial_radius_offset: 0.0,
+            inertia: 0.9,
+            inertial_panning: [0.0; 3],
+            target: [100.0, 0.0, 1000.0],
+            transformed_direction: [0.0; 3],
+            movement: None,
+        }
+    }
     fn calculate_camera_position_and_target(&mut self) {}
     fn calculate_position(&mut self, result: &mut [f32; 3]) {
         let mut sinb = self.beta.sin();

@@ -73,7 +73,7 @@ impl<const U: u32> GpuBuffer for MappadleGPUBuffer<U> {
     fn set_size(&mut self, size: usize) {
         self.0.size = size;
     }
-    fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Arc<Resource<JSBuffer>> {
+    fn replace_externref(&mut self, externref: Arc<Resource<JSBuffer>>) -> Arc<Resource<JSBuffer>> {
         self.0.replace_externref(externref)
     }
     fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>) {
@@ -82,6 +82,10 @@ impl<const U: u32> GpuBuffer for MappadleGPUBuffer<U> {
 
     fn externref_arc(&self) -> Arc<Resource<JSBuffer>> {
         self.0.externref_arc()
+    }
+    
+    fn take_externref(self) -> Arc<Resource<JSBuffer>> {
+        self.0.take_externref()
     }
 }
 impl<const U: u32> Deref for MappadleGPUBuffer<U> {

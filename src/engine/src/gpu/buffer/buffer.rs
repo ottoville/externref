@@ -81,8 +81,9 @@ pub trait GpuBuffer {
     fn usages(&self) -> u32;
     fn size(&self) -> usize;
     fn set_size(&mut self, size: usize);
-    fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Arc<Resource<JSBuffer>>;
+    fn replace_externref(&mut self, externref: Arc<Resource<JSBuffer>>) -> Arc<Resource<JSBuffer>>;
     fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>);
+    fn take_externref(self) -> Arc<Resource<JSBuffer>>;
 }
 impl<const U: u32> GpuBuffer for GPUBuffer<U> {
     fn externref(&self) -> &Resource<JSBuffer> {
@@ -90,6 +91,9 @@ impl<const U: u32> GpuBuffer for GPUBuffer<U> {
     }
     fn externref_arc(&self) -> Arc<Resource<JSBuffer>> {
         self.externref.clone()
+    }
+    fn take_externref(self) -> Arc<Resource<JSBuffer>> {
+        self.externref
     }
     fn label(&self) -> &String {
         &self.label
@@ -106,10 +110,10 @@ impl<const U: u32> GpuBuffer for GPUBuffer<U> {
     fn set_size(&mut self, size: usize) {
         self.size = size;
     }
-    fn replace_externref(&mut self, externref: Resource<JSBuffer>) -> Arc<Resource<JSBuffer>> {
+    fn replace_externref(&mut self, externref: Arc<Resource<JSBuffer>>) -> Arc<Resource<JSBuffer>> {
         self.make_dirty();
         let old_externref = self.externref.clone();
-        self.externref = Arc::new(externref);
+        self.externref = externref;
         return old_externref;
         //mem::replace(&mut self.externref, externref)
     }

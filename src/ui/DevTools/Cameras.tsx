@@ -3,6 +3,7 @@ import type { TerraCamera } from '../../TerraCamera.js';
 import type { Engine } from '../../engine.js';
 import { PositionCamera } from '../../controllers/PositionCamera.js';
 import type { CameraController } from '../../controllers/CameraController.js';
+import { stringFromPtr } from '../../utils.js';
 declare const engine: Engine;
 function Camera(props: { camera: TerraCamera }) {
   const [cameraPosition, setCameraPosition] = useState<
@@ -30,10 +31,14 @@ function Camera(props: { camera: TerraCamera }) {
       props.camera.onUpdatePosition.delete(listener);
     };
   }, [props.camera]);
+  const label = stringFromPtr(
+    engine.rust.memory,
+    engine.rust.get_camera_label(props.camera.id),
+  );
   return (
     <li>
       <>
-        {props.camera.label}
+        {label}
         <br />
         X: {cameraPosition[0].toFixed(5)} Y: {cameraPosition[1].toFixed(5)} Z:{' '}
         {cameraPosition[2].toFixed(5)}
@@ -55,7 +60,7 @@ export function Cameras() {
       engine.rust.drop_gpu_lock(gpu_lock);
       const camera = engine.rust.externrefs.get(camera_index) as TerraCamera;
 
-      return <Camera key={camera.label} camera={camera}></Camera>;
+      return <Camera key={camera.id} camera={camera}></Camera>;
     });
 
   return (

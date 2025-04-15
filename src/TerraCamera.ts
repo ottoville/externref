@@ -1,15 +1,13 @@
 ﻿import type { Engine } from './engine.js';
 import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
-import { BindGroup, Buffer, BufferUsageEnums } from './webgpu-ts/index.js';
-import { create_rust_label, stringFromPtr } from './utils.js';
+import { create_rust_label } from './utils.js';
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 import { Externref } from './externref.js';
+import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
 declare const engine: Engine;
 
 export class TerraCamera {
-  updateClustersBindGroup?: BindGroup<GPU['pipelineLayouts']['clustersLayout']>;
-
   update_camera_projection_view_inverted() {
     engine.rust.update_camera_projection_view_inverted(this.id);
   }
@@ -18,12 +16,6 @@ export class TerraCamera {
 
   onUpdatePosition: Set<(x: number, y: number, z: number) => void> = new Set();
   id: number;
-  get label(): string {
-    return stringFromPtr(
-      engine.rust.memory,
-      engine.rust.get_camera_label(this.id),
-    );
-  }
   constructor(
     label: string,
     gpu: GPU,
@@ -40,6 +32,7 @@ export class TerraCamera {
           gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
           this,
           ...create_rust_label(label),
+          gpu.pipelineLayouts.clustersLayout,
         );
       } else {
         this.id = engine.rust.add_child_to_camera(
@@ -49,6 +42,7 @@ export class TerraCamera {
           gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
           this,
           ...create_rust_label(label),
+          gpu.pipelineLayouts.clustersLayout,
         );
       }
     } else {
@@ -58,45 +52,11 @@ export class TerraCamera {
         gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
         this,
         ...create_rust_label(label),
+        gpu.pipelineLayouts.clustersLayout,
       );
     }
     engine.getGPU((gpu2) => {
       this.gpu = gpu2;
-      this.updateClustersBindGroup = new BindGroup(
-        gpu2.pipelineLayouts.clustersLayout,
-        'updateProjection',
-        (bindGroup2) => {
-          const gpu_lock = engine.rust.get_gpu();
-          const cameralock = engine.rust.get_camera(gpu_lock, this.id);
-
-          const projection_buffer_index =
-            engine.rust.get_gpu_projection_buffer_from_mutex(gpu_lock);
-
-          const projection_buffer = (
-            engine.rust.externrefs.get(projection_buffer_index) as Externref<
-              false,
-              Buffer<(typeof BufferUsageEnums)['UNIFORM']>
-            >
-          ).externref;
-          const cluster_buffer_index =
-            engine.rust.get_camera_cluster_buffer_from_mutex(cameralock);
-
-          engine.rust.drop_camera_lock(cameralock);
-          engine.rust.drop_gpu_lock(gpu_lock);
-
-          const group = {
-            clusters: (
-              engine.rust.externrefs.get(cluster_buffer_index) as Externref<
-                false,
-                Buffer<(typeof BufferUsageEnums)['STORAGE']>
-              >
-            ).externref.getStorageBinding(bindGroup2),
-            screentoview: projection_buffer.getUniformBinding(bindGroup2),
-          };
-          return group;
-        },
-      );
-      gpu2.cameras.push(this);
     });
   }
   updateDirection(
@@ -116,6 +76,17 @@ export class TerraCamera {
     engine.rust.update_camera_position(camera, x, y, z);
   }
   attachControllerForCamera(controller: CameraController) {
+    if (controller instanceof ArcRotateCamera) {
+      const gpu = engine.rust.get_gpu();
+      const cameralock = engine.rust.get_camera(gpu, this.id);
+      engine.rust.attach_archrotate_camera_controller(
+        cameralock,
+        controller.id,
+      );
+      engine.rust.drop_camera_lock(cameralock);
+      engine.rust.drop_gpu_lock(gpu);
+    }
+
     if (this.#inputController) {
       if (this.#inputController !== controller) {
         if (typeof document !== 'undefined')

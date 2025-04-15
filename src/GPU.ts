@@ -16,7 +16,6 @@ import type {
   RenderPipelineProps,
   RenderPipelineProps0,
 } from './GPU/RenderPipeline.js';
-import { tileCount } from './GPU/Shaders/structs/Structs.js';
 import { UIVertShader } from './GPU/Shaders/UI.vert.js';
 import { UIFragShader } from './GPU/Shaders/UI.frag.js';
 import {
@@ -70,8 +69,6 @@ export class GPU {
   readonly mousePositionBuffer = new SharedArrayBuffer(4);
   readonly mousePosition = new Uint16Vector2(this.mousePositionBuffer);
 
-  readonly cameras: TerraCamera[] = [];
-
   readonly BindGroupPosition: BindGroup<
     typeof this.pipelineLayouts.BindGroupLayoutPosition
   >;
@@ -116,12 +113,6 @@ export class GPU {
       }>
     >;
   }>;
-  readonly clusterSizeinBytes: number;
-
-  readonly #CLUSTER_WORKGROUP_SIZE: [number, number, number] = [4, 2, 4];
-  readonly CLUSTER_DISPATCH_SIZE: [number, number, number] = tileCount.map(
-    (v, i) => Math.ceil(v / this.#CLUSTER_WORKGROUP_SIZE[i]!),
-  ) as [number, number, number];
 
   readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat() as
     | 'rgba8unorm'
@@ -332,10 +323,6 @@ export class GPU {
         'f32',
       ),
     });
-
-    const totalClusters = tileCount[0] * tileCount[1] * tileCount[2];
-    this.clusterSizeinBytes =
-      totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
 
     this.pipelineLayouts = createPipelineLayouts(this);
     engine.rust.init_gpu(
@@ -660,14 +647,12 @@ export class GPU {
           this.scale.x = canvas.width / entry.contentRect.width;
           this.scale.y = canvas.height / entry.contentRect.height;
 
-          const commandEncoder = this.device.createCommandEncoder({
-            label: 'resizeEncoder',
-          });
-          const passEncoder = commandEncoder.beginComputePass({
-            label: 'resizePassEncoder',
-          });
+          const rustpassEncoder = engine.rust.on_resize(aspectRatio);
+
+          const passEncoder =
+            engine.rust.get_raw_computepassencoder(rustpassEncoder);
           passEncoder.setPipeline(await computePipelineClustersP);
-          engine.rust.on_resize(aspectRatio);
+          //engine.rust.on_resize(aspectRatio);
           this.#renderPasses.forEach((renderPass) => {
             renderPass.resize(canvas.width, canvas.height);
             passEncoder.setBindGroup(
@@ -675,11 +660,16 @@ export class GPU {
               renderPass.createSizeBindGroup().bindGroup,
             );
             renderPass.perspectiveCameras.forEach((camera) => {
-              passEncoder.setBindGroup(
+              const gpu = engine.rust.get_gpu();
+              const cameralock = engine.rust.get_camera(gpu, camera.id);
+              engine.rust.set_bindgroup_computepassencoder(
+                cameralock,
+                new Externref(true, device),
                 1,
-                camera.updateClustersBindGroup!.bindGroup,
+                rustpassEncoder,
               );
-              passEncoder.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
+              engine.rust.drop_camera_lock(cameralock);
+              engine.rust.drop_gpu_lock(gpu);
             });
           });
           // Call onResize after all renderPasses have resizes so callbacks
@@ -687,8 +677,8 @@ export class GPU {
           this.#renderPasses.forEach((renderPass) => {
             renderPass.onResize.forEach((cb) => cb());
           });
-          passEncoder.end();
-          this.device.queue.submit([commandEncoder.finish()]);
+          engine.rust.end_and_submit(rustpassEncoder);
+
           const updateViewPipeline = await updateViewPipelineP;
           this.#renderFrame = window.requestAnimationFrame((time) =>
             this.#renderLoop(time, updateViewPipeline),

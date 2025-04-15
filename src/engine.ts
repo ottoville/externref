@@ -351,9 +351,7 @@ export type rustWasm = {
   drop_gpu_lock(gpu: rust_mutex<'locked', 'gpulock'>): void;
   drop_camera_lock(camera: rust_mutex<'locked', 'camera'>): void;
   get_gpu_mesh_buffer(engine: rust_pointer<'gpu'>): number;
-  get_gpu_projection_buffer_from_mutex(
-    engine: rust_mutex<'locked', 'gpulock'>,
-  ): number;
+
   init_gpu(
     device: Externref<true, GPUDevice>,
     queue: GPUQueue,
@@ -373,6 +371,7 @@ export type rustWasm = {
     label_ptr: number,
     label_len: number,
     label_cap: number,
+    cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
   ): number;
   add_child_to_camera(
     camera_id: number,
@@ -383,6 +382,7 @@ export type rustWasm = {
     label_ptr: number,
     label_len: number,
     label_cap: number,
+    cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
   ): number;
   add_child_to_camera_water(
     camera_id: number,
@@ -393,6 +393,7 @@ export type rustWasm = {
     label_ptr: number,
     label_len: number,
     label_cap: number,
+    cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
   ): number;
   get_camera_label(camera_id: number): rust_pointer<'camera_label'>;
   get_camera_externref(
@@ -412,9 +413,6 @@ export type rustWasm = {
   get_camera_projection_inverted_ptr(
     camera: rust_mutex<'locked', 'camera'>,
   ): rust_pointer<'camera_projection_inverted'>;
-  get_camera_cluster_buffer_from_mutex(
-    camera: rust_mutex<'locked', 'camera'>,
-  ): number;
 
   update_camera_projection_view_inverted(camera_id: number): void;
   update_camera_position(
@@ -429,7 +427,10 @@ export type rustWasm = {
     y: number,
     z: number,
   ): void;
-  on_resize(aspect_ratio: number): void;
+  on_resize(aspect_ratio: number): rust_pointer<'computepass'>;
+  get_raw_computepassencoder(
+    computepass: rust_pointer<'computepass'>,
+  ): GPUComputePassEncoder;
   iterate_bindings(iterator: Rust_Iterator<number>): number;
   move_character(
     character_mesh_id: rust_pointer<'mesh_id'>,
@@ -481,9 +482,22 @@ export type rustWasm = {
   create_collider_sphere(
     collision_radius: number,
   ): rust_pointer<'collider_sphere'>;
+  set_bindgroup_computepassencoder(
+    camera: rust_mutex<'locked', 'camera'>,
+    device: Externref<true, GPUDevice>,
+    index: number,
+    computepass: rust_pointer<'computepass'>,
+  ): void;
+  end_and_submit(computepass: rust_pointer<'computepass'>): void;
+  new_arc_rotate_camera(): rust_pointer<'cameracontroller'>;
+  new_mesh_camera(): rust_pointer<'cameracontroller'>;
+  new_position_camera(): rust_pointer<'cameracontroller'>;
+  attach_archrotate_camera_controller(
+    camera: rust_mutex<'locked', 'camera'>,
+    controller: rust_pointer<'cameracontroller'>,
+  ): void;
 } & BufferInterface &
   DevToolsInterface;
-
 const ObjectStores = {
   maps: <ObjStoreDetails>{
     parameters: {

@@ -22,8 +22,11 @@ export class MeshCamera extends CameraController {
     y: 0,
   };
   cursor: UIRectangle | undefined = undefined;
+  id: rust_pointer<'cameracontroller'>;
+
   constructor(public camera: TerraCamera) {
     super();
+    this.id = engine.rust.new_mesh_camera();
     const gpulock = engine.rust.get_gpu();
     const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
     const direction = new ReadOnlyTerraVector3(

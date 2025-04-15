@@ -16,12 +16,15 @@ export class PositionCamera extends CameraController {
   #position: readonly [number, number, number] = [-3000, 300, 0];
   #velocity = 0.5 as const;
   #arrowKeysDown = 0;
+  id: rust_pointer<'cameracontroller'>;
 
   constructor(
     private camera: TerraCamera,
     initial = false,
   ) {
     super();
+    this.id = engine.rust.new_position_camera();
+
     const gpulock = engine.rust.get_gpu();
     const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
 

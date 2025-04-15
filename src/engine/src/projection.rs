@@ -12,7 +12,7 @@ const PROJECTION_BUFFER_SIZE: usize = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 const TILE_COUNT: [f32; 3] = [32.0, 18.0, 48.0];
 #[repr(C, align(4))]
 pub struct InnerProjection {
-    pub projection_reversed_z: [[f32; 4]; 4],
+    pub projection_reversed_z: Mutex<[[f32; 4]; 4]>,
     near_plane: f32,
     far_plane: f32,
     fow: f32,
@@ -23,14 +23,14 @@ pub struct Projection {
 }
 impl InnerProjection {
     pub fn create_buffer(
-        &mut self,
+        &self,
         device: &Resource<JSDevice>,
         aspect_ratio: f32,
     ) -> GPUBuffer<UNIFORM_USAGE> {
         let f = 1.0 / (self.fow / 2.0).tan();
         let nf = 1.0 / (self.near_plane - self.far_plane);
-
-        self.projection_reversed_z = [
+        let mut projectionlock = self.projection_reversed_z.lock().unwrap();
+        *projectionlock = [
             [f / aspect_ratio, 0.0, 0.0, 0.0],
             [0.0, f, 0.0, 0.0],
             [0.0, 0.0, 0.0, -1.0],
@@ -50,7 +50,7 @@ impl InnerProjection {
         );
         let mut inverted = Box::new([[0.0; 4]; 4]);
         let mut inverted_far_plane = Box::new([[0.0; 4]; 4]);
-        self.projection_reversed_z.invert_to_ref(&mut inverted);
+        projectionlock.invert_to_ref(&mut inverted);
         reversed_projection_far_plane.invert_to_ref(&mut inverted_far_plane);
         let far_near_log = (self.far_plane / self.near_plane).log2();
         let near_and_far = Box::new([
@@ -61,7 +61,7 @@ impl InnerProjection {
         ]);
 
         buffer.set_mapped_range(inverted.as_ptr() as usize, 64, 0);
-        buffer.set_mapped_range(self.projection_reversed_z.as_ptr() as usize, 64, 64);
+        buffer.set_mapped_range(projectionlock.as_ptr() as usize, 64, 64);
         buffer.set_mapped_range(inverted_far_plane.as_ptr() as usize, 64, 128);
         //Near and far plane
         buffer.set_mapped_range(&raw const self.near_plane as usize, 8, 192);
@@ -71,8 +71,8 @@ impl InnerProjection {
 }
 impl Projection {
     pub fn new(device: &Resource<JSDevice>) -> Self {
-        let mut inner_projection = InnerProjection {
-            projection_reversed_z: [[0.0; 4]; 4],
+        let inner_projection = InnerProjection {
+            projection_reversed_z: Mutex::new([[0.0; 4]; 4]),
             near_plane: 1.0,
             far_plane: 100000.0,
             fow: 0.4,
@@ -82,5 +82,47 @@ impl Projection {
             inner_projection,
             buffer,
         }
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn test_projection() {
+    use externref::ExternRef;
+    unsafe {
+        let projection = Arc::new(Projection::new(&Resource::new_non_null(
+            std::mem::transmute::<usize, ExternRef>(0),
+        )));
+
+        assert_eq!(
+            *projection
+                .inner_projection
+                .projection_reversed_z
+                .lock()
+                .unwrap(),
+            [
+                [4.933155, 0.0, 0.0, 0.0],
+                [0.0, 4.933155, 0.0, 0.0],
+                [0.0, 0.0, 0.0, -1.0],
+                [0.0, 0.0, 1.0, 0.0]
+            ]
+        );
+        projection.inner_projection.create_buffer(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+            2.0,
+        );
+        assert_eq!(
+            *projection
+                .inner_projection
+                .projection_reversed_z
+                .lock()
+                .unwrap(),
+            [
+                [2.4665775, 0.0, 0.0, 0.0],
+                [0.0, 4.933155, 0.0, 0.0],
+                [0.0, 0.0, 0.0, -1.0],
+                [0.0, 0.0, 1.0, 0.0]
+            ]
+        );
     }
 }
