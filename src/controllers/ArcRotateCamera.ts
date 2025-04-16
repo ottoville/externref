@@ -329,7 +329,6 @@ export class ArcRotateCamera extends CameraController {
 
     if (
       engine.rust.test_triangles(
-        engine.collider.collider_ptr,
         this.colliderSphere,
         newPosition[0],
         newPosition[1],

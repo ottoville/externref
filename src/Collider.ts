@@ -1,4 +1,4 @@
-﻿import type { Engine, rustWasm } from './engine.js';
+﻿import type { Engine } from './engine.js';
 import { MutableTerraVector3, TerraVector3 } from './Math.js';
 declare const engine: Engine;
 
@@ -20,7 +20,6 @@ function CrossToRef(
 }
 export class ColliderJS {
   #velocitySquaredLength!: number;
-  collider_ptr: rust_pointer<'legacy_collider'>;
   getLowestRoot(a: number, b: number, c: number, maxR: number) {
     //TODO: This will give false negative if determinant is zero
     var determinant = b * b - 4.0 * a * c;
@@ -74,10 +73,6 @@ export class ColliderJS {
   private _baseToVertex: [x: number, y: number, z: number] = [0, 0, 0];
   _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
   _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
-
-  constructor(rustExports: rustWasm) {
-    this.collider_ptr = rustExports.collider();
-  }
 
   //#velocity!:Vector3;
   // basePoint!: Vector3;
@@ -148,15 +143,7 @@ export class ColliderJS {
     this.#velocityWorld[0] = dir[0] * sphere.collisionRadius;
     this.#velocityWorld[1] = dir[1] * sphere.collisionRadius;
     this.#velocityWorld[2] = dir[2] * sphere.collisionRadius;
-    //@ts-ignore removed
-    engine.rust.set_speed(
-      this.collider_ptr,
-      Math.hypot(
-        this.#velocityWorld[0],
-        this.#velocityWorld[1],
-        this.#velocityWorld[2],
-      ),
-    );
+
     this.epsilon = e;
     //@ts-ignore removed
     this.collision_resolved = true;
@@ -379,16 +366,6 @@ export class ColliderJS {
         }
         i--;
       }
-    }
-    if (found) {
-      //@ts-expect-error removed
-      engine.rust.collision_found(
-        this.collider_ptr,
-        t,
-        this.#velocitySquaredLength,
-        collidedPointInTriangle,
-        triangle.planeCollider.byteOffset,
-      );
     }
   }
 }

@@ -11,7 +11,7 @@ pub struct ColliderSphere {
     pub collisions_scaling_matrix: [[f32; 4]; 4],
     pub close_distance_vector: f32,
 }
-static CLOSE_DISTANCE: f32 = 0.0022;
+pub static CLOSE_DISTANCE: f32 = 0.0022;
 pub static CLOSE_DISTANCE_SQRT: f32 = CLOSE_DISTANCE * CLOSE_DISTANCE;
 
 #[no_mangle]
@@ -61,11 +61,7 @@ pub struct Collider {
     pub destination_point: [f32; 4],
     pub did_collide: bool,
 }
-#[no_mangle]
-pub extern "C" fn collider() -> *mut Collider {
-    let coll = Box::new(Collider::new());
-    Box::into_raw(coll)
-}
+
 #[cfg(target_arch = "wasm32")]
 fn v3_dot(a: v128, b: v128) -> f32 {
     use std::arch::wasm32::{f32x4_extract_lane, f32x4_mul};
@@ -136,7 +132,7 @@ pub fn check_point_in_triangle(
 }
 #[cfg(target_arch = "wasm32")]
 pub fn check_for_lowest_root0(
-    collider: *mut Collider,
+    lowest_root: f32,
     triangle: v128,
     velocity_squared: f32,
     base_point: v128,
@@ -144,14 +140,12 @@ pub fn check_for_lowest_root0(
 ) -> f32 {
     use std::arch::wasm32::f32x4_sub;
     let temp_v = f32x4_sub(triangle, base_point);
-    unsafe {
-        get_lowest_root(
-            velocity_squared,
-            2.0 * v3_dot(velocity, temp_v),
-            v3_dot(temp_v, temp_v) - 1.0,
-            (*collider).lowest_root,
-        )
-    }
+    get_lowest_root(
+        velocity_squared,
+        2.0 * v3_dot(velocity, temp_v),
+        v3_dot(temp_v, temp_v) - 1.0,
+        lowest_root,
+    )
 }
 pub fn get_lowest_root(a: f32, b: f32, c: f32, max_r: f32) -> f32 {
     let determinant = b * b - 4.0 * a * c;
@@ -241,11 +235,7 @@ impl Collider {
             did_collide: false,
         }
     }
-    pub fn _initialize(
-        &mut self,
-        world_position: &[f32; 4],
-        speed: f32,        
-    ) {
+    pub fn _initialize(&mut self, world_position: &[f32; 4], speed: f32) {
         self.collision_resolved = true;
         self.speed = speed;
         self.collided_point_in_triangle = None;
@@ -491,7 +481,7 @@ impl Collider {
         }
         if !found {
             let mut cur_lowest_root =
-                check_for_lowest_root0(self, triangle0, velocity_squared, base_point, velocity);
+                check_for_lowest_root0(self.lowest_root, triangle0, velocity_squared, base_point, velocity);
 
             unsafe {
                 if cur_lowest_root > 0.0 {
@@ -500,14 +490,14 @@ impl Collider {
                     found = true
                 }
                 cur_lowest_root =
-                    check_for_lowest_root0(self, triangle1, velocity_squared, base_point, velocity);
+                    check_for_lowest_root0(self.lowest_root, triangle1, velocity_squared, base_point, velocity);
                 if cur_lowest_root > 0.0 {
                     self.lowest_root = cur_lowest_root;
                     v128_store(self.collision_point.as_mut_ptr() as *mut v128, triangle1);
                     found = true
                 }
                 cur_lowest_root =
-                    check_for_lowest_root0(self, triangle2, velocity_squared, base_point, velocity);
+                    check_for_lowest_root0(self.lowest_root, triangle2, velocity_squared, base_point, velocity);
                 if cur_lowest_root > 0.0 {
                     self.lowest_root = cur_lowest_root;
                     v128_store(self.collision_point.as_mut_ptr() as *mut v128, triangle2);

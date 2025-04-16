@@ -1,6 +1,5 @@
 import { Physics } from './physics.js';
 import { GPU } from './GPU.js';
-import { ColliderJS } from './Collider.js';
 import type { Scene } from './Scene.js';
 import { TerraCamera } from './TerraCamera.js';
 //@ts-expect-error todo
@@ -102,7 +101,6 @@ export type rustWasm = {
     half_depth: number,
   ): rust_pointer<'geometry'>;
   create_icosphere_geometry(order: number): rust_pointer<'geometry'>;
-  collider(): rust_pointer<'legacy_collider'>;
   process_gpu_queue(
     time: number,
     updateViewPipeline: GPUComputePipeline,
@@ -451,7 +449,6 @@ export type rustWasm = {
   ): void;
   rebuild_triangle_planes(geometry: rust_pointer<'geometry'>): void;
   test_triangles(
-    rust_collider_ptr: rust_pointer<'legacy_collider'>,
     collider_sphere: rust_pointer<'collider_sphere'>,
     newPosition_x: number,
     newPosition_y: number,
@@ -605,8 +602,6 @@ export class Engine {
 
   readonly physics: Physics;
   readonly scenes: Map<string, Scene> = new Map();
-  // readonly collisionNotFound:DataView
-  readonly collider: ColliderJS;
 
   inputManager: CameraController | null = null;
 
@@ -1065,7 +1060,5 @@ export class Engine {
       });
     }
     this.physics = new Physics(this);
-
-    this.collider = new ColliderJS(rust);
   }
 }
