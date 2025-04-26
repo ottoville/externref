@@ -1,3 +1,5 @@
+use core::f32;
+
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     engine::Engine2,
@@ -66,6 +68,7 @@ pub unsafe extern "C" fn new_character_mesh(
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.update_color(0.0, 0.9, 1.0, 0.0);
+        mesh_property.update_euler_angles(f32::consts::PI, 0.0, 0.0);
     }
     return Box::into_raw(Box::new(mesh_id));
 }

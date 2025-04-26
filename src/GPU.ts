@@ -730,9 +730,6 @@ export class GPU {
     framecount++;
     //performance.mark('renderloopStart');
 
-    if (engine.inputManager?.checkInputs) {
-      engine.inputManager?.checkInputs();
-    }
     if (engine.rust.process_gpu_queue(time, updateViewPipeline)) {
       // Some buffers did move from onqueue to pending, execute runtime later on
       this.executeRuntime = true;

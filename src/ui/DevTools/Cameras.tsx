@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import type { TerraCamera } from '../../TerraCamera.js';
 import type { Engine } from '../../engine.js';
 import { PositionCamera } from '../../controllers/PositionCamera.js';
-import type { CameraController } from '../../controllers/CameraController.js';
 import { stringFromPtr } from '../../utils.js';
+import { ArcRotateCamera } from '../../controllers/ArcRotateCamera.js';
 declare const engine: Engine;
 function Camera(props: { camera: TerraCamera }) {
   const [cameraPosition, setCameraPosition] = useState<
@@ -46,7 +46,6 @@ function Camera(props: { camera: TerraCamera }) {
     </li>
   );
 }
-let oldController: CameraController | null = null;
 export function Cameras() {
   const [debugCamera, setDebugCamera] = useState(false);
   const cameras = new Array(engine.rust.get_cameras_count())
@@ -72,10 +71,10 @@ export function Cameras() {
           <button
             type="button"
             onClick={() => {
-              if (oldController) {
-                setDebugCamera(false);
-                engine.gpu!.mainCamera.attachControllerForCamera(oldController);
-              }
+              setDebugCamera(false);
+              engine.gpu!.mainCamera.attachControllerForCamera(
+                new ArcRotateCamera(engine.gpu!.mainCamera, true),
+              );
             }}
           >
             Remove debug camera
@@ -92,12 +91,9 @@ export function Cameras() {
           type="button"
           onClick={() => {
             setDebugCamera(true);
-            oldController = engine.inputManager;
-            const positionCamera = new PositionCamera(
-              engine.gpu!.mainCamera,
-              true,
+            engine.gpu!.mainCamera.attachControllerForCamera(
+              new PositionCamera(engine.gpu!.mainCamera, true),
             );
-            engine.gpu!.mainCamera.attachControllerForCamera(positionCamera);
           }}
         >
           Switch to debug camera

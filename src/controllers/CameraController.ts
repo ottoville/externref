@@ -18,6 +18,8 @@ export abstract class CameraController {
 
   abstract attachCameraController(): void;
   abstract deAttachCameraController(): void;
-  abstract checkInputs(force_recalculate?: boolean): void;
-  abstract id: rust_pointer<'cameracontroller'>;
+  abstract id:
+    | rust_pointer<'ArcRotateCamera'>
+    | rust_pointer<'positioncamera'>
+    | rust_pointer<'meshcamera'>;
 }

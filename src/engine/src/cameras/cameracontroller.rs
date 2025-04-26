@@ -3,6 +3,7 @@ pub trait CameraController {
         &mut self,
         force_recalculate: bool,
         position: &mut [f32; 4],
-        direction: &mut [f32; 3],
+        direction: &mut [f32; 4],
+        view: &[[f32; 4]; 4]
     ) -> u32;
 }

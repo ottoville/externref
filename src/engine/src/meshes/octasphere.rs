@@ -91,7 +91,7 @@ pub unsafe extern "C" fn create_octasphere(
     let mut points_c: Vec<usize> = vec![0; n];
 
     for i in 0..n {
-        let theta = (std::f32::consts::PI * 0.5 * (i as f32)) / (n as f32 - 1.0);
+        let theta = (std::f32::consts::FRAC_PI_2 * (i as f32)) / (n as f32 - 1.0);
         let col = n - 1 - i;
         let point_a_index = vert_index;
         vert_index = vert_index + 1;

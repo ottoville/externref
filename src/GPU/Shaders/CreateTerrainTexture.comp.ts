@@ -154,10 +154,10 @@ export function CreateTerrainTexture(
           ]
         >(
           '@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>',
-          [1],
+          [16, 16],
           ([, /*{ _slopes, _facet12, }*/ { ground_texture }]) => /* wgsl */ `
-            let cx:f32 = f32(GlobalInvocationID.x) * (f32(${settings.size[0]})/f32(${settings.textureSize.width})) - f32(${settings.size[0]}/u32(2));
-            let cz:f32 = f32(GlobalInvocationID.y) * (f32(${settings.size[1]})/f32(${settings.textureSize.height})) - f32(${settings.size[1]}/u32(2));
+            let cx:f32 = f32(GlobalInvocationID.x) * (f32(${settings.size[0] / settings.textureSize.width})) - f32(${settings.size[0]}/u32(2));
+            let cz:f32 = f32(GlobalInvocationID.y) * (f32(${settings.size[1] / settings.textureSize.height})) - f32(${settings.size[1]}/u32(2));
         
             let y:f32 = getHeightAtCoordinates(vec2<f32>(cx, cz));
             if( y > 4.0 ) {

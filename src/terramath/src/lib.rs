@@ -70,11 +70,11 @@ impl Quaternion {
 
         if z_axis_y < -limit {
             result[1] = 2.0 * f32::atan2(qy, qw);
-            result[0] = std::f32::consts::PI * 0.5;
+            result[0] = std::f32::consts::FRAC_PI_2;
             result[2] = 0.0;
         } else if z_axis_y > limit {
             result[1] = 2.0 * f32::atan2(qy, qw);
-            result[0] = std::f32::consts::PI * -0.5;
+            result[0] = -std::f32::consts::FRAC_PI_2;
             result[2] = 0.0;
         } else {
             let sqw = qw * qw;
@@ -141,6 +141,14 @@ impl Quaternion {
             self.w,
             iw.mul_add(-self.k, ix.mul_add(-self.j, iy * self.i)),
         );
+    }
+    pub fn multiply(&self, other: &Self) -> Self {
+        Quaternion {
+            i: self.i * other.i - self.j * other.j - self.k * other.k - self.w * other.w,
+            j: self.i * other.j + self.j * other.i + self.k * other.w - self.w * other.k,
+            k: self.i * other.k - self.j * other.w + self.k * other.i + self.w * other.j,
+            w: self.i * other.w + self.j * other.k - self.k * other.j + self.w * other.i,
+        }
     }
 }
 #[cfg(test)]
@@ -212,6 +220,7 @@ pub trait VectorMath<T, const N: usize> {
      * Returns new vector which is sub of two vectors
      */
     fn sub_vec(&self, other: &Self) -> Self;
+    fn sub_vec_to_ref(&self, other: &Self, result: &mut Self);
     fn sub_vec_in_place(&mut self, other: &Self);
     /**
      * Returns new vector which is multiplied with scalar
@@ -317,6 +326,11 @@ impl VectorMath<f32, 3> for [f32; 3] {
     }
     fn sub_vec(&self, other: &Self) -> Self {
         [self[0] - other[0], self[1] - other[1], self[2] - other[2]]
+    }
+    fn sub_vec_to_ref(&self, other: &Self, result: &mut Self) {
+        result[0] = self[0] - other[0];
+        result[1] = self[1] - other[1];
+        result[2] = self[2] - other[2];
     }
     fn sub_vec_in_place(&mut self, other: &Self) {
         self[0] -= other[0];
@@ -491,6 +505,12 @@ impl VectorMath<f32, 4> for [f32; 4] {
             self[2] - other[2],
             self[3] - other[3],
         ]
+    }
+    fn sub_vec_to_ref(&self, other: &Self, result: &mut Self) {
+        result[0] = self[0] - other[0];
+        result[1] = self[1] - other[1];
+        result[2] = self[2] - other[2];
+        result[3] = self[3] - other[3];
     }
     fn sub_vec_in_place(&mut self, other: &Self) {
         self[0] -= other[0];
@@ -670,8 +690,6 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
     fn multiply(&self, other: &Self) -> Self {
         todo!()
     }
-    
-
 }
 
 impl MatrixMath<f32> for [[f32; 3]; 3] {
@@ -813,11 +831,11 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
     fn invert_to_ref(&self, _other: &mut Self) -> bool {
         todo!()
     }
-    
+
     fn multiply(&self, other: &Self) -> Self {
         todo!()
     }
-    
+
     fn invert(&self) -> Self {
         todo!()
     }
@@ -941,7 +959,7 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
         }
     }
     fn multiply(&self, other: &Self) -> Self {
-        let mut result = [[0.0;4];4];
+        let mut result = [[0.0; 4]; 4];
         self.multiply_to_ref(other, &mut result);
         return result;
     }
@@ -1083,9 +1101,9 @@ impl MatrixMath<f32> for [[f32; 4]; 4] {
 
         return true;
     }
-    
+
     fn invert(&self) -> Self {
-        let mut result = [[0.0;4];4];
+        let mut result = [[0.0; 4]; 4];
         self.invert_to_ref(&mut result);
         return result;
     }

@@ -27,7 +27,6 @@ use crate::{
     MULTIVALUE_USIZE,
 };
 
-use super::arc_rotate_camera::ArcRotateCamera;
 use super::cameracontroller::CameraController;
 #[no_mangle]
 #[externref]
@@ -43,13 +42,7 @@ pub unsafe extern "C" fn drop_camera_lock(camera: *mut &Camera) {
     let camera = Box::from_raw(camera);
     drop(camera);
 }
-#[no_mangle]
-pub unsafe extern "C" fn attach_archrotate_camera_controller(
-    camera: *mut &mut Camera,
-    controller: *mut ArcRotateCamera,
-) {
-    (*camera).controller = Some(Box::from_raw(controller));
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn get_cameras_count() -> usize {
     NEXT_CAMERA_ID.load(Ordering::Relaxed)
@@ -83,7 +76,7 @@ pub unsafe extern "C" fn update_camera_position(camera: *mut &mut Camera, x: f32
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_direction(camera: *mut &mut Camera, x: f32, y: f32, z: f32) {
-    (*camera).update_direction([x, y, z]);
+    (*camera).update_direction([x, y, z, 0.0]);
 }
 
 #[externref]
@@ -149,7 +142,7 @@ pub unsafe extern "C" fn add_child_to_camera_water(
             if (do_update_view & VIEW_UPDATED_DIRECTION) == VIEW_UPDATED_DIRECTION {
                 direction[1] = -direction[1];
             }
-            return do_update_view
+            return do_update_view;
         })),
         externref,
         label,
@@ -274,7 +267,7 @@ pub struct Camera {
     pub projection_view: [[f32; 4]; 4],
     pub view: [[f32; 4]; 4],
     projection_view_inverted: [[f32; 4]; 4],
-    pub direction: [f32; 3],
+    pub direction: [f32; 4],
     pub position: [f32; 4],
     externref: Resource<JSCamera>,
     pub updated: bool,
@@ -282,7 +275,7 @@ pub struct Camera {
     pub children: Vec<Camera>,
     pub do_update_view: u32,
     pub id: usize,
-    before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 3], &mut [f32; 4]) -> u32 + Send>>,
+    before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
     pub on_update_position: Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>) + Send>>,
     projection_view_inverted_is_dirty: bool,
     buffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
@@ -295,7 +288,7 @@ pub struct Camera {
 impl Camera {
     pub fn new(
         layout2: Resource<JSBindGroupLayout>,
-        before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 3], &mut [f32; 4]) -> u32 + Send>>,
+        before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
         externref: Resource<JSCamera>,
         label: String,
         device: &Resource<JSDevice>,
@@ -369,7 +362,7 @@ impl Camera {
             projection_view: [[0.0; 4]; 4],
             projection_view_inverted: [[0.0; 4]; 4],
             position: [0.0; 4],
-            direction: [1.0, 0.0, 0.0],
+            direction: [1.0, 0.0, 0.0, 0.0],
             externref,
             updated: false,
             label,
@@ -391,7 +384,7 @@ impl Camera {
     pub fn check_inputs(&mut self) {
         if let Some(controller) = &mut self.controller {
             self.do_update_view |=
-                controller.check_inputs(false, &mut self.position, &mut self.direction);
+                controller.check_inputs(false, &mut self.position, &mut self.direction, &self.view);
         }
         for camera in &mut self.children {
             camera.check_inputs();
@@ -438,7 +431,7 @@ impl Camera {
             self.do_update_view |= VIEW_UPDATED_POSITION;
         }
     }
-    pub fn update_direction(&mut self, direction: [f32; 3]) {
+    pub fn update_direction(&mut self, direction: [f32; 4]) {
         if direction[0] != self.direction[0]
             || direction[1] != self.direction[1]
             || direction[2] != self.direction[2]
@@ -458,7 +451,11 @@ impl Camera {
         let camera_updated = self.do_update_view != 0;
         if self.do_update_view != 0 {
             if let Some(before_view_update) = &self.before_view_update {
-                self.do_update_view |= before_view_update(self.do_update_view, &mut self.direction, &mut self.position);
+                self.do_update_view |= before_view_update(
+                    self.do_update_view,
+                    &mut self.direction,
+                    &mut self.position,
+                );
             }
             if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
                 for cb in self.on_update_position.iter() {

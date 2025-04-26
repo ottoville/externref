@@ -5,6 +5,8 @@ import { create_rust_label } from './utils.js';
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 import { Externref } from './externref.js';
 import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
+import { MeshCamera } from './controllers/MeshCamera.js';
+import { PositionCamera } from './controllers/PositionCamera.js';
 declare const engine: Engine;
 
 export class TerraCamera {
@@ -76,16 +78,27 @@ export class TerraCamera {
     engine.rust.update_camera_position(camera, x, y, z);
   }
   attachControllerForCamera(controller: CameraController) {
+    const gpu = engine.rust.get_gpu();
+    const cameralock = engine.rust.get_camera(gpu, this.id);
+
     if (controller instanceof ArcRotateCamera) {
-      const gpu = engine.rust.get_gpu();
-      const cameralock = engine.rust.get_camera(gpu, this.id);
       engine.rust.attach_archrotate_camera_controller(
         cameralock,
         controller.id,
       );
-      engine.rust.drop_camera_lock(cameralock);
-      engine.rust.drop_gpu_lock(gpu);
+    } else if (controller instanceof MeshCamera) {
+      engine.rust.attach_meshcamera_camera_controller(
+        cameralock,
+        controller.id,
+      );
+    } else if (controller instanceof PositionCamera) {
+      engine.rust.attach_positioncamera_camera_controller(
+        cameralock,
+        controller.id,
+      );
     }
+    engine.rust.drop_camera_lock(cameralock);
+    engine.rust.drop_gpu_lock(gpu);
 
     if (this.#inputController) {
       if (this.#inputController !== controller) {

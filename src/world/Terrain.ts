@@ -520,8 +520,8 @@ TODO
           passEncoder.setBindGroup(0, bindGroupHeightsRead.bindGroup);
           passEncoder.setBindGroup(1, bindGroup1.bindGroup);
           passEncoder.dispatchWorkgroups(
-            Terrain.#textureSize.width,
-            Terrain.#textureSize.height,
+            Terrain.#textureSize.width / 16,
+            Terrain.#textureSize.height / 16,
           );
           passEncoder.end();
           this.terrainPositionAndUvsAndNormalsGPU.copyTo(

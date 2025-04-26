@@ -26,6 +26,7 @@ import { createTimeControls } from './TimeControls.js';
 import { CreateFPSMeter } from './FPS.js';
 import { UIRectangleTextureView } from './UIRectangleTextureView.js';
 import { RightTriangularPrism } from '../GPU/Meshes/right_triangular_prism.js';
+import { MeshCamera } from '../controllers/MeshCamera.js';
 
 declare const engine: Engine;
 
@@ -137,14 +138,10 @@ export class Canvas {
           // Initial scene objects here
 
           new Sea([terrascene]);
-          //new testPlane(terrascene);
-          const archRotateController = new ArcRotateCamera(
-            gpu.mainCamera,
-            true,
+          gpu.mainCamera.attachControllerForCamera(
+            new ArcRotateCamera(gpu.mainCamera, true),
           );
-          gpu.mainCamera.attachControllerForCamera(archRotateController);
           const human = new Human({
-            inputEnabled: false,
             scenes: [terrascene],
           });
           human.setTranslation([403.4, 600, 23]);
@@ -156,10 +153,16 @@ export class Canvas {
 
           document.addEventListener('keydown', (e) => {
             if (e.key === 'Tab') {
-              if (engine.inputManager === human.inputManager) {
-                gpu.mainCamera.attachControllerForCamera(archRotateController);
+              human.haveControl = false;
+              if (engine.inputManager instanceof MeshCamera) {
+                gpu.mainCamera.attachControllerForCamera(
+                  new ArcRotateCamera(gpu.mainCamera, false),
+                );
               } else {
-                gpu.mainCamera.attachControllerForCamera(human.inputManager);
+                human.haveControl = true;
+                gpu.mainCamera.attachControllerForCamera(
+                  new MeshCamera(engine.gpu!.mainCamera, human.id),
+                );
               }
             }
           });

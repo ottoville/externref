@@ -1,18 +1,9 @@
 ﻿import type { Engine, ListenerObj } from '../engine.js';
-import {
-  MutableTerraVector3,
-  ReadOnlyTerraVector3,
-  TerraMatrix,
-} from '../Math.js';
+import { MutableTerraVector3, ReadOnlyTerraVector3 } from '../Math.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import { CameraController } from './CameraController.js';
 let pointerDownButton = 0;
-const panningSensibility = 20;
-const angularSensibilityX = 3000;
-const angularSensibilityY = 3000;
 declare const engine: Engine;
-
-const Epsilon = 0.001;
 
 interface serialized {
   alpha: number;
@@ -24,7 +15,7 @@ interface serialized {
 export class ArcRotateCamera extends CameraController {
   name = 'ArcRotateCamera';
   #serializeRequested = false;
-  id: rust_pointer<'cameracontroller'>;
+  id: rust_pointer<'ArcRotateCamera'>;
   serialize(): void {
     if (this.#serializeRequested || !engine.DB) return;
     this.#serializeRequested = true;
@@ -43,16 +34,19 @@ export class ArcRotateCamera extends CameraController {
     ) as { 0: number; 1: number; 2: number } & Float32Array;
     engine.rust.drop_camera_lock(cameralock);
     engine.rust.drop_gpu_lock(gpulock);
-
+    const target = new MutableTerraVector3(
+      engine.rust.memory.buffer,
+      engine.rust.get_target_ptr(this.id),
+    );
     const request = engine.DB.transaction('save', 'readwrite')
       .objectStore('save')
       .put({
         data: {
-          alpha: this.#alpha,
-          beta: this.#beta,
+          alpha: engine.rust.get_alpha(this.id),
+          beta: engine.rust.get_beta(this.id),
           position,
-          radius: this.#radius,
-          target: this.#target,
+          radius: engine.rust.get_radius(this.id),
+          target,
         } as serialized,
         name: 'ArchRotateCamera',
         type: 'camera',
@@ -66,38 +60,6 @@ export class ArcRotateCamera extends CameraController {
     };
   }
 
-  #computationVector: [number, number, number] = [0, 0, 0];
-
-  #cameraTransformMatrix = new TerraMatrix();
-
-  // #globalCurrentTarget = new Float32Array(3);
-
-  #inertia = 0.9;
-  #speed = 2.0;
-
-  #transformedDirection = new MutableTerraVector3();
-  /**
-   * Defines the value of the inertia used during panning.
-   * 0 would mean stop inertia and one would mean no decelleration at all.
-   */
-  #panningInertia = 0.9;
-
-  #inertialPanning = new MutableTerraVector3();
-  /*
-   * Current inertia value on the longitudinal axis.
-   * The bigger this number the longer it will take for the camera to stop.
-   */
-  #inertialAlphaOffset = 0;
-  /**
-   * Current inertia value on the latitudinal axis.
-   * The bigger this number the longer it will take for the camera to stop.
-   */
-  #inertialBetaOffset = 0;
-
-  #target = new MutableTerraVector3([100, 0, 1000]);
-  #alpha = 0;
-  #beta = 0;
-  #radius = 10;
   readonly colliderSphere = engine.rust.create_collider_sphere(2);
 
   constructor(
@@ -106,6 +68,7 @@ export class ArcRotateCamera extends CameraController {
   ) {
     super();
     this.id = engine.rust.new_arc_rotate_camera();
+
     if (initial && engine.DB) {
       engine.DB.transaction('save')
         .objectStore('save')
@@ -119,11 +82,15 @@ export class ArcRotateCamera extends CameraController {
         ).result;
         const gpulock = engine.rust.get_gpu();
         const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+        const target = new MutableTerraVector3(
+          engine.rust.memory.buffer,
+          engine.rust.get_target_ptr(this.id),
+        );
         if (result) {
-          this.#alpha = result.data.alpha;
-          this.#beta = result.data.beta;
-          this.#radius = result.data.radius;
-          this.#target.set(result.data.target);
+          engine.rust.set_alpha(this.id, result.data.alpha);
+          engine.rust.set_beta(this.id, result.data.beta);
+          engine.rust.set_radius(this.id, result.data.radius);
+          target.set(result.data.target);
 
           this.cameraControl?.updatePosition(
             cameralock,
@@ -134,9 +101,9 @@ export class ArcRotateCamera extends CameraController {
           this.#calculateDirection(cameralock);
         } else {
           // Use these default values for camera when there are no existing save
-          this.#alpha = 0.4614110368395256;
-          this.#beta = 1.4816457152012938;
-          this.#radius = 457.55058783756886;
+          engine.rust.set_alpha(this.id, 0.4614110368395256);
+          engine.rust.set_beta(this.id, 1.4816457152012938);
+          engine.rust.set_radius(this.id, 457.55058783756886);
           this.cameraControl?.updatePosition(
             cameralock,
             952.791,
@@ -144,7 +111,7 @@ export class ArcRotateCamera extends CameraController {
             587.233,
           );
 
-          this.#target.set([544.716, 258.727, 384.335]);
+          target.set([544.716, 258.727, 384.335]);
         }
         engine.rust.drop_camera_lock(cameralock);
         engine.rust.drop_gpu_lock(gpulock);
@@ -162,27 +129,35 @@ export class ArcRotateCamera extends CameraController {
         engine.rust.memory.buffer,
         engine.rust.get_camera_direction_ptr(cameralock),
       );
-      this.#target.set([
+      const target = new MutableTerraVector3(
+        engine.rust.memory.buffer,
+        engine.rust.get_target_ptr(this.id),
+      );
+      target.set([
         position[0] - direction[0] * 100,
         position[1] - direction[1] * 100,
         position[2] - direction[2] * 100,
       ]);
+
+      engine.rust.rebuild_angles_and_radius(
+        this.id,
+        position[0],
+        position[1],
+        position[2],
+      );
       engine.rust.drop_camera_lock(cameralock);
       engine.rust.drop_gpu_lock(gpulock);
-
-      this.#rebuildAnglesAndRadius();
     }
   }
   #cameraMove: ListenerObj<'pointermove'> = {
     cb: (e) => {
       e.preventDefault();
-      if (pointerDownButton == 2) {
-        this.#inertialPanning[0] += -e.movementX / panningSensibility;
-        this.#inertialPanning[2] += e.movementY / panningSensibility;
-      } else {
-        this.#inertialAlphaOffset += e.movementX / angularSensibilityX;
-        this.#inertialBetaOffset -= e.movementY / angularSensibilityY;
-      }
+      engine.rust.camera_move(
+        this.id,
+        pointerDownButton,
+        e.movementX,
+        e.movementY,
+      );
     },
     object: this,
     type: 'pointermove',
@@ -190,40 +165,13 @@ export class ArcRotateCamera extends CameraController {
   #cameraWheel: ListenerObj<'wheel'> = {
     cb: (e) => {
       e.preventDefault();
-      let delta = -e.deltaY / (3 * 40);
-      if (e.ctrlKey) delta *= 10;
-      if (delta) {
-        this.inertialRadiusOffset += delta;
-      }
+      engine.rust.camera_wheel(this.id, e.deltaY, e.ctrlKey);
     },
     object: this,
     type: 'wheel',
   };
-  MoveToPlace = () => {
-    if (this.#movement) {
-      this.#movement.targetMovingfrom.LerpToRef(
-        this.#movement.targetMovingTo,
-        this.#movement.targetLerpPosition,
-        this.#target,
-      );
-      this.#movement.targetLerpPosition += 0.01;
-      if (this.#movement.targetLerpPosition > 1) {
-        this.#movement = null;
-      }
-    }
-  };
   moveto(destination: readonly [number, number, number]) {
-    this.#movement = {
-      kinematic: true,
-      targetLerpPosition: 0,
-      // Clone destination to survive Wasm memory grow.
-      targetMovingTo: [...destination],
-      targetMovingfrom: new ReadOnlyTerraVector3([
-        this.#target[0],
-        this.#target[1],
-        this.#target[2],
-      ]),
-    };
+    engine.rust.set_movement(this.id, true, ...destination);
   }
   pointerDown = false;
   #cameraPointerDown: ListenerObj<'pointerdown'> = {
@@ -235,16 +183,13 @@ export class ArcRotateCamera extends CameraController {
           .pickPosition()
           .then((position) => {
             if (position) {
-              this.#movement = {
-                kinematic: false,
-                targetLerpPosition: 0,
-                targetMovingTo: position.position,
-                targetMovingfrom: new MutableTerraVector3([
-                  this.#target[0],
-                  this.#target[1],
-                  this.#target[2],
-                ]),
-              };
+              engine.rust.set_movement(
+                this.id,
+                false,
+                position.position[0],
+                position.position[1],
+                position.position[2],
+              );
             }
           })
           .catch((err) => engine.showError(err));
@@ -303,68 +248,20 @@ export class ArcRotateCamera extends CameraController {
       type: 'pointermove',
     } as ListenerObj<'pointermove'>);
   }
-  #calculatePosition() {
-    let sinb = Math.sin(this.#beta);
-    if (sinb === 0) {
-      sinb = 0.0001;
-    }
-    //this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
-    this.#computationVector[0] =
-      this.#target[0] + this.#radius * Math.cos(this.#alpha) * sinb;
-    this.#computationVector[1] =
-      this.#target[1] + this.#radius * Math.cos(this.#beta);
-    this.#computationVector[2] =
-      this.#target[2] + this.#radius * Math.sin(this.#alpha) * sinb;
-    return this.#computationVector;
-  }
-  calculateCameraPositionAndTarget() {
-    if (!this.cameraControl) {
-      throw new Error('no cameracontrol');
-    }
-
-    // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
-    // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
-    const newPosition = this.#calculatePosition();
-    //let starttime=performance.now();
-
-    if (
-      engine.rust.test_triangles(
-        this.colliderSphere,
-        newPosition[0],
-        newPosition[1],
-        newPosition[2],
-        this.camera.id,
-      )
-    ) {
-      this.#rebuildAnglesAndRadius();
-    }
-    // Recompute because of constraints
-    const calculatedPosition = this.#calculatePosition();
-    const gpulock = engine.rust.get_gpu();
-    const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
-
-    this.cameraControl?.updatePosition(
-      cameralock,
-      calculatedPosition[0],
-      calculatedPosition[1],
-      calculatedPosition[2],
-    );
-
-    this.#calculateDirection(cameralock);
-    engine.rust.drop_camera_lock(cameralock);
-    engine.rust.drop_gpu_lock(gpulock);
-  }
   #calculateDirection(cameralock: rust_mutex<'locked', 'camera'>) {
     const position = new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.get_camera_position_ptr(cameralock),
       3,
     ) as unknown as readonly [number, number, number];
-
+    const target = new MutableTerraVector3(
+      engine.rust.memory.buffer,
+      engine.rust.get_target_ptr(this.id),
+    );
     const direction = [
-      position[0] - this.#target[0],
-      position[1] - this.#target[1],
-      position[2] - this.#target[2],
+      position[0] - target[0],
+      position[1] - target[1],
+      position[2] - target[2],
     ] as [number, number, number];
 
     //Normalize direction
@@ -376,226 +273,6 @@ export class ArcRotateCamera extends CameraController {
       direction[1] *= scale;
       direction[2] *= scale;
     }
-    this.cameraControl?.updateDirection(cameralock, ...direction);
-  }
-  #movement: {
-    kinematic: boolean;
-    targetMovingfrom: ReadOnlyTerraVector3;
-    targetMovingTo: readonly [number, number, number];
-    targetLerpPosition: number;
-  } | null = null;
-  checkInputs = (force_recalculate = false) => {
-    if (this.#movement?.kinematic) {
-      //Todo: use delta as t increase
-      this.MoveToPlace();
-      this.calculateCameraPositionAndTarget();
-      return;
-    }
-    let updateView = force_recalculate;
-    // Inertia
-    if (
-      this.#inertialAlphaOffset !== 0 ||
-      this.#inertialBetaOffset !== 0 ||
-      this.inertialRadiusOffset !== 0
-    ) {
-      this.MoveToPlace();
-
-      let inertialAlphaOffset = this.#inertialAlphaOffset;
-      if (this.#beta <= 0) {
-        inertialAlphaOffset *= -1;
-      }
-      this.#alpha += inertialAlphaOffset;
-
-      this.#beta += this.#inertialBetaOffset;
-      //useRightHandedSystem
-      inertialAlphaOffset *= -1;
-      this.#radius -= this.inertialRadiusOffset;
-      this.#inertialAlphaOffset *= this.#inertia;
-      this.#inertialBetaOffset *= this.#inertia;
-      this.inertialRadiusOffset *= this.#inertia;
-      if (Math.abs(this.#inertialAlphaOffset) < Epsilon) {
-        this.#inertialAlphaOffset = 0;
-      }
-      if (Math.abs(this.#inertialBetaOffset) < Epsilon) {
-        this.#inertialBetaOffset = 0;
-      }
-      if (Math.abs(this.inertialRadiusOffset) < this.#speed * Epsilon) {
-        this.inertialRadiusOffset = 0;
-      }
-      updateView = true;
-    }
-
-    // Panning inertia
-    if (this.#inertialPanning[0] !== 0 || this.#inertialPanning[2] !== 0) {
-      this.#movement = null;
-      const gpulock = engine.rust.get_gpu();
-      const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
-
-      const viewArr = new TerraMatrix(
-        engine.rust.memory.buffer,
-        engine.rust.get_camera_view_ptr(cameralock),
-      );
-
-      viewArr.invertToRef(this.#cameraTransformMatrix);
-
-      this.#transformedDirection.set([
-        this.#cameraTransformMatrix[0],
-        this.#cameraTransformMatrix[1],
-        this.#cameraTransformMatrix[2],
-      ]);
-
-      const scaleX = this.#inertialPanning[0];
-      const scaleZ = this.#inertialPanning[2];
-      // panning on X Axis
-      this.#transformedDirection[0] *= scaleX;
-      this.#transformedDirection[1] *= scaleX;
-      this.#transformedDirection[2] *= scaleX;
-
-      // panning on Y axis
-      // this.#transformedDirection[1] += panningAxis[1] * this.#inertialPanningY;
-
-      // panning on Z axis
-      this.#transformedDirection[0] -= Math.cos(this.#alpha) * scaleZ;
-      this.#transformedDirection[2] -= Math.sin(this.#alpha) * scaleZ;
-      //this._target.addInPlace(this._transformedDirection);
-      this.#target[0] += this.#transformedDirection[0];
-      this.#target[1] += this.#transformedDirection[1];
-      this.#target[2] += this.#transformedDirection[2];
-      //Camera direction
-      //for LHW this is target - position
-      this.#calculateDirection(cameralock);
-      engine.rust.drop_camera_lock(cameralock);
-      engine.rust.drop_gpu_lock(gpulock);
-
-      updateView = true;
-      this.#inertialPanning[0] *= this.#panningInertia;
-      this.#inertialPanning[2] *= this.#panningInertia;
-
-      if (Math.abs(this.#inertialPanning[0]) < this.#speed * Epsilon) {
-        this.#inertialPanning[0] = 0;
-      }
-      if (Math.abs(this.#inertialPanning[2]) < this.#speed * Epsilon) {
-        this.#inertialPanning[2] = 0;
-      }
-    }
-
-    // Limits
-    this.checkLimits();
-
-    if (updateView) {
-      this.calculateCameraPositionAndTarget();
-    }
-  };
-  // Rebuilds angles (alpha, beta) and radius from the give position and target
-  #rebuildAnglesAndRadius(): void {
-    const gpulock = engine.rust.get_gpu();
-    const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
-
-    const position = new Float32Array(
-      engine.rust.memory.buffer,
-      engine.rust.get_camera_position_ptr(cameralock),
-      3,
-    ) as unknown as readonly [number, number, number];
-
-    // this._position.subtractToRef(this._getTargetPosition(), this._computationVector);
-    this.#computationVector[0] = position[0] - this.#target[0];
-    this.#computationVector[1] = position[1] - this.#target[1];
-    this.#computationVector[2] = position[2] - this.#target[2];
-    engine.rust.drop_camera_lock(cameralock);
-    engine.rust.drop_gpu_lock(gpulock);
-
-    // this.radius = this._computationVector.length();
-    this.#radius = Math.sqrt(
-      this.#computationVector[0] * this.#computationVector[0] +
-        this.#computationVector[1] * this.#computationVector[1] +
-        this.#computationVector[2] * this.#computationVector[2],
-    );
-
-    if (this.#radius === 0) {
-      this.#radius = 0.0001; // Just to avoid division by zero
-    }
-
-    // Alpha
-    if (this.#computationVector[0] === 0 && this.#computationVector[2] === 0) {
-      this.#alpha = Math.PI / 2; // avoid division by zero when looking along up axis, and set to acos(0)
-    } else {
-      this.#alpha = Math.acos(
-        this.#computationVector[0] /
-          Math.sqrt(
-            Math.pow(this.#computationVector[0], 2) +
-              Math.pow(this.#computationVector[2], 2),
-          ),
-      );
-    }
-    if (this.#computationVector[2] < 0) {
-      this.#alpha = 2 * Math.PI - this.#alpha;
-    }
-
-    // Beta
-    this.#beta = Math.acos(this.#computationVector[1] / this.#radius);
-    this.checkLimits();
-  }
-
-  // Minimum allowed angle on the latitudinal axis.
-  // This can help limiting how the Camera is able to move in the scene.
-
-  lowerBetaLimit = 0.01;
-
-  // Maximum allowed angle on the latitudinal axis.
-  // This can help limiting how the Camera is able to move in the scene.
-
-  upperBetaLimit = Math.PI - 0.01;
-
-  // Minimum allowed angle on the longitudinal axis.
-  // This can help limiting how the Camera is able to move in the scene.
-
-  lowerAlphaLimit: number | null = null;
-  // Maximum allowed angle on the longitudinal axis.
-  // This can help limiting how the Camera is able to move in the scene.
-  upperAlphaLimit: number | null = null;
-  //Minimum allowed distance of the camera to the target(The camera can not get closer).
-  // This can help limiting how the Camera is able to move in the scene.
-  lowerRadiusLimit: number | null = null;
-
-  // Current inertia value on the radius axis.
-  // The bigger this number the longer it will take for the camera to stop.
-  inertialRadiusOffset = 0;
-  // Maximum allowed distance of the camera to the target (The camera can not get further).
-  // This can help limiting how the Camera is able to move in the scene.
-  upperRadiusLimit: number | null = null;
-  private checkLimits() {
-    if (!(this.lowerBetaLimit === null || this.lowerBetaLimit === undefined)) {
-      if (this.#beta < this.lowerBetaLimit) {
-        this.#beta = this.lowerBetaLimit;
-      }
-    }
-
-    if (!(this.upperBetaLimit === null || this.upperBetaLimit === undefined)) {
-      if (this.#beta > this.upperBetaLimit) {
-        this.#beta = this.upperBetaLimit;
-      }
-    }
-
-    if (this.lowerAlphaLimit !== null && this.#alpha < this.lowerAlphaLimit) {
-      this.#alpha = this.lowerAlphaLimit;
-    }
-    if (this.upperAlphaLimit !== null && this.#alpha > this.upperAlphaLimit) {
-      this.#alpha = this.upperAlphaLimit;
-    }
-
-    if (
-      this.lowerRadiusLimit !== null &&
-      this.#radius < this.lowerRadiusLimit
-    ) {
-      this.#radius = this.lowerRadiusLimit;
-      this.inertialRadiusOffset = 0;
-    }
-    if (
-      this.upperRadiusLimit !== null &&
-      this.#radius > this.upperRadiusLimit
-    ) {
-      this.#radius = this.upperRadiusLimit;
-      this.inertialRadiusOffset = 0;
-    }
+    engine.rust.update_camera_direction(cameralock, ...direction);
   }
 }

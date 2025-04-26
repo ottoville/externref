@@ -209,6 +209,12 @@ export type rustWasm = {
     y: number,
     z: number,
   ): void;
+  update_euler_angles_from_mutex(
+    mesh: rust_pointer<'mesh'>,
+    x: number,
+    y: number,
+    z: number,
+  ): void;
   update_translation(
     mesh_id: rust_pointer<'mesh_id'>,
     x: number,
@@ -448,13 +454,6 @@ export type rustWasm = {
     externref: Externref<false, MainNode>,
   ): void;
   rebuild_triangle_planes(geometry: rust_pointer<'geometry'>): void;
-  test_triangles(
-    collider_sphere: rust_pointer<'collider_sphere'>,
-    newPosition_x: number,
-    newPosition_y: number,
-    newPosition_z: number,
-    camera_id: number,
-  ): boolean;
   get_impulse_from_id(
     mesh_id: rust_pointer<'mesh_id'>,
   ): rust_pointer<'impulse'>;
@@ -486,12 +485,81 @@ export type rustWasm = {
     computepass: rust_pointer<'computepass'>,
   ): void;
   end_and_submit(computepass: rust_pointer<'computepass'>): void;
-  new_arc_rotate_camera(): rust_pointer<'cameracontroller'>;
-  new_mesh_camera(): rust_pointer<'cameracontroller'>;
-  new_position_camera(): rust_pointer<'cameracontroller'>;
+  new_arc_rotate_camera(): rust_pointer<'ArcRotateCamera'>;
+  camera_wheel(
+    controller: rust_pointer<'ArcRotateCamera'>,
+    delta_y: number,
+    ctrl_key: boolean,
+  ): void;
+  camera_move(
+    controller: rust_pointer<'ArcRotateCamera'>,
+    pointer_down_button: number,
+    movement_x: number,
+    movement_y: number,
+  ): void;
+  get_alpha(controller: rust_pointer<'ArcRotateCamera'>): number;
+  set_alpha(controller: rust_pointer<'ArcRotateCamera'>, value: number): void;
+  get_beta(controller: rust_pointer<'ArcRotateCamera'>): number;
+  set_beta(controller: rust_pointer<'ArcRotateCamera'>, value: number): void;
+  get_radius(controller: rust_pointer<'ArcRotateCamera'>): number;
+  set_radius(controller: rust_pointer<'ArcRotateCamera'>, value: number): void;
+  set_movement(
+    controller: rust_pointer<'ArcRotateCamera'>,
+    kinematic: boolean,
+    target_moving_to_x: number,
+    target_moving_to_y: number,
+    target_moving_to_z: number,
+  ): void;
+  get_target_ptr(
+    controller: rust_pointer<'ArcRotateCamera'>,
+  ): rust_pointer<'target'>;
+  rebuild_angles_and_radius(
+    controller: rust_pointer<'ArcRotateCamera'>,
+    x: number,
+    y: number,
+    z: number,
+  ): void;
+  new_mesh_camera(
+    canvas_width: number,
+    mesh_id: rust_pointer<'mesh_id'>,
+  ): rust_pointer<'meshcamera'>;
+  update_canvas_width(
+    mesh_camera: rust_pointer<'meshcamera'>,
+    canvas_width: number,
+  ): void;
+  new_position_camera(): rust_pointer<'positioncamera'>;
   attach_archrotate_camera_controller(
     camera: rust_mutex<'locked', 'camera'>,
-    controller: rust_pointer<'cameracontroller'>,
+    controller: rust_pointer<'ArcRotateCamera'>,
+  ): void;
+  attach_positioncamera_camera_controller(
+    camera: rust_mutex<'locked', 'camera'>,
+    controller: rust_pointer<'positioncamera'>,
+  ): void;
+  attach_meshcamera_camera_controller(
+    camera: rust_mutex<'locked', 'camera'>,
+    controller: rust_pointer<'meshcamera'>,
+  ): void;
+  keyfunction(
+    controller: rust_pointer<'positioncamera'>,
+    up: boolean,
+    ctrl_key: boolean,
+    key_ptr: number,
+    key_len: number,
+    key_cap: number,
+  ): void;
+  keyfunctionmeshcamera(
+    controller: rust_pointer<'meshcamera'>,
+    up: boolean,
+    key_ptr: number,
+    key_len: number,
+    key_cap: number,
+  ): void;
+  get_arrow_keys_down(controller: rust_pointer<'meshcamera'>): number;
+  pointer_move_function(
+    controller: rust_pointer<'meshcamera'>,
+    movement_x: number,
+    movement_y: number,
   ): void;
 } & BufferInterface &
   DevToolsInterface;

@@ -65,28 +65,7 @@ pub unsafe extern "C" fn physic_tick(delta: f32) {
     let engine = &mut ENGINE.engine2.lock().unwrap();
     engine.physic_tick(delta / 1000.0);
 }
-#[no_mangle]
-#[cfg(target_arch = "wasm32")]
-pub unsafe extern "C" fn test_triangles(
-    collider_sphere: *mut ColliderSphere,
-    new_position_x: f32,
-    new_position_y: f32,
-    new_position_z: f32,
-    camera_id: usize,
-) -> bool {
-    let mut gpuoption = ENGINE.gpu.lock().unwrap();
-    let camera = &mut gpuoption.as_mut().unwrap().get_camera_by_id_mut(camera_id);
 
-    if let Some(position_after_collision) = ENGINE.engine2.lock().unwrap().check_collisions(
-        &*collider_sphere,
-        [new_position_x, new_position_y, new_position_z, 0.0],
-        &camera.position,
-    ) {
-        camera.update_position(position_after_collision);
-        return true;
-    }
-    return false;
-}
 const GRAVITY: nalgebra::Matrix<
     f32,
     nalgebra::Const<3>,

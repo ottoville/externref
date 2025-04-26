@@ -154,35 +154,7 @@ pub unsafe extern "C" fn have_rigid_body(
         .rigid_body_handle
         .is_some()
 }
-#[no_mangle]
-pub unsafe extern "C" fn update_euler_angles(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-    x: f32,
-    y: f32,
-    z: f32,
-) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
-    {
-        let mut mesh_property = mesh.mesh_property.lock().unwrap();
-        mesh_property.update_euler_angles(x, y, z);
-    }
-    mesh.on_update(true);
-}
-#[no_mangle]
-pub unsafe extern "C" fn update_rotation(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-    x: f32,
-    y: f32,
-    z: f32,
-    w: f32,
-) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
-    {
-        let mut mesh_property = mesh.mesh_property.lock().unwrap();
-        mesh_property.update_rotation(x, y, z, w);
-    }
-    mesh.on_update(true);
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn update_translation(
     mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
@@ -295,6 +267,43 @@ pub unsafe extern "C" fn rotation_pointer_euler(
     MULTIVALUE_F32[1] = euler[1];
     MULTIVALUE_F32[2] = euler[2];
     return MULTIVALUE_F32.as_ptr();
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_euler_angles(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    x: f32,
+    y: f32,
+    z: f32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+    {
+        let mut mesh_property = mesh.mesh_property.lock().unwrap();
+        mesh_property.update_euler_angles(x, y, z);
+    }
+    mesh.on_update(true);
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_euler_angles_from_mutex(mesh: *mut Mesh, x: f32, y: f32, z: f32) {
+    {
+        let mut mesh_property = (*mesh).mesh_property.lock().unwrap();
+        mesh_property.update_euler_angles(x, y, z);
+    }
+    (*mesh).on_update(true);
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_rotation(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    x: f32,
+    y: f32,
+    z: f32,
+    w: f32,
+) {
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+    {
+        let mut mesh_property = mesh.mesh_property.lock().unwrap();
+        mesh_property.update_rotation(x, y, z, w);
+    }
+    mesh.on_update(true);
 }
 #[no_mangle]
 pub unsafe extern "C" fn velocity_pointer(mesh: *const Mesh) -> *const [f32; 4] {

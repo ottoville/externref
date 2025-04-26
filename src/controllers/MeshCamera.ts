@@ -1,7 +1,7 @@
 import { MutableTerraVector3, ReadOnlyTerraVector3 } from '../Math.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import type { Engine, ListenerObj } from '../engine.js';
-import { ARROW_KEYS, CameraController } from './CameraController.js';
+import { CameraController } from './CameraController.js';
 import { Anchor, NumericUnit, UIRectangle } from '../ui/UIRectangle.js';
 import { UIRectangleBackground } from '../ui/UIRectangleBackground.js';
 declare const engine: Engine;
@@ -16,17 +16,16 @@ export class MeshCamera extends CameraController {
   name = 'PositionCamera';
   angle = Math.PI;
   verticalAngle = Math.PI * 0.5;
-  arrowKeysDown = 0;
-  pointerMovement = {
-    x: 0,
-    y: 0,
-  };
-  cursor: UIRectangle | undefined = undefined;
-  id: rust_pointer<'cameracontroller'>;
 
-  constructor(public camera: TerraCamera) {
+  cursor: UIRectangle | undefined = undefined;
+  id: rust_pointer<'meshcamera'>;
+
+  constructor(
+    public camera: TerraCamera,
+    mesh_id: rust_pointer<'mesh_id'>,
+  ) {
     super();
-    this.id = engine.rust.new_mesh_camera();
+    this.id = engine.rust.new_mesh_camera(engine.canvas!.width, mesh_id);
     const gpulock = engine.rust.get_gpu();
     const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
     const direction = new ReadOnlyTerraVector3(
@@ -36,41 +35,6 @@ export class MeshCamera extends CameraController {
     this.angle = Math.acos(direction[0]);
     engine.rust.drop_camera_lock(cameralock);
     engine.rust.drop_gpu_lock(gpulock);
-  }
-  checkInputs() {
-    if (this.pointerMovement.x || this.pointerMovement.y) {
-      if (this.pointerMovement.x) {
-        this.angle += (Math.PI * this.pointerMovement.x) / engine.canvas!.width;
-        this.pointerMovement.x = 0;
-      }
-      if (this.pointerMovement.y) {
-        this.verticalAngle -=
-          (Math.PI * this.pointerMovement.y) / engine.canvas!.width;
-        this.pointerMovement.y = 0;
-      }
-      if (this.angle < 0) {
-        this.angle = Math.PI * 2 + this.angle;
-      }
-      if (this.angle < 0) {
-        throw new Error('negative angle');
-      }
-      this.angle = this.angle % (Math.PI * 2);
-      this.verticalAngle = this.verticalAngle % (Math.PI * 2);
-      const ang = this.angle - Math.PI;
-      const vang = this.verticalAngle;
-      const gpulock = engine.rust.get_gpu();
-      const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
-
-      this.cameraControl?.updateDirection(
-        cameralock,
-        Math.cos(ang) * Math.sin(vang),
-        Math.cos(vang),
-        Math.sin(ang) * Math.sin(vang),
-      );
-      engine.rust.drop_camera_lock(cameralock);
-      engine.rust.drop_gpu_lock(gpulock);
-    }
-    return true;
   }
   deAttachCameraController() {
     document.exitPointerLock();
@@ -122,11 +86,9 @@ export class MeshCamera extends CameraController {
     }
     this.#lockPointer();
     engine.addInputListener(this.#lockPointerListener);
-    engine.addInputListener(this.#keydownfunction);
-    engine.addInputListener(this.#keyupfunction);
-    engine.addInputListener(this.#pointerMoveFunction);
   }
   updateMouseCoords = () => {
+    engine.rust.update_canvas_width(this.id, engine.canvas!.width);
     const gpu = this.camera.gpu;
     if (gpu) {
       Atomics.store(
@@ -166,52 +128,6 @@ export class MeshCamera extends CameraController {
 
   serialize = () => {
     return;
-  };
-  #keydownfunction: ListenerObj<'keydown'> = {
-    cb: (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp') {
-        this.arrowKeysDown |= ARROW_KEYS.UP;
-      } else if (e.key === 'ArrowDown') {
-        this.arrowKeysDown |= ARROW_KEYS.DOWN;
-      }
-      if (e.key === 'ArrowLeft') {
-        this.arrowKeysDown |= ARROW_KEYS.LEFT;
-      } else if (e.key === 'ArrowRight') {
-        this.arrowKeysDown |= ARROW_KEYS.RIGHT;
-      }
-    },
-    object: this,
-    type: 'keydown',
-  };
-  #pointerMoveFunction: ListenerObj<'pointermove'> = {
-    cb: (e: PointerEvent) => {
-      this.pointerMovement = {
-        x: e.movementX,
-        y: e.movementY,
-      };
-    },
-    object: this,
-    options: {
-      force: true,
-    },
-    type: 'pointermove',
-  };
-  #keyupfunction: ListenerObj<'keyup'> = {
-    cb: (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp') {
-        this.arrowKeysDown &= ~ARROW_KEYS.UP;
-        //  this.#mesh.grip=0;
-      } else if (e.key === 'ArrowDown') {
-        this.arrowKeysDown &= ~ARROW_KEYS.DOWN;
-      }
-      if (e.key === 'ArrowLeft') {
-        this.arrowKeysDown &= ~ARROW_KEYS.LEFT;
-      } else if (e.key === 'ArrowRight') {
-        this.arrowKeysDown &= ~ARROW_KEYS.RIGHT;
-      }
-    },
-    object: this,
-    type: 'keyup',
   };
   lastTranslation = new MutableTerraVector3();
 }
