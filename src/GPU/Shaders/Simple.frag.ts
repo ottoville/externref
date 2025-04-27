@@ -21,8 +21,8 @@ import {
 
 export const pickOutputFragmentFunction = new FragmentShaderFunction(
   pickOutputFragment,
-  (_, { id }) => /* wgsl */ ` var output:PickOutput;
-          output.ID = ${id};
+  (_, { id, generation }) => /* wgsl */ ` var output:PickOutput;
+          output.ID = vec2<u32>(${id}, ${generation});
           return output;`,
   pickOutput,
 );

@@ -121,7 +121,7 @@ export class GPU {
     gRenderTargetId: ColorRenderTarget<
       RenderpassTargetOptions<
         RenderpassTargetTextureParams<
-          'r32uint',
+          'rg32uint',
           (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC']
         >
       >
@@ -168,6 +168,7 @@ export class GPU {
     readonly shadow: StructProperty<'f32'>;
     readonly spot_light: StructProperty<'vec3<f32>'>;
     readonly id: StructProperty<'u32'>;
+    readonly generation: StructProperty<'u32'>;
     readonly point_light_squared: StructProperty<'f32'>; //30
     readonly directional_light: StructProperty<'f32'>;
     /**
@@ -314,6 +315,8 @@ export class GPU {
       spot_light: new StructProperty('@size(16)', 'vec3<f32>'),
       // eslint-disable-next-line sort-keys
       id: new StructProperty('', 'u32'),
+      // eslint-disable-next-line sort-keys
+      generation: new StructProperty('', 'u32'),
       point_light_squared: new StructProperty('', 'f32'), //30
       // eslint-disable-next-line sort-keys
       directional_light: new StructProperty('', 'f32'),
@@ -368,7 +371,7 @@ export class GPU {
           gRenderTargetId: new ColorRenderTarget(
             {
               context: {
-                format: 'r32uint',
+                format: 'rg32uint',
                 gpu: this.device,
                 label: 'idTexture',
                 size: {

@@ -110,11 +110,14 @@ unsafe extern "C" fn on_resize(aspect_ratio: f32) -> *mut ComputePassEncoder {
     let mut command_encoder = GPUCommandEncoder::new(String::from("screen_resize"));
     for projection in &gpu.projections {
         {
-            let new_projection_buffer = 
-                projection
-                    .inner_projection
-                    .create_buffer(&gpu.device, aspect_ratio);
-            projection.buffer.lock().unwrap().replace_externref(new_projection_buffer.take_externref());
+            let new_projection_buffer = projection
+                .inner_projection
+                .create_buffer(&gpu.device, aspect_ratio);
+            projection
+                .buffer
+                .lock()
+                .unwrap()
+                .replace_externref(new_projection_buffer.take_externref());
         }
     }
     for camera in gpu.cameras.iter_mut() {
@@ -408,6 +411,7 @@ impl GPU {
                                     GPU_MEMORY_INDEX_SIZE
                                         * (mesh_property.gpu_mesh_alignment.0 + 16),
                                 );
+
                                 temp_buffer.set_mapped_range(
                                     &raw const mesh_property.gpu_memory as usize,
                                     std::mem::size_of::<GPUMesh>(),

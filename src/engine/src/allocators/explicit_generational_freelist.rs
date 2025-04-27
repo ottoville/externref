@@ -1,25 +1,27 @@
 use std::{
     marker::PhantomData,
     mem::ManuallyDrop,
+    num::NonZeroU32,
     ops::{Index, IndexMut},
 };
-
 struct Slot<T> {
     /**
      * Each insert adds one.
      */
-    generation: u32,
+    generation: NonZeroU32,
     /**
      * If exists, current slot is removed
      */
-    next_free: Option<usize>,
+    next_free: Option<u32>,
     data: ManuallyDrop<T>,
 }
 
+#[repr(C)]
 struct InnerIndex {
-    idx: usize,
-    generation: u32,
+    idx: u32,
+    generation: NonZeroU32,
 }
+
 // Guard for not referencing index with only type that was returned from allocator.
 #[repr(transparent)]
 pub struct ExplicitGenerationalFreeListIndex<T> {
@@ -27,6 +29,11 @@ pub struct ExplicitGenerationalFreeListIndex<T> {
     phantom: PhantomData<T>,
 }
 
+impl<T> ExplicitGenerationalFreeListIndex<T> {
+    pub fn compare_with_raw(&self, id: u32, generation: NonZeroU32) -> bool {
+        self.idx.idx == id && self.idx.generation == generation
+    }
+}
 impl<T> Clone for ExplicitGenerationalFreeListIndex<T> {
     fn clone(&self) -> Self {
         Self {
@@ -46,7 +53,7 @@ impl<T> Clone for ExplicitGenerationalFreeListIndex<T> {
 */
 pub struct ExplicitGenerationalFreeList<T> {
     entries: Vec<Slot<T>>,
-    next_free: usize,
+    next_free: u32,
 }
 impl<T> ExplicitGenerationalFreeList<T> {
     pub fn new(capacity: usize) -> Self {
@@ -57,18 +64,23 @@ impl<T> ExplicitGenerationalFreeList<T> {
     }
     pub fn insert(&mut self, value: T) -> ExplicitGenerationalFreeListIndex<T> {
         let idx = self.next_free;
-        let generation = if idx == self.entries.len() {
+        let generation = if idx == self.entries.len() as u32 {
             self.next_free += 1;
+            let generation = unsafe { NonZeroU32::new_unchecked(1) };
             self.entries.push(Slot {
-                generation: 0,
+                generation,
                 next_free: None,
                 data: ManuallyDrop::new(value),
             });
-            0
+            generation
         } else {
             unsafe {
-                let freeslot = self.entries.get_unchecked_mut(idx);
-                freeslot.generation += 1;
+                let freeslot = self.entries.get_unchecked_mut(idx as usize);
+
+                freeslot.generation = match freeslot.generation.checked_add(1) {
+                    Some(generation) => generation,
+                    None => NonZeroU32::new_unchecked(1),
+                };
                 self.next_free = freeslot.next_free.take().unwrap();
                 freeslot.data = ManuallyDrop::new(value);
                 freeslot.generation
@@ -80,7 +92,7 @@ impl<T> ExplicitGenerationalFreeList<T> {
         };
     }
     pub fn remove(&mut self, index: ExplicitGenerationalFreeListIndex<T>) -> bool {
-        let entry = unsafe { self.entries.get_unchecked_mut(index.idx.idx) };
+        let entry = unsafe { self.entries.get_unchecked_mut(index.idx.idx as usize) };
         if entry.generation == index.idx.generation {
             entry.next_free = Some(self.next_free);
             self.next_free = index.idx.idx;
@@ -107,7 +119,7 @@ impl<T> ExplicitGenerationalFreeList<T> {
     }
     pub fn get(&self, index: &ExplicitGenerationalFreeListIndex<T>) -> Option<&T> {
         unsafe {
-            let entry = self.entries.get_unchecked(index.idx.idx);
+            let entry = self.entries.get_unchecked(index.idx.idx as usize);
             if entry.generation == index.idx.generation {
                 return Some(&entry.data);
             }
@@ -116,7 +128,7 @@ impl<T> ExplicitGenerationalFreeList<T> {
     }
     pub fn get_mut(&mut self, index: &ExplicitGenerationalFreeListIndex<T>) -> Option<&mut T> {
         unsafe {
-            let entry = self.entries.get_unchecked_mut(index.idx.idx);
+            let entry = self.entries.get_unchecked_mut(index.idx.idx as usize);
             if entry.generation == index.idx.generation {
                 return Some(&mut entry.data);
             }
@@ -176,7 +188,6 @@ fn test_generational_explicit_freelist() {
         freelist.remove(second_1.clone()); //0,empty,2
 
         assert_ne!(freelist.get(&second_1).is_none(), true);
-        
 
         assert_eq!(freelist.used_space(), 3);
         let forth_3 = freelist.insert(TestEntry(3)); //0,3,2

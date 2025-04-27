@@ -14,11 +14,10 @@ use crate::MULTIVALUE_F32;
 use crate::MULTIVALUE_USIZE;
 use collider::ColliderSphere;
 use core::panic;
+use std::num::NonZeroU32;
 use externref::externref;
 use externref::Resource;
 use rapier3d::prelude::*;
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
@@ -28,7 +27,6 @@ use terramath::Quaternion;
 use terramath::Vec3wgslF32;
 
 pub struct JSMesh(());
-static MESH_ID: AtomicUsize = AtomicUsize::new(0);
 pub struct Mesh {
     pub mesh_property: Arc<Mutex<MeshProperty>>,
     pub geometry: Option<Box<Geometry>>,
@@ -48,9 +46,15 @@ pub struct Mesh {
     pub on_gpu_queue: bool,
     pub externref: Option<Resource<JSMesh>>,
     pub character: Option<Character>,
-    id: usize,
 }
-
+#[no_mangle]
+pub unsafe extern "C" fn compare_mesh_id(
+    id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    idx: u32,
+    generation: NonZeroU32,
+) -> bool {
+    (*id).compare_with_raw(idx, generation)
+}
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh_from_js(
@@ -541,7 +545,6 @@ impl Mesh {
         camera_can_collide_to: bool,
     ) -> ExplicitGenerationalFreeListIndex<Mesh> {
         let engine = &mut ENGINE.engine2.lock().unwrap();
-        let mesh_id = MESH_ID.fetch_add(1, Ordering::Relaxed);
         let mesh_property = mesh_property_opt.unwrap_or_else(|| {
             let gpu_mesh_alignment = engine.gpu_allocated.allocate();
             let maybegpu = &mut ENGINE.gpu.lock().unwrap();
@@ -561,7 +564,7 @@ impl Mesh {
                     shadow: 0.0,
                     color: [0.0, 0.0, 0.0, 0.0],
                     spotlight: [0.0, 0.0, 0.0, 0.0],
-                    _id: mesh_id,
+                    id: None,
                     point_light_squared: point_light * point_light,
                     directional_light,
                     scenes: scenes as u32,
@@ -582,7 +585,7 @@ impl Mesh {
             }))
         });
         let m = Mesh {
-            mesh_property,
+            mesh_property: mesh_property.clone(),
             geometry: None,
             kinematic_velocity: [0.0, 0.0, 0.0, 0.0],
             positions_count: Option::None,
@@ -594,9 +597,9 @@ impl Mesh {
             on_gpu_queue: false,
             externref,
             character: None,
-            id: mesh_id,
         };
         let id = meshes.insert(m);
+        mesh_property.lock().unwrap().gpu_memory.id = Some(id.clone());
         if camera_can_collide_to {
             engine.camera_can_collide_meshes.push(id.clone());
         }

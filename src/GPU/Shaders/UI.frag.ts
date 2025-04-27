@@ -19,7 +19,7 @@ export function createUIFragmentShader(gpu: GPU) {
         diffuseOutput,
         ([{ texture }], { v_uv }) => /* wgsl */ `
               let fragCoordI=vec2<i32>(floor(${v_uv}));
-              let color:vec4<f32> = ${textureLoad(texture, 'fragCoordI', '0')};
+              let color:vec4<f32> = ${textureLoad(texture, 'fragCoordI', 0)};
           
               var output:Output;
           

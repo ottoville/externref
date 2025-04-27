@@ -60,6 +60,7 @@ export function createPickOutput(
         var worldPos=${world.prop('transformation')} * ${position};
         output.fragCoord = ${scene.prop('modelViewProjection')} * worldPos;
         output.id=${world.prop('id')};
+        output.generation=${world.prop('generation')};
         //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
         //ambient=lights.ambient;
         return output;

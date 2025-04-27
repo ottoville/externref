@@ -561,6 +561,11 @@ export type rustWasm = {
     movement_x: number,
     movement_y: number,
   ): void;
+  compare_mesh_id(
+    mesh_id: rust_pointer<'mesh_id'>,
+    id: number,
+    generation: number,
+  ): boolean;
 } & BufferInterface &
   DevToolsInterface;
 const ObjectStores = {

@@ -72,7 +72,7 @@ export class PickableRenderPass<
       });
       this.#pickBufferRead = gpu.device.createBuffer({
         label: 'pickBufferRead',
-        size: 4 + 4, //depth + meshID (four pixel)
+        size: 4 + 4 + 4, //depth + meshID + generation (four pixel)
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
       });
       this.#mousePositionBuffer = new Buffer({
@@ -139,13 +139,15 @@ export class PickableRenderPass<
     position: readonly [number, number, number];
     meshId: number;
   } | null> | null = null;
-  #zAndIDPromise: Promise<[z: number, id: number]> | null = null;
+  #zAndIDPromise: Promise<[z: number, id: number, generation: number]> | null =
+    null;
   async pickPosition(): Promise<{
     position: readonly [number, number, number];
   } | null>;
   async pickPosition(mesh: true): Promise<{
     position: readonly [number, number, number];
     meshId: number;
+    generation: number;
   } | null>;
   async pickPosition(
     mesh = false,
@@ -200,21 +202,22 @@ export class PickableRenderPass<
           0,
           this.#pickBufferRead!,
           0,
-          4 + 4,
+          4 + 4 + 4,
         );
         gpu.queue.submit([encoder.finish()]);
 
         this.#zAndIDPromise = this.#pickBufferRead!.mapAsync(
           GPUMapMode.READ,
           0,
-          4 + 4,
+          4 + 4 + 4,
         ).then(() => {
-          const b = this.#pickBufferRead!.getMappedRange(0, 4 + 4);
+          const b = this.#pickBufferRead!.getMappedRange(0, 4 + 4 + 4);
           const z = new DataView(b).getFloat32(0, true);
           const meshID = new DataView(b).getUint32(4, true);
+          const generation = new DataView(b).getUint32(8, true);
           this.#pickBufferRead!.unmap();
           this.#zAndIDPromise = null;
-          return [z, meshID];
+          return [z, meshID, generation];
         });
       }
     } else {
@@ -279,7 +282,12 @@ export class PickableRenderPass<
             } else this.pickPromise = null;
             buffer.unmap();
             this.#zAndIDPromise = null;
-            return [z, meshId];
+            const generation = new DataView(b).getUint32(
+              missOffset + 32 + 4,
+              true,
+            );
+
+            return [z, meshId, generation];
           });
       }
     }
@@ -308,6 +316,7 @@ export class PickableRenderPass<
       if (mesh) {
         this.pickPromiseMesh = null;
         return {
+          generation: zAndID[2],
           meshId: zAndID[1],
           position: result,
         };
@@ -342,7 +351,14 @@ export class PickableRenderPass<
     if (!pickInfo) {
       return null;
     }
-    const pickedMesh = wantedMeshes.find((mesh) => mesh.id === pickInfo.meshId);
+
+    const pickedMesh = wantedMeshes.find((mesh) =>
+      engine.rust.compare_mesh_id(
+        mesh.id,
+        pickInfo.meshId,
+        pickInfo.generation,
+      ),
+    );
     if (!pickedMesh) {
       return null;
     }

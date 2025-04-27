@@ -65,7 +65,6 @@ export function createGroundVertShader(gpu: GPU) {
       
         //let localPosition:vec4<f32> = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
         //output.position=localPosition.xyz;//position;
-        output.id=${world.prop('id')};
         output.scenes=${world.prop('scenes')};
         return output;
         `,
@@ -91,6 +90,7 @@ export function createGroundVertShader(gpu: GPU) {
               'modelViewProjection',
             )} * ${position};
             output.id=${world.prop('id')};
+            output.generation=${world.prop('generation')};
             return output;
         `,
       ) satisfies GroundFunction,

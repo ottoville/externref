@@ -27,9 +27,10 @@ export const fragOutput = new Struct('Output', {
 export const pickOutput = new Struct('PickOutput', {
   fragCoord,
   id: new StructProperty('@location(0) @interpolate(flat)', 'u32'),
+  generation: new StructProperty('@location(1) @interpolate(flat)', 'u32'),
 });
 export const pickOutputFragment = new Struct('PickOutput', {
-  ID: new StructProperty('@location(0)', 'u32'),
+  ID: new StructProperty('@location(0)', 'vec2<u32>'),
 });
 export const colorPositionOutput = new Struct('Output', {
   fragCoord,
@@ -186,6 +187,7 @@ export const ViewUniforms = new Struct('ViewUniforms', {
 export const Depth_And_Mesh = new Struct('Depth_And_Mesh', {
   depth: new StructProperty('', 'f32'),
   mesh: new StructProperty('', 'u32'),
+  generation: new StructProperty('', 'u32'),
 });
 export const Mouse = new Struct('Mouse', {
   position: new StructProperty('', 'vec2<i32>'),

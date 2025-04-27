@@ -1,6 +1,8 @@
 #!cfg(target_arch = "wasm32")
 mod allocators;
 mod boundingbox;
+pub mod cameras;
+pub mod character;
 mod devtools;
 mod drawable;
 mod engine;
@@ -15,17 +17,15 @@ pub mod projection;
 mod swapbuffers;
 mod terrain;
 mod vertices;
-pub mod character;
-pub mod cameras;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
 use crate::Collider;
 
-use allocators::freeindex::FreeIndexIndex;
+use allocators::{explicit_generational_freelist::ExplicitGenerationalFreeListIndex, freeindex::FreeIndexIndex};
 use math2::Mat3wgslF32;
-use mesh::ENGINE;
+use mesh::{Mesh, ENGINE};
 use rapier3d::prelude::*;
 use vertices::{Position, Position2DAndUV, PositionAndNormal, PositionAndNormalAndUV};
 
@@ -144,7 +144,7 @@ pub struct GPUMesh {
     ambient: [f32; 3],
     shadow: f32,
     spotlight: [f32; 4],
-    _id: usize,
+    id: Option<ExplicitGenerationalFreeListIndex<Mesh>>,
     point_light_squared: f32,
     directional_light: f32,
     scenes: u32,
