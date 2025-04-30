@@ -13,6 +13,7 @@ import type { Engine } from '../../engine.js';
 import { type GPU } from '../../GPU.js';
 import { tileCount } from '../Shaders/structs/Structs.js';
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
+import { create_rust_label } from '../../utils.js';
 declare const engine: Engine;
 
 const gpu_screen_buffer_size = 16; //screen width and height and ratio
@@ -75,13 +76,13 @@ export class RenderPass<
       colorFormats: Object.values(this.props.colorRenderTargets).map((rt) => {
         return rt.renderTargetOptions.context.format;
       }),
-      label: this.props.label,
       sampleCount: this.props.sampleCount ?? 1,
       ...GPURenderBundleEncoderDescriptor,
     };
 
     const rust_renderbundle = engine.rust.new_renderbundle(
       GPURenderBundleEncoderDescriptor2,
+      ...create_rust_label(this.props.label),
     );
     const recorder = (renderBundleEncoder2: GPURenderBundleEncoder) => {
       renderBundle2.renderBundleEncoder = renderBundleEncoder2;

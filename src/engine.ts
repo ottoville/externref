@@ -460,6 +460,9 @@ export type rustWasm = {
 
   new_renderbundle(
     descriptor: GPURenderBundleEncoderDescriptor,
+    label_ptr: number,
+    label_len: number,
+    label_cap: number,
   ): rust_pointer<'renderbundleencoder'>;
   renderbundle_set_bindgroup(
     renderbundle: rust_pointer<'renderbundleencoder'>,

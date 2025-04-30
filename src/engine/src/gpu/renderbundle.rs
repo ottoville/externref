@@ -1,4 +1,5 @@
 use std::{
+    cell::LazyCell,
     ptr,
     sync::{Arc, Mutex},
 };
@@ -23,6 +24,7 @@ pub struct JSRenderBundle(());
 fn create_renderbundle_encoder(
     _device: &Resource<JSDevice>,
     _descriptor: &Resource<JSRenderBundleDescriptor>,
+    label: *const usize,
 ) -> Resource<JSRenderBundleEncoder> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
@@ -47,6 +49,7 @@ extern "C" {
     fn create_renderbundle_encoder(
         device: &Resource<JSDevice>,
         descriptor: &Resource<JSRenderBundleDescriptor>,
+        label: *const usize,
     ) -> Resource<JSRenderBundleEncoder>;
     fn finish(
         //TODO: take ownership of encoder
@@ -59,18 +62,16 @@ extern "C" {
 #[no_mangle]
 pub unsafe extern "C" fn new_renderbundle(
     descriptor: Resource<JSRenderBundleDescriptor>,
+    label_ptr: *mut u8,
+    label_len: usize,
+    label_cap: usize,
 ) -> *mut RenderBundleEncoder {
     let gpuopt = ENGINE.gpu.lock().unwrap();
-    let externref = Arc::new(create_renderbundle_encoder(
+    Box::into_raw(Box::new(RenderBundleEncoder::new(
+        String::from_raw_parts(label_ptr, label_len, label_cap),
         &gpuopt.as_ref().unwrap().device,
-        &descriptor,
-    ));
-    Box::into_raw(Box::new(RenderBundleEncoder {
-        externref,
-        renderbundle: Arc::new(Mutex::new(None)),
         descriptor,
-        buffers: Vec::new(),
-    }))
+    )))
 }
 #[no_mangle]
 pub unsafe extern "C" fn renderbundle_set_bindgroup(
@@ -107,12 +108,41 @@ pub struct RenderBundleEncoder {
     renderbundle: Arc<Mutex<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
     pub buffers: Vec<Arc<Resource<JSBuffer>>>,
+    label: String,
 }
 pub struct RenderBundle {
     buffers: Vec<Arc<Resource<JSBuffer>>>,
     externref: Resource<JSRenderBundle>,
 }
+thread_local! {
+    static FINISH_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("finish_record_renderbundle")) };
+}
 impl RenderBundleEncoder {
+    pub fn new(
+        label: String,
+        device: &Resource<JSDevice>,
+        descriptor: Resource<JSRenderBundleDescriptor>,
+    ) -> Self {
+        unsafe {
+            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
+            MULTIVALUE_USIZE[1] = label.len();
+            MULTIVALUE_USIZE[2] = label.capacity();
+        }
+        let externref = unsafe {
+            Arc::new(create_renderbundle_encoder(
+                &device,
+                &descriptor,
+                MULTIVALUE_USIZE.as_ptr(),
+            ))
+        };
+        RenderBundleEncoder {
+            externref,
+            renderbundle: Arc::new(Mutex::new(None)),
+            descriptor,
+            buffers: Vec::new(),
+            label,
+        }
+    }
     pub fn record_renderbundle(
         &mut self,
         gpu_lock: *mut &'static mut GPU,
@@ -120,12 +150,13 @@ impl RenderBundleEncoder {
     ) -> Arc<Mutex<Option<RenderBundle>>> {
         let renderbundle = &mut self.renderbundle.lock().unwrap();
         if Option::is_none(renderbundle) {
-            let label = String::from("TODO");
             unsafe {
                 do_record(&record, &*self.externref);
-                MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-                MULTIVALUE_USIZE[1] = label.len();
-                MULTIVALUE_USIZE[2] = label.capacity();
+                FINISH_LABEL.with(|label| {
+                    MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
+                    MULTIVALUE_USIZE[1] = label.len();
+                    MULTIVALUE_USIZE[2] = label.capacity();
+                });
 
                 let externref = finish(&*self.externref, MULTIVALUE_USIZE.as_ptr());
                 let _ = renderbundle.insert(RenderBundle {
@@ -137,6 +168,7 @@ impl RenderBundleEncoder {
                 self.externref = Arc::new(create_renderbundle_encoder(
                     &(*gpu_lock).device,
                     &self.descriptor,
+                    &self.label as *const String as *const usize,
                 ));
             }
         }

@@ -1,5 +1,4 @@
 ﻿import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
-import { PickableRenderPass } from './GPU/RenderPasses/PickableRenderPass.js';
 
 import { type Engine } from './engine.js';
 import { Uint16Vector2 } from './Math.js';
@@ -50,6 +49,7 @@ import { StructProperty } from './webgpu-ts/index.js';
 import { createPipelineLayouts } from './GPU/Shaders/Pipelinelayouts.js';
 import { createUI } from './GPU/UI.js';
 import { Externref } from './externref.js';
+import { PickableRenderPassMSAA } from './GPU/RenderPasses/PickableRenderPassMSAA.js';
 
 declare const engine: Engine;
 let curSecond = 0;
@@ -78,7 +78,7 @@ export class GPU {
     x: 1,
     y: 1,
   };
-  readonly renderPassScreen: PickableRenderPass<
+  readonly renderPassScreen: PickableRenderPassMSAA<
     {
       gRenderTargetDiffuse: MSAARenderTarget<
         RenderpassTarget<
@@ -446,7 +446,7 @@ export class GPU {
         }),
       ),
     };
-    this.renderPassScreen = new PickableRenderPass(
+    this.renderPassScreen = new PickableRenderPassMSAA(
       {
         colorRenderTargets: this.screenRenderTargets,
         entryPoint: 'main',

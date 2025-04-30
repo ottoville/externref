@@ -8,8 +8,11 @@ export const RenderbundleEncoderInterface = {
     device: Externref<true, GPUDevice>,
     // TODO pass individual params of descriptor
     descriptor: GPURenderBundleEncoderDescriptor,
+    label_vec_ptr: rust_pointer<'label'>,
   ) {
-    return device.externref.createRenderBundleEncoder(descriptor);
+    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+
+    return device.externref.createRenderBundleEncoder({ ...descriptor, label });
   },
 
   do_record(
