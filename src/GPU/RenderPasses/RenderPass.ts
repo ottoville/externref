@@ -10,7 +10,7 @@ import {
   type RenderpassProps,
 } from '../../webgpu-ts/index.js';
 import type { Engine } from '../../engine.js';
-import { type GPU } from '../../GPU.js';
+import type { GPU } from '../../GPU.js';
 import { tileCount } from '../Shaders/structs/Structs.js';
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import { create_rust_label } from '../../utils.js';
@@ -27,7 +27,7 @@ export interface RenderPassProps<
   size: { width: number; height: number };
   getSizeOnResize: (width: number, height: number) => [number, number];
   entryPoint: E;
-  rootLayouts: RenderPipelineLayout[];
+  rootLayout: RenderPipelineLayout;
   GPURenderBundleEncoderDescriptor?: Partial<GPURenderBundleEncoderDescriptor>;
 }
 
@@ -40,9 +40,8 @@ export class RenderPass<
   E extends string = string,
 > extends Renderpass<U> {
   readonly perspectiveCameras: TerraCamera[] = [];
-  readonly #rootLayouts: RenderPipelineLayout[];
+  readonly #rootLayout: RenderPipelineLayout;
 
-  readonly createSizeBindGroup: () => BindGroup;
   #screenDimensionsBuffer: Buffer<BufferUsageEnums.UNIFORM>;
   onResize: Map<object, () => void> = new Map();
   public size: { width: number; height: number };
@@ -60,13 +59,13 @@ export class RenderPass<
       size,
       getSizeOnResize,
       entryPoint,
-      rootLayouts: rootLayout,
+      rootLayout,
       GPURenderBundleEncoderDescriptor,
     } = props;
     this.size = size;
     this.#getSizeOnResize = getSizeOnResize;
     this.entryPoint = entryPoint;
-    this.#rootLayouts = rootLayout;
+    this.#rootLayout = rootLayout;
     const renderTargersArray = Object.values(colorRenderTargets);
     renderTargersArray.forEach((rt) => {
       rt.resize(this.size, this.props.sampleCount);
@@ -89,13 +88,11 @@ export class RenderPass<
       let drawedMeshes = 0;
       if (this.perspectiveCameras.length === 0) {
         // Draw UI
-        this.#rootLayouts.forEach((layout) => {
-          drawedMeshes += layout.render(renderBundle2, this, 0);
-        });
+        drawedMeshes += this.#rootLayout.render(renderBundle2, this, 0);
       } else {
         renderBundleEncoder2.setBindGroup(
           0,
-          this.createSizeBindGroup().getForRenderBundle(renderBundle2),
+          this.sizeBindGroup.getForRenderBundle(renderBundle2),
         );
 
         this.perspectiveCameras.forEach((camera) => {
@@ -105,9 +102,7 @@ export class RenderPass<
             gpu.gpu_lock!,
             camera.id,
           );
-          this.#rootLayouts.forEach((layout) => {
-            drawedMeshes += layout.render(renderBundle2, this, 2);
-          });
+          drawedMeshes += this.#rootLayout.render(renderBundle2, this, 2);
         });
       }
     };
@@ -132,21 +127,18 @@ export class RenderPass<
     this.bundles.push(renderBundle2);
 
     this.#screenDimensionsBuffer = this.#updateSizeBindGroup(gpu, true);
-    this.createSizeBindGroup = () => {
-      this.sizeBindGroup = new BindGroup(
-        gpu.pipelineLayouts.sizeBindGroupLayout,
-        'sizeBindGroup',
-        (bindGroup) => ({
-          screen_dimensions: this.#screenDimensionsBuffer.getUniformBinding(
-            bindGroup,
-            0,
-            16,
-          ),
-        }),
-      );
-      return this.sizeBindGroup;
-    };
-    this.sizeBindGroup = this.createSizeBindGroup();
+
+    this.sizeBindGroup = new BindGroup(
+      gpu.pipelineLayouts.sizeBindGroupLayout,
+      'sizeBindGroup',
+      (bindGroup) => ({
+        screen_dimensions: this.#screenDimensionsBuffer.getUniformBinding(
+          bindGroup,
+          0,
+          16,
+        ),
+      }),
+    );
   }
   #updateSizeBindGroup(gpu: GPU, initial = false) {
     if (!initial) this.#screenDimensionsBuffer.destroy();

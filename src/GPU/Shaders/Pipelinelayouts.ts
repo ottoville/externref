@@ -104,13 +104,6 @@ export function createPipelineLayouts(gpu: GPU) {
     ),
   });
 
-  const rootCameralayout = new RenderPipelineLayout({
-    bindGroupLayouts: [
-      sizeBindGroupLayout,
-      uniformBindGroupLayoutWithTime,
-    ] as const,
-    label: 'rootCamera',
-  });
   const BindGroupLayoutPosition = new BGLayout(
     gpu.device,
     'BindGroupLayoutPosition',
@@ -128,6 +121,36 @@ export function createPipelineLayouts(gpu: GPU) {
       ),
     },
   );
+  const BindGroupLayoutCanvas = new BGLayout(gpu.device, 'BindGroupLayoutUI', {
+    texture: new TextLayout(
+      {
+        texture: {},
+        visibility: ShaderStage.FRAGMENT,
+      },
+      'texture_2d<f32>',
+    ),
+    uniforms: new BufLayout(
+      {
+        buffer: {
+          minBindingSize: 8,
+          type: 'uniform',
+        },
+        visibility: ShaderStage.VERTEX,
+      },
+      float2f32,
+    ),
+  });
+  const canvasRootLayout = new RenderPipelineLayout({
+    bindGroupLayouts: [BindGroupLayoutCanvas],
+    label: 'canvasRootLayout',
+  });
+  const rootCameralayout = new RenderPipelineLayout({
+    bindGroupLayouts: [
+      sizeBindGroupLayout,
+      uniformBindGroupLayoutWithTime,
+    ] as const,
+    label: 'rootCamera',
+  });
   const positionAndTimeBindGroup = rootCameralayout.appendBinds(
     'positionBindGroupTimeWGSLLayot',
     [BindGroupLayoutPosition],
@@ -173,29 +196,7 @@ export function createPipelineLayouts(gpu: GPU) {
       ),
     },
   );
-  const BindGroupLayoutCanvas = new BGLayout(gpu.device, 'BindGroupLayoutUI', {
-    texture: new TextLayout(
-      {
-        texture: {},
-        visibility: ShaderStage.FRAGMENT,
-      },
-      'texture_2d<f32>',
-    ),
-    uniforms: new BufLayout(
-      {
-        buffer: {
-          minBindingSize: 8,
-          type: 'uniform',
-        },
-        visibility: ShaderStage.VERTEX,
-      },
-      float2f32,
-    ),
-  });
-  const canvasRootLayout = new RenderPipelineLayout({
-    bindGroupLayouts: [BindGroupLayoutCanvas],
-    label: 'canvasRootLayout',
-  });
+
   const clustersLayout = new BGLayout(gpu.device, 'CreateClustersLayout2', {
     clusters: UpdateClustersBufferLayout,
     screentoview: new BufLayout(

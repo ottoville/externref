@@ -402,7 +402,7 @@ export class GPU {
           return [w, h];
         },
         label: 'pickRenderPass',
-        rootLayouts: [this.pipelineLayouts.rootCameralayout],
+        rootLayout: this.pipelineLayouts.rootCameralayout,
         sampleCount: 1,
         size: {
           height: canvas.height,
@@ -454,7 +454,7 @@ export class GPU {
           return [w, h];
         },
         label: 'renderPassScreen',
-        rootLayouts: [this.pipelineLayouts.rootCameralayout],
+        rootLayout: this.pipelineLayouts.rootCameralayout,
         sampleCount: 4,
         size: {
           height: canvas.height,
@@ -505,7 +505,7 @@ export class GPU {
         entryPoint: 'main',
         getSizeOnResize: (w, h) => [w >> 2, h >> 2],
         label: 'renderPassWater',
-        rootLayouts: [this.pipelineLayouts.rootCameralayout],
+        rootLayout: this.pipelineLayouts.rootCameralayout,
         sampleCount: 1,
         size: {
           height: canvas.height,
@@ -585,7 +585,7 @@ export class GPU {
           return [w, h];
         },
         label: 'renderPassCanvas',
-        rootLayouts: [this.pipelineLayouts.canvasRootLayout],
+        rootLayout: this.pipelineLayouts.canvasRootLayout,
         sampleCount: 1,
         size: {
           height: canvas.height,
@@ -658,10 +658,7 @@ export class GPU {
           //engine.rust.on_resize(aspectRatio);
           this.#renderPasses.forEach((renderPass) => {
             renderPass.resize(canvas.width, canvas.height);
-            passEncoder.setBindGroup(
-              0,
-              renderPass.createSizeBindGroup().bindGroup,
-            );
+            passEncoder.setBindGroup(0, renderPass.sizeBindGroup.bindGroup);
             renderPass.perspectiveCameras.forEach((camera) => {
               const gpu = engine.rust.get_gpu();
               const cameralock = engine.rust.get_camera(gpu, camera.id);
