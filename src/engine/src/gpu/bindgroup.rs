@@ -43,29 +43,30 @@ pub struct JSBindGroup(());
 pub struct JSBindGroupLayout(());
 
 pub struct BindGroup {
-    pub externref: Option<Arc<Resource<JSBindGroup>>>,
+    pub resources: Mutex<Option<Arc<BindGroupResources>>>,
     label: String,
     layout: Arc<Resource<JSBindGroupLayout>>,
     bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
-    pub rawbuffers: Vec<Arc<Resource<JSBuffer>>>,
-    pub renderbundles: Vec<Weak<Mutex<Option<RenderBundle>>>>,
+    pub renderbundles: Mutex<Vec<Weak<Mutex<Option<RenderBundle>>>>>,
 }
-
+pub struct BindGroupResources {
+    pub externref: Resource<JSBindGroup>,
+    pub rawbuffers: Vec<Arc<Resource<JSBuffer>>>,
+}
 impl BindGroup {
     pub fn new(
         label: String,
         layout: Arc<Resource<JSBindGroupLayout>>,
         bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
-    ) -> Arc<Mutex<BindGroup>> {
-        let bind_group = Arc::new(Mutex::new(BindGroup {
-            externref: None,
+    ) -> Arc<BindGroup> {
+        let bind_group = Arc::new(BindGroup {
+            resources: Mutex::new(None),
             label,
             layout,
             bufferbindings,
-            rawbuffers: Vec::new(),
-            renderbundles: Vec::new(),
-        }));
-        for buffer_binding_mutex in bind_group.lock().unwrap().bufferbindings.iter() {
+            renderbundles: Mutex::new(Vec::new()),
+        });
+        for buffer_binding_mutex in bind_group.bufferbindings.iter() {
             let mut buffer_binding = buffer_binding_mutex.lock().unwrap();
             buffer_binding.bindgroups.push(Arc::downgrade(&bind_group));
             buffer_binding
@@ -76,17 +77,19 @@ impl BindGroup {
         }
         return bind_group;
     }
-    pub fn get_bindgroup(&mut self, device: &Resource<JSDevice>) -> Arc<Resource<JSBindGroup>> {
-        let extenref_resources = self.externref.get_or_insert_with(|| {
-            self.rawbuffers.clear();
+    pub fn get_bindgroup(&self, device: &Resource<JSDevice>) -> Arc<BindGroupResources> {
+        let mut resources = self.resources.lock().unwrap();
+        let extenref_resources = resources.get_or_insert_with(|| {
+            let mut rawbuffers = Vec::with_capacity(self.bufferbindings.len());
             for binding in self.bufferbindings.iter() {
-                let buffer_binding = binding.lock().unwrap();
-                self.rawbuffers
-                    .push(buffer_binding.buffer.lock().unwrap().externref_arc());
+                let buffer_binding: std::sync::MutexGuard<'_, BufferBinding> =
+                    binding.lock().unwrap();
+                let externref_arc = buffer_binding.buffer.lock().unwrap().externref_arc();
+                rawbuffers.push(externref_arc);
             }
 
             let bindings_iterator = Box::new(self.bufferbindings.iter());
-            Arc::new(unsafe {
+            let externref = unsafe {
                 MULTIVALUE_USIZE[0] = self.label.as_ptr() as usize;
                 MULTIVALUE_USIZE[1] = self.label.len();
                 MULTIVALUE_USIZE[2] = self.label.capacity();
@@ -96,14 +99,18 @@ impl BindGroup {
                     MULTIVALUE_USIZE.as_ptr(),
                     Box::into_raw(bindings_iterator),
                 )
+            };
+            Arc::new(BindGroupResources {
+                externref,
+                rawbuffers,
             })
         });
         return extenref_resources.clone();
     }
-    pub fn make_dirty(&mut self) {
-        self.externref.take();
+    pub fn make_dirty(&self) {
+        self.resources.lock().unwrap().take();
         self.rawbuffers.clear();
-        for somerenderbundle in self.renderbundles.iter() {
+        for somerenderbundle in self.renderbundles.lock().unwrap().iter() {
             if let Some(renderbundle) = somerenderbundle.upgrade() {
                 renderbundle.lock().unwrap().take();
             }
@@ -159,17 +166,17 @@ fn test_bindgroup() {
         );
         {
             //Externref is not set yet, as it is set lazily
-            assert_eq!(bindgroup.lock().unwrap().externref.is_none(), true);
+            assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
             //buffer ref count is 2, one from test and other from bindgroup
             assert_eq!(Arc::strong_count(&rawbuffer), 2);
         }
 
-        renderbundle_encoder.set_bindgroup(&device, 0, &mut *bindgroup.lock().unwrap(), &[]);
+        renderbundle_encoder.set_bindgroup(&device, 0, &mut *bindgroup, &[]);
         let rawbindgroup = bindgroup
+            .resources
             .lock()
             .as_ref()
             .unwrap()
-            .externref
             .as_ref()
             .unwrap()
             .clone();
@@ -178,7 +185,7 @@ fn test_bindgroup() {
             assert_eq!(Arc::strong_count(&rawbindgroup), 3);
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
-        bindgroup.lock().unwrap().make_dirty();
+        bindgroup.make_dirty();
         {
             //bindgroup 2 ref: test, renderbundle_encoder
             assert_eq!(Arc::strong_count(&rawbindgroup), 2);

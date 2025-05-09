@@ -80,8 +80,9 @@ fn test_lights() {
             Arc::new(layout),
             vec![BufferBinding::new(lights.buffer.clone(), 0, None)],
         );
-        bindgroup.lock().unwrap().get_bindgroup(&device);
-        assert_eq!(bindgroup.lock().unwrap().externref.is_none(), false);
+        bindgroup.get_bindgroup(&device);
+        
+        assert_eq!(bindgroup.resources.lock().unwrap().is_none(), false);
         let mut swapbuffers = SwapBuffers::new();
 
         assert_eq!(swapbuffers.queue_submited(), false);
@@ -98,7 +99,7 @@ fn test_lights() {
         lights.push(FreeIndexIndex(4));
         lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.buffer.lock().as_ref().unwrap().size, 32);
-        assert_eq!(bindgroup.lock().unwrap().externref.is_none(), true);
+        assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
         let queue = Queue {
             externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
         };

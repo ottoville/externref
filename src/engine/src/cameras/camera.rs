@@ -279,9 +279,9 @@ pub struct Camera {
     projection_view_inverted_is_dirty: bool,
     buffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
     cluster_array_buffer: Arc<Mutex<GPUBuffer<STORAGE_USAGE>>>,
-    update_view_bind_group: Arc<Mutex<BindGroup>>,
-    pub update_clusters_bind_group: Arc<Mutex<BindGroup>>,
-    pub uniform_bindgroup: Arc<Mutex<BindGroup>>,
+    update_view_bind_group: Arc<BindGroup>,
+    pub update_clusters_bind_group: Arc<BindGroup>,
+    pub uniform_bindgroup: Arc<BindGroup>,
     pub controller: Option<Box<dyn CameraController + Send>>,
 }
 impl Camera {
@@ -560,7 +560,7 @@ impl Camera {
         lights_pass: &mut ComputePassEncoder,
     ) {
         if force || self.updated {
-            lights_pass.set_bindgroup(device, 1, &mut self.update_view_bind_group.lock().unwrap(), &[]);
+            lights_pass.set_bindgroup(device, 1, &mut self.update_view_bind_group, &[]);
             lights_pass.dispatch_workgroups(
                 CLUSTER_DISPATCH_SIZE[0],
                 CLUSTER_DISPATCH_SIZE[1],

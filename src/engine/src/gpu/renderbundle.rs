@@ -11,9 +11,9 @@ use crate::{
 };
 
 use super::{
-    bindgroup::{BindGroup, JSBindGroup},
+    bindgroup::{BindGroup, BindGroupResources},
     binding_commands::BindingCommands,
-    gpu::JSDevice,
+    gpu::{JSDevice, GPU},
 };
 
 pub struct JSRenderBundleEncoder(());
@@ -139,12 +139,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup_camera(
     device: &Resource<JSDevice>,
 ) {
     let camera = get_camera_by_id(&*cameras, camera_id);
-    (*renderbundle).set_bindgroup(
-        &*device,
-        index,
-        &mut *camera.uniform_bindgroup.lock().unwrap(),
-        &[],
-    );
+    (*renderbundle).set_bindgroup(&*device, index, &(*camera.uniform_bindgroup, &[]));
 }
 #[no_mangle]
 pub unsafe extern "C" fn renderbundle_make_dirty(renderbundle: *mut RenderBundleEncoder) {
@@ -154,12 +149,12 @@ pub struct RenderBundleEncoder {
     pub externref: Arc<Resource<JSRenderBundleEncoder>>,
     pub renderbundle: Arc<Mutex<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
-    pub bindgroups: Vec<Arc<Resource<JSBindGroup>>>,
+    pub bindgroups: Vec<Arc<BindGroupResources>>,
     label: String,
     record: Resource<JSFunction>,
 }
 pub struct RenderBundle {
-    pub bindgroups: Vec<Arc<Resource<JSBindGroup>>>,
+    pub bindgroups: Vec<Arc<BindGroupResources>>,
     pub externref: Resource<JSRenderBundle>,
 }
 thread_local! {
@@ -243,13 +238,15 @@ impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
         &self.externref
     }
 
-    fn after_set_bindgroup(&mut self, bindgroup: &mut BindGroup) {
+    fn after_set_bindgroup(&mut self, bindgroup: &BindGroup) {
         bindgroup
             .renderbundles
+            .lock()
+            .unwrap()
             .push(Arc::downgrade(&self.renderbundle));
     }
 
-    fn bindgroups(&mut self) -> &mut Vec<Arc<Resource<JSBindGroup>>> {
+    fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {
         &mut self.bindgroups
     }
 }

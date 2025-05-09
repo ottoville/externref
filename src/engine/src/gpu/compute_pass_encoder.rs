@@ -3,8 +3,7 @@ use std::sync::Arc;
 use externref::{externref, Resource};
 
 use super::{
-    bindgroup::{BindGroup, JSBindGroup},
-    binding_commands::BindingCommands,
+    bindgroup::{BindGroup, BindGroupResources}, binding_commands::BindingCommands, buffer::buffer::JSBuffer,
     command_encoder::GPUCommandEncoder,
 };
 
@@ -51,9 +50,9 @@ impl BindingCommands<JSComputePassEncoder> for ComputePassEncoder {
     fn externref(&self) -> &Resource<JSComputePassEncoder> {
         &self.externref
     }
-    fn after_set_bindgroup(&mut self, _bindgroup: &mut BindGroup) {}
+    fn after_set_bindgroup(&mut self, _bindgroup: &BindGroup) {}
 
-    fn bindgroups(&mut self) -> &mut Vec<Arc<Resource<JSBindGroup>>> {
+    fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {
         &mut self.command_encoder.bindgroups
     }
 }

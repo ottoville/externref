@@ -3,12 +3,12 @@ use std::{ptr, sync::Arc};
 use externref::{externref, Resource};
 
 use super::{
-    bindgroup::{BindGroup, JSBindGroup},
+    bindgroup::{BindGroup, BindGroupResources, JSBindGroup},
     gpu::JSDevice,
 };
 
 #[cfg(test)]
-unsafe fn set_bindgroup(
+pub unsafe fn set_bindgroup(
     _resource: usize,
     _index: u32,
     _bindgroup: &Resource<JSBindGroup>,
@@ -23,7 +23,7 @@ unsafe fn set_bindgroup(
 #[link(wasm_import_module = "bindcommands")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    fn set_bindgroup(
+    pub fn set_bindgroup(
         resource: usize,
         index: u32,
         bindgroup: &Resource<JSBindGroup>,
@@ -33,15 +33,15 @@ extern "C" {
 }
 pub trait BindingCommands<T> {
     fn externref(&self) -> &Resource<T>;
-    fn after_set_bindgroup(&mut self, bindgroup: &mut BindGroup);
+    fn after_set_bindgroup(&mut self, bindgroup: &BindGroup);
     // Hold references to prevent buffer being CG't before command encoder has been executed
-    fn bindgroups(&mut self) -> &mut Vec<Arc<Resource<JSBindGroup>>>;
+    fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>>;
     fn set_bindgroup(
         &mut self,
         device: &Resource<JSDevice>,
         index: u32,
-        bindgroup: &mut BindGroup,
-        dynamic_offsets: &[u32]
+        bindgroup: &BindGroup,
+        dynamic_offsets: &[u32],
     ) {
         let externref = self.externref();
         let ptr = unsafe { ptr::read(externref as *const Resource<T> as *const usize) };
@@ -50,10 +50,10 @@ pub trait BindingCommands<T> {
             set_bindgroup(
                 ptr,
                 index,
-                &extenref_resources,
+                &extenref_resources.externref,
                 dynamic_offsets.as_ptr(),
                 dynamic_offsets.len(),
-            );
+            )
         };
         self.bindgroups().push(extenref_resources);
 
