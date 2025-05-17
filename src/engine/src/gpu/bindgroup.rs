@@ -45,7 +45,7 @@ pub struct JSBindGroupLayout(());
 pub struct BindGroup {
     pub externref: Option<Resource<JSBindGroup>>,
     label: String,
-    layout: Resource<JSBindGroupLayout>,
+    layout: Arc<Resource<JSBindGroupLayout>>,
     bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
     pub rawbuffers: Vec<Arc<Resource<JSBuffer>>>,
     pub renderbundles: Vec<Weak<Mutex<Option<RenderBundle>>>>,
@@ -54,7 +54,7 @@ pub struct BindGroup {
 impl BindGroup {
     pub fn new(
         label: String,
-        layout: Resource<JSBindGroupLayout>,
+        layout: Arc<Resource<JSBindGroupLayout>>,
         bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
     ) -> Arc<Mutex<BindGroup>> {
         let mut rawbuffers = Vec::new();

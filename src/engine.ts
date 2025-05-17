@@ -1102,8 +1102,6 @@ export class Engine {
             cb(gpu);
           });
           this.GPUSubscribionsOnce.clear();
-
-          gpu.pickRenderPass.perspectiveCameras.push(gpu.mainCamera);
           //@ts-expect-error todo
           window.printRenderTarget = () => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises

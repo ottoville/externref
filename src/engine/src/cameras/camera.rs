@@ -316,7 +316,7 @@ impl Camera {
         );
         let update_view_bind_group = BindGroup::new(
             String::from("updateViewBindGroup2"),
-            layout,
+            Arc::new(layout),
             vec![cluster_array_buffer_binding.clone(), buffer_binding.clone()],
         );
 
@@ -324,7 +324,7 @@ impl Camera {
 
         let update_clusters_bind_group = BindGroup::new(
             String::from("update_clusters_bind_group"),
-            clusters_layout,
+            Arc::new(clusters_layout),
             vec![
                 cluster_array_buffer_binding.clone(),
                 projection_binding.clone(),
@@ -337,7 +337,7 @@ impl Camera {
 
         let uniform_bindgroup = BindGroup::new(
             String::from("uniformBindGroup"),
-            layout2,
+            Arc::new(layout2),
             vec![
                 cluster_array_buffer_binding,
                 gpu_buffer_binding,

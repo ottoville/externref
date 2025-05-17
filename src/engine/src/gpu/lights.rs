@@ -77,7 +77,7 @@ fn test_lights() {
         let mut lights = Lights::new(&device, String::from("GPUPointLights"));
         let bindgroup = BindGroup::new(
             String::from("test"),
-            layout,
+            Arc::new(layout),
             vec![BufferBinding::new(lights.buffer.clone(), 0, None)],
         );
         bindgroup.lock().unwrap().get_bind_group(&device);

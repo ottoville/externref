@@ -21,10 +21,13 @@ export class TerraCamera {
   constructor(
     label: string,
     gpu: GPU,
-    renderPass: RenderPass,
+    renderPasses: RenderPass[],
     parent?: TerraCamera,
   ) {
-    renderPass.perspectiveCameras.push(this);
+    renderPasses.forEach((renderPass) => {
+      renderPass.perspectiveCameras.push(this);
+    });
+
     if (parent) {
       if (label === 'waterCamera') {
         this.id = engine.rust.add_child_to_camera_water(

@@ -527,13 +527,17 @@ export class GPU {
       }),
       this,
     );
-    this.mainCamera = new TerraCamera(
-      'mainCamera',
-      this,
+    this.mainCamera = new TerraCamera('mainCamera', this, [
       this.renderPassScreen,
-    );
+      this.pickRenderPass,
+    ]);
 
-    new TerraCamera('waterCamera', this, this.renderPassWater, this.mainCamera);
+    new TerraCamera(
+      'waterCamera',
+      this,
+      [this.renderPassWater],
+      this.mainCamera,
+    );
     //TODO: this does not need to be canvas size
     /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
             (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');

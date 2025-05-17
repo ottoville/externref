@@ -211,7 +211,7 @@ pub unsafe extern "C" fn init_gpu(
 
         let update_view_bindgroup = BindGroup::new(
             String::from("updateViewBindGroup"),
-            layout,
+            Arc::new(layout),
             vec![
                 directional_lights_buffer_binding,
                 meshes_buffer_binding,
