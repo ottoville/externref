@@ -20,7 +20,7 @@ export class ArcRotateCamera extends CameraController {
     if (this.#serializeRequested || !engine.DB) return;
     this.#serializeRequested = true;
     const gpulock = engine.rust.get_gpu();
-    const cameralock = engine.rust.get_camera(
+    const cameralock = engine.rust.get_camera_by_id_mut(
       gpulock,
       engine.gpu!.mainCamera.id,
     );
@@ -81,7 +81,10 @@ export class ArcRotateCamera extends CameraController {
           }>
         ).result;
         const gpulock = engine.rust.get_gpu();
-        const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+        const cameralock = engine.rust.get_camera_by_id_mut(
+          gpulock,
+          this.camera.id,
+        );
         const target = new MutableTerraVector3(
           engine.rust.memory.buffer,
           engine.rust.get_target_ptr(this.id),
@@ -118,7 +121,10 @@ export class ArcRotateCamera extends CameraController {
       };
     } else {
       const gpulock = engine.rust.get_gpu();
-      const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+      const cameralock = engine.rust.get_camera_by_id_mut(
+        gpulock,
+        this.camera.id,
+      );
 
       const position = new Float32Array(
         engine.rust.memory.buffer,

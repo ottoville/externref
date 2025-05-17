@@ -79,7 +79,7 @@ export class TerraCamera {
   }
   attachControllerForCamera(controller: CameraController) {
     const gpu = engine.rust.get_gpu();
-    const cameralock = engine.rust.get_camera(gpu, this.id);
+    const cameralock = engine.rust.get_camera_by_id_mut(gpu, this.id);
 
     if (controller instanceof ArcRotateCamera) {
       engine.rust.attach_archrotate_camera_controller(

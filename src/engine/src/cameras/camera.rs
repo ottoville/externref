@@ -5,6 +5,9 @@ use std::{num::NonZero, ptr, sync::Mutex};
 use externref::{externref, Resource};
 use terramath::MatrixMath;
 
+use crate::allocators::explicit_generational_freelist::{
+    ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
+};
 use crate::gpu::bindgroup::JSBindGroup;
 use crate::gpu::binding_commands::BindingCommands;
 use crate::gpu::command_buffer::CommandBuffer;
@@ -28,9 +31,10 @@ use crate::{
 };
 
 use super::cameracontroller::CameraController;
+
 #[no_mangle]
 #[externref]
-pub unsafe extern "C" fn get_camera(
+pub unsafe extern "C" fn get_camera_by_id_mut(
     gpuopt: *mut MutexGuard<'static, Option<GPU>>,
     camera_id: usize,
 ) -> *mut &Camera {
@@ -45,23 +49,24 @@ pub unsafe extern "C" fn drop_camera_lock(camera: *mut &Camera) {
 
 #[no_mangle]
 pub unsafe extern "C" fn get_cameras_count() -> usize {
+    //TODO: return actual count not just used space
     NEXT_CAMERA_ID.load(Ordering::Relaxed)
 }
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn get_camera_externref(
-    gpu_lock: *mut MutexGuard<'static, Option<GPU>>,
     camera_id: usize,
 ) -> usize {
-    let externref = &(*gpu_lock)
-        .as_ref()
-        .unwrap()
-        .get_camera_by_id(camera_id)
-        .externref;
+    let gpuopt = ENGINE.gpu.lock().unwrap();
+    let gpu = gpuopt.as_ref().unwrap();
+    let camera = gpu.get_camera_by_id(camera_id);
+    let externref = &camera.externref;
     ptr::read(externref as *const Resource<JSCamera> as *const usize)
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_label(camera_id: usize) -> *const usize {
+pub unsafe extern "C" fn get_camera_label(
+    camera_id: usize,
+) -> *const usize {
     let gpuoption = ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_ref().unwrap();
     let label = &gpu.get_camera_by_id(camera_id).label;
@@ -71,11 +76,11 @@ pub unsafe extern "C" fn get_camera_label(camera_id: usize) -> *const usize {
     return MULTIVALUE_USIZE.as_ptr();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_camera_position(camera: *mut &mut Camera, x: f32, y: f32, z: f32) {
+pub unsafe extern "C" fn update_camera_position(camera: *mut Camera, x: f32, y: f32, z: f32) {
     (*camera).update_position([x, y, z, 0.0]);
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_camera_direction(camera: *mut &mut Camera, x: f32, y: f32, z: f32) {
+pub unsafe extern "C" fn update_camera_direction(camera: *mut Camera, x: f32, y: f32, z: f32) {
     (*camera).update_direction([x, y, z, 0.0]);
 }
 
@@ -189,19 +194,19 @@ pub unsafe extern "C" fn add_camera(
     let mut gpuoption = ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
     let id = camera.id;
-    gpu.cameras.push(camera);
+    gpu.cameras.insert(camera);
     return id;
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_direction_ptr(camera: *mut &mut Camera) -> *const f32 {
+pub unsafe extern "C" fn get_camera_direction_ptr(camera: *mut Camera) -> *const f32 {
     (*camera).direction.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_position_ptr(camera: *mut &mut Camera) -> *const f32 {
+pub unsafe extern "C" fn get_camera_position_ptr(camera: *mut Camera) -> *const f32 {
     (*camera).position.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_view_ptr(camera: *mut &mut Camera) -> *const [f32; 4] {
+pub unsafe extern "C" fn get_camera_view_ptr(camera: *mut Camera) -> *const [f32; 4] {
     (*camera).view.as_ptr()
 }
 #[no_mangle]
@@ -209,16 +214,6 @@ pub unsafe extern "C" fn get_camera_projection_inverted_ptr(
     camera: *mut &mut Camera,
 ) -> *const [f32; 4] {
     (*camera).projection_view_inverted.as_ptr()
-}
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn get_camera_update_clusters_bind_group(
-    camera: *mut &mut Camera,
-    device: &Resource<JSDevice>,
-) -> usize {
-    let mut bindgroup = (*camera).update_clusters_bind_group.lock().unwrap();
-    let externref = bindgroup.get_bind_group(device);
-    ptr::read(externref as *const Resource<JSBindGroup> as *const usize)
 }
 
 #[no_mangle]

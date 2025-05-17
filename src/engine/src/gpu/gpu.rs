@@ -5,9 +5,9 @@ use std::sync::{Arc, Mutex};
 
 use externref::{externref, Resource};
 
+use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::{Camera, CLUSTER_DISPATCH_SIZE};
-use crate::cameras::cameracontroller::CameraController;
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::Projection;
@@ -230,14 +230,13 @@ pub unsafe extern "C" fn init_gpu(
             gpu_buffer,
             pending_command_buffers: Vec::with_capacity(8),
             projections: vec![Arc::new(projection)],
-            cameras: Vec::with_capacity(2),
+            cameras: ExplicitGenerationalFreeList::new(4),
             update_view_bindgroup,
             point_lights,
             directional_lights,
             swap_buffers: SwapBuffers::new(),
             timebuffer,
             time: 0.0,
-            camera_controller: None,
         });
     }
 }
@@ -287,18 +286,17 @@ pub struct GPU {
     pub gpu_buffer: Arc<Mutex<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>>,
     pub pending_command_buffers: Vec<CommandBuffer>,
     pub projections: Vec<Arc<Projection>>,
-    pub cameras: Vec<Camera>,
+    pub cameras: ExplicitGenerationalFreeList<Camera>,
     update_view_bindgroup: Arc<Mutex<BindGroup>>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
     swap_buffers: SwapBuffers,
     pub timebuffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
     pub time: f32,
-    camera_controller: Option<Box<dyn CameraController + Send>>,
 }
 impl GPU {
-    pub fn get_camera_by_id(&self, camera_id: usize) -> &Camera {
-        for camera in &self.cameras {
+        pub fn get_camera_by_id(&self, camera_id: usize) -> &Camera {
+        for camera in self.cameras.iter() {
             if camera.id == camera_id {
                 return camera;
             } else {
@@ -310,7 +308,7 @@ impl GPU {
         panic!("Camera not found");
     }
     pub fn get_camera_by_id_mut(&mut self, camera_id: usize) -> &mut Camera {
-        for camera in &mut self.cameras {
+        for camera in self.cameras.iter_mut() {
             if camera.id == camera_id {
                 return camera;
             } else {
@@ -326,7 +324,7 @@ impl GPU {
         time: f32,
         update_view_pipeline: &Resource<JSComputePipeline>,
     ) -> bool {
-        for camera in &mut self.cameras {
+        for camera in self.cameras.iter_mut() {
             camera.check_inputs();
         }
         self.time = time;
@@ -356,7 +354,7 @@ impl GPU {
         let mut update_lights = false;
         let mut some_camera_updated = false;
         //Cameras
-        for camera in &mut self.cameras.iter_mut() {
+        for camera in self.cameras.iter_mut() {
             if camera.update_view(
                 &mut self.pending_command_buffers,
                 &self.device,
@@ -450,7 +448,7 @@ impl GPU {
                 &mut self.update_view_bindgroup.lock().unwrap(),
             );
             //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
-            for camera in &mut self.cameras {
+            for camera in self.cameras.iter_mut() {
                 camera.update_camera(&self.device, update_lights, &mut lights_pass);
             }
 

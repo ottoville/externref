@@ -8,6 +8,7 @@ use crate::allocators::explicit_generational_freelist::{
 };
 use crate::allocators::freeindex::FreeIndex;
 
+use crate::cameras::camera::Camera;
 use crate::gpu::gpu::GPU;
 
 use crate::mesh::JSMesh;

@@ -24,7 +24,10 @@ export class PositionCamera extends CameraController {
     this.id = engine.rust.new_position_camera();
 
     const gpulock = engine.rust.get_gpu();
-    const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+    const cameralock = engine.rust.get_camera_by_id_mut(
+      gpulock,
+      this.camera.id,
+    );
 
     const syncCamera = () => {
       this.cameraControl?.updatePosition(

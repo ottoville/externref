@@ -102,12 +102,11 @@ export abstract class AbstractPickableRenderPass<
       const x = (engine.gpu!.mousePosition[0] / this.size.width) * 2 - 1;
       const y = -((engine.gpu!.mousePosition[1] / this.size.height) * 2 - 1);
       const gpulock = engine.rust.get_gpu();
-      const cameralock = engine.rust.get_camera(gpulock, camera.id);
+      const cameralock = engine.rust.get_camera_by_id_mut(gpulock, camera.id);
       const projectionViewInverted = new TerraMatrix(
         engine.rust.memory.buffer,
         engine.rust.get_camera_projection_inverted_ptr(cameralock),
       );
-      console.log('z', x, y, zAndID[0]);
       new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(
         projectionViewInverted,
         result,

@@ -347,7 +347,7 @@ export type rustWasm = {
   remove_onchange_callback(mesh_id: rust_pointer<'mesh_id'>, cb: number): void;
   get_engine(): rust_mutex<'locked', 'enginelock'>;
   get_gpu(): rust_mutex<'locked', 'gpulock'>;
-  get_camera(
+  get_camera_by_id_mut(
     gpu: rust_mutex<'locked', 'gpulock'>,
     camera_id: number,
   ): rust_mutex<'locked', 'camera'>;
@@ -400,10 +400,7 @@ export type rustWasm = {
     cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
   ): number;
   get_camera_label(camera_id: number): rust_pointer<'camera_label'>;
-  get_camera_externref(
-    cameras: rust_mutex<'locked', 'gpulock'>,
-    camera_id: number,
-  ): number;
+  get_camera_externref(camera_id: number): number;
   get_cameras_count(): number;
   get_camera_direction_ptr(
     camera: rust_mutex<'locked', 'camera'>,

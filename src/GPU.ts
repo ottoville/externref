@@ -661,7 +661,10 @@ export class GPU {
             passEncoder.setBindGroup(0, renderPass.sizeBindGroup.bindGroup);
             renderPass.perspectiveCameras.forEach((camera) => {
               const gpu = engine.rust.get_gpu();
-              const cameralock = engine.rust.get_camera(gpu, camera.id);
+              const cameralock = engine.rust.get_camera_by_id_mut(
+                gpu,
+                camera.id,
+              );
               engine.rust.set_bindgroup_computepassencoder(
                 cameralock,
                 new Externref(true, device),

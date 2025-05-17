@@ -27,7 +27,10 @@ export class MeshCamera extends CameraController {
     super();
     this.id = engine.rust.new_mesh_camera(engine.canvas!.width, mesh_id);
     const gpulock = engine.rust.get_gpu();
-    const cameralock = engine.rust.get_camera(gpulock, this.camera.id);
+    const cameralock = engine.rust.get_camera_by_id_mut(
+      gpulock,
+      this.camera.id,
+    );
     const direction = new ReadOnlyTerraVector3(
       engine.rust.memory.buffer,
       engine.rust.get_camera_direction_ptr(cameralock),
