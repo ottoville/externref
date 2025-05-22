@@ -147,11 +147,14 @@ pub unsafe extern "C" fn end_and_submit(computepass: *mut ComputePassEncoder) {
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn set_bindgroup_computepassencoder(
-    camera: *mut &mut Camera,
+    gpuopt: *mut MutexGuard<'static, Option<GPU>>,
+    camera_id: usize,
     device: &Resource<JSDevice>,
     index: u32,
     computepass: *mut ComputePassEncoder,
 ) {
+    let gpu = (*gpuopt).as_ref().unwrap();
+    let camera = gpu.get_camera_by_id(camera_id);
     let mut bindgroup = (*camera).update_clusters_bind_group.lock().unwrap();
 
     (*computepass).set_bindgroup(device, index, &mut bindgroup);

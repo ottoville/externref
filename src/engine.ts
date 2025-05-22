@@ -479,7 +479,8 @@ export type rustWasm = {
     collision_radius: number,
   ): rust_pointer<'collider_sphere'>;
   set_bindgroup_computepassencoder(
-    camera: rust_mutex<'locked', 'camera'>,
+    gpu: rust_mutex<'locked', 'gpulock'>,
+    camera_id: number,
     device: Externref<true, GPUDevice>,
     index: number,
     computepass: rust_pointer<'computepass'>,

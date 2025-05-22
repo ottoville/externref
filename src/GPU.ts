@@ -659,25 +659,21 @@ export class GPU {
           const passEncoder =
             engine.rust.get_raw_computepassencoder(rustpassEncoder);
           passEncoder.setPipeline(await computePipelineClustersP);
-          //engine.rust.on_resize(aspectRatio);
           this.#renderPasses.forEach((renderPass) => {
             renderPass.resize(canvas.width, canvas.height);
             passEncoder.setBindGroup(0, renderPass.sizeBindGroup.bindGroup);
+            const gpu = engine.rust.get_gpu();
+
             renderPass.perspectiveCameras.forEach((camera) => {
-              const gpu = engine.rust.get_gpu();
-              const cameralock = engine.rust.get_camera_by_id_mut(
+              engine.rust.set_bindgroup_computepassencoder(
                 gpu,
                 camera.id,
-              );
-              engine.rust.set_bindgroup_computepassencoder(
-                cameralock,
                 new Externref(true, device),
                 1,
                 rustpassEncoder,
               );
-              engine.rust.drop_camera_lock(cameralock);
-              engine.rust.drop_gpu_lock(gpu);
             });
+            engine.rust.drop_gpu_lock(gpu);
           });
           // Call onResize after all renderPasses have resizes so callbacks
           // can refer updated render target of other renderpasses.

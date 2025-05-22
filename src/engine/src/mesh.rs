@@ -647,7 +647,7 @@ impl Mesh {
         }
         self.on_update(physics);
     }
-    pub unsafe fn apply_impulse(&mut self, x: f32, y: f32, z: f32) {
+    pub fn apply_impulse(&mut self, x: f32, y: f32, z: f32) {
         match self.rigid_body_handle {
             Some(rigid_body_handle) => {
                 let mut engine = ENGINE.engine2.lock().unwrap();
