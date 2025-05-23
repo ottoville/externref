@@ -30,8 +30,8 @@ impl CameraMovement {
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn new_arc_rotate_camera() -> *mut ArcRotateCamera {
-    Box::into_raw(Box::new(ArcRotateCamera::new()))
+pub unsafe extern "C" fn new_arc_rotate_camera(initial: bool, camera_id: usize) -> *mut ArcRotateCamera {
+    Box::into_raw(Box::new(ArcRotateCamera::new(initial, camera_id)))
 }
 #[no_mangle]
 pub unsafe extern "C" fn camera_move(
@@ -55,39 +55,18 @@ pub unsafe extern "C" fn get_alpha(arc_rotate_camera: *mut ArcRotateCamera) -> f
     (*arc_rotate_camera).alpha
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_alpha(arc_rotate_camera: *mut ArcRotateCamera, value: f32) {
-    (*arc_rotate_camera).alpha = value;
-}
-#[no_mangle]
 pub unsafe extern "C" fn get_beta(arc_rotate_camera: *mut ArcRotateCamera) -> f32 {
     (*arc_rotate_camera).beta
-}
-#[no_mangle]
-pub unsafe extern "C" fn set_beta(arc_rotate_camera: *mut ArcRotateCamera, value: f32) {
-    (*arc_rotate_camera).beta = value;
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_radius(arc_rotate_camera: *mut ArcRotateCamera) -> f32 {
     (*arc_rotate_camera).radius
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_radius(arc_rotate_camera: *mut ArcRotateCamera, value: f32) {
-    (*arc_rotate_camera).radius = value;
-}
-#[no_mangle]
 pub unsafe extern "C" fn get_target_ptr(
     arc_rotate_camera: *mut ArcRotateCamera,
 ) -> *const [f32; 4] {
     &(*arc_rotate_camera).target
-}
-#[no_mangle]
-pub unsafe extern "C" fn rebuild_angles_and_radius(
-    arc_rotate_camera: *mut ArcRotateCamera,
-    x: f32,
-    y: f32,
-    z: f32,
-) {
-    (*arc_rotate_camera).rebuild_angles_and_radius(&[x, y, z, 0.0]);
 }
 #[no_mangle]
 pub unsafe extern "C" fn attach_archrotate_camera_controller(
@@ -115,6 +94,25 @@ pub unsafe extern "C" fn set_movement(
         ],
         target_lerp_position: 0.0,
     })
+}
+#[no_mangle]
+pub unsafe extern "C" fn restore_arc_rotate_camera(
+    arc_rotate_camera: *mut ArcRotateCamera,
+    alpha: f32,
+    beta: f32,
+    radius: f32,
+    target_x: f32,
+    target_y: f32,
+    target_z: f32,
+    position_x: f32,
+    position_y: f32,
+    position_z: f32,
+    camera_id: usize,
+) {
+    (*arc_rotate_camera).restore(
+        alpha, beta, radius, target_x, target_y, target_z, position_x, position_y, position_z,
+        camera_id,
+    );
 }
 pub struct ArcRotateCamera {
     alpha: f32,
@@ -269,9 +267,9 @@ impl CameraController for ArcRotateCamera {
     }
 }
 impl ArcRotateCamera {
-    pub fn new() -> Self {
+    pub fn new(initial: bool, camera_id: usize) -> Self {
         let collision_radius = 2.0;
-        ArcRotateCamera {
+        let mut controller = ArcRotateCamera {
             alpha: 0.0,
             beta: 0.0,
             radius: 10.0,
@@ -303,7 +301,15 @@ impl ArcRotateCamera {
             lower_radius_limit: f32::NEG_INFINITY,
             upper_radius_limit: f32::INFINITY,
             lower_target_ylimit: f32::NEG_INFINITY,
+        };
+        if !initial {
+            let gpuopt = ENGINE.gpu.lock().unwrap();
+            let gpu = gpuopt.as_ref().unwrap();
+            let camera = gpu.get_camera_by_id(camera_id);
+            controller.target = camera.position.sub_vec(&camera.direction.multiply(100.0));
+            controller.rebuild_angles_and_radius(&camera.position);
         }
+        return controller;
     }
     fn camera_move(&mut self, pointer_down_button: u32, movement_x: i32, movement_y: i32) {
         if pointer_down_button == 2 {
@@ -322,6 +328,31 @@ impl ArcRotateCamera {
         if delta != 0.0 {
             self.inertial_radius_offset += delta;
         }
+    }
+    fn restore(
+        &mut self,
+        alpha: f32,
+        beta: f32,
+        radius: f32,
+        target_x: f32,
+        target_y: f32,
+        target_z: f32,
+        position_x: f32,
+        position_y: f32,
+        position_z: f32,
+        camera_id: usize,
+    ) {
+        self.alpha = alpha;
+        self.beta = beta;
+        self.radius = radius;
+        self.target = [target_x, target_y, target_z, 0.0];
+
+        let mut gpuopt = ENGINE.gpu.lock().unwrap();
+        let gpu = gpuopt.as_mut().unwrap();
+        let camera = gpu.get_camera_by_id_mut(camera_id);
+
+        camera.update_position([position_x, position_y, position_z, 0.0]);
+        self.calculate_direction(&camera.position, &mut camera.direction);
     }
     /// Rebuilds angles (alpha, beta) and radius from the give position and target
     fn rebuild_angles_and_radius(&mut self, current_position: &[f32; 4]) {

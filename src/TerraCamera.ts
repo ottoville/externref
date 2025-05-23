@@ -8,7 +8,6 @@ import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
 import { MeshCamera } from './controllers/MeshCamera.js';
 import { PositionCamera } from './controllers/PositionCamera.js';
 declare const engine: Engine;
-
 export class TerraCamera {
   update_camera_projection_view_inverted() {
     engine.rust.update_camera_projection_view_inverted(this.id);
@@ -63,22 +62,6 @@ export class TerraCamera {
     engine.getGPU((gpu2) => {
       this.gpu = gpu2;
     });
-  }
-  updateDirection(
-    camera: rust_mutex<'locked', 'camera'>,
-    x: number,
-    y: number,
-    z: number,
-  ) {
-    engine.rust.update_camera_direction(camera, x, y, z);
-  }
-  updatePosition(
-    camera: rust_mutex<'locked', 'camera'>,
-    x: number,
-    y: number,
-    z: number,
-  ) {
-    engine.rust.update_camera_position(camera, x, y, z);
   }
   attachControllerForCamera(controller: CameraController) {
     const gpu = engine.rust.get_gpu();

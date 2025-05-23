@@ -486,7 +486,23 @@ export type rustWasm = {
     computepass: rust_pointer<'computepass'>,
   ): void;
   end_and_submit(computepass: rust_pointer<'computepass'>): void;
-  new_arc_rotate_camera(): rust_pointer<'ArcRotateCamera'>;
+  new_arc_rotate_camera(
+    initial: boolean,
+    camera_id: number,
+  ): rust_pointer<'ArcRotateCamera'>;
+  restore_arc_rotate_camera(
+    controller: rust_pointer<'ArcRotateCamera'>,
+    alpha: number,
+    beta: number,
+    radius: number,
+    target_x: number,
+    target_y: number,
+    target_z: number,
+    position_x: number,
+    position_y: number,
+    position_z: number,
+    camera_id: number,
+  ): void;
   camera_wheel(
     controller: rust_pointer<'ArcRotateCamera'>,
     delta_y: number,
@@ -499,11 +515,8 @@ export type rustWasm = {
     movement_y: number,
   ): void;
   get_alpha(controller: rust_pointer<'ArcRotateCamera'>): number;
-  set_alpha(controller: rust_pointer<'ArcRotateCamera'>, value: number): void;
   get_beta(controller: rust_pointer<'ArcRotateCamera'>): number;
-  set_beta(controller: rust_pointer<'ArcRotateCamera'>, value: number): void;
   get_radius(controller: rust_pointer<'ArcRotateCamera'>): number;
-  set_radius(controller: rust_pointer<'ArcRotateCamera'>, value: number): void;
   set_movement(
     controller: rust_pointer<'ArcRotateCamera'>,
     kinematic: boolean,
@@ -514,12 +527,6 @@ export type rustWasm = {
   get_target_ptr(
     controller: rust_pointer<'ArcRotateCamera'>,
   ): rust_pointer<'target'>;
-  rebuild_angles_and_radius(
-    controller: rust_pointer<'ArcRotateCamera'>,
-    x: number,
-    y: number,
-    z: number,
-  ): void;
   new_mesh_camera(
     canvas_width: number,
     mesh_id: rust_pointer<'mesh_id'>,

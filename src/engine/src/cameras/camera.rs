@@ -76,11 +76,11 @@ pub unsafe extern "C" fn get_camera_label(
     return MULTIVALUE_USIZE.as_ptr();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_camera_position(camera: *mut Camera, x: f32, y: f32, z: f32) {
+pub unsafe extern "C" fn update_camera_position(camera: *mut &mut Camera, x: f32, y: f32, z: f32) {
     (*camera).update_position([x, y, z, 0.0]);
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_camera_direction(camera: *mut Camera, x: f32, y: f32, z: f32) {
+pub unsafe extern "C" fn update_camera_direction(camera: *mut &mut Camera, x: f32, y: f32, z: f32) {
     (*camera).update_direction([x, y, z, 0.0]);
 }
 
@@ -202,7 +202,7 @@ pub unsafe extern "C" fn get_camera_direction_ptr(camera: *mut Camera) -> *const
     (*camera).direction.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_position_ptr(camera: *mut Camera) -> *const f32 {
+pub unsafe extern "C" fn get_camera_position_ptr(camera: *mut &Camera) -> *const f32 {
     (*camera).position.as_ptr()
 }
 #[no_mangle]

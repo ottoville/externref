@@ -1,5 +1,5 @@
 ﻿import type { Engine, ListenerObj } from '../engine.js';
-import { MutableTerraVector3, ReadOnlyTerraVector3 } from '../Math.js';
+import { MutableTerraVector3 } from '../Math.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import { CameraController } from './CameraController.js';
 let pointerDownButton = 0;
@@ -67,7 +67,10 @@ export class ArcRotateCamera extends CameraController {
     initial = false,
   ) {
     super();
-    this.id = engine.rust.new_arc_rotate_camera();
+    this.id = engine.rust.new_arc_rotate_camera(
+      initial && engine.DB !== undefined,
+      camera.id,
+    );
 
     if (initial && engine.DB) {
       engine.DB.transaction('save')
@@ -80,79 +83,38 @@ export class ArcRotateCamera extends CameraController {
             type: string;
           }>
         ).result;
-        const gpulock = engine.rust.get_gpu();
-        const cameralock = engine.rust.get_camera_by_id_mut(
-          gpulock,
-          this.camera.id,
-        );
-        const target = new MutableTerraVector3(
-          engine.rust.memory.buffer,
-          engine.rust.get_target_ptr(this.id),
-        );
-        if (result) {
-          engine.rust.set_alpha(this.id, result.data.alpha);
-          engine.rust.set_beta(this.id, result.data.beta);
-          engine.rust.set_radius(this.id, result.data.radius);
-          target.set(result.data.target);
 
-          this.cameraControl?.updatePosition(
-            cameralock,
+        if (result) {
+          engine.rust.restore_arc_rotate_camera(
+            this.id,
+            result.data.alpha,
+            result.data.beta,
+            result.data.radius,
+            result.data.target[0],
+            result.data.target[1],
+            result.data.target[2],
             result.data.position[0],
             result.data.position[1],
             result.data.position[2],
+            this.camera.id,
           );
-          this.#calculateDirection(cameralock);
         } else {
           // Use these default values for camera when there are no existing save
-          engine.rust.set_alpha(this.id, 0.4614110368395256);
-          engine.rust.set_beta(this.id, 1.4816457152012938);
-          engine.rust.set_radius(this.id, 457.55058783756886);
-          this.cameraControl?.updatePosition(
-            cameralock,
+          engine.rust.restore_arc_rotate_camera(
+            this.id,
+            0.4614110368395256,
+            1.4816457152012938,
+            457.55058783756886,
+            544.716,
+            258.727,
+            384.335,
             952.791,
             299.464,
             587.233,
+            this.camera.id,
           );
-
-          target.set([544.716, 258.727, 384.335]);
         }
-        engine.rust.drop_camera_lock(cameralock);
-        engine.rust.drop_gpu_lock(gpulock);
       };
-    } else {
-      const gpulock = engine.rust.get_gpu();
-      const cameralock = engine.rust.get_camera_by_id_mut(
-        gpulock,
-        this.camera.id,
-      );
-
-      const position = new Float32Array(
-        engine.rust.memory.buffer,
-        engine.rust.get_camera_position_ptr(cameralock),
-        3,
-      ) as unknown as readonly [number, number, number];
-      const direction = new ReadOnlyTerraVector3(
-        engine.rust.memory.buffer,
-        engine.rust.get_camera_direction_ptr(cameralock),
-      );
-      const target = new MutableTerraVector3(
-        engine.rust.memory.buffer,
-        engine.rust.get_target_ptr(this.id),
-      );
-      target.set([
-        position[0] - direction[0] * 100,
-        position[1] - direction[1] * 100,
-        position[2] - direction[2] * 100,
-      ]);
-
-      engine.rust.rebuild_angles_and_radius(
-        this.id,
-        position[0],
-        position[1],
-        position[2],
-      );
-      engine.rust.drop_camera_lock(cameralock);
-      engine.rust.drop_gpu_lock(gpulock);
     }
   }
   #cameraMove: ListenerObj<'pointermove'> = {
@@ -253,32 +215,5 @@ export class ArcRotateCamera extends CameraController {
       },
       type: 'pointermove',
     } as ListenerObj<'pointermove'>);
-  }
-  #calculateDirection(cameralock: rust_mutex<'locked', 'camera'>) {
-    const position = new Float32Array(
-      engine.rust.memory.buffer,
-      engine.rust.get_camera_position_ptr(cameralock),
-      3,
-    ) as unknown as readonly [number, number, number];
-    const target = new MutableTerraVector3(
-      engine.rust.memory.buffer,
-      engine.rust.get_target_ptr(this.id),
-    );
-    const direction = [
-      position[0] - target[0],
-      position[1] - target[1],
-      position[2] - target[2],
-    ] as [number, number, number];
-
-    //Normalize direction
-    const zLength = Math.hypot(direction[0], direction[1], direction[2]);
-    if (!(zLength === 0 || zLength === 1)) {
-      //zAxis.normalizeFromLength(xLength);
-      const scale = 1.0 / zLength;
-      direction[0] *= scale;
-      direction[1] *= scale;
-      direction[2] *= scale;
-    }
-    engine.rust.update_camera_direction(cameralock, ...direction);
   }
 }

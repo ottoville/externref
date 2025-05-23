@@ -30,13 +30,13 @@ export class PositionCamera extends CameraController {
     );
 
     const syncCamera = () => {
-      this.cameraControl?.updatePosition(
+      engine.rust.update_camera_position(
         cameralock,
         this.#position[0],
         this.#position[1],
         this.#position[2],
       );
-      this.cameraControl?.updateDirection(
+      engine.rust.update_camera_direction(
         cameralock,
         Math.cos(this.#angle),
         0,
