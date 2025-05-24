@@ -333,6 +333,7 @@ export class GPU {
       device.queue,
       this.pipelineLayouts.updateViewLayout,
       true,
+      this.pipelineLayouts.sizeBindGroupLayout,
     );
     this.shaders = createShaderBuilders(this);
     this.updateViewShader = createUpdateViewShader(this);
@@ -401,6 +402,7 @@ export class GPU {
         getSizeOnResize: (w, h) => {
           return [w, h];
         },
+        id: 2,
         label: 'pickRenderPass',
         rootLayout: this.pipelineLayouts.rootCameralayout,
         sampleCount: 1,
@@ -453,6 +455,7 @@ export class GPU {
         getSizeOnResize: (w, h) => {
           return [w, h];
         },
+        id: 0,
         label: 'renderPassScreen',
         rootLayout: this.pipelineLayouts.rootCameralayout,
         sampleCount: 4,
@@ -504,6 +507,7 @@ export class GPU {
         },
         entryPoint: 'main',
         getSizeOnResize: (w, h) => [w >> 2, h >> 2],
+        id: 1,
         label: 'renderPassWater',
         rootLayout: this.pipelineLayouts.rootCameralayout,
         sampleCount: 1,
@@ -588,6 +592,7 @@ export class GPU {
         getSizeOnResize: (w, h) => {
           return [w, h];
         },
+        id: 3,
         label: 'renderPassCanvas',
         rootLayout: this.pipelineLayouts.canvasRootLayout,
         sampleCount: 1,

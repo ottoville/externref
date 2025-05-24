@@ -8,6 +8,8 @@ use externref::{externref, Resource};
 use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::{Camera, CLUSTER_DISPATCH_SIZE};
+use crate::cameras::camera_group::CameraGroup;
+use crate::cameras::cameracontroller::CameraController;
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::Projection;
@@ -18,13 +20,14 @@ use super::bindgroup::{BindGroup, JSBindGroup, JSBindGroupLayout};
 use super::binding_commands::BindingCommands;
 use super::buffer::buffer::{GpuBuffer, JSBuffer};
 use super::buffer::copy_src::CopySrc;
-use super::buffer::usages::{COPYSRC_USAGE, UNIFORM_COPYDST_USAGE};
+use super::buffer::usages::{COPYSRC_USAGE, UNIFORM_COPYDST_USAGE, UNIFORM_USAGE};
 use super::bufferbinding::BufferBinding;
 use super::command_buffer::{CommandBuffer, JSCommandBuffer};
 use super::command_encoder::{GPUCommandEncoder, JSCommandEncoder};
 use super::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSComputePipeline};
 use super::lights::Lights;
 use super::queue::JSQueue;
+use super::renderpass::Renderpass;
 use super::{
     buffer::{buffer::GPUBuffer, usages::UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE},
     queue::Queue,
@@ -129,6 +132,7 @@ unsafe extern "C" fn on_resize(aspect_ratio: f32) -> *mut ComputePassEncoder {
             true,
         );
     }
+
     Box::into_raw(Box::new(
         command_encoder.begin_compute_pass(String::from("resizePassEncoder")),
     ))
@@ -192,6 +196,7 @@ pub unsafe extern "C" fn init_gpu(
     queue: Resource<JSQueue>,
     layout: Resource<JSBindGroupLayout>,
     force: bool,
+    size_bindgroup_layout: Resource<JSBindGroupLayout>,
 ) {
     let mut gpu = ENGINE.gpu.lock().unwrap();
     if force || gpu.is_none() {
@@ -211,7 +216,7 @@ pub unsafe extern "C" fn init_gpu(
             BufferBinding::new(directional_lights.buffer.clone(), 0, None);
         let point_lights_buffer_binding = BufferBinding::new(point_lights.buffer.clone(), 0, None);
         let meshes_buffer_binding = BufferBinding::new(gpu_buffer.clone(), 0, None);
-
+        let layout_arc = Arc::new(size_bindgroup_layout);
         let update_view_bindgroup = BindGroup::new(
             String::from("updateViewBindGroup"),
             Arc::new(layout),
@@ -227,6 +232,88 @@ pub unsafe extern "C" fn init_gpu(
             String::from("timeBuffer"),
             false,
         )));
+        let screen_dimension_buffer_screen =
+            GPUBuffer::<UNIFORM_USAGE>::new(&device, 16, String::from("screen_buffer"), false);
+        let render_pass_screen = Renderpass {
+            jsrenderpass: None,
+            bundle: None,
+            cameragroups: vec![
+                CameraGroup {
+                    cameras: Vec::with_capacity(2),
+                    bind_group: None,
+                },
+                CameraGroup {
+                    cameras: Vec::with_capacity(2),
+                    bind_group: Some(BindGroup::new(
+                        String::from("sizeBindGroup"),
+                        layout_arc.clone(),
+                        vec![BufferBinding::new(
+                            Arc::new(Mutex::new(screen_dimension_buffer_screen)),
+                            0,
+                            None,
+                        )],
+                    )),
+                },
+            ],
+        };
+        let screen_dimension_buffer_screen_water =
+            GPUBuffer::<UNIFORM_USAGE>::new(&device, 16, String::from("screen_buffer"), false);
+
+        let render_pass_water = Renderpass {
+            jsrenderpass: None,
+            bundle: None,
+            cameragroups: vec![
+                CameraGroup {
+                    cameras: Vec::with_capacity(2),
+                    bind_group: None,
+                },
+                CameraGroup {
+                    cameras: Vec::with_capacity(2),
+                    bind_group: Some(BindGroup::new(
+                        String::from("sizeBindGroup"),
+                        layout_arc.clone(),
+                        vec![BufferBinding::new(
+                            Arc::new(Mutex::new(screen_dimension_buffer_screen_water)),
+                            0,
+                            None,
+                        )],
+                    )),
+                },
+            ],
+        };
+        let screen_dimension_buffer_screen_pick =
+            GPUBuffer::<UNIFORM_USAGE>::new(&device, 16, String::from("screen_buffer"), false);
+
+        let pick_render_pass = Renderpass {
+            jsrenderpass: None,
+            bundle: None,
+            cameragroups: vec![
+                CameraGroup {
+                    cameras: Vec::with_capacity(2),
+                    bind_group: None,
+                },
+                CameraGroup {
+                    cameras: Vec::with_capacity(2),
+                    bind_group: Some(BindGroup::new(
+                        String::from("sizeBindGroup"),
+                        layout_arc,
+                        vec![BufferBinding::new(
+                            Arc::new(Mutex::new(screen_dimension_buffer_screen_pick)),
+                            0,
+                            None,
+                        )],
+                    )),
+                },
+            ],
+        };
+        let render_pass_canvas = Renderpass {
+            jsrenderpass: None,
+            bundle: None,
+            cameragroups: vec![CameraGroup {
+                cameras: Vec::with_capacity(2),
+                bind_group: None,
+            }],
+        };
         let _ = gpu.insert(GPU {
             device,
             queue: Queue { externref: queue },
@@ -234,6 +321,12 @@ pub unsafe extern "C" fn init_gpu(
             pending_command_buffers: Vec::with_capacity(8),
             projections: vec![Arc::new(projection)],
             cameras: ExplicitGenerationalFreeList::new(4),
+            renderpasses: vec![
+                render_pass_screen,
+                render_pass_water,
+                pick_render_pass,
+                render_pass_canvas,
+            ],
             update_view_bindgroup,
             point_lights,
             directional_lights,
@@ -290,6 +383,7 @@ pub struct GPU {
     pub pending_command_buffers: Vec<CommandBuffer>,
     pub projections: Vec<Arc<Projection>>,
     pub cameras: ExplicitGenerationalFreeList<Camera>,
+    pub renderpasses: Vec<Renderpass>,
     update_view_bindgroup: Arc<Mutex<BindGroup>>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
@@ -298,7 +392,7 @@ pub struct GPU {
     pub time: f32,
 }
 impl GPU {
-        pub fn get_camera_by_id(&self, camera_id: usize) -> &Camera {
+    pub fn get_camera_by_id(&self, camera_id: usize) -> &Camera {
         for camera in self.cameras.iter() {
             if camera.id == camera_id {
                 return camera;
@@ -306,7 +400,7 @@ impl GPU {
                 if let Some(child_camera) = camera.find_child(camera_id) {
                     return child_camera;
                 }
-            };
+            }
         }
         panic!("Camera not found");
     }
@@ -318,7 +412,7 @@ impl GPU {
                 if let Some(child_camera) = camera.find_child_mut(camera_id) {
                     return child_camera;
                 }
-            };
+            }
         }
         panic!("Camera not found");
     }
@@ -454,7 +548,6 @@ impl GPU {
             for camera in self.cameras.iter_mut() {
                 camera.update_camera(&self.device, update_lights, &mut lights_pass);
             }
-
             command_encoder = lights_pass.end();
         }
         let gpubox = Box::into_raw(Box::new(self));
@@ -489,6 +582,7 @@ fn test_gpu_queue() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         process_gpu_queue(
             0.0,
@@ -539,6 +633,7 @@ fn test_time_update() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         {
             let mut maybegpu = ENGINE.gpu.lock().unwrap();

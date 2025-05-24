@@ -25,6 +25,7 @@ import { DeviceExports } from './wasm-interfaces/DeviceInterface.js';
 import { DevToolsInterface } from './wasm-interfaces/DevToolsInterface.js';
 import { RenderbundleEncoderInterface } from './wasm-interfaces/RenderBundleEncoderInterface.js';
 import { BindCommandsInterface } from './wasm-interfaces/BindCommandsInterface.js';
+import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 
 const textDecoder = new TextDecoder();
 
@@ -361,6 +362,7 @@ export type rustWasm = {
     queue: GPUQueue,
     layout: GPU['pipelineLayouts']['updateViewLayout'],
     force: boolean,
+    size_bindgroup_layout: GPU['pipelineLayouts']['sizeBindGroupLayout'],
   ): void;
   push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
   drain_command_buffers(
@@ -376,6 +378,9 @@ export type rustWasm = {
     label_len: number,
     label_cap: number,
     cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
+    renderpasses_ptr: number,
+    renderpasses_len: number,
+    renderpasses_cap: number,
   ): number;
   add_child_to_camera(
     camera_id: number,
@@ -387,6 +392,9 @@ export type rustWasm = {
     label_len: number,
     label_cap: number,
     cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
+    renderpasses_ptr: number,
+    renderpasses_len: number,
+    renderpasses_cap: number,
   ): number;
   add_child_to_camera_water(
     camera_id: number,
@@ -398,6 +406,9 @@ export type rustWasm = {
     label_len: number,
     label_cap: number,
     cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
+    renderpasses_ptr: number,
+    renderpasses_len: number,
+    renderpasses_cap: number,
   ): number;
   get_camera_label(camera_id: number): rust_pointer<'camera_label'>;
   get_camera_externref(camera_id: number): number;
@@ -454,15 +465,16 @@ export type rustWasm = {
   get_impulse_from_id(
     mesh_id: rust_pointer<'mesh_id'>,
   ): rust_pointer<'impulse'>;
-
-  new_renderbundle(
+  link_renderpass(
+    id: number,
+    renderpass_descriptor: RenderPass,
     descriptor: GPURenderBundleEncoderDescriptor,
     label_ptr: number,
     label_len: number,
     label_cap: number,
   ): rust_pointer<'renderbundleencoder'>;
   renderbundle_set_bindgroup(
-    renderbundle: rust_pointer<'renderbundleencoder'>,
+    renderpass_id: number,
     index: number,
     gpu_lock: rust_pointer<'gpu'>,
     camera_id: number,
@@ -471,7 +483,7 @@ export type rustWasm = {
     renderbundle: rust_pointer<'renderbundleencoder'>,
   ): void;
   record_renderbundle(
-    renderbundle: rust_pointer<'renderbundleencoder'>,
+    renderpass_id: number,
     gpu: rust_pointer<'gpu'>,
     cb: (renderBundleEncoder: GPURenderBundleEncoder) => void,
   ): number;

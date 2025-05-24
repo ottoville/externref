@@ -100,9 +100,20 @@ fn test_bounding_box() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             true,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
         let meshes = ENGINE.meshes.lock().unwrap();
-        let id = Mesh::new(0.0, 0.0, 0.0, 0, String::from("box"), None, None, meshes, false);
+        let id = Mesh::new(
+            0.0,
+            0.0,
+            0.0,
+            0,
+            String::from("box"),
+            None,
+            None,
+            meshes,
+            false,
+        );
         let m = &mut ENGINE.meshes.lock().unwrap()[&id];
         let mut geometry = Geometry::new(false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());

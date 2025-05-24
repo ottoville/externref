@@ -58,30 +58,19 @@ extern "C" {
     ) -> Resource<JSRenderBundle>;
     fn do_record(record: &Resource<JSFunction>, encoder: &Resource<JSRenderBundleEncoder>);
 }
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn new_renderbundle(
-    descriptor: Resource<JSRenderBundleDescriptor>,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
-) -> *mut RenderBundleEncoder {
-    let gpuopt = ENGINE.gpu.lock().unwrap();
-    Box::into_raw(Box::new(RenderBundleEncoder::new(
-        String::from_raw_parts(label_ptr, label_len, label_cap),
-        &gpuopt.as_ref().unwrap().device,
-        descriptor,
-    )))
-}
 #[no_mangle]
 pub unsafe extern "C" fn renderbundle_set_bindgroup(
-    renderbundle: *mut RenderBundleEncoder,
+    renderpass_id: usize,
     index: u32,
     gpu_lock: *mut &'static mut GPU,
     camera_id: usize,
 ) {
+    let renderbundle = (*gpu_lock).renderpasses[renderpass_id]
+        .bundle
+        .as_mut()
+        .unwrap();
     let camera = (*gpu_lock).get_camera_by_id(camera_id);
-    (*renderbundle).set_bindgroup(
+    renderbundle.set_bindgroup(
         &(*gpu_lock).device,
         index,
         &mut *camera.uniform_bindgroup.lock().unwrap(),
@@ -94,11 +83,16 @@ pub unsafe extern "C" fn renderbundle_make_dirty(renderbundle: *mut RenderBundle
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn record_renderbundle(
-    renderbundle: *mut RenderBundleEncoder,
+    renderpass_id: usize,
     gpu_lock: *mut &'static mut GPU,
     record: Resource<JSFunction>,
 ) -> usize {
-    let rb = (*renderbundle).record_renderbundle(gpu_lock, record);
+        let renderbundle = (*gpu_lock).renderpasses[renderpass_id]
+        .bundle
+        .as_mut()
+        .unwrap();
+
+    let rb = renderbundle.record_renderbundle(gpu_lock, record);
     let m = rb.lock();
     let externref = &m.as_ref().unwrap().as_ref().unwrap().externref;
     ptr::read(externref as *const Resource<JSRenderBundle> as *const usize)

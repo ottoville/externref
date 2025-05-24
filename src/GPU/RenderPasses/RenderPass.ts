@@ -29,6 +29,7 @@ export interface RenderPassProps<
   entryPoint: E;
   rootLayout: RenderPipelineLayout;
   GPURenderBundleEncoderDescriptor?: Partial<GPURenderBundleEncoderDescriptor>;
+  id: number;
 }
 
 export class RenderPass<
@@ -52,9 +53,13 @@ export class RenderPass<
     renderpipeline: RenderPipelineProps,
     renderPipelineDescriptor: RenderPipelineBuilderDesc,
   ) => void;
-  constructor(props: RenderPassProps<U, E>, gpu: GPU) {
+  constructor(
+    public override props: RenderPassProps<U, E>,
+    gpu: GPU,
+  ) {
     super(props);
     const {
+      id,
       colorRenderTargets,
       size,
       getSizeOnResize,
@@ -70,7 +75,6 @@ export class RenderPass<
     renderTargersArray.forEach((rt) => {
       rt.resize(this.size, this.props.sampleCount);
     });
-
     const GPURenderBundleEncoderDescriptor2 = {
       colorFormats: Object.values(this.props.colorRenderTargets).map((rt) => {
         return rt.renderTargetOptions.context.format;
@@ -78,11 +82,13 @@ export class RenderPass<
       sampleCount: this.props.sampleCount ?? 1,
       ...GPURenderBundleEncoderDescriptor,
     };
-
-    const rust_renderbundle = engine.rust.new_renderbundle(
+    const rust_renderbundle = engine.rust.link_renderpass(
+      id,
+      this,
       GPURenderBundleEncoderDescriptor2,
       ...create_rust_label(this.props.label),
     );
+
     const recorder = (renderBundleEncoder2: GPURenderBundleEncoder) => {
       renderBundle2.renderBundleEncoder = renderBundleEncoder2;
       let drawedMeshes = 0;
@@ -97,7 +103,7 @@ export class RenderPass<
 
         this.perspectiveCameras.forEach((camera) => {
           engine.rust.renderbundle_set_bindgroup(
-            rust_renderbundle,
+            id,
             1,
             gpu.gpu_lock!,
             camera.id,
@@ -112,7 +118,7 @@ export class RenderPass<
       },
       render: () => {
         const index = engine.rust.record_renderbundle(
-          rust_renderbundle,
+          id,
           engine.gpu!.gpu_lock!,
           recorder,
         );

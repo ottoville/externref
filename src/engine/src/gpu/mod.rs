@@ -9,3 +9,4 @@ pub mod bufferbinding;
 pub mod command_buffer;
 pub mod renderbundle;
 pub mod binding_commands;
+pub mod renderpass;
