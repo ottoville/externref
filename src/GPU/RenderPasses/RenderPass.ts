@@ -53,11 +53,10 @@ export class RenderPass<
     renderpipeline: RenderPipelineProps,
     renderPipelineDescriptor: RenderPipelineBuilderDesc,
   ) => void;
-  constructor(
-    public override props: RenderPassProps<U, E>,
-    gpu: GPU,
-  ) {
+  override props: Readonly<RenderPassProps<U, E>>;
+  constructor(props: RenderPassProps<U, E>, gpu: GPU) {
     super(props);
+    this.props = Object.freeze(props);
     const {
       id,
       colorRenderTargets,

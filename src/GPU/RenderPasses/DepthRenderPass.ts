@@ -21,6 +21,7 @@ export class DepthRenderPass<
     depthRenderTarget: DepthRenderTarget,
     gpu: GPU,
   ) {
+    renderPassProps.depthStencilAttachment = depthRenderTarget;
     renderPassProps.GPURenderBundleEncoderDescriptor = {
       depthStencilFormat: depthRenderTarget.renderTarget.texture.props.format,
     };
@@ -30,17 +31,6 @@ export class DepthRenderPass<
   override resize(width: number, height: number) {
     super.resize(width, height);
     this.depthRenderTarget.resize(this.size, this.props.sampleCount);
-  }
-  override get GPURenderPassDescriptor(): GPURenderPassDescriptor {
-    const renderPassDescriptor = super.GPURenderPassDescriptor;
-
-    renderPassDescriptor.depthStencilAttachment = {
-      depthClearValue: this.depthRenderTarget.clearValue,
-      depthLoadOp: 'clear',
-      depthStoreOp: 'store',
-      view: this.depthRenderTarget.renderTarget.getAsRenderTarget(this),
-    };
-    return renderPassDescriptor;
   }
   override onDecoratePipeline = (
     renderpipeline: RenderPipelineProps,

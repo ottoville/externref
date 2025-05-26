@@ -434,18 +434,21 @@ export class GPU {
             r: 0.53, g: 0.8, b: 0.92, a: 0.0,
           },
         },
-        new RenderpassTarget({
-          context: {
-            format: 'bgra8unorm',
-            gpu: this.device,
-            label: 'diffuseTexture',
-            size: {
-              height: 300,
-              width: 300,
+        new RenderpassTarget(
+          {
+            context: {
+              format: 'bgra8unorm',
+              gpu: this.device,
+              label: 'diffuseTexture',
+              size: {
+                height: 300,
+                width: 300,
+              },
+              usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
             },
-            usages: TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING'],
           },
-        }),
+          {},
+        ),
       ),
     };
     this.renderPassScreen = new PickableRenderPassMSAA(
