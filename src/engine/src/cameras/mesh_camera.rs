@@ -100,10 +100,10 @@ impl MeshCamera {
 impl CameraController for MeshCamera {
     fn check_inputs(
         &mut self,
-        force_recalculate: bool,
+        _force_recalculate: bool,
         position: &mut [f32; 4],
         direction: &mut [f32; 4],
-        view: &[[f32; 4]; 4],
+        _view: &[[f32; 4]; 4],
     ) -> u32 {
         let mut updated = 0;
         let meshes = ENGINE.meshes.lock().unwrap();

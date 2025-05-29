@@ -26,6 +26,7 @@ import { DevToolsInterface } from './wasm-interfaces/DevToolsInterface.js';
 import { RenderbundleEncoderInterface } from './wasm-interfaces/RenderBundleEncoderInterface.js';
 import { BindCommandsInterface } from './wasm-interfaces/BindCommandsInterface.js';
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
+import { RenderPassEncoderInterface } from './wasm-interfaces/RenderPassEncoder.js';
 
 const textDecoder = new TextDecoder();
 
@@ -419,9 +420,6 @@ export type rustWasm = {
   get_camera_position_ptr(
     camera: rust_mutex<'locked', 'camera'>,
   ): rust_pointer<'position'>;
-  get_camera_view_ptr(
-    camera: rust_mutex<'locked', 'camera'>,
-  ): rust_pointer<'camera_view'>;
   get_camera_projection_inverted_ptr(
     camera: rust_mutex<'locked', 'camera'>,
   ): rust_pointer<'camera_projection_inverted'>;
@@ -467,26 +465,28 @@ export type rustWasm = {
   ): rust_pointer<'impulse'>;
   link_renderpass(
     id: number,
-    renderpass_descriptor: RenderPass,
+    js_renderpass: RenderPass,
     descriptor: GPURenderBundleEncoderDescriptor,
     label_ptr: number,
     label_len: number,
     label_cap: number,
+    cb: (
+      renderBundleEncoder: GPURenderBundleEncoder,
+      cameras: rust_pointer<'cameras'>,
+      device: Externref<true, GPUDevice>,
+      gpu_buffer: number,
+    ) => void,
   ): rust_pointer<'renderbundleencoder'>;
   renderbundle_set_bindgroup(
-    renderpass_id: number,
+    renderbundle: rust_pointer<'renderbundleencoder'>,
     index: number,
-    gpu_lock: rust_pointer<'gpu'>,
     camera_id: number,
+    cameras: rust_pointer<'cameras'>,
+    device: Externref<true, GPUDevice>,
   ): void;
   renderbundle_make_dirty(
     renderbundle: rust_pointer<'renderbundleencoder'>,
   ): void;
-  record_renderbundle(
-    renderpass_id: number,
-    gpu: rust_pointer<'gpu'>,
-    cb: (renderBundleEncoder: GPURenderBundleEncoder) => void,
-  ): number;
   create_collider_sphere(
     collision_radius: number,
   ): rust_pointer<'collider_sphere'>;
@@ -830,6 +830,9 @@ export class Engine {
             ref.externref.destroy();
           }
         },
+        get_renderpass_descriptor(renderpass: RenderPass) {
+          return renderpass.GPURenderPassDescriptor;
+        },
         mesh_on_change(mesh: Externref<false, MainNode>) {
           mesh.externref.onMeshChange.forEach((cb) => cb());
         },
@@ -846,18 +849,13 @@ export class Engine {
         now() {
           return performance.now();
         },
-        render_renderpasses(
-          renderloop_commandEncoder: GPUCommandEncoder,
-          rust_gpu: rust_pointer<'gpu'>,
-        ) {
-          engine.gpu!.renderRenderPasses(renderloop_commandEncoder, rust_gpu);
-        },
         vertices_change({ externref: mesh }: Externref<false, DataNode>) {
           mesh.onVerticesChange();
         },
       },
       queue: QueueInterface,
       renderbundleencoder: RenderbundleEncoderInterface,
+      renderpassencoder: RenderPassEncoderInterface,
     };
     try {
       if (

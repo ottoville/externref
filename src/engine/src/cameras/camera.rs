@@ -206,16 +206,12 @@ pub unsafe extern "C" fn add_camera(
     return id;
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_direction_ptr(camera: *mut Camera) -> *const f32 {
+pub unsafe extern "C" fn get_camera_direction_ptr(camera: *mut &Camera) -> *const f32 {
     (*camera).direction.as_ptr()
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_position_ptr(camera: *mut &Camera) -> *const f32 {
     (*camera).position.as_ptr()
-}
-#[no_mangle]
-pub unsafe extern "C" fn get_camera_view_ptr(camera: *mut Camera) -> *const [f32; 4] {
-    (*camera).view.as_ptr()
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_projection_inverted_ptr(

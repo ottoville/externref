@@ -103,8 +103,8 @@ fn test_swap_buffers() {
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         let mut swap = SwapBuffers::new();
-        swap.get(&device, 110, |buffer| {});
-        swap.get(&device, 110, |buffer| {});
+        swap.get(&device, 110, |_buffer| {});
+        swap.get(&device, 110, |_buffer| {});
         assert_eq!(swap.onqueue.len(), 2);
         assert_eq!(swap.queue_submited(), true);
         assert_eq!(swap.onqueue.len(), 0);
@@ -113,7 +113,7 @@ fn test_swap_buffers() {
         assert_eq!(swap.pending.len(), 0);
         let buffers = swap.mapped.get(&110usize).unwrap();
         assert_eq!(buffers.len(), 2);
-        swap.get(&device, 105, |buffer| {});
+        swap.get(&device, 105, |_buffer| {});
         let buffers = swap.mapped.get(&110usize).unwrap();
         assert_eq!(buffers.len(), 1);
     }

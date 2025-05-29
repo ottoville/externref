@@ -9,7 +9,6 @@ use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeL
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::{Camera, CLUSTER_DISPATCH_SIZE};
 use crate::cameras::camera_group::CameraGroup;
-use crate::cameras::cameracontroller::CameraController;
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::Projection;
@@ -27,7 +26,7 @@ use super::command_encoder::{GPUCommandEncoder, JSCommandEncoder};
 use super::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSComputePipeline};
 use super::lights::Lights;
 use super::queue::JSQueue;
-use super::renderpass::Renderpass;
+use super::renderpass::{JSRenderPass, JSRenderPassDescriptor, Renderpass};
 use super::{
     buffer::{buffer::GPUBuffer, usages::UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE},
     queue::Queue,
@@ -63,10 +62,11 @@ pub unsafe fn create_gpu_buffer(
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(test)]
-pub unsafe fn render_renderpasses(
-    _command_encoder: &Resource<JSCommandEncoder>,
-    _gpu: *mut &mut GPU,
-) {
+pub unsafe fn get_renderpass_descriptor(
+    _renderpass: &Resource<JSRenderPass>,
+) -> Resource<JSRenderPassDescriptor> {
+    use externref::ExternRef;
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -96,7 +96,9 @@ extern "C" {
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn mesh_on_change(mesh: Option<&Resource<crate::mesh::JSMesh>>);
-    pub fn render_renderpasses(command_encoder: &Resource<JSCommandEncoder>, gpu: *mut &mut GPU);
+    pub fn get_renderpass_descriptor(
+        renderpass: &Resource<JSRenderPass>,
+    ) -> Resource<JSRenderPassDescriptor>;
 }
 #[externref]
 #[no_mangle]
@@ -436,7 +438,7 @@ impl GPU {
                 4,
             );
         });
-        let renderloop_command_encoder =
+        let mut renderloop_command_encoder =
             GPUCommandEncoder::new(String::from("renderloop_commandEncoder"));
 
         //Lights
@@ -550,30 +552,38 @@ impl GPU {
             }
             command_encoder = lights_pass.end();
         }
-        let gpubox = Box::into_raw(Box::new(self));
-        let gpu2 = unsafe {
-            render_renderpasses(&renderloop_command_encoder.externref, gpubox);
-            *Box::from_raw(gpubox)
+        let gpu_buffer_id = unsafe {
+            let externref = &*self.gpu_buffer.lock().unwrap().externref;
+            ptr::read(externref as *const Resource<JSBuffer> as *const usize)
         };
+
+        for renderpass in &mut self.renderpasses {
+            renderloop_command_encoder = renderpass.render(
+                renderloop_command_encoder,
+                &self.device,
+                &self.cameras,
+                gpu_buffer_id,
+            );
+        }
         // Update mesh positions etc
-        gpu2.queue
+        self.queue
             .submit(&mut vec![command_encoder.finish(String::from("renderloop"))].drain(..));
         // Every other than depends on mesh positions etc
-        gpu2.queue
-            .submit(&mut gpu2.pending_command_buffers.drain(..));
+        self.queue
+            .submit(&mut self.pending_command_buffers.drain(..));
         // Draw commands last so everything is up to date
-        gpu2.queue.submit(
+        self.queue.submit(
             &mut vec![renderloop_command_encoder.finish(String::from("renderloop_renderencoder"))]
                 .drain(..),
         );
         TEMP_GPU_BUFFERS.lock().unwrap().clear();
-        return gpu2.swap_buffers.queue_submited();
+        return self.swap_buffers.queue_submited();
     }
 }
-
 #[cfg(test)]
 #[test]
 fn test_gpu_queue() {
+    use crate::gpu::renderbundle::RenderBundleEncoder;
     use crate::mesh::Mesh;
     use externref::ExternRef;
     unsafe {
@@ -584,15 +594,33 @@ fn test_gpu_queue() {
             false,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
+        for id in 0..4 {
+            let mut gpuopt = ENGINE.gpu.lock().unwrap();
+            let gpu = gpuopt.as_mut().unwrap();
+            gpu.renderpasses[id].jsrenderpass =
+                Some(Resource::new_non_null(std::mem::transmute::<
+                    usize,
+                    ExternRef,
+                >(1)));
+            gpu.renderpasses[id].bundle = Some(RenderBundleEncoder::new(
+                String::from("test"),
+                &gpu.device,
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            ));
+            gpu.renderpasses[id].bundle.as_mut().unwrap();
+        }
         process_gpu_queue(
             0.0,
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
         );
+
         {
             GPU_QUEUE.with_borrow(|queue| {
                 assert_eq!(queue.len(), 0);
             });
         }
+
         let mesh_id = Mesh::new(
             0.0,
             1.0,
@@ -604,10 +632,12 @@ fn test_gpu_queue() {
             ENGINE.meshes.lock().unwrap(),
             false,
         );
+
         {
             let mesh = &ENGINE.meshes.lock().unwrap()[&mesh_id];
             assert_eq!(mesh.on_gpu_queue, true);
         }
+
         process_gpu_queue(
             0.0,
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
@@ -623,6 +653,7 @@ fn test_gpu_queue() {
 #[test]
 fn test_time_update() {
     use crate::engine;
+    use crate::gpu::renderbundle::RenderBundleEncoder;
     use crate::mesh::Mesh;
     use crate::mesh::ENGINE;
     use externref::ExternRef;
@@ -635,6 +666,23 @@ fn test_time_update() {
             false,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
+        let mut label = String::from("test");
+        for id in 0..4 {
+            let mut gpuopt = ENGINE.gpu.lock().unwrap();
+            let gpu = gpuopt.as_mut().unwrap();
+            gpu.renderpasses[id].jsrenderpass =
+                Some(Resource::new_non_null(std::mem::transmute::<
+                    usize,
+                    ExternRef,
+                >(1)));
+            gpu.renderpasses[id].bundle = Some(RenderBundleEncoder::new(
+                String::from("test"),
+                &gpu.device,
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            ));
+            gpu.renderpasses[id].bundle.as_mut().unwrap();
+        }
         {
             let mut maybegpu = ENGINE.gpu.lock().unwrap();
             assert_eq!(

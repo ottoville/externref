@@ -14,10 +14,10 @@ use crate::MULTIVALUE_F32;
 use crate::MULTIVALUE_USIZE;
 use collider::ColliderSphere;
 use core::panic;
-use std::num::NonZeroU32;
 use externref::externref;
 use externref::Resource;
 use rapier3d::prelude::*;
+use std::num::NonZeroU32;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
@@ -547,15 +547,17 @@ impl Mesh {
         let engine = &mut ENGINE.engine2.lock().unwrap();
         let mesh_property = mesh_property_opt.unwrap_or_else(|| {
             let gpu_mesh_alignment = engine.gpu_allocated.allocate();
-            let maybegpu = &mut ENGINE.gpu.lock().unwrap();
-            if let Some(gpu) = maybegpu.as_mut() {
-                if point_light > 0.0 {
-                    gpu.point_lights.push(gpu_mesh_alignment);
-                }
-                if directional_light > 0.0 {
-                    gpu.directional_lights.push(gpu_mesh_alignment);
-                }
-            };
+            {
+                let maybegpu = &mut ENGINE.gpu.lock().unwrap();
+                if let Some(gpu) = maybegpu.as_mut() {
+                    if point_light > 0.0 {
+                        gpu.point_lights.push(gpu_mesh_alignment);
+                    }
+                    if directional_light > 0.0 {
+                        gpu.directional_lights.push(gpu_mesh_alignment);
+                    }
+                };
+            }
             Arc::new(Mutex::new(MeshProperty {
                 gpu_memory: GPUMesh {
                     transformation: MatrixMath::identity(),

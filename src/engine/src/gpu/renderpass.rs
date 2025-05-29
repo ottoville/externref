@@ -1,13 +1,22 @@
+use std::cell::LazyCell;
+
 use externref::{externref, Resource};
 
-use crate::{cameras::camera_group::CameraGroup, mesh::ENGINE};
+use crate::{
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
+    cameras::{camera::Camera, camera_group::CameraGroup},
+    mesh::ENGINE,
+};
 
 use super::{
     binding_commands::BindingCommands,
-    gpu::JSDevice,
-    renderbundle::{JSRenderBundleDescriptor, RenderBundleEncoder},
+    command_encoder::GPUCommandEncoder,
+    gpu::{get_renderpass_descriptor, JSDevice},
+    renderbundle::{JSFunction, JSRenderBundleDescriptor, RenderBundleEncoder},
 };
-
+thread_local! {
+    static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass")) };
+}
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn link_renderpass(
@@ -17,6 +26,7 @@ pub unsafe extern "C" fn link_renderpass(
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
+    record: Resource<JSFunction>,
 ) -> *mut RenderBundleEncoder {
     let mut gpuopt = ENGINE.gpu.lock().unwrap();
     let gpu = gpuopt.as_mut().unwrap();
@@ -25,10 +35,10 @@ pub unsafe extern "C" fn link_renderpass(
         String::from_raw_parts(label_ptr, label_len, label_cap),
         &gpu.device,
         descriptor,
+        record,
     ));
     gpu.renderpasses[id].bundle.as_mut().unwrap()
 }
-
 pub struct JSRenderPassDescriptor(());
 pub struct JSRenderPass(());
 
@@ -57,5 +67,25 @@ impl Renderpass {
                 }
             }
         }
+    }
+    pub fn render(
+        &mut self,
+        command_encoder: GPUCommandEncoder,
+        device: &Resource<JSDevice>,
+        cameras: &ExplicitGenerationalFreeList<Camera>,
+        gpu_buffer: usize,
+    ) -> GPUCommandEncoder {
+        return RENDERPASS_LABEL.with(|label| {
+            let descriptor = unsafe { get_renderpass_descriptor(self.jsrenderpass.as_ref().unwrap()) };
+            let renderpass_encoder = command_encoder
+                .begin_render_pass(label, &descriptor);
+            let renderbundle = self
+                .bundle
+                .as_mut()
+                .unwrap()
+                .record_renderbundle(device, cameras, gpu_buffer);
+            renderpass_encoder.execute_bundles(renderbundle.lock().unwrap().as_ref().unwrap());
+            return renderpass_encoder.end();
+        });
     }
 }

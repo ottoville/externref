@@ -1,17 +1,20 @@
 use std::{
     cell::LazyCell,
     ptr,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, MutexGuard},
 };
 
 use externref::{externref, Resource};
 
-use crate::{mesh::ENGINE, MULTIVALUE_USIZE};
+use crate::{
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
+    cameras::camera::Camera, MULTIVALUE_USIZE,
+};
 
 use super::{
     bindgroup::BindGroup,
     binding_commands::BindingCommands,
-    buffer::buffer::JSBuffer,
+    buffer::{buffer::{GPUBuffer, JSBuffer}, usages::UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE},
     gpu::{JSDevice, GPU},
 };
 
@@ -24,13 +27,20 @@ pub struct JSRenderBundle(());
 fn create_renderbundle_encoder(
     _device: &Resource<JSDevice>,
     _descriptor: &Resource<JSRenderBundleDescriptor>,
-    label: *const usize,
+    _label: *const usize,
 ) -> Resource<JSRenderBundleEncoder> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
 }
 #[cfg(test)]
-fn do_record(_record: &Resource<JSFunction>, _encoder: &Resource<JSRenderBundleEncoder>) {}
+fn do_record(
+    _record: &Resource<JSFunction>,
+    _encoder: &Resource<JSRenderBundleEncoder>,
+    _cameras: *const ExplicitGenerationalFreeList<Camera>,
+    _device: &Resource<JSDevice>,
+    _gpu_buffer_externref: usize
+) {
+}
 #[cfg(test)]
 fn finish(
     _encoder: &Resource<JSRenderBundleEncoder>,
@@ -56,22 +66,38 @@ extern "C" {
         encoder: &Resource<JSRenderBundleEncoder>,
         label: *const usize,
     ) -> Resource<JSRenderBundle>;
-    fn do_record(record: &Resource<JSFunction>, encoder: &Resource<JSRenderBundleEncoder>);
+    fn do_record(
+        record: &Resource<JSFunction>,
+        encoder: &Resource<JSRenderBundleEncoder>,
+        cameras: *const ExplicitGenerationalFreeList<Camera>,
+        device: &Resource<JSDevice>,
+        gpu_buffer_externref: usize
+    );
+}
+fn get_camera_by_id(cameras: &ExplicitGenerationalFreeList<Camera>, camera_id: usize) -> &Camera {
+    for camera in cameras.iter() {
+        if camera.id == camera_id {
+            return camera;
+        } else {
+            if let Some(child_camera) = camera.find_child(camera_id) {
+                return child_camera;
+            }
+        }
+    }
+    panic!("Camera not found");
 }
 #[no_mangle]
+#[externref]
 pub unsafe extern "C" fn renderbundle_set_bindgroup(
-    renderpass_id: usize,
+    renderbundle: *mut RenderBundleEncoder,
     index: u32,
-    gpu_lock: *mut &'static mut GPU,
     camera_id: usize,
+    cameras: *const ExplicitGenerationalFreeList<Camera>,
+    device: &Resource<JSDevice>,
 ) {
-    let renderbundle = (*gpu_lock).renderpasses[renderpass_id]
-        .bundle
-        .as_mut()
-        .unwrap();
-    let camera = (*gpu_lock).get_camera_by_id(camera_id);
-    renderbundle.set_bindgroup(
-        &(*gpu_lock).device,
+    let camera = get_camera_by_id(&*cameras, camera_id);
+    (*renderbundle).set_bindgroup(
+        &*device,
         index,
         &mut *camera.uniform_bindgroup.lock().unwrap(),
     );
@@ -80,33 +106,17 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup(
 pub unsafe extern "C" fn renderbundle_make_dirty(renderbundle: *mut RenderBundleEncoder) {
     (*renderbundle).make_dirty();
 }
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn record_renderbundle(
-    renderpass_id: usize,
-    gpu_lock: *mut &'static mut GPU,
-    record: Resource<JSFunction>,
-) -> usize {
-        let renderbundle = (*gpu_lock).renderpasses[renderpass_id]
-        .bundle
-        .as_mut()
-        .unwrap();
-
-    let rb = renderbundle.record_renderbundle(gpu_lock, record);
-    let m = rb.lock();
-    let externref = &m.as_ref().unwrap().as_ref().unwrap().externref;
-    ptr::read(externref as *const Resource<JSRenderBundle> as *const usize)
-}
 pub struct RenderBundleEncoder {
     pub externref: Arc<Resource<JSRenderBundleEncoder>>,
-    renderbundle: Arc<Mutex<Option<RenderBundle>>>,
+    pub renderbundle: Arc<Mutex<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
     pub buffers: Vec<Arc<Resource<JSBuffer>>>,
     label: String,
+    record: Resource<JSFunction>,
 }
 pub struct RenderBundle {
     buffers: Vec<Arc<Resource<JSBuffer>>>,
-    externref: Resource<JSRenderBundle>,
+    pub externref: Resource<JSRenderBundle>,
 }
 thread_local! {
     static FINISH_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("finish_record_renderbundle")) };
@@ -116,6 +126,7 @@ impl RenderBundleEncoder {
         label: String,
         device: &Resource<JSDevice>,
         descriptor: Resource<JSRenderBundleDescriptor>,
+        record: Resource<JSFunction>,
     ) -> Self {
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
@@ -135,17 +146,19 @@ impl RenderBundleEncoder {
             descriptor,
             buffers: Vec::new(),
             label,
+            record,
         }
     }
     pub fn record_renderbundle(
         &mut self,
-        gpu_lock: *mut &'static mut GPU,
-        record: Resource<JSFunction>,
+        device: &Resource<JSDevice>,
+        cameras: &ExplicitGenerationalFreeList<Camera>,
+        gpu_buffer: usize
     ) -> Arc<Mutex<Option<RenderBundle>>> {
         let renderbundle = &mut self.renderbundle.lock().unwrap();
         if Option::is_none(renderbundle) {
             unsafe {
-                do_record(&record, &*self.externref);
+                do_record(&self.record, &*self.externref, cameras, device, gpu_buffer);
                 FINISH_LABEL.with(|label| {
                     MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
                     MULTIVALUE_USIZE[1] = label.len();
@@ -160,7 +173,7 @@ impl RenderBundleEncoder {
                 // Create bundeEncoder ready for next time it is called
                 // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.
                 self.externref = Arc::new(create_renderbundle_encoder(
-                    &(*gpu_lock).device,
+                    device,
                     &self.descriptor,
                     &self.label as *const String as *const usize,
                 ));

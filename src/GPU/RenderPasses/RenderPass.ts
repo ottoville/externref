@@ -14,6 +14,7 @@ import type { GPU } from '../../GPU.js';
 import { tileCount } from '../Shaders/structs/Structs.js';
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import { create_rust_label } from '../../utils.js';
+import { Externref } from 'externref.js';
 declare const engine: Engine;
 
 const gpu_screen_buffer_size = 16; //screen width and height and ratio
@@ -81,14 +82,14 @@ export class RenderPass<
       sampleCount: this.props.sampleCount ?? 1,
       ...GPURenderBundleEncoderDescriptor,
     };
-    const rust_renderbundle = engine.rust.link_renderpass(
-      id,
-      this,
-      GPURenderBundleEncoderDescriptor2,
-      ...create_rust_label(this.props.label),
-    );
 
-    const recorder = (renderBundleEncoder2: GPURenderBundleEncoder) => {
+    const recorder = (
+      renderBundleEncoder2: GPURenderBundleEncoder,
+      cameras: rust_pointer<'cameras'>,
+      device: Externref<true, GPUDevice>,
+      gpu_buffer: number,
+    ) => {
+      engine.gpu!.gpu_buffer = gpu_buffer;
       renderBundle2.renderBundleEncoder = renderBundleEncoder2;
       let drawedMeshes = 0;
       if (this.perspectiveCameras.length === 0) {
@@ -102,27 +103,27 @@ export class RenderPass<
 
         this.perspectiveCameras.forEach((camera) => {
           engine.rust.renderbundle_set_bindgroup(
-            id,
+            rust_renderbundle,
             1,
-            gpu.gpu_lock!,
             camera.id,
+            cameras,
+            device,
           );
           drawedMeshes += this.#rootLayout.render(renderBundle2, this, 2);
         });
       }
     };
+    const rust_renderbundle = engine.rust.link_renderpass(
+      id,
+      this,
+      GPURenderBundleEncoderDescriptor2,
+      ...create_rust_label(this.props.label),
+      recorder,
+    );
+
     const renderBundle2 = {
       destroy: () => {
         engine.rust.renderbundle_make_dirty(rust_renderbundle);
-      },
-      render: () => {
-        const index = engine.rust.record_renderbundle(
-          id,
-          engine.gpu!.gpu_lock!,
-          recorder,
-        );
-        const rb = engine.rust.externrefs.get(index) as GPURenderBundle;
-        return rb;
       },
     } as {
       destroy: () => void;

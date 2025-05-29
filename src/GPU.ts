@@ -181,7 +181,7 @@ export class GPU {
     readonly z: StructProperty<'f32'>;
   }>;
   mainCamera: TerraCamera;
-  gpu_lock?: rust_pointer<'gpu'>;
+  gpu_buffer?: number;
   /**
    * Create render pipeline. The function calculates hash and checks if existing render pipeline exists with same parameters.
    * @param desc
@@ -342,11 +342,13 @@ export class GPU {
       this.pipelineLayouts.BindGroupLayoutPosition,
       'BindGroupPosition',
       (bindGroup) => {
-        const index = engine.rust.get_gpu_mesh_buffer(this.gpu_lock!);
-        const buffer = engine.rust.externrefs.get(index) as Externref<
+        const buffer = engine.rust.externrefs.get(
+          this.gpu_buffer!,
+        ) as Externref<
           false,
           Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
         >;
+
         return {
           world: buffer.externref.getUniformBinding(
             bindGroup,
@@ -714,16 +716,6 @@ export class GPU {
     }
   }
   #idleCallback: number | undefined;
-  renderRenderPasses(
-    renderloop_commandEncoder: GPUCommandEncoder,
-    rust_gpu: rust_pointer<'gpu'>,
-  ) {
-    this.gpu_lock = rust_gpu;
-    this.#renderPasses.forEach((renderPass) => {
-      //Do the actual drawing
-      renderPass.render(renderloop_commandEncoder);
-    });
-  }
   executeRuntime = false;
   readonly #renderLoop = (
     time: DOMHighResTimeStamp,

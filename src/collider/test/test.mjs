@@ -51,7 +51,6 @@ const exportObj = {
     mesh_on_physic_tick(mesh_id) {},
     mesh_on_change() {},
     vertices_change() {},
-    render_renderpasses() {},
     drop_ref() {},
   },
   queue: {

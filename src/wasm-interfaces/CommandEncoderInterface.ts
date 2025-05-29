@@ -13,6 +13,17 @@ export const CommandEncoderInterface = {
     const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
     return commandEncoder.beginComputePass({ label });
   },
+  begin_render_pass(
+    commandEncoder: GPUCommandEncoder,
+    renderpass: GPURenderPassDescriptor,
+    label_vec_ptr: rust_pointer<'label'>,
+  ): GPURenderPassEncoder {
+    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    return commandEncoder.beginRenderPass({
+      ...renderpass,
+      label,
+    });
+  },
   copy_buffer_to_buffer(
     commandEncoder: GPUCommandEncoder,
     { externref: source }: Externref<boolean, Buffer<COPY_SRC_BUFFER>>,

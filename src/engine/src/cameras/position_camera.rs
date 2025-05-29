@@ -8,11 +8,11 @@ pub const ARROW_KEYS_UP: u32 = 1;
 pub const ARROW_KEYS_RIGHT: u32 = 2;
 pub const ARROW_KEYS_DOWN: u32 = 4;
 pub const ARROW_KEYS_LEFT: u32 = 8;
-const ARROW_KEYS_UP_RIGHT: u32 = ARROW_KEYS_UP | ARROW_KEYS_RIGHT;
+/*const ARROW_KEYS_UP_RIGHT: u32 = ARROW_KEYS_UP | ARROW_KEYS_RIGHT;
 const ARROW_KEYS_UP_LEFT: u32 = ARROW_KEYS_UP | ARROW_KEYS_LEFT;
 const ARROW_KEYS_DOWN_RIGHT: u32 = ARROW_KEYS_DOWN | ARROW_KEYS_RIGHT;
 const ARROW_KEYS_DOWN_LEFT: u32 = ARROW_KEYS_DOWN | ARROW_KEYS_LEFT;
-const ARROW_KEYS_LEFT_OR_RIGHT: u32 = ARROW_KEYS_LEFT | ARROW_KEYS_RIGHT;
+const ARROW_KEYS_LEFT_OR_RIGHT: u32 = ARROW_KEYS_LEFT | ARROW_KEYS_RIGHT;*/
 const ARROW_KEYS_UP_OR_DOWN: u32 = ARROW_KEYS_UP | ARROW_KEYS_DOWN;
 
 #[no_mangle]
@@ -95,10 +95,10 @@ impl PositionCamera {
 impl CameraController for PositionCamera {
     fn check_inputs(
         &mut self,
-        force_recalculate: bool,
+        _force_recalculate: bool,
         position: &mut [f32; 4],
         direction: &mut [f32; 4],
-        view: &[[f32; 4]; 4],
+        _view: &[[f32; 4]; 4],
     ) -> u32 {
         if self.arrow_keys_down == 0 && self.elevation == 0 {
             return 0;

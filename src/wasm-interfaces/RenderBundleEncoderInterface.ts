@@ -16,10 +16,18 @@ export const RenderbundleEncoderInterface = {
   },
 
   do_record(
-    cb: (renderBundleEncoder: GPURenderBundleEncoder) => void,
+    cb: (
+      renderBundleEncoder: GPURenderBundleEncoder,
+      cameras: rust_pointer<'cameras'>,
+      device: Externref<true, GPUDevice>,
+      gpu_buffer: number,
+    ) => void,
     encoder: GPURenderBundleEncoder,
+    cameras: rust_pointer<'cameras'>,
+    device: Externref<true, GPUDevice>,
+    gpu_buffer: number,
   ) {
-    cb(encoder);
+    cb(encoder, cameras, device, gpu_buffer);
   },
   // TODO share interface with commandencoderinterface
   finish(

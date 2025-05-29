@@ -5,9 +5,7 @@ use externref::{externref, Resource};
 use crate::MULTIVALUE_USIZE;
 
 use super::{
-    buffer::{buffer::JSBuffer, copy_dst::CopyDst, copy_src::CopySrc},
-    command_buffer::{CommandBuffer, JSCommandBuffer},
-    compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder},
+    buffer::{buffer::JSBuffer, copy_dst::CopyDst, copy_src::CopySrc}, command_buffer::{CommandBuffer, JSCommandBuffer}, compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder}, render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder}, renderpass::JSRenderPassDescriptor
 };
 
 pub struct JSCommandEncoder(());
@@ -36,6 +34,15 @@ unsafe fn begin_compute_pass(
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
 }
 #[cfg(test)]
+unsafe fn begin_render_pass(
+    _command_encoder: &Resource<JSCommandEncoder>,
+    _descriptor: &Resource<JSRenderPassDescriptor>,
+    _label: *const usize,
+) -> Resource<JSRenderPassEncoder> {
+    use externref::ExternRef;
+    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+}
+#[cfg(test)]
 fn finish(
     _command_encoder: &Resource<JSCommandEncoder>,
     _label: *const usize,
@@ -59,6 +66,11 @@ extern "C" {
         command_encoder: &Resource<JSCommandEncoder>,
         label: *const usize,
     ) -> Resource<JSComputePassEncoder>;
+    fn begin_render_pass(
+        command_encoder: &Resource<JSCommandEncoder>,
+        descriptor: &Resource<JSRenderPassDescriptor>,
+        label: *const usize,
+    ) -> Resource<JSRenderPassEncoder>;
     pub fn copy_buffer_to_buffer(
         command_encoder: &Resource<JSCommandEncoder>,
         source: &Resource<JSBuffer>,
@@ -110,6 +122,23 @@ impl GPUCommandEncoder {
             MULTIVALUE_USIZE[2] = label.capacity();
             let externref = begin_compute_pass(&self.externref, MULTIVALUE_USIZE.as_ptr());
             ComputePassEncoder {
+                command_encoder: self,
+                externref,
+            }
+        }
+    }
+    pub fn begin_render_pass(
+        self,
+        label: &String,
+        descriptor: &Resource<JSRenderPassDescriptor>,
+    ) -> RenderPassEncoder {
+        unsafe {
+            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
+            MULTIVALUE_USIZE[1] = label.len();
+            MULTIVALUE_USIZE[2] = label.capacity();
+            let externref =
+                begin_render_pass(&self.externref, descriptor, MULTIVALUE_USIZE.as_ptr());
+            RenderPassEncoder {
                 command_encoder: self,
                 externref,
             }

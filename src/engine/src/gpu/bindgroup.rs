@@ -113,3 +113,60 @@ impl BindGroup {
         }
     }
 }
+
+#[cfg(test)]
+#[test]
+fn test_bindgroup() {
+    use super::gpu::{create_bind_group, init_gpu};
+    use super::renderbundle::{RenderBundle, RenderBundleEncoder};
+    use crate::engine;
+    use crate::gpu::{
+        binding_commands::BindingCommands,
+        buffer::{
+            buffer::GPUBuffer,
+            usages::{STORAGE_USAGE, UNIFORM_COPYDST_USAGE},
+        },
+    };
+    use crate::mesh::ENGINE;
+    use externref::ExternRef;
+
+    unsafe {
+        init_gpu(
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            false,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+        );
+
+        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
+        let buffer = Arc::new(Mutex::new(GPUBuffer::<UNIFORM_COPYDST_USAGE>::new(
+            &device,
+            4,
+            String::from("test"),
+            false,
+        )));
+        let buffer_binding = BufferBinding::new(buffer, 0, None);
+        let bindgroup = BindGroup::new(
+            String::from("test"),
+            Arc::new(Resource::new_non_null(std::mem::transmute::<
+                usize,
+                ExternRef,
+            >(1))),
+            vec![buffer_binding],
+        );
+
+        let mut renderbundle = RenderBundleEncoder::new(
+            String::from("test"),
+            &device,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+        );
+        renderbundle.set_bindgroup(&device, 0, &mut *bindgroup.lock().unwrap());
+        let mut gpuopt = ENGINE.gpu.lock();
+        let mut gpuopt2 = gpuopt.as_mut().unwrap();
+        let gpu = gpuopt2.as_mut().unwrap();
+
+        renderbundle.record_renderbundle(&gpu.device, &gpu.cameras, 1);
+    }
+}
