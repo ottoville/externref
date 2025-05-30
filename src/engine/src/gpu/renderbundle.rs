@@ -1,7 +1,6 @@
 use std::{
     cell::LazyCell,
-    ptr,
-    sync::{Arc, Mutex, MutexGuard},
+    sync::{Arc, Mutex},
 };
 
 use externref::{externref, Resource};
@@ -12,10 +11,9 @@ use crate::{
 };
 
 use super::{
-    bindgroup::BindGroup,
+    bindgroup::{BindGroup, JSBindGroup},
     binding_commands::BindingCommands,
-    buffer::{buffer::{GPUBuffer, JSBuffer}, usages::UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE},
-    gpu::{JSDevice, GPU},
+    gpu::JSDevice,
 };
 
 pub struct JSRenderBundleEncoder(());
@@ -38,7 +36,7 @@ fn do_record(
     _encoder: &Resource<JSRenderBundleEncoder>,
     _cameras: *const ExplicitGenerationalFreeList<Camera>,
     _device: &Resource<JSDevice>,
-    _gpu_buffer_externref: usize
+    _gpu_buffer_externref: usize,
 ) {
 }
 #[cfg(test)]
@@ -71,7 +69,7 @@ extern "C" {
         encoder: &Resource<JSRenderBundleEncoder>,
         cameras: *const ExplicitGenerationalFreeList<Camera>,
         device: &Resource<JSDevice>,
-        gpu_buffer_externref: usize
+        gpu_buffer_externref: usize,
     );
 }
 fn get_camera_by_id(cameras: &ExplicitGenerationalFreeList<Camera>, camera_id: usize) -> &Camera {
@@ -110,12 +108,12 @@ pub struct RenderBundleEncoder {
     pub externref: Arc<Resource<JSRenderBundleEncoder>>,
     pub renderbundle: Arc<Mutex<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
-    pub buffers: Vec<Arc<Resource<JSBuffer>>>,
+    pub bindgroups: Vec<Arc<Resource<JSBindGroup>>>,
     label: String,
     record: Resource<JSFunction>,
 }
 pub struct RenderBundle {
-    buffers: Vec<Arc<Resource<JSBuffer>>>,
+    pub bindgroups: Vec<Arc<Resource<JSBindGroup>>>,
     pub externref: Resource<JSRenderBundle>,
 }
 thread_local! {
@@ -144,7 +142,7 @@ impl RenderBundleEncoder {
             externref,
             renderbundle: Arc::new(Mutex::new(None)),
             descriptor,
-            buffers: Vec::new(),
+            bindgroups: Vec::new(),
             label,
             record,
         }
@@ -153,7 +151,7 @@ impl RenderBundleEncoder {
         &mut self,
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
-        gpu_buffer: usize
+        gpu_buffer: usize,
     ) -> Arc<Mutex<Option<RenderBundle>>> {
         let renderbundle = &mut self.renderbundle.lock().unwrap();
         if Option::is_none(renderbundle) {
@@ -167,7 +165,7 @@ impl RenderBundleEncoder {
 
                 let externref = finish(&*self.externref, MULTIVALUE_USIZE.as_ptr());
                 let _ = renderbundle.insert(RenderBundle {
-                    buffers: Vec::from_iter(self.buffers.drain(..)),
+                    bindgroups: Vec::from_iter(self.bindgroups.drain(..)),
                     externref,
                 });
                 // Create bundeEncoder ready for next time it is called
@@ -197,7 +195,7 @@ impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
             .push(Arc::downgrade(&self.renderbundle));
     }
 
-    fn buffers(&mut self) -> &mut Vec<Arc<Resource<JSBuffer>>> {
-        &mut self.buffers
+    fn bindgroups(&mut self) -> &mut Vec<Arc<Resource<JSBindGroup>>> {
+        &mut self.bindgroups
     }
 }

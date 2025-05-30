@@ -77,7 +77,7 @@ impl Renderpass {
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
             let descriptor = unsafe { get_renderpass_descriptor(self.jsrenderpass.as_ref().unwrap()) };
-            let renderpass_encoder = command_encoder
+            let mut renderpass_encoder = command_encoder
                 .begin_render_pass(label, &descriptor);
             let renderbundle = self
                 .bundle

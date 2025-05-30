@@ -3,7 +3,8 @@ use std::{ptr, sync::Arc};
 use externref::{externref, Resource};
 
 use super::{
-    bindgroup::{BindGroup, JSBindGroup}, buffer::buffer::JSBuffer, gpu::JSDevice
+    bindgroup::{BindGroup, JSBindGroup},
+    gpu::JSDevice,
 };
 
 #[cfg(test)]
@@ -21,7 +22,7 @@ pub trait BindingCommands<T> {
     fn externref(&self) -> &Resource<T>;
     fn after_set_bindgroup(&mut self, bindgroup: &mut BindGroup);
     // Hold references to prevent buffer being CG't before command encoder has been executed
-    fn buffers(&mut self) -> &mut Vec<Arc<Resource<JSBuffer>>>;
+    fn bindgroups(&mut self) -> &mut Vec<Arc<Resource<JSBindGroup>>>;
     fn set_bindgroup(
         &mut self,
         device: &Resource<JSDevice>,
@@ -30,11 +31,10 @@ pub trait BindingCommands<T> {
     ) {
         let externref = self.externref();
         let ptr = unsafe { ptr::read(externref as *const Resource<T> as *const usize) };
-        unsafe { set_bindgroup(ptr, index, bindgroup.get_bindgroup(device)) };
-        for rawbuffer in bindgroup.rawbuffers.iter() {
-            self.buffers().push(rawbuffer.clone());
-        }
-        self.after_set_bindgroup(bindgroup);
+        let extenref_resources = bindgroup.get_bindgroup(device);
+        unsafe { set_bindgroup(ptr, index, &extenref_resources) };
+        self.bindgroups().push(extenref_resources);
 
+        self.after_set_bindgroup(bindgroup);
     }
 }

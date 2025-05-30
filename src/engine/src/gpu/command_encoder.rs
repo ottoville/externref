@@ -5,7 +5,7 @@ use externref::{externref, Resource};
 use crate::MULTIVALUE_USIZE;
 
 use super::{
-    buffer::{buffer::JSBuffer, copy_dst::CopyDst, copy_src::CopySrc}, command_buffer::{CommandBuffer, JSCommandBuffer}, compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder}, render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder}, renderpass::JSRenderPassDescriptor
+    bindgroup::JSBindGroup, buffer::{buffer::JSBuffer, copy_dst::CopyDst, copy_src::CopySrc}, command_buffer::{CommandBuffer, JSCommandBuffer}, compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder}, render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder}, renderpass::JSRenderPassDescriptor
 };
 
 pub struct JSCommandEncoder(());
@@ -85,6 +85,7 @@ pub struct GPUCommandEncoder {
     pub externref: Resource<JSCommandEncoder>,
     // Hold references to prevent buffer being CG't before command encoder has been executed
     pub buffers: Vec<Arc<Resource<JSBuffer>>>,
+    pub bindgroups: Vec<Arc<Resource<JSBindGroup>>>,
     label: String,
     owned_by_js: bool,
 }
@@ -101,6 +102,7 @@ impl GPUCommandEncoder {
                 label,
                 owned_by_js: false,
                 buffers: Vec::new(),
+                bindgroups: Vec::new(),
             };
         }
     }
@@ -111,6 +113,7 @@ impl GPUCommandEncoder {
             MULTIVALUE_USIZE[2] = label.capacity();
             CommandBuffer {
                 buffers: self.buffers,
+                bindgroups: self.bindgroups,
                 externref: finish(&self.externref, MULTIVALUE_USIZE.as_ptr()),
             }
         }

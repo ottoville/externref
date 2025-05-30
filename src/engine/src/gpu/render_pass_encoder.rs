@@ -32,8 +32,12 @@ pub struct RenderPassEncoder {
 }
 
 impl RenderPassEncoder {
-    pub fn execute_bundles(&self, bundle: &RenderBundle) {
+    pub fn execute_bundles(&mut self, bundle: &RenderBundle) {
         unsafe { execute_bundles(&self.externref, &bundle.externref) };
+
+        for bindgroup in bundle.bindgroups.iter() {
+            self.command_encoder.bindgroups.push(bindgroup.clone());
+        }
     }
     //TODO combine with compute pass encoder end
     pub fn end(self) -> GPUCommandEncoder {

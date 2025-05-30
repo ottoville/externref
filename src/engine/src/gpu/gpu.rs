@@ -22,7 +22,7 @@ use super::buffer::copy_src::CopySrc;
 use super::buffer::usages::{COPYSRC_USAGE, UNIFORM_COPYDST_USAGE, UNIFORM_USAGE};
 use super::bufferbinding::BufferBinding;
 use super::command_buffer::{CommandBuffer, JSCommandBuffer};
-use super::command_encoder::{GPUCommandEncoder, JSCommandEncoder};
+use super::command_encoder::GPUCommandEncoder;
 use super::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSComputePipeline};
 use super::lights::Lights;
 use super::queue::JSQueue;
@@ -357,6 +357,7 @@ pub unsafe extern "C" fn push_to_pending_command_buffers(buffer: Resource<JSComm
         .push(CommandBuffer {
             externref: buffer,
             buffers: Vec::new(),
+            bindgroups: Vec::new(),
         });
 }
 #[no_mangle]

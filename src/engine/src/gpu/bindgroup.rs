@@ -43,7 +43,7 @@ pub struct JSBindGroup(());
 pub struct JSBindGroupLayout(());
 
 pub struct BindGroup {
-    pub externref: Option<Resource<JSBindGroup>>,
+    pub externref: Option<Arc<Resource<JSBindGroup>>>,
     label: String,
     layout: Arc<Resource<JSBindGroupLayout>>,
     bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
@@ -76,8 +76,8 @@ impl BindGroup {
         }
         return bind_group;
     }
-    pub fn get_bindgroup(&mut self, device: &Resource<JSDevice>) -> &Resource<JSBindGroup> {
-        self.externref.get_or_insert_with(|| {
+    pub fn get_bindgroup(&mut self, device: &Resource<JSDevice>) -> Arc<Resource<JSBindGroup>> {
+        let extenref_resources = self.externref.get_or_insert_with(|| {
             self.rawbuffers.clear();
             for binding in self.bufferbindings.iter() {
                 let buffer_binding = binding.lock().unwrap();
@@ -86,7 +86,7 @@ impl BindGroup {
             }
 
             let bindings_iterator = Box::new(self.bufferbindings.iter());
-            unsafe {
+            Arc::new(unsafe {
                 MULTIVALUE_USIZE[0] = self.label.as_ptr() as usize;
                 MULTIVALUE_USIZE[1] = self.label.len();
                 MULTIVALUE_USIZE[2] = self.label.capacity();
@@ -96,8 +96,9 @@ impl BindGroup {
                     MULTIVALUE_USIZE.as_ptr(),
                     Box::into_raw(bindings_iterator),
                 )
-            }
-        })
+            })
+        });
+        return extenref_resources.clone();
     }
     pub fn make_dirty(&mut self) {
         self.externref.take();
@@ -137,7 +138,7 @@ fn test_bindgroup() {
         );
 
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-        let mut renderbundle = RenderBundleEncoder::new(
+        let mut renderbundle_encoder = RenderBundleEncoder::new(
             String::from("test"),
             &device,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -154,32 +155,70 @@ fn test_bindgroup() {
             >(1))),
             vec![BufferBinding::new(Arc::new(Mutex::new(buffer)), 0, None)],
         );
+        {
+            assert_eq!(bindgroup.lock().unwrap().externref.is_none(), true)
+        }
         assert_eq!(Arc::strong_count(&rawbuffer), 2);
 
-        renderbundle.set_bindgroup(&device, 0, &mut *bindgroup.lock().unwrap());
-        assert_eq!(Arc::strong_count(&rawbuffer), 4);
+        renderbundle_encoder.set_bindgroup(&device, 0, &mut *bindgroup.lock().unwrap());
+        {
+            assert_eq!(
+                Arc::strong_count(
+                    bindgroup
+                        .lock()
+                        .as_ref()
+                        .unwrap()
+                        .externref
+                        .as_ref()
+                        .unwrap()
+                ),
+                2
+            )
+        }
+        assert_eq!(Arc::strong_count(&rawbuffer), 3);
 
         let mut gpuopt = ENGINE.gpu.lock();
         let mut gpuopt2 = gpuopt.as_mut().unwrap();
         let gpu = gpuopt2.as_mut().unwrap();
 
-        let renderbundle = renderbundle.record_renderbundle(&gpu.device, &gpu.cameras, 1);
-        assert_eq!(Arc::strong_count(&rawbuffer), 4);
+        let renderbundle = renderbundle_encoder.record_renderbundle(&gpu.device, &gpu.cameras, 1);
+        drop(renderbundle_encoder);
+
+        assert_eq!(Arc::strong_count(&rawbuffer), 3);
         let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
 
-        let renderpass_encoder = command_encoder.begin_render_pass(
+        let mut renderpass_encoder = command_encoder.begin_render_pass(
             &String::from("test"),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderpass_encoder.execute_bundles(renderbundle.lock().unwrap().as_ref().unwrap());
-        assert_eq!(Arc::strong_count(&rawbuffer), 4);
+                drop(renderbundle);
+
+        {
+            assert_eq!(
+                Arc::strong_count(
+                    bindgroup
+                        .lock()
+                        .as_ref()
+                        .unwrap()
+                        .externref
+                        .as_ref()
+                        .unwrap()
+                ),
+                2
+            )
+        }
+        assert_eq!(Arc::strong_count(&rawbuffer), 3);
         let command_encoder = renderpass_encoder.end();
-        let command_buffer = command_encoder.finish(String::from("test"));
-        assert_eq!(Arc::strong_count(&rawbuffer), 4);
-        let queue = Queue {
-            externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-        };
-        queue.submit(&mut vec![command_buffer].drain(..));
-        assert_eq!(Arc::strong_count(&rawbuffer), 4);
+        {
+            let command_buffer = command_encoder.finish(String::from("test"));
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+
+            let queue = Queue {
+                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            };
+            queue.submit(&mut vec![command_buffer].drain(..));
+        }
+        assert_eq!(Arc::strong_count(&rawbuffer), 3);
     }
 }
