@@ -356,7 +356,6 @@ export type rustWasm = {
   drop_engine_lock(engine: rust_mutex<'locked', 'enginelock'>): void;
   drop_gpu_lock(gpu: rust_mutex<'locked', 'gpulock'>): void;
   drop_camera_lock(camera: rust_mutex<'locked', 'camera'>): void;
-  get_gpu_mesh_buffer(engine: rust_pointer<'gpu'>): number;
 
   init_gpu(
     device: Externref<true, GPUDevice>,

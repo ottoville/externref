@@ -360,12 +360,6 @@ pub unsafe extern "C" fn push_to_pending_command_buffers(buffer: Resource<JSComm
         });
 }
 #[no_mangle]
-#[cfg(feature = "webgpu")]
-pub unsafe extern "C" fn get_gpu_mesh_buffer(gpu: *mut &mut GPU) -> usize {
-    let externref = &*(*gpu).gpu_buffer.lock().unwrap().externref;
-    ptr::read(externref as *const Resource<JSBuffer> as *const usize)
-}
-#[no_mangle]
 #[externref]
 pub unsafe extern "C" fn process_gpu_queue(
     time: f32,
@@ -666,7 +660,6 @@ fn test_time_update() {
             false,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
-        let mut label = String::from("test");
         for id in 0..4 {
             let mut gpuopt = ENGINE.gpu.lock().unwrap();
             let gpu = gpuopt.as_mut().unwrap();
