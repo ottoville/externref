@@ -150,7 +150,9 @@ fn test_bindgroup() {
             >(1))),
             vec![buffer_binding],
         );
-
+        for rawbuffer in bindgroup.lock().unwrap().rawbuffers.iter() {
+            assert_eq!(Arc::strong_count(rawbuffer), 1);
+        }
         let mut renderbundle = RenderBundleEncoder::new(
             String::from("test"),
             &device,
@@ -158,10 +160,16 @@ fn test_bindgroup() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderbundle.set_bindgroup(&device, 0, &mut *bindgroup.lock().unwrap());
+        for rawbuffer in bindgroup.lock().unwrap().rawbuffers.iter() {
+            assert_eq!(Arc::strong_count(rawbuffer), 3);
+        }
         let mut gpuopt = ENGINE.gpu.lock();
         let mut gpuopt2 = gpuopt.as_mut().unwrap();
         let gpu = gpuopt2.as_mut().unwrap();
 
         renderbundle.record_renderbundle(&gpu.device, &gpu.cameras, 1);
+        for rawbuffer in bindgroup.lock().unwrap().rawbuffers.iter() {
+            assert_eq!(Arc::strong_count(rawbuffer), 3);
+        }
     }
 }
