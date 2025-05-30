@@ -80,7 +80,7 @@ fn test_lights() {
             Arc::new(layout),
             vec![BufferBinding::new(lights.buffer.clone(), 0, None)],
         );
-        bindgroup.lock().unwrap().get_bind_group(&device);
+        bindgroup.lock().unwrap().get_bindgroup(&device);
         assert_eq!(bindgroup.lock().unwrap().externref.is_none(), false);
         let mut swapbuffers = SwapBuffers::new();
 

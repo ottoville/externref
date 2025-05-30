@@ -57,17 +57,12 @@ impl BindGroup {
         layout: Arc<Resource<JSBindGroupLayout>>,
         bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
     ) -> Arc<Mutex<BindGroup>> {
-        let mut rawbuffers = Vec::new();
-        for binding in bufferbindings.iter() {
-            let buffer_binding = binding.lock().unwrap();
-            rawbuffers.push(buffer_binding.buffer.lock().unwrap().externref_arc());
-        }
         let bind_group = Arc::new(Mutex::new(BindGroup {
             externref: None,
             label,
             layout,
             bufferbindings,
-            rawbuffers,
+            rawbuffers: Vec::new(),
             renderbundles: Vec::new(),
         }));
         for buffer_binding_mutex in bind_group.lock().unwrap().bufferbindings.iter() {
@@ -81,7 +76,7 @@ impl BindGroup {
         }
         return bind_group;
     }
-    pub fn get_bind_group(&mut self, device: &Resource<JSDevice>) -> &Resource<JSBindGroup> {
+    pub fn get_bindgroup(&mut self, device: &Resource<JSDevice>) -> &Resource<JSBindGroup> {
         self.externref.get_or_insert_with(|| {
             self.rawbuffers.clear();
             for binding in self.bufferbindings.iter() {

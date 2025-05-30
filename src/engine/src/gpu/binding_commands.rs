@@ -30,7 +30,7 @@ pub trait BindingCommands<T> {
     ) {
         let externref = self.externref();
         let ptr = unsafe { ptr::read(externref as *const Resource<T> as *const usize) };
-        unsafe { set_bindgroup(ptr, index, bindgroup.get_bind_group(device)) };
+        unsafe { set_bindgroup(ptr, index, bindgroup.get_bindgroup(device)) };
         for rawbuffer in bindgroup.rawbuffers.iter() {
             self.buffers().push(rawbuffer.clone());
         }
