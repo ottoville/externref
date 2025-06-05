@@ -1,8 +1,3 @@
-import {
-  Buffer,
-  COPY_DST_BUFFER,
-  type BufferUsageEnums,
-} from '../webgpu-ts/index.js';
 import type { Engine } from '../engine.js';
 import { Externref } from '../externref.js';
 
@@ -16,28 +11,24 @@ export type BufferInterface = {
     label_len: number,
     label_cap: number,
   ): rust_pointer<'GPUBuffer'>;
-  get_raw_buffer<U extends BufferUsageEnums, M extends boolean>(
+  get_raw_buffer(
     buffer: rust_pointer<'GPUBuffer'>,
-  ): Externref<false, Buffer<U, M>>;
+  ): Externref<false, GPUBuffer>;
 };
 
 export const BufferExports = {
-  map_state({
-    externref: buffer,
-  }: Externref<boolean, Buffer<BufferUsageEnums.MAP_WRITE>>) {
-    const mapState = buffer.mapState();
+  map_state({ externref: buffer }: Externref<boolean, GPUBuffer>) {
+    const mapState = buffer.mapState;
     if (mapState === 'unmapped') return 0;
     if (mapState === 'pending') return 1;
     return 2;
   },
   map_write_async(
-    {
-      externref: buffer,
-    }: Externref<boolean, Buffer<BufferUsageEnums.MAP_WRITE>>,
+    { externref: buffer }: Externref<boolean, GPUBuffer>,
     offset: number,
     size: number,
   ) {
-    buffer.map_write(offset, size).catch((err) => {
+    buffer.mapAsync(GPUMapMode.WRITE, offset, size).catch((err) => {
       if (err instanceof Error && err.name === 'AbortError') {
         console.warn(err);
       } else {
@@ -46,7 +37,7 @@ export const BufferExports = {
     });
   },
   set_mapped_range(
-    { externref: buffer }: Externref<boolean, Buffer<BufferUsageEnums, true>>,
+    { externref: buffer }: Externref<boolean, GPUBuffer>,
     offset: number,
     size: Word<'dword'>,
     buffer_offset: GPUSize64,
@@ -54,22 +45,7 @@ export const BufferExports = {
     const data = new Uint8Array(engine.rust.memory.buffer, offset, size);
     new Uint8Array(buffer.getMappedRange(buffer_offset, size)).set(data);
   },
-  unmap({
-    externref: buffer,
-  }: Externref<boolean, Buffer<BufferUsageEnums, true>>) {
+  unmap({ externref: buffer }: Externref<boolean, GPUBuffer>) {
     buffer.unmap();
-  },
-  write(
-    { externref: destination }: Externref<boolean, Buffer<COPY_DST_BUFFER>>,
-    sourceOffset: GPUSize64,
-    copySize: GPUSize64,
-    destinationOffset: GPUSize64,
-  ) {
-    destination.write(
-      destinationOffset,
-      engine.rust.memory.buffer,
-      sourceOffset,
-      copySize,
-    );
   },
 };

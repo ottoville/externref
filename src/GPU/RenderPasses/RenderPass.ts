@@ -88,8 +88,10 @@ export class RenderPass<
       cameras: rust_pointer<'cameras'>,
       device: Externref<true, GPUDevice>,
       gpu_buffer: number,
+      bind_group_position: rust_pointer<'bind_group_position'>,
     ) => {
       engine.gpu!.gpu_buffer = gpu_buffer;
+      engine.gpu!.bind_group_position = bind_group_position;
       renderBundle2.renderBundleEncoder = renderBundleEncoder2;
       let drawedMeshes = 0;
       if (this.perspectiveCameras.length === 0) {
@@ -102,7 +104,7 @@ export class RenderPass<
         );
 
         this.perspectiveCameras.forEach((camera) => {
-          engine.rust.renderbundle_set_bindgroup(
+          engine.rust.renderbundle_set_bindgroup_camera(
             rust_renderbundle,
             1,
             camera.id,
@@ -125,7 +127,8 @@ export class RenderPass<
       destroy: () => {
         engine.rust.renderbundle_make_dirty(rust_renderbundle);
       },
-    } as {
+      rust_renderbundle_encoder: rust_renderbundle,
+    } as unknown as {
       destroy: () => void;
       render: () => GPURenderBundle;
       renderBundleEncoder: GPURenderBundleEncoder;

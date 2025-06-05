@@ -1,9 +1,11 @@
 use std::cell::RefCell;
+use std::num::NonZeroUsize;
 use std::ptr;
 use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
 
 use externref::{externref, Resource};
+use logger::LoggerArray;
 
 use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use crate::allocators::stack_allocator::StackAllocator;
@@ -163,7 +165,7 @@ pub unsafe extern "C" fn set_bindgroup_computepassencoder(
     let camera = gpu.get_camera_by_id(camera_id);
     let mut bindgroup = (*camera).update_clusters_bind_group.lock().unwrap();
 
-    (*computepass).set_bindgroup(device, index, &mut bindgroup);
+    (*computepass).set_bindgroup(device, index, &mut bindgroup, &[]);
     (*computepass).dispatch_workgroups(
         CLUSTER_DISPATCH_SIZE[0],
         CLUSTER_DISPATCH_SIZE[1],
@@ -199,7 +201,8 @@ pub unsafe extern "C" fn init_gpu(
     layout: Resource<JSBindGroupLayout>,
     force: bool,
     size_bindgroup_layout: Resource<JSBindGroupLayout>,
-) {
+    position_bindgroup_layout: Resource<JSBindGroupLayout>,
+) -> usize {
     let mut gpu = ENGINE.gpu.lock().unwrap();
     if force || gpu.is_none() {
         let gpu_buffer = Arc::new(Mutex::new(
@@ -210,6 +213,19 @@ pub unsafe extern "C" fn init_gpu(
                 false,
             ),
         ));
+
+        let positions_buffer_binding = BufferBinding::new(
+            gpu_buffer.clone(),
+            0,
+            NonZeroUsize::new(GPU_MEMORY_INDEX_SIZE),
+        );
+
+        let bind_group_position = BindGroup::new(
+            String::from("BindGroupPosition"),
+            Arc::new(position_bindgroup_layout),
+            vec![positions_buffer_binding],
+        );
+
         let projection = Projection::new(&device);
         let point_lights = Lights::new(&device, String::from("GPUPointLights"));
         let directional_lights = Lights::new(&device, String::from("GPUDirectionalLights"));
@@ -319,7 +335,8 @@ pub unsafe extern "C" fn init_gpu(
         let _ = gpu.insert(GPU {
             device,
             queue: Queue { externref: queue },
-            gpu_buffer,
+            gpu_buffer: gpu_buffer,
+            bind_group_position,
             pending_command_buffers: Vec::with_capacity(8),
             projections: vec![Arc::new(projection)],
             cameras: ExplicitGenerationalFreeList::new(4),
@@ -337,6 +354,9 @@ pub unsafe extern "C" fn init_gpu(
             time: 0.0,
         });
     }
+    let gpu_unwrapped = gpu.as_ref().unwrap();
+    let externref = &*(gpu_unwrapped.gpu_buffer.lock().unwrap().externref);
+    return ptr::read(externref as *const Resource<JSBuffer> as *const usize);
 }
 #[no_mangle]
 pub unsafe extern "C" fn check_mapped_buffers() -> bool {
@@ -377,6 +397,7 @@ pub struct GPU {
     pub device: Resource<JSDevice>,
     pub queue: Queue,
     pub gpu_buffer: Arc<Mutex<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>>,
+    pub bind_group_position: Arc<Mutex<BindGroup>>,
     pub pending_command_buffers: Vec<CommandBuffer>,
     pub projections: Vec<Arc<Projection>>,
     pub cameras: ExplicitGenerationalFreeList<Camera>,
@@ -513,6 +534,12 @@ impl GPU {
                             let mut gpu_buffer = self.gpu_buffer.lock().unwrap();
                             // if MAX_INSTANCES was increased, resize the buffer
                             if gpu_buffer.size < wanted_size {
+                                [
+                                    String::from("resize gpubuffer"),
+                                    gpu_buffer.size.to_string(),
+                                    wanted_size.to_string(),
+                                ]
+                                .log();
                                 gpu_buffer.resize(&self.device, &mut command_encoder, wanted_size);
                             }
                             for (i, mesh_property_m) in queue.drain(..).enumerate() {
@@ -540,6 +567,7 @@ impl GPU {
                 &self.device,
                 0,
                 &mut self.update_view_bindgroup.lock().unwrap(),
+                &[]
             );
             //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
             for camera in self.cameras.iter_mut() {
@@ -558,6 +586,7 @@ impl GPU {
                 &self.device,
                 &self.cameras,
                 gpu_buffer_id,
+                &self.bind_group_position,
             );
         }
         // Update mesh positions etc
@@ -587,6 +616,7 @@ fn test_gpu_queue() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         for id in 0..4 {
@@ -659,6 +689,7 @@ fn test_time_update() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         for id in 0..4 {

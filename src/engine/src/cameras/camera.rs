@@ -560,7 +560,7 @@ impl Camera {
         lights_pass: &mut ComputePassEncoder,
     ) {
         if force || self.updated {
-            lights_pass.set_bindgroup(device, 1, &mut self.update_view_bind_group.lock().unwrap());
+            lights_pass.set_bindgroup(device, 1, &mut self.update_view_bind_group.lock().unwrap(), &[]);
             lights_pass.dispatch_workgroups(
                 CLUSTER_DISPATCH_SIZE[0],
                 CLUSTER_DISPATCH_SIZE[1],
@@ -585,6 +585,7 @@ fn test_child_camera() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         let projection = Arc::new(Projection::new(&Resource::new_non_null(

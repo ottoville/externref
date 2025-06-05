@@ -101,6 +101,7 @@ fn test_bounding_box() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             true,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
         let meshes = ENGINE.meshes.lock().unwrap();
         let id = Mesh::new(

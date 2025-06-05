@@ -37,6 +37,7 @@ fn do_record(
     _cameras: *const ExplicitGenerationalFreeList<Camera>,
     _device: &Resource<JSDevice>,
     _gpu_buffer_externref: usize,
+    _bind_group_position: *const Arc<Mutex<BindGroup>>,
 ) {
 }
 #[cfg(test)]
@@ -70,6 +71,7 @@ extern "C" {
         cameras: *const ExplicitGenerationalFreeList<Camera>,
         device: &Resource<JSDevice>,
         gpu_buffer_externref: usize,
+        bind_group_position: *const Arc<Mutex<BindGroup>>,
     );
 }
 fn get_camera_by_id(cameras: &ExplicitGenerationalFreeList<Camera>, camera_id: usize) -> &Camera {
@@ -89,6 +91,49 @@ fn get_camera_by_id(cameras: &ExplicitGenerationalFreeList<Camera>, camera_id: u
 pub unsafe extern "C" fn renderbundle_set_bindgroup(
     renderbundle: *mut RenderBundleEncoder,
     index: u32,
+    bindgroup: *const Arc<Mutex<BindGroup>>,
+    device: &Resource<JSDevice>,
+) {
+    (*renderbundle).set_bindgroup(&*device, index, &mut (*bindgroup).lock().unwrap(), &[]);
+}
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn renderbundle_set_bindgroup_1(
+    renderbundle: *mut RenderBundleEncoder,
+    index: u32,
+    bindgroup: *const Arc<Mutex<BindGroup>>,
+    device: &Resource<JSDevice>,
+    dynamic_offset: u32,
+) {
+    (*renderbundle).set_bindgroup(
+        &*device,
+        index,
+        &mut (*bindgroup).lock().unwrap(),
+        &[dynamic_offset],
+    );
+}
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn renderbundle_set_bindgroup_2(
+    renderbundle: *mut RenderBundleEncoder,
+    index: u32,
+    bindgroup: *const Arc<Mutex<BindGroup>>,
+    device: &Resource<JSDevice>,
+    dynamic_offset1: u32,
+    dynamic_offset2: u32,
+) {
+    (*renderbundle).set_bindgroup(
+        &*device,
+        index,
+        &mut (*bindgroup).lock().unwrap(),
+        &[dynamic_offset1, dynamic_offset2],
+    );
+}
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn renderbundle_set_bindgroup_camera(
+    renderbundle: *mut RenderBundleEncoder,
+    index: u32,
     camera_id: usize,
     cameras: *const ExplicitGenerationalFreeList<Camera>,
     device: &Resource<JSDevice>,
@@ -98,6 +143,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup(
         &*device,
         index,
         &mut *camera.uniform_bindgroup.lock().unwrap(),
+        &[],
     );
 }
 #[no_mangle]
@@ -152,11 +198,19 @@ impl RenderBundleEncoder {
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         gpu_buffer: usize,
+        bind_group_position: &Arc<Mutex<BindGroup>>,
     ) -> Arc<Mutex<Option<RenderBundle>>> {
         let renderbundle = &mut self.renderbundle.lock().unwrap();
         if Option::is_none(renderbundle) {
             unsafe {
-                do_record(&self.record, &*self.externref, cameras, device, gpu_buffer);
+                do_record(
+                    &self.record,
+                    &*self.externref,
+                    cameras,
+                    device,
+                    gpu_buffer,
+                    bind_group_position,
+                );
                 FINISH_LABEL.with(|label| {
                     MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
                     MULTIVALUE_USIZE[1] = label.len();

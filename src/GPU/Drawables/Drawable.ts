@@ -4,20 +4,20 @@ import type { Engine } from '../../engine.js';
 import { MainNode } from '../../MainNode.js';
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import {
-  BindGroup,
   Buffer,
   BufferUsageEnums,
   type VERTEX_BUFFER,
   type RenderPipelineBuilderDesc,
   Drawable as DrawableType,
   type IRenderBundleEncoder,
+  BindGroupRef,
 } from '../../webgpu-ts/index.js';
 declare const engine: Engine;
 
 export type DrawableProps<N extends MainNode> = {
   renderPipeline: RenderPipelineProps;
   renderPasses?: Set<RenderPass>;
-  bindGroups: { bindGroup: BindGroup; offsets?: number[] }[];
+  bindGroups: BindGroupRef[];
   vertexBuffers:
     | readonly (
         | rust_array_ptr<'f32'>
@@ -41,7 +41,7 @@ export abstract class Drawable<N extends MainNode = MainNode>
   public renderPipeline: RenderPipelineProps;
   renderPasses: Set<RenderPass>;
   destroyed = false;
-  readonly bindGroups: readonly { bindGroup: BindGroup; offsets?: number[] }[];
+  readonly bindGroups: readonly BindGroupRef[];
   constructor({
     renderPipeline,
     renderPasses = new Set([engine.gpu!.renderPassScreen]),

@@ -19,6 +19,7 @@ import {
 } from './structs/Structs.js';
 import { gpu_memory_index_size } from './ShaderBuilders.js';
 import { PROJECTION_BUFFER_SIZE } from './Clusters.comp.js';
+import { RustRenderPipelineLayout } from '../RustRenderPipelineLayout.js';
 
 const UpdateClustersBufferLayout = new BufLayout(
   {
@@ -144,7 +145,7 @@ export function createPipelineLayouts(gpu: GPU) {
     bindGroupLayouts: [BindGroupLayoutCanvas],
     label: 'canvasRootLayout',
   });
-  const rootCameralayout = new RenderPipelineLayout({
+  const rootCameralayout = new RustRenderPipelineLayout({
     bindGroupLayouts: [
       sizeBindGroupLayout,
       uniformBindGroupLayoutWithTime,

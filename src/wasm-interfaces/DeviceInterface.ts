@@ -1,11 +1,7 @@
 import { Rust_Iterator, rust_iterator_to_js, stringFromPtr } from '../utils.js';
 import type { Engine } from '../engine.js';
 import { Externref } from '../externref.js';
-import {
-  Buffer,
-  type BGLayout,
-  type BufferUsageEnums,
-} from '../webgpu-ts/index.js';
+import { type BGLayout } from '../webgpu-ts/index.js';
 
 declare const engine: Engine;
 export const DeviceExports = {
@@ -31,8 +27,8 @@ export const DeviceExports = {
           binding: i,
           resource: {
             buffer: (
-              engine.rust.externrefs.get(index!) as Externref<false, Buffer>
-            ).externref.buffer,
+              engine.rust.externrefs.get(index!) as Externref<false, GPUBuffer>
+            ).externref,
             offset: offset!,
             size: size!,
           },
@@ -45,19 +41,18 @@ export const DeviceExports = {
     { externref: device }: Externref<true, GPUDevice>,
     size: number,
     label_vec_ptr: rust_pointer<'label'>,
-    usages: BufferUsageEnums,
-    mapped: boolean,
+    usage: number,
+    mappedAtCreation: boolean,
     ownedByJS: boolean,
   ) {
     const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
     return new Externref(
       ownedByJS,
-      new Buffer({
-        gpu: device,
+      device.createBuffer({
         label,
-        mappedAtCreation: mapped,
+        mappedAtCreation,
         size,
-        usages,
+        usage,
       }),
     );
   },

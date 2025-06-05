@@ -23,14 +23,7 @@ pub unsafe fn set_mapped_range(
     _buffer_offset: usize,
 ) {
 }
-#[cfg(test)]
-pub unsafe fn write(
-    _buffer: &Resource<JSBuffer>,
-    _ptr: usize,
-    _size: usize,
-    _buffer_offset: usize,
-) {
-}
+
 #[cfg(test)]
 pub unsafe fn unmap(_buffer: &Resource<JSBuffer>) {}
 
@@ -47,7 +40,6 @@ extern "C" {
         buffer_offset: usize,
     );
     pub fn unmap(buffer: &Resource<JSBuffer>);
-    pub fn write(buffer: &Resource<JSBuffer>, ptr: usize, size: usize, buffer_offset: usize);
     pub fn map_write_async(buffer: &Resource<JSBuffer>, offset: usize, size: usize);
     /**
      * 0: unmapped, 1: pending: 2: mapped;

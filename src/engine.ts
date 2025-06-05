@@ -363,7 +363,8 @@ export type rustWasm = {
     layout: GPU['pipelineLayouts']['updateViewLayout'],
     force: boolean,
     size_bindgroup_layout: GPU['pipelineLayouts']['sizeBindGroupLayout'],
-  ): void;
+    position_bindgroup_layout: GPU['pipelineLayouts']['BindGroupLayoutPosition'],
+  ): number;
   push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
   drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
@@ -474,9 +475,31 @@ export type rustWasm = {
       cameras: rust_pointer<'cameras'>,
       device: Externref<true, GPUDevice>,
       gpu_buffer: number,
+      bind_group_position: rust_pointer<'bind_group_position'>,
     ) => void,
   ): rust_pointer<'renderbundleencoder'>;
   renderbundle_set_bindgroup(
+    renderbundle: rust_pointer<'renderbundleencoder'>,
+    index: number,
+    bindgroup: rust_pointer<'bind_group_position'>,
+    device: Externref<true, GPUDevice>,
+  ): void;
+  renderbundle_set_bindgroup_1(
+    renderbundle: rust_pointer<'renderbundleencoder'>,
+    index: number,
+    bindgroup: rust_pointer<'bind_group_position'>,
+    device: Externref<true, GPUDevice>,
+    dynamic_offset: number,
+  ): void;
+  renderbundle_set_bindgroup_2(
+    renderbundle: rust_pointer<'renderbundleencoder'>,
+    index: number,
+    bindgroup: rust_pointer<'bind_group_position'>,
+    device: Externref<true, GPUDevice>,
+    dynamic_offset1: number,
+    dynamic_offset2: number,
+  ): void;
+  renderbundle_set_bindgroup_camera(
     renderbundle: rust_pointer<'renderbundleencoder'>,
     index: number,
     camera_id: number,

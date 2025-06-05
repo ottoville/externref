@@ -24,9 +24,6 @@ import {
   ColorRenderTarget,
   MSAARenderTarget,
   createRenderPipelineBuilder,
-  BindGroup,
-  Buffer,
-  BufferUsageEnums,
   DepthRenderTarget,
   RenderPipelineLayout,
   type RENDER_TARGET_TEXTURE,
@@ -40,6 +37,8 @@ import {
   VertexShaderBuilder,
   FragmentShaderBuilder,
   PipelineIntersection,
+  type IRenderBundleEncoder,
+  type IBindGroup,
 } from './webgpu-ts/index.js';
 import {
   createShaderBuilders,
@@ -69,7 +68,7 @@ export class GPU {
   readonly mousePositionBuffer = new SharedArrayBuffer(4);
   readonly mousePosition = new Uint16Vector2(this.mousePositionBuffer);
 
-  readonly BindGroupPosition: BindGroup<
+  readonly BindGroupPosition: IBindGroup<
     typeof this.pipelineLayouts.BindGroupLayoutPosition
   >;
   readonly #renderPasses: RenderPass[];
@@ -182,6 +181,7 @@ export class GPU {
   }>;
   mainCamera: TerraCamera;
   gpu_buffer?: number;
+  bind_group_position?: rust_pointer<'bind_group_position'>;
   /**
    * Create render pipeline. The function calculates hash and checks if existing render pipeline exists with same parameters.
    * @param desc
@@ -328,36 +328,72 @@ export class GPU {
     });
 
     this.pipelineLayouts = createPipelineLayouts(this);
-    engine.rust.init_gpu(
+    const bindGroup_index = engine.rust.init_gpu(
       new Externref(true, device),
       device.queue,
       this.pipelineLayouts.updateViewLayout,
       true,
       this.pipelineLayouts.sizeBindGroupLayout,
+      this.pipelineLayouts.BindGroupLayoutPosition,
     );
     this.shaders = createShaderBuilders(this);
     this.updateViewShader = createUpdateViewShader(this);
 
-    this.BindGroupPosition = new BindGroup(
-      this.pipelineLayouts.BindGroupLayoutPosition,
-      'BindGroupPosition',
-      (bindGroup) => {
-        const buffer = engine.rust.externrefs.get(
-          this.gpu_buffer!,
-        ) as Externref<
-          false,
-          Buffer<(typeof BufferUsageEnums)['UNIFORM|STORAGE|COPY_SRC|COPY_DST']>
-        >;
+    const bindGroup = engine.rust.externrefs.get(
+      bindGroup_index,
+    ) as GPUBindGroup;
 
-        return {
-          world: buffer.externref.getUniformBinding(
-            bindGroup,
-            0,
-            gpu_memory_index_size,
-          ),
-        };
+    this.BindGroupPosition = {
+      bindGroup,
+      destroy: function (): void {
+        throw new Error('Function not implemented.');
       },
-    );
+
+      getForRenderBundle: function (
+        _renderBundleEncoder: IRenderBundleEncoder,
+      ): GPUBindGroup {
+        throw new Error('Function not implemented.');
+      },
+      //@ts-expect-error rust hax
+      getForRenderBundle2: (
+        rust_renderbundle_encoder: rust_pointer<'renderbundleencoder'>,
+        bindGroupStartIndex: number,
+        offsets?: readonly number[] | undefined,
+      ) => {
+        if (offsets) {
+          if (offsets.length === 0) {
+            engine.rust.renderbundle_set_bindgroup(
+              rust_renderbundle_encoder,
+              bindGroupStartIndex++,
+              this.bind_group_position!,
+              new Externref(true, engine.gpu!.device),
+            );
+          } else if (offsets.length === 1) {
+            engine.rust.renderbundle_set_bindgroup_1(
+              rust_renderbundle_encoder,
+              bindGroupStartIndex++,
+              this.bind_group_position!,
+              new Externref(true, engine.gpu!.device),
+              offsets[0]!,
+            );
+          } else if (offsets.length === 2) {
+            engine.rust.renderbundle_set_bindgroup_2(
+              rust_renderbundle_encoder,
+              bindGroupStartIndex++,
+              this.bind_group_position!,
+              new Externref(true, engine.gpu!.device),
+              offsets[0]!,
+              offsets[1]!,
+            );
+          } else {
+            throw new Error(
+              'unsupported length of dynamic offsets ' + offsets.length,
+            );
+          }
+        }
+      },
+      layout: this.pipelineLayouts.BindGroupLayoutPosition,
+    };
 
     this.bindGroupTextureWater =
       this.pipelineLayouts.rootCameralayout.appendBinds(

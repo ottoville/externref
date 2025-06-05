@@ -3,7 +3,9 @@ use std::sync::Arc;
 use externref::{externref, Resource};
 
 use super::{
-    bindgroup::JSBindGroup, buffer::buffer::JSBuffer, command_buffer::{CommandBuffer, JSCommandBuffer}
+    bindgroup::JSBindGroup,
+    buffer::{buffer::JSBuffer, copy_dst::CopyDst},
+    command_buffer::{CommandBuffer, JSCommandBuffer},
 };
 
 pub struct JSQueue(());
@@ -14,7 +16,15 @@ unsafe fn submit(
     _iterator: *mut &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>),
 ) {
 }
-
+#[cfg(test)]
+unsafe fn write_buffer(
+    _queue: &Resource<JSQueue>,
+    _buffer: &Resource<JSBuffer>,
+    _ptr: usize,
+    _size: usize,
+    _buffer_offset: usize,
+) {
+}
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
 #[externref]
@@ -25,6 +35,14 @@ extern "C" {
         queue: &Resource<JSQueue>,
         iterator: *mut &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>),
     );
+    pub fn write_buffer(
+        queue: &Resource<JSQueue>,
+        buffer: &Resource<JSBuffer>,
+        ptr: usize,
+        size: usize,
+        buffer_offset: usize,
+    );
+
 }
 static mut COMMAND_BUFFER_EXTERNREF: Option<Resource<JSCommandBuffer>> = None;
 
@@ -57,6 +75,23 @@ impl Queue {
         let boxed = Box::into_raw(Box::new(mapped));
         unsafe {
             submit(&self.externref, boxed);
+        }
+    }
+    pub fn write_buffer<T: CopyDst>(
+        &self,
+        buffer: T,
+        ptr: usize,
+        size: usize,
+        buffer_offset: usize,
+    ) {
+        unsafe {
+            write_buffer(
+                &self.externref,
+                buffer.externref(),
+                ptr,
+                size,
+                buffer_offset,
+            )
         }
     }
 }

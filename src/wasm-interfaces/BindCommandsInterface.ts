@@ -7,6 +7,8 @@ export const BindCommandsInterface = {
     resource_index: number,
     index: number,
     bindgroup: BindGroup | GPUBindGroup,
+    dynamicOffsetsDataStart: GPUSize64,
+    dynamicOffsetsDataLength: GPUSize32,
   ) {
     const resource = engine.rust.externrefs.get(
       resource_index,
@@ -14,6 +16,10 @@ export const BindCommandsInterface = {
     resource.setBindGroup(
       index,
       bindgroup instanceof BindGroup ? bindgroup.bindGroup : bindgroup,
+      // TODO: cache view
+      new Uint32Array(engine.rust.memory.buffer),
+      dynamicOffsetsDataStart / 4,
+      dynamicOffsetsDataLength,
     );
   },
 };

@@ -1,7 +1,6 @@
 import { Externref } from 'externref.js';
 import type { Engine } from '../engine.js';
 import { stringFromPtr } from '../utils.js';
-import { Buffer, COPY_DST_BUFFER, COPY_SRC_BUFFER } from 'webgpu-ts/Buffer.js';
 
 declare const engine: Engine;
 
@@ -26,16 +25,16 @@ export const CommandEncoderInterface = {
   },
   copy_buffer_to_buffer(
     commandEncoder: GPUCommandEncoder,
-    { externref: source }: Externref<boolean, Buffer<COPY_SRC_BUFFER>>,
-    { externref: destination }: Externref<boolean, Buffer<COPY_DST_BUFFER>>,
+    { externref: source }: Externref<boolean, GPUBuffer>,
+    { externref: destination }: Externref<boolean, GPUBuffer>,
     sourceOffset: GPUSize64,
     destinationOffset: GPUSize64,
     copySize: GPUSize64,
   ) {
     commandEncoder.copyBufferToBuffer(
-      source.buffer,
+      source,
       sourceOffset,
-      destination.buffer,
+      destination,
       destinationOffset,
       copySize,
     );
