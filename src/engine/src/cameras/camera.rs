@@ -560,7 +560,7 @@ impl Camera {
         lights_pass: &mut ComputePassEncoder,
     ) {
         if force || self.updated {
-            lights_pass.set_bindgroup(device, 1, &mut self.update_view_bind_group, &[]);
+            lights_pass.set_bindgroup(device, 1, &self.update_view_bind_group, &[]);
             lights_pass.dispatch_workgroups(
                 CLUSTER_DISPATCH_SIZE[0],
                 CLUSTER_DISPATCH_SIZE[1],

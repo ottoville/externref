@@ -1,7 +1,4 @@
-use std::{
-    cell::LazyCell,
-    sync::{Arc, Mutex},
-};
+use std::{cell::LazyCell, sync::Arc};
 
 use externref::{externref, Resource};
 
@@ -74,7 +71,7 @@ impl Renderpass {
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         gpu_buffer: usize,
-        bind_group_position: &Arc<Mutex<BindGroup>>,
+        bind_group_position: &Arc<BindGroup>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
             let descriptor =

@@ -396,7 +396,7 @@ pub struct GPU {
     pub device: Resource<JSDevice>,
     pub queue: Queue,
     pub gpu_buffer: Arc<Mutex<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>>,
-    pub bind_group_position: Arc<Mutex<BindGroup>>,
+    pub bind_group_position: Arc<BindGroup>,
     pub pending_command_buffers: Vec<CommandBuffer>,
     pub projections: Vec<Arc<Projection>>,
     pub cameras: ExplicitGenerationalFreeList<Camera>,

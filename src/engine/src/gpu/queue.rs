@@ -3,7 +3,7 @@ use std::sync::Arc;
 use externref::{externref, Resource};
 
 use super::{
-    bindgroup::JSBindGroup,
+    bindgroup::BindGroupResources,
     buffer::{buffer::JSBuffer, copy_dst::CopyDst},
     command_buffer::{CommandBuffer, JSCommandBuffer},
 };

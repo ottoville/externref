@@ -109,7 +109,6 @@ impl BindGroup {
     }
     pub fn make_dirty(&self) {
         self.resources.lock().unwrap().take();
-        self.rawbuffers.clear();
         for somerenderbundle in self.renderbundles.lock().unwrap().iter() {
             if let Some(renderbundle) = somerenderbundle.upgrade() {
                 renderbundle.lock().unwrap().take();
@@ -171,7 +170,7 @@ fn test_bindgroup() {
             assert_eq!(Arc::strong_count(&rawbuffer), 2);
         }
 
-        renderbundle_encoder.set_bindgroup(&device, 0, &mut *bindgroup, &[]);
+        renderbundle_encoder.set_bindgroup(&device, 0, &*bindgroup, &[]);
         let rawbindgroup = bindgroup
             .resources
             .lock()
@@ -189,16 +188,18 @@ fn test_bindgroup() {
         {
             //bindgroup 2 ref: test, renderbundle_encoder
             assert_eq!(Arc::strong_count(&rawbindgroup), 2);
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            //buffer ref count is 3: test, command_encoder and rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
         let mut gpuopt = ENGINE.gpu.lock();
         let mut gpuopt2 = gpuopt.as_mut().unwrap();
         let gpu = gpuopt2.as_mut().unwrap();
 
-        let renderbundle = renderbundle_encoder.record_renderbundle(&gpu.device, &gpu.cameras, 1, &bindgroup);
+        let renderbundle =
+            renderbundle_encoder.record_renderbundle(&gpu.device, &gpu.cameras, 1, &bindgroup);
         drop(renderbundle_encoder);
 
-        assert_eq!(Arc::strong_count(&rawbuffer), 2);
+        assert_eq!(Arc::strong_count(&rawbuffer), 3);
         let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
 
         let mut renderpass_encoder = command_encoder.begin_render_pass(
@@ -211,12 +212,13 @@ fn test_bindgroup() {
         {
             //bindgroup 2 ref: test, renderpass_encoder
             assert_eq!(Arc::strong_count(&rawbindgroup), 2);
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            //buffer ref count is 3: test, command_encoder, rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
         let command_encoder = renderpass_encoder.end();
         {
             let command_buffer = command_encoder.finish(String::from("test"));
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
 
             let queue = Queue {
                 externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -228,7 +230,7 @@ fn test_bindgroup() {
         {
             //bindgroup 1 ref: test
             assert_eq!(Arc::strong_count(&rawbindgroup), 1);
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
     }
 }
@@ -291,17 +293,17 @@ fn test_bindgroup_buffer_resize() {
         );
         {
             //Externref is not set yet, as it is set lazily
-            assert_eq!(bindgroup.lock().unwrap().externref.is_none(), true);
+            assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
             //buffer ref count is 2, one from test and other from bindgroup
             assert_eq!(Arc::strong_count(&rawbuffer), 2);
         }
 
-        renderbundle_encoder.set_bindgroup(&device, 0, &mut *bindgroup.lock().unwrap(), &[]);
+        renderbundle_encoder.set_bindgroup(&device, 0, &*bindgroup, &[]);
         let rawbindgroup = bindgroup
+            .resources
             .lock()
             .as_ref()
             .unwrap()
-            .externref
             .as_ref()
             .unwrap()
             .clone();
@@ -314,24 +316,25 @@ fn test_bindgroup_buffer_resize() {
         {
             //bindgroup 2 ref: test, renderbundle_encoder
             assert_eq!(Arc::strong_count(&rawbindgroup), 2);
-            //buffer ref count is 2: test, command_encoder
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            //buffer ref count is 3: test, command_encoder and rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
-        bindgroup.lock().unwrap().make_dirty();
+        bindgroup.make_dirty();
         {
             //bindgroup 2 ref: test, renderbundle_encoder
             assert_eq!(Arc::strong_count(&rawbindgroup), 2);
-            //buffer ref count is 2: test, command_encoder
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            //buffer ref count is 3: test, command_encoder and rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
         let mut gpuopt = ENGINE.gpu.lock();
         let mut gpuopt2 = gpuopt.as_mut().unwrap();
         let gpu = gpuopt2.as_mut().unwrap();
 
-        let renderbundle = renderbundle_encoder.record_renderbundle(&gpu.device, &gpu.cameras, 1, &bindgroup);
+        let renderbundle =
+            renderbundle_encoder.record_renderbundle(&gpu.device, &gpu.cameras, 1, &bindgroup);
         drop(renderbundle_encoder);
-        //buffer ref count is 2: test, command_encoder
-        assert_eq!(Arc::strong_count(&rawbuffer), 2);
+        //buffer ref count is 3: test, command_encoder, rawbindgroup
+        assert_eq!(Arc::strong_count(&rawbuffer), 3);
 
         let mut renderpass_encoder = command_encoder.begin_render_pass(
             &String::from("test"),
@@ -343,14 +346,14 @@ fn test_bindgroup_buffer_resize() {
         {
             //bindgroup 2 ref: test, renderpass_encoder
             assert_eq!(Arc::strong_count(&rawbindgroup), 2);
-            //buffer ref count is 2: test, command_encoder
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            //buffer ref count is 3: test, command_encoder, rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
         let command_encoder = renderpass_encoder.end();
         {
             let command_buffer = command_encoder.finish(String::from("test"));
-            //buffer ref count is 2: test, command_buffer
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            //buffer ref count is 3: test, command_encoder, rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
 
             let queue = Queue {
                 externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -362,7 +365,7 @@ fn test_bindgroup_buffer_resize() {
         {
             //bindgroup 1 ref: test
             assert_eq!(Arc::strong_count(&rawbindgroup), 1);
-            assert_eq!(Arc::strong_count(&rawbuffer), 1);
+            assert_eq!(Arc::strong_count(&rawbuffer), 2);
         }
     }
 }
