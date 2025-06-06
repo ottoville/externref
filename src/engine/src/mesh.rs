@@ -67,7 +67,7 @@ pub unsafe extern "C" fn new_mesh_from_js(
     label_cap: usize,
     externref: Resource<JSMesh>,
     camera_can_collide_to: bool,
-) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     return Box::into_raw(Box::new(Mesh::new(
         point_light,
@@ -82,14 +82,21 @@ pub unsafe extern "C" fn new_mesh_from_js(
     )));
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_geometry<'frame>(
+pub unsafe extern "C" fn destroy_mesh(
+    mesh_id_ptr: *mut ExplicitGenerationalFreeListIndex<Mesh>,
+) {
+    let mesh = Box::from_raw(mesh_id_ptr);
+    ENGINE.meshes.lock().unwrap().remove(*mesh);
+}
+#[no_mangle]
+pub unsafe extern "C" fn get_geometry(
     mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
 ) -> *const Geometry {
     let mesh = &ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.geometry.as_ref().unwrap().as_ref() as *const Geometry
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_geometry<'frame>(
+pub unsafe extern "C" fn set_geometry(
     mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     geometry: *mut Geometry,
 ) -> *mut Geometry {

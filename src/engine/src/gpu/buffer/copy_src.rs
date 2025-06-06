@@ -30,7 +30,6 @@ pub trait CopySrc: GpuBuffer {
                 false,
                 self.owned_by_js(),
             );
-            command_encoder.buffers.push(self.externref_arc());
             copy_buffer_to_buffer(
                 &command_encoder.externref,
                 &self.externref(),

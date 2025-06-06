@@ -198,7 +198,12 @@ export abstract class MainNode implements Destroyable {
       );
     }
   }
+  #destroyed = false;
   destroy() {
+    //prevent destroy loop between rust and js
+    if (this.#destroyed) return;
+    this.#destroyed = true;
     this.drawable?.destroy();
+    engine.rust.destroy_mesh(this.id);
   }
 }

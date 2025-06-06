@@ -104,10 +104,7 @@ impl<const U: u32> GpuBuffer for GPUBuffer<U> {
     }
     fn replace_externref(&mut self, externref: Arc<Resource<JSBuffer>>) -> Arc<Resource<JSBuffer>> {
         self.make_dirty();
-        let old_externref = self.externref.clone();
-        self.externref = externref;
-        return old_externref;
-        //mem::replace(&mut self.externref, externref)
+        return std::mem::replace(&mut self.externref, externref);
     }
 
     fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>) {

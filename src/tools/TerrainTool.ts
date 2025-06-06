@@ -283,11 +283,15 @@ export class TerrainTool extends MainNode {
     },
     type: 'pointerup',
   };
+  #destroyed = false;
+
   override destroy = (): void => {
+    super.destroy();
+    //prevent destroy loop between rust and js
+    if (this.#destroyed) return;
+    this.#destroyed = true;
     engine.rust.destroy_elevator(this.#elevator);
     engine.clearInputListeners(this);
-    //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
-    super.destroy();
   };
   #mouseListener: ListenerObj<'pointermove'> = {
     cb: () => {

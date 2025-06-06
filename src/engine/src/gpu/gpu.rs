@@ -5,7 +5,6 @@ use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
 
 use externref::{externref, Resource};
-use logger::LoggerArray;
 
 use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use crate::allocators::stack_allocator::StackAllocator;
@@ -534,12 +533,6 @@ impl GPU {
                             let mut gpu_buffer = self.gpu_buffer.lock().unwrap();
                             // if MAX_INSTANCES was increased, resize the buffer
                             if gpu_buffer.size < wanted_size {
-                                [
-                                    String::from("resize gpubuffer"),
-                                    gpu_buffer.size.to_string(),
-                                    wanted_size.to_string(),
-                                ]
-                                .log();
                                 gpu_buffer.resize(&self.device, &mut command_encoder, wanted_size);
                             }
                             for (i, mesh_property_m) in queue.drain(..).enumerate() {

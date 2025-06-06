@@ -119,6 +119,7 @@ export type rustWasm = {
     externref: Externref<false, MainNode>,
     camera_can_collide_to: boolean,
   ): rust_pointer<'mesh_id'>;
+  destroy_mesh(mesh_id: rust_pointer<'mesh_id'>): void;
   create_debug_mesh_wireframe(
     target_mesh_id: rust_pointer<'mesh_id'>,
     label_ptr: number,
