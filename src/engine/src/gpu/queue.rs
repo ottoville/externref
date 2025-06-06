@@ -3,7 +3,7 @@ use std::sync::Arc;
 use externref::{externref, Resource};
 
 use super::{
-    bindgroup::JSBindGroup,
+    bindgroup::BindGroupResources,
     buffer::{buffer::JSBuffer, copy_dst::CopyDst},
     command_buffer::{CommandBuffer, JSCommandBuffer},
 };
@@ -65,8 +65,7 @@ impl Queue {
     pub fn submit(&self, command_buffers: &mut (dyn Iterator<Item = CommandBuffer>)) {
         // Maintain reference for buffers until submit has been fully executed
         let mut buffers: Vec<Vec<Arc<Resource<JSBuffer>>>> = Vec::new();
-        let mut bindgroups: Vec<Vec<Arc<Resource<JSBindGroup>>>> = Vec::new();
-
+        let mut bindgroups: Vec<Vec<Arc<BindGroupResources>>> = Vec::new();
         let mapped = &mut command_buffers.map(|c: CommandBuffer| {
             buffers.push(c.buffers);
             bindgroups.push(c.bindgroups);

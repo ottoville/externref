@@ -11,7 +11,7 @@ pub struct BufferBinding {
     pub buffer: Arc<Mutex<dyn BindGroupBindable + Send>>,
     pub offset: usize,
     pub size: Option<NonZeroUsize>,
-    pub bindgroups: Vec<Weak<Mutex<BindGroup>>>,
+    pub bindgroups: Vec<Weak<BindGroup>>,
 }
 impl BufferBinding {
     pub fn new(
@@ -29,7 +29,7 @@ impl BufferBinding {
     pub fn make_dirty(&mut self) {
         for somebindgroup in self.bindgroups.iter() {
             if let Some(bind_group) = somebindgroup.upgrade() {
-                bind_group.lock().unwrap().make_dirty();
+                bind_group.make_dirty();
             }
         }
     }

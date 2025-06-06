@@ -1,7 +1,4 @@
-use std::{
-    cell::LazyCell,
-    sync::{Arc, Mutex},
-};
+use std::{cell::LazyCell, sync::Arc};
 
 use externref::{externref, Resource};
 
@@ -59,16 +56,11 @@ impl Renderpass {
             let gpuopt = ENGINE.gpu.lock().unwrap();
             for camera_group in &self.cameragroups {
                 if let Some(bind_group) = &camera_group.bind_group {
-                    renderbundle.set_bindgroup(device, 0, bind_group.lock().as_mut().unwrap(), &[]);
+                    renderbundle.set_bindgroup(device, 0, bind_group, &[]);
                 }
                 for camera_id in &camera_group.cameras {
                     let camera = gpuopt.as_ref().unwrap().get_camera_by_id(*camera_id);
-                    renderbundle.set_bindgroup(
-                        device,
-                        1,
-                        &mut camera.uniform_bindgroup.lock().unwrap(),
-                        &[]
-                    );
+                    renderbundle.set_bindgroup(device, 1, &camera.uniform_bindgroup, &[]);
                 }
             }
         }
@@ -79,7 +71,7 @@ impl Renderpass {
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         gpu_buffer: usize,
-        bind_group_position: &Arc<Mutex<BindGroup>>,
+        bind_group_position: &Arc<BindGroup>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
             let descriptor =

@@ -5,7 +5,7 @@ use externref::{externref, Resource};
 use crate::MULTIVALUE_USIZE;
 
 use super::{
-    bindgroup::JSBindGroup, buffer::{buffer::JSBuffer, copy_dst::CopyDst, copy_src::CopySrc}, command_buffer::{CommandBuffer, JSCommandBuffer}, compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder}, render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder}, renderpass::JSRenderPassDescriptor
+    bindgroup::BindGroupResources, buffer::{buffer::JSBuffer, copy_dst::CopyDst, copy_src::CopySrc}, command_buffer::{CommandBuffer, JSCommandBuffer}, compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder}, render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder}, renderpass::JSRenderPassDescriptor
 };
 
 pub struct JSCommandEncoder(());
@@ -85,7 +85,7 @@ pub struct GPUCommandEncoder {
     pub externref: Resource<JSCommandEncoder>,
     // Hold references to prevent buffer being CG't before command encoder has been executed
     pub buffers: Vec<Arc<Resource<JSBuffer>>>,
-    pub bindgroups: Vec<Arc<Resource<JSBindGroup>>>,
+    pub bindgroups: Vec<Arc<BindGroupResources>>,
     label: String,
     owned_by_js: bool,
 }

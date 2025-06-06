@@ -162,7 +162,7 @@ pub unsafe extern "C" fn set_bindgroup_computepassencoder(
 ) {
     let gpu = (*gpuopt).as_ref().unwrap();
     let camera = gpu.get_camera_by_id(camera_id);
-    let mut bindgroup = (*camera).update_clusters_bind_group.lock().unwrap();
+    let mut bindgroup = &(*camera).update_clusters_bind_group;
 
     (*computepass).set_bindgroup(device, index, &mut bindgroup, &[]);
     (*computepass).dispatch_workgroups(
@@ -396,12 +396,12 @@ pub struct GPU {
     pub device: Resource<JSDevice>,
     pub queue: Queue,
     pub gpu_buffer: Arc<Mutex<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>>,
-    pub bind_group_position: Arc<Mutex<BindGroup>>,
+    pub bind_group_position: Arc<BindGroup>,
     pub pending_command_buffers: Vec<CommandBuffer>,
     pub projections: Vec<Arc<Projection>>,
     pub cameras: ExplicitGenerationalFreeList<Camera>,
     pub renderpasses: Vec<Renderpass>,
-    update_view_bindgroup: Arc<Mutex<BindGroup>>,
+    update_view_bindgroup: Arc<BindGroup>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
     swap_buffers: SwapBuffers,
@@ -453,6 +453,8 @@ impl GPU {
                 4,
             );
         });
+
+        // TODO: reuse already allocated memory from previous iteration, thus allowing constant string
         let mut renderloop_command_encoder =
             GPUCommandEncoder::new(String::from("renderloop_commandEncoder"));
 
@@ -556,12 +558,7 @@ impl GPU {
             let mut lights_pass =
                 command_encoder.begin_compute_pass(String::from("lightPassEncoder"));
             lights_pass.set_pipeline(update_view_pipeline);
-            lights_pass.set_bindgroup(
-                &self.device,
-                0,
-                &mut self.update_view_bindgroup.lock().unwrap(),
-                &[]
-            );
+            lights_pass.set_bindgroup(&self.device, 0, &self.update_view_bindgroup, &[]);
             //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
             for camera in self.cameras.iter_mut() {
                 camera.update_camera(&self.device, update_lights, &mut lights_pass);
