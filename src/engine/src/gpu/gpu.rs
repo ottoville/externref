@@ -153,26 +153,6 @@ pub unsafe extern "C" fn end_and_submit(computepass: *mut ComputePassEncoder) {
 }
 #[no_mangle]
 #[externref]
-pub unsafe extern "C" fn set_bindgroup_computepassencoder(
-    gpuopt: *mut MutexGuard<'static, Option<GPU>>,
-    camera_id: usize,
-    device: &Resource<JSDevice>,
-    index: u32,
-    computepass: *mut ComputePassEncoder,
-) {
-    let gpu = (*gpuopt).as_ref().unwrap();
-    let camera = gpu.get_camera_by_id(camera_id);
-    let mut bindgroup = &(*camera).update_clusters_bind_group;
-
-    (*computepass).set_bindgroup(device, index, &mut bindgroup, &[]);
-    (*computepass).dispatch_workgroups(
-        CLUSTER_DISPATCH_SIZE[0],
-        CLUSTER_DISPATCH_SIZE[1],
-        CLUSTER_DISPATCH_SIZE[2],
-    );
-}
-#[no_mangle]
-#[externref]
 pub unsafe extern "C" fn get_raw_computepassencoder(
     computepass: *mut ComputePassEncoder,
 ) -> &'static Resource<JSComputePassEncoder> {
@@ -254,24 +234,18 @@ pub unsafe extern "C" fn init_gpu(
         let render_pass_screen = Renderpass {
             jsrenderpass: None,
             bundle: None,
-            cameragroups: vec![
-                CameraGroup {
-                    cameras: Vec::with_capacity(2),
-                    bind_group: None,
-                },
-                CameraGroup {
-                    cameras: Vec::with_capacity(2),
-                    bind_group: Some(BindGroup::new(
-                        String::from("sizeBindGroup"),
-                        layout_arc.clone(),
-                        vec![BufferBinding::new(
-                            Arc::new(Mutex::new(screen_dimension_buffer_screen)),
-                            0,
-                            None,
-                        )],
-                    )),
-                },
-            ],
+            cameragroups: vec![CameraGroup {
+                cameras: Vec::with_capacity(2),
+                bind_group: Some(BindGroup::new(
+                    String::from("sizeBindGroup"),
+                    layout_arc.clone(),
+                    vec![BufferBinding::new(
+                        Arc::new(Mutex::new(screen_dimension_buffer_screen)),
+                        0,
+                        None,
+                    )],
+                )),
+            }],
         };
         let screen_dimension_buffer_screen_water =
             GPUBuffer::<UNIFORM_USAGE>::new(&device, 16, String::from("screen_buffer"), false);
@@ -279,24 +253,18 @@ pub unsafe extern "C" fn init_gpu(
         let render_pass_water = Renderpass {
             jsrenderpass: None,
             bundle: None,
-            cameragroups: vec![
-                CameraGroup {
-                    cameras: Vec::with_capacity(2),
-                    bind_group: None,
-                },
-                CameraGroup {
-                    cameras: Vec::with_capacity(2),
-                    bind_group: Some(BindGroup::new(
-                        String::from("sizeBindGroup"),
-                        layout_arc.clone(),
-                        vec![BufferBinding::new(
-                            Arc::new(Mutex::new(screen_dimension_buffer_screen_water)),
-                            0,
-                            None,
-                        )],
-                    )),
-                },
-            ],
+            cameragroups: vec![CameraGroup {
+                cameras: Vec::with_capacity(2),
+                bind_group: Some(BindGroup::new(
+                    String::from("sizeBindGroup"),
+                    layout_arc.clone(),
+                    vec![BufferBinding::new(
+                        Arc::new(Mutex::new(screen_dimension_buffer_screen_water)),
+                        0,
+                        None,
+                    )],
+                )),
+            }],
         };
         let screen_dimension_buffer_screen_pick =
             GPUBuffer::<UNIFORM_USAGE>::new(&device, 16, String::from("screen_buffer"), false);
@@ -304,32 +272,23 @@ pub unsafe extern "C" fn init_gpu(
         let pick_render_pass = Renderpass {
             jsrenderpass: None,
             bundle: None,
-            cameragroups: vec![
-                CameraGroup {
-                    cameras: Vec::with_capacity(2),
-                    bind_group: None,
-                },
-                CameraGroup {
-                    cameras: Vec::with_capacity(2),
-                    bind_group: Some(BindGroup::new(
-                        String::from("sizeBindGroup"),
-                        layout_arc,
-                        vec![BufferBinding::new(
-                            Arc::new(Mutex::new(screen_dimension_buffer_screen_pick)),
-                            0,
-                            None,
-                        )],
-                    )),
-                },
-            ],
+            cameragroups: vec![CameraGroup {
+                cameras: Vec::with_capacity(2),
+                bind_group: Some(BindGroup::new(
+                    String::from("sizeBindGroup"),
+                    layout_arc,
+                    vec![BufferBinding::new(
+                        Arc::new(Mutex::new(screen_dimension_buffer_screen_pick)),
+                        0,
+                        None,
+                    )],
+                )),
+            }],
         };
         let render_pass_canvas = Renderpass {
             jsrenderpass: None,
             bundle: None,
-            cameragroups: vec![CameraGroup {
-                cameras: Vec::with_capacity(2),
-                bind_group: None,
-            }],
+            cameragroups: Vec::new(),
         };
         let _ = gpu.insert(GPU {
             device,
@@ -444,7 +403,7 @@ impl GPU {
         self.time = time;
         let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
         self.swap_buffers.get(&self.device, 8, |temp_buffer| {
-            temp_buffer.set_mapped_range((&raw const self.time) as usize, 4, 0);
+            temp_buffer.set_mapped_range(&self.time, 0);
             command_encoder.copy_buffer_to_buffer(
                 &**temp_buffer,
                 &*self.timebuffer.lock().unwrap(),
@@ -527,8 +486,7 @@ impl GPU {
                                 );
 
                                 temp_buffer.set_mapped_range(
-                                    &raw const mesh_property.gpu_memory as usize,
-                                    std::mem::size_of::<GPUMesh>(),
+                                    &mesh_property.gpu_memory,
                                     i * std::mem::size_of::<GPUMesh>(),
                                 );
                             }

@@ -7,7 +7,8 @@ use externref::{externref, Resource};
 
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
-    cameras::camera::Camera, MULTIVALUE_USIZE,
+    cameras::{camera::Camera, camera_group::CameraGroup},
+    MULTIVALUE_USIZE,
 };
 
 use super::{
@@ -34,10 +35,9 @@ fn create_renderbundle_encoder(
 fn do_record(
     _record: &Resource<JSFunction>,
     _encoder: &Resource<JSRenderBundleEncoder>,
-    _cameras: *const ExplicitGenerationalFreeList<Camera>,
-    _device: &Resource<JSDevice>,
     _gpu_buffer_externref: usize,
     _bind_group_position: *const Arc<BindGroup>,
+    _bindgroup_start_index: u32,
 ) {
 }
 #[cfg(test)]
@@ -68,13 +68,12 @@ extern "C" {
     fn do_record(
         record: &Resource<JSFunction>,
         encoder: &Resource<JSRenderBundleEncoder>,
-        cameras: *const ExplicitGenerationalFreeList<Camera>,
-        device: &Resource<JSDevice>,
         gpu_buffer_externref: usize,
         bind_group_position: *const Arc<BindGroup>,
+        bindgroup_start_index: u32,
     );
 }
-fn get_camera_by_id(cameras: &ExplicitGenerationalFreeList<Camera>, camera_id: usize) -> &Camera {
+pub fn get_camera_by_id(cameras: &ExplicitGenerationalFreeList<Camera>, camera_id: usize) -> &Camera {
     for camera in cameras.iter() {
         if camera.id == camera_id {
             return camera;
@@ -105,12 +104,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup_1(
     device: &Resource<JSDevice>,
     dynamic_offset: u32,
 ) {
-    (*renderbundle).set_bindgroup(
-        &*device,
-        index,
-        &(*bindgroup),
-        &[dynamic_offset],
-    );
+    (*renderbundle).set_bindgroup(&*device, index, &(*bindgroup), &[dynamic_offset]);
 }
 #[no_mangle]
 #[externref]
@@ -128,18 +122,6 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup_2(
         &(*bindgroup),
         &[dynamic_offset1, dynamic_offset2],
     );
-}
-#[no_mangle]
-#[externref]
-pub unsafe extern "C" fn renderbundle_set_bindgroup_camera(
-    renderbundle: *mut RenderBundleEncoder,
-    index: u32,
-    camera_id: usize,
-    cameras: *const ExplicitGenerationalFreeList<Camera>,
-    device: &Resource<JSDevice>,
-) {
-    let camera = get_camera_by_id(&*cameras, camera_id);
-    (*renderbundle).set_bindgroup(&*device, index, &(*camera.uniform_bindgroup), &[]);
 }
 #[no_mangle]
 pub unsafe extern "C" fn renderbundle_make_dirty(renderbundle: *mut RenderBundleEncoder) {
@@ -188,45 +170,80 @@ impl RenderBundleEncoder {
             record,
         }
     }
-    pub fn record_renderbundle(
+    pub fn record_renderbundle<F>(
         &mut self,
+        cameragroups: &Vec<CameraGroup>,
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         gpu_buffer: usize,
         bind_group_position: &Arc<BindGroup>,
-    ) -> Arc<Mutex<Option<RenderBundle>>> {
-        let renderbundle = &mut self.renderbundle.lock().unwrap();
-        if Option::is_none(renderbundle) {
+        cb: F,
+    ) where
+        F: FnOnce(&RenderBundle),
+    {
+        {
+            let renderbundle_m = self.renderbundle.lock();
+            if let Some(renderbundle) = renderbundle_m.as_ref().unwrap().as_ref() {
+                cb(renderbundle);
+                return;
+            };
+        };
+        // There is possible race condition because lock to renderbundle is not hold between check and set
+        if cameragroups.len() > 0 {
+            for camera_group in cameragroups {
+                if let Some(bind_group) = &camera_group.bind_group {
+                    self.set_bindgroup(device, 0, bind_group, &[]);
+                }
+                for camera_id in &camera_group.cameras {
+                    let camera = get_camera_by_id(cameras, *camera_id);
+                    self.set_bindgroup(device, 1, &camera.uniform_bindgroup, &[]);
+                    unsafe {
+                        do_record(
+                            &self.record,
+                            &*self.externref,
+                            gpu_buffer,
+                            bind_group_position,
+                            2,
+                        );
+                    }
+                }
+            }
+        } else {
+            // Draw UI
             unsafe {
                 do_record(
                     &self.record,
                     &*self.externref,
-                    cameras,
-                    device,
                     gpu_buffer,
                     bind_group_position,
+                    0,
                 );
-                FINISH_LABEL.with(|label| {
-                    MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-                    MULTIVALUE_USIZE[1] = label.len();
-                    MULTIVALUE_USIZE[2] = label.capacity();
-                });
-
-                let externref = finish(&*self.externref, MULTIVALUE_USIZE.as_ptr());
-                let _ = renderbundle.insert(RenderBundle {
-                    bindgroups: Vec::from_iter(self.bindgroups.drain(..)),
-                    externref,
-                });
-                // Create bundeEncoder ready for next time it is called
-                // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.
-                self.externref = Arc::new(create_renderbundle_encoder(
-                    device,
-                    &self.descriptor,
-                    &self.label as *const String as *const usize,
-                ));
             }
         }
-        return Arc::clone(&self.renderbundle);
+        unsafe {
+            FINISH_LABEL.with(|label| {
+                MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
+                MULTIVALUE_USIZE[1] = label.len();
+                MULTIVALUE_USIZE[2] = label.capacity();
+            });
+        }
+
+        let externref = unsafe { finish(&*self.externref, MULTIVALUE_USIZE.as_ptr()) };
+        let renderbundle = RenderBundle {
+            bindgroups: Vec::from_iter(self.bindgroups.drain(..)),
+            externref,
+        };
+        cb(&renderbundle);
+        let _ = self.renderbundle.lock().unwrap().insert(renderbundle);
+        // Create bundeEncoder ready for next time it is called
+        // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.
+        unsafe {
+            self.externref = Arc::new(create_renderbundle_encoder(
+                device,
+                &self.descriptor,
+                &self.label as *const String as *const usize,
+            ));
+        }
     }
     // Only from legacy JS objects
     fn make_dirty(&mut self) {

@@ -26,6 +26,10 @@ impl BufferBinding {
             bindgroups: Vec::new(),
         }))
     }
+    pub fn replace_buffer(&mut self, buffer: Arc<Mutex<dyn BindGroupBindable + Send>>) {
+        self.buffer = buffer;
+        self.make_dirty();
+    }
     pub fn make_dirty(&mut self) {
         for somebindgroup in self.bindgroups.iter() {
             if let Some(bind_group) = somebindgroup.upgrade() {

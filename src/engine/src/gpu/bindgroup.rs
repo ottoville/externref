@@ -46,7 +46,7 @@ pub struct BindGroup {
     pub resources: Mutex<Option<Arc<BindGroupResources>>>,
     label: String,
     layout: Arc<Resource<JSBindGroupLayout>>,
-    bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
+    pub bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
     pub renderbundles: Mutex<Vec<Weak<Mutex<Option<RenderBundle>>>>>,
 }
 pub struct BindGroupResources {
@@ -195,10 +195,6 @@ fn test_bindgroup() {
         let mut gpuopt2 = gpuopt.as_mut().unwrap();
         let gpu = gpuopt2.as_mut().unwrap();
 
-        let renderbundle =
-            renderbundle_encoder.record_renderbundle(&gpu.device, &gpu.cameras, 1, &bindgroup);
-        drop(renderbundle_encoder);
-
         assert_eq!(Arc::strong_count(&rawbuffer), 3);
         let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
 
@@ -206,8 +202,17 @@ fn test_bindgroup() {
             &String::from("test"),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
-        renderpass_encoder.execute_bundles(renderbundle.lock().unwrap().as_ref().unwrap());
-        drop(renderbundle);
+        renderbundle_encoder.record_renderbundle(
+            &gpu.renderpasses[0].cameragroups,
+            &gpu.device,
+            &gpu.cameras,
+            1,
+            &bindgroup,
+            |renderbundle| {
+                renderpass_encoder.execute_bundles(renderbundle);
+            },
+        );
+        drop(renderbundle_encoder);
 
         {
             //bindgroup 2 ref: test, renderpass_encoder
@@ -330,9 +335,6 @@ fn test_bindgroup_buffer_resize() {
         let mut gpuopt2 = gpuopt.as_mut().unwrap();
         let gpu = gpuopt2.as_mut().unwrap();
 
-        let renderbundle =
-            renderbundle_encoder.record_renderbundle(&gpu.device, &gpu.cameras, 1, &bindgroup);
-        drop(renderbundle_encoder);
         //buffer ref count is 3: test, command_encoder, rawbindgroup
         assert_eq!(Arc::strong_count(&rawbuffer), 3);
 
@@ -340,8 +342,17 @@ fn test_bindgroup_buffer_resize() {
             &String::from("test"),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
-        renderpass_encoder.execute_bundles(renderbundle.lock().unwrap().as_ref().unwrap());
-        drop(renderbundle);
+        renderbundle_encoder.record_renderbundle(
+            &gpu.renderpasses[0].cameragroups,
+            &gpu.device,
+            &gpu.cameras,
+            1,
+            &bindgroup,
+            |renderbundle| {
+                renderpass_encoder.execute_bundles(renderbundle);
+            },
+        );
+        drop(renderbundle_encoder);
 
         {
             //bindgroup 2 ref: test, renderpass_encoder

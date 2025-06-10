@@ -226,7 +226,7 @@ pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: usize
 
     let camera = gpuoption.as_mut().unwrap().get_camera_by_id_mut(camera_id);
     if camera.projection_view_inverted_is_dirty {
-        camera.projection_view_inverted = camera.projection_view.invert();
+        camera.projection_view_inverted = camera.views.projection_view.invert();
         camera.projection_view_inverted_is_dirty = false;
     }
 }
@@ -260,11 +260,14 @@ static UNIFORM_BUFFER_SIZE: usize =
     4 * 16 * 2 /* viewPosition */ +
   4 * 4;
 
+struct Views {
+    pub projection_view: [[f32; 4]; 4],
+    pub view: [[f32; 4]; 4],
+}
 #[repr(C, align(4))]
 pub struct Camera {
     pub projection: Arc<Projection>,
-    pub projection_view: [[f32; 4]; 4],
-    pub view: [[f32; 4]; 4],
+    views: Views,
     projection_view_inverted: [[f32; 4]; 4],
     pub direction: [f32; 4],
     pub position: [f32; 4],
@@ -353,13 +356,15 @@ impl Camera {
         );
         let camera = Camera {
             projection,
-            view: [
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
-            projection_view: [[0.0; 4]; 4],
+            views: Views {
+                projection_view: [[0.0; 4]; 4],
+                view: [
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0],
+                ],
+            },
             projection_view_inverted: [[0.0; 4]; 4],
             position: [0.0; 4],
             direction: [1.0, 0.0, 0.0, 0.0],
@@ -389,7 +394,7 @@ impl Camera {
     pub fn check_inputs(&mut self) {
         if let Some(controller) = &mut self.controller {
             self.do_update_view |=
-                controller.check_inputs(false, &mut self.position, &mut self.direction, &self.view);
+                controller.check_inputs(false, &mut self.position, &mut self.direction, &self.views.view);
         }
         for camera in &mut self.children {
             camera.check_inputs();
@@ -490,45 +495,45 @@ impl Camera {
                 );
             }
             //Camera direction
-            self.view[0][2] = self.direction[0];
-            self.view[1][2] = self.direction[1];
-            self.view[2][2] = self.direction[2];
+            self.views.view[0][2] = self.direction[0];
+            self.views.view[1][2] = self.direction[1];
+            self.views.view[2][2] = self.direction[2];
 
-            self.view[0][0] = self.view[2][2];
-            self.view[2][0] = -self.view[0][2];
+            self.views.view[0][0] = self.views.view[2][2];
+            self.views.view[2][0] = -self.views.view[0][2];
 
             let x_square_length =
-                self.view[0][0] * self.view[0][0] + self.view[2][0] * self.view[2][0];
+                self.views.view[0][0] * self.views.view[0][0] + self.views.view[2][0] * self.views.view[2][0];
             if x_square_length == 0.0 {
-                self.view[0][0] = 1.0;
+                self.views.view[0][0] = 1.0;
             } else {
                 let len = x_square_length.sqrt();
                 if !(len == 0.0 || len == 1.0) {
                     let scale = 1.0 / len;
-                    self.view[0][0] *= scale;
-                    self.view[2][0] *= scale;
+                    self.views.view[0][0] *= scale;
+                    self.views.view[2][0] *= scale;
                 }
             }
             // Y axis
-            self.view[0][1] = self.view[1][2] * self.view[2][0];
-            self.view[1][1] = self.view[2][2] * self.view[0][0] - self.view[0][2] * self.view[2][0];
-            self.view[2][1] = -(self.view[1][2] * self.view[0][0]);
+            self.views.view[0][1] = self.views.view[1][2] * self.views.view[2][0];
+            self.views.view[1][1] = self.views.view[2][2] * self.views.view[0][0] - self.views.view[0][2] * self.views.view[2][0];
+            self.views.view[2][1] = -(self.views.view[1][2] * self.views.view[0][0]);
             // Eye angles, dot products
             //x
-            self.view[3][0] =
-                -(self.view[0][0] * self.position[0] + self.view[2][0] * self.position[2]);
+            self.views.view[3][0] =
+                -(self.views.view[0][0] * self.position[0] + self.views.view[2][0] * self.position[2]);
             //y
-            self.view[3][1] = -(self.view[0][1] * self.position[0]
-                + self.view[1][1] * self.position[1]
-                + self.view[2][1] * self.position[2]);
+            self.views.view[3][1] = -(self.views.view[0][1] * self.position[0]
+                + self.views.view[1][1] * self.position[1]
+                + self.views.view[2][1] * self.position[2]);
             //z
-            self.view[3][2] = -(self.view[0][2] * self.position[0]
-                + self.view[1][2] * self.position[1]
-                + self.view[2][2] * self.position[2]);
+            self.views.view[3][2] = -(self.views.view[0][2] * self.position[0]
+                + self.views.view[1][2] * self.position[1]
+                + self.views.view[2][2] * self.position[2]);
 
             self.projection_view_inverted_is_dirty = true;
 
-            self.projection_view = self.view.multiply(
+            self.views.projection_view = self.views.view.multiply(
                 &self
                     .projection
                     .inner_projection
@@ -537,7 +542,7 @@ impl Camera {
                     .unwrap(),
             );
             swap_buffer.get(device, 128, |buffer| {
-                buffer.set_mapped_range(self.projection_view.as_ptr() as usize, 128, 0);
+                buffer.set_mapped_range(&self.views, 0);
                 command_encoder.copy_buffer_to_buffer(
                     &**buffer,
                     &(*self.buffer.lock().unwrap()),
@@ -641,7 +646,7 @@ fn test_child_camera() {
         assert_eq!(camera.children[0].position, [1.0, 2.0, 3.0, 0.0]);
 
         assert_eq!(
-            camera.view,
+            camera.views.view,
             [
                 [0.0, -0.0, 1.0, 0.0],
                 [0.0, 1.0, 0.0, 0.0],
@@ -650,7 +655,7 @@ fn test_child_camera() {
             ]
         );
         assert_eq!(
-            camera.projection_view,
+            camera.views.projection_view,
             [
                 [0.0, 0.0, 0.0, -1.0],
                 [0.0, 4.933155, 0.0, 0.0],
@@ -671,7 +676,7 @@ fn test_child_camera() {
             true,
         );
         assert_eq!(
-            camera.projection_view,
+            camera.views.projection_view,
             [
                 [0.0, 0.0, 0.0, -1.0],
                 [0.0, 4.933155, 0.0, 0.0],

@@ -5,7 +5,6 @@ import type {
   DepthRenderTarget,
   RenderPipelineBuilderDesc,
 } from '../../webgpu-ts/index.js';
-import type { GPU } from '../../GPU.js';
 
 export class DepthRenderPass<
   T extends {
@@ -19,17 +18,20 @@ export class DepthRenderPass<
   constructor(
     renderPassProps: RenderPassProps<T, E>,
     depthRenderTarget: DepthRenderTarget,
-    gpu: GPU,
   ) {
     renderPassProps.depthStencilAttachment = depthRenderTarget;
     renderPassProps.GPURenderBundleEncoderDescriptor = {
       depthStencilFormat: depthRenderTarget.renderTarget.texture.props.format,
     };
-    super(renderPassProps, gpu);
+    super(renderPassProps);
     this.depthRenderTarget = depthRenderTarget;
   }
-  override resize(width: number, height: number) {
-    super.resize(width, height);
+  override resize(
+    width: number,
+    height: number,
+    computepass: rust_pointer<'computepass'>,
+  ) {
+    super.resize(width, height, computepass);
     this.depthRenderTarget.resize(this.size, this.props.sampleCount);
   }
   override onDecoratePipeline = (

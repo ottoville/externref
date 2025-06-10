@@ -77,8 +77,12 @@ export class PickableRenderPass<
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
   }
-  override resize(width: number, height: number) {
-    super.resize(width, height);
+  override resize(
+    width: number,
+    height: number,
+    computepass: rust_pointer<'computepass'>,
+  ) {
+    super.resize(width, height, computepass);
     //update picking
     const oldpickBuffer = this.pickBuffer;
     if (oldpickBuffer) {

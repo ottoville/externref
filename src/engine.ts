@@ -439,6 +439,12 @@ export type rustWasm = {
     z: number,
   ): void;
   on_resize(aspect_ratio: number): rust_pointer<'computepass'>;
+  resize_renderpass(
+    id: number,
+    width: number,
+    height: number,
+    computepass: rust_pointer<'computepass'>,
+  ): void;
   get_raw_computepassencoder(
     computepass: rust_pointer<'computepass'>,
   ): GPUComputePassEncoder;
@@ -473,10 +479,9 @@ export type rustWasm = {
     label_cap: number,
     cb: (
       renderBundleEncoder: GPURenderBundleEncoder,
-      cameras: rust_pointer<'cameras'>,
-      device: Externref<true, GPUDevice>,
       gpu_buffer: number,
       bind_group_position: rust_pointer<'bind_group_position'>,
+      bindgroup_start_index: number,
     ) => void,
   ): rust_pointer<'renderbundleencoder'>;
   renderbundle_set_bindgroup(
@@ -500,26 +505,12 @@ export type rustWasm = {
     dynamic_offset1: number,
     dynamic_offset2: number,
   ): void;
-  renderbundle_set_bindgroup_camera(
-    renderbundle: rust_pointer<'renderbundleencoder'>,
-    index: number,
-    camera_id: number,
-    cameras: rust_pointer<'cameras'>,
-    device: Externref<true, GPUDevice>,
-  ): void;
   renderbundle_make_dirty(
     renderbundle: rust_pointer<'renderbundleencoder'>,
   ): void;
   create_collider_sphere(
     collision_radius: number,
   ): rust_pointer<'collider_sphere'>;
-  set_bindgroup_computepassencoder(
-    gpu: rust_mutex<'locked', 'gpulock'>,
-    camera_id: number,
-    device: Externref<true, GPUDevice>,
-    index: number,
-    computepass: rust_pointer<'computepass'>,
-  ): void;
   end_and_submit(computepass: rust_pointer<'computepass'>): void;
   new_arc_rotate_camera(
     initial: boolean,

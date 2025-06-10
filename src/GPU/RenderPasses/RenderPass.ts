@@ -1,23 +1,15 @@
 ﻿import type { TerraCamera } from '../../TerraCamera.js';
 import {
   type ColorRenderTarget,
-  Buffer,
-  BufferUsageEnums,
-  BindGroup,
   RenderPipelineLayout,
   RenderPipelineBuilderDesc,
   Renderpass,
   type RenderpassProps,
 } from '../../webgpu-ts/index.js';
 import type { Engine } from '../../engine.js';
-import type { GPU } from '../../GPU.js';
-import { tileCount } from '../Shaders/structs/Structs.js';
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import { create_rust_label } from '../../utils.js';
-import { Externref } from 'externref.js';
 declare const engine: Engine;
-
-const gpu_screen_buffer_size = 16; //screen width and height and ratio
 
 export interface RenderPassProps<
   U extends {
@@ -44,18 +36,16 @@ export class RenderPass<
   readonly perspectiveCameras: TerraCamera[] = [];
   readonly #rootLayout: RenderPipelineLayout;
 
-  #screenDimensionsBuffer: Buffer<BufferUsageEnums.UNIFORM>;
   onResize: Map<object, () => void> = new Map();
   public size: { width: number; height: number };
   entryPoint: E;
   #getSizeOnResize: (width: number, height: number) => [number, number];
-  sizeBindGroup: BindGroup;
   onDecoratePipeline?: (
     renderpipeline: RenderPipelineProps,
     renderPipelineDescriptor: RenderPipelineBuilderDesc,
   ) => void;
   override props: Readonly<RenderPassProps<U, E>>;
-  constructor(props: RenderPassProps<U, E>, gpu: GPU) {
+  constructor(props: RenderPassProps<U, E>) {
     super(props);
     this.props = Object.freeze(props);
     const {
@@ -85,35 +75,14 @@ export class RenderPass<
 
     const recorder = (
       renderBundleEncoder2: GPURenderBundleEncoder,
-      cameras: rust_pointer<'cameras'>,
-      device: Externref<true, GPUDevice>,
       gpu_buffer: number,
       bind_group_position: rust_pointer<'bind_group_position'>,
+      bindgroup_start_index: number,
     ) => {
       engine.gpu!.gpu_buffer = gpu_buffer;
       engine.gpu!.bind_group_position = bind_group_position;
       renderBundle2.renderBundleEncoder = renderBundleEncoder2;
-      let drawedMeshes = 0;
-      if (this.perspectiveCameras.length === 0) {
-        // Draw UI
-        drawedMeshes += this.#rootLayout.render(renderBundle2, this, 0);
-      } else {
-        renderBundleEncoder2.setBindGroup(
-          0,
-          this.sizeBindGroup.getForRenderBundle(renderBundle2),
-        );
-
-        this.perspectiveCameras.forEach((camera) => {
-          engine.rust.renderbundle_set_bindgroup_camera(
-            rust_renderbundle,
-            1,
-            camera.id,
-            cameras,
-            device,
-          );
-          drawedMeshes += this.#rootLayout.render(renderBundle2, this, 2);
-        });
-      }
+      this.#rootLayout.render(renderBundle2, this, bindgroup_start_index);
     };
     const rust_renderbundle = engine.rust.link_renderpass(
       id,
@@ -134,49 +103,24 @@ export class RenderPass<
       renderBundleEncoder: GPURenderBundleEncoder;
     };
     this.bundles.push(renderBundle2);
-
-    this.#screenDimensionsBuffer = this.#updateSizeBindGroup(gpu, true);
-
-    this.sizeBindGroup = new BindGroup(
-      gpu.pipelineLayouts.sizeBindGroupLayout,
-      'sizeBindGroup',
-      (bindGroup) => ({
-        screen_dimensions: this.#screenDimensionsBuffer.getUniformBinding(
-          bindGroup,
-          0,
-          16,
-        ),
-      }),
-    );
-  }
-  #updateSizeBindGroup(gpu: GPU, initial = false) {
-    if (!initial) this.#screenDimensionsBuffer.destroy();
-    const screenDimensionsBuffer = new Buffer({
-      gpu: gpu.device,
-      label: 'screen_buffer',
-      mappedAtCreation: true,
-      size: gpu_screen_buffer_size,
-      usages: BufferUsageEnums.UNIFORM,
-    });
-    const uniformbuffer = screenDimensionsBuffer.getMappedRange();
-    new Float32Array(uniformbuffer, 0, 4).set([
-      this.size.width,
-      this.size.height,
-      this.size.width / tileCount[0],
-      this.size.height / tileCount[1],
-    ]);
-
-    this.#screenDimensionsBuffer = screenDimensionsBuffer.unmap();
-    return this.#screenDimensionsBuffer;
   }
   onRenderPipelinesChange: Set<() => void> = new Set();
 
-  resize(width: number, height: number) {
+  resize(
+    width: number,
+    height: number,
+    computepass: rust_pointer<'computepass'>,
+  ) {
     if (width === 0) {
       throw new Error('Cannot resize renderpass to zero width');
     }
     [this.size.width, this.size.height] = this.#getSizeOnResize(width, height);
-    this.#updateSizeBindGroup(engine.gpu!);
+    engine.rust.resize_renderpass(
+      this.props.id,
+      this.size.width,
+      this.size.height,
+      computepass,
+    );
     for (const rt of Object.values(this.props.colorRenderTargets)) {
       rt.resize(this.size, this.props.sampleCount);
     }

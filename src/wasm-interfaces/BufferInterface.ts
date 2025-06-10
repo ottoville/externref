@@ -39,7 +39,7 @@ export const BufferExports = {
   set_mapped_range(
     { externref: buffer }: Externref<boolean, GPUBuffer>,
     offset: number,
-    size: Word<'dword'>,
+    size: number,
     buffer_offset: GPUSize64,
   ) {
     const data = new Uint8Array(engine.rust.memory.buffer, offset, size);

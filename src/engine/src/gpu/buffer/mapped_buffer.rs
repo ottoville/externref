@@ -29,9 +29,19 @@ impl<B: GpuBuffer> MappedGPUBuffer<B> {
     pub fn new(buffer: B) -> MappedGPUBuffer<B> {
         MappedGPUBuffer(buffer)
     }
-    pub fn set_mapped_range(&self, ptr: usize, size: usize, buffer_offset: usize) {
+    pub fn set_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
         unsafe {
             set_mapped_range(&self.0.externref(), ptr, size, buffer_offset);
+        }
+    }
+    pub fn set_mapped_range<T>(&self, data: &T, buffer_offset: usize) {
+        unsafe {
+            set_mapped_range(
+                &self.0.externref(),
+                data as *const T as usize,
+                size_of::<T>(),
+                buffer_offset,
+            );
         }
     }
     pub fn unmap(self) -> B {

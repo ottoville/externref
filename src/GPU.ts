@@ -404,53 +404,48 @@ export class GPU {
         ],
       );
 
-    this.pickRenderPass = new RenderPass(
-      {
-        colorRenderTargets: {
-          gRenderTargetId: new ColorRenderTarget(
-            {
-              context: {
-                format: 'rg32uint',
-                gpu: this.device,
-                label: 'idTexture',
-                size: {
-                  height: 300,
-                  width: 300,
-                },
-                usages:
-                  TextureUsageEnums[
-                    'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'
-                  ],
+    this.pickRenderPass = new RenderPass({
+      colorRenderTargets: {
+        gRenderTargetId: new ColorRenderTarget(
+          {
+            context: {
+              format: 'rg32uint',
+              gpu: this.device,
+              label: 'idTexture',
+              size: {
+                height: 300,
+                width: 300,
               },
-              textureViewDescriptor: {
-                arrayLayerCount: 1,
-                baseArrayLayer: 0,
-              },
+              usages:
+                TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC'],
             },
-            {
-              // prettier-ignore
-              clearValue: {
+            textureViewDescriptor: {
+              arrayLayerCount: 1,
+              baseArrayLayer: 0,
+            },
+          },
+          {
+            // prettier-ignore
+            clearValue: {
               // eslint-disable-next-line sort-keys
               r: 0.0, g: 1.0, b: 0.0, a: 1.0,
             },
-            },
-          ),
-        },
-        entryPoint: 'pick',
-        getSizeOnResize: (w, h) => {
-          return [w, h];
-        },
-        id: 2,
-        label: 'pickRenderPass',
-        rootLayout: this.pipelineLayouts.rootCameralayout,
-        sampleCount: 1,
-        size: {
-          height: canvas.height,
-          width: canvas.width,
-        },
+          },
+        ),
       },
-      this,
-    );
+      entryPoint: 'pick',
+      getSizeOnResize: (w, h) => {
+        return [w, h];
+      },
+      id: 2,
+      label: 'pickRenderPass',
+      rootLayout: this.pipelineLayouts.rootCameralayout,
+      sampleCount: 1,
+      size: {
+        height: canvas.height,
+        width: canvas.width,
+      },
+    });
     this.screenRenderTargets = {
       gRenderTargetDiffuse: new MSAARenderTarget(
         {
@@ -570,7 +565,6 @@ export class GPU {
           usages: TextureUsageEnums['RENDER_ATTACHMENT|COPY_SRC'],
         },
       }),
-      this,
     );
     this.mainCamera = new TerraCamera('mainCamera', this, [
       this.renderPassScreen,
@@ -601,49 +595,46 @@ export class GPU {
 
     this.UIPipeline = createUI(this);
 
-    this.renderPassCanvas = new RenderPass(
-      {
-        colorRenderTargets: {
-          swap: new ColorRenderTarget(
-            {
-              context: { context, format: this.#presentationFormat },
-            },
-            {
-              blend: {
-                alpha: {
-                  dstFactor: 'one-minus-src-alpha',
-                  operation: 'add',
-                  srcFactor: 'one',
-                },
-                color: {
-                  dstFactor: 'one-minus-src-alpha',
-                  operation: 'add',
-                  srcFactor: 'src-alpha',
-                },
+    this.renderPassCanvas = new RenderPass({
+      colorRenderTargets: {
+        swap: new ColorRenderTarget(
+          {
+            context: { context, format: this.#presentationFormat },
+          },
+          {
+            blend: {
+              alpha: {
+                dstFactor: 'one-minus-src-alpha',
+                operation: 'add',
+                srcFactor: 'one',
               },
-              // prettier-ignore
-              clearValue: {
+              color: {
+                dstFactor: 'one-minus-src-alpha',
+                operation: 'add',
+                srcFactor: 'src-alpha',
+              },
+            },
+            // prettier-ignore
+            clearValue: {
               // eslint-disable-next-line sort-keys
               r: 0.53, g: 0.8, b: 0.92, a: 1.0,
             },
-            },
-          ),
-        },
-        entryPoint: 'main',
-        getSizeOnResize: (w, h) => {
-          return [w, h];
-        },
-        id: 3,
-        label: 'renderPassCanvas',
-        rootLayout: this.pipelineLayouts.canvasRootLayout,
-        sampleCount: 1,
-        size: {
-          height: canvas.height,
-          width: canvas.width,
-        },
+          },
+        ),
       },
-      this,
-    );
+      entryPoint: 'main',
+      getSizeOnResize: (w, h) => {
+        return [w, h];
+      },
+      id: 3,
+      label: 'renderPassCanvas',
+      rootLayout: this.pipelineLayouts.canvasRootLayout,
+      sampleCount: 1,
+      size: {
+        height: canvas.height,
+        width: canvas.width,
+      },
+    });
 
     //Scene layoyt is iterated manually so remove it not to iterate it twise.
     //this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);
@@ -706,20 +697,7 @@ export class GPU {
             engine.rust.get_raw_computepassencoder(rustpassEncoder);
           passEncoder.setPipeline(await computePipelineClustersP);
           this.#renderPasses.forEach((renderPass) => {
-            renderPass.resize(canvas.width, canvas.height);
-            passEncoder.setBindGroup(0, renderPass.sizeBindGroup.bindGroup);
-            const gpu = engine.rust.get_gpu();
-
-            renderPass.perspectiveCameras.forEach((camera) => {
-              engine.rust.set_bindgroup_computepassencoder(
-                gpu,
-                camera.id,
-                new Externref(true, device),
-                1,
-                rustpassEncoder,
-              );
-            });
-            engine.rust.drop_gpu_lock(gpu);
+            renderPass.resize(canvas.width, canvas.height, rustpassEncoder);
           });
           // Call onResize after all renderPasses have resizes so callbacks
           // can refer updated render target of other renderpasses.

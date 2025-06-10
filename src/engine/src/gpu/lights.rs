@@ -59,7 +59,7 @@ impl Lights {
             buffer.resize_zeroed(device, self.lights.capacity() * 4);
         }
         swap_buffer.get(device, buffer.size, |mapped_buffer| {
-            mapped_buffer.set_mapped_range(self.lights.as_ptr() as usize, self.lights.len() * 4, 0);
+            mapped_buffer.set_mapped_range_raw(self.lights.as_ptr() as usize, self.lights.len() * 4, 0);
             command_encoder.copy_buffer_to_buffer(&**mapped_buffer, &*buffer, 0, 0, buffer.size);
         });
     }

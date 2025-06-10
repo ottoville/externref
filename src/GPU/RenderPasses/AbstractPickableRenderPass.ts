@@ -56,7 +56,7 @@ export abstract class AbstractPickableRenderPass<
     gpu: GPU,
     pickBufferDesc: GPUBufferDescriptor,
   ) {
-    super(renderPassProps, depthRenderTarget, gpu);
+    super(renderPassProps, depthRenderTarget);
 
     this.pickBuffer = gpu.device.createBuffer(pickBufferDesc);
   }
