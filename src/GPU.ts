@@ -71,7 +71,6 @@ export class GPU {
   readonly BindGroupPosition: IBindGroup<
     typeof this.pipelineLayouts.BindGroupLayoutPosition
   >;
-  readonly #renderPasses: RenderPass[];
 
   readonly scale = {
     x: 1,
@@ -641,13 +640,6 @@ export class GPU {
 
     //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
 
-    this.#renderPasses = [
-      this.renderPassCanvas,
-      this.renderPassScreen,
-      this.renderPassWater,
-      this.pickRenderPass,
-    ];
-
     const ClustersShader = createClustersCompShader(this);
     const computePipelineClustersP =
       ClustersShader[1].createComputePipeline('main');
@@ -691,20 +683,12 @@ export class GPU {
           this.scale.x = canvas.width / entry.contentRect.width;
           this.scale.y = canvas.height / entry.contentRect.height;
 
-          const rustpassEncoder = engine.rust.on_resize(aspectRatio);
-
-          const passEncoder =
-            engine.rust.get_raw_computepassencoder(rustpassEncoder);
-          passEncoder.setPipeline(await computePipelineClustersP);
-          this.#renderPasses.forEach((renderPass) => {
-            renderPass.resize(canvas.width, canvas.height, rustpassEncoder);
-          });
-          // Call onResize after all renderPasses have resizes so callbacks
-          // can refer updated render target of other renderpasses.
-          this.#renderPasses.forEach((renderPass) => {
-            renderPass.onResize.forEach((cb) => cb());
-          });
-          engine.rust.end_and_submit(rustpassEncoder);
+          engine.rust.on_resize(
+            aspectRatio,
+            canvas.width,
+            canvas.height,
+            await computePipelineClustersP,
+          );
 
           const updateViewPipeline = await updateViewPipelineP;
           this.#renderFrame = window.requestAnimationFrame((time) =>

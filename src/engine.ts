@@ -438,12 +438,19 @@ export type rustWasm = {
     y: number,
     z: number,
   ): void;
-  on_resize(aspect_ratio: number): rust_pointer<'computepass'>;
+  on_resize(
+    aspect_ratio: number,
+    width: number,
+    height: number,
+    pipeline: GPUComputePipeline,
+  ): void;
   resize_renderpass(
-    id: number,
     width: number,
     height: number,
     computepass: rust_pointer<'computepass'>,
+    cameragroups: rust_pointer<'cameragroups'>,
+    cameras: rust_pointer<'cameras'>,
+    device: Externref<false, GPUDevice>,
   ): void;
   get_raw_computepassencoder(
     computepass: rust_pointer<'computepass'>,
@@ -511,7 +518,6 @@ export type rustWasm = {
   create_collider_sphere(
     collision_radius: number,
   ): rust_pointer<'collider_sphere'>;
-  end_and_submit(computepass: rust_pointer<'computepass'>): void;
   new_arc_rotate_camera(
     initial: boolean,
     camera_id: number,
@@ -844,6 +850,7 @@ export class Engine {
             ref.externref.destroy();
           }
         },
+
         get_renderpass_descriptor(renderpass: RenderPass) {
           return renderpass.GPURenderPassDescriptor;
         },
@@ -862,6 +869,27 @@ export class Engine {
         },
         now() {
           return performance.now();
+        },
+        renderpass_on_resize(renderpass: RenderPass) {
+          renderpass.onResize.forEach((cb) => cb());
+        },
+        resize_renderpass(
+          renderpass: RenderPass,
+          width: number,
+          height: number,
+          computepass: rust_pointer<'computepass'>,
+          cameragroups: rust_pointer<'cameragroups'>,
+          cameras: rust_pointer<'cameras'>,
+          device: Externref<false, GPUDevice>,
+        ) {
+          renderpass.resize(
+            width,
+            height,
+            computepass,
+            cameragroups,
+            cameras,
+            device,
+          );
         },
         vertices_change({ externref: mesh }: Externref<false, DataNode>) {
           mesh.onVerticesChange();

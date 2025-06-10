@@ -13,6 +13,7 @@ import {
 import type { GPU } from '../../GPU.js';
 import type { Engine } from '../../engine.js';
 import { AbstractPickableRenderPass } from './AbstractPickableRenderPass.js';
+import { Externref } from 'externref.js';
 declare const engine: Engine;
 
 export class PickableRenderPass<
@@ -81,8 +82,11 @@ export class PickableRenderPass<
     width: number,
     height: number,
     computepass: rust_pointer<'computepass'>,
+    cameragroups: rust_pointer<'cameragroups'>,
+    cameras: rust_pointer<'cameras'>,
+    device: Externref<false, GPUDevice>,
   ) {
-    super.resize(width, height, computepass);
+    super.resize(width, height, computepass, cameragroups, cameras, device);
     //update picking
     const oldpickBuffer = this.pickBuffer;
     if (oldpickBuffer) {

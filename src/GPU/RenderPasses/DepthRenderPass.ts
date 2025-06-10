@@ -5,6 +5,7 @@ import type {
   DepthRenderTarget,
   RenderPipelineBuilderDesc,
 } from '../../webgpu-ts/index.js';
+import { Externref } from 'externref.js';
 
 export class DepthRenderPass<
   T extends {
@@ -30,8 +31,11 @@ export class DepthRenderPass<
     width: number,
     height: number,
     computepass: rust_pointer<'computepass'>,
+    cameragroups: rust_pointer<'cameragroups'>,
+    cameras: rust_pointer<'cameras'>,
+    device: Externref<false, GPUDevice>,
   ) {
-    super.resize(width, height, computepass);
+    super.resize(width, height, computepass, cameragroups, cameras, device);
     this.depthRenderTarget.resize(this.size, this.props.sampleCount);
   }
   override onDecoratePipeline = (

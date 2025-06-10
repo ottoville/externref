@@ -12,28 +12,28 @@ use super::{
     bindgroup::BindGroup,
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::ComputePassEncoder,
-    gpu::{get_renderpass_descriptor, JSDevice},
+    gpu::{get_renderpass_descriptor, JSDevice, GPU},
     renderbundle::{JSFunction, JSRenderBundleDescriptor, RenderBundleEncoder},
 };
 thread_local! {
     static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass")) };
 }
+#[externref]
 #[no_mangle]
 pub unsafe extern "C" fn resize_renderpass(
-    id: usize,
     width: u32,
     height: u32,
     computepass: *mut ComputePassEncoder,
+    cameragroups: *mut Vec<CameraGroup>,
+    cameras: *const ExplicitGenerationalFreeList<Camera>,
+    device: &Resource<JSDevice>
 ) {
-    let mut gpuopt = ENGINE.gpu.lock().unwrap();
-    let gpu = gpuopt.as_mut().unwrap();
-    let renderpass = &mut gpu.renderpasses[id];
-    for cameragroup in &mut renderpass.cameragroups {
+    for cameragroup in &mut *cameragroups {
         cameragroup.update_size_bind_group(
-            &gpu.device,
+            device,
             width,
             height,
-            &gpu.cameras,
+            &(*cameras),
             &mut *computepass,
         );
     }

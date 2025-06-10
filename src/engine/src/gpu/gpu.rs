@@ -69,7 +69,19 @@ pub unsafe fn get_renderpass_descriptor(
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
-
+#[cfg(test)]
+pub fn renderpass_on_resize(_renderpass: &Resource<JSRenderPass>) {}
+#[cfg(test)]
+pub fn resize_renderpass(
+    _renderpass: &Resource<JSRenderPass>,
+    _width: f32,
+    _height: f32,
+    _computepass: *mut ComputePassEncoder,
+    _cameragroups: *mut Vec<CameraGroup>,
+    _cameras: *const ExplicitGenerationalFreeList<Camera>,
+    _device: &Resource<JSDevice>,
+) {
+}
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "device")]
@@ -100,6 +112,17 @@ extern "C" {
     pub fn get_renderpass_descriptor(
         renderpass: &Resource<JSRenderPass>,
     ) -> Resource<JSRenderPassDescriptor>;
+    pub fn resize_renderpass(
+        renderpass: &Resource<JSRenderPass>,
+        width: f32,
+        height: f32,
+        computepass: *mut ComputePassEncoder,
+        cameragroups: *mut Vec<CameraGroup>,
+        cameras: *const ExplicitGenerationalFreeList<Camera>,
+        device: &Resource<JSDevice>,
+    );
+    pub fn renderpass_on_resize(renderpass: &Resource<JSRenderPass>);
+
 }
 #[externref]
 #[no_mangle]
@@ -109,8 +132,14 @@ pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_
 /**
  * Called on window resize
  */
+#[externref]
 #[no_mangle]
-unsafe extern "C" fn on_resize(aspect_ratio: f32) -> *mut ComputePassEncoder {
+unsafe extern "C" fn on_resize(
+    aspect_ratio: f32,
+    width: f32,
+    height: f32,
+    pipeline: &Resource<JSComputePipeline>,
+) {
     let gpuoption = &mut ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
     let mut command_encoder = GPUCommandEncoder::new(String::from("screen_resize"));
@@ -135,22 +164,34 @@ unsafe extern "C" fn on_resize(aspect_ratio: f32) -> *mut ComputePassEncoder {
             true,
         );
     }
+    let computepassencoder = command_encoder.begin_compute_pass(String::from("resizePassEncoder"));
+    computepassencoder.set_pipeline(pipeline);
 
-    Box::into_raw(Box::new(
-        command_encoder.begin_compute_pass(String::from("resizePassEncoder")),
-    ))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn end_and_submit(computepass: *mut ComputePassEncoder) {
-    let maybegpu = ENGINE.gpu.lock().unwrap();
-    maybegpu.as_ref().unwrap().queue.submit(
-        &mut vec![Box::from_raw(computepass)
+    let computepassencoderb = Box::into_raw(Box::new(computepassencoder));
+    for renderpass in &mut gpu.renderpasses {
+        resize_renderpass(
+            renderpass.jsrenderpass.as_ref().unwrap(),
+            width,
+            height,
+            computepassencoderb,
+            &mut renderpass.cameragroups,
+            &gpu.cameras,
+            &gpu.device,
+        );
+    }
+    // Call onResize after all renderPasses have resizes so callbacks
+    // can refer updated render target of other renderpasses.
+    for renderpass in &gpu.renderpasses {
+        renderpass_on_resize(renderpass.jsrenderpass.as_ref().unwrap());
+    }
+    gpu.queue.submit(
+        &mut vec![Box::from_raw(computepassencoderb)
             .end()
             .finish(String::from("resize"))]
         .drain(..),
     );
 }
+
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn get_raw_computepassencoder(

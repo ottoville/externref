@@ -9,6 +9,7 @@ import {
 import type { Engine } from '../../engine.js';
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
 import { create_rust_label } from '../../utils.js';
+import { Externref } from 'externref.js';
 declare const engine: Engine;
 
 export interface RenderPassProps<
@@ -110,16 +111,21 @@ export class RenderPass<
     width: number,
     height: number,
     computepass: rust_pointer<'computepass'>,
+    cameragroups: rust_pointer<'cameragroups'>,
+    cameras: rust_pointer<'cameras'>,
+    device: Externref<false, GPUDevice>,
   ) {
     if (width === 0) {
       throw new Error('Cannot resize renderpass to zero width');
     }
     [this.size.width, this.size.height] = this.#getSizeOnResize(width, height);
     engine.rust.resize_renderpass(
-      this.props.id,
       this.size.width,
       this.size.height,
       computepass,
+      cameragroups,
+      cameras,
+      device,
     );
     for (const rt of Object.values(this.props.colorRenderTargets)) {
       rt.resize(this.size, this.props.sampleCount);
