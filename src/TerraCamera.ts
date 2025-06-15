@@ -3,7 +3,6 @@ import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
 import { create_rust_label, create_rust_vec_ptr } from './utils.js';
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
-import { Externref } from './externref.js';
 import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
 import { MeshCamera } from './controllers/MeshCamera.js';
 import { PositionCamera } from './controllers/PositionCamera.js';
@@ -36,7 +35,6 @@ export class TerraCamera {
       if (label === 'waterCamera') {
         this.id = engine.rust.add_child_to_camera_water(
           parent.id,
-          new Externref(true, gpu.device),
           gpu.pipelineLayouts.updateClustersLayout,
           gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
           this,
@@ -49,7 +47,6 @@ export class TerraCamera {
       } else {
         this.id = engine.rust.add_child_to_camera(
           parent.id,
-          new Externref(true, gpu.device),
           gpu.pipelineLayouts.updateClustersLayout,
           gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
           this,
@@ -62,7 +59,6 @@ export class TerraCamera {
       }
     } else {
       this.id = engine.rust.add_camera(
-        new Externref(true, gpu.device),
         gpu.pipelineLayouts.updateClustersLayout,
         gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
         this,

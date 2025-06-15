@@ -80,7 +80,6 @@ pub unsafe extern "C" fn update_camera_direction(camera: *mut &mut Camera, x: f3
 #[no_mangle]
 pub unsafe extern "C" fn add_child_to_camera(
     camera_id: usize,
-    device: &Resource<JSDevice>,
     layout: Resource<JSBindGroupLayout>,
     layout2: Resource<JSBindGroupLayout>,
     externref: Resource<JSCamera>,
@@ -105,7 +104,6 @@ pub unsafe extern "C" fn add_child_to_camera(
         None,
         externref,
         label,
-        device,
         layout,
         clusters_layout,
         projection,
@@ -121,7 +119,6 @@ pub unsafe extern "C" fn add_child_to_camera(
 #[no_mangle]
 pub unsafe extern "C" fn add_child_to_camera_water(
     camera_id: usize,
-    device: &Resource<JSDevice>,
     layout: Resource<JSBindGroupLayout>,
     layout2: Resource<JSBindGroupLayout>,
     externref: Resource<JSCamera>,
@@ -153,7 +150,6 @@ pub unsafe extern "C" fn add_child_to_camera_water(
         })),
         externref,
         label,
-        device,
         layout,
         clusters_layout,
         projection,
@@ -168,7 +164,6 @@ pub unsafe extern "C" fn add_child_to_camera_water(
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn add_camera(
-    device: &Resource<JSDevice>,
     layout: Resource<JSBindGroupLayout>,
     layout2: Resource<JSBindGroupLayout>,
     externref: Resource<JSCamera>,
@@ -192,7 +187,6 @@ pub unsafe extern "C" fn add_camera(
         None,
         externref,
         label,
-        device,
         layout,
         clusters_layout,
         projection,
@@ -293,14 +287,16 @@ impl Camera {
         before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
         externref: Resource<JSCamera>,
         label: String,
-        device: &Resource<JSDevice>,
         layout: Resource<JSBindGroupLayout>,
         clusters_layout: Resource<JSBindGroupLayout>,
         projection: Arc<Projection>,
         renderpasses: Vec<usize>,
     ) -> Camera {
+        let mut maybegpu = ENGINE.gpu.lock().unwrap();
+        let gpu = maybegpu.as_mut().unwrap();
+
         let camerauniform_buffer = Arc::new(Mutex::new(GPUBuffer::<UNIFORM_COPYDST_USAGE>::new(
-            device,
+            &gpu.device,
             UNIFORM_BUFFER_SIZE,
             String::from("camerauniformBuffer"),
             false,
@@ -311,7 +307,7 @@ impl Camera {
             NonZero::new(UNIFORM_BUFFER_SIZE),
         );
         let cluster_array_buffer = Arc::new(Mutex::new(GPUBuffer::<STORAGE_USAGE>::new(
-            device,
+            &gpu.device,
             CLUSTER_SIZE_IN_BYTES as usize,
             String::from("clusterArrayBuffer"),
             false,
@@ -338,8 +334,6 @@ impl Camera {
                 projection_binding.clone(),
             ],
         );
-        let mut maybegpu = ENGINE.gpu.lock().unwrap();
-        let gpu = maybegpu.as_mut().unwrap();
 
         let gpu_buffer_binding = BufferBinding::new(gpu.gpu_buffer.clone(), 0, None);
 
@@ -393,8 +387,12 @@ impl Camera {
     }
     pub fn check_inputs(&mut self) {
         if let Some(controller) = &mut self.controller {
-            self.do_update_view |=
-                controller.check_inputs(false, &mut self.position, &mut self.direction, &self.views.view);
+            self.do_update_view |= controller.check_inputs(
+                false,
+                &mut self.position,
+                &mut self.direction,
+                &self.views.view,
+            );
         }
         for camera in &mut self.children {
             camera.check_inputs();
@@ -502,8 +500,8 @@ impl Camera {
             self.views.view[0][0] = self.views.view[2][2];
             self.views.view[2][0] = -self.views.view[0][2];
 
-            let x_square_length =
-                self.views.view[0][0] * self.views.view[0][0] + self.views.view[2][0] * self.views.view[2][0];
+            let x_square_length = self.views.view[0][0] * self.views.view[0][0]
+                + self.views.view[2][0] * self.views.view[2][0];
             if x_square_length == 0.0 {
                 self.views.view[0][0] = 1.0;
             } else {
@@ -516,12 +514,13 @@ impl Camera {
             }
             // Y axis
             self.views.view[0][1] = self.views.view[1][2] * self.views.view[2][0];
-            self.views.view[1][1] = self.views.view[2][2] * self.views.view[0][0] - self.views.view[0][2] * self.views.view[2][0];
+            self.views.view[1][1] = self.views.view[2][2] * self.views.view[0][0]
+                - self.views.view[0][2] * self.views.view[2][0];
             self.views.view[2][1] = -(self.views.view[1][2] * self.views.view[0][0]);
             // Eye angles, dot products
             //x
-            self.views.view[3][0] =
-                -(self.views.view[0][0] * self.position[0] + self.views.view[2][0] * self.position[2]);
+            self.views.view[3][0] = -(self.views.view[0][0] * self.position[0]
+                + self.views.view[2][0] * self.position[2]);
             //y
             self.views.view[3][1] = -(self.views.view[0][1] * self.position[0]
                 + self.views.view[1][1] * self.position[1]
@@ -601,7 +600,6 @@ fn test_child_camera() {
             None,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             projection.clone(),
@@ -612,7 +610,6 @@ fn test_child_camera() {
             None,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("camera1.0"),
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Arc::new(Projection::new(&Resource::new_non_null(

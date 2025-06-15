@@ -372,7 +372,6 @@ export type rustWasm = {
   ): GPUCommandBuffer | null;
   check_mapped_buffers(): boolean;
   add_camera(
-    device: Externref<true, GPUDevice>,
     layout: GPU['pipelineLayouts']['updateClustersLayout'],
     layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
     camera: TerraCamera,
@@ -386,7 +385,6 @@ export type rustWasm = {
   ): number;
   add_child_to_camera(
     camera_id: number,
-    device: Externref<true, GPUDevice>,
     layout: GPU['pipelineLayouts']['updateClustersLayout'],
     layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
     camera: TerraCamera,
@@ -400,7 +398,6 @@ export type rustWasm = {
   ): number;
   add_child_to_camera_water(
     camera_id: number,
-    device: Externref<true, GPUDevice>,
     layout: GPU['pipelineLayouts']['updateClustersLayout'],
     layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
     camera: TerraCamera,
