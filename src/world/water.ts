@@ -27,7 +27,7 @@ export class Sea extends DataNode {
         vertices: geometry,
       },
       {
-        camera_can_collide_do: false,
+        camera_can_collide_to: false,
         label: 'water',
         rigid_body: RigidBody.off,
         scenes,

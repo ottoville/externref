@@ -55,7 +55,7 @@ export class Plants extends MainNode {
   }
   constructor(scene: Scene, terrainP: Promise<Terrain>) {
     super({
-      camera_can_collide_do: false,
+      camera_can_collide_to: false,
       label: 'Plants',
     });
 

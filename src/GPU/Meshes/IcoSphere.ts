@@ -35,7 +35,7 @@ export class IcoSphere extends IndexedSingleColoredMesh {
         vertices: geometry,
       },
       {
-        camera_can_collide_do: false,
+        camera_can_collide_to: false,
         label,
         rigid_body,
         scenes,

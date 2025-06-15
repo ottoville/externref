@@ -54,7 +54,7 @@ export class Sun extends MainNode {
   drawable: DrawableSimple<RenderPipelineProps<SunVertShader>> | undefined;
   constructor(gpu: GPU, scenes: Scene[]) {
     super({
-      camera_can_collide_do: false,
+      camera_can_collide_to: false,
       directional_light: 1,
       label: 'sun',
       rigid_body: RigidBody.off,

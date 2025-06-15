@@ -49,7 +49,7 @@ export class BoundingBoxMesh extends IndexedDataNode {
         vertices: geometry,
       },
       {
-        camera_can_collide_do: false,
+        camera_can_collide_to: false,
         label: 'BoundingBox_' + targetNode.node.label,
         rigid_body: RigidBody.off,
       },

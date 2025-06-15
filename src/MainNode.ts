@@ -23,7 +23,7 @@ export type MainNodeProps = {
   label: string;
   scenes?: Scene[] | undefined;
   rigid_body?: RigidBody | undefined;
-  camera_can_collide_do: boolean;
+  camera_can_collide_to: boolean;
 };
 
 export abstract class MainNode implements Destroyable {
@@ -182,7 +182,7 @@ export abstract class MainNode implements Destroyable {
         label,
         scenes,
         rigid_body = RigidBody.default,
-        camera_can_collide_do,
+        camera_can_collide_to: camera_can_collide_do,
       } = props;
       const sceneids = scenes
         ? scenes.reduce((acc, scene) => acc | scene.id, 0)

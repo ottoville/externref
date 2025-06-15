@@ -32,7 +32,7 @@ class PlaneMesh extends IndexedDataNode {
         vertices: geometry,
       },
       {
-        camera_can_collide_do: false,
+        camera_can_collide_to: false,
         label: 'plane',
         rigid_body: RigidBody.off,
       },

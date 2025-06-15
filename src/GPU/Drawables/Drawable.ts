@@ -25,6 +25,7 @@ export type DrawableProps<N extends MainNode> = {
         | rust_array_ptr<'position_and_normal'>
         | rust_array_ptr<'position2d_and_uv'>
         | Buffer<VERTEX_BUFFER>
+        | GPUBuffer
       )[]
     | undefined;
   node: N;
@@ -146,6 +147,13 @@ export abstract class Drawable<N extends MainNode = MainNode>
     buffer: rust_array_ptr<'f32'>,
     destroyOld?: boolean,
   ): Buffer<VERTEX_BUFFER>;
+  setVertexBuffer(
+    index: number,
+    buffer: GPUBuffer,
+    destroyOld?: boolean,
+    GPUoffset?: number,
+    size?: number,
+  ): Buffer<VERTEX_BUFFER>;
   setVertexBuffer<T extends Buffer<VERTEX_BUFFER>>(
     index: number,
     buffer: T,
@@ -156,6 +164,7 @@ export abstract class Drawable<N extends MainNode = MainNode>
   setVertexBuffer(
     index: number,
     buffer:
+      | GPUBuffer
       | Buffer<VERTEX_BUFFER>
       | rust_array_ptr<'f32'>
       | rust_array_ptr<'position_and_normal'>
@@ -170,13 +179,29 @@ export abstract class Drawable<N extends MainNode = MainNode>
     buffer:
       | rust_array_ptr<'f32'>
       | rust_array_ptr<'position_and_normal'>
+      | rust_array_ptr<'position2d_and_uv'>
       | rust_array_ptr<'position'>
-      | Buffer<VERTEX_BUFFER>,
+      | Buffer<VERTEX_BUFFER>
+      | GPUBuffer,
     destroyOld = true,
     GPUoffset?: number,
     size?: number,
   ): Buffer<VERTEX_BUFFER> {
-    if (buffer instanceof Buffer) {
+    if (buffer instanceof GPUBuffer) {
+      var Tbuffer = Object.setPrototypeOf(
+        {
+          buffer,
+          props: {
+            gpu: engine.gpu!.device,
+            label: buffer.label,
+            size: buffer.size,
+            usages: BufferUsageEnums.VERTEX,
+          },
+          renderBundles: new Set(),
+        },
+        Buffer.prototype,
+      ) as Buffer<VERTEX_BUFFER>;
+    } else if (buffer instanceof Buffer) {
       var Tbuffer = buffer;
     } else {
       const ptr = buffer[0];

@@ -36,7 +36,7 @@ export class Box extends IndexedSingleColoredMesh {
       typeof mainNodeProps === 'number'
         ? mainNodeProps
         : {
-            camera_can_collide_do: false,
+            camera_can_collide_to: false,
             label: 'box' + uid++,
             ...mainNodeProps,
           },

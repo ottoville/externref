@@ -36,7 +36,7 @@ export class OctaSphere extends IndexedColoredMesh {
         vertices: geometry,
       },
       {
-        camera_can_collide_do: false,
+        camera_can_collide_to: false,
         label: 'OctaSphere' + uid++,
         ...mainNodeProps,
       },

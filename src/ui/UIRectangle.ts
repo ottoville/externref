@@ -440,7 +440,7 @@ export abstract class UIRectangle<
         vertices: geometry,
       },
       {
-        camera_can_collide_do: false,
+        camera_can_collide_to: false,
         label: props.label,
       },
     );

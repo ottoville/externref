@@ -32,7 +32,8 @@ export type MappedVertexBuffers<
             | rust_array_ptr<'position'>
             | rust_array_ptr<'position_and_normal'>
             | rust_array_ptr<'position2d_and_uv'>
-            | Buffer<VERTEX_BUFFER>;
+            | Buffer<VERTEX_BUFFER>
+            | GPUBuffer;
         }>
       : []
     : never;
