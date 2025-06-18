@@ -327,82 +327,6 @@ export class GPU {
     });
 
     this.pipelineLayouts = createPipelineLayouts(this);
-    const bindGroup_index = engine.rust.init_gpu(
-      new Externref(true, device),
-      device.queue,
-      this.pipelineLayouts.updateViewLayout,
-      true,
-      this.pipelineLayouts.sizeBindGroupLayout,
-      this.pipelineLayouts.BindGroupLayoutPosition,
-    );
-    this.shaders = createShaderBuilders(this);
-    this.updateViewShader = createUpdateViewShader(this);
-
-    const bindGroup = engine.rust.externrefs.get(
-      bindGroup_index,
-    ) as GPUBindGroup;
-
-    this.BindGroupPosition = {
-      bindGroup,
-      destroy: function (): void {
-        throw new Error('Function not implemented.');
-      },
-
-      getForRenderBundle: function (
-        _renderBundleEncoder: IRenderBundleEncoder,
-      ): GPUBindGroup {
-        throw new Error('Function not implemented.');
-      },
-      //@ts-expect-error rust hax
-      getForRenderBundle2: (
-        rust_renderbundle_encoder: rust_pointer<'renderbundleencoder'>,
-        bindGroupStartIndex: number,
-        offsets?: readonly number[] | undefined,
-      ) => {
-        if (offsets) {
-          if (offsets.length === 0) {
-            engine.rust.renderbundle_set_bindgroup(
-              rust_renderbundle_encoder,
-              bindGroupStartIndex++,
-              this.bind_group_position!,
-              new Externref(true, engine.gpu!.device),
-            );
-          } else if (offsets.length === 1) {
-            engine.rust.renderbundle_set_bindgroup_1(
-              rust_renderbundle_encoder,
-              bindGroupStartIndex++,
-              this.bind_group_position!,
-              new Externref(true, engine.gpu!.device),
-              offsets[0]!,
-            );
-          } else if (offsets.length === 2) {
-            engine.rust.renderbundle_set_bindgroup_2(
-              rust_renderbundle_encoder,
-              bindGroupStartIndex++,
-              this.bind_group_position!,
-              new Externref(true, engine.gpu!.device),
-              offsets[0]!,
-              offsets[1]!,
-            );
-          } else {
-            throw new Error(
-              'unsupported length of dynamic offsets ' + offsets.length,
-            );
-          }
-        }
-      },
-      layout: this.pipelineLayouts.BindGroupLayoutPosition,
-    };
-
-    this.bindGroupTextureWater =
-      this.pipelineLayouts.rootCameralayout.appendBinds(
-        'lightsBindGroupTexture2PipelineLayout',
-        [
-          this.pipelineLayouts.waterTextureLayot,
-          this.pipelineLayouts.BindGroupLayoutPosition,
-        ],
-      );
-
     this.pickRenderPass = new RenderPass({
       colorRenderTargets: {
         gRenderTargetId: new ColorRenderTarget(
@@ -483,6 +407,11 @@ export class GPU {
         ),
       ),
     };
+    const context: GPUCanvasContext | null = canvas.getContext(
+      'webgpu',
+    ) as unknown as GPUCanvasContext; // unknown for jest
+    if (!context) throw new Error('Unable to get webgpu context');
+
     this.renderPassScreen = new PickableRenderPassMSAA(
       {
         colorRenderTargets: this.screenRenderTargets,
@@ -565,35 +494,6 @@ export class GPU {
         },
       }),
     );
-    this.mainCamera = new TerraCamera('mainCamera', this, [
-      this.renderPassScreen,
-      this.pickRenderPass,
-    ]);
-
-    new TerraCamera(
-      'waterCamera',
-      this,
-      [this.renderPassWater],
-      this.mainCamera,
-    );
-    //TODO: this does not need to be canvas size
-    /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
-            (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');
-    */
-
-    const context: GPUCanvasContext | null = canvas.getContext(
-      'webgpu',
-    ) as unknown as GPUCanvasContext; // unknown for jest
-    if (!context) throw new Error('Unable to get webgpu context');
-
-    context.configure({
-      device: device,
-      format: this.#presentationFormat,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-
-    this.UIPipeline = createUI(this);
-
     this.renderPassCanvas = new RenderPass({
       colorRenderTargets: {
         swap: new ColorRenderTarget(
@@ -634,6 +534,113 @@ export class GPU {
         width: canvas.width,
       },
     });
+    const bindGroup_index = engine.rust.init_gpu(
+      new Externref(true, device),
+      device.queue,
+      this.pipelineLayouts.updateViewLayout,
+      true,
+      this.pipelineLayouts.sizeBindGroupLayout,
+      this.pipelineLayouts.BindGroupLayoutPosition,
+      this.renderPassScreen,
+      this.renderPassWater,
+      this.renderPassCanvas,
+      this.pickRenderPass,
+    );
+    this.renderPassScreen.link_renderpass(this);
+    this.renderPassWater.link_renderpass(this);
+    this.renderPassCanvas.link_renderpass(this);
+    this.pickRenderPass.link_renderpass(this);
+    this.shaders = createShaderBuilders(this);
+    this.updateViewShader = createUpdateViewShader(this);
+
+    const bindGroup = engine.rust.externrefs.get(
+      bindGroup_index,
+    ) as GPUBindGroup;
+
+    this.BindGroupPosition = {
+      bindGroup,
+      destroy: function (): void {
+        throw new Error('Function not implemented.');
+      },
+
+      getForRenderBundle: function (
+        _renderBundleEncoder: IRenderBundleEncoder,
+      ): GPUBindGroup {
+        throw new Error('Function not implemented.');
+      },
+      //@ts-expect-error rust hax
+      getForRenderBundle2: (
+        rust_renderbundle_encoder: rust_pointer<'renderbundleencoder'>,
+        bindGroupStartIndex: number,
+        offsets?: readonly number[] | undefined,
+      ) => {
+        if (offsets) {
+          if (offsets.length === 0) {
+            engine.rust.renderbundle_set_bindgroup(
+              rust_renderbundle_encoder,
+              bindGroupStartIndex++,
+              this.bind_group_position!,
+              new Externref(true, engine.gpu!.device),
+            );
+          } else if (offsets.length === 1) {
+            engine.rust.renderbundle_set_bindgroup_1(
+              rust_renderbundle_encoder,
+              bindGroupStartIndex++,
+              this.bind_group_position!,
+              new Externref(true, engine.gpu!.device),
+              offsets[0]!,
+            );
+          } else if (offsets.length === 2) {
+            engine.rust.renderbundle_set_bindgroup_2(
+              rust_renderbundle_encoder,
+              bindGroupStartIndex++,
+              this.bind_group_position!,
+              new Externref(true, engine.gpu!.device),
+              offsets[0]!,
+              offsets[1]!,
+            );
+          } else {
+            throw new Error(
+              'unsupported length of dynamic offsets ' + offsets.length,
+            );
+          }
+        }
+      },
+      layout: this.pipelineLayouts.BindGroupLayoutPosition,
+    };
+
+    this.bindGroupTextureWater =
+      this.pipelineLayouts.rootCameralayout.appendBinds(
+        'lightsBindGroupTexture2PipelineLayout',
+        [
+          this.pipelineLayouts.waterTextureLayot,
+          this.pipelineLayouts.BindGroupLayoutPosition,
+        ],
+      );
+
+    this.mainCamera = new TerraCamera('mainCamera', this, [
+      this.renderPassScreen,
+      this.pickRenderPass,
+    ]);
+
+    new TerraCamera(
+      'waterCamera',
+      this,
+      [this.renderPassWater],
+      this.mainCamera,
+    );
+    //TODO: this does not need to be canvas size
+    /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
+            (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');
+    */
+
+    context.configure({
+      device: device,
+      format: this.#presentationFormat,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    this.UIPipeline = createUI(this);
 
     //Scene layoyt is iterated manually so remove it not to iterate it twise.
     //this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);

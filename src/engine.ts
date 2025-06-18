@@ -365,6 +365,10 @@ export type rustWasm = {
     force: boolean,
     size_bindgroup_layout: GPU['pipelineLayouts']['sizeBindGroupLayout'],
     position_bindgroup_layout: GPU['pipelineLayouts']['BindGroupLayoutPosition'],
+    renderPassScreen: RenderPass,
+    renderPassWater: RenderPass,
+    renderPassCanvas: RenderPass,
+    pickRenderPass: RenderPass,
   ): number;
   push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
   drain_command_buffers(
@@ -476,11 +480,7 @@ export type rustWasm = {
   ): rust_pointer<'impulse'>;
   link_renderpass(
     id: number,
-    js_renderpass: RenderPass,
     descriptor: GPURenderBundleEncoderDescriptor,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
     cb: (
       renderBundleEncoder: GPURenderBundleEncoder,
       gpu_buffer: number,

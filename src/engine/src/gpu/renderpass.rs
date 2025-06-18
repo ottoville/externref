@@ -12,7 +12,7 @@ use super::{
     bindgroup::BindGroup,
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::ComputePassEncoder,
-    gpu::{get_renderpass_descriptor, JSDevice, GPU},
+    gpu::{get_renderpass_descriptor, JSDevice},
     renderbundle::{JSFunction, JSRenderBundleDescriptor, RenderBundleEncoder},
 };
 thread_local! {
@@ -42,18 +42,13 @@ pub unsafe extern "C" fn resize_renderpass(
 #[no_mangle]
 pub unsafe extern "C" fn link_renderpass(
     id: usize,
-    renderpass: Resource<JSRenderPass>,
     descriptor: Resource<JSRenderBundleDescriptor>,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
     record: Resource<JSFunction>,
 ) -> *mut RenderBundleEncoder {
     let mut gpuopt = ENGINE.gpu.lock().unwrap();
     let gpu = gpuopt.as_mut().unwrap();
-    gpu.renderpasses[id].jsrenderpass = Some(renderpass);
     gpu.renderpasses[id].bundle = Some(RenderBundleEncoder::new(
-        String::from_raw_parts(label_ptr, label_len, label_cap),
+        gpu.renderpasses[id].label.clone(),
         &gpu.device,
         descriptor,
         record,
@@ -64,11 +59,10 @@ pub struct JSRenderPassDescriptor(());
 pub struct JSRenderPass(());
 
 pub struct Renderpass {
-    // TODO: remove option
     pub bundle: Option<RenderBundleEncoder>,
     pub cameragroups: Vec<CameraGroup>,
-    // TODO: remove option
-    pub jsrenderpass: Option<Resource<JSRenderPass>>,
+    pub jsrenderpass: Resource<JSRenderPass>,
+    pub label: String
 }
 impl Renderpass {
     pub fn render(
@@ -81,7 +75,7 @@ impl Renderpass {
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
             let descriptor =
-                unsafe { get_renderpass_descriptor(self.jsrenderpass.as_ref().unwrap()) };
+                unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
             let mut renderpass_encoder = command_encoder.begin_render_pass(label, &descriptor);
             self.bundle.as_mut().unwrap().record_renderbundle(
                 &self.cameragroups,
