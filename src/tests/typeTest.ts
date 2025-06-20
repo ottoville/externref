@@ -4,7 +4,6 @@
  */
 
 import type { Engine } from '../engine.js';
-import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { createWaterVertShader } from '../GPU/Shaders/Water.vert.js';
@@ -13,7 +12,15 @@ import { createSunVertShader } from 'GPU/Shaders/Sun.vert.js';
 import { createSingleColorFragShader } from 'GPU/Shaders/SingleColor.frag.js';
 import { TextureView } from 'webgpu-ts/TextureView.js';
 declare const engine: Engine;
-
+const SunRenderPipeline = Object.freeze({
+  connections: {
+    main: 'main' as const,
+  },
+  depthBuffer: {
+    depthCompare: 'always' as GPUCompareFunction,
+    depthWriteEnabled: false,
+  },
+});
 new Texture({
   format: 'r8unorm',
   gpu: engine.gpu!.device,

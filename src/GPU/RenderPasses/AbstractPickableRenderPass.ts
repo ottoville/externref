@@ -30,7 +30,7 @@ export abstract class AbstractPickableRenderPass<
   abstract doPick(
     encoder: GPUCommandEncoder,
     mesh: boolean,
-  ): Promise<[z: number, id: number, generation: number]>;
+  ): Promise<[z: number, id: number, generation: number]> | null;
   pickPromise: Promise<{
     position: readonly [number, number, number];
   } | null> | null = null;
@@ -62,21 +62,19 @@ export abstract class AbstractPickableRenderPass<
   }
   pickPosition(): Promise<{
     position: readonly [number, number, number];
-  } | null>;
+  } | null> | null;
   pickPosition(mesh: true): Promise<{
     position: readonly [number, number, number];
     meshId: number;
     generation: number;
-  } | null>;
+  } | null> | null;
   pickPosition(
     mesh = false,
   ): Promise<
     | { position: readonly [number, number, number] }
     | { position: readonly [number, number, number]; meshId: number }
     | null
-  > {
-    //HOX! remember to remove, debugging only
-    mesh = true;
+  > | null {
     if (mesh && this.pickPromiseMesh) {
       return this.pickPromiseMesh;
     } else if (!mesh && this.pickPromise) {
@@ -91,7 +89,11 @@ export abstract class AbstractPickableRenderPass<
       label: 'pickPosition_encoder',
     });
 
-    const promise = this.doPick(encoder, mesh).then((zAndID) => {
+    const pickPromise = this.doPick(encoder, mesh);
+    if (pickPromise === null) {
+      return null;
+    }
+    const promise = pickPromise.then((zAndID) => {
       if (zAndID[0] === 0) {
         // Z is 0 when did not hit anything, far plane value
         this.pickPromise = null;

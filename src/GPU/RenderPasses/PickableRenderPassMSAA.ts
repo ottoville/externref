@@ -32,7 +32,7 @@ export class PickableRenderPassMSAA<
   E extends string = string,
 > extends AbstractPickableRenderPass<T, E> {
   readonly #pickBufferRead: GPUBuffer;
-  #pickPositionPipeline: GPUComputePipeline | Promise<GPUComputePipeline>;
+  #pickPositionPipeline?: GPUComputePipeline;
   readonly #mousePositionBuffer: Buffer<
     (typeof BufferUsageEnums)['UNIFORM|COPY_DST']
   >;
@@ -58,12 +58,12 @@ export class PickableRenderPassMSAA<
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
     const readDepthShader = createReadDepth(gpu);
-    this.#pickPositionPipeline = readDepthShader[1]
+    readDepthShader[1]
       .createComputePipeline('main')
       .then((pickPositionPipeline) => {
         this.#pickPositionPipeline = pickPositionPipeline;
-        return pickPositionPipeline;
-      });
+      })
+      .catch((err) => engine.showError(err));
     this.#pickBufferRead = gpu.device.createBuffer({
       label: 'pickBufferRead',
       size: 4 + 4 + 4, //depth + meshID + generation (four pixel)
@@ -99,7 +99,10 @@ export class PickableRenderPassMSAA<
   }
   #zAndIDPromise: Promise<[z: number, id: number, generation: number]> | null =
     null;
-  async doPick(encoder: GPUCommandEncoder) {
+  doPick(encoder: GPUCommandEncoder) {
+    if (!this.#pickPositionPipeline) {
+      return null;
+    }
     if (!this.#zAndIDPromise) {
       const gpu = this.depthRenderTarget.renderTarget.texture.props.gpu;
 
@@ -120,11 +123,8 @@ export class PickableRenderPassMSAA<
       const pickPass = encoder.beginComputePass({
         label: 'pickPass',
       });
-      if (this.#pickPositionPipeline instanceof GPUComputePipeline) {
-        pickPass.setPipeline(this.#pickPositionPipeline);
-      } else {
-        pickPass.setPipeline(await this.#pickPositionPipeline);
-      }
+      pickPass.setPipeline(this.#pickPositionPipeline);
+
       pickPass.setBindGroup(0, this.#pickPositionBindGroup0.bindGroup);
       pickPass.setBindGroup(1, this.#pickPositionBindGroup1.bindGroup);
       pickPass.dispatchWorkgroups(1);

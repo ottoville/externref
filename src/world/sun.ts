@@ -3,7 +3,6 @@ import { MainNode, RigidBody } from '../MainNode.js';
 import { Angle } from '../Math.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import type { Engine } from '../engine.js';
-import { SunRenderPipeline } from '../GPU/RenderPipeLines/Sun.js';
 import type { GPU } from '../GPU.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import {
@@ -65,7 +64,13 @@ export class Sun extends MainNode {
     const renderPipeline = gpu.createRenderPipelineBuilder(
       {
         desc: {
-          ...SunRenderPipeline,
+          connections: {
+            main: 'main',
+          },
+          depthBuffer: {
+            depthCompare: 'always',
+            depthWriteEnabled: false,
+          },
           primitive: {
             cullMode: 'none',
             topology: 'triangle-strip',

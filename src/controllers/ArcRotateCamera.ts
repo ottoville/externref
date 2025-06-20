@@ -147,20 +147,22 @@ export class ArcRotateCamera extends CameraController {
       this.pointerDown = true;
       pointerDownButton = e.button;
       if (pointerDownButton !== 2) {
-        engine.gpu?.renderPassScreen
-          .pickPosition()
-          .then((position) => {
-            if (position) {
-              engine.rust.set_movement(
-                this.id,
-                false,
-                position.position[0],
-                position.position[1],
-                position.position[2],
-              );
-            }
-          })
-          .catch((err) => engine.showError(err));
+        const pickPosition = engine.gpu?.renderPassScreen.pickPosition();
+        if (pickPosition) {
+          pickPosition
+            .then((position) => {
+              if (position) {
+                engine.rust.set_movement(
+                  this.id,
+                  false,
+                  position.position[0],
+                  position.position[1],
+                  position.position[2],
+                );
+              }
+            })
+            .catch((err) => engine.showError(err));
+        }
       }
       engine.addInputListener(this.#cameraMove);
       const onceUp: ListenerObj<'pointerup'> = {

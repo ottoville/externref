@@ -106,8 +106,7 @@ export class PickableRenderPass<
     this.pickBuffer = this.createPickBuffer(this.gpu);
   }
 
-  // eslint-disable-next-line require-await
-  async doPick(encoder: GPUCommandEncoder, mesh: boolean) {
+  doPick(encoder: GPUCommandEncoder, mesh: boolean) {
     let newOffset =
       this.gpu.mousePosition[1] * this.#rowBytes +
       this.gpu.mousePosition[0] *
