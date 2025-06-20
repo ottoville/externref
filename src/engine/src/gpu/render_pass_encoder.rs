@@ -5,7 +5,7 @@ use super::{
     renderbundle::{JSRenderBundle, RenderBundle},
 };
 #[cfg(test)]
-fn execute_bundles(
+unsafe fn execute_bundles(
     _renderpassencoder: &Resource<JSRenderPassEncoder>,
     _bundle: &Resource<JSRenderBundle>,
 ) {

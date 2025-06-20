@@ -365,11 +365,6 @@ pub unsafe extern "C" fn init_gpu(
     let externref = &*(gpu_unwrapped.gpu_buffer.lock().unwrap().externref);
     return ptr::read(externref as *const Resource<JSBuffer> as *const usize);
 }
-#[no_mangle]
-pub unsafe extern "C" fn check_mapped_buffers() -> bool {
-    let mut gpu = ENGINE.gpu.lock().unwrap();
-    gpu.as_mut().unwrap().swap_buffers.check_mapped_buffers()
-}
 
 #[externref]
 #[no_mangle]
@@ -392,11 +387,11 @@ pub unsafe extern "C" fn push_to_pending_command_buffers(buffer: Resource<JSComm
 pub unsafe extern "C" fn process_gpu_queue(
     time: f32,
     update_view_pipeline: &Resource<JSComputePipeline>,
-) -> bool {
+) {
     let mut gpuoption = ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
 
-    return gpu.process_gpu_queue(time, update_view_pipeline);
+    gpu.process_gpu_queue(time, update_view_pipeline);
 }
 pub struct JSDevice(());
 
@@ -412,7 +407,7 @@ pub struct GPU {
     update_view_bindgroup: Arc<BindGroup>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
-    swap_buffers: SwapBuffers,
+    pub swap_buffers: SwapBuffers,
     pub timebuffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
     pub time: f32,
 }
@@ -445,7 +440,7 @@ impl GPU {
         &mut self,
         time: f32,
         update_view_pipeline: &Resource<JSComputePipeline>,
-    ) -> bool {
+    ) {
         for camera in self.cameras.iter_mut() {
             camera.check_inputs();
         }
@@ -598,7 +593,8 @@ impl GPU {
                 .drain(..),
         );
         TEMP_GPU_BUFFERS.lock().unwrap().clear();
-        return self.swap_buffers.queue_submited();
+        #[cfg(not(test))]
+        self.swap_buffers.queue_submited();
     }
 }
 #[cfg(test)]
@@ -669,59 +665,5 @@ fn test_gpu_queue() {
             let mesh = &ENGINE.meshes.lock().unwrap()[&mesh_id];
             assert_eq!(mesh.on_gpu_queue, false);
         }
-    }
-}
-
-#[cfg(test)]
-#[test]
-fn test_time_update() {
-    use crate::engine;
-    use crate::gpu::renderbundle::RenderBundleEncoder;
-    use crate::mesh::Mesh;
-    use crate::mesh::ENGINE;
-    use externref::ExternRef;
-
-    unsafe {
-        init_gpu(
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            false,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-        );
-        for id in 0..4 {
-            let mut gpuopt = ENGINE.gpu.lock().unwrap();
-            let gpu = gpuopt.as_mut().unwrap();
-            gpu.renderpasses[id].jsrenderpass =
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-            gpu.renderpasses[id].bundle = Some(RenderBundleEncoder::new(
-                String::from("test"),
-                &gpu.device,
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            ));
-            gpu.renderpasses[id].bundle.as_mut().unwrap();
-        }
-        {
-            let mut maybegpu = ENGINE.gpu.lock().unwrap();
-            assert_eq!(
-                maybegpu.as_mut().unwrap().swap_buffers.queue_submited(),
-                false
-            );
-        }
-        process_gpu_queue(
-            0.0,
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-        );
-        let mapping = process_gpu_queue(
-            0.0,
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-        );
-        assert_eq!(mapping, true);
     }
 }

@@ -499,7 +499,6 @@ impl Mesh {
 }
 
 impl Mesh {
-    #[cfg(target_arch = "wasm32")]
     pub fn check_collision(
         &mut self,
         collider: &mut collider::Collider,

@@ -103,10 +103,7 @@ export type rustWasm = {
     half_depth: number,
   ): rust_pointer<'geometry'>;
   create_icosphere_geometry(order: number): rust_pointer<'geometry'>;
-  process_gpu_queue(
-    time: number,
-    updateViewPipeline: GPUComputePipeline,
-  ): boolean;
+  process_gpu_queue(time: number, updateViewPipeline: GPUComputePipeline): void;
 
   new_mesh_from_js(
     point_light: number,
@@ -374,7 +371,6 @@ export type rustWasm = {
   drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
   ): GPUCommandBuffer | null;
-  check_mapped_buffers(): boolean;
   add_camera(
     layout: GPU['pipelineLayouts']['updateClustersLayout'],
     layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
@@ -603,6 +599,10 @@ export type rustWasm = {
     id: number,
     generation: number,
   ): boolean;
+  buffer_mapped(
+    rust_buffer: rust_pointer<'buffer'>,
+    cb: rust_pointer<'fn'>,
+  ): void;
 } & BufferInterface &
   DevToolsInterface;
 const ObjectStores = {

@@ -26,16 +26,10 @@ pub unsafe extern "C" fn resize_renderpass(
     computepass: *mut ComputePassEncoder,
     cameragroups: *mut Vec<CameraGroup>,
     cameras: *const ExplicitGenerationalFreeList<Camera>,
-    device: &Resource<JSDevice>
+    device: &Resource<JSDevice>,
 ) {
     for cameragroup in &mut *cameragroups {
-        cameragroup.update_size_bind_group(
-            device,
-            width,
-            height,
-            &(*cameras),
-            &mut *computepass,
-        );
+        cameragroup.update_size_bind_group(device, width, height, &(*cameras), &mut *computepass);
     }
 }
 #[externref]
@@ -62,7 +56,7 @@ pub struct Renderpass {
     pub bundle: Option<RenderBundleEncoder>,
     pub cameragroups: Vec<CameraGroup>,
     pub jsrenderpass: Resource<JSRenderPass>,
-    pub label: String
+    pub label: String,
 }
 impl Renderpass {
     pub fn render(
@@ -74,19 +68,21 @@ impl Renderpass {
         bind_group_position: &Arc<BindGroup>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
-            let descriptor =
-                unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
+            let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
             let mut renderpass_encoder = command_encoder.begin_render_pass(label, &descriptor);
-            self.bundle.as_mut().unwrap().record_renderbundle(
-                &self.cameragroups,
-                device,
-                cameras,
-                gpu_buffer,
-                bind_group_position,
-                |renderbundle| {
-                    renderpass_encoder.execute_bundles(renderbundle);
-                },
-            );
+            if let Some(bundle) = self.bundle.as_mut() {
+                bundle.record_renderbundle(
+                    &self.cameragroups,
+                    device,
+                    cameras,
+                    gpu_buffer,
+                    bind_group_position,
+                    |renderbundle| {
+                        renderpass_encoder.execute_bundles(renderbundle);
+                    },
+                );
+            }
+
             return renderpass_encoder.end();
         });
     }

@@ -196,11 +196,11 @@ fn test_bindgroup() {
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
         let mut gpuopt = ENGINE.gpu.lock();
-        let mut gpuopt2 = gpuopt.as_mut().unwrap();
+        let gpuopt2 = gpuopt.as_mut().unwrap();
         let gpu = gpuopt2.as_mut().unwrap();
 
         assert_eq!(Arc::strong_count(&rawbuffer), 3);
-        let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
+        let command_encoder = GPUCommandEncoder::new(String::from("test"));
 
         let mut renderpass_encoder = command_encoder.begin_render_pass(
             &String::from("test"),
@@ -340,7 +340,7 @@ fn test_bindgroup_buffer_resize() {
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
         let mut gpuopt = ENGINE.gpu.lock();
-        let mut gpuopt2 = gpuopt.as_mut().unwrap();
+        let gpuopt2 = gpuopt.as_mut().unwrap();
         let gpu = gpuopt2.as_mut().unwrap();
 
         //buffer ref count is 3: test, command_encoder, rawbindgroup

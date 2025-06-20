@@ -12,20 +12,8 @@ use super::mapped_buffer::MappedGPUBuffer;
 use super::usages::COPYSRC_USAGE;
 
 pub struct JSBuffer(());
-#[cfg(test)]
-pub unsafe fn map_write_async(_buffer: &Resource<JSBuffer>, _offset: usize, _size: usize) {}
 
-#[cfg(test)]
-pub unsafe fn set_mapped_range(
-    _buffer: &Resource<JSBuffer>,
-    _offset: usize,
-    _size: usize,
-    _buffer_offset: usize,
-) {
-}
 
-#[cfg(test)]
-pub unsafe fn unmap(_buffer: &Resource<JSBuffer>) {}
 
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
@@ -33,17 +21,6 @@ pub unsafe fn unmap(_buffer: &Resource<JSBuffer>) {}
 #[link(wasm_import_module = "buffer")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    pub fn set_mapped_range(
-        buffer: &Resource<JSBuffer>,
-        offset: usize,
-        size: usize,
-        buffer_offset: usize,
-    );
-    pub fn unmap(buffer: &Resource<JSBuffer>);
-    pub fn map_write_async(buffer: &Resource<JSBuffer>, offset: usize, size: usize);
-    /**
-     * 0: unmapped, 1: pending: 2: mapped;
-     */
     pub fn map_state(buffer: &Resource<JSBuffer>) -> u32;
 }
 
@@ -165,6 +142,16 @@ impl<const U: u32> GPUBuffer<U> {
                 buffer_bindings: Vec::new(),
             });
         }
+    }
+    pub fn map_state(&self) -> u32 {
+        #[cfg(feature = "webgpu")]
+        #[cfg(any(not(test), rust_analyzer))]
+        unsafe {
+            map_state(&self.externref)
+        }
+
+        #[cfg(test)]
+        return 2;
     }
     pub fn make_dirty(&self) {
         for some_buffer_binding in self.buffer_bindings.iter() {

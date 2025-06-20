@@ -623,8 +623,6 @@ fn test_child_camera() {
         );
         camera.update_position([1.0, 2.0, 3.0, 0.0]);
         camera.children.push(child_1);
-        let mut maybegpu = ENGINE.gpu.lock().unwrap();
-        let mut gpu = maybegpu.as_mut().unwrap();
         let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
 
         let mut swap_buffers = SwapBuffers::new();

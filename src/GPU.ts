@@ -720,8 +720,6 @@ export class GPU {
       this.onceAfterRender.push(cb);
     }
   }
-  #idleCallback: number | undefined;
-  executeRuntime = false;
   readonly #renderLoop = (
     time: DOMHighResTimeStamp,
     updateViewPipeline: GPUComputePipeline,
@@ -738,17 +736,8 @@ export class GPU {
     framecount++;
     //performance.mark('renderloopStart');
 
-    if (engine.rust.process_gpu_queue(time, updateViewPipeline)) {
-      // Some buffers did move from onqueue to pending, execute runtime later on
-      this.executeRuntime = true;
-    }
-    if (this.executeRuntime && this.#idleCallback === undefined) {
-      this.#idleCallback = requestIdleCallback(() => {
-        this.#idleCallback = undefined;
-        // If there are still pending buffers, execute runtime again later on
-        this.executeRuntime = engine.rust.check_mapped_buffers();
-      });
-    }
+    engine.rust.process_gpu_queue(time, updateViewPipeline);
+
     this.device.queue
       .onSubmittedWorkDone()
       .then(() => {

@@ -23,7 +23,7 @@ pub struct JSRenderBundleDescriptor(());
 pub struct JSRenderBundle(());
 
 #[cfg(test)]
-fn create_renderbundle_encoder(
+unsafe fn create_renderbundle_encoder(
     _device: &Resource<JSDevice>,
     _descriptor: &Resource<JSRenderBundleDescriptor>,
     _label: *const usize,
@@ -32,7 +32,7 @@ fn create_renderbundle_encoder(
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
 }
 #[cfg(test)]
-fn do_record(
+unsafe fn do_record(
     _record: &Resource<JSFunction>,
     _encoder: &Resource<JSRenderBundleEncoder>,
     _gpu_buffer_externref: usize,

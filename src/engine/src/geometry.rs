@@ -420,7 +420,6 @@ impl<'vert> Geometry {
             self.collider_planes_parallel = vec![[[0.0; 4]; 4]; faces_count / 4];
         }
     }
-    #[cfg(target_arch = "wasm32")]
     pub fn check_collision(&mut self, collider: &mut collider::Collider) {
         if self.faces_count() % 4 != 0 {
             return;
@@ -435,6 +434,7 @@ impl<'vert> Geometry {
         if self.collider_planes_parallel.len() == 0 {
             return;
         }
+        #[cfg(target_arch = "wasm32")]
         collider.test_triangles(& self.collider_planes, &self.collider_planes_parallel);
     }
     pub fn update_collider_planes(&mut self) {

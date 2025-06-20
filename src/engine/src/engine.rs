@@ -288,7 +288,6 @@ impl Engine2 {
             self.camera_can_collide_meshes
                 .retain(|mesh_id| match meshes.get_mut(&mesh_id) {
                     Some(mesh) => {
-                        #[cfg(target_arch = "wasm32")]
                         mesh.check_collision(&mut self.collider, &*collider_sphere);
                         return true;
                     }

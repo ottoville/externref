@@ -24,17 +24,28 @@ export const BufferExports = {
     return 2;
   },
   map_write_async(
-    { externref: buffer }: Externref<boolean, GPUBuffer>,
+    index: number,
     offset: number,
     size: number,
+    rust_buffer: rust_pointer<'buffer'>,
+    cb: rust_pointer<'fn'>,
   ) {
-    buffer.mapAsync(GPUMapMode.WRITE, offset, size).catch((err) => {
-      if (err instanceof Error && err.name === 'AbortError') {
-        console.warn(err);
-      } else {
-        engine.showError(err);
-      }
-    });
+    const { externref: buffer } = engine.rust.externrefs.get(
+      index,
+    ) as Externref<boolean, GPUBuffer>;
+
+    buffer
+      .mapAsync(GPUMapMode.WRITE, offset, size)
+      .then(() => {
+        engine.rust.buffer_mapped(rust_buffer, cb);
+      })
+      .catch((err) => {
+        if (err instanceof Error && err.name === 'AbortError') {
+          console.warn(err);
+        } else {
+          engine.showError(err);
+        }
+      });
   },
   set_mapped_range(
     { externref: buffer }: Externref<boolean, GPUBuffer>,

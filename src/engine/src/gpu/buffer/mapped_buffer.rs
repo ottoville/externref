@@ -1,11 +1,38 @@
 use std::ops::Deref;
 
-use super::buffer::{set_mapped_range, unmap};
 use super::buffer::{GPUBuffer, GpuBuffer};
 use super::usages::COPYSRC_USAGE;
 use externref::{externref, Resource};
 
+use crate::gpu::buffer::buffer::JSBuffer;
 use crate::gpu::gpu::JSDevice;
+
+#[cfg(test)]
+pub unsafe fn set_mapped_range(
+    _buffer: &Resource<JSBuffer>,
+    _offset: usize,
+    _size: usize,
+    _buffer_offset: usize,
+) {
+}
+#[cfg(test)]
+pub unsafe fn unmap(_buffer: &Resource<JSBuffer>) {}
+
+#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "webgpu")]
+#[externref]
+#[link(wasm_import_module = "buffer")]
+#[cfg(any(not(test), rust_analyzer))]
+extern "C" {
+    pub fn set_mapped_range(
+        buffer: &Resource<JSBuffer>,
+        offset: usize,
+        size: usize,
+        buffer_offset: usize,
+    );
+    pub fn unmap(buffer: &Resource<JSBuffer>);
+}
+
 
 // Todo: set inner buffer to private
 pub struct MappedGPUBuffer<B: GpuBuffer>(B);
