@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::num::NonZeroUsize;
+use std::num::{NonZeroU32, NonZeroUsize};
 use std::ptr;
 use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
@@ -278,6 +278,7 @@ pub unsafe extern "C" fn init_gpu(
             GPUBuffer::<UNIFORM_USAGE>::new(&device, 16, String::from("screen_buffer"), false);
         let render_pass_screen = Renderpass {
             label: String::from("renderPassScreen"),
+            size: [NonZeroU32::new_unchecked(1); 2],
             jsrenderpass: js_render_pass_screen,
             bundle: None,
             cameragroups: vec![CameraGroup {
@@ -298,6 +299,7 @@ pub unsafe extern "C" fn init_gpu(
 
         let render_pass_water = Renderpass {
             label: String::from("renderPassWater"),
+            size: [NonZeroU32::new_unchecked(1); 2],
             jsrenderpass: js_render_pass_water,
             bundle: None,
             cameragroups: vec![CameraGroup {
@@ -318,6 +320,7 @@ pub unsafe extern "C" fn init_gpu(
 
         let pick_render_pass = Renderpass {
             label: String::from("renderPassPick"),
+            size: [NonZeroU32::new_unchecked(1); 2],
             jsrenderpass: js_pick_render_pass,
             bundle: None,
             cameragroups: vec![CameraGroup {
@@ -335,6 +338,7 @@ pub unsafe extern "C" fn init_gpu(
         };
         let render_pass_canvas = Renderpass {
             label: String::from("renderPassCanvas"),
+            size: [NonZeroU32::new_unchecked(1); 2],
             jsrenderpass: js_render_pass_canvas,
             bundle: None,
             cameragroups: Vec::new(),

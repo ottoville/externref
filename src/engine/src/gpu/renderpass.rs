@@ -1,4 +1,8 @@
-use std::{cell::LazyCell, sync::Arc};
+use std::{
+    cell::LazyCell,
+    num::{NonZero, NonZeroU32},
+    sync::{atomic::Ordering, Arc},
+};
 
 use externref::{externref, Resource};
 
@@ -57,6 +61,7 @@ pub struct Renderpass {
     pub cameragroups: Vec<CameraGroup>,
     pub jsrenderpass: Resource<JSRenderPass>,
     pub label: String,
+    pub size: [NonZeroU32; 2],
 }
 impl Renderpass {
     pub fn render(
