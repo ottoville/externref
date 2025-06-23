@@ -98,6 +98,12 @@ export class RenderPass<
           this,
           bindgroup_start_index,
         );
+        //@ts-expect-error rust fix
+        this.bundles.push({
+          destroy: () => {
+            engine.rust.renderbundle_make_dirty(rust_renderbundle);
+          },
+        });
       },
     );
   }
