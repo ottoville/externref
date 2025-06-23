@@ -316,7 +316,7 @@ export type rustWasm = {
 
   init_engine2(): number;
   physic_tick(delta: number): void;
-
+  set_mouse_position(x: number, y: number): void;
   create_ball_collider(radius: number): rust_pointer<'collider'>;
   create_capsule_collider(
     half_height: number,
@@ -418,10 +418,6 @@ export type rustWasm = {
   get_camera_position_ptr(
     camera: rust_mutex<'locked', 'camera'>,
   ): rust_pointer<'position'>;
-  get_camera_projection_inverted_ptr(
-    camera: rust_mutex<'locked', 'camera'>,
-  ): rust_pointer<'camera_projection_inverted'>;
-
   update_camera_projection_view_inverted(camera_id: number): void;
   update_camera_position(
     camera: rust_mutex<'locked', 'camera'>,
@@ -440,14 +436,6 @@ export type rustWasm = {
     width: number,
     height: number,
     pipeline: GPUComputePipeline,
-  ): void;
-  resize_renderpass(
-    width: number,
-    height: number,
-    computepass: rust_pointer<'computepass'>,
-    cameragroups: rust_pointer<'cameragroups'>,
-    cameras: rust_pointer<'cameras'>,
-    device: Externref<false, GPUDevice>,
   ): void;
   get_raw_computepassencoder(
     computepass: rust_pointer<'computepass'>,
@@ -552,15 +540,10 @@ export type rustWasm = {
   get_target_ptr(
     controller: rust_pointer<'ArcRotateCamera'>,
   ): rust_pointer<'target'>;
-  new_mesh_camera(
-    canvas_width: number,
-    mesh_id: rust_pointer<'mesh_id'>,
-  ): rust_pointer<'meshcamera'>;
-  update_canvas_width(
-    mesh_camera: rust_pointer<'meshcamera'>,
-    canvas_width: number,
-  ): void;
+  new_mesh_camera(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'meshcamera'>;
   new_position_camera(): rust_pointer<'positioncamera'>;
+  pick_position(id: number, z: number): number;
+  get_renderpass_size(id: number): rust_pointer<'array'>;
   attach_archrotate_camera_controller(
     camera: rust_mutex<'locked', 'camera'>,
     controller: rust_pointer<'ArcRotateCamera'>,
@@ -867,26 +850,19 @@ export class Engine {
         now() {
           return performance.now();
         },
-        renderpass_on_resize(renderpass: RenderPass) {
-          renderpass.onResize.forEach((cb) => cb());
+        renderpass_on_resize(
+          renderpass: RenderPass,
+          width: number,
+          height: number,
+        ) {
+          renderpass.onResize.forEach((cb) => cb(width, height));
         },
         resize_renderpass(
           renderpass: RenderPass,
           width: number,
           height: number,
-          computepass: rust_pointer<'computepass'>,
-          cameragroups: rust_pointer<'cameragroups'>,
-          cameras: rust_pointer<'cameras'>,
-          device: Externref<false, GPUDevice>,
         ) {
-          renderpass.resize(
-            width,
-            height,
-            computepass,
-            cameragroups,
-            cameras,
-            device,
-          );
+          renderpass.resize(width, height);
         },
         vertices_change({ externref: mesh }: Externref<false, DataNode>) {
           mesh.onVerticesChange();
@@ -1122,6 +1098,14 @@ export class Engine {
           'keyup',
         ] as const
       ).forEach((eventType) => {
+        nodes.canvas.addEventListener('pointermove', (e) => {
+          if (this.gpu) {
+            engine.rust.set_mouse_position(
+              e.clientX * this.gpu.scale.x,
+              e.clientY * this.gpu.scale.y,
+            );
+          }
+        });
         nodes.canvas.addEventListener(
           eventType,
           (e) => {

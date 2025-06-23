@@ -247,8 +247,8 @@ pub trait VectorMath<T, const N: usize> {
     fn divide_in_place(&mut self, dividor: T);
     fn divide_to_ref(&self, dividor: f32, result: &mut Self);
     fn to_scaling_matrix(&self) -> [[T; N]; N];
-    fn transform(&self, matrix: [[f32; 4]; 4]) -> Self;
-    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], other: &mut Self);
+    fn transform(&self, matrix: &[[f32; 4]; 4]) -> Self;
+    fn transform_to_ref(&self, matrix: &[[f32; 4]; 4], other: &mut Self);
     fn lerp_to_ref(&self, to: &Self, t: f32, result: &mut Self);
 }
 pub trait VectorMathF32<const N: usize>: VectorMath<f32, N> {
@@ -387,13 +387,13 @@ impl VectorMath<f32, 3> for [f32; 3] {
             [0.0, 0.0, self[2]],
         ]
     }
-    fn transform(&self, matrix: [[f32; 4]; 4]) -> Self {
+    fn transform(&self, matrix: &[[f32; 4]; 4]) -> Self {
         let mut result = [0.0; 3];
         self.transform_to_ref(matrix, &mut result);
         return result;
     }
     #[cfg(not(target_arch = "wasm32"))]
-    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], other: &mut Self) {
+    fn transform_to_ref(&self, matrix: &[[f32; 4]; 4], other: &mut Self) {
         let rx =
             self[0] * matrix[0][0] + self[1] * matrix[1][0] + self[2] * matrix[2][0] + matrix[3][0];
         let ry =
@@ -410,7 +410,7 @@ impl VectorMath<f32, 3> for [f32; 3] {
         other[2] = rz * rw;
     }
     #[cfg(target_arch = "wasm32")]
-    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], other: &mut Self) {
+    fn transform_to_ref(&self, matrix: &[[f32; 4]; 4], other: &mut Self) {
         use std::arch::wasm32::{
             f32x4_add, f32x4_extract_lane, f32x4_mul, f32x4_splat, v128, v128_load,
         };
@@ -587,15 +587,15 @@ impl VectorMath<f32, 4> for [f32; 4] {
         ]
     }
 
-    fn transform(&self, _matrix: [[f32; 4]; 4]) -> Self {
+    fn transform(&self, _matrix: &[[f32; 4]; 4]) -> Self {
         todo!()
     }
     #[cfg(not(target_arch = "wasm32"))]
-    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], result: &mut Self) {
+    fn transform_to_ref(&self, matrix: &[[f32; 4]; 4], result: &mut Self) {
         todo!()
     }
     #[cfg(target_arch = "wasm32")]
-    fn transform_to_ref(&self, matrix: [[f32; 4]; 4], result: &mut Self) {
+    fn transform_to_ref(&self, matrix: &[[f32; 4]; 4], result: &mut Self) {
         use std::arch::wasm32::*;
         unsafe {
             let v0 = v128_load(&matrix[0] as *const f32 as *const v128);
@@ -1210,4 +1210,14 @@ fn test_multiply() {
             [18527.969, -3568.928, 1306.04, 190130.86]
         ]
     );
+}
+#[cfg(test)]
+#[test]
+#[wasm_bindgen_test::wasm_bindgen_test]
+fn test_multiply_vec3_mat16() {
+    let vec: [f32; 3] = [1.0,2.0,3.0];
+    let mat: [[f32; 4]; 4] = [[4.0,5.0,6.0, 7.0],[6.0,5.0,4.0, 3.0],[4.0,6.0,5.0, 4.0], [9.0,8.0,7.0,6.0]];
+    let mut result = [0.0;3];
+    vec.transform_to_ref(&mat, &mut result);
+    assert_eq!(result, [1.1935483, 1.3225806, 1.1612903]);
 }

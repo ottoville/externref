@@ -357,17 +357,10 @@ export class GPU {
         ),
       },
       entryPoint: 'pick',
-      getSizeOnResize: (w, h) => {
-        return [w, h];
-      },
       id: 2,
       label: 'pickRenderPass',
       rootLayout: this.pipelineLayouts.rootCameralayout,
       sampleCount: 1,
-      size: {
-        height: canvas.height,
-        width: canvas.width,
-      },
     });
     this.screenRenderTargets = {
       gRenderTargetDiffuse: new MSAARenderTarget(
@@ -416,17 +409,10 @@ export class GPU {
       {
         colorRenderTargets: this.screenRenderTargets,
         entryPoint: 'main',
-        getSizeOnResize: (w, h) => {
-          return [w, h];
-        },
         id: 0,
         label: 'renderPassScreen',
         rootLayout: this.pipelineLayouts.rootCameralayout,
         sampleCount: 4,
-        size: {
-          height: canvas.height,
-          width: canvas.width,
-        },
       },
       new DepthRenderTarget(0, {
         context: {
@@ -470,15 +456,10 @@ export class GPU {
           ),
         },
         entryPoint: 'main',
-        getSizeOnResize: (w, h) => [w >> 2, h >> 2],
         id: 1,
         label: 'renderPassWater',
         rootLayout: this.pipelineLayouts.rootCameralayout,
         sampleCount: 1,
-        size: {
-          height: canvas.height,
-          width: canvas.width,
-        },
       },
       new DepthRenderTarget(0, {
         context: {
@@ -522,17 +503,10 @@ export class GPU {
         ),
       },
       entryPoint: 'main',
-      getSizeOnResize: (w, h) => {
-        return [w, h];
-      },
       id: 3,
       label: 'renderPassCanvas',
       rootLayout: this.pipelineLayouts.canvasRootLayout,
       sampleCount: 1,
-      size: {
-        height: canvas.height,
-        width: canvas.width,
-      },
     });
     const bindGroup_index = engine.rust.init_gpu(
       new Externref(true, device),

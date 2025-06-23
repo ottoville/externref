@@ -11,7 +11,6 @@ use super::{
 
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh_camera(
-    canvas_width: u32,
     mesh_id: *mut ExplicitGenerationalFreeListIndex<Mesh>,
 ) -> *mut MeshCamera {
     Box::into_raw(Box::new(MeshCamera {
@@ -20,7 +19,6 @@ pub unsafe extern "C" fn new_mesh_camera(
         pointer_movement_y: 0,
         angle: std::f32::consts::PI,
         v_angle: std::f32::consts::FRAC_PI_2,
-        canvas_width: canvas_width as f32,
         mesh_id: (*mesh_id).clone(),
     }))
 }
@@ -30,10 +28,6 @@ pub unsafe extern "C" fn attach_meshcamera_camera_controller(
     controller: *mut MeshCamera,
 ) {
     (*camera).controller = Some(Box::from_raw(controller));
-}
-#[no_mangle]
-pub unsafe extern "C" fn update_canvas_width(controller: *mut MeshCamera, canvas_width: u32) {
-    (*controller).canvas_width = canvas_width as f32;
 }
 #[no_mangle]
 pub unsafe extern "C" fn keyfunctionmeshcamera(
@@ -68,7 +62,6 @@ pub struct MeshCamera {
     pointer_movement_y: i32,
     angle: f32,
     v_angle: f32,
-    canvas_width: f32,
     mesh_id: ExplicitGenerationalFreeListIndex<Mesh>,
 }
 impl MeshCamera {

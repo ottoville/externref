@@ -208,7 +208,6 @@ export class ArcRotateCamera extends CameraController {
           const gpu = this.camera.gpu;
           Atomics.store(gpu.mousePosition, 0, e.clientX * gpu.scale.x);
           Atomics.store(gpu.mousePosition, 1, e.clientY * gpu.scale.y);
-          Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
         }
       },
       object: this,

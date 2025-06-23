@@ -440,7 +440,7 @@ impl<'vert> Geometry {
     pub fn update_collider_planes(&mut self) {
         let positions = self.vertices.get_positions();
         for (position, col_pos) in positions.zip(&mut self.last_collider_world_vertices) {
-            col_pos.0 = position.0.transform(self.collisions_transform_matrix);
+            col_pos.0 = position.0.transform(&self.collisions_transform_matrix);
         }
         for collider_plane in self.collider_planes.iter_mut() {
             let v0 = &collider_plane.vectors[0].0;

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::{panic, usize};
 
@@ -8,7 +9,6 @@ use crate::allocators::explicit_generational_freelist::{
 };
 use crate::allocators::freeindex::FreeIndex;
 
-use crate::cameras::camera::Camera;
 use crate::gpu::gpu::GPU;
 
 use crate::mesh::JSMesh;
@@ -66,14 +66,18 @@ pub unsafe extern "C" fn physic_tick(delta: f32) {
     let engine = &mut ENGINE.engine2.lock().unwrap();
     engine.physic_tick(delta / 1000.0);
 }
-
+#[no_mangle]
+pub unsafe extern "C" fn set_mouse_position(x: f32, y: f32) {
+    // TODO: Save raw position and do gpu scaling when loading the value
+    MOUSE_POSITION.store(((y as u32) << 16) | (x as u32), Ordering::Relaxed);
+}
 const GRAVITY: nalgebra::Matrix<
     f32,
     nalgebra::Const<3>,
     nalgebra::Const<1>,
     nalgebra::ArrayStorage<f32, 3, 1>,
 > = vector![0.0, -9.81, 0.0];
-
+pub static MOUSE_POSITION: AtomicU32 = AtomicU32::new(0);
 pub struct Engine {
     pub engine2: Mutex<Engine2>,
     pub gpu: Mutex<Option<GPU>>,
@@ -127,7 +131,6 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
         gpu: Mutex::new(None),
         meshes: Mutex::new(ExplicitGenerationalFreeList::new(100)),
         event_handler: ChannelEventCollector::new(collision_send, contact_send),
-
         character_controller: KinematicCharacterController::default(),
     };
 });

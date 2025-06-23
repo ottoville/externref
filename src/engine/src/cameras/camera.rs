@@ -207,12 +207,6 @@ pub unsafe extern "C" fn get_camera_direction_ptr(camera: *mut &Camera) -> *cons
 pub unsafe extern "C" fn get_camera_position_ptr(camera: *mut &Camera) -> *const f32 {
     (*camera).position.as_ptr()
 }
-#[no_mangle]
-pub unsafe extern "C" fn get_camera_projection_inverted_ptr(
-    camera: *mut &mut Camera,
-) -> *const [f32; 4] {
-    (*camera).projection_view_inverted.as_ptr()
-}
 
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: usize) {
@@ -262,7 +256,7 @@ struct Views {
 pub struct Camera {
     pub projection: Arc<Projection>,
     views: Views,
-    projection_view_inverted: [[f32; 4]; 4],
+    pub projection_view_inverted: [[f32; 4]; 4],
     pub direction: [f32; 4],
     pub position: [f32; 4],
     externref: Resource<JSCamera>,

@@ -121,7 +121,8 @@ export abstract class UIRectangle<
       ) {
         this.#texture.destroy();
         this.#texture = undefined;
-        this.#updateBoundingBoxAndVerticesSuper();
+        const size = this.props.renderPass.size;
+        this.#updateBoundingBoxAndVerticesSuper(size.width, size.height);
       }
     }
     if (!this.#texture) {
@@ -174,14 +175,12 @@ export abstract class UIRectangle<
     Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>
   >;
   screenPosition = new TerraVector2(2);
-  protected updatePosition() {
+  protected updatePosition(width: number, height: number) {
     if (this.props.translate.x.value[1] === NumericUnit['%']) {
       var XPosition = this.props.translate.x.value[0];
     } else {
       //pixels
-      var XPosition =
-        (this.props.translate.x.value[0] / this.props.renderPass.size.width) *
-        2;
+      var XPosition = (this.props.translate.x.value[0] / width) * 2;
     }
     if (this.props.translate.x.anchor === Anchor.RIGHT) {
       XPosition = -XPosition + 1;
@@ -193,9 +192,7 @@ export abstract class UIRectangle<
       var YPosition = this.props.translate.y.value[0];
     } else {
       //pixels
-      var YPosition =
-        (this.props.translate.y.value[0] / this.props.renderPass.size.height) *
-        2;
+      var YPosition = (this.props.translate.y.value[0] / height) * 2;
     }
     if (this.props.translate.y.anchor === Anchor.TOP) {
       YPosition = -YPosition + 1;
@@ -204,25 +201,25 @@ export abstract class UIRectangle<
     }
     this.screenPosition[1] = YPosition;
   }
-  #updateBoundingBoxAndVerticesSuper() {
-    const { scale, renderPass, originalAspectRatio, translate } = this.props;
+  #updateBoundingBoxAndVerticesSuper(width: number, height: number) {
+    const { scale, originalAspectRatio, translate } = this.props;
     if (
       this.props.translate.x.value[1] === NumericUnit.px ||
       this.props.translate.y.value[1] === NumericUnit.px
     ) {
-      this.updatePosition();
+      this.updatePosition(width, height);
       this.uniformBuffer.write(0, this.screenPosition);
     }
     let widthPixels: number;
     if (scale.unit === NumericUnit['%']) {
-      widthPixels = renderPass.size.width * scale.min_width;
+      widthPixels = width * scale.min_width;
     } else {
       widthPixels = scale.min_width;
     }
     if (originalAspectRatio) {
       const heightPixels = widthPixels * originalAspectRatio;
       if (scale.unit === NumericUnit['%']) {
-        scale.y = heightPixels / renderPass.size.height;
+        scale.y = heightPixels / height;
       } else {
         scale.y = heightPixels;
       }
@@ -233,26 +230,26 @@ export abstract class UIRectangle<
       if (originalAspectRatio) halfHeight = halfWidth * originalAspectRatio;
       else {
         if (scale.unit === NumericUnit['%'])
-          halfHeight = renderPass.size.height * scale.y * 0.5;
+          halfHeight = height * scale.y * 0.5;
         else halfHeight = scale.y * 0.5;
       }
       let movementXPixels = translate.x.value[0];
       if (translate.x.value[1] === NumericUnit['%']) {
-        movementXPixels = translate.x.value[0] * renderPass.size.width * 0.5;
+        movementXPixels = translate.x.value[0] * width * 0.5;
       }
       if (translate.x.anchor === Anchor.RIGHT) {
-        movementXPixels = renderPass.size.width - movementXPixels;
+        movementXPixels = width - movementXPixels;
       } else if (translate.x.anchor === Anchor.CENTER) {
-        movementXPixels = movementXPixels + renderPass.size.width * 0.5;
+        movementXPixels = movementXPixels + width * 0.5;
       }
       let movementYPixels = translate.y.value[0];
       if (translate.y.value[1] === NumericUnit['%']) {
-        movementYPixels = translate.y.value[0] * renderPass.size.height * 0.5;
+        movementYPixels = translate.y.value[0] * height * 0.5;
       }
       if (translate.y.anchor === Anchor.BOTTOM) {
-        movementYPixels = renderPass.size.height - movementYPixels;
+        movementYPixels = height - movementYPixels;
       } else if (translate.y.anchor === Anchor.CENTER) {
-        movementYPixels = renderPass.size.height * 0.5 - movementYPixels;
+        movementYPixels = height * 0.5 - movementYPixels;
       }
 
       this.boundingBox.top = (movementYPixels - halfHeight) / devicePixelRatio;
@@ -268,22 +265,22 @@ export abstract class UIRectangle<
     let widthBorderRelative: number;
     let heightBorderRelative: number;
     if (borderSize.width[1] === NumericUnit['%']) {
-      widthBorderPixels = renderPass.size.width * borderSize.width[0];
+      widthBorderPixels = width * borderSize.width[0];
       widthBorderRelative = borderSize.width[0];
     } else {
       widthBorderPixels = borderSize.width[0];
-      widthBorderRelative = widthBorderPixels / renderPass.size.width;
+      widthBorderRelative = widthBorderPixels / width;
     }
     if (borderSize.height !== 'auto') {
       if (borderSize.height[1] === NumericUnit['%']) {
-        heightBorderPixels = renderPass.size.height * borderSize.height[0];
+        heightBorderPixels = height * borderSize.height[0];
         heightBorderRelative = borderSize.height[0];
       } else {
         heightBorderPixels = borderSize.height[0];
-        heightBorderRelative = heightBorderPixels / renderPass.size.height;
+        heightBorderRelative = heightBorderPixels / height;
       }
     } else {
-      heightBorderRelative = widthBorderPixels / renderPass.size.height;
+      heightBorderRelative = widthBorderPixels / height;
     }
     let outer_sizeX: number;
     let outer_sizeY: number;
@@ -291,8 +288,8 @@ export abstract class UIRectangle<
       outer_sizeX = scale.min_width;
       outer_sizeY = scale.y;
     } else {
-      outer_sizeX = scale.min_width / renderPass.size.width;
-      outer_sizeY = scale.y / renderPass.size.height;
+      outer_sizeX = scale.min_width / width;
+      outer_sizeY = scale.y / height;
     }
 
     const content_sizeX = outer_sizeX - widthBorderRelative;
@@ -357,7 +354,8 @@ export abstract class UIRectangle<
       size: 8,
       usages: BufferUsageEnums['UNIFORM|COPY_DST'],
     });
-    this.updatePosition();
+    const size = renderPass.size;
+    this.updatePosition(size.width, size.height);
     new Float32Array(uniformBuffer.getMappedRange()).set(this.screenPosition);
     this.uniformBuffer = uniformBuffer.unmap();
 
@@ -447,7 +445,8 @@ export abstract class UIRectangle<
     this.#node.positions_count = positionsCount;
 
     queueMicrotask(() => {
-      this.#updateBoundingBoxAndVerticesSuper();
+      const size2 = this.props.renderPass.size;
+      this.#updateBoundingBoxAndVerticesSuper(size2.width, size2.height);
       const stride = 4;
 
       const drawable = new DrawableSimple(
@@ -486,8 +485,8 @@ export abstract class UIRectangle<
         },
       );
       this.#node.drawable = drawable;
-      renderPass.onResize.set(this, () => {
-        this.#updateBoundingBoxAndVerticesSuper();
+      renderPass.onResize.set(this, (width, height) => {
+        this.#updateBoundingBoxAndVerticesSuper(width, height);
         drawable.setVertexBuffer(0, [
           engine.rust.vertices_pointer(this.#node.geometry, false),
           this.#node.vertices_count * this.#node.vertices_stride,

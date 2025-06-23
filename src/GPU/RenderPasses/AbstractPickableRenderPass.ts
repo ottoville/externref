@@ -12,7 +12,6 @@ import { DepthRenderPass } from './DepthRenderPass.js';
 import { RenderPassProps } from './RenderPass.js';
 import type { GPU } from '../../GPU.js';
 import type { Engine } from '../../engine.js';
-import { MutableTerraVector3, TerraMatrix } from '../../Math.js';
 declare const engine: Engine;
 
 export abstract class AbstractPickableRenderPass<
@@ -100,31 +99,20 @@ export abstract class AbstractPickableRenderPass<
         this.pickPromiseMesh = null;
         return null;
       }
-      const result: [number, number, number] = [0, 0, 0];
-      const x = (engine.gpu!.mousePosition[0] / this.size.width) * 2 - 1;
-      const y = -((engine.gpu!.mousePosition[1] / this.size.height) * 2 - 1);
-      const gpulock = engine.rust.get_gpu();
-      const cameralock = engine.rust.get_camera_by_id_mut(gpulock, camera.id);
-      const projectionViewInverted = new TerraMatrix(
-        engine.rust.memory.buffer,
-        engine.rust.get_camera_projection_inverted_ptr(cameralock),
-      );
-      new MutableTerraVector3([x, y, zAndID[0]]).multiply2Ref(
-        projectionViewInverted,
-        result,
-      );
-      engine.rust.drop_camera_lock(cameralock);
-      engine.rust.drop_gpu_lock(gpulock);
+      const ptr = engine.rust.pick_position(this.props.id, zAndID[0]);
+      const position = [
+        ...new Float32Array(engine.rust.memory.buffer, ptr, 3),
+      ] as [number, number, number];
       if (mesh) {
         this.pickPromiseMesh = null;
         return {
           generation: zAndID[2],
           meshId: zAndID[1],
-          position: result,
+          position,
         };
       } else this.pickPromise = null;
       return {
-        position: result,
+        position,
       };
     });
     //Calculate inverted matrix while buffer is mapping

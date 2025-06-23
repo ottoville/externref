@@ -13,7 +13,6 @@ import {
 import type { GPU } from '../../GPU.js';
 import type { Engine } from '../../engine.js';
 import { AbstractPickableRenderPass } from './AbstractPickableRenderPass.js';
-import { Externref } from 'externref.js';
 declare const engine: Engine;
 
 export class PickableRenderPass<
@@ -28,8 +27,8 @@ export class PickableRenderPass<
   },
   E extends string = string,
 > extends AbstractPickableRenderPass<T, E> {
-  #rowBytes: number;
-  #rowBytesDepth: number;
+  #rowBytes: number = 0;
+  #rowBytesDepth: number = 0;
 
   constructor(
     renderPassProps: RenderPassProps<T, E>,
@@ -44,24 +43,11 @@ export class PickableRenderPass<
     >,
     private gpu: GPU,
   ) {
-    let rowBytes =
-      renderPassProps.size.width *
-      gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId.renderTarget
-        .texture.bytes_per_fixel;
-
-    const offset = rowBytes % 256;
-    if (offset !== 0) rowBytes = rowBytes - offset + 256;
-
     super(renderPassProps, depthRenderTarget, gpu, {
       label: 'pickBuffer',
-      size: rowBytes * renderPassProps.size.height,
+      size: 16,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
-    this.#rowBytes = rowBytes;
-    this.#rowBytesDepth =
-      this.size.width *
-      this.gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId
-        .renderTarget.texture.bytes_per_fixel;
   }
   createPickBuffer(gpu: GPU) {
     let rowBytes =
@@ -78,15 +64,8 @@ export class PickableRenderPass<
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
   }
-  override resize(
-    width: number,
-    height: number,
-    computepass: rust_pointer<'computepass'>,
-    cameragroups: rust_pointer<'cameragroups'>,
-    cameras: rust_pointer<'cameras'>,
-    device: Externref<false, GPUDevice>,
-  ) {
-    super.resize(width, height, computepass, cameragroups, cameras, device);
+  override resize(width: number, height: number) {
+    super.resize(width, height);
     //update picking
     const oldpickBuffer = this.pickBuffer;
     if (oldpickBuffer) {
@@ -95,11 +74,11 @@ export class PickableRenderPass<
       }, 1000);
     }
     this.#rowBytes =
-      this.size.width *
+      width *
       this.gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId
         .renderTarget.texture.bytes_per_fixel;
     this.#rowBytesDepth =
-      this.size.width *
+      width *
       this.gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId
         .renderTarget.texture.bytes_per_fixel;
 
@@ -182,7 +161,6 @@ export class PickableRenderPass<
           this.zAndIDPromise = null;
           const generation = new DataView(b).getUint32(8 + 32 + 4, true);
           this.pickBuffer.unmap();
-          console.log(meshId, generation);
           return [z, meshId, generation];
         });
     }

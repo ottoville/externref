@@ -8,7 +8,6 @@ import {
 } from '../../webgpu-ts/index.js';
 import type { Engine } from '../../engine.js';
 import type { RenderPipelineProps } from 'GPU/RenderPipeline.js';
-import { Externref } from 'externref.js';
 import type { GPU } from '../../GPU.js';
 declare const engine: Engine;
 
@@ -18,8 +17,6 @@ export interface RenderPassProps<
   },
   E extends string = string,
 > extends RenderpassProps<U> {
-  size: { width: number; height: number };
-  getSizeOnResize: (width: number, height: number) => [number, number];
   entryPoint: E;
   rootLayout: RenderPipelineLayout;
   GPURenderBundleEncoderDescriptor?: Partial<GPURenderBundleEncoderDescriptor>;
@@ -37,10 +34,19 @@ export class RenderPass<
   readonly perspectiveCameras: TerraCamera[] = [];
   readonly #rootLayout: RenderPipelineLayout;
 
-  onResize: Map<object, () => void> = new Map();
-  public size: { width: number; height: number };
+  onResize: Map<object, (width: number, height: number) => void> = new Map();
+  public get size() {
+    const ptr = engine.rust.get_renderpass_size(this.props.id);
+    const size = [...new Uint32Array(engine.rust.memory.buffer, ptr, 2)] as [
+      number,
+      number,
+    ];
+    return {
+      height: size[1],
+      width: size[0],
+    };
+  }
   entryPoint: E;
-  #getSizeOnResize: (width: number, height: number) => [number, number];
   onDecoratePipeline?: (
     renderpipeline: RenderPipelineProps,
     renderPipelineDescriptor: RenderPipelineBuilderDesc,
@@ -49,21 +55,9 @@ export class RenderPass<
   constructor(props: RenderPassProps<U, E>) {
     super(props);
     this.props = Object.freeze(props);
-    const {
-      colorRenderTargets,
-      size,
-      getSizeOnResize,
-      entryPoint,
-      rootLayout,
-    } = props;
-    this.size = size;
-    this.#getSizeOnResize = getSizeOnResize;
+    const { entryPoint, rootLayout } = props;
     this.entryPoint = entryPoint;
     this.#rootLayout = rootLayout;
-    const renderTargersArray = Object.values(colorRenderTargets);
-    renderTargersArray.forEach((rt) => {
-      rt.resize(this.size, this.props.sampleCount);
-    });
   }
   onRenderPipelinesChange: Set<() => void> = new Set();
   link_renderpass(gpu: GPU) {
@@ -107,28 +101,9 @@ export class RenderPass<
       },
     );
   }
-  resize(
-    width: number,
-    height: number,
-    computepass: rust_pointer<'computepass'>,
-    cameragroups: rust_pointer<'cameragroups'>,
-    cameras: rust_pointer<'cameras'>,
-    device: Externref<false, GPUDevice>,
-  ) {
-    if (width === 0) {
-      throw new Error('Cannot resize renderpass to zero width');
-    }
-    [this.size.width, this.size.height] = this.#getSizeOnResize(width, height);
-    engine.rust.resize_renderpass(
-      this.size.width,
-      this.size.height,
-      computepass,
-      cameragroups,
-      cameras,
-      device,
-    );
+  resize(width: number, height: number) {
     for (const rt of Object.values(this.props.colorRenderTargets)) {
-      rt.resize(this.size, this.props.sampleCount);
+      rt.resize({ height, width }, this.props.sampleCount);
     }
   }
 }

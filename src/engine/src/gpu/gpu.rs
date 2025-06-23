@@ -70,16 +70,17 @@ pub unsafe fn get_renderpass_descriptor(
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(test)]
-pub fn renderpass_on_resize(_renderpass: &Resource<JSRenderPass>) {}
+pub fn renderpass_on_resize(
+    _renderpass: &Resource<JSRenderPass>,
+    width: NonZeroU32,
+    height: NonZeroU32,
+) {
+}
 #[cfg(test)]
 pub fn resize_renderpass(
     _renderpass: &Resource<JSRenderPass>,
-    _width: f32,
-    _height: f32,
-    _computepass: *mut ComputePassEncoder,
-    _cameragroups: *mut Vec<CameraGroup>,
-    _cameras: *const ExplicitGenerationalFreeList<Camera>,
-    _device: &Resource<JSDevice>,
+    width: NonZeroU32,
+    height: NonZeroU32,
 ) {
 }
 #[cfg(target_arch = "wasm32")]
@@ -114,14 +115,14 @@ extern "C" {
     ) -> Resource<JSRenderPassDescriptor>;
     pub fn resize_renderpass(
         renderpass: &Resource<JSRenderPass>,
-        width: f32,
-        height: f32,
-        computepass: *mut ComputePassEncoder,
-        cameragroups: *mut Vec<CameraGroup>,
-        cameras: *const ExplicitGenerationalFreeList<Camera>,
-        device: &Resource<JSDevice>,
+        width: NonZeroU32,
+        height: NonZeroU32,
     );
-    pub fn renderpass_on_resize(renderpass: &Resource<JSRenderPass>);
+    pub fn renderpass_on_resize(
+        renderpass: &Resource<JSRenderPass>,
+        width: NonZeroU32,
+        height: NonZeroU32,
+    );
 
 }
 #[externref]
@@ -136,8 +137,8 @@ pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_
 #[no_mangle]
 unsafe extern "C" fn on_resize(
     aspect_ratio: f32,
-    width: f32,
-    height: f32,
+    width: u32,
+    height: u32,
     pipeline: &Resource<JSComputePipeline>,
 ) {
     let gpuoption = &mut ENGINE.gpu.lock().unwrap();
@@ -164,28 +165,32 @@ unsafe extern "C" fn on_resize(
             true,
         );
     }
-    let computepassencoder = command_encoder.begin_compute_pass(String::from("resizePassEncoder"));
+    let mut computepassencoder = command_encoder.begin_compute_pass(String::from("resizePassEncoder"));
     computepassencoder.set_pipeline(pipeline);
 
-    let computepassencoderb = Box::into_raw(Box::new(computepassencoder));
     for renderpass in &mut gpu.renderpasses {
-        resize_renderpass(
-            &renderpass.jsrenderpass,
+        let width = NonZeroU32::new(width).unwrap();
+        let height = NonZeroU32::new(height).unwrap();
+        renderpass.resize(
             width,
             height,
-            computepassencoderb,
-            &mut renderpass.cameragroups,
-            &gpu.cameras,
             &gpu.device,
+            &gpu.cameras,
+            &mut computepassencoder,
         );
+        resize_renderpass(&renderpass.jsrenderpass, renderpass.size[0], renderpass.size[1]);
     }
     // Call onResize after all renderPasses have resizes so callbacks
     // can refer updated render target of other renderpasses.
     for renderpass in &gpu.renderpasses {
-        renderpass_on_resize(&renderpass.jsrenderpass);
+        renderpass_on_resize(
+            &renderpass.jsrenderpass,
+            renderpass.size[0],
+            renderpass.size[1],
+        );
     }
     gpu.queue.submit(
-        &mut vec![Box::from_raw(computepassencoderb)
+        &mut vec![computepassencoder
             .end()
             .finish(String::from("resize"))]
         .drain(..),
@@ -279,6 +284,7 @@ pub unsafe extern "C" fn init_gpu(
         let render_pass_screen = Renderpass {
             label: String::from("renderPassScreen"),
             size: [NonZeroU32::new_unchecked(1); 2],
+            size_modifier: None,
             jsrenderpass: js_render_pass_screen,
             bundle: None,
             cameragroups: vec![CameraGroup {
@@ -300,6 +306,10 @@ pub unsafe extern "C" fn init_gpu(
         let render_pass_water = Renderpass {
             label: String::from("renderPassWater"),
             size: [NonZeroU32::new_unchecked(1); 2],
+            size_modifier: Some(|w, h| {
+                *w = NonZeroU32::new_unchecked(w.get() >> 2);
+                *h = NonZeroU32::new_unchecked(h.get() >> 2);
+            }),
             jsrenderpass: js_render_pass_water,
             bundle: None,
             cameragroups: vec![CameraGroup {
@@ -321,6 +331,7 @@ pub unsafe extern "C" fn init_gpu(
         let pick_render_pass = Renderpass {
             label: String::from("renderPassPick"),
             size: [NonZeroU32::new_unchecked(1); 2],
+            size_modifier: None,
             jsrenderpass: js_pick_render_pass,
             bundle: None,
             cameragroups: vec![CameraGroup {
@@ -339,6 +350,7 @@ pub unsafe extern "C" fn init_gpu(
         let render_pass_canvas = Renderpass {
             label: String::from("renderPassCanvas"),
             size: [NonZeroU32::new_unchecked(1); 2],
+            size_modifier: None,
             jsrenderpass: js_render_pass_canvas,
             bundle: None,
             cameragroups: Vec::new(),

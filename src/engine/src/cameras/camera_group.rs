@@ -1,4 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    num::NonZeroU32,
+    sync::{Arc, Mutex},
+};
 
 use externref::Resource;
 
@@ -25,8 +28,8 @@ impl CameraGroup {
     pub fn update_size_bind_group(
         &mut self,
         device: &Resource<JSDevice>,
-        width: u32,
-        height: u32,
+        width: NonZeroU32,
+        height: NonZeroU32,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         computepass: &mut ComputePassEncoder,
     ) {
@@ -37,10 +40,10 @@ impl CameraGroup {
             false,
         );
         let data = [
-            width as f32,
-            height as f32,
-            width as f32 / TILE_COUNT[0],
-            height as f32 / TILE_COUNT[1],
+            width.get() as f32,
+            height.get() as f32,
+            width.get() as f32 / TILE_COUNT[0],
+            height.get() as f32 / TILE_COUNT[1],
         ];
         screen_dimension_buffer.set_mapped_range(&data, 0);
         let bindgroup = self.bind_group.as_ref().unwrap();

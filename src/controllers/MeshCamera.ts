@@ -25,7 +25,7 @@ export class MeshCamera extends CameraController {
     mesh_id: rust_pointer<'mesh_id'>,
   ) {
     super();
-    this.id = engine.rust.new_mesh_camera(engine.canvas!.width, mesh_id);
+    this.id = engine.rust.new_mesh_camera(mesh_id);
     const gpulock = engine.rust.get_gpu();
     const cameralock = engine.rust.get_camera_by_id_mut(
       gpulock,
@@ -91,7 +91,6 @@ export class MeshCamera extends CameraController {
     engine.addInputListener(this.#lockPointerListener);
   }
   updateMouseCoords = () => {
-    engine.rust.update_canvas_width(this.id, engine.canvas!.width);
     const gpu = this.camera.gpu;
     if (gpu) {
       Atomics.store(
