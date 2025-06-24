@@ -1,5 +1,5 @@
 const fullRad = Math.PI * 2;
-import { TerraVector2, Angle } from '../Math.js';
+import { Angle } from '../Math.js';
 
 import type { Terrain } from '../world/Terrain.js';
 
@@ -8,7 +8,7 @@ import type { Engine, ListenerObj } from '../engine.js';
 declare const engine: Engine;
 
 export type PTDresult = {
-  coord: TerraVector2;
+  coord: [number, number];
   rad: number; // Angle,
   size: Readonly<{
     width: number;
@@ -20,7 +20,7 @@ export type PTResultF = (coords: PTDresult) => void;
 export abstract class paintGround {
   protected ang360: Angle = new Angle(0);
   #end_position: Float32Array = new Float32Array(2);
-  #start_position = new TerraVector2(2);
+  #start_position: [number, number] = [0, 0];
   protected size = {
     height: 0,
     width: 0,
@@ -41,7 +41,7 @@ export abstract class paintGround {
     engine.clearInputListeners(this);
   }
 
-  protected drawVector = new TerraVector2(2);
+  protected drawVector: [number, number] = [0, 0];
 
   #drawArea: ListenerObj<'pointermove'> = {
     cb: () => {
@@ -86,7 +86,7 @@ export abstract class paintGround {
     object: this,
     type: 'pointermove',
   };
-  abstract onMainPointerDown(startingPoint: Float32Array): void;
+  abstract onMainPointerDown(startingPoint: [number, number]): void;
   abstract onMainPointerUp(height: number, end_position: Float32Array): void;
   abstract onAreaDraw(width: number): void;
   #mouseMoved = false;
@@ -187,10 +187,7 @@ export abstract class paintGround {
         .gpu!.renderPassScreen.pickMesh([this.ground.mesh])
         .then((pickInfo) => {
           if (pickInfo) {
-            this.#start_position = new TerraVector2([
-              pickInfo.position[0],
-              pickInfo.position[2],
-            ]);
+            this.#start_position = [pickInfo.position[0], pickInfo.position[2]];
             this.onMainPointerDown(this.#start_position);
             engine.addInputListener(this.#drawArea);
             engine.addInputListener(this.#pointerUp);

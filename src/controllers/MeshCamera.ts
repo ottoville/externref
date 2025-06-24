@@ -50,38 +50,36 @@ export class MeshCamera extends CameraController {
     if (gpu) {
       cursorBitmap
         .then((bitmap) => {
-          this.cursor = new UIRectangleBackground(
-            {
-              borderSize: {
-                height: 'auto',
-                width: [0],
-              },
-              canvaspipeline: gpu.UIPipeline,
-              label: 'cursor',
-              originalAspectRatio: 1,
-              renderPass: gpu.renderPassCanvas,
-              scale: {
-                min_width: 0.01,
-                unit: NumericUnit['%'],
-                y: 0.01,
-              },
-              translate: {
-                x: {
-                  anchor: Anchor.CENTER,
-                  value: [0],
-                },
-                y: {
-                  anchor: Anchor.CENTER,
-                  value: [0],
-                },
-              },
-            },
-            {
+          this.cursor = new UIRectangleBackground({
+            backgroundAsset: {
               border_height: 0,
               border_width: 0,
               texture: bitmap,
             },
-          );
+            borderSize: {
+              height: 'auto',
+              width: [0],
+            },
+            canvaspipeline: gpu.UIPipeline,
+            label: 'cursor',
+            originalAspectRatio: 1,
+            renderPass: gpu.renderPassCanvas,
+            scale: {
+              min_width: 0.01,
+              unit: NumericUnit['%'],
+              y: 0.01,
+            },
+            translate: {
+              x: {
+                anchor: Anchor.CENTER,
+                value: [0],
+              },
+              y: {
+                anchor: Anchor.CENTER,
+                value: [0],
+              },
+            },
+          });
         })
         .catch((err) => {
           engine.showError(err);

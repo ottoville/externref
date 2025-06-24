@@ -1,8 +1,3 @@
-﻿export class TerraVector2 extends Float32Array {
-  declare 0: number;
-  declare 1: number;
-}
-
 export abstract class TerraVector3 extends Float32Array {
   abstract 0: number;
   abstract 1: number;
@@ -124,13 +119,6 @@ export class Angle {
     }
     this._rad = Math.abs((this._deg * Math.PI) / 180);
     return this._rad;
-  }
-  360(p1: TerraVector2, p2: TerraVector2): Angle {
-    if (p2[1] - p1[1] < 0) {
-      if (p2[0] - p1[0] < 0) return new Angle(fullRad - this.rad);
-      return new Angle(Math.PI + this.rad);
-    } else if (p2[0] - p1[0] > 0) return new Angle(Math.PI - this.rad);
-    return new Angle(this.rad);
   }
   sum(ang: Angle): Angle {
     return new Angle((this.rad % ang.rad) % fullRad);

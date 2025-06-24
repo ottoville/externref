@@ -72,18 +72,21 @@ export class UIRectangleNode<
     if (!this.instance) {
       if (bitmap) {
         if (bitmap instanceof ImageBitmap) {
-          this.instance = new UIRectangleBackground(
-            commonProps,
-            {
+          this.instance = new UIRectangleBackground({
+            ...commonProps,
+            backgroundAsset: {
               border_height: 0.2,
               border_width: 0.2,
               texture: bitmap,
             },
-            this.props.text,
-          );
+            text: this.props.text,
+          });
         }
       } else {
-        this.instance = new UIRectangleTextOnly(commonProps, text);
+        this.instance = new UIRectangleTextOnly({
+          ...commonProps,
+          text,
+        });
       }
     } else if (
       this.instance instanceof UIRectangleBackground ||
@@ -93,9 +96,9 @@ export class UIRectangleNode<
       if (this.instance instanceof UIRectangleBackground) {
         if (
           bitmap instanceof ImageBitmap &&
-          bitmap !== this.instance.backgroundAsset.texture
+          bitmap !== this.instance.props.backgroundAsset.texture
         ) {
-          this.instance.backgroundAsset = {
+          this.instance.props.backgroundAsset = {
             border_height: 0.2,
             border_width: 0.2,
             texture: bitmap,
@@ -104,12 +107,12 @@ export class UIRectangleNode<
         }
       }
 
-      if (text !== this.instance.text) {
-        this.instance.text = text;
+      if (text !== this.instance.props.text) {
+        this.instance.props.text = text;
         reRender = true;
       }
       if (reRender) {
-        this.instance.createTexture();
+        this.instance.createTexture(this.instance.textUV);
       }
     }
     if (children) {

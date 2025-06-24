@@ -1,5 +1,4 @@
 import type { UIRectangleProps } from './UIRectangle.js';
-import type { TextUV } from './UIRectangleTextOnly.js';
 import { UIRectangleText } from './UIRectangleText.js';
 import type {
   Texture,
@@ -130,20 +129,39 @@ function createTexture(
   }
   return copySource;
 }
+
+interface UIRectangleBackgroundProps extends UIRectangleProps {
+  /**
+        border_width: Relative width of border in texture UV mapping, between 0 and 1
+        border_height: Relative height of border in texture UV mapping, between 0 and 1
+     */
+  backgroundAsset: {
+    texture: ImageBitmap;
+    readonly border_width: number;
+    readonly border_height: number;
+  };
+  text?: string;
+}
+
 /*
     Draws rectangle.
 */
 export class UIRectangleBackground extends UIRectangleText {
-  createTexture(): TextureView<
-    Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>
-  > {
+  createTexture(
+    textUV: [
+      topLeft: [number, number],
+      topRight: [number, number],
+      bottomRight: [number, number],
+      bottomLeft: [number, number],
+    ],
+  ): TextureView<Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>> {
     const copySource = createTexture(
-      this.backgroundAsset,
-      this.textUV,
+      this.props.backgroundAsset,
+      textUV,
       this.props.originalAspectRatio,
-      this.text,
+      this.props.text,
     );
-    return this.createTextureView(copySource);
+    return this.createTextureView(copySource, textUV);
   }
   override updateBoundingBoxAndVertices(args: {
     vertices: Float32Array;
@@ -151,18 +169,24 @@ export class UIRectangleBackground extends UIRectangleText {
     content_sizeY: number;
     outer_sizeX: number;
     outer_sizeY: number;
+    textUV: [
+      topLeft: [number, number],
+      topRight: [number, number],
+      bottomRight: [number, number],
+      bottomLeft: [number, number],
+    ];
   }) {
     const { vertices, content_sizeX, content_sizeY, outer_sizeX, outer_sizeY } =
       args;
     const { borderSize } = this.props;
-    const texture = this.backgroundAsset.texture;
+    const texture = this.props.backgroundAsset.texture;
     const container_uvs = {
-      bottom: this.backgroundAsset.border_height * texture.height,
-      left: (1 - this.backgroundAsset.border_width) * texture.width,
-      right: this.backgroundAsset.border_width * texture.width,
-      top: (1 - this.backgroundAsset.border_height) * texture.height,
+      bottom: this.props.backgroundAsset.border_height * texture.height,
+      left: (1 - this.props.backgroundAsset.border_width) * texture.width,
+      right: this.props.backgroundAsset.border_width * texture.width,
+      top: (1 - this.props.backgroundAsset.border_height) * texture.height,
     };
-    if (this.text) {
+    if (this.props.text) {
       super.updateBoundingBoxAndVertices(args);
     } else {
       vertices.set([
@@ -421,20 +445,19 @@ export class UIRectangleBackground extends UIRectangleText {
       );
     }
   }
-  constructor(
-    props: UIRectangleProps,
-    /**
-        border_width: Relative width of border in texture UV mapping, between 0 and 1
-        border_height: Relative height of border in texture UV mapping, between 0 and 1
-     */
-    public backgroundAsset: {
-      texture: ImageBitmap;
-      readonly border_width: number;
-      readonly border_height: number;
-    },
-    public text?: string,
-  ) {
-    const textUV: TextUV = [
+  textUV: [
+    topLeft: [number, number],
+    topRight: [number, number],
+    bottomRight: [number, number],
+    bottomLeft: [number, number],
+  ];
+  constructor(override props: UIRectangleBackgroundProps) {
+    const textUV: [
+      topLeft: [number, number],
+      topRight: [number, number],
+      bottomRight: [number, number],
+      bottomLeft: [number, number],
+    ] = [
       [0, 0],
       [0, 0],
       [0, 0],
@@ -442,7 +465,13 @@ export class UIRectangleBackground extends UIRectangleText {
     ];
     super(
       props,
-      createTexture(backgroundAsset, textUV, props.originalAspectRatio, text),
+      createTexture(
+        props.backgroundAsset,
+        textUV,
+        props.originalAspectRatio,
+        props.text,
+      ),
+      textUV,
     );
     this.textUV = textUV;
   }

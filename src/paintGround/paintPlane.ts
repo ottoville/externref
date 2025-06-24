@@ -2,7 +2,6 @@
 import { Terrain } from '../world/Terrain.js';
 import type { Scene } from '../Scene.js';
 
-import { TerraVector2 } from '../Math.js';
 import { DrawableIndexed } from '../GPU/Drawables/DrawableIndexed.js';
 import type { Engine } from '../engine.js';
 import {
@@ -49,7 +48,7 @@ class PlaneMesh extends IndexedDataNode {
 export class paintPlane extends paintGround {
   #mesh: PlaneMesh;
   #widthVector: [number, number] = [0, 0];
-  #startingPoint = new TerraVector2(2);
+  #startingPoint: [number, number] = [0, 0];
   #meshPosition: [number, number, number] = [0, 0, 0];
 
   constructor(scene: Scene, ground: Terrain, callback: PTResultF) {
@@ -79,7 +78,7 @@ export class paintPlane extends paintGround {
     this.#mesh.destroy();
   }
 
-  onMainPointerDown(startingPoint: TerraVector2) {
+  onMainPointerDown(startingPoint: [number, number]) {
     this.#startingPoint = startingPoint;
   }
   onMainPointerUp(height: number): void {

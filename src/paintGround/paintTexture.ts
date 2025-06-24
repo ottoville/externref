@@ -1,7 +1,6 @@
 ﻿import { paintGround, type PTResultF } from './paintGround.js';
 import type { Terrain } from '../world/Terrain.js';
 import type { Scene } from '../Scene.js';
-import { TerraVector2 } from '../Math.js';
 import type {
   Texture,
   Texture2dSize,
@@ -39,7 +38,7 @@ export class paintTexture extends paintGround {
   }
   #offsetX = 0;
   #offsetY = 0;
-  onMainPointerDown(startingPoint: TerraVector2): void {
+  onMainPointerDown(startingPoint: [number, number]): void {
     this.#offsetX = this.textureWidth * 0.5 + startingPoint[0] / this.ratio;
     this.#offsetY = this.textureHeight * 0.5 + startingPoint[1] / this.ratio;
   }
