@@ -99,12 +99,15 @@ export class PickableRenderPassMSAA<
   }
   #zAndIDPromise: Promise<[z: number, id: number, generation: number]> | null =
     null;
-  doPick(encoder: GPUCommandEncoder) {
+  doPick(_mesh: boolean, mouse_x: number, mouse_y: number) {
     if (!this.#pickPositionPipeline) {
       return null;
     }
     if (!this.#zAndIDPromise) {
       const gpu = this.depthRenderTarget.renderTarget.texture.props.gpu;
+      const encoder = gpu.createCommandEncoder({
+        label: 'pickPosition_encoder',
+      });
 
       const mousePositionSwapBuffer = new Buffer({
         gpu,
@@ -114,8 +117,8 @@ export class PickableRenderPassMSAA<
         usages: BufferUsageEnums.COPY_SRC,
       });
       new Uint32Array(mousePositionSwapBuffer.getMappedRange(0, 8)).set([
-        engine.gpu!.mousePosition[0],
-        engine.gpu!.mousePosition[1],
+        mouse_x,
+        mouse_y,
       ]);
       mousePositionSwapBuffer
         .unmap()

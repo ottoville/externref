@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::{panic, usize};
 
@@ -68,8 +68,16 @@ pub unsafe extern "C" fn physic_tick(delta: f32) {
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_mouse_position(x: f32, y: f32) {
-    // TODO: Save raw position and do gpu scaling when loading the value
-    MOUSE_POSITION.store(((y as u32) << 16) | (x as u32), Ordering::Relaxed);
+    MOUSE_POSITION.store(((y.to_bits() as u64) << 32) | (x.to_bits() as u64), Ordering::Relaxed);
+}
+#[no_mangle]
+pub unsafe extern "C" fn get_mouse_position() -> u32 {
+    let mouse_position = MOUSE_POSITION.load(Ordering::Relaxed);
+    let mut gpuopt = ENGINE.gpu.lock().unwrap();
+    let gpu = gpuopt.as_mut().unwrap();
+    let mouse_x = f32::from_bits((mouse_position & 0xFFFF_FFFF) as u32) * gpu.device_pixel_ratio;
+    let mouse_y = f32::from_bits((mouse_position >> 32) as u32) * gpu.device_pixel_ratio;
+    return ((mouse_y as u32) << 16) | (mouse_x as u32);
 }
 const GRAVITY: nalgebra::Matrix<
     f32,
@@ -77,7 +85,7 @@ const GRAVITY: nalgebra::Matrix<
     nalgebra::Const<1>,
     nalgebra::ArrayStorage<f32, 3, 1>,
 > = vector![0.0, -9.81, 0.0];
-pub static MOUSE_POSITION: AtomicU32 = AtomicU32::new(0);
+pub static MOUSE_POSITION: AtomicU64 = AtomicU64::new(0);
 pub struct Engine {
     pub engine2: Mutex<Engine2>,
     pub gpu: Mutex<Option<GPU>>,

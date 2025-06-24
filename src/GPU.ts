@@ -1,7 +1,6 @@
 ﻿import { RenderPass } from './GPU/RenderPasses/RenderPass.js';
 
 import { type Engine } from './engine.js';
-import { Uint16Vector2 } from './Math.js';
 import { DepthRenderPass } from './GPU/RenderPasses/DepthRenderPass.js';
 import { TerraCamera } from './TerraCamera.js';
 import {
@@ -65,17 +64,10 @@ interface createRenderPipelineProps<
 }
 
 export class GPU {
-  readonly mousePositionBuffer = new SharedArrayBuffer(4);
-  readonly mousePosition = new Uint16Vector2(this.mousePositionBuffer);
-
   readonly BindGroupPosition: IBindGroup<
     typeof this.pipelineLayouts.BindGroupLayoutPosition
   >;
 
-  readonly scale = {
-    x: 1,
-    y: 1,
-  };
   readonly renderPassScreen: PickableRenderPassMSAA<
     {
       gRenderTargetDiffuse: MSAARenderTarget<
@@ -643,14 +635,16 @@ export class GPU {
       if (entry.contentRect.width === 0) {
         return;
       }
+
       window.cancelAnimationFrame(this.#renderFrame);
       if (resizeHandler) clearTimeout(resizeHandler);
       resizeHandler = setTimeout(async () => {
         try {
           const aspectRatio =
-            entry.contentRect.width / entry.contentRect.height;
+            entry.devicePixelContentBoxSize[0]!.inlineSize /
+            entry.devicePixelContentBoxSize[0]!.blockSize;
           canvas.width = Math.min(
-            (entry.contentRect.width | 0) * window.devicePixelRatio,
+            entry.devicePixelContentBoxSize[0]!.inlineSize,
             maxResolution.width,
           );
 
@@ -661,14 +655,12 @@ export class GPU {
             canvas.width = canvas.height * aspectRatio;
           }
 
-          this.scale.x = canvas.width / entry.contentRect.width;
-          this.scale.y = canvas.height / entry.contentRect.height;
-
           engine.rust.on_resize(
             aspectRatio,
             canvas.width,
             canvas.height,
             await computePipelineClustersP,
+            window.devicePixelRatio,
           );
 
           const updateViewPipeline = await updateViewPipelineP;
@@ -678,7 +670,7 @@ export class GPU {
         } catch (e) {
           engine.showError(e);
         }
-      }, 500);
+      }, 300);
     });
     if (!canvas.parentElement) {
       throw new Error('Canvas must have parent element');

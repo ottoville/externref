@@ -140,61 +140,11 @@ unsafe extern "C" fn on_resize(
     width: u32,
     height: u32,
     pipeline: &Resource<JSComputePipeline>,
+    device_pixel_ratio: f32,
 ) {
     let gpuoption = &mut ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
-    let mut command_encoder = GPUCommandEncoder::new(String::from("screen_resize"));
-    for projection in &gpu.projections {
-        {
-            let new_projection_buffer = projection
-                .inner_projection
-                .create_buffer(&gpu.device, aspect_ratio);
-            projection
-                .buffer
-                .lock()
-                .unwrap()
-                .replace_externref(new_projection_buffer.take_externref());
-        }
-    }
-    for camera in gpu.cameras.iter_mut() {
-        camera.update_view(
-            &mut gpu.pending_command_buffers,
-            &gpu.device,
-            &mut command_encoder,
-            &mut gpu.swap_buffers,
-            true,
-        );
-    }
-    let mut computepassencoder = command_encoder.begin_compute_pass(String::from("resizePassEncoder"));
-    computepassencoder.set_pipeline(pipeline);
-
-    for renderpass in &mut gpu.renderpasses {
-        let width = NonZeroU32::new(width).unwrap();
-        let height = NonZeroU32::new(height).unwrap();
-        renderpass.resize(
-            width,
-            height,
-            &gpu.device,
-            &gpu.cameras,
-            &mut computepassencoder,
-        );
-        resize_renderpass(&renderpass.jsrenderpass, renderpass.size[0], renderpass.size[1]);
-    }
-    // Call onResize after all renderPasses have resizes so callbacks
-    // can refer updated render target of other renderpasses.
-    for renderpass in &gpu.renderpasses {
-        renderpass_on_resize(
-            &renderpass.jsrenderpass,
-            renderpass.size[0],
-            renderpass.size[1],
-        );
-    }
-    gpu.queue.submit(
-        &mut vec![computepassencoder
-            .end()
-            .finish(String::from("resize"))]
-        .drain(..),
-    );
+    gpu.on_resize(aspect_ratio, width, height, pipeline, device_pixel_ratio);
 }
 
 #[no_mangle]
@@ -375,6 +325,7 @@ pub unsafe extern "C" fn init_gpu(
             swap_buffers: SwapBuffers::new(),
             timebuffer,
             time: 0.0,
+            device_pixel_ratio: 1.0,
         });
     }
     let gpu_unwrapped = gpu.as_ref().unwrap();
@@ -426,8 +377,76 @@ pub struct GPU {
     pub swap_buffers: SwapBuffers,
     pub timebuffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
     pub time: f32,
+    pub device_pixel_ratio: f32,
 }
 impl GPU {
+    fn on_resize(
+        &mut self,
+        aspect_ratio: f32,
+        width: u32,
+        height: u32,
+        pipeline: &Resource<JSComputePipeline>,
+        device_pixel_ratio: f32,
+    ) {
+        self.device_pixel_ratio = device_pixel_ratio;
+        let mut command_encoder = GPUCommandEncoder::new(String::from("screen_resize"));
+        for projection in &self.projections {
+            {
+                let new_projection_buffer = projection
+                    .inner_projection
+                    .create_buffer(&self.device, aspect_ratio);
+                projection
+                    .buffer
+                    .lock()
+                    .unwrap()
+                    .replace_externref(new_projection_buffer.take_externref());
+            }
+        }
+        for camera in self.cameras.iter_mut() {
+            camera.update_view(
+                &mut self.pending_command_buffers,
+                &self.device,
+                &mut command_encoder,
+                &mut self.swap_buffers,
+                true,
+            );
+        }
+        let mut computepassencoder =
+            command_encoder.begin_compute_pass(String::from("resizePassEncoder"));
+        computepassencoder.set_pipeline(pipeline);
+
+        for renderpass in &mut self.renderpasses {
+            let width = NonZeroU32::new(width).unwrap();
+            let height = NonZeroU32::new(height).unwrap();
+            renderpass.resize(
+                width,
+                height,
+                &self.device,
+                &self.cameras,
+                &mut computepassencoder,
+            );
+            unsafe {
+                resize_renderpass(
+                    &renderpass.jsrenderpass,
+                    renderpass.size[0],
+                    renderpass.size[1],
+                );
+            }
+        }
+        // Call onResize after all renderPasses have resizes so callbacks
+        // can refer updated render target of other renderpasses.
+        for renderpass in &self.renderpasses {
+            unsafe {
+                renderpass_on_resize(
+                    &renderpass.jsrenderpass,
+                    renderpass.size[0],
+                    renderpass.size[1],
+                );
+            }
+        }
+        self.queue
+            .submit(&mut vec![computepassencoder.end().finish(String::from("resize"))].drain(..));
+    }
     pub fn get_camera_by_id(&self, camera_id: usize) -> &Camera {
         for camera in self.cameras.iter() {
             if camera.id == camera_id {

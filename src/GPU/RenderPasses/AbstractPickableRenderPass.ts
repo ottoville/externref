@@ -27,8 +27,9 @@ export abstract class AbstractPickableRenderPass<
   E extends string = string,
 > extends DepthRenderPass<T, E> {
   abstract doPick(
-    encoder: GPUCommandEncoder,
     mesh: boolean,
+    x: number,
+    y: number,
   ): Promise<[z: number, id: number, generation: number]> | null;
   pickPromise: Promise<{
     position: readonly [number, number, number];
@@ -79,16 +80,10 @@ export abstract class AbstractPickableRenderPass<
     } else if (!mesh && this.pickPromise) {
       return this.pickPromise;
     }
-    const camera = this.perspectiveCameras[0];
-    if (!camera) {
-      throw new Error('There are no perspective cameras on this renderpass');
-    }
-    const gpu = this.depthRenderTarget.renderTarget.texture.props.gpu;
-    const encoder = gpu.createCommandEncoder({
-      label: 'pickPosition_encoder',
-    });
-
-    const pickPromise = this.doPick(encoder, mesh);
+    const mouse_position = engine.rust.get_mouse_position();
+    const mouse_x = mouse_position & 0xffff;
+    const mouse_y = mouse_position >> 16;
+    const pickPromise = this.doPick(mesh, mouse_x, mouse_y);
     if (pickPromise === null) {
       return null;
     }
@@ -99,7 +94,12 @@ export abstract class AbstractPickableRenderPass<
         this.pickPromiseMesh = null;
         return null;
       }
-      const ptr = engine.rust.pick_position(this.props.id, zAndID[0]);
+      const ptr = engine.rust.pick_position(
+        this.props.id,
+        mouse_x,
+        mouse_y,
+        zAndID[0],
+      );
       const position = [
         ...new Float32Array(engine.rust.memory.buffer, ptr, 3),
       ] as [number, number, number];
@@ -115,6 +115,10 @@ export abstract class AbstractPickableRenderPass<
         position,
       };
     });
+    const camera = this.perspectiveCameras[0];
+    if (!camera) {
+      throw new Error('There are no perspective cameras on this renderpass');
+    }
     //Calculate inverted matrix while buffer is mapping
     camera.update_camera_projection_view_inverted();
     if (mesh) {

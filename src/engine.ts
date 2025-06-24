@@ -317,6 +317,7 @@ export type rustWasm = {
   init_engine2(): number;
   physic_tick(delta: number): void;
   set_mouse_position(x: number, y: number): void;
+  get_mouse_position(): number;
   create_ball_collider(radius: number): rust_pointer<'collider'>;
   create_capsule_collider(
     half_height: number,
@@ -436,6 +437,7 @@ export type rustWasm = {
     width: number,
     height: number,
     pipeline: GPUComputePipeline,
+    device_pixel_ratio: number,
   ): void;
   get_raw_computepassencoder(
     computepass: rust_pointer<'computepass'>,
@@ -542,7 +544,12 @@ export type rustWasm = {
   ): rust_pointer<'target'>;
   new_mesh_camera(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'meshcamera'>;
   new_position_camera(): rust_pointer<'positioncamera'>;
-  pick_position(id: number, z: number): number;
+  pick_position(
+    id: number,
+    mouse_x: number,
+    mouse_y: number,
+    z: number,
+  ): number;
   get_renderpass_size(id: number): rust_pointer<'array'>;
   attach_archrotate_camera_controller(
     camera: rust_mutex<'locked', 'camera'>,
@@ -1099,12 +1106,7 @@ export class Engine {
         ] as const
       ).forEach((eventType) => {
         nodes.canvas.addEventListener('pointermove', (e) => {
-          if (this.gpu) {
-            engine.rust.set_mouse_position(
-              e.clientX * this.gpu.scale.x,
-              e.clientY * this.gpu.scale.y,
-            );
-          }
+          engine.rust.set_mouse_position(e.clientX, e.clientY);
         });
         nodes.canvas.addEventListener(
           eventType,

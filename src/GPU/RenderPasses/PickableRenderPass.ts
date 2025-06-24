@@ -85,16 +85,18 @@ export class PickableRenderPass<
     this.pickBuffer = this.createPickBuffer(this.gpu);
   }
 
-  doPick(encoder: GPUCommandEncoder, mesh: boolean) {
+  doPick(mesh: boolean, mouse_x: number, mouse_y: number) {
+    const encoder = this.gpu.device.createCommandEncoder({
+      label: 'pickPosition_encoder',
+    });
     let newOffset =
-      this.gpu.mousePosition[1] * this.#rowBytes +
-      this.gpu.mousePosition[0] *
+      mouse_y * this.#rowBytes +
+      mouse_x *
         this.gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId
           .renderTarget.texture.bytes_per_fixel;
     let newOffsetDepth =
-      this.gpu.mousePosition[1] * this.#rowBytesDepth +
-      this.gpu.mousePosition[0] *
-        this.depthRenderTarget.renderTarget.texture.bytes_per_fixel;
+      mouse_y * this.#rowBytesDepth +
+      mouse_x * this.depthRenderTarget.renderTarget.texture.bytes_per_fixel;
 
     //For MapAsync
     const missOffset = newOffset % 8;
@@ -129,8 +131,8 @@ export class PickableRenderPass<
       encoder.copyTextureToBuffer(
         {
           origin: {
-            x: engine.gpu!.mousePosition[0],
-            y: this.gpu.mousePosition[1],
+            x: mouse_x,
+            y: mouse_y,
             z: 0,
           },
           texture:

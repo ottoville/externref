@@ -90,35 +90,11 @@ export class MeshCamera extends CameraController {
     this.#lockPointer();
     engine.addInputListener(this.#lockPointerListener);
   }
-  updateMouseCoords = () => {
-    const gpu = this.camera.gpu;
-    if (gpu) {
-      Atomics.store(
-        gpu.mousePosition,
-        0,
-        gpu.renderPassCanvas.size.width * 0.5,
-      );
-      Atomics.store(
-        gpu.mousePosition,
-        1,
-        gpu.renderPassCanvas.size.height * 0.5,
-      );
-      Atomics.notify(new Int32Array(gpu.mousePositionBuffer), 0);
-    }
-  };
   #lockPointer = () => {
     if (document.pointerLockElement) return;
-    (engine.canvas!.requestPointerLock() as unknown as Promise<void>)
-      .then(() => {
-        const gpu = this.camera.gpu;
-        if (gpu) {
-          this.updateMouseCoords();
-          gpu.renderPassCanvas.onResize.set(this, this.updateMouseCoords);
-        }
-      })
-      .catch((err) => {
-        engine.showError(err);
-      });
+    engine.canvas!.requestPointerLock().catch((err) => {
+      engine.showError(err);
+    });
   };
   #lockPointerListener: ListenerObj<'pointerdown'> = {
     cb: () => {

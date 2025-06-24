@@ -202,19 +202,5 @@ export class ArcRotateCamera extends CameraController {
   attachCameraController() {
     engine.addInputListener(this.#cameraWheel);
     engine.addInputListener(this.#cameraPointerDown);
-    engine.addInputListener({
-      cb: (e) => {
-        if (this.camera.gpu) {
-          const gpu = this.camera.gpu;
-          Atomics.store(gpu.mousePosition, 0, e.clientX * gpu.scale.x);
-          Atomics.store(gpu.mousePosition, 1, e.clientY * gpu.scale.y);
-        }
-      },
-      object: this,
-      options: {
-        force: true,
-      },
-      type: 'pointermove',
-    } as ListenerObj<'pointermove'>);
   }
 }
