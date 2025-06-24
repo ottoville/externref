@@ -196,13 +196,6 @@ export type rustWasm = {
     size: number,
   ): rust_pointer<rust_vec_ptr<'position2d_and_uv'>>;
   update_scale(mesh_id: number, x: number, y: number, z: number): void;
-  update_rotation(
-    mesh_id: rust_pointer<'mesh_id'>,
-    x: number,
-    y: number,
-    z: number,
-    w: number,
-  ): void;
   update_euler_angles(
     mesh_id: rust_pointer<'mesh_id'>,
     x: number,
@@ -238,9 +231,7 @@ export type rustWasm = {
   translation_pointer_from_id(
     mesh_id: rust_pointer<'mesh_id'>,
   ): rust_pointer<'translation'>;
-  rotation_pointer(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'rotation'>;
   rotation_pointer_euler(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'f32'>;
-  scale_pointer(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'scale'>;
   velocity_pointer(mesh: rust_pointer<'mesh'>): rust_pointer<'velocity'>;
   velocity_pointer_from_id(
     mesh_id: rust_pointer<'mesh_id'>,

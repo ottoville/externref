@@ -36,9 +36,9 @@ export class Sun extends MainNode {
 
     const translation = DataNode.getTranslation(mesh);
     DataNode.setVelocity(mesh, [
-      sunPositionX - translation[0],
-      sunPositionY - translation[1],
-      sunPositionZ - translation[2],
+      sunPositionX - translation[0]!,
+      sunPositionY - translation[1]!,
+      sunPositionZ - translation[2]!,
     ]);
     //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
     const ambientR = this.#clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);

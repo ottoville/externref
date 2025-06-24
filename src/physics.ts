@@ -85,9 +85,9 @@ export class Physics {
       if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
         const currentTranslation = movable.getTranslationFromId();
         movable.setTranslation([
-          currentTranslation[0] + velocity[0],
-          currentTranslation[1] + velocity[1],
-          currentTranslation[2] + velocity[2],
+          currentTranslation[0] + velocity[0]!,
+          currentTranslation[1] + velocity[1]!,
+          currentTranslation[2] + velocity[2]!,
         ]);
       }
     });
@@ -102,11 +102,11 @@ export class Physics {
       const velocity = tickable.getVelocityFromId();
       const wantedVelocityPerDelta = tmp_vector;
       wantedVelocityPerDelta[0] =
-        velocity[0] * dt + tickable.acceleration2[0] * dt_half_sqrt;
+        velocity[0]! * dt + tickable.acceleration2[0] * dt_half_sqrt;
       wantedVelocityPerDelta[1] =
-        velocity[1] * dt + tickable.acceleration2[1] * dt_half_sqrt;
+        velocity[1]! * dt + tickable.acceleration2[1] * dt_half_sqrt;
       wantedVelocityPerDelta[2] =
-        velocity[2] * dt + tickable.acceleration2[2] * dt_half_sqrt;
+        velocity[2]! * dt + tickable.acceleration2[2] * dt_half_sqrt;
       const motionFrictionAcceleration: [number, number, number] = [0, 0, 0];
       const oldT = tickable.getTranslationFromId();
       const oldTanslation = [oldT[0], oldT[1], oldT[2]] as unknown as readonly [
@@ -149,11 +149,11 @@ export class Physics {
           }
           // Calculate correct acceleration so new position can be forced throught velocity
           tickable.acceleration2[0] =
-            (newVelocityDelta[0] - velocity[0] * dt) / dt_half_sqrt;
+            (newVelocityDelta[0] - velocity[0]! * dt) / dt_half_sqrt;
           tickable.acceleration2[1] =
-            (newVelocityDelta[1] - velocity[1] * dt) / dt_half_sqrt;
+            (newVelocityDelta[1] - velocity[1]! * dt) / dt_half_sqrt;
           tickable.acceleration2[2] =
-            (newVelocityDelta[2] - velocity[2] * dt) / dt_half_sqrt;
+            (newVelocityDelta[2] - velocity[2]! * dt) / dt_half_sqrt;
 
           motionFrictionAcceleration[0] =
             -tickable.last_velocity[0] * tickable.grip;
@@ -186,11 +186,11 @@ export class Physics {
       impulse[2] = 0;
 
       tickable.setVelocityFromId([
-        velocity[0] +
+        velocity[0]! +
           (tickable.last_acceleration[0] + tickable.acceleration2[0]) * dt_half,
-        velocity[1] +
+        velocity[1]! +
           (tickable.last_acceleration[1] + tickable.acceleration2[1]) * dt_half,
-        velocity[2] +
+        velocity[2]! +
           (tickable.last_acceleration[2] + tickable.acceleration2[2]) * dt_half,
       ]);
     }

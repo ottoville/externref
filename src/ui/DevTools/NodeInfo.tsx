@@ -1,6 +1,5 @@
 import { DrawableDirect } from '../../GPU/Drawables/DrawableDirect.js';
 import type { Drawable } from '../../GPU/Drawables/Drawable.js';
-import { ReadOnlyTerraVector3 } from '../../Math.js';
 import { memo, useEffect, useState } from 'react';
 import { createWireFrameMesh } from '../../GPU/Meshes/helpers/wireframe.js';
 import { DataNode } from '../../nodes/DataNode.js';
@@ -21,16 +20,14 @@ export const NodeInfo = memo(function NodeInfo({
 }: {
   drawable: Drawable;
 }) {
-  const [translation, setTranslation] = useState(new ReadOnlyTerraVector3());
-  const [scale, setScale] = useState(new ReadOnlyTerraVector3());
+  const [translation, setTranslation] = useState(new Float32Array(3));
+  const [scale, setScale] = useState(new Float32Array(3));
   useEffect(() => {
     const ptr = engine.rust.devtools_pointer();
     const CB_ID = engine.rust.add_onchange_callback(drawable.node.id);
     const listener = () => {
-      setTranslation(
-        new ReadOnlyTerraVector3(engine.rust.memory.buffer, ptr + 12),
-      );
-      setScale(new ReadOnlyTerraVector3(engine.rust.memory.buffer, ptr + 24));
+      setTranslation(new Float32Array(engine.rust.memory.buffer, ptr + 12, 3));
+      setScale(new Float32Array(engine.rust.memory.buffer, ptr + 24, 3));
     };
     drawable.node.onMeshChange.add(listener);
     listener();
@@ -61,7 +58,7 @@ export const NodeInfo = memo(function NodeInfo({
             title="translation X"
             type="number"
             step="1"
-            value={translation[0].toFixed(3)}
+            value={translation[0]!.toFixed(3)}
           />
         </label>
         <br />
@@ -80,7 +77,7 @@ export const NodeInfo = memo(function NodeInfo({
             title="translation Y"
             type="number"
             step="1"
-            value={translation[1].toFixed(3)}
+            value={translation[1]!.toFixed(3)}
           />
         </label>
         <br />
@@ -99,7 +96,7 @@ export const NodeInfo = memo(function NodeInfo({
             title="translation Z"
             type="number"
             step="1"
-            value={translation[2].toFixed(3)}
+            value={translation[2]!.toFixed(3)}
           />
         </label>
       </fieldset>
@@ -113,14 +110,14 @@ export const NodeInfo = memo(function NodeInfo({
             onChange={(evt) => {
               drawable.node.update_scale(
                 evt.target.valueAsNumber,
-                scale[1],
-                scale[2],
+                scale[1]!,
+                scale[2]!,
               );
             }}
             title="scale X"
             type="number"
             step="0.1"
-            value={scale[0].toFixed(3)}
+            value={scale[0]!.toFixed(3)}
           />
         </label>
         <br />
@@ -129,15 +126,15 @@ export const NodeInfo = memo(function NodeInfo({
           <input
             onChange={(evt) => {
               drawable.node.update_scale(
-                scale[0],
+                scale[0]!,
                 evt.target.valueAsNumber,
-                scale[2],
+                scale[2]!,
               );
             }}
             title="scale Y"
             type="number"
             step="0.1"
-            value={scale[1].toFixed(3)}
+            value={scale[1]!.toFixed(3)}
           />
         </label>
         <br />
@@ -146,15 +143,15 @@ export const NodeInfo = memo(function NodeInfo({
           <input
             onChange={(evt) => {
               drawable.node.update_scale(
-                scale[0],
-                scale[1],
+                scale[0]!,
+                scale[1]!,
                 evt.target.valueAsNumber,
               );
             }}
             title="scale Z"
             type="number"
             step="0.1"
-            value={scale[2].toFixed(3)}
+            value={scale[2]!.toFixed(3)}
           />
         </label>
       </fieldset>

@@ -1,4 +1,3 @@
-import { ReadOnlyTerraVector3 } from '../Math.js';
 import type { Engine } from '../engine.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import { CameraController } from './CameraController.js';
@@ -67,11 +66,12 @@ export class PositionCamera extends CameraController {
       ) as unknown as readonly [number, number, number];
 
       this.#position = [...position];
-      const direction = new ReadOnlyTerraVector3(
+      const direction = new Float32Array(
         engine.rust.memory.buffer,
         engine.rust.get_camera_direction_ptr(cameralock),
+        3,
       );
-      this.#angle = Math.acos(direction[0]);
+      this.#angle = Math.acos(direction[0]!);
     }
     engine.rust.drop_camera_lock(cameralock);
     engine.rust.drop_gpu_lock(gpulock);

@@ -1,10 +1,4 @@
-﻿import {
-  MutableTerraVector3,
-  Quaternion,
-  ReadOnlyTerraVector3,
-  TerraVector3,
-} from './Math.js';
-import type { Scene } from './Scene.js';
+﻿import type { Scene } from './Scene.js';
 import type { Engine } from './engine.js';
 import type { Drawable } from './GPU/Drawables/Drawable.js';
 import { Destroyable } from 'webgpu-ts/index.js';
@@ -52,24 +46,6 @@ export abstract class MainNode implements Destroyable {
     engine.rust.update_scale(this.id, x, y, z);
   }
   /**
-   * Get rotation quaternion
-   */
-  get rotation(): Quaternion {
-    return new Quaternion(
-      engine.rust.memory.buffer,
-      engine.rust.rotation_pointer(this.id),
-    );
-  }
-  /**
-   * Update rotation using quaternion
-   * To use euler angles, use update_euler_angles
-   */
-  set rotation(
-    args: [x: number, y: number, z: number, w: number] | Quaternion,
-  ) {
-    engine.rust.update_rotation(this.id, args[0], args[1], args[2], args[3]);
-  }
-  /**
    * Update rotation using euler angler
    */
   set euler_angles(values: [rad_x: number, rad_y: number, rad_z: number]) {
@@ -78,9 +54,9 @@ export abstract class MainNode implements Destroyable {
   /**
    * Get rotation using euler angler
    */
-  get euler_angles(): ReadOnlyTerraVector3 {
+  get euler_angles(): Float32Array {
     const ptr = engine.rust.rotation_pointer_euler(this.id);
-    return new ReadOnlyTerraVector3(engine.rust.memory.buffer, ptr);
+    return new Float32Array(engine.rust.memory.buffer, ptr, 3);
   }
   set_scenes(id: number) {
     engine.rust.set_scenes(this.id, id);
@@ -111,10 +87,11 @@ export abstract class MainNode implements Destroyable {
   onMeshChange: Set<() => void> = new Set();
   onPhysicTick?: (time: number, mesh: rust_pointer<'mesh'>) => void;
 
-  static getTranslation(mesh: rust_pointer<'mesh'>): ReadOnlyTerraVector3 {
-    return new ReadOnlyTerraVector3(
+  static getTranslation(mesh: rust_pointer<'mesh'>): Float32Array {
+    return new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.translation_pointer(mesh),
+      3,
     );
   }
   getTranslationFromId() {
@@ -124,41 +101,39 @@ export abstract class MainNode implements Destroyable {
       3,
     ) as unknown as readonly [number, number, number];
   }
-  setTranslation(value: [number, number, number] | ReadOnlyTerraVector3) {
+  setTranslation(value: [number, number, number]) {
     engine.rust.update_translation(this.id, value[0], value[1], value[2]);
   }
-  get scale(): ReadOnlyTerraVector3 {
-    return new ReadOnlyTerraVector3(
-      engine.rust.memory.buffer,
-      engine.rust.scale_pointer(this.id),
-    );
-  }
-  static getVelocity(mesh: rust_pointer<'mesh'>): ReadOnlyTerraVector3 {
-    return new ReadOnlyTerraVector3(
+  static getVelocity(mesh: rust_pointer<'mesh'>): Float32Array {
+    return new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.velocity_pointer(mesh),
+      3,
     );
   }
-  getVelocityFromId(): ReadOnlyTerraVector3 {
-    return new ReadOnlyTerraVector3(
+  getVelocityFromId(): Float32Array {
+    return new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.velocity_pointer_from_id(this.id),
+      3,
     );
   }
   static setVelocity(
     mesh: rust_pointer<'mesh'>,
-    value: [number, number, number] | TerraVector3,
+    value: [number, number, number],
   ) {
-    new MutableTerraVector3(
+    new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.velocity_pointer(mesh),
+      3,
     ).set(value);
     engine.rust.update_dynamic_buffer(mesh);
   }
-  setVelocityFromId(value: [number, number, number] | TerraVector3) {
-    new MutableTerraVector3(
+  setVelocityFromId(value: [number, number, number]) {
+    new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.velocity_pointer_from_id(this.id),
+      3,
     ).set(value);
     this.update_dynamic_buffer_from_id();
   }

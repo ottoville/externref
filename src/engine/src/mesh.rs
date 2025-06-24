@@ -233,26 +233,6 @@ pub unsafe extern "C" fn translation_pointer_from_id(
         .translation
 }
 #[no_mangle]
-pub unsafe extern "C" fn rotation_pointer(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-) -> *const Quaternion {
-    &(ENGINE.meshes.lock().unwrap()[&*mesh_id]
-        .mesh_property
-        .lock()
-        .unwrap()
-        .rotation)
-}
-#[no_mangle]
-pub unsafe extern "C" fn scale_pointer(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-) -> *const [f32; 3] {
-    &ENGINE.meshes.lock().unwrap()[&*mesh_id]
-        .mesh_property
-        .lock()
-        .unwrap()
-        .scaling
-}
-#[no_mangle]
 pub unsafe extern "C" fn rotation_pointer_euler(
     mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
 ) -> *const f32 {
@@ -289,21 +269,6 @@ pub unsafe extern "C" fn update_euler_angles_from_mutex(mesh: *mut Mesh, x: f32,
         mesh_property.update_euler_angles(x, y, z);
     }
     (*mesh).on_update(true);
-}
-#[no_mangle]
-pub unsafe extern "C" fn update_rotation(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-    x: f32,
-    y: f32,
-    z: f32,
-    w: f32,
-) {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
-    {
-        let mut mesh_property = mesh.mesh_property.lock().unwrap();
-        mesh_property.update_rotation(x, y, z, w);
-    }
-    mesh.on_update(true);
 }
 #[no_mangle]
 pub unsafe extern "C" fn velocity_pointer(mesh: *const Mesh) -> *const [f32; 4] {

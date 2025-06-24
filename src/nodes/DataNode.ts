@@ -1,5 +1,4 @@
 import { MainNode, MainNodeProps } from '../MainNode.js';
-import { MutableTerraVector3, ReadOnlyFloat32Array } from '../Math.js';
 import type { Engine } from '../engine.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
 import { create_rust_vec_ptr } from '../utils.js';
@@ -7,7 +6,7 @@ declare const engine: Engine;
 
 class pickInfo {
   buffer = new SharedArrayBuffer(6 * 4);
-  point = new MutableTerraVector3(this.buffer);
+  point = new Float32Array(this.buffer);
   #distance = new DataView(this.buffer, 3 * 4, 4);
   getDistance() {
     return this.#distance.getFloat32(0, true);
@@ -91,20 +90,12 @@ export class DataNode extends MainNode {
   //Actual velocity that occured last tick
   last_velocity: [number, number, number] = [0, 0, 0];
   last_acceleration: [number, number, number] = [0, 0, 0];
-  static getSpeedSquared(mesh: rust_pointer<'mesh'>) {
-    const velocity = this.getVelocity(mesh);
-    return (
-      velocity[0] * velocity[0] +
-      velocity[1] * velocity[1] +
-      velocity[2] * velocity[2]
-    );
-  }
   getSpeedSquaredFromId() {
     const velocity = this.getVelocityFromId();
     return (
-      velocity[0] * velocity[0] +
-      velocity[1] * velocity[1] +
-      velocity[2] * velocity[2]
+      velocity[0]! * velocity[0]! +
+      velocity[1]! * velocity[1]! +
+      velocity[2]! * velocity[2]!
     );
   }
   //coefficient of friction
@@ -149,7 +140,7 @@ export class DataNode extends MainNode {
    * Get raw vertices data
    */
   get vertices() {
-    return new ReadOnlyFloat32Array(
+    return new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.vertices_pointer(this.geometry, false),
       this.vertices_count * this.vertices_stride,

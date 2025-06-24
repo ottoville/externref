@@ -3,7 +3,6 @@ import { WorkerReturn, WorkerThread } from '../WorkerThread.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import { MainNode } from '../MainNode.js';
 import type { GPU } from '../GPU.js';
-import { MutableTerraVector3, TerraVector3 } from '../Math.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import type { Scene } from '../Scene.js';
 import {
@@ -172,7 +171,10 @@ export class TerrainToolButton extends UIRectangleNodeHover<TerrainToolButtonSta
 export class TerrainTool extends MainNode {
   #elevator: rust_pointer<'elevator'>;
   drawable: DrawableSimple<RenderPipelineProps<HelperVertShader>>;
-  readonly #pick: { readonly position: TerraVector3; meshId: number };
+  readonly #pick: {
+    readonly position: [number, number, number];
+    meshId: number;
+  };
   scene: Scene;
 
   constructor(public terrain: Terrain) {
@@ -217,10 +219,11 @@ export class TerrainTool extends MainNode {
     );
     this.#pick = {
       meshId: 0,
-      position: new MutableTerraVector3(
+      position: new Float32Array(
         engine.rust.memory.buffer,
         engine.rust.mouse_position_pointer(this.#elevator),
-      ),
+        3,
+      ) as unknown as [number, number, number],
     };
     engine.addInputListener(this.#mouseListener);
   }

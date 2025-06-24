@@ -1,5 +1,4 @@
 import { MainNode } from '../../MainNode.js';
-import { ReadOnlyTerraVector3 } from '../../Math.js';
 import { useEffect, useRef } from 'react';
 import type { Engine } from '../../engine.js';
 // Import side effects
@@ -14,7 +13,7 @@ export function Rotation({ node }: { node: MainNode }) {
   /**
    * Rotation that is not set manually in devtools
    */
-  const rotation = useRef(new ReadOnlyTerraVector3());
+  const rotation = useRef(new Float32Array(3));
   const rotatedManually = useRef(false);
 
   const changeRotation = () => {
@@ -47,17 +46,14 @@ export function Rotation({ node }: { node: MainNode }) {
     const ptr = engine.rust.devtools_pointer();
     const listener = () => {
       if (!rotatedManually.current) {
-        rotation.current = new ReadOnlyTerraVector3(
-          engine.rust.memory.buffer,
-          ptr,
-        );
+        rotation.current = new Float32Array(engine.rust.memory.buffer, ptr);
         if (rotationX.current) {
-          rotationX.current.valueAsNumber = rotation.current[0];
+          rotationX.current.valueAsNumber = rotation.current[0]!;
         }
         if (rotationY.current)
-          rotationY.current.valueAsNumber = rotation.current[1];
+          rotationY.current.valueAsNumber = rotation.current[1]!;
         if (rotationZ.current)
-          rotationZ.current.valueAsNumber = rotation.current[2];
+          rotationZ.current.valueAsNumber = rotation.current[2]!;
       } else {
         rotatedManually.current = false;
       }

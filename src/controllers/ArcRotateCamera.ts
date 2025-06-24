@@ -1,5 +1,4 @@
 ﻿import type { Engine, ListenerObj } from '../engine.js';
-import { MutableTerraVector3 } from '../Math.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import { CameraController } from './CameraController.js';
 let pointerDownButton = 0;
@@ -34,9 +33,10 @@ export class ArcRotateCamera extends CameraController {
     ) as { 0: number; 1: number; 2: number } & Float32Array;
     engine.rust.drop_camera_lock(cameralock);
     engine.rust.drop_gpu_lock(gpulock);
-    const target = new MutableTerraVector3(
+    const target = new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.get_target_ptr(this.id),
+      3,
     );
     const request = engine.DB.transaction('save', 'readwrite')
       .objectStore('save')

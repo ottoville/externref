@@ -121,19 +121,23 @@ export class Human extends IndexedSingleColoredMesh {
           If character is colliding, update character velocity to same direction as its facingF
         */
         const velocity = DataNode.getVelocity(mesh);
-        const horizontalSpeed = Math.hypot(velocity[0], velocity[2]);
+        const horizontalSpeed = Math.hypot(velocity[0]!, velocity[2]!);
         const direction2 = [Math.sin(this.angle), Math.cos(this.angle)] as [
           number,
           number,
         ];
         direction2[0] *= -horizontalSpeed;
         direction2[1] *= -horizontalSpeed;
-        DataNode.setVelocity(mesh, [direction2[0], velocity[1], direction2[1]]);
+        DataNode.setVelocity(mesh, [
+          direction2[0],
+          velocity[1]!,
+          direction2[1],
+        ]);
       }
     }
     if (this.colliding_character) {
       const velocity = DataNode.getVelocity(mesh);
-      const horizontalSpeed = Math.hypot(velocity[0], velocity[2]);
+      const horizontalSpeed = Math.hypot(velocity[0]!, velocity[2]!);
       const direction2 = [Math.sin(this.angle), Math.cos(this.angle)] as [
         number,
         number,
@@ -174,26 +178,26 @@ export class Human extends IndexedSingleColoredMesh {
           if (Math.abs(angle2 - angle) > 0.1) {
             DataNode.setVelocity(mesh, [
               -Math.sin(angle) * horizontalSpeed,
-              velocity[1],
+              velocity[1]!,
               -Math.cos(angle) * horizontalSpeed,
             ]);
           }
         } else if ((this.arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
           DataNode.setVelocity(mesh, [
             -direction2[0] * horizontalSpeed,
-            velocity[1],
+            velocity[1]!,
             -direction2[1] * horizontalSpeed,
           ]);
         } else if ((this.arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
           DataNode.setVelocity(mesh, [
             direction2[0] * horizontalSpeed,
-            velocity[1],
+            velocity[1]!,
             direction2[1] * horizontalSpeed,
           ]);
         } else if ((this.arrowKeysDown & ARROW_KEYS.LEFT) === ARROW_KEYS.LEFT) {
           DataNode.setVelocity(mesh, [
             -direction2[1] * horizontalSpeed,
-            velocity[1],
+            velocity[1]!,
             direction2[0] * horizontalSpeed,
           ]);
         } else if (
@@ -202,7 +206,7 @@ export class Human extends IndexedSingleColoredMesh {
         ) {
           DataNode.setVelocity(mesh, [
             direction2[1] * horizontalSpeed,
-            velocity[1],
+            velocity[1]!,
             -direction2[0] * horizontalSpeed,
           ]);
         }

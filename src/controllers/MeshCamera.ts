@@ -1,4 +1,3 @@
-import { MutableTerraVector3, ReadOnlyTerraVector3 } from '../Math.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import { CameraController } from './CameraController.js';
@@ -31,11 +30,12 @@ export class MeshCamera extends CameraController {
       gpulock,
       this.camera.id,
     );
-    const direction = new ReadOnlyTerraVector3(
+    const direction = new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.get_camera_direction_ptr(cameralock),
+      3,
     );
-    this.angle = Math.acos(direction[0]);
+    this.angle = Math.acos(direction[0]!);
     engine.rust.drop_camera_lock(cameralock);
     engine.rust.drop_gpu_lock(gpulock);
   }
@@ -105,5 +105,4 @@ export class MeshCamera extends CameraController {
   serialize = () => {
     return;
   };
-  lastTranslation = new MutableTerraVector3();
 }
