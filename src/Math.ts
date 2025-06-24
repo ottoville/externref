@@ -1,34 +1,4 @@
-﻿export class TerraMatrix extends Float32Array {
-  constructor(Arr?: ArrayBufferLike, offset?: number);
-  constructor(Arr?: number[]);
-  constructor(Arr?: number[] | ArrayBufferLike, offset = 0) {
-    if (!Arr) super(16);
-    else if (Array.isArray(Arr)) {
-      Arr.length = 16;
-      super(Arr);
-    } else {
-      super(Arr, offset, 16);
-    }
-  }
-  declare readonly length: 16;
-  declare 0: number;
-  declare 1: number;
-  declare 2: number;
-  declare 3: number;
-  declare 4: number;
-  declare 5: number;
-  declare 6: number;
-  declare 7: number;
-  declare 8: number;
-  declare 9: number;
-  declare 10: number;
-  declare 11: number;
-  declare 12: number;
-  declare 13: number;
-  declare 14: number;
-  declare 15: number;
-}
-export class TerraVector2 extends Float32Array {
+﻿export class TerraVector2 extends Float32Array {
   declare 0: number;
   declare 1: number;
 }

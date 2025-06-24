@@ -231,7 +231,6 @@ export type rustWasm = {
     positions_count: number,
   ): number;
   strip(mesh_id: rust_pointer<'mesh_id'>): number;
-  gpu_pointer(mesh_id: rust_pointer<'mesh_id'>): number;
   label_field_pointer(
     mesh_id: rust_pointer<'mesh_id'>,
   ): rust_pointer<'label_field'>;

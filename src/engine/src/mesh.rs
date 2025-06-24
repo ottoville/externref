@@ -219,17 +219,6 @@ pub unsafe extern "C" fn strip(mesh_id: *const ExplicitGenerationalFreeListIndex
     mesh.get_geometry().strip
 }
 #[no_mangle]
-pub unsafe extern "C" fn gpu_pointer(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-) -> *const [[f32; 4]; 4] {
-    &ENGINE.meshes.lock().unwrap()[&*mesh_id]
-        .mesh_property
-        .lock()
-        .unwrap()
-        .gpu_memory
-        .transformation
-}
-#[no_mangle]
 pub unsafe extern "C" fn translation_pointer(mesh: *const Mesh) -> *const Vec3wgslF32 {
     &(*mesh).mesh_property.lock().unwrap().translation
 }

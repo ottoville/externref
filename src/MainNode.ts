@@ -2,7 +2,6 @@
   MutableTerraVector3,
   Quaternion,
   ReadOnlyTerraVector3,
-  TerraMatrix,
   TerraVector3,
 } from './Math.js';
 import type { Scene } from './Scene.js';
@@ -111,12 +110,6 @@ export abstract class MainNode implements Destroyable {
   }
   onMeshChange: Set<() => void> = new Set();
   onPhysicTick?: (time: number, mesh: rust_pointer<'mesh'>) => void;
-
-  get_transformation = () =>
-    new TerraMatrix(
-      engine.rust.memory.buffer,
-      engine.rust.gpu_pointer(this.id),
-    );
 
   static getTranslation(mesh: rust_pointer<'mesh'>): ReadOnlyTerraVector3 {
     return new ReadOnlyTerraVector3(
