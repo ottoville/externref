@@ -21,13 +21,13 @@ export default {
     return false;
   },
   plugins: [
+    nodeResolve(),
     typescript({
       tsconfig:
         process.env.BUILD === "production"
           ? "./src/tsconfig.devtools.json"
           : "./src/tsconfig.devtools.debug.json",
     }),
-    nodeResolve(),
     commonjs(),
   ],
 };

@@ -31,22 +31,22 @@
   "author": "Otto-Ville Lamminpää",
   "license": "All rights reserved",
   "dependencies": {
-    "@microsoft/applicationinsights-web": "3.3.3",
-    "@rollup/plugin-node-resolve": "^15.3.0",
-    "@rollup/plugin-typescript": "^12.1.1",
-    "@rollup/plugin-commonjs": "^28.0.1",
-    "@types/node": "22.7.7",
+    "@microsoft/applicationinsights-web": "3.3.8",
+    "@rollup/plugin-node-resolve": "16.0.1",
+    "@rollup/plugin-typescript": "12.1.2",
+    "@rollup/plugin-commonjs": "28.0.6",
+    "@types/node": "24.0.4",
     "@types/react": "18.3.11",
     "@types/react-dom": "18.3.1",
-    "@webgpu/types": "0.1.60",
+    "@webgpu/types": "0.1.61",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "rollup": "^4.27.3",
-    "typescript": "5.6.3"
+    "typescript": "5.8.3"
   },
   "devDependencies": {
-    "@azure/static-web-apps-cli": "2.0.5",
-    "@eslint/js": "9.15.0",
+    "@azure/static-web-apps-cli": "2.0.6",
+    "@eslint/js": "9.29.0",
     "@frsource/cypress-plugin-visual-regression-diff": "3.3.10",
     "cypress": "14.0.0",
     "eslint": "9.15.0",
@@ -58,8 +58,7 @@
     "jscpd": "4.0.5",
     "prettier": "3.3.3",
     "puppeteer-core": "24.1.1",
-    "source-map-loader": "4.0.1",
-    "ts-jest": "29.2.5",
-    "typescript-eslint": "8.15.0"
+    "ts-jest": "29.4.0",
+    "typescript-eslint": "8.35.0"
   }
 }
