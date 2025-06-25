@@ -188,7 +188,7 @@ impl<'vert> Geometry {
                     .iter()
                     .map(|v| [v[0] as u32, v[1] as u32, v[2] as u32])
                     .collect(),
-            )
+            ).unwrap()
             .density(2.0)
             .restitution(0.5)
             .build(),
