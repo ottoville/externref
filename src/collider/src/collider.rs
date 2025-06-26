@@ -5,7 +5,7 @@
 use std::arch::wasm32::v128;
 use std::mem;
 
-use terramath::{Plane, Vec3wgslF32, VectorMath, VectorMathF32};
+use terramath::{Plane, Vec3wgslF32, VectorMath};
 pub struct ColliderSphere {
     pub collision_radius: f32,
     pub collisions_scaling_matrix: [[f32; 4]; 4],

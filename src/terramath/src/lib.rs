@@ -175,8 +175,7 @@ fn test_quaternion() {
     assert_eq!(euler[2], 0.32591859);
 }
 #[cfg(target_arch = "wasm32")]
-#[no_mangle]
-pub extern "C" fn simd_dot(x1: v128, x2: v128, y1: v128, y2: v128, z1: v128, z2: v128) -> v128 {
+pub fn simd_dot(x1: v128, x2: v128, y1: v128, y2: v128, z1: v128, z2: v128) -> v128 {
     use std::arch::wasm32::{f32x4_add, f32x4_mul};
     f32x4_add(
         f32x4_add(f32x4_mul(x1, x2), f32x4_mul(y1, y2)),
