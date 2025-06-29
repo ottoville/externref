@@ -1,3 +1,4 @@
+use crate::gpu::buffer::usages::{MAP_READ_COPYDST_USAGE, MAP_READ_USAGE};
 use std::num::NonZeroUsize;
 use std::ptr;
 use std::sync::{Arc, Weak};
@@ -19,10 +20,19 @@ unsafe fn map_write_async(
     _buffer: usize,
     _offset: usize,
     _size: usize,
-    rustbuffer: *mut MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>,
+    gpubuffer: *mut MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>,
     callback: *mut fn(MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>),
 ) {
-    Box::from_raw(callback)(MappedGPUBuffer::new(*Box::from_raw(rustbuffer)));
+    Box::from_raw(callback)(MappedGPUBuffer::new(*Box::from_raw(gpubuffer)));
+}
+#[cfg(test)]
+unsafe fn map_read_async(
+    _buffer: usize,
+    _offset: usize,
+    _size: usize,
+    _gpubuffer: *mut MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>,
+    _callback: *mut *mut dyn FnOnce(MappedGPUBuffer<MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>>),
+) {
 }
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
@@ -33,18 +43,54 @@ extern "C" {
         buffer: usize,
         offset: usize,
         size: usize,
-        buffer: *mut MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>,
+        gpubuffer: *mut MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>,
         callback: *mut fn(MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>),
+    );
+    fn map_read_async(
+        buffer: usize,
+        offset: usize,
+        size: usize,
+        gpubuffer: *mut MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>,
+        callback: *mut *mut dyn FnOnce(MappedGPUBuffer<MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>>),
     );
 }
 #[no_mangle]
-pub unsafe extern "C" fn buffer_mapped(
+pub unsafe extern "C" fn buffer_mapped_write(
     buffer: *mut MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>,
     callback: *mut fn(MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>),
 ) {
     Box::from_raw(callback)(MappedGPUBuffer::new(*Box::from_raw(buffer)));
 }
+#[no_mangle]
+pub unsafe extern "C" fn buffer_mapped_read(
+    buffer: *mut MappadleGPUBuffer<MAP_READ_USAGE>,
+    callback: *mut *mut dyn FnOnce(MappedGPUBuffer<MappadleGPUBuffer<MAP_READ_USAGE>>),
+) {
+    Box::from_raw(*Box::from_raw(callback))(MappedGPUBuffer::new(*Box::from_raw(buffer)));
+}
 pub struct MappadleGPUBuffer<const U: u32>(GPUBuffer<U>);
+impl MappadleGPUBuffer<MAP_READ_COPYDST_USAGE> {
+    pub fn map_read_async(
+        self,
+        offset: usize,
+        size: Option<NonZeroUsize>,
+        cb: *mut dyn FnOnce(MappedGPUBuffer<Self>),
+    ) {
+        let actual_size = match size {
+            Some(size) => size.get(),
+            None => self.0.size - offset,
+        };
+        unsafe {
+            map_read_async(
+                ptr::read(&*self.0.externref as *const Resource<JSBuffer> as *const usize),
+                offset,
+                actual_size,
+                Box::into_raw(Box::new(self)),
+                Box::into_raw(Box::new(cb)),
+            );
+        }
+    }
+}
 impl MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE> {
     pub fn map_write_async(
         self,
@@ -93,6 +139,22 @@ impl<const U: u32> MappadleGPUBuffer<U> {
                 size,
                 buffer_bindings: Vec::new(),
             }));
+        }
+    }
+    pub fn new(device: &Resource<JSDevice>, size: usize, label: String) -> MappadleGPUBuffer<U> {
+        unsafe {
+            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
+            MULTIVALUE_USIZE[1] = label.len();
+            MULTIVALUE_USIZE[2] = label.capacity();
+            let externref =
+                create_gpu_buffer(device, size, MULTIVALUE_USIZE.as_ptr(), U, false, false);
+            return MappadleGPUBuffer(GPUBuffer {
+                externref: Arc::new(externref),
+                label,
+                owned_by_js: false,
+                size,
+                buffer_bindings: Vec::new(),
+            });
         }
     }
 }

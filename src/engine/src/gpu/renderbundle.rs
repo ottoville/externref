@@ -73,7 +73,10 @@ extern "C" {
         bindgroup_start_index: u32,
     );
 }
-pub fn get_camera_by_id(cameras: &ExplicitGenerationalFreeList<Camera>, camera_id: usize) -> &Camera {
+pub fn get_camera_by_id(
+    cameras: &ExplicitGenerationalFreeList<Camera>,
+    camera_id: usize,
+) -> &Camera {
     for camera in cameras.iter() {
         if camera.id == camera_id {
             return camera;
@@ -238,10 +241,14 @@ impl RenderBundleEncoder {
         // Create bundeEncoder ready for next time it is called
         // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.
         unsafe {
+            MULTIVALUE_USIZE[0] = self.label.as_ptr() as usize;
+            MULTIVALUE_USIZE[1] = self.label.len();
+            MULTIVALUE_USIZE[2] = self.label.capacity();
+
             self.externref = Arc::new(create_renderbundle_encoder(
                 device,
                 &self.descriptor,
-                &self.label as *const String as *const usize,
+                MULTIVALUE_USIZE.as_ptr(),
             ));
         }
     }

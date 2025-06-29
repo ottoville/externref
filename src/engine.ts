@@ -579,7 +579,11 @@ export type rustWasm = {
     id: number,
     generation: number,
   ): boolean;
-  buffer_mapped(
+  buffer_mapped_write(
+    rust_buffer: rust_pointer<'buffer'>,
+    cb: rust_pointer<'fn'>,
+  ): void;
+  buffer_mapped_read(
     rust_buffer: rust_pointer<'buffer'>,
     cb: rust_pointer<'fn'>,
   ): void;

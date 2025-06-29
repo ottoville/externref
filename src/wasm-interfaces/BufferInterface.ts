@@ -17,6 +17,39 @@ export type BufferInterface = {
 };
 
 export const BufferExports = {
+  get_mapped_range(
+    { externref: buffer }: Externref<boolean, GPUBuffer>,
+    offset: number,
+    size: number,
+    buffer_offset: GPUSize64,
+  ) {
+    const data = new Uint8Array(engine.rust.memory.buffer, offset, size);
+    const arr = new Uint8Array(buffer.getMappedRange(buffer_offset, size));
+    data.set(arr);
+  },
+  map_read_async(
+    index: number,
+    offset: number,
+    size: number,
+    rust_buffer: rust_pointer<'buffer'>,
+    cb: rust_pointer<'fn'>,
+  ) {
+    const { externref: buffer } = engine.rust.externrefs.get(
+      index,
+    ) as Externref<boolean, GPUBuffer>;
+    buffer
+      .mapAsync(GPUMapMode.READ, offset, size)
+      .then(() => {
+        engine.rust.buffer_mapped_read(rust_buffer, cb);
+      })
+      .catch((err) => {
+        if (err instanceof Error && err.name === 'AbortError') {
+          console.warn(err);
+        } else {
+          engine.showError(err);
+        }
+      });
+  },
   map_state({ externref: buffer }: Externref<boolean, GPUBuffer>) {
     const mapState = buffer.mapState;
     if (mapState === 'unmapped') return 0;
@@ -37,7 +70,7 @@ export const BufferExports = {
     buffer
       .mapAsync(GPUMapMode.WRITE, offset, size)
       .then(() => {
-        engine.rust.buffer_mapped(rust_buffer, cb);
+        engine.rust.buffer_mapped_write(rust_buffer, cb);
       })
       .catch((err) => {
         if (err instanceof Error && err.name === 'AbortError') {

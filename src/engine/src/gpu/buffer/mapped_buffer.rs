@@ -16,6 +16,14 @@ pub unsafe fn set_mapped_range(
 ) {
 }
 #[cfg(test)]
+fn get_mapped_range(
+    _buffer: &Resource<JSBuffer>,
+    _offset: usize,
+    _size: usize,
+    _buffer_offset: usize,
+) {
+}
+#[cfg(test)]
 pub unsafe fn unmap(_buffer: &Resource<JSBuffer>) {}
 
 #[cfg(target_arch = "wasm32")]
@@ -24,6 +32,12 @@ pub unsafe fn unmap(_buffer: &Resource<JSBuffer>) {}
 #[link(wasm_import_module = "buffer")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
+    pub fn get_mapped_range(
+        buffer: &Resource<JSBuffer>,
+        offset: usize,
+        size: usize,
+        buffer_offset: usize,
+    );
     pub fn set_mapped_range(
         buffer: &Resource<JSBuffer>,
         offset: usize,
@@ -32,7 +46,6 @@ extern "C" {
     );
     pub fn unmap(buffer: &Resource<JSBuffer>);
 }
-
 
 // Todo: set inner buffer to private
 pub struct MappedGPUBuffer<B: GpuBuffer>(B);
@@ -55,6 +68,21 @@ pub unsafe extern "C" fn create_mapped_GPU_buffer_copysrc(
 impl<B: GpuBuffer> MappedGPUBuffer<B> {
     pub fn new(buffer: B) -> MappedGPUBuffer<B> {
         MappedGPUBuffer(buffer)
+    }
+    pub fn get_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
+        unsafe {
+            get_mapped_range(&self.0.externref(), ptr, size, buffer_offset);
+        }
+    }
+    pub fn get_mapped_range<T>(&self, data: &mut T, buffer_offset: usize) {
+        unsafe {
+            get_mapped_range(
+                &self.0.externref(),
+                data as *const T as usize,
+                size_of::<T>(),
+                buffer_offset,
+            );
+        }
     }
     pub fn set_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
         unsafe {
