@@ -36,9 +36,7 @@ export class IndexedDataNode extends DataNode {
       len_vertices,
       cap_vertices,
     );
-    this.drawable?.setIndexBuffer(
-      engine.rust.indices_pointer_from_geometry(this.geometry),
-    );
+    this.drawable?.setIndexBuffer();
 
     this.onIndicesChange.forEach((cb) => cb());
   }

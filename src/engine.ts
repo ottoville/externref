@@ -10,7 +10,6 @@ import { DataNode } from './nodes/DataNode.js';
 import type { CameraController } from './controllers/CameraController.js';
 import type { UIRectangleNodeHover } from './ui/UIRectangleNodeHover.js';
 import { MainNode, type RigidBody } from './MainNode.js';
-import { Buffer, INDEX_BUFFER } from './webgpu-ts/index.js';
 import {
   BufferExports,
   type BufferInterface,
@@ -27,6 +26,7 @@ import { RenderbundleEncoderInterface } from './wasm-interfaces/RenderBundleEnco
 import { BindCommandsInterface } from './wasm-interfaces/BindCommandsInterface.js';
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 import { RenderPassEncoderInterface } from './wasm-interfaces/RenderPassEncoder.js';
+import { RenderCommandsInterface } from './wasm-interfaces/RenderCommandsInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -163,21 +163,11 @@ export type rustWasm = {
     vertices_length: number,
     vertices_cap: number,
   ): void;
-  indices_pointer_from_geometry(
-    geometry: rust_pointer<'geometry'>,
-  ): rust_pointer<'indices'>;
-  set_indices_gpu_buffer(
-    indices: rust_pointer<'indices'>,
-    buffer: Externref<false, Buffer<INDEX_BUFFER>>,
-  ): void;
   get_indices_gpu_buffer(
-    indices: rust_pointer<'indices'>,
-  ): Externref<false, Buffer<INDEX_BUFFER>> | null;
+    geometry: rust_pointer<'geometry'>,
+  ): Externref<false, GPUBuffer>;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
-  ): rust_pointer<rust_vec_ptr<'usize'>>;
-  get_indices_pointer(
-    indices: rust_pointer<'indices'>,
   ): rust_pointer<rust_vec_ptr<'usize'>>;
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: rust_pointer<'mesh_id'>): boolean;
@@ -469,6 +459,15 @@ export type rustWasm = {
     index: number,
     bindgroup: rust_pointer<'bind_group_position'>,
     device: Externref<true, GPUDevice>,
+  ): void;
+  render_indexed(
+    renderbundle: rust_pointer<'renderbundleencoder'>,
+    geometry: rust_pointer<'geometry'>,
+    index_count: number,
+    instance_count: number,
+    first_index: number,
+    base_vertex: number,
+    first_instance: number,
   ): void;
   renderbundle_set_bindgroup_1(
     renderbundle: rust_pointer<'renderbundleencoder'>,
@@ -786,6 +785,17 @@ export class Engine {
       commandencoder: CommandEncoderInterface,
       computepassencoder: ComputePassEncoderInterface,
       console: {
+        debug_str(ptr: number, length: number) {
+          console.debug(
+            textDecoder.decode(
+              new Uint8Array(
+                (rust.instance.exports.memory as WebAssembly.Memory).buffer,
+                ptr,
+                length,
+              ),
+            ),
+          );
+        },
         error_str(ptr: number, length: number) {
           console.error(
             textDecoder.decode(
@@ -871,6 +881,7 @@ export class Engine {
       },
       queue: QueueInterface,
       renderbundleencoder: RenderbundleEncoderInterface,
+      rendercommands: RenderCommandsInterface,
       renderpassencoder: RenderPassEncoderInterface,
     };
     try {

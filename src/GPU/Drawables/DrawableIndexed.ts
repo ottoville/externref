@@ -6,31 +6,22 @@ import {
 } from './DrawableDirect.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import type { DrawableProps } from './Drawable.js';
-import {
-  Buffer,
-  BufferUsageEnums,
-  type IRenderBundleEncoder,
-  type INDEX_BUFFER,
-} from '../../webgpu-ts/index.js';
+import { type IRenderBundleEncoder } from '../../webgpu-ts/index.js';
 import type { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
-import { Externref } from '../../externref.js';
-import { create_rust_vec_ptr } from '../../utils.js';
 declare const engine: Engine;
 
 export type DrawableIndexedProps = {
   baseVertex?: number;
   firstIndex?: number;
-  GPUIndexFormat?: GPUIndexFormat;
 };
 
 export class DrawableIndexed<
   R extends RenderPipelineProps = RenderPipelineProps,
   N extends IndexedDataNode = IndexedDataNode,
 > extends DrawableDirect<N> {
-  #indexBuffer: Buffer<INDEX_BUFFER> | undefined;
+  indexBuffer: GPUBuffer | undefined;
   #baseVertex: number;
   #firstIndex: number;
-  #GPUIndexFormat: GPUIndexFormat;
   /**
    * Override indices_count. When not set, defaults to index buffer size
    */
@@ -41,20 +32,13 @@ export class DrawableIndexed<
       vertexBuffers: MappedVertexBuffers<R>;
     },
     drawableDirectProps?: DrawableDirectProps,
-    {
-      baseVertex = 0,
-      firstIndex = 0,
-      GPUIndexFormat = 'uint32',
-    }: DrawableIndexedProps = {},
+    { baseVertex = 0, firstIndex = 0 }: DrawableIndexedProps = {},
   ) {
     super(drawableProps, drawableDirectProps);
-    this.setIndexBuffer(
-      engine.rust.indices_pointer_from_geometry(this.node.geometry),
-    );
+    this.setIndexBuffer();
 
     this.#baseVertex = baseVertex;
     this.#firstIndex = firstIndex;
-    this.#GPUIndexFormat = GPUIndexFormat;
   }
 
   override destroy(
@@ -62,73 +46,25 @@ export class DrawableIndexed<
     preserveIndexBuffer = false,
   ): void {
     super.destroy(preserveVerticeBuffers);
-    if (!preserveIndexBuffer && this.#indexBuffer) {
-      this.#indexBuffer.destroy();
+    if (!preserveIndexBuffer && this.indexBuffer) {
+      this.indexBuffer.destroy();
     }
   }
-  setIndexBuffer(buffer: rust_pointer<'indices'>, baseVertex = 0) {
+  setIndexBuffer(baseVertex = 0) {
+    const gpubuffer = engine.rust.get_indices_gpu_buffer(this.node.geometry);
+    this.indexBuffer = gpubuffer.externref;
     this.#baseVertex = baseVertex;
-    const gpubuffer = engine.rust.get_indices_gpu_buffer(buffer);
-    if (gpubuffer) {
-      this.#indexBuffer = gpubuffer.externref;
-    } else {
-      const indices_ptr = engine.rust.get_indices_pointer(buffer);
-      const indices = create_rust_vec_ptr(indices_ptr);
-      if (indices[1] > 0) {
-        const indexBuffer = new Buffer({
-          gpu: engine.gpu!.device,
-          label: 'index_' + this.node.label,
-          mappedAtCreation: true,
-          size: indices[1] * Uint32Array.BYTES_PER_ELEMENT,
-          usages: BufferUsageEnums.INDEX,
-        });
-
-        new Uint32Array(indexBuffer.getMappedRange()).set(
-          new Uint32Array(engine.rust.memory.buffer, indices[0], indices[1]),
-        );
-        this.#indexBuffer = indexBuffer.unmap();
-        this.#GPUIndexFormat = 'uint32';
-
-        engine.rust.set_indices_gpu_buffer(
-          buffer,
-          new Externref(false, this.#indexBuffer),
-        );
-      }
-    }
   }
   render(renderEncoder: IRenderBundleEncoder | GPURenderPassEncoder) {
-    if (this.#indexBuffer) {
-      let encoder: GPURenderBundleEncoder | GPURenderPassEncoder;
-      console.debug('set inxedBuffer', this.#indexBuffer.props.label);
-      if (renderEncoder instanceof GPURenderPassEncoder) {
-        encoder = renderEncoder;
-        encoder.setIndexBuffer(
-          this.#indexBuffer.getIndexBinding(),
-          this.#GPUIndexFormat,
-        );
-      } else {
-        encoder = renderEncoder.renderBundleEncoder;
-        encoder.setIndexBuffer(
-          this.#indexBuffer.getIndexBinding(renderEncoder),
-          this.#GPUIndexFormat,
-        );
-      }
-
+    if (this.indexBuffer) {
       const indices_count = this.indices_count ?? this.node.indices_count;
       if (indices_count === 0) {
         console.warn('wont draw', this.node.label, ', zero indices');
       } else {
-        console.debug(
-          'drawIndexed',
-          this.node.label,
-          'indices',
-          indices_count,
-          'instanceCount',
-          this.instanceCount,
-          'indexFormat',
-          this.#GPUIndexFormat,
-        );
-        encoder.drawIndexed(
+        engine.rust.render_indexed(
+          //@ts-expect-error rust haxx
+          renderEncoder.rust_renderbundle_encoder,
+          this.node.geometry,
           indices_count,
           this.instanceCount,
           this.#firstIndex,

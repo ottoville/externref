@@ -2,6 +2,8 @@ use std::{ptr, sync::Arc};
 
 use externref::{externref, Resource};
 
+use crate::gpu::externref_trait::HaveExternref;
+
 use super::{
     bindgroup::{BindGroup, BindGroupResources, JSBindGroup},
     gpu::JSDevice,
@@ -31,8 +33,7 @@ extern "C" {
         dynamic_offsets_data_length: usize,
     );
 }
-pub trait BindingCommands<T> {
-    fn externref(&self) -> &Resource<T>;
+pub trait BindingCommands<T>: HaveExternref<T> {
     fn after_set_bindgroup(&mut self, bindgroup: &BindGroup);
     // Hold references to prevent buffer being CG't before command encoder has been executed
     fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>>;

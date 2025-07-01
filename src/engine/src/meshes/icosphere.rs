@@ -114,11 +114,27 @@ pub unsafe extern "C" fn create_icosphere_geometry(order: usize) -> *mut Geometr
 #[cfg(test)]
 #[test]
 fn test_icosphere() {
+    use crate::gpu::gpu::init_gpu;
+    use externref::ExternRef;
+    use externref::Resource;
+
     unsafe {
+        init_gpu(
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            true,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+        );
         let geometry_ptr = create_icosphere_geometry(1);
         let geometry: Box<Geometry> = Box::from_raw(geometry_ptr);
         assert_eq!(
-            geometry.indices.indices,
+            geometry.indices.as_ref().unwrap().indices,
             vec![
                 0, 12, 14, 11, 13, 12, 5, 14, 13, 12, 13, 14, 0, 14, 16, 5, 15, 14, 1, 16, 15, 14,
                 15, 16, 0, 16, 18, 1, 17, 16, 7, 18, 17, 16, 17, 18, 0, 18, 20, 7, 19, 18, 10, 20,

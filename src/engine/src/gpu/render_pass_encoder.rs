@@ -1,5 +1,7 @@
 use externref::{externref, Resource};
 
+use crate::gpu::{binding_commands::BindingCommands, buffer::usages::INDEX_USAGE, externref_trait::HaveExternref, render_commands::RenderCommands};
+
 use super::{
     command_encoder::GPUCommandEncoder,
     renderbundle::{JSRenderBundle, RenderBundle},
@@ -38,6 +40,10 @@ impl RenderPassEncoder {
         for bindgroup in bundle.bindgroups.iter() {
             self.command_encoder.bindgroups.push(bindgroup.clone());
         }
+
+        for buffer in bundle.buffers.iter() {
+            self.command_encoder.buffers.push(buffer.clone());
+        }
     }
     //TODO combine with compute pass encoder end
     pub fn end(self) -> GPUCommandEncoder {
@@ -47,5 +53,31 @@ impl RenderPassEncoder {
             end(&self.externref);
         }
         return self.command_encoder;
+    }
+}
+impl HaveExternref<JSRenderPassEncoder> for RenderPassEncoder {
+    fn externref(&self) -> &Resource<JSRenderPassEncoder> {
+        &self.externref
+    }
+}
+impl BindingCommands<JSRenderPassEncoder> for RenderPassEncoder {
+    fn after_set_bindgroup(&mut self, bindgroup: &super::bindgroup::BindGroup) {
+        todo!()
+    }
+
+    fn bindgroups(&mut self) -> &mut Vec<std::sync::Arc<super::bindgroup::BindGroupResources>> {
+        todo!()
+    }
+}
+impl RenderCommands<JSRenderPassEncoder> for RenderPassEncoder {
+    fn buffers(&mut self) -> &mut Vec<std::sync::Arc<Resource<super::buffer::buffer::JSBuffer>>> {
+        // TODO: is it really necessary to save buffer reference in renderpassencoder
+        todo!()
+    }
+    fn after_set_buffer(
+        &mut self,
+        buffer: &mut super::buffer::buffer::GPUBuffer<INDEX_USAGE>,
+    ) {
+        todo!()
     }
 }

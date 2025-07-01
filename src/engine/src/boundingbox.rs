@@ -95,6 +95,8 @@ fn test_bounding_box() {
     use externref::ExternRef;
     use externref::Resource;
     unsafe {
+        use crate::{gpu::buffer::buffer::GPUBuffer, indices::Indices};
+
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
@@ -123,7 +125,10 @@ fn test_bounding_box() {
         let mut geometry = Geometry::new(false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());
         geometry.set_vertices(vertices);
-        geometry.indices.indices = BOX_INDICES.to_vec();
+        geometry.indices = Some(Indices {
+            indices: BOX_INDICES.to_vec(),
+            gpu_buffer: GPUBuffer::new(&Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)), 4, String::from("test"), false),
+        });
         {
             let mut mesh_property = m.mesh_property.lock().unwrap();
             mesh_property.scaling[0] = 500.0;

@@ -6,14 +6,13 @@ use externref::{externref, Resource};
 use crate::gpu::bufferbinding::BufferBinding;
 use crate::gpu::gpu::create_gpu_buffer;
 use crate::gpu::gpu::JSDevice;
+use crate::gpu::renderbundle::RenderBundle;
 use crate::MULTIVALUE_USIZE;
 
 use super::mapped_buffer::MappedGPUBuffer;
 use super::usages::COPYSRC_USAGE;
 
 pub struct JSBuffer(());
-
-
 
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
@@ -39,6 +38,7 @@ pub struct GPUBuffer<const U: u32> {
     pub owned_by_js: bool,
     pub size: usize,
     pub buffer_bindings: Vec<Weak<Mutex<BufferBinding>>>,
+    pub renderbundles: Vec<Weak<Mutex<Option<RenderBundle>>>>,
 }
 
 //////////////////////////////
@@ -89,6 +89,11 @@ impl<const U: u32> GpuBuffer for GPUBuffer<U> {
     }
 }
 impl<const U: u32> GPUBuffer<U> {
+    pub fn replace(&mut self, buffer: Self) {
+        self.replace_externref(buffer.externref);
+        self.set_size(buffer.size);
+        self.make_dirty();
+    }
     pub fn new(
         device: &Resource<JSDevice>,
         size: usize,
@@ -113,6 +118,7 @@ impl<const U: u32> GPUBuffer<U> {
                 owned_by_js,
                 size,
                 buffer_bindings: Vec::new(),
+                renderbundles: Vec::new(),
             };
         }
     }
@@ -140,6 +146,7 @@ impl<const U: u32> GPUBuffer<U> {
                 owned_by_js,
                 size,
                 buffer_bindings: Vec::new(),
+                renderbundles: Vec::new(),
             });
         }
     }
@@ -157,6 +164,11 @@ impl<const U: u32> GPUBuffer<U> {
         for some_buffer_binding in self.buffer_bindings.iter() {
             if let Some(buffer_binding) = some_buffer_binding.upgrade() {
                 buffer_binding.lock().unwrap().make_dirty();
+            }
+        }
+        for somerenderbundle in &self.renderbundles {
+            if let Some(renderbundle) = somerenderbundle.upgrade() {
+                renderbundle.lock().unwrap().take();
             }
         }
     }

@@ -120,11 +120,27 @@ pub unsafe extern "C" fn create_cone_geometry(bottom_faces: usize) -> *mut Geome
 #[cfg(test)]
 #[test]
 fn test_cone() {
+    use crate::gpu::gpu::init_gpu;
+    use externref::ExternRef;
+    use externref::Resource;
+
     unsafe {
+        init_gpu(
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            true,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+        );
         let geometry_ptr = create_cone_geometry(4);
         let geometry: Box<Geometry> = Box::from_raw(geometry_ptr);
         assert_eq!(
-            geometry.indices.indices,
+            geometry.indices.as_ref().unwrap().indices,
             vec![
                 0, 1, 5, 1, 2, 5, 4, 5, 2, 2, 3, 4, 6, 12, 7, 7, 13, 8, 8, 14, 9, 9, 15, 10, 10,
                 16, 11, 11, 17, 6

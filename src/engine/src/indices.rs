@@ -1,36 +1,42 @@
 use externref::{externref, Resource};
 
-use crate::{gpu::buffer::buffer::JSBuffer, MULTIVALUE_USIZE};
+use crate::{
+    gpu::{
+        buffer::{
+            buffer::{GPUBuffer, JSBuffer},
+            usages::INDEX_USAGE,
+        },
+        render_commands::RenderCommands,
+        renderbundle::RenderBundleEncoder,
+    },
+    Geometry,
+};
 
 #[externref]
 #[no_mangle]
-pub unsafe extern "C" fn set_indices_gpu_buffer(
-    indices_ptr: *mut Indices,
-    buffer: Resource<JSBuffer>,
-) {
-    let indices = &mut (*indices_ptr);
-    indices.gpu_buffer = Some(buffer);
-}
-#[externref]
-#[no_mangle]
 pub unsafe extern "C" fn get_indices_gpu_buffer<'frame>(
-    indices_ptr: *mut Indices,
-) -> Option<&'frame Resource<JSBuffer>> {
-    let indices = &mut (*indices_ptr);
-    indices.gpu_buffer.as_ref()
+    geometry_ptr: *mut Geometry,
+) -> &'frame Resource<JSBuffer> {
+    let indices = (*geometry_ptr).indices.as_ref().unwrap();
+    &indices.gpu_buffer.externref
 }
 #[externref]
 #[no_mangle]
-pub unsafe extern "C" fn get_indices_pointer<'frame>(
-    indices_ptr: *mut Indices,
-) -> *const usize {
-    let indices = &mut (*indices_ptr);
-    MULTIVALUE_USIZE[0] = indices.indices.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = indices.indices.len();
-    MULTIVALUE_USIZE[2] = indices.indices.capacity();
-    MULTIVALUE_USIZE.as_ptr()
+pub unsafe extern "C" fn render_indexed(
+    renderbundle: *mut RenderBundleEncoder,
+    geometry_ptr: *mut Geometry,
+    index_count: u32,
+    instance_count: u32,
+    first_index: u32,
+    base_vertex: i32,
+    first_instance: u32,
+) {
+    let indices = &mut (*geometry_ptr).indices.as_mut().unwrap();
+
+    (*renderbundle).set_indexbuffer(&mut indices.gpu_buffer, 32, 0, None);
+    (*renderbundle).draw_indexed(index_count, instance_count, first_index, base_vertex, first_instance);
 }
 pub struct Indices {
     pub indices: Vec<usize>,
-    pub gpu_buffer: Option<Resource<JSBuffer>>,
+    pub gpu_buffer: GPUBuffer<INDEX_USAGE>,
 }

@@ -11,3 +11,5 @@ pub mod renderbundle;
 pub mod binding_commands;
 pub mod renderpass;
 pub mod render_pass_encoder;
+pub mod render_commands;
+pub mod externref_trait;

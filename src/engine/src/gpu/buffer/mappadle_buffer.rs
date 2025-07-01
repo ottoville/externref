@@ -138,6 +138,7 @@ impl<const U: u32> MappadleGPUBuffer<U> {
                 owned_by_js,
                 size,
                 buffer_bindings: Vec::new(),
+                renderbundles: Vec::new()
             }));
         }
     }
@@ -154,6 +155,7 @@ impl<const U: u32> MappadleGPUBuffer<U> {
                 owned_by_js: false,
                 size,
                 buffer_bindings: Vec::new(),
+                renderbundles: Vec::new()
             });
         }
     }

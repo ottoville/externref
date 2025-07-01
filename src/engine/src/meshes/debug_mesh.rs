@@ -15,8 +15,8 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
     let target = &meshes[&*target_mesh_id];
 
     let target_indices = &target.get_geometry().indices;
-    let mut indices: Vec<usize> = vec![0; target_indices.indices.len() * 2];
-    for (i, target_triangle) in target_indices.indices.chunks_exact(3).enumerate() {
+    let mut indices: Vec<usize> = vec![0; target_indices.as_ref().unwrap().indices.len() * 2];
+    for (i, target_triangle) in target_indices.as_ref().unwrap().indices.chunks_exact(3).enumerate() {
         indices[i * 6] = target_triangle[0];
         indices[i * 6 + 1] = target_triangle[1];
         indices[i * 6 + 2] = target_triangle[1];

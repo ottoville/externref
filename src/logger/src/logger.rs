@@ -6,6 +6,8 @@ pub unsafe fn log_str(_prt: usize, _len: usize) {}
 pub unsafe fn error_str(_prt: usize, _len: usize) {}
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn warn_str(_prt: usize, _len: usize) {}
+#[cfg(not(target_arch = "wasm32"))]
+pub unsafe fn debug_str(_prt: usize, _len: usize) {}
 
 #[link(wasm_import_module = "console")]
 #[cfg(target_arch = "wasm32")]
@@ -14,6 +16,7 @@ extern "C" {
     fn error_str(prt: usize, len: usize);
     fn log_str(prt: usize, len: usize);
     fn warn_str(prt: usize, len: usize);
+    fn debug_str(prt: usize, len: usize);
 }
 pub trait LoggerArray: LoggerString {
     fn log(&self) {
@@ -37,11 +40,19 @@ pub trait LoggerArray: LoggerString {
             unsafe { error_str(log_string.as_ptr() as usize, log_string.len()) };
         })
     }
+    fn debug(&self) {
+        LOG_STRING.with_borrow_mut(|log_string| {
+            log_string.clear();
+            self.make_string(log_string);
+            unsafe { debug_str(log_string.as_ptr() as usize, log_string.len()) };
+        })
+    }
 }
 pub trait Logger {
     fn log(&self);
     fn warn(&self);
     fn error(&self);
+    fn debug(&self);
 }
 thread_local! {
     static LOG_STRING:RefCell<String> = const { RefCell::new(String::new()) };
@@ -124,6 +135,9 @@ impl Logger for str {
     }
     fn error(&self) {
         unsafe { error_str(self.as_ptr() as usize, self.len()) };
+    }
+    fn debug(&self) {
+        unsafe { debug_str(self.as_ptr() as usize, self.len()) };
     }
 }
 impl LoggerArray for [&str] {}

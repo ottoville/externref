@@ -12,19 +12,22 @@ use terramath::{CrossProduct, Plane, Vec3wgslF32, VectorMath, VectorMathF32};
 
 pub use crate::boundingbox::BoundingBox;
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex, indices::Indices, math2::Vec2wgslF32, mesh::{Mesh, ENGINE}, vertices::{Position2DAndUV, PositionAndNormalAndUV, VertexKind}, MULTIVALUE_USIZE
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
+    gpu::buffer::{
+        buffer::{GPUBuffer, GpuBuffer},
+        usages::INDEX_USAGE,
+    },
+    indices::Indices,
+    math2::Vec2wgslF32,
+    mesh::{Mesh, ENGINE},
+    vertices::{Position2DAndUV, PositionAndNormalAndUV, VertexKind},
+    MULTIVALUE_USIZE,
 };
-#[no_mangle]
-pub unsafe extern "C" fn indices_pointer_from_geometry(
-    geometry_ptr: *mut Geometry,
-) -> *mut Indices {
-    let geometry = &mut (*geometry_ptr);
-    &mut geometry.indices as *mut Indices
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry) -> *const usize {
     let geometry = &(*geometry_ptr);
-    let indices = &geometry.indices;
+    let indices = &geometry.indices.as_ref().unwrap();
     MULTIVALUE_USIZE[0] = indices.indices.as_ptr() as usize;
     MULTIVALUE_USIZE[1] = indices.indices.len();
     MULTIVALUE_USIZE[2] = indices.indices.capacity();
@@ -61,7 +64,12 @@ pub unsafe extern "C" fn rebuild_triangle_planes(geometry: *mut Geometry) {
     (*geometry).rebuild_triangle_planes();
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_faces(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>, ptr: *mut Plane, length: usize, cap: usize) {
+pub unsafe extern "C" fn set_faces(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    ptr: *mut Plane,
+    length: usize,
+    cap: usize,
+) {
     let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);
     let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
@@ -76,7 +84,9 @@ pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry) -> usize 
     geometry.vertices.length()
 }
 #[no_mangle]
-pub unsafe extern "C" fn have_vertices(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) -> bool {
+pub unsafe extern "C" fn have_vertices(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> bool {
     let mesh = &ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.get_geometry().vertices.have_vertices()
 }
@@ -95,10 +105,17 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
     let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     let geometry = mesh.get_geometry_mut();
-    geometry.indices = Indices {
-        indices,
-        gpu_buffer: None,
-    };
+    let gpuopt = ENGINE.gpu.lock().unwrap();
+    let gpu = gpuopt.as_ref().unwrap();
+    let mut label = String::from("index_");
+    label.push_str(&geometry.label);
+
+    let mapped = GPUBuffer::<INDEX_USAGE>::new_mapped(&gpu.device, indices.len() * 4, label, false);
+    mapped.set_mapped_range_raw(indices.as_ptr() as usize, indices.len() * 4, 0);
+    let indices2 = geometry.indices.as_mut().unwrap();
+    indices2.indices = indices;
+    indices2.gpu_buffer.replace(mapped.unmap());
+
     geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
     geometry.faces_dirty = true;
 }
@@ -141,7 +158,7 @@ pub unsafe extern "C" fn create_ui_geometry(position_count: usize) -> *mut Geome
 pub struct Geometry {
     pub bounding_box: BoundingBox,
     pub vertices: VertexKind,
-    pub indices: Indices,
+    pub indices: Option<Indices>,
     pub faces: Vec<[usize; 3]>,
     pub faces_dirty: bool,
     pub planes: Faces,
@@ -188,7 +205,8 @@ impl<'vert> Geometry {
                     .iter()
                     .map(|v| [v[0] as u32, v[1] as u32, v[2] as u32])
                     .collect(),
-            ).unwrap()
+            )
+            .unwrap()
             .density(2.0)
             .restitution(0.5)
             .build(),
@@ -202,7 +220,7 @@ impl<'vert> Geometry {
     ) -> *mut Collider {
         let positions = self.vertices.get_positions();
 
-        let mut new_indices = self.indices.indices.clone();
+        let mut new_indices = self.indices.as_ref().unwrap().indices.clone();
         let mut new_vertices: Vec<OPoint<f32, Const<3>>> = Vec::new();
         /*
          * Scale vertices and remove remove duplicated positions
@@ -301,7 +319,7 @@ impl<'vert> Geometry {
                             && pos.0[2] == nextpos.0[2]
                         {
                             vector.remove(ii);
-                            dedup_index(ii, i, &mut self.indices.indices);
+                            dedup_index(ii, i, &mut self.indices.as_mut().unwrap().indices);
                             continue;
                         }
                         ii = ii + 1;
@@ -325,10 +343,7 @@ impl<'vert> Geometry {
         Geometry {
             bounding_box: BoundingBox::new(),
             vertices: VertexKind::None,
-            indices: Indices {
-                indices: Vec::new(),
-                gpu_buffer: None,
-            },
+            indices: None,
             faces: Vec::new(),
             faces_dirty: true,
             planes: Faces::new(0),
@@ -348,7 +363,7 @@ impl<'vert> Geometry {
             return;
         }
         self.faces.clear();
-        if self.indices.indices.len() == 0 {
+        if self.indices.is_none() {
             if self.strip {
                 panic!("Unindexed Trimesh collider with triangle strip is not yet supported");
             }
@@ -373,6 +388,8 @@ impl<'vert> Geometry {
                 // Length is self.indices.len() - 2
                 self.faces = self
                     .indices
+                    .as_ref()
+                    .unwrap()
                     .indices
                     .windows(3)
                     .map(|i| i.try_into().unwrap())
@@ -381,6 +398,8 @@ impl<'vert> Geometry {
                 // Lenght is self.indices.len() / 3
                 self.faces = self
                     .indices
+                    .as_ref()
+                    .unwrap()
                     .indices
                     .chunks_exact(3)
                     .map(|i| i.try_into().unwrap())
@@ -394,11 +413,12 @@ impl<'vert> Geometry {
             return self.planes.planes.len();
         } else {
             //TODO: Hand strip and indexed
-            let position_count = if self.indices.indices.len() > 0 {
-                self.indices.indices.len()
+            let position_count = if let Some(indices) = self.indices.as_ref() {
+                indices.indices.len()
             } else {
                 self.vertices.length()
             };
+
             if position_count == 0 {
                 return 0usize;
             } else if self.strip {
@@ -435,7 +455,7 @@ impl<'vert> Geometry {
             return;
         }
         #[cfg(target_arch = "wasm32")]
-        collider.test_triangles(& self.collider_planes, &self.collider_planes_parallel);
+        collider.test_triangles(&self.collider_planes, &self.collider_planes_parallel);
     }
     pub fn update_collider_planes(&mut self) {
         let positions = self.vertices.get_positions();
@@ -488,7 +508,7 @@ impl<'vert> Geometry {
             return;
         }
         //Todo: handle geometry with no indices and strip
-        for triangle in self.indices.indices.chunks_exact(3) {
+        for triangle in self.indices.as_ref().unwrap().indices.chunks_exact(3) {
             let position0 = &self.last_collider_world_vertices[triangle[0]];
             let position1 = &self.last_collider_world_vertices[triangle[1]];
             let position2 = &self.last_collider_world_vertices[triangle[2]];
@@ -518,10 +538,27 @@ impl<'vert> Geometry {
      * Set indices to geometry
      */
     pub fn set_indices(&mut self, indices: Vec<usize>) {
-        self.indices = Indices {
-            indices,
-            gpu_buffer: None,
-        };
+        let gpuopt = ENGINE.gpu.lock().unwrap();
+        let gpu = gpuopt.as_ref().unwrap();
+        let mut label = String::from("index_");
+        label.push_str(&self.label);
+
+        let mapped =
+            GPUBuffer::<INDEX_USAGE>::new_mapped(&gpu.device, indices.len() * 4, label, false);
+        mapped.set_mapped_range_raw(indices.as_ptr() as usize, indices.len() * 4, 0);
+
+        match &mut self.indices {
+            Some(inds) => {
+                inds.indices = indices;
+                inds.gpu_buffer.replace(mapped.unmap());
+            }
+            None => {
+                self.indices = Some(Indices {
+                    indices,
+                    gpu_buffer: mapped.unmap(),
+                });
+            }
+        }
         self.bounding_box.need_init = true;
         if self.camera_can_collide_to {
             self.allocate_collider_planes();

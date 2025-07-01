@@ -2,8 +2,11 @@ use std::sync::Arc;
 
 use externref::{externref, Resource};
 
+use crate::gpu::externref_trait::HaveExternref;
+
 use super::{
-    bindgroup::{BindGroup, BindGroupResources}, binding_commands::BindingCommands, buffer::buffer::JSBuffer,
+    bindgroup::{BindGroup, BindGroupResources},
+    binding_commands::BindingCommands,
     command_encoder::GPUCommandEncoder,
 };
 
@@ -46,10 +49,12 @@ pub struct ComputePassEncoder {
     pub command_encoder: GPUCommandEncoder,
     pub externref: Resource<JSComputePassEncoder>,
 }
-impl BindingCommands<JSComputePassEncoder> for ComputePassEncoder {
+impl HaveExternref<JSComputePassEncoder> for ComputePassEncoder {
     fn externref(&self) -> &Resource<JSComputePassEncoder> {
         &self.externref
     }
+}
+impl BindingCommands<JSComputePassEncoder> for ComputePassEncoder {
     fn after_set_bindgroup(&mut self, _bindgroup: &BindGroup) {}
 
     fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {

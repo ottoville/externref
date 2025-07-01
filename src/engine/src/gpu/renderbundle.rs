@@ -1,5 +1,6 @@
 use std::{
     cell::LazyCell,
+    mem::replace,
     sync::{Arc, Mutex},
 };
 
@@ -8,6 +9,12 @@ use externref::{externref, Resource};
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
+    gpu::{
+        buffer::{
+            buffer::{GPUBuffer, JSBuffer},
+            usages::INDEX_USAGE,
+        }, externref_trait::HaveExternref, render_commands::RenderCommands
+    },
     MULTIVALUE_USIZE,
 };
 
@@ -135,11 +142,13 @@ pub struct RenderBundleEncoder {
     pub renderbundle: Arc<Mutex<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
     pub bindgroups: Vec<Arc<BindGroupResources>>,
+    pub buffers: Vec<Arc<Resource<JSBuffer>>>,
     label: String,
     record: Resource<JSFunction>,
 }
 pub struct RenderBundle {
     pub bindgroups: Vec<Arc<BindGroupResources>>,
+    pub buffers: Vec<Arc<Resource<JSBuffer>>>,
     pub externref: Resource<JSRenderBundle>,
 }
 thread_local! {
@@ -169,6 +178,7 @@ impl RenderBundleEncoder {
             renderbundle: Arc::new(Mutex::new(None)),
             descriptor,
             bindgroups: Vec::new(),
+            buffers: Vec::new(),
             label,
             record,
         }
@@ -232,8 +242,11 @@ impl RenderBundleEncoder {
         }
 
         let externref = unsafe { finish(&*self.externref, MULTIVALUE_USIZE.as_ptr()) };
+
         let renderbundle = RenderBundle {
-            bindgroups: Vec::from_iter(self.bindgroups.drain(..)),
+            // TODO: reuse allocation from previous renderbundle?
+            bindgroups: replace(&mut self.bindgroups, Vec::new()),
+            buffers: replace(&mut self.buffers, Vec::new()),
             externref,
         };
         cb(&renderbundle);
@@ -257,11 +270,12 @@ impl RenderBundleEncoder {
         self.renderbundle.lock().unwrap().take();
     }
 }
-impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
+impl HaveExternref<JSRenderBundleEncoder> for RenderBundleEncoder {
     fn externref(&self) -> &Resource<JSRenderBundleEncoder> {
         &self.externref
     }
-
+}
+impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
     fn after_set_bindgroup(&mut self, bindgroup: &BindGroup) {
         bindgroup
             .renderbundles
@@ -272,5 +286,16 @@ impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
 
     fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {
         &mut self.bindgroups
+    }
+}
+impl RenderCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
+    fn buffers(&mut self) -> &mut Vec<Arc<Resource<JSBuffer>>> {
+        &mut self.buffers
+    }
+
+    fn after_set_buffer(&mut self, buffer: &mut GPUBuffer<INDEX_USAGE>) {
+        buffer
+            .renderbundles
+            .push(Arc::downgrade(&self.renderbundle));
     }
 }
