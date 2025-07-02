@@ -198,8 +198,7 @@ export const NodeInfo = memo(function NodeInfo({
                 <>
                   <br />
                   Indices count:
-                  {drawable.indices_count ??
-                    (drawable.node as IndexedDataNode).indices_count}
+                  {(drawable.node as IndexedDataNode).indices_count}
                   <br />
                   <button
                     type="button"

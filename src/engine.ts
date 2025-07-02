@@ -163,9 +163,6 @@ export type rustWasm = {
     vertices_length: number,
     vertices_cap: number,
   ): void;
-  get_indices_gpu_buffer(
-    geometry: rust_pointer<'geometry'>,
-  ): Externref<false, GPUBuffer>;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<rust_vec_ptr<'usize'>>;
@@ -462,7 +459,6 @@ export type rustWasm = {
   render_indexed(
     renderbundle: rust_pointer<'renderbundleencoder'>,
     geometry: rust_pointer<'geometry'>,
-    index_count: number,
     instance_count: number,
     first_index: number,
     base_vertex: number,
