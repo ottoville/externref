@@ -440,7 +440,6 @@ export type rustWasm = {
     mesh_id: rust_pointer<'mesh_id'>,
     externref: Externref<false, MainNode>,
   ): void;
-  rebuild_triangle_planes(geometry: rust_pointer<'geometry'>): void;
   get_impulse_from_id(
     mesh_id: rust_pointer<'mesh_id'>,
   ): rust_pointer<'impulse'>;

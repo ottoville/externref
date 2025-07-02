@@ -13,10 +13,7 @@ use terramath::{CrossProduct, Plane, Vec3wgslF32, VectorMath, VectorMathF32};
 pub use crate::boundingbox::BoundingBox;
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
-    gpu::buffer::{
-        buffer::{GPUBuffer, GpuBuffer},
-        usages::INDEX_USAGE,
-    },
+    gpu::buffer::{buffer::GPUBuffer, usages::INDEX_USAGE},
     indices::Indices,
     math2::Vec2wgslF32,
     mesh::{Mesh, ENGINE},
@@ -60,10 +57,6 @@ pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry) -> usize {
     (*geometry).vertices.vertices_stride() / 4usize
 }
 #[no_mangle]
-pub unsafe extern "C" fn rebuild_triangle_planes(geometry: *mut Geometry) {
-    (*geometry).rebuild_triangle_planes();
-}
-#[no_mangle]
 pub unsafe extern "C" fn set_faces(
     mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
     ptr: *mut Plane,
@@ -74,7 +67,7 @@ pub unsafe extern "C" fn set_faces(
     let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     let geometry = mesh.get_geometry_mut();
-    geometry.collider_planes = Vec::with_capacity(planes.len());
+    geometry.collider_planes.collider_planes = Vec::with_capacity(planes.len());
     geometry.collider_planes_parallel = vec![[[0.0; 4]; 4]; planes.len() / 4];
     geometry.planes.planes = planes;
 }
@@ -105,16 +98,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
     let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     let geometry = mesh.get_geometry_mut();
-    let gpuopt = ENGINE.gpu.lock().unwrap();
-    let gpu = gpuopt.as_ref().unwrap();
-    let mut label = String::from("index_");
-    label.push_str(&geometry.label);
-
-    let mapped = GPUBuffer::<INDEX_USAGE>::new_mapped(&gpu.device, indices.len() * 4, label, false);
-    mapped.set_mapped_range_raw(indices.as_ptr() as usize, indices.len() * 4, 0);
-    let indices2 = geometry.indices.as_mut().unwrap();
-    indices2.indices = indices;
-    indices2.gpu_buffer.replace(mapped.unmap());
+    geometry.set_indices(indices);
 
     geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
     geometry.faces_dirty = true;
@@ -154,7 +138,10 @@ pub unsafe extern "C" fn create_ui_geometry(position_count: usize) -> *mut Geome
     geometry.set_vertices(VertexKind::Position2DAndUV(vertices));
     Box::into_raw(geometry)
 }
-
+pub struct ColliderPlanes {
+    last_collider_world_vertices: Vec<Vec3wgslF32>,
+    pub collider_planes: Vec<ColliderPlane>,
+}
 pub struct Geometry {
     pub bounding_box: BoundingBox,
     pub vertices: VertexKind,
@@ -164,9 +151,8 @@ pub struct Geometry {
     pub planes: Faces,
     pub strip: bool,
     pub label: String,
-    pub collider_planes: Vec<ColliderPlane>,
+    pub collider_planes: ColliderPlanes,
     pub collider_planes_parallel: Vec<[[f32; 4]; 4]>, //lanes for x,y,z,d
-    pub last_collider_world_vertices: Vec<Vec3wgslF32>,
     pub collisions_transform_matrix: [[f32; 4]; 4],
     pub last_collider_transform_matrix: [[f32; 4]; 4],
     pub static_faces: bool, // Used for terrain
@@ -347,9 +333,11 @@ impl<'vert> Geometry {
             faces: Vec::new(),
             faces_dirty: true,
             planes: Faces::new(0),
-            collider_planes: Vec::new(),
+            collider_planes: ColliderPlanes {
+                last_collider_world_vertices: Vec::new(),
+                collider_planes: Vec::new(),
+            },
             collider_planes_parallel: Vec::new(),
-            last_collider_world_vertices: Vec::new(),
             static_faces,
             strip,
             camera_can_collide_to,
@@ -430,13 +418,14 @@ impl<'vert> Geometry {
     }
     pub fn allocate_collider_planes(&mut self) {
         if self.vertices.have_vertices() {
-            self.last_collider_world_vertices = vec![Vec3wgslF32([0.0; 3]); self.vertices.length()]; //Vec::with_capacity((self.vertices.length()));
+            self.collider_planes.last_collider_world_vertices =
+                vec![Vec3wgslF32([0.0; 3]); self.vertices.length()]; //Vec::with_capacity((self.vertices.length()));
             if self.static_faces {
                 return;
             }
             let faces_count = self.faces_count();
             self.planes = Faces::new(faces_count);
-            self.collider_planes = Vec::with_capacity(faces_count);
+            self.collider_planes.collider_planes = Vec::with_capacity(faces_count);
             self.collider_planes_parallel = vec![[[0.0; 4]; 4]; faces_count / 4];
         }
     }
@@ -455,22 +444,29 @@ impl<'vert> Geometry {
             return;
         }
         #[cfg(target_arch = "wasm32")]
-        collider.test_triangles(&self.collider_planes, &self.collider_planes_parallel);
+        collider.test_triangles(
+            &self.collider_planes.collider_planes,
+            &self.collider_planes_parallel,
+            &self.collider_planes.last_collider_world_vertices
+        );
     }
     pub fn update_collider_planes(&mut self) {
         let positions = self.vertices.get_positions();
-        for (position, col_pos) in positions.zip(&mut self.last_collider_world_vertices) {
+        for (position, col_pos) in
+            positions.zip(&mut self.collider_planes.last_collider_world_vertices)
+        {
             col_pos.0 = position.0.transform(&self.collisions_transform_matrix);
         }
-        for collider_plane in self.collider_planes.iter_mut() {
-            let v0 = &collider_plane.vectors[0].0;
-            let v1 = &collider_plane.vectors[1].0;
-            let v2 = &collider_plane.vectors[2].0;
+        for collider_plane in self.collider_planes.collider_planes.iter_mut() {
+            let v0 = &self.collider_planes.last_collider_world_vertices[collider_plane.vectors[0]].0;
+            let v1 = &self.collider_planes.last_collider_world_vertices[collider_plane.vectors[1]].0;
+            let v2 = &self.collider_planes.last_collider_world_vertices[collider_plane.vectors[2]].0;
             collider_plane.plane.update_from_triangle(v0, v1, v2);
         }
         if self.faces_count() % 4 == 0 {
             //Todo: merge with upper loop?
             for (quatro, parallel) in self
+                .collider_planes
                 .collider_planes
                 .chunks_exact_mut(4)
                 .zip(&mut self.collider_planes_parallel)
@@ -503,21 +499,19 @@ impl<'vert> Geometry {
             .warn();
         }
     }
-    pub fn rebuild_triangle_planes(&'static mut self) {
+    pub fn rebuild_triangle_planes(&mut self) {
         if !self.camera_can_collide_to || self.vertices.length() == 0 || self.faces_count() == 0 {
             return;
         }
         //Todo: handle geometry with no indices and strip
         for triangle in self.indices.as_ref().unwrap().indices.chunks_exact(3) {
-            let position0 = &self.last_collider_world_vertices[triangle[0]];
-            let position1 = &self.last_collider_world_vertices[triangle[1]];
-            let position2 = &self.last_collider_world_vertices[triangle[2]];
-            self.collider_planes.push(ColliderPlane {
+            let vectors: [usize; 3] = triangle.try_into().unwrap();
+            self.collider_planes.collider_planes.push(ColliderPlane {
                 plane: Plane {
                     norm: [0.0; 3],
                     d: 0.0,
                 },
-                vectors: [position0, position1, position2],
+                vectors,
             });
         }
         //invalidate last_collider_transform_matrix to get update_collider_planes called again
@@ -562,6 +556,7 @@ impl<'vert> Geometry {
         self.bounding_box.need_init = true;
         if self.camera_can_collide_to {
             self.allocate_collider_planes();
+            self.rebuild_triangle_planes();
         }
     }
 }
