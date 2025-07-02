@@ -17,7 +17,7 @@ use crate::{
     indices::Indices,
     math2::Vec2wgslF32,
     mesh::{Mesh, ENGINE},
-    vertices::{Position2DAndUV, PositionAndNormalAndUV, VertexKind},
+    vertices::{self, Position2DAndUV, PositionAndNormalAndUV, VertexKind},
     MULTIVALUE_USIZE,
 };
 
@@ -41,12 +41,14 @@ pub unsafe extern "C" fn vertices_pointer(
     }
     let vertices = &(*geometry).vertices;
     match vertices {
-        VertexKind::PositionAndNormalAndUV(vector) => vector.as_ptr() as *const f32,
-        VertexKind::PositionAndNormalAndColor(vector) => vector.as_ptr() as *const f32,
-        VertexKind::PositionAndNormal(vector) => vector.as_ptr() as *const f32,
-        VertexKind::Position2DAndUV(vector) => vector.as_ptr() as *const f32,
-        VertexKind::Position(vector) => vector.as_ptr() as *const f32,
-        VertexKind::None => panic!("Asked vertices pointer but there are no vertices"),
+        Some(verts) => match verts {
+            VertexKind::PositionAndNormalAndUV(vector) => vector.as_ptr() as *const f32,
+            VertexKind::PositionAndNormalAndColor(vector) => vector.as_ptr() as *const f32,
+            VertexKind::PositionAndNormal(vector) => vector.as_ptr() as *const f32,
+            VertexKind::Position2DAndUV(vector) => vector.as_ptr() as *const f32,
+            VertexKind::Position(vector) => vector.as_ptr() as *const f32,
+        },
+        None => panic!("Asked vertices pointer but there are no vertices"),
     }
 }
 /**
@@ -54,7 +56,7 @@ pub unsafe extern "C" fn vertices_pointer(
  */
 #[no_mangle]
 pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry) -> usize {
-    (*geometry).vertices.vertices_stride() / 4usize
+    (*geometry).vertices.as_ref().unwrap().vertices_stride() / 4usize
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(
@@ -74,14 +76,14 @@ pub unsafe extern "C" fn set_faces(
 #[no_mangle]
 pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry) -> usize {
     let geometry = &(*geometry_ptr);
-    geometry.vertices.length()
+    geometry.vertices.as_ref().unwrap().length()
 }
 #[no_mangle]
 pub unsafe extern "C" fn have_vertices(
     mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
 ) -> bool {
     let mesh = &ENGINE.meshes.lock().unwrap()[&*mesh_id];
-    mesh.get_geometry().vertices.have_vertices()
+    mesh.get_geometry().vertices.is_some()
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
@@ -144,7 +146,7 @@ pub struct ColliderPlanes {
 }
 pub struct Geometry {
     pub bounding_box: BoundingBox,
-    pub vertices: VertexKind,
+    pub vertices: Option<VertexKind>,
     pub indices: Option<Indices>,
     pub faces: Vec<[usize; 3]>,
     pub faces_dirty: bool,
@@ -171,8 +173,10 @@ fn dedup_index(old: usize, new: usize, indices: &mut Vec<usize>) {
 
 impl<'vert> Geometry {
     pub fn create_trimesh_collider(&mut self, scaling: [f32; 3]) -> *mut Collider {
-        let newvertices = self
-            .vertices
+        let vertices = self
+            .vertices.as_ref().unwrap();
+        let newvertices = 
+            vertices
             .get_positions()
             .map(|position| {
                 Point::new(
@@ -182,7 +186,7 @@ impl<'vert> Geometry {
                 )
             })
             .collect();
-        let positions_count = self.vertices.length();
+        let positions_count = vertices.length();
         self.create_faces(NonZeroUsize::new(positions_count));
         let collider = Box::new(
             ColliderBuilder::trimesh(
@@ -204,7 +208,7 @@ impl<'vert> Geometry {
         collision_events: bool,
         scaling: [f32; 3],
     ) -> *mut Collider {
-        let positions = self.vertices.get_positions();
+        let positions = self.vertices.as_ref().unwrap().get_positions();
 
         let mut new_indices = self.indices.as_ref().unwrap().indices.clone();
         let mut new_vertices: Vec<OPoint<f32, Const<3>>> = Vec::new();
@@ -243,14 +247,14 @@ impl<'vert> Geometry {
     }
     pub fn calculate_normals(&mut self) {
         self.create_faces(Option::None);
-
-        for normal in self.vertices.get_normals_mut() {
+        let vertices = self.vertices.as_mut().unwrap();
+        for normal in vertices.get_normals_mut() {
             normal.0.clear();
         }
         for triangle in self.faces.iter() {
-            let ia = self.vertices.get_position(triangle[0]).0;
-            let ib = self.vertices.get_position(triangle[1]).0;
-            let ic = self.vertices.get_position(triangle[2]).0;
+            let ia = vertices.get_position(triangle[0]).0;
+            let ib = vertices.get_position(triangle[1]).0;
+            let ic = vertices.get_position(triangle[2]).0;
 
             //TODO: check if frontface is cw or ccw
             let e1 = ia.sub_vec(&ib);
@@ -258,20 +262,20 @@ impl<'vert> Geometry {
 
             let no = e1.cross(&e2);
 
-            self.vertices
+            vertices
                 .get_normal_mut(triangle[0])
                 .0
                 .add_vec_in_place(&no);
-            self.vertices
+            vertices
                 .get_normal_mut(triangle[1])
                 .0
                 .add_vec_in_place(&no);
-            self.vertices
+            vertices
                 .get_normal_mut(triangle[2])
                 .0
                 .add_vec_in_place(&no);
         }
-        for normal in self.vertices.get_normals_mut() {
+        for normal in vertices.get_normals_mut() {
             normal.0.normalize_in_place();
         }
     }
@@ -280,7 +284,7 @@ impl<'vert> Geometry {
        Removes duplicated positions
     **/
     pub fn dedup_positions(&mut self) {
-        match &mut self.vertices {
+        match &mut self.vertices.as_mut().unwrap() {
             VertexKind::PositionAndNormalAndUV(_) => {
                 todo!()
             }
@@ -316,7 +320,6 @@ impl<'vert> Geometry {
             VertexKind::Position(_) => {
                 todo!()
             }
-            VertexKind::None => todo!(),
             VertexKind::Position2DAndUV(_) => todo!(),
         }
     }
@@ -328,7 +331,7 @@ impl<'vert> Geometry {
     ) -> Self {
         Geometry {
             bounding_box: BoundingBox::new(),
-            vertices: VertexKind::None,
+            vertices: None,
             indices: None,
             faces: Vec::new(),
             faces_dirty: true,
@@ -361,7 +364,7 @@ impl<'vert> Geometry {
             if let Some(pos_count) = override_positions_count {
                 positions_count = usize::from(pos_count)
             } else {
-                positions_count = self.vertices.length();
+                positions_count = self.vertices.as_ref().unwrap().length();
                 if positions_count == 0 {
                     panic!("Faces needs either indices or vertices");
                 }
@@ -404,7 +407,7 @@ impl<'vert> Geometry {
             let position_count = if let Some(indices) = self.indices.as_ref() {
                 indices.indices.len()
             } else {
-                self.vertices.length()
+                self.vertices.as_ref().unwrap().length()
             };
 
             if position_count == 0 {
@@ -417,9 +420,9 @@ impl<'vert> Geometry {
         }
     }
     pub fn allocate_collider_planes(&mut self) {
-        if self.vertices.have_vertices() {
+        if let Some(vertices) = self.vertices.as_ref() {
             self.collider_planes.last_collider_world_vertices =
-                vec![Vec3wgslF32([0.0; 3]); self.vertices.length()]; //Vec::with_capacity((self.vertices.length()));
+                vec![Vec3wgslF32([0.0; 3]); vertices.length()]; //Vec::with_capacity((self.vertices.length()));
             if self.static_faces {
                 return;
             }
@@ -447,20 +450,23 @@ impl<'vert> Geometry {
         collider.test_triangles(
             &self.collider_planes.collider_planes,
             &self.collider_planes_parallel,
-            &self.collider_planes.last_collider_world_vertices
+            &self.collider_planes.last_collider_world_vertices,
         );
     }
     pub fn update_collider_planes(&mut self) {
-        let positions = self.vertices.get_positions();
+        let positions = self.vertices.as_ref().unwrap().get_positions();
         for (position, col_pos) in
             positions.zip(&mut self.collider_planes.last_collider_world_vertices)
         {
             col_pos.0 = position.0.transform(&self.collisions_transform_matrix);
         }
         for collider_plane in self.collider_planes.collider_planes.iter_mut() {
-            let v0 = &self.collider_planes.last_collider_world_vertices[collider_plane.vectors[0]].0;
-            let v1 = &self.collider_planes.last_collider_world_vertices[collider_plane.vectors[1]].0;
-            let v2 = &self.collider_planes.last_collider_world_vertices[collider_plane.vectors[2]].0;
+            let v0 =
+                &self.collider_planes.last_collider_world_vertices[collider_plane.vectors[0]].0;
+            let v1 =
+                &self.collider_planes.last_collider_world_vertices[collider_plane.vectors[1]].0;
+            let v2 =
+                &self.collider_planes.last_collider_world_vertices[collider_plane.vectors[2]].0;
             collider_plane.plane.update_from_triangle(v0, v1, v2);
         }
         if self.faces_count() % 4 == 0 {
@@ -500,7 +506,7 @@ impl<'vert> Geometry {
         }
     }
     pub fn rebuild_triangle_planes(&mut self) {
-        if !self.camera_can_collide_to || self.vertices.length() == 0 || self.faces_count() == 0 {
+        if !self.camera_can_collide_to || self.vertices.is_none() || self.faces_count() == 0 {
             return;
         }
         //Todo: handle geometry with no indices and strip
@@ -519,10 +525,10 @@ impl<'vert> Geometry {
     }
     pub fn update_bounding_box(&mut self, transformation: &[[f32; 4]; 4]) {
         self.bounding_box
-            .update_bounding_box(&self.vertices, transformation)
+            .update_bounding_box(&self.vertices.as_ref().unwrap(), transformation)
     }
     pub fn set_vertices(&mut self, vertices: VertexKind) {
-        self.vertices = vertices;
+        self.vertices = Some(vertices);
         self.bounding_box.need_init = true;
         if self.camera_can_collide_to {
             self.allocate_collider_planes();

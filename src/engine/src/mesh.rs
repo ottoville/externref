@@ -489,7 +489,7 @@ impl Mesh {
                 return positions_count;
             }
             None => {
-                return self.get_geometry().vertices.length();
+                return self.get_geometry().vertices.as_ref().unwrap().length();
             }
         }
     }
@@ -670,7 +670,7 @@ impl Mesh {
         let transformation = mesh_property.get_transformation();
         if let Some(g) = &mut self.geometry {
             g.bounding_box
-                .update_bounding_box(&g.vertices, &transformation);
+                .update_bounding_box(&g.vertices.as_ref().unwrap(), &transformation);
             g.bounding_box.intersect_box_aa_sphere(collider, radius)
         } else {
             panic!("Mesh {} has no geometry", self.label)

@@ -135,9 +135,9 @@ impl Elevator {
             panic!("Elevator needs indices")
         }
         let half = geometry.planes.planes.len() / 2;
-
+        let vertices = geometry.vertices.as_mut().unwrap();
         for sv in self.selected_vertices.iter() {
-            let vertice = geometry.vertices.get_position_mut(sv.0);
+            let vertice = vertices.get_position_mut(sv.0);
             let mut positiony = vertice.0[1];
             if sv.1 < radius_near {
                 positiony += full_height;
@@ -164,24 +164,21 @@ impl Elevator {
                     .insert(indices.indices[face_index * 3 + 2]);
             }
             let v1_ptr = std::slice::from_ref(
-                geometry
-                    .vertices
+                vertices
                     .get_position(indices.indices[face_index * 3]),
             )
             .as_ptr() as *mut v128;
             let v1 = v128_load(v1_ptr);
 
             let v2_ptr = std::slice::from_ref(
-                geometry
-                    .vertices
+                vertices
                     .get_position(indices.indices[face_index * 3 + 1]),
             )
             .as_ptr() as *mut v128;
             let v2 = v128_load(v2_ptr);
 
             let v3_ptr = std::slice::from_ref(
-                geometry
-                    .vertices
+                vertices
                     .get_position(indices.indices[face_index * 3 + 2]),
             )
             .as_ptr() as *mut v128;
@@ -215,7 +212,7 @@ impl Elevator {
         }
         for vertex_index in self.selected_indices.iter() {
             let faces = &self.faces_of_vertices[*vertex_index];
-            let norm_ptr = std::slice::from_ref(geometry.vertices.get_position(*vertex_index + 4))
+            let norm_ptr = std::slice::from_ref(vertices.get_position(*vertex_index + 4))
                 .as_ptr() as *mut v128;
 
             let mut norm_v = f32x4_splat(0.0);
@@ -234,7 +231,7 @@ impl Elevator {
             v128_store(norm_ptr, normalized);
         }
         if new_position && self.selected_vertices.len() > 0 {
-            let stride = geometry.vertices.vertices_stride();
+            let stride = vertices.vertices_stride();
             self.offset = self
                 .selected_vertices
                 .iter()
@@ -255,7 +252,7 @@ impl Elevator {
     }
 
     pub fn new(geometry: &mut Geometry) -> Elevator {
-        let mut vertices = geometry.vertices.get_positions();
+        let mut vertices = geometry.vertices.as_ref().unwrap().get_positions();
         let mut vertices_horizontal: Vec<f32> = Vec::new();
         loop {
             let next: Option<&Vec3wgslF32> = vertices.next();

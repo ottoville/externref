@@ -60,7 +60,7 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
     let target = &meshes[&*target_mesh_id];
 
     let target_vertices = &target.get_geometry().vertices;
-    let positions_count = target_vertices.length() * 2;
+    let positions_count = target_vertices.as_ref().unwrap().length() * 2;
     let mesh_id = Mesh::new(
         0.0,
         0.0,

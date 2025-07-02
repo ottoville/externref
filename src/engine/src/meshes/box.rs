@@ -137,17 +137,35 @@ pub unsafe extern "C" fn create_box_geometry() -> *mut Geometry {
 #[cfg(test)]
 #[test]
 fn test_calculate_normals() {
+    use crate::gpu::gpu::init_gpu;
+    use externref::ExternRef;
+    use externref::Resource;
+
+    unsafe { init_gpu(
+        Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+        Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+        Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+        true,
+        Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+        Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+        Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+        Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+        Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+        Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+    ) };
     let mut geometry = Geometry::new(true, false, false, "box_geometry".to_string());
     geometry.set_indices(BOX_INDICES.to_vec());
     let vertices = create_box_vertices();
     let vertices2 = create_box_vertices();
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     geometry.calculate_normals();
-    if let VertexKind::PositionAndNormal(vertices) = geometry.vertices {
-        for n in 0..vertices.len() {
-            assert_eq!(vertices[n].normal.0, vertices2[n].normal.0);
+    if let Some(verts) = geometry.vertices {
+        if let VertexKind::PositionAndNormal(vertices) = verts {
+            for n in 0..vertices.len() {
+                assert_eq!(vertices[n].normal.0, vertices2[n].normal.0);
+            }
+        } else {
+            panic!("Vertices are bad format")
         }
-    } else {
-        panic!("Vertices are bad format")
     }
 }

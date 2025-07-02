@@ -41,7 +41,6 @@ pub struct PositionAndNormalAndColor {
     pub color: Vec3wgslF32,
 }
 pub enum VertexKind {
-    None,
     PositionAndNormalAndUV(Vec<PositionAndNormalAndUV>),
     PositionAndNormalAndColor(Vec<PositionAndNormalAndColor>),
     PositionAndNormal(Vec<PositionAndNormal>),
@@ -59,7 +58,6 @@ impl VertexKind {
                 todo!()
             }
             VertexKind::Position(vector) => &vector[index].0,
-            VertexKind::None => todo!(),
         }
     }
     pub fn get_position_mut(&mut self, index: usize) -> &mut Vec3wgslF32 {
@@ -71,7 +69,6 @@ impl VertexKind {
                 todo!()
             }
             VertexKind::Position(vector) => &mut vector[index].0,
-            VertexKind::None => todo!(),
         }
     }
     pub fn get_normal_mut(&mut self, index: usize) -> &mut Vec3wgslF32 {
@@ -83,7 +80,6 @@ impl VertexKind {
                 todo!()
             }
             VertexKind::Position(_vector) => todo!(),
-            VertexKind::None => todo!(),
         }
     }
     pub fn get_positions(&self) -> Box<dyn Iterator<Item = &Vec3wgslF32> + '_> {
@@ -99,7 +95,6 @@ impl VertexKind {
                 todo!()
             }
             VertexKind::Position(vector) => Box::new(vector.iter().map(|v| &v.0)),
-            VertexKind::None => todo!(),
         }
     }
     pub fn vertices_stride(&self) -> usize {
@@ -111,7 +106,6 @@ impl VertexKind {
             VertexKind::PositionAndNormal(_) => std::mem::size_of::<PositionAndNormal>(),
             VertexKind::Position2DAndUV(_) => std::mem::size_of::<Position2DAndUV>(),
             VertexKind::Position(_) => std::mem::size_of::<Position>(),
-            VertexKind::None => todo!(),
         }
     }
     pub fn get_positions_mut(&mut self) -> Box<dyn Iterator<Item = &mut Vec3wgslF32> + '_> {
@@ -129,7 +123,6 @@ impl VertexKind {
                 todo!()
             }
             VertexKind::Position(vector) => Box::new(vector.iter_mut().map(|v| &mut v.0)),
-            VertexKind::None => todo!(),
         }
     }
     pub fn get_normals_mut(&mut self) -> Box<dyn Iterator<Item = &mut Vec3wgslF32> + '_> {
@@ -147,13 +140,6 @@ impl VertexKind {
                 todo!()
             }
             VertexKind::Position(vector) => Box::new(vector.iter_mut().map(|v| &mut v.0)),
-            VertexKind::None => todo!(),
-        }
-    }
-    pub fn have_vertices(&self) -> bool {
-        match self {
-            VertexKind::None => false,
-            _ => true,
         }
     }
     pub fn length(&self) -> usize {
@@ -163,7 +149,6 @@ impl VertexKind {
             VertexKind::PositionAndNormal(vector) => vector.len(),
             VertexKind::Position2DAndUV(vector) => vector.len(),
             VertexKind::Position(vector) => vector.len(),
-            VertexKind::None => 0,
         };
     }
 }
