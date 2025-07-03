@@ -1,4 +1,4 @@
-use std::num::NonZeroUsize;
+use std::{cell::Cell, num::NonZeroUsize, rc::Rc};
 
 use collider::ColliderPlane;
 use logger::LoggerArray;
@@ -13,7 +13,15 @@ use terramath::{CrossProduct, Plane, Vec3wgslF32, VectorMath, VectorMathF32};
 pub use crate::boundingbox::BoundingBox;
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
-    gpu::buffer::{buffer::GPUBuffer, usages::INDEX_USAGE},
+    gpu::{
+        buffer::{
+            buffer::GPUBuffer,
+            mappadle_buffer::MappadleGPUBuffer,
+            mapped_buffer::MappedGPUBuffer,
+            usages::{INDEX_USAGE, MAP_READ_COPYDST_USAGE},
+        },
+        gpu::serialize_terrain,
+    },
     indices::Indices,
     math2::Vec2wgslF32,
     mesh::{Mesh, ENGINE},
@@ -56,7 +64,7 @@ pub unsafe extern "C" fn vertices_pointer(
  */
 #[no_mangle]
 pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry) -> usize {
-    (*geometry).vertices.as_ref().unwrap().vertices_stride() / 4usize
+    (*geometry).vertices.as_ref().unwrap().stride() / 4usize
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(
@@ -87,23 +95,63 @@ pub unsafe extern "C" fn have_vertices(
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-    indices_ptr: *mut usize,
-    indices_length: usize,
-    indices_cap: usize,
-    vertices_ptr: *mut PositionAndNormalAndUV,
-    vertices_length: usize,
-    vertices_cap: usize,
+    mesh_id: *mut ExplicitGenerationalFreeListIndex<Mesh>,
+    indices_buffer: *mut MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>,
+    vertices_buffer: *mut MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>,
 ) {
-    let indices = Vec::from_raw_parts(indices_ptr, indices_length, indices_cap);
-    let vertices = Vec::from_raw_parts(vertices_ptr, vertices_length, vertices_cap);
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+    let gate = Rc::new(Cell::new(false));
+    let gate2 = gate.clone();
+    let then = |mesh: &mut Mesh| {
+        let geometry = mesh.geometry.as_mut().unwrap();
+        let vertices = geometry.vertices.as_ref().unwrap();
+        let indices = &geometry.indices.as_ref().unwrap().indices;
 
-    let geometry = mesh.get_geometry_mut();
-    geometry.set_indices(indices);
-
-    geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
-    geometry.faces_dirty = true;
+        serialize_terrain(
+            vertices.as_ptr(),
+            vertices.length() * vertices.stride(),
+            indices.as_ptr() as usize,
+            indices.len(),
+        );
+        let collider = mesh.create_trimesh_collider();
+        ENGINE
+            .engine2
+            .lock()
+            .unwrap()
+            .add_collider_to_mesh(collider, mesh);
+    };
+    Box::from_raw(indices_buffer).map_read_async(
+        0,
+        None,
+        Box::into_raw(Box::new(
+            move |buffer: MappedGPUBuffer<MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>>| {
+                let mut indices: Vec<usize> = vec![0; buffer.size / 4];
+                buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
+                let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+                let geometry = mesh.geometry.as_mut().unwrap();
+                geometry.set_indices(indices);
+                // Execute callback if gate was "true", set it to "true" if it was "false"
+                gate.set(gate.get().then(|| then(mesh)).is_none());
+            },
+        )),
+    );
+    Box::from_raw(vertices_buffer).map_read_async(
+        0,
+        None,
+        Box::into_raw(Box::new(
+            move |buffer: MappedGPUBuffer<MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>>| {
+                let mut vertices: Vec<PositionAndNormalAndUV> =
+                    Vec::with_capacity(buffer.size / size_of::<PositionAndNormalAndUV>());
+                buffer.get_mapped_range_raw(vertices.as_mut_ptr() as usize, buffer.size, 0);
+                vertices.set_len(buffer.size / size_of::<PositionAndNormalAndUV>());
+                let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+                let geometry = mesh.geometry.as_mut().unwrap();
+                geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
+                geometry.faces_dirty = true;
+                // Execute callback if gate was "true", set it to "true" if it was "false"
+                gate2.set(gate2.get().then(|| then(mesh)).is_none());
+            },
+        )),
+    );
 }
 #[no_mangle]
 pub unsafe extern "C" fn dedup_positions(geometry_ptr: *mut Geometry) {
@@ -172,37 +220,6 @@ fn dedup_index(old: usize, new: usize, indices: &mut Vec<usize>) {
 }
 
 impl<'vert> Geometry {
-    pub fn create_trimesh_collider(&mut self, scaling: [f32; 3]) -> *mut Collider {
-        let vertices = self
-            .vertices.as_ref().unwrap();
-        let newvertices = 
-            vertices
-            .get_positions()
-            .map(|position| {
-                Point::new(
-                    position.0[0] * scaling[0],
-                    position.0[1] * scaling[1],
-                    position.0[2] * scaling[2],
-                )
-            })
-            .collect();
-        let positions_count = vertices.length();
-        self.create_faces(NonZeroUsize::new(positions_count));
-        let collider = Box::new(
-            ColliderBuilder::trimesh(
-                newvertices,
-                self.faces
-                    .iter()
-                    .map(|v| [v[0] as u32, v[1] as u32, v[2] as u32])
-                    .collect(),
-            )
-            .unwrap()
-            .density(2.0)
-            .restitution(0.5)
-            .build(),
-        );
-        Box::into_raw(collider)
-    }
     pub fn create_convex_collider(
         &mut self,
         collision_events: bool,
@@ -262,18 +279,9 @@ impl<'vert> Geometry {
 
             let no = e1.cross(&e2);
 
-            vertices
-                .get_normal_mut(triangle[0])
-                .0
-                .add_vec_in_place(&no);
-            vertices
-                .get_normal_mut(triangle[1])
-                .0
-                .add_vec_in_place(&no);
-            vertices
-                .get_normal_mut(triangle[2])
-                .0
-                .add_vec_in_place(&no);
+            vertices.get_normal_mut(triangle[0]).0.add_vec_in_place(&no);
+            vertices.get_normal_mut(triangle[1]).0.add_vec_in_place(&no);
+            vertices.get_normal_mut(triangle[2]).0.add_vec_in_place(&no);
         }
         for normal in vertices.get_normals_mut() {
             normal.0.normalize_in_place();
@@ -424,9 +432,16 @@ impl<'vert> Geometry {
             self.collider_planes.last_collider_world_vertices =
                 vec![Vec3wgslF32([0.0; 3]); vertices.length()]; //Vec::with_capacity((self.vertices.length()));
             if self.static_faces {
+                ["static_faces", &self.label].log();
                 return;
             }
             let faces_count = self.faces_count();
+            [
+                "allocate_collider_planes",
+                &self.label,
+                &faces_count.to_string(),
+            ]
+            .log();
             self.planes = Faces::new(faces_count);
             self.collider_planes.collider_planes = Vec::with_capacity(faces_count);
             self.collider_planes_parallel = vec![[[0.0; 4]; 4]; faces_count / 4];
@@ -559,6 +574,7 @@ impl<'vert> Geometry {
                 });
             }
         }
+        self.faces_dirty = true;
         self.bounding_box.need_init = true;
         if self.camera_can_collide_to {
             self.allocate_collider_planes();

@@ -1,5 +1,4 @@
-﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
-import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
+﻿import { DrawableIndexed } from '../Drawables/DrawableIndexed.js';
 import type { Engine } from '../../engine.js';
 import type { RenderPipelineProps0 } from '../RenderPipeline.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
@@ -13,6 +12,7 @@ import {
 } from '../../webgpu-ts/index.js';
 import { MainNodeProps } from 'MainNode.js';
 import { GPU } from 'GPU.js';
+import { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 declare const engine: Engine;
 
 export type SimpleIndexedMeshProps = {
@@ -39,7 +39,7 @@ interface GPUProps<
   vertexShaderBuilder: V;
   fragmentShaderBuilder: F;
 }
-export class SimpleIndexedMesh extends BoundableNodeIndexed {
+export class SimpleIndexedMesh extends IndexedDataNode {
   constructor(
     dataNodeProps: DataNodeProps,
     mainNodeProps: MainNodeProps | rust_pointer<'mesh_id'>,

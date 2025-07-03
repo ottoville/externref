@@ -11,6 +11,13 @@ export type BufferInterface = {
     label_len: number,
     label_cap: number,
   ): rust_pointer<'GPUBuffer'>;
+  create_mappadle_GPU_buffer_copydst_mapread(
+    length: number,
+    label_ptr: number,
+    label_len: number,
+    label_cap: number,
+  ): rust_pointer<'GPUBuffer'>;
+
   get_raw_buffer(
     buffer: rust_pointer<'GPUBuffer'>,
   ): Externref<false, GPUBuffer>;

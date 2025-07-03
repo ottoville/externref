@@ -83,6 +83,14 @@ pub fn resize_renderpass(
     height: NonZeroU32,
 ) {
 }
+#[cfg(test)]
+pub fn serialize_terrain(
+    vertices_ptr: usize,
+    vertices_len: usize,
+    indices_ptr: usize,
+    indices_len: usize,
+) {
+}
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "device")]
@@ -122,6 +130,12 @@ extern "C" {
         renderpass: &Resource<JSRenderPass>,
         width: NonZeroU32,
         height: NonZeroU32,
+    );
+    pub fn serialize_terrain(
+        vertices_ptr: usize,
+        vertices_len: usize,
+        indices_ptr: usize,
+        indices_len: usize,
     );
 
 }

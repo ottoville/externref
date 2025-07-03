@@ -18,6 +18,7 @@ use externref::externref;
 use externref::Resource;
 use rapier3d::prelude::*;
 use std::num::NonZeroU32;
+use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
@@ -82,9 +83,7 @@ pub unsafe extern "C" fn new_mesh_from_js(
     )));
 }
 #[no_mangle]
-pub unsafe extern "C" fn destroy_mesh(
-    mesh_id_ptr: *mut ExplicitGenerationalFreeListIndex<Mesh>,
-) {
+pub unsafe extern "C" fn destroy_mesh(mesh_id_ptr: *mut ExplicitGenerationalFreeListIndex<Mesh>) {
     let mesh = Box::from_raw(mesh_id_ptr);
     ENGINE.meshes.lock().unwrap().remove(*mesh);
 }
@@ -111,11 +110,13 @@ pub unsafe extern "C" fn add_collider(
     collider: *mut Collider,
 ) {
     let coll = Box::from_raw(collider);
+    let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+
     ENGINE
         .engine2
         .lock()
         .unwrap()
-        .add_collider_to_mesh(*coll, &*mesh_id);
+        .add_collider_to_mesh(*coll, mesh);
 }
 
 #[no_mangle]
@@ -286,9 +287,7 @@ pub unsafe extern "C" fn create_trimesh_collider(
     mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
 ) -> *mut Collider {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
-    let scaling = mesh.mesh_property.lock().unwrap().scaling.clone();
-    let geometry = mesh.get_geometry_mut();
-    geometry.create_trimesh_collider(scaling)
+    Box::into_raw(Box::new(mesh.create_trimesh_collider()))
 }
 #[no_mangle]
 pub unsafe extern "C" fn create_convex_collider(
@@ -453,6 +452,37 @@ impl Mesh {
 }
 
 impl Mesh {
+    pub fn create_trimesh_collider(&mut self) -> Collider {
+        let scaling = self.mesh_property.lock().unwrap().scaling.clone();
+        let geometry = self.geometry.as_mut().unwrap();
+
+        let vertices = geometry.vertices.as_ref().unwrap();
+        let newvertices = vertices
+            .get_positions()
+            .map(|position| {
+                Point::new(
+                    position.0[0] * scaling[0],
+                    position.0[1] * scaling[1],
+                    position.0[2] * scaling[2],
+                )
+            })
+            .collect();
+        let positions_count = vertices.length();
+        geometry.create_faces(NonZeroUsize::new(positions_count));
+         
+            ColliderBuilder::trimesh(
+                newvertices,
+                geometry
+                    .faces
+                    .iter()
+                    .map(|v| [v[0] as u32, v[1] as u32, v[2] as u32])
+                    .collect(),
+            )
+            .unwrap()
+            .density(2.0)
+            .restitution(0.5)
+            .build()    
+    }
     pub fn check_collision(
         &mut self,
         collider: &mut collider::Collider,

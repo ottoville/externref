@@ -35,10 +35,47 @@ import {
   type RenderTargetTexture,
 } from '../webgpu-ts/index.js';
 import { TerrainSubdivisions } from '../GPU/Shaders/ShaderBuilders.js';
+import { create_rust_label } from '../utils.js';
 declare const engine: Engine;
 
 const terrainSize = [10000, 10000] as const;
 const subdivisions = [64, 64] as const;
+export function serialize_terrain(
+  vertices: Float32Array<ArrayBuffer>,
+  indices: Uint32Array<ArrayBuffer>,
+  compress = false,
+) {
+  const cacheP = caches.open('save');
+  if (!compress) {
+    const response = new Response(vertices);
+    response.headers.set('content-length', vertices.byteLength.toString());
+    response.headers.set('content-type', 'application/octet-stream');
+
+    const response2 = new Response(indices);
+    response2.headers.set('content-length', indices.byteLength.toString());
+    response2.headers.set('content-type', 'application/octet-stream');
+    void cacheP.then((cache) => {
+      cache.put(new Request('/terrain'), response).catch((err) => {
+        engine.showError(err);
+      });
+      cache.put(new Request('/indices'), response2).catch((err) => {
+        engine.showError(err);
+      });
+    });
+  } else {
+    /* const c = new OffscreenCanvas((Terrain.subdivisions[0] + 1) * 3, (Terrain.subdivisions[1] + 1));
+             const ctx = c.getContext("2d");
+             if (!ctx)
+                 throw ('get 2d context failed');
+             //disabled for now
+
+             ctx.putImageData(new ImageData(new Uint8ClampedArray(this.#vertices.buffer), c.width, c.height), 0, 0);
+             let blob = await c.convertToBlob({ type: "image/webp", quality: 1 });
+             const response = new Response(blob);
+             response.headers.set('content-length', blob.size.toString());
+             (await cacheP).put(new Request('/terrain.webp'), response);*/
+  }
+}
 export class Terrain {
   /*
 TODO
@@ -142,7 +179,10 @@ TODO
     }
     b1.destroy();
     clearTimeout(this.#autosave);
-    this.#autosave = setTimeout(() => this.#serialize(), 10000);
+    this.#autosave = setTimeout(
+      () => serialize_terrain(this.mesh.vertices, this.mesh.indices),
+      10000,
+    );
   }
 
   static async loadFromTexture(gpu: GPU, scenes: Scene[]): Promise<Terrain> {
@@ -300,47 +340,6 @@ TODO
     return t;
   }
 
-  async #serialize(compress = false) {
-    const cacheP = caches.open('save');
-    if (!compress) {
-      const response = new Response(this.mesh.vertices);
-      response.headers.set(
-        'content-length',
-        (
-          this.mesh.vertices_count *
-          Float32Array.BYTES_PER_ELEMENT *
-          this.mesh.vertices_stride
-        ).toString(),
-      );
-      response.headers.set('content-type', 'application/octet-stream');
-
-      const indices = this.mesh.indices;
-      const response2 = new Response(indices);
-      response2.headers.set('content-length', indices.byteLength.toString());
-      response2.headers.set('content-type', 'application/octet-stream');
-
-      const cache = await cacheP;
-      cache.put(new Request('/terrain'), response).catch((err) => {
-        engine.showError(err);
-      });
-      cache.put(new Request('/indices'), response2).catch((err) => {
-        engine.showError(err);
-      });
-    } else {
-      /* const c = new OffscreenCanvas((Terrain.subdivisions[0] + 1) * 3, (Terrain.subdivisions[1] + 1));
-             const ctx = c.getContext("2d");
-             if (!ctx)
-                 throw ('get 2d context failed');
-             //disabled for now
-
-             ctx.putImageData(new ImageData(new Uint8ClampedArray(this.#vertices.buffer), c.width, c.height), 0, 0);
-             let blob = await c.convertToBlob({ type: "image/webp", quality: 1 });
-             const response = new Response(blob);
-             response.headers.set('content-length', blob.size.toString());
-             (await cacheP).put(new Request('/terrain.webp'), response);*/
-    }
-  }
-
   readonly texture: RenderTargetTexture<
     (typeof TextureUsageEnums)['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'],
     'rgba8unorm',
@@ -474,25 +473,34 @@ TODO
     this.#ready = caches
       .match(new Request('/terrainTexture.webp'))
       .then(async (cachedtexture) => {
-        const gpuReadBufferPositions = new Buffer({
-          gpu: gpu.device,
-          label: 'terrainPositionAndUvsAndNormalsGPURead',
-          size: this.terrainPositionAndUvsAndNormalsGPU.props.size,
-          usages: BufferUsageEnums['MAP_READ|COPY_DST'],
-        });
+        const gpuReadBufferPositions =
+          engine.rust.create_mappadle_GPU_buffer_copydst_mapread(
+            this.terrainPositionAndUvsAndNormalsGPU.props.size,
+            ...create_rust_label('terrainPositionAndUvsAndNormalsGPURead'),
+          );
         const textureSizeBytes =
           Int32Array.BYTES_PER_ELEMENT *
           (Terrain.#textureSize.width * Terrain.#textureSize.height);
         if (cachedtexture) {
           passEncoder.end();
-          this.terrainPositionAndUvsAndNormalsGPU.copyTo(
-            commandEncoder,
-            gpuReadBufferPositions,
+          commandEncoder.copyBufferToBuffer(
+            this.terrainPositionAndUvsAndNormalsGPU.buffer, // source buffer
             0,
+            engine.rust.get_raw_buffer(gpuReadBufferPositions).externref, //destination buffer
             0,
           );
           var gpuReadBufferIndices =
-            terrainIndicesGPU.createCopy(commandEncoder);
+            engine.rust.create_mappadle_GPU_buffer_copydst_mapread(
+              terrainIndicesGPU.props.size,
+              ...create_rust_label(terrainIndicesGPU.props.label),
+            );
+          commandEncoder.copyBufferToBuffer(
+            terrainIndicesGPU.buffer, // source buffer
+            0,
+            engine.rust.get_raw_buffer(gpuReadBufferIndices).externref, //destination buffer
+            0,
+          );
+
           const bitmap = await createImageBitmap(await cachedtexture.blob());
           this.texture.copyFromExternalImage(
             {
@@ -524,10 +532,11 @@ TODO
             Terrain.#textureSize.height / 16,
           );
           passEncoder.end();
-          this.terrainPositionAndUvsAndNormalsGPU.copyTo(
-            commandEncoder,
-            gpuReadBufferPositions,
+
+          commandEncoder.copyBufferToBuffer(
+            this.terrainPositionAndUvsAndNormalsGPU.buffer, // source buffer
             0,
+            engine.rust.get_raw_buffer(gpuReadBufferPositions).externref, //destination buffer
             0,
           );
 
@@ -550,7 +559,16 @@ TODO
           );
 
           var gpuReadBufferIndices =
-            terrainIndicesGPU.createCopy(commandEncoder);
+            engine.rust.create_mappadle_GPU_buffer_copydst_mapread(
+              terrainIndicesGPU.props.size,
+              ...create_rust_label(terrainIndicesGPU.props.label),
+            );
+          commandEncoder.copyBufferToBuffer(
+            terrainIndicesGPU.buffer, // source buffer
+            0,
+            engine.rust.get_raw_buffer(gpuReadBufferIndices).externref, //destination buffer
+            0,
+          );
           const gpuCommands = commandEncoder.finish();
           gpu.device.queue.submit([gpuCommands]);
           const c = new OffscreenCanvas(
@@ -598,6 +616,12 @@ TODO
           .catch((err) => {
             engine.showError(err);
           });
+        engine.rust.set_indices_and_vertices_PositionAndNormalAndUV(
+          this.mesh.id,
+          gpuReadBufferIndices,
+          gpuReadBufferPositions,
+        );
+        /*
         gpuReadBufferPositions
           .readAndDestroy((readbuff) => {
             return gpuReadBufferIndices.readAndDestroy((buff) => {
@@ -613,7 +637,7 @@ TODO
           })
           .catch((err) => {
             engine.showError(err);
-          });
+          });*/
       })
       .catch((err) => engine.showError(err));
   }

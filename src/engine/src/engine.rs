@@ -395,9 +395,8 @@ impl Engine2 {
     pub fn add_collider_to_mesh<'a>(
         &mut self,
         collider: Collider,
-        mesh_id: &ExplicitGenerationalFreeListIndex<Mesh>,
+        mesh: &mut Mesh,
     ) {
-        let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
         match mesh.rigid_body_handle {
             Some(rigid_body_handle) => {
                 let collider_handle = self.collider_set.insert_with_parent(

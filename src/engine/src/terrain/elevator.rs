@@ -231,7 +231,7 @@ impl Elevator {
             v128_store(norm_ptr, normalized);
         }
         if new_position && self.selected_vertices.len() > 0 {
-            let stride = vertices.vertices_stride();
+            let stride = vertices.stride();
             self.offset = self
                 .selected_vertices
                 .iter()

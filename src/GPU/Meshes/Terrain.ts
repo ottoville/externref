@@ -1,5 +1,4 @@
-﻿import { BoundableNodeIndexed } from '../../nodes/BoundableNodeIndexed.js';
-import type { Scene } from '../../Scene.js';
+﻿import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 import {
@@ -17,8 +16,9 @@ import type {
   VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
+import { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 
-export class TerrainMesh extends BoundableNodeIndexed {
+export class TerrainMesh extends IndexedDataNode {
   sampler: GPUSampler | undefined;
   override drawable:
     | LightsTextureDrawableIndexed<
@@ -49,10 +49,6 @@ export class TerrainMesh extends BoundableNodeIndexed {
         label: 'terrain',
         rigid_body: RigidBody.off,
         scenes,
-      },
-      () => {
-        const collider_ptr = this.create_collider();
-        engine.rust.add_collider(this.id, collider_ptr);
       },
     );
     if (engine.gpu) {

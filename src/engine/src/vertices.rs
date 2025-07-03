@@ -97,7 +97,7 @@ impl VertexKind {
             VertexKind::Position(vector) => Box::new(vector.iter().map(|v| &v.0)),
         }
     }
-    pub fn vertices_stride(&self) -> usize {
+    pub fn stride(&self) -> usize {
         match &self {
             VertexKind::PositionAndNormalAndUV(_) => std::mem::size_of::<PositionAndNormalAndUV>(),
             VertexKind::PositionAndNormalAndColor(_) => {
@@ -149,6 +149,15 @@ impl VertexKind {
             VertexKind::PositionAndNormal(vector) => vector.len(),
             VertexKind::Position2DAndUV(vector) => vector.len(),
             VertexKind::Position(vector) => vector.len(),
+        };
+    }
+    pub fn as_ptr(&self) -> usize {
+        return match &self {
+            VertexKind::PositionAndNormalAndUV(vector) => vector.as_ptr() as usize,
+            VertexKind::PositionAndNormalAndColor(vector) => vector.as_ptr() as usize,
+            VertexKind::PositionAndNormal(vector) => vector.as_ptr() as usize,
+            VertexKind::Position2DAndUV(vector) => vector.as_ptr() as usize,
+            VertexKind::Position(vector) => vector.as_ptr() as usize,
         };
     }
 }

@@ -27,6 +27,7 @@ import { BindCommandsInterface } from './wasm-interfaces/BindCommandsInterface.j
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 import { RenderPassEncoderInterface } from './wasm-interfaces/RenderPassEncoder.js';
 import { RenderCommandsInterface } from './wasm-interfaces/RenderCommandsInterface.js';
+import { serialize_terrain } from './world/Terrain.js';
 
 const textDecoder = new TextDecoder();
 
@@ -156,12 +157,8 @@ export type rustWasm = {
   ): rust_pointer<'f32'>;
   set_indices_and_vertices_PositionAndNormalAndUV(
     mesh_id: rust_pointer<'mesh_id'>,
-    indices: rust_pointer<'usize'>,
-    indices_length: number,
-    indices_cap: number,
-    vertices: rust_pointer<'position_and_normal_and_uv'>,
-    vertices_length: number,
-    vertices_cap: number,
+    indices: rust_pointer<'GPUBuffer'>,
+    vertices: rust_pointer<'GPUBuffer'>,
   ): void;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
@@ -869,6 +866,25 @@ export class Engine {
           height: number,
         ) {
           renderpass.resize(width, height);
+        },
+        serialize_terrain(
+          vertices_ptr: number,
+          vertices_bytelen: number,
+          indices_ptr: number,
+          indices_len: number,
+        ) {
+          serialize_terrain(
+            new Float32Array(
+              engine.rust.memory.buffer,
+              vertices_ptr,
+              vertices_bytelen / Float32Array.BYTES_PER_ELEMENT,
+            ),
+            new Uint32Array(
+              engine.rust.memory.buffer,
+              indices_ptr,
+              indices_len,
+            ),
+          );
         },
         vertices_change({ externref: mesh }: Externref<false, DataNode>) {
           mesh.onVerticesChange();

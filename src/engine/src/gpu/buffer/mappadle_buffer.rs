@@ -13,7 +13,22 @@ use super::{
 };
 use crate::gpu::buffer::usages::MAP_WRITE_COPYSRC_USAGE;
 use crate::gpu::gpu::JSDevice;
+use crate::mesh::ENGINE;
 use externref::Resource;
+
+#[no_mangle]
+#[cfg(feature = "webgpu")]
+pub unsafe extern "C" fn create_mappadle_GPU_buffer_copydst_mapread(
+    length: usize,
+    label_ptr: *mut u8,
+    label_len: usize,
+    label_cap: usize,
+) -> *const MappadleGPUBuffer<MAP_READ_COPYDST_USAGE> {
+    let gpuopt = ENGINE.gpu.lock().unwrap();
+    let gpu = gpuopt.as_ref().unwrap();
+    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
+    Box::into_raw(Box::new(MappadleGPUBuffer::new(&gpu.device, length, label)))
+}
 
 #[cfg(test)]
 unsafe fn map_write_async(
