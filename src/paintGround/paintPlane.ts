@@ -11,6 +11,7 @@ import {
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
 import { RigidBody } from 'MainNode.js';
 import { IndexedDataNode } from '../nodes/IndexedDataNode.js';
+import { create_rust_label } from '../utils.js';
 declare const engine: Engine;
 
 class PlaneMesh extends IndexedDataNode {
@@ -25,17 +26,17 @@ class PlaneMesh extends IndexedDataNode {
     const pos_len =
       engine.rust.vertices_stride(geometry) *
       engine.rust.vertices_count(geometry);
-
-    super(
-      {
-        vertices: geometry,
-      },
-      {
-        camera_can_collide_to: false,
-        label: 'plane',
-        rigid_body: RigidBody.off,
-      },
+    const mesh = engine.rust.new_mesh_from_js(
+      0,
+      0,
+      1,
+      RigidBody.off,
+      ...create_rust_label('plane'),
+      false,
     );
+    engine.rust.set_geometry(mesh, geometry);
+
+    super({}, mesh);
     this.drawable = new DrawableIndexed({
       bindGroups: [],
       node: this,

@@ -30,12 +30,7 @@ export class NormalsMesh extends DataNode {
       targetNode.node.id,
       ...create_rust_label('normals_' + targetNode.node.label),
     );
-    super(
-      {
-        vertices: engine.rust.get_geometry(mesh),
-      },
-      mesh,
-    );
+    super({}, mesh);
     const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
     if (!gpuVertexBuffer) {
       throw new Error('mesh does not have vertexbuffer');

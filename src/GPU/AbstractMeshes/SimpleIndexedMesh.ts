@@ -10,7 +10,6 @@ import {
   type VertexShaderBuilder,
   FragmentShaderFunction,
 } from '../../webgpu-ts/index.js';
-import { MainNodeProps } from 'MainNode.js';
 import { GPU } from 'GPU.js';
 import { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
 declare const engine: Engine;
@@ -42,7 +41,7 @@ interface GPUProps<
 export class SimpleIndexedMesh extends IndexedDataNode {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: MainNodeProps | rust_pointer<'mesh_id'>,
+    mainNodeProps: rust_pointer<'mesh_id'>,
     gpuProps?: GPUProps,
     {
       vBufferGPU,
@@ -53,11 +52,6 @@ export class SimpleIndexedMesh extends IndexedDataNode {
       topology: 'triangle-list',
     },
   ) {
-    if (!dataNodeProps.vertices) {
-      throw new Error(
-        'SimpleIndexedMesh without vertices is not yet supported',
-      );
-    }
     super(dataNodeProps, mainNodeProps);
     if (gpuProps) {
       if (!vBufferGPU) {
@@ -71,7 +65,7 @@ export class SimpleIndexedMesh extends IndexedDataNode {
         }
 
         const vertices_view = engine.rust.vertices_pointer(
-          dataNodeProps.vertices,
+          this.geometry,
           false,
         );
         const vertices_len = this.vertices_count * this.vertices_stride;

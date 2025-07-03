@@ -1,9 +1,7 @@
-﻿import type { MainNodeProps } from 'MainNode.js';
-import type { Engine } from '../../engine.js';
+﻿import type { Engine } from '../../engine.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
 declare const engine: Engine;
 
-let uid = 0;
 export class Box extends IndexedSingleColoredMesh {
   override create_collider() {
     const scaleZ = this.getScaleZ();
@@ -25,21 +23,15 @@ export class Box extends IndexedSingleColoredMesh {
       can_collide?: boolean;
       color?: [number, number, number, number];
     },
-    mainNodeProps: Partial<MainNodeProps> | rust_pointer<'mesh_id'>,
+    mainNodeProps: rust_pointer<'mesh_id'>,
   ) {
     const geometry = engine.rust.create_box_geometry();
+    engine.rust.set_geometry(mainNodeProps, geometry);
     super(
       {
         can_collide,
-        vertices: geometry,
       },
-      typeof mainNodeProps === 'number'
-        ? mainNodeProps
-        : {
-            camera_can_collide_to: false,
-            label: 'box' + uid++,
-            ...mainNodeProps,
-          },
+      mainNodeProps,
     );
     this.setColorFromId(color);
   }

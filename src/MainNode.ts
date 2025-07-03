@@ -2,7 +2,7 @@
 import type { Engine } from './engine.js';
 import type { Drawable } from './GPU/Drawables/Drawable.js';
 import { Destroyable } from 'webgpu-ts/index.js';
-import { create_rust_label, stringFromPtr } from './utils.js';
+import { stringFromPtr } from './utils.js';
 import { Externref } from './externref.js';
 declare const engine: Engine;
 export const enum RigidBody {
@@ -140,31 +140,9 @@ export abstract class MainNode implements Destroyable {
   get have_rigid_body() {
     return engine.rust.have_rigid_body(this.id);
   }
-  constructor(props: MainNodeProps | rust_pointer<'mesh_id'>) {
-    if (typeof props === 'number') {
-      this.id = props;
-    } else {
-      const {
-        point_light = 0,
-        directional_light = 0,
-        label,
-        scenes,
-        rigid_body = RigidBody.default,
-        camera_can_collide_to: camera_can_collide_do,
-      } = props;
-      const sceneids = scenes
-        ? scenes.reduce((acc, scene) => acc | scene.id, 0)
-        : 1;
-      this.id = engine.rust.new_mesh_from_js(
-        point_light,
-        directional_light,
-        sceneids,
-        rigid_body,
-        ...create_rust_label(label),
-        new Externref(false, this),
-        camera_can_collide_do,
-      );
-    }
+  constructor(props: rust_pointer<'mesh_id'>) {
+    this.id = props;
+    engine.rust.set_mesh_externref(this.id, new Externref(false, this));
   }
   #destroyed = false;
   destroy() {

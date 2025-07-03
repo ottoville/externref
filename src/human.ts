@@ -2,7 +2,6 @@
 import type { Scene } from './Scene.js';
 import { ARROW_KEYS } from './controllers/CameraController.js';
 import { create_rust_label } from './utils.js';
-import { Externref } from './externref.js';
 import { IndexedSingleColoredMesh } from './GPU/AbstractMeshes/IndexedSingleColoredMesh.js';
 import { DataNode } from './nodes/DataNode.js';
 declare const engine: Engine;
@@ -27,11 +26,9 @@ export class Human extends IndexedSingleColoredMesh {
     super(
       {
         can_collide: false,
-        vertices: engine.rust.get_geometry(mesh),
       },
       mesh,
     );
-    engine.rust.set_mesh_externref(this.id, new Externref(false, this));
     engine.physics.tickables.push(this);
     this.hasGravity = true;
     this.update_scale(1, 1, 1);

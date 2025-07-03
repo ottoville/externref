@@ -11,6 +11,7 @@ import {
 } from '../GPU/Shaders/Sun.vert.js';
 import { createSingleColorFragShader } from '../GPU/Shaders/SingleColor.frag.js';
 import { DataNode } from '../nodes/DataNode.js';
+import { create_rust_label } from '../utils.js';
 declare const engine: Engine;
 
 const zAngle = Math.cos(Math.PI * 0.2);
@@ -52,13 +53,15 @@ export class Sun extends MainNode {
   };
   drawable: DrawableSimple<RenderPipelineProps<SunVertShader>> | undefined;
   constructor(gpu: GPU, scenes: Scene[]) {
-    super({
-      camera_can_collide_to: false,
-      directional_light: 1,
-      label: 'sun',
-      rigid_body: RigidBody.off,
-      scenes,
-    });
+    const mesh = engine.rust.new_mesh_from_js(
+      0,
+      1,
+      scenes.reduce((acc, scene) => acc | scene.id, 0),
+      RigidBody.off,
+      ...create_rust_label('sun'),
+      false,
+    );
+    super(mesh);
     this.positions_count = 14;
 
     const renderPipeline = gpu.createRenderPipelineBuilder(

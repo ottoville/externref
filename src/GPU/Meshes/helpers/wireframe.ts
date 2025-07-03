@@ -50,7 +50,6 @@ export function createWireFrameMesh(
     const node = new IndexedDataNode(
       {
         can_collide: false,
-        vertices: engine.rust.get_geometry(mesh),
       },
       mesh,
     );

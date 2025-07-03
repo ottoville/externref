@@ -13,6 +13,7 @@ import {
 import { RigidBody } from '../../../MainNode.js';
 import { IndexedDataNode } from '../../../nodes/IndexedDataNode.js';
 import { PositionVertice } from '../../Shaders/structs/Structs.js';
+import { create_rust_label } from '../../../utils.js';
 declare const engine: Engine;
 const buffer = new VertexBufferLayouts([
   {
@@ -44,16 +45,16 @@ export class BoundingBoxMesh extends IndexedDataNode {
     view.set(
       new Float32Array(engine.rust.memory.buffer, vertices_view, vertices_len),
     );
-    super(
-      {
-        vertices: geometry,
-      },
-      {
-        camera_can_collide_to: false,
-        label: 'BoundingBox_' + targetNode.node.label,
-        rigid_body: RigidBody.off,
-      },
+    const mesh = engine.rust.new_mesh_from_js(
+      0,
+      0,
+      1,
+      RigidBody.off,
+      ...create_rust_label('BoundingBox_' + targetNode.node.label),
+      false,
     );
+    engine.rust.set_geometry(mesh, geometry);
+    super({}, mesh);
     this.positions_count = 26;
 
     const renderPipeline = engine.gpu!.createRenderPipelineBuilder(

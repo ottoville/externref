@@ -66,7 +66,6 @@ pub unsafe extern "C" fn new_mesh_from_js(
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
-    externref: Resource<JSMesh>,
     camera_can_collide_to: bool,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
@@ -76,7 +75,7 @@ pub unsafe extern "C" fn new_mesh_from_js(
         scenes,
         rigid_body,
         label,
-        Some(externref),
+        None,
         None,
         ENGINE.meshes.lock().unwrap(),
         camera_can_collide_to,

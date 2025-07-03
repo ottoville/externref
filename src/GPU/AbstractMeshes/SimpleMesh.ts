@@ -4,12 +4,13 @@ import type { Engine } from '../../engine.js';
 import type { RenderPipelineProps } from '../RenderPipeline.js';
 import { type SimpleVertShader } from '../Shaders/SingleColoredWithNormal.vert.js';
 import type { DataNodeProps } from '../../nodes/DataNode.js';
-import type { MainNodeProps } from 'MainNode.js';
+import { RigidBody, type MainNodeProps } from 'MainNode.js';
 import {
   Buffer,
   BufferUsageEnums,
   type VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
+import { create_rust_label } from '../../utils.js';
 declare const engine: Engine;
 
 export class SimpleMesh extends DataNode {
@@ -21,14 +22,30 @@ export class SimpleMesh extends DataNode {
     mainNodeProps: MainNodeProps,
     vBufferGPU?: Buffer<VERTEX_BUFFER>,
   ) {
-    super(dataNodeProps, mainNodeProps);
+    const {
+      point_light = 0,
+      directional_light = 0,
+      label,
+      scenes,
+      rigid_body = RigidBody.default,
+      camera_can_collide_to: camera_can_collide_do,
+    } = mainNodeProps;
+    const sceneids = scenes
+      ? scenes.reduce((acc, scene) => acc | scene.id, 0)
+      : 1;
+    const mesh = engine.rust.new_mesh_from_js(
+      point_light,
+      directional_light,
+      sceneids,
+      rigid_body,
+      ...create_rust_label(label),
+      camera_can_collide_do,
+    );
+    super(dataNodeProps, mesh);
     if (engine.gpu) {
       if (!vBufferGPU) {
-        if (!dataNodeProps.vertices) {
-          throw new Error('SimpleMesh without vertices is not yet supported');
-        }
         const vertices_view = engine.rust.vertices_pointer(
-          dataNodeProps.vertices,
+          this.geometry,
           false,
         );
         const vertices_len = this.vertices_count * this.vertices_stride;

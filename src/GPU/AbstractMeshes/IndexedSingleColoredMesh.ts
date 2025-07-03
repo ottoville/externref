@@ -3,7 +3,6 @@ import {
   SimpleIndexedMesh,
   type SimpleIndexedMeshProps,
 } from './SimpleIndexedMesh.js';
-import { MainNodeProps } from 'MainNode.js';
 import { Engine } from 'engine.js';
 declare const engine: Engine;
 
@@ -13,7 +12,7 @@ declare const engine: Engine;
 export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: MainNodeProps | rust_pointer<'mesh_id'>,
+    mainNodeProps: rust_pointer<'mesh_id'>,
     simpleIndexedMeshProps?: SimpleIndexedMeshProps,
   ) {
     super(

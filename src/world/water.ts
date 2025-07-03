@@ -11,6 +11,7 @@ import { BindGroup } from '../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
 import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
 import { DataNode } from '../nodes/DataNode.js';
+import { create_rust_label } from '../utils.js';
 
 export class Sea extends DataNode {
   override drawable:
@@ -21,17 +22,21 @@ export class Sea extends DataNode {
   }
   constructor(scenes: Scene[]) {
     const geometry = engine.rust.create_water_geometry();
+    const mesh = engine.rust.new_mesh_from_js(
+      0,
+      0,
+      scenes.reduce((acc, scene) => acc | scene.id, 0),
+      RigidBody.off,
+      ...create_rust_label('water'),
+      false,
+    );
+    engine.rust.set_geometry(mesh, geometry);
+
     super(
       {
         can_collide: false,
-        vertices: geometry,
       },
-      {
-        camera_can_collide_to: false,
-        label: 'water',
-        rigid_body: RigidBody.off,
-        scenes,
-      },
+      mesh,
     ); //48
     if (engine.gpu) {
       const renderPipeline = engine.gpu.createRenderPipelineBuilder(

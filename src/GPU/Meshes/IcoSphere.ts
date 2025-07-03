@@ -1,7 +1,8 @@
-﻿import type { Scene } from '../../Scene.js';
+﻿import { create_rust_label } from '../../utils.js';
+import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
-import { RigidBody } from 'MainNode.js';
+import { RigidBody } from '../../MainNode.js';
 declare const engine: Engine;
 let uid = 0;
 export class IcoSphere extends IndexedSingleColoredMesh {
@@ -18,7 +19,7 @@ export class IcoSphere extends IndexedSingleColoredMesh {
     label = 'sphere' + uid++,
     can_collide = false,
     scenes,
-    rigid_body,
+    rigid_body = RigidBody.off,
   }: {
     order?: number;
     label?: string;
@@ -27,19 +28,21 @@ export class IcoSphere extends IndexedSingleColoredMesh {
     rigid_body?: RigidBody;
   }) {
     const geometry = engine.rust.create_icosphere_geometry(order);
-
+    const mesh = engine.rust.new_mesh_from_js(
+      0,
+      0,
+      scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1,
+      rigid_body,
+      ...create_rust_label(label),
+      false,
+    );
+    engine.rust.set_geometry(mesh, geometry);
     super(
       {
         can_collide,
         frontFace: 'ccw',
-        vertices: geometry,
       },
-      {
-        camera_can_collide_to: false,
-        label,
-        rigid_body,
-        scenes,
-      },
+      mesh,
     );
   }
 }

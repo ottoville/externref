@@ -1,4 +1,4 @@
-import { MainNode, MainNodeProps } from '../MainNode.js';
+import { MainNode } from '../MainNode.js';
 import type { Engine } from '../engine.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
 import { create_rust_vec_ptr } from '../utils.js';
@@ -14,7 +14,6 @@ class pickInfo {
 }
 
 export type DataNodeProps = {
-  vertices: rust_pointer<'geometry'>;
   /**
    * Setting true will create collider in rapier
    */
@@ -189,22 +188,15 @@ export class DataNode extends MainNode {
   }
   frontFace: GPUFrontFace;
   geometry: rust_pointer<'geometry'>;
-  constructor(
-    props: DataNodeProps,
-    mainNodeProps: MainNodeProps | rust_pointer<'mesh_id'>,
-  ) {
+  constructor(props: DataNodeProps, mainNodeProps: rust_pointer<'mesh_id'>) {
     super(mainNodeProps);
     this.#props = Object.freeze(props);
 
-    const { vertices, can_collide = false, frontFace = 'cw' } = props;
+    const { can_collide = false, frontFace = 'cw' } = props;
 
     this.frontFace = frontFace;
 
-    if (typeof mainNodeProps !== 'number') {
-      this.geometry = engine.rust.set_geometry(this.id, vertices);
-    } else {
-      this.geometry = engine.rust.get_geometry(this.id);
-    }
+    this.geometry = engine.rust.get_geometry(this.id);
 
     if (can_collide) {
       const collider_ptr = this.create_collider();

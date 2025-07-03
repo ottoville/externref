@@ -1,6 +1,8 @@
-﻿import type { Scene } from '../../Scene.js';
+﻿import { create_rust_label } from '../../utils.js';
+import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
+import { RigidBody } from 'MainNode.js';
 declare const engine: Engine;
 
 let uid = 0;
@@ -23,17 +25,21 @@ export class RightTriangularPrism extends IndexedSingleColoredMesh {
     color?: [number, number, number, number];
   }) {
     const geometry = engine.rust.create_rtp_geometry();
+    const mesh = engine.rust.new_mesh_from_js(
+      point_light,
+      0,
+      scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1,
+      RigidBody.off,
+      ...create_rust_label(label),
+      false,
+    );
+    engine.rust.set_geometry(mesh, geometry);
+
     super(
       {
         can_collide,
-        vertices: geometry,
       },
-      {
-        camera_can_collide_to: false,
-        label,
-        point_light,
-        scenes,
-      },
+      mesh,
     );
     this.setColorFromId(color);
   }

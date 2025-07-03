@@ -14,6 +14,8 @@ import {
   BufferUsageEnums,
   type RenderTargetTexture,
 } from '../webgpu-ts/index.js';
+import { RigidBody } from 'MainNode.js';
+import { create_rust_label } from '../utils.js';
 declare const engine: Engine;
 
 export const enum NumericUnit {
@@ -476,16 +478,17 @@ export abstract class UIRectangle<
         ? 54
         : 6;
     const geometry = engine.rust.create_ui_geometry(positionsCount);
-
-    this.#node = new DataNode(
-      {
-        vertices: geometry,
-      },
-      {
-        camera_can_collide_to: false,
-        label: props.label,
-      },
+    const mesh = engine.rust.new_mesh_from_js(
+      0,
+      0,
+      1,
+      RigidBody.off,
+      ...create_rust_label(props.label),
+      false,
     );
+    engine.rust.set_geometry(mesh, geometry);
+
+    this.#node = new DataNode({}, mesh);
     this.#node.positions_count = positionsCount;
 
     this.#updateBoundingBoxAndVerticesSuper(size.width, size.height, textUV);

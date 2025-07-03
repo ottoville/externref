@@ -114,7 +114,6 @@ export type rustWasm = {
     label_ptr: number,
     label_len: number,
     label_cap: number,
-    externref: Externref<false, MainNode>,
     camera_can_collide_to: boolean,
   ): rust_pointer<'mesh_id'>;
   destroy_mesh(mesh_id: rust_pointer<'mesh_id'>): void;

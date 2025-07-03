@@ -1,6 +1,7 @@
-﻿import type { MainNodeProps } from 'MainNode.js';
+﻿import { RigidBody, type MainNodeProps } from 'MainNode.js';
 import type { Engine } from '../../engine.js';
 import { IndexedColoredMesh } from '../AbstractMeshes/IndexedColoredMesh.js';
+import { create_rust_label } from '../../utils.js';
 declare const engine: Engine;
 
 export type OctaSphereProps = {
@@ -30,16 +31,32 @@ export class OctaSphere extends IndexedColoredMesh {
       vertices[i + 9] = Math.random();
       vertices[i + 10] = Math.random();
     }
+    const {
+      point_light = 0,
+      directional_light = 0,
+      label,
+      scenes,
+      rigid_body = RigidBody.default,
+      camera_can_collide_to = false,
+    } = mainNodeProps;
+    const sceneids = scenes
+      ? scenes.reduce((acc, scene) => acc | scene.id, 0)
+      : 1;
+    const mesh = engine.rust.new_mesh_from_js(
+      point_light,
+      directional_light,
+      sceneids,
+      rigid_body,
+      ...create_rust_label(label || 'OctaSphere' + uid++),
+      camera_can_collide_to,
+    );
+    engine.rust.set_geometry(mesh, geometry);
+
     super(
       {
         can_collide,
-        vertices: geometry,
       },
-      {
-        camera_can_collide_to: false,
-        label: 'OctaSphere' + uid++,
-        ...mainNodeProps,
-      },
+      mesh,
     );
 
     this.width = width;

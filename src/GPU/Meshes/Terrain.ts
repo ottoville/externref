@@ -17,6 +17,7 @@ import type {
 } from '../../webgpu-ts/index.js';
 import { RigidBody } from 'MainNode.js';
 import { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
+import { create_rust_label } from '../../utils.js';
 
 export class TerrainMesh extends IndexedDataNode {
   sampler: GPUSampler | undefined;
@@ -39,17 +40,24 @@ export class TerrainMesh extends IndexedDataNode {
       true,
       false,
     );
+    const sceneids = scenes
+      ? scenes.reduce((acc, scene) => acc | scene.id, 0)
+      : 1;
+    const mesh = engine.rust.new_mesh_from_js(
+      0,
+      0,
+      sceneids,
+      RigidBody.off,
+      ...create_rust_label('terrain'),
+      true,
+    );
+    engine.rust.set_geometry(mesh, geometry);
+
     super(
       {
         can_collide: true,
-        vertices: geometry,
       },
-      {
-        camera_can_collide_to: true,
-        label: 'terrain',
-        rigid_body: RigidBody.off,
-        scenes,
-      },
+      mesh,
     );
     if (engine.gpu) {
       this.sampler = engine.gpu.device.createSampler({

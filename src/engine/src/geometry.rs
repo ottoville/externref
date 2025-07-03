@@ -43,19 +43,14 @@ pub unsafe extern "C" fn vertices_pointer(
     geometry: *mut Geometry,
     // If vertices are modified, the BB needs to be inited
     need_init: bool,
-) -> *const f32 {
+) -> usize {
     if need_init {
         (*geometry).bounding_box.need_init = true;
     }
     let vertices = &(*geometry).vertices;
+
     match vertices {
-        Some(verts) => match verts {
-            VertexKind::PositionAndNormalAndUV(vector) => vector.as_ptr() as *const f32,
-            VertexKind::PositionAndNormalAndColor(vector) => vector.as_ptr() as *const f32,
-            VertexKind::PositionAndNormal(vector) => vector.as_ptr() as *const f32,
-            VertexKind::Position2DAndUV(vector) => vector.as_ptr() as *const f32,
-            VertexKind::Position(vector) => vector.as_ptr() as *const f32,
-        },
+        Some(verts) => verts.as_ptr(),
         None => panic!("Asked vertices pointer but there are no vertices"),
     }
 }
@@ -432,16 +427,9 @@ impl<'vert> Geometry {
             self.collider_planes.last_collider_world_vertices =
                 vec![Vec3wgslF32([0.0; 3]); vertices.length()]; //Vec::with_capacity((self.vertices.length()));
             if self.static_faces {
-                ["static_faces", &self.label].log();
                 return;
             }
             let faces_count = self.faces_count();
-            [
-                "allocate_collider_planes",
-                &self.label,
-                &faces_count.to_string(),
-            ]
-            .log();
             self.planes = Faces::new(faces_count);
             self.collider_planes.collider_planes = Vec::with_capacity(faces_count);
             self.collider_planes_parallel = vec![[[0.0; 4]; 4]; faces_count / 4];
