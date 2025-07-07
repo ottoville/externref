@@ -621,23 +621,6 @@ TODO
           gpuReadBufferIndices,
           gpuReadBufferPositions,
         );
-        /*
-        gpuReadBufferPositions
-          .readAndDestroy((readbuff) => {
-            return gpuReadBufferIndices.readAndDestroy((buff) => {
-              this.mesh.set_indices_and_vertices_PositionAndNormalAndUV(
-                new Uint32Array(buff),
-                new Float32Array(readbuff),
-              );
-              this.updateSwap2(0, readbuff.byteLength, true);
-              this.#serialize().catch((err) => {
-                engine.showError(err);
-              });
-            });
-          })
-          .catch((err) => {
-            engine.showError(err);
-          });*/
       })
       .catch((err) => engine.showError(err));
   }

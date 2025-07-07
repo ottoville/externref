@@ -1,7 +1,4 @@
-use super::{
-    buffer::GPUBuffer, copy_dst::CopyDst, copy_src::CopySrc, mappadle_buffer::MappadleGPUBuffer,
-    uniform::BindGroupBindable,
-};
+use super::{buffer::GPUBuffer, copy_dst::CopyDst, copy_src::CopySrc, uniform::BindGroupBindable};
 
 /////////////////////////////////////////////////////////////////////////////////////
 // MapRead
@@ -12,7 +9,7 @@ pub const MAP_READ_COPYDST_USAGE: u32 = MAP_READ_USAGE | COPYDST_USAGE;
 // MapWrite
 pub const MAP_WRITE_USAGE: u32 = 2;
 pub const MAP_WRITE_COPYSRC_USAGE: u32 = MAP_WRITE_USAGE | COPYSRC_USAGE;
-impl CopySrc for MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE> {}
+impl CopySrc for GPUBuffer<MAP_WRITE_COPYSRC_USAGE> {}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // CopySrc
@@ -32,7 +29,8 @@ pub const INDEX_USAGE: u32 = 16;
 // Vertex
 pub const VERTEX_USAGE: u32 = 32;
 pub const VERTEX_STORAGE_COPYSRC_USAGE: u32 = VERTEX_USAGE | STORAGE_USAGE | COPYSRC_USAGE;
-pub const VERTEX_STORAGE_COPYSRC_COPYDSST_USAGE: u32 = VERTEX_USAGE | STORAGE_USAGE | COPYSRC_USAGE | COPYDST_USAGE;
+pub const VERTEX_STORAGE_COPYSRC_COPYDSST_USAGE: u32 =
+    VERTEX_USAGE | STORAGE_USAGE | COPYSRC_USAGE | COPYDST_USAGE;
 impl BindGroupBindable for GPUBuffer<VERTEX_STORAGE_COPYSRC_COPYDSST_USAGE> {}
 
 /////////////////////////////////////////////////////////////////////////////////////

@@ -5,17 +5,15 @@ use externref::Resource;
 use crate::{
     gpu::{
         buffer::{
-            mappadle_buffer::MappadleGPUBuffer, mapped_buffer::MappedGPUBuffer,
-            usages::MAP_WRITE_COPYSRC_USAGE,
+            buffer::GPUBuffer, mappadle_buffer::MappadleGPUBufferWrite, mapped_buffer::MappedGPUBuffer, usages::MAP_WRITE_COPYSRC_USAGE
         },
         gpu::JSDevice,
     },
     mesh::ENGINE,
 };
-
 pub struct SwapBuffers {
-    mapped: BTreeMap<usize, Vec<MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>>>,
-    onqueue: Vec<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
+    mapped: BTreeMap<usize, Vec<MappedGPUBuffer<GPUBuffer<MAP_WRITE_COPYSRC_USAGE>>>>,
+    onqueue: Vec<GPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
 }
 impl SwapBuffers {
     pub fn new() -> SwapBuffers {
@@ -31,7 +29,7 @@ impl SwapBuffers {
     fn get_existing(
         &mut self,
         size: usize,
-    ) -> Option<MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>> {
+    ) -> Option<MappedGPUBuffer<GPUBuffer<MAP_WRITE_COPYSRC_USAGE>>> {
         let (got_size, len, buffer) = {
             let (got_size, pool) = self
                 .mapped
@@ -46,14 +44,14 @@ impl SwapBuffers {
         }
         return buffer;
     }
-    pub fn get<F: FnOnce(&MappedGPUBuffer<MappadleGPUBuffer<MAP_WRITE_COPYSRC_USAGE>>)>(
+    pub fn get<F: FnOnce(&MappedGPUBuffer<GPUBuffer<MAP_WRITE_COPYSRC_USAGE>>)>(
         &mut self,
         device: &Resource<JSDevice>,
         size: usize,
         cb: F,
     ) {
         let mapped_buffer = self.get_existing(size).unwrap_or_else(|| {
-            MappadleGPUBuffer::new_mapped(
+            GPUBuffer::new_mapped(
                 device,
                 size,
                 String::from(size.to_string() + "_swap_buffer"),

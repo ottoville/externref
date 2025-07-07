@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::sync::Arc;
 use std::sync::{Mutex, Weak};
 
@@ -7,10 +8,13 @@ use crate::gpu::bufferbinding::BufferBinding;
 use crate::gpu::gpu::create_gpu_buffer;
 use crate::gpu::gpu::JSDevice;
 use crate::gpu::renderbundle::RenderBundle;
-use crate::MULTIVALUE_USIZE;
 
 use super::mapped_buffer::MappedGPUBuffer;
 use super::usages::COPYSRC_USAGE;
+
+thread_local! {
+    static LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };
+}
 
 pub struct JSBuffer(());
 
@@ -94,33 +98,37 @@ impl<const U: u32> GPUBuffer<U> {
         self.set_size(buffer.size);
         self.make_dirty();
     }
+    fn inner_new(
+        device: &Resource<JSDevice>,
+        size: usize,
+        label: String,
+        owned_by_js: bool,
+        mapped: bool,
+    ) -> Self {
+        let label_ptr = LABEL.with_borrow_mut(|l| {
+            l[0] = label.as_ptr() as usize;
+            l[1] = label.len();
+            l[2] = label.capacity();
+            l.as_ptr()
+        });
+        let externref =
+            unsafe { create_gpu_buffer(device, size, label_ptr, U, mapped, owned_by_js) };
+        GPUBuffer {
+            externref: Arc::new(externref),
+            label,
+            owned_by_js,
+            size,
+            buffer_bindings: Vec::new(),
+            renderbundles: Vec::new(),
+        }
+    }
     pub fn new(
         device: &Resource<JSDevice>,
         size: usize,
         label: String,
         owned_by_js: bool,
     ) -> GPUBuffer<U> {
-        unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-            let externref = create_gpu_buffer(
-                device,
-                size,
-                MULTIVALUE_USIZE.as_ptr(),
-                U,
-                false,
-                owned_by_js,
-            );
-            return GPUBuffer {
-                externref: Arc::new(externref),
-                label,
-                owned_by_js,
-                size,
-                buffer_bindings: Vec::new(),
-                renderbundles: Vec::new(),
-            };
-        }
+        return GPUBuffer::<U>::inner_new(device, size, label, owned_by_js, false);
     }
     pub fn new_mapped(
         device: &Resource<JSDevice>,
@@ -128,27 +136,13 @@ impl<const U: u32> GPUBuffer<U> {
         label: String,
         owned_by_js: bool,
     ) -> MappedGPUBuffer<GPUBuffer<U>> {
-        unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-            let externref = create_gpu_buffer(
-                device,
-                size,
-                MULTIVALUE_USIZE.as_ptr(),
-                U,
-                true,
-                owned_by_js,
-            );
-            return MappedGPUBuffer::new(GPUBuffer {
-                externref: Arc::new(externref),
-                label,
-                owned_by_js,
-                size,
-                buffer_bindings: Vec::new(),
-                renderbundles: Vec::new(),
-            });
-        }
+        return MappedGPUBuffer::new(GPUBuffer::<U>::inner_new(
+            device,
+            size,
+            label,
+            owned_by_js,
+            true,
+        ));
     }
     pub fn map_state(&self) -> u32 {
         #[cfg(feature = "webgpu")]
@@ -173,17 +167,16 @@ impl<const U: u32> GPUBuffer<U> {
         }
     }
     pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: usize) {
-        unsafe {
-            self.size = size;
-            self.externref = Arc::new(create_gpu_buffer(
-                device,
-                size,
-                MULTIVALUE_USIZE.as_ptr(),
-                U,
-                false,
-                self.owned_by_js,
-            ));
-            self.make_dirty();
-        }
+        self.size = size;
+        let label_ptr = LABEL.with_borrow_mut(|l| {
+            l[0] = self.label.as_ptr() as usize;
+            l[1] = self.label.len();
+            l[2] = self.label.capacity();
+            l.as_ptr()
+        });
+        self.externref = Arc::new(unsafe {
+            create_gpu_buffer(device, size, label_ptr, U, false, self.owned_by_js)
+        });
+        self.make_dirty();
     }
 }

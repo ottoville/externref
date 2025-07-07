@@ -16,7 +16,7 @@ use crate::{
     gpu::{
         buffer::{
             buffer::GPUBuffer,
-            mappadle_buffer::MappadleGPUBuffer,
+            mappadle_buffer::MappadleGPUBufferRead,
             mapped_buffer::MappedGPUBuffer,
             usages::{INDEX_USAGE, MAP_READ_COPYDST_USAGE},
         },
@@ -91,8 +91,8 @@ pub unsafe extern "C" fn have_vertices(
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
     mesh_id: *mut ExplicitGenerationalFreeListIndex<Mesh>,
-    indices_buffer: *mut MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>,
-    vertices_buffer: *mut MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>,
+    indices_buffer: *mut GPUBuffer<MAP_READ_COPYDST_USAGE>,
+    vertices_buffer: *mut GPUBuffer<MAP_READ_COPYDST_USAGE>,
 ) {
     let gate = Rc::new(Cell::new(false));
     let gate2 = gate.clone();
@@ -118,7 +118,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
         0,
         None,
         Box::into_raw(Box::new(
-            move |buffer: MappedGPUBuffer<MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>>| {
+            move |buffer: MappedGPUBuffer<GPUBuffer<MAP_READ_COPYDST_USAGE>>| {
                 let mut indices: Vec<usize> = vec![0; buffer.size / 4];
                 buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
                 let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
@@ -133,7 +133,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
         0,
         None,
         Box::into_raw(Box::new(
-            move |buffer: MappedGPUBuffer<MappadleGPUBuffer<MAP_READ_COPYDST_USAGE>>| {
+            move |buffer: MappedGPUBuffer<GPUBuffer<MAP_READ_COPYDST_USAGE>>| {
                 let mut vertices: Vec<PositionAndNormalAndUV> =
                     Vec::with_capacity(buffer.size / size_of::<PositionAndNormalAndUV>());
                 buffer.get_mapped_range_raw(vertices.as_mut_ptr() as usize, buffer.size, 0);
