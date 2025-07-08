@@ -1,10 +1,8 @@
-﻿import { create_rust_label } from '../../utils.js';
-import type { Scene } from '../../Scene.js';
+﻿import type { Scene } from '../../Scene.js';
 import type { Engine } from '../../engine.js';
 import { IndexedSingleColoredMesh } from '../AbstractMeshes/IndexedSingleColoredMesh.js';
 import { RigidBody } from '../../MainNode.js';
 declare const engine: Engine;
-let uid = 0;
 export class IcoSphere extends IndexedSingleColoredMesh {
   override create_collider() {
     return engine.rust.create_ball_collider(this.scale_x);
@@ -16,7 +14,6 @@ export class IcoSphere extends IndexedSingleColoredMesh {
   }
   constructor({
     order = 0,
-    label = 'sphere' + uid++,
     can_collide = false,
     scenes,
     rigid_body = RigidBody.off,
@@ -27,16 +24,14 @@ export class IcoSphere extends IndexedSingleColoredMesh {
     scenes?: Scene[];
     rigid_body?: RigidBody;
   }) {
-    const geometry = engine.rust.create_icosphere_geometry(order);
-    const mesh = engine.rust.new_mesh_from_js(
+    const mesh = engine.rust.create_icosphere_mesh(
       0,
       0,
       scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1,
       rigid_body,
-      ...create_rust_label(label),
       false,
+      order,
     );
-    engine.rust.set_geometry(mesh, geometry);
     super(
       {
         can_collide,

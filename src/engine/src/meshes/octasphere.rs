@@ -1,8 +1,10 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, sync::atomic::AtomicU32};
 
 use terramath::{CrossProduct, Quaternion, Vec3wgslF32, VectorMath, VectorMathF32};
 
 use crate::{
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
+    mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormalAndColor, VertexKind},
     Geometry,
 };
@@ -22,14 +24,50 @@ thread_local! {
         points_right_cell: RefCell::new(Vec::new()),
     }
 }
+static ID: AtomicU32 = AtomicU32::new(0);
 
 #[no_mangle]
 pub unsafe extern "C" fn create_octasphere(
+    point_light: f32,
+    directional_light: f32,
+    scenes: f32,
+    rigid_body: u32,
+    camera_can_collide_to: bool,
     num_subdivisions: u32,
     half_width: f32,
     half_height: f32,
     half_depth: f32,
-) -> *const Geometry {
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+    let mut label = String::from("OctaSphere");
+    label.push_str(
+        &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
+            .to_string(),
+    );
+
+    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+        point_light,
+        directional_light,
+        scenes,
+        rigid_body,
+        label,
+        None,
+        None,
+        ENGINE.meshes.lock().unwrap(),
+        camera_can_collide_to,
+    );
+    let geometry =
+        create_octasphere_geometry(num_subdivisions, half_width, half_height, half_depth);
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    mesh.geometry = Some(Box::new(geometry));
+    Box::into_raw(Box::new(mesh_id))
+}
+
+pub fn create_octasphere_geometry(
+    num_subdivisions: u32,
+    half_width: f32,
+    half_height: f32,
+    half_depth: f32,
+) -> Geometry {
     let n = (2u32).pow(num_subdivisions + 1) as usize;
     // (n * ((n + 1.0) / 2.0))
     let num_faces_per_patch = if num_subdivisions == 0 {
@@ -57,9 +95,9 @@ pub unsafe extern "C" fn create_octasphere(
     let indices_per_path = cells_per_patch * 3;
     let mut indices_count = indices_per_path * 8;
     vertices_and_normals.resize_with(total_vertices_count, || PositionAndNormalAndColor {
-        position: Vec3wgslF32([0.0;3]),
-        normal: Vec3wgslF32([0.0;3]),
-        color: Vec3wgslF32([0.0;3]),
+        position: Vec3wgslF32([0.0; 3]),
+        normal: Vec3wgslF32([0.0; 3]),
+        color: Vec3wgslF32([0.0; 3]),
     });
 
     // First patch tessellation
@@ -430,7 +468,7 @@ pub unsafe extern "C" fn create_octasphere(
     let mut geometry = Geometry::new(false, true, false, "octasphere_geometry".to_string());
     geometry.set_vertices(VertexKind::PositionAndNormalAndColor(vertices_and_normals));
     geometry.set_indices(indices);
-    Box::into_raw(Box::new(geometry))
+    return geometry;
 }
 
 fn close_circle(

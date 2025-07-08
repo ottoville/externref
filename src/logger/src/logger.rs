@@ -11,7 +11,6 @@ pub unsafe fn debug_str(_prt: usize, _len: usize) {}
 
 #[link(wasm_import_module = "console")]
 #[cfg(target_arch = "wasm32")]
-#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     fn error_str(prt: usize, len: usize);
     fn log_str(prt: usize, len: usize);

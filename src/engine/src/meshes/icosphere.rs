@@ -1,11 +1,14 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::atomic::AtomicU32};
 
 use terramath::VectorMathF32;
 
 use crate::{
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
+    mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormal, VertexKind},
     Geometry,
 };
+static ID: AtomicU32 = AtomicU32::new(0);
 
 fn add_mid_point(
     mid_cache: &mut HashMap<u64, usize>,
@@ -31,7 +34,37 @@ fn add_mid_point(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_icosphere_geometry(order: usize) -> *mut Geometry {
+pub unsafe extern "C" fn create_icosphere_mesh(
+    point_light: f32,
+    directional_light: f32,
+    scenes: f32,
+    rigid_body: u32,
+    camera_can_collide_to: bool,
+    order: usize,
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+    let mut label = String::from("Icosphere");
+    label.push_str(
+        &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
+            .to_string(),
+    );
+
+    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+        point_light,
+        directional_light,
+        scenes,
+        rigid_body,
+        label,
+        None,
+        None,
+        ENGINE.meshes.lock().unwrap(),
+        camera_can_collide_to,
+    );
+    let geometry = create_icosphere_geometry(order);
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    mesh.geometry = Some(Box::new(geometry));
+    Box::into_raw(Box::new(mesh_id))
+}
+pub fn create_icosphere_geometry(order: usize) -> Geometry {
     // set up a 20-triangle icosahedron
     let f: f32 = 1.618034; // (1 + 5 ** 0.5) / 2;
     let t: usize = 4usize.pow(order as u32);
@@ -105,11 +138,11 @@ pub unsafe extern "C" fn create_icosphere_geometry(order: usize) -> *mut Geometr
         vertice.position.0.normalize_in_place();
         vertice.normal.0 = vertice.position.0.clone();
     }
-    let mut geometry = Box::new(Geometry::new(false, false, false, "Icosphere".to_string()));
+    let mut geometry = Geometry::new(false, false, false, "Icosphere".to_string());
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     let flattened = indices.as_flattened_mut().to_vec();
     geometry.set_indices(flattened);
-    return Box::into_raw(geometry);
+    return geometry;
 }
 #[cfg(test)]
 #[test]
@@ -131,8 +164,7 @@ fn test_icosphere() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
-        let geometry_ptr = create_icosphere_geometry(1);
-        let geometry: Box<Geometry> = Box::from_raw(geometry_ptr);
+        let geometry = create_icosphere_geometry(1);
         assert_eq!(
             geometry.indices.as_ref().unwrap().indices,
             vec![

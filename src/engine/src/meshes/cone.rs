@@ -1,6 +1,8 @@
-use std::{f32::consts::TAU, ops::Neg};
+use std::{f32::consts::TAU, ops::Neg, sync::atomic::AtomicU32};
 
 use crate::{
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
+    mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormal, VertexKind},
     Geometry,
 };
@@ -16,13 +18,43 @@ const SIDE_NORM_SIN: f32 = 0.9238795;
  * cos(Math.PI*05*0.5 + Math.PI*0.5*0.5*0.5) that is 45deg + 22,5deg
  */
 const SIDE_NORM_COS: f32 = 0.38268343;
+static ID: AtomicU32 = AtomicU32::new(0);
+#[no_mangle]
+pub unsafe extern "C" fn create_cone_mesh(
+    point_light: f32,
+    directional_light: f32,
+    scenes: f32,
+    rigid_body: u32,
+    camera_can_collide_to: bool,
+    bottom_faces: usize,
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+    let mut label = String::from("Cone");
+    label.push_str(
+        &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
+            .to_string(),
+    );
+    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+        point_light,
+        directional_light,
+        scenes,
+        rigid_body,
+        label,
+        None,
+        None,
+        ENGINE.meshes.lock().unwrap(),
+        camera_can_collide_to,
+    );
+    let geometry = create_cone_geometry(bottom_faces);
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    mesh.geometry = Some(Box::new(geometry));
+    Box::into_raw(Box::new(mesh_id))
+}
 
 /**
  * @param bottom_faces How many triangles there are on botton. Total sides of cone will be faces + 2
  * @returns
  */
-#[no_mangle]
-pub unsafe extern "C" fn create_cone_geometry(bottom_faces: usize) -> *mut Geometry {
+pub fn create_cone_geometry(bottom_faces: usize) -> Geometry {
     debug_assert_eq!(bottom_faces % 2, 0);
     let side_faces = bottom_faces + 2;
     let half_side = side_faces / 2;
@@ -112,10 +144,10 @@ pub unsafe extern "C" fn create_cone_geometry(bottom_faces: usize) -> *mut Geome
     // Close the circle by setting last indice to first
     side_indices[side_faces * 3 - 1] = side_faces;
 
-    let mut geometry = Box::new(Geometry::new(false, false, false, "Cone".to_string()));
+    let mut geometry = Geometry::new(false, false, false, "Cone".to_string());
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     geometry.set_indices(indices);
-    return Box::into_raw(geometry);
+    return geometry;
 }
 #[cfg(test)]
 #[test]
@@ -137,8 +169,7 @@ fn test_cone() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
-        let geometry_ptr = create_cone_geometry(4);
-        let geometry: Box<Geometry> = Box::from_raw(geometry_ptr);
+        let geometry = create_cone_geometry(4);
         assert_eq!(
             geometry.indices.as_ref().unwrap().indices,
             vec![

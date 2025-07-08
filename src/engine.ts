@@ -98,12 +98,32 @@ export type rustWasm = {
   ): rust_pointer<'geometry'>;
 
   create_octasphere(
+    point_light: number,
+    directional_light: number,
+    scenes: number,
+    rigid_body: RigidBody,
+    camera_can_collide_to: boolean,
+
     num_subdivisions: number,
     half_width: number,
     half_height: number,
     half_depth: number,
-  ): rust_pointer<'geometry'>;
-  create_icosphere_geometry(order: number): rust_pointer<'geometry'>;
+  ): rust_pointer<'mesh_id'>;
+  create_icosphere_mesh(
+    point_light: number,
+    directional_light: number,
+    scenes: number,
+    rigid_body: RigidBody,
+    camera_can_collide_to: boolean,
+    order: number,
+  ): rust_pointer<'mesh_id'>;
+  create_box_mesh(
+    point_light: number,
+    directional_light: number,
+    scenes: number,
+    rigid_body: RigidBody,
+    camera_can_collide_to: boolean,
+  ): rust_pointer<'mesh_id'>;
   process_gpu_queue(time: number, updateViewPipeline: GPUComputePipeline): void;
 
   new_mesh_from_js(
@@ -142,9 +162,21 @@ export type rustWasm = {
     geometry: rust_pointer<'geometry'>,
   ): rust_pointer<'geometry'>;
   get_geometry(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'geometry'>;
-  create_box_geometry(): rust_pointer<'geometry'>;
-  create_rtp_geometry(): rust_pointer<'geometry'>;
-  create_cone_geometry(faces: number): rust_pointer<'geometry'>;
+  create_rtp_mesh(
+    point_light: number,
+    directional_light: number,
+    scenes: number,
+    rigid_body: RigidBody,
+    camera_can_collide_to: boolean,
+  ): rust_pointer<'mesh_id'>;
+  create_cone_mesh(
+    point_light: number,
+    directional_light: number,
+    scenes: number,
+    rigid_body: RigidBody,
+    camera_can_collide_to: boolean,
+    faces: number,
+  ): rust_pointer<'mesh_id'>;
   add_collider(
     mesh_id: rust_pointer<'mesh_id'>,
     collider: rust_pointer<'collider'>,

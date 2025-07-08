@@ -1,9 +1,11 @@
+use std::sync::atomic::AtomicU32;
+
 use terramath::Vec3wgslF32;
 
 use crate::{
-    vertices::{PositionAndNormal, VertexKind},
-    Geometry,
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex, mesh::{Mesh, ENGINE}, vertices::{PositionAndNormal, VertexKind}, Geometry
 };
+static ID: AtomicU32 = AtomicU32::new(0);
 
 pub fn create_rtp_vertices() -> Vec<PositionAndNormal> {
     vec![
@@ -94,16 +96,43 @@ pub const RTP_INDICES: [usize; 24] = [
     10, 11, 12, 10, 12, 13, // bottom
     14, 15, 16, 14, 16, 17, // right
 ];
-
 #[no_mangle]
-pub unsafe extern "C" fn create_rtp_geometry() -> *const Geometry {
-    let mut geometry = Box::new(Geometry::new(
+pub unsafe extern "C" fn create_rtp_mesh(
+    point_light: f32,
+    directional_light: f32,
+    scenes: f32,
+    rigid_body: u32,
+    camera_can_collide_to: bool,
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+    let mut label = String::from("TriangularPrism");
+    label.push_str(
+        &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
+            .to_string(),
+    );
+    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+        point_light,
+        directional_light,
+        scenes,
+        rigid_body,
+        label,
+        None,
+        None,
+        ENGINE.meshes.lock().unwrap(),
+        camera_can_collide_to,
+    );
+    let geometry = create_rtp_geometry();
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    mesh.geometry = Some(Box::new(geometry));
+    Box::into_raw(Box::new(mesh_id))
+}
+pub fn create_rtp_geometry() -> Geometry {
+    let mut geometry = Geometry::new(
         true,
         false,
         false,
         "rtp_geometry".to_string(),
-    ));
+    );
     geometry.set_indices(RTP_INDICES.to_vec());
     geometry.set_vertices(VertexKind::PositionAndNormal(create_rtp_vertices()));
-    Box::into_raw(geometry)
+    return geometry;
 }

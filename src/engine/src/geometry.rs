@@ -25,7 +25,7 @@ use crate::{
     indices::Indices,
     math2::Vec2wgslF32,
     mesh::{Mesh, ENGINE},
-    vertices::{self, Position2DAndUV, PositionAndNormalAndUV, VertexKind},
+    vertices::{Position2DAndUV, PositionAndNormalAndUV, VertexKind},
     MULTIVALUE_USIZE,
 };
 

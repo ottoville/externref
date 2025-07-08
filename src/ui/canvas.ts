@@ -28,6 +28,7 @@ import { UIRectangleTextureView } from './UIRectangleTextureView.js';
 import { RightTriangularPrism } from '../GPU/Meshes/right_triangular_prism.js';
 import { MeshCamera } from '../controllers/MeshCamera.js';
 import { create_rust_label } from '../utils.js';
+import { Box } from '../GPU/Meshes/Box.js';
 
 declare const engine: Engine;
 
@@ -212,6 +213,9 @@ export class Canvas {
         cone.setColorFromId([1, 0, 0, 0]);
         cone.update_scale(50, 50, 50);
         cone.radius = 50;
+
+        const box = new Box({ can_collide: true });
+        box.setTranslation([80, 900, -70]);
 
         const capsule = new Capsule(true, CAPSULE_ORIENTATION.x, 3, {
           label: 'capsule1',

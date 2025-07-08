@@ -1,7 +1,7 @@
 use std::{
     cell::LazyCell,
     num::{NonZero, NonZeroU32},
-    sync::{atomic::Ordering, Arc},
+    sync::Arc,
 };
 
 use externref::{externref, Resource};
@@ -10,7 +10,6 @@ use terramath::VectorMath;
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
-    engine::MOUSE_POSITION,
     gpu::gpu::GPU,
     mesh::ENGINE,
     MULTIVALUE_F32,
@@ -44,7 +43,12 @@ pub unsafe extern "C" fn link_renderpass(
     gpu.renderpasses[id].bundle.as_mut().unwrap()
 }
 #[no_mangle]
-pub unsafe extern "C" fn pick_position(id: usize,mouse_x: f32, mouse_y: f32, z: f32) -> *const f32 {
+pub unsafe extern "C" fn pick_position(
+    id: usize,
+    mouse_x: f32,
+    mouse_y: f32,
+    z: f32,
+) -> *const f32 {
     let gpuopt = ENGINE.gpu.lock().unwrap();
     let gpu = gpuopt.as_ref().unwrap();
     gpu.renderpasses[id].pick_position(gpu, mouse_x, mouse_y, z)
@@ -68,7 +72,6 @@ pub struct Renderpass {
 }
 impl Renderpass {
     pub fn pick_position(&self, gpu: &GPU, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32 {
-        let mouse_position = MOUSE_POSITION.load(Ordering::Relaxed);
         let x = (mouse_x as f32 / self.size[0].get() as f32) * 2.0 - 1.0;
         let y = -((mouse_y as f32 / self.size[1].get() as f32) * 2.0 - 1.0);
         let camera_id = self.cameragroups[0].cameras[0];

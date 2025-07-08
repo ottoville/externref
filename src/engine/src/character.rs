@@ -64,7 +64,7 @@ pub unsafe extern "C" fn new_character_mesh(
         impulse: [0.0; 3],
         shape: Box::new(Ball::new(3.0)),
     });
-    mesh.geometry = Some(Box::from_raw(geometry));
+    mesh.geometry = Some(Box::new(geometry));
     {
         let mut mesh_property = mesh.mesh_property.lock().unwrap();
         mesh_property.update_color(0.0, 0.9, 1.0, 0.0);

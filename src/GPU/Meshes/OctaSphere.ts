@@ -1,7 +1,6 @@
 ﻿import { RigidBody, type MainNodeProps } from 'MainNode.js';
 import type { Engine } from '../../engine.js';
 import { IndexedColoredMesh } from '../AbstractMeshes/IndexedColoredMesh.js';
-import { create_rust_label } from '../../utils.js';
 declare const engine: Engine;
 
 export type OctaSphereProps = {
@@ -9,7 +8,6 @@ export type OctaSphereProps = {
   height?: number;
   depth?: number;
 };
-let uid = 0;
 export class OctaSphere extends IndexedColoredMesh {
   protected width: number;
   protected height: number;
@@ -20,7 +18,28 @@ export class OctaSphere extends IndexedColoredMesh {
     mainNodeProps: Partial<MainNodeProps>,
     can_collide = false,
   ) {
-    const geometry = engine.rust.create_octasphere(2, width, height, depth);
+    const {
+      point_light = 0,
+      directional_light = 0,
+      scenes,
+      rigid_body = RigidBody.default,
+      camera_can_collide_to = false,
+    } = mainNodeProps;
+    const sceneids = scenes
+      ? scenes.reduce((acc, scene) => acc | scene.id, 0)
+      : 1;
+    const mesh = engine.rust.create_octasphere(
+      point_light,
+      directional_light,
+      sceneids,
+      rigid_body,
+      camera_can_collide_to,
+      2,
+      width,
+      height,
+      depth,
+    );
+    const geometry = engine.rust.get_geometry(mesh);
     const vertices = new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.vertices_pointer(geometry, false),
@@ -31,26 +50,6 @@ export class OctaSphere extends IndexedColoredMesh {
       vertices[i + 9] = Math.random();
       vertices[i + 10] = Math.random();
     }
-    const {
-      point_light = 0,
-      directional_light = 0,
-      label,
-      scenes,
-      rigid_body = RigidBody.default,
-      camera_can_collide_to = false,
-    } = mainNodeProps;
-    const sceneids = scenes
-      ? scenes.reduce((acc, scene) => acc | scene.id, 0)
-      : 1;
-    const mesh = engine.rust.new_mesh_from_js(
-      point_light,
-      directional_light,
-      sceneids,
-      rigid_body,
-      ...create_rust_label(label || 'OctaSphere' + uid++),
-      camera_can_collide_to,
-    );
-    engine.rust.set_geometry(mesh, geometry);
 
     super(
       {
