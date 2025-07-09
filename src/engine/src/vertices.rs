@@ -82,8 +82,8 @@ impl VertexKind {
             VertexKind::Position(_vector) => todo!(),
         }
     }
-    pub fn get_positions(&self) -> Box<dyn Iterator<Item = &Vec3wgslF32> + '_> {
-        match &self {
+    pub fn get_positions(&self) -> impl Iterator<Item = &Vec3wgslF32> {
+        let b: Box<dyn Iterator<Item = &Vec3wgslF32>> = match &self {
             VertexKind::PositionAndNormalAndUV(vector) => {
                 Box::new(vector.iter().map(|v| &v.position))
             }
@@ -95,7 +95,8 @@ impl VertexKind {
                 todo!()
             }
             VertexKind::Position(vector) => Box::new(vector.iter().map(|v| &v.0)),
-        }
+        };
+        return b;
     }
     pub fn stride(&self) -> usize {
         match &self {

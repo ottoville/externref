@@ -186,7 +186,7 @@ impl BoundingBox {
     pub fn init(&mut self, vertices: &VertexKind) {
         //TODO: use macro
 
-        let mut positions: Box<dyn Iterator<Item = &Vec3wgslF32>> = vertices.get_positions();
+        let mut positions = vertices.get_positions();
 
         let first_vertice = positions.next().unwrap();
         self.min_original[0] = first_vertice.0[0];

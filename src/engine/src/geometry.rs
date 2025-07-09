@@ -1,4 +1,4 @@
-use std::{cell::Cell, num::NonZeroUsize, rc::Rc};
+use std::{cell::Cell, num::NonZeroUsize, rc::Rc, sync::atomic::AtomicU32};
 
 use collider::ColliderPlane;
 use logger::LoggerArray;
@@ -152,16 +152,31 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
 pub unsafe extern "C" fn dedup_positions(geometry_ptr: *mut Geometry) {
     (*geometry_ptr).dedup_positions();
 }
+static ID: AtomicU32 = AtomicU32::new(0);
 #[no_mangle]
-pub extern "C" fn create_legacy_terrain_geometry(
-    camera_can_collide_to: bool,
-    static_faces: bool,
-    strip: bool,
-) -> *mut Geometry {
+pub unsafe extern "C" fn create_legacy_terrain_geometry(
+    scenes: f32,
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+    let mut label = String::from("Terrain");
+    label.push_str(
+        &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
+            .to_string(),
+    );
+    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+        0.0,
+        0.0,
+        scenes,
+        0,
+        label,
+        None,
+        None,
+        ENGINE.meshes.lock().unwrap(),
+        true,
+    );
     let mut geometry = Box::new(Geometry::new(
-        camera_can_collide_to,
-        static_faces,
-        strip,
+        true,
+        true,
+        false,
         "legacy_terrain".to_string(),
     ));
     geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vec![
@@ -172,7 +187,9 @@ pub extern "C" fn create_legacy_terrain_geometry(
         },
     ]));
     geometry.set_indices(vec![0, 0, 0]);
-    Box::into_raw(geometry)
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    mesh.geometry = Some(geometry);
+    Box::into_raw(Box::new(mesh_id))
 }
 #[no_mangle]
 pub unsafe extern "C" fn create_ui_geometry(position_count: usize) -> *mut Geometry {

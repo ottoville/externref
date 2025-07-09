@@ -15,9 +15,7 @@ import type {
   TextureView,
   VERTEX_BUFFER,
 } from '../../webgpu-ts/index.js';
-import { RigidBody } from 'MainNode.js';
 import { IndexedDataNode } from '../../nodes/IndexedDataNode.js';
-import { create_rust_label } from '../../utils.js';
 
 export class TerrainMesh extends IndexedDataNode {
   sampler: GPUSampler | undefined;
@@ -35,24 +33,10 @@ export class TerrainMesh extends IndexedDataNode {
     public initialTexture: TextureView<Texture<TEXTURE_BINDING_TEXTURE>>,
     public vBuffer: Buffer<VERTEX_BUFFER>,
   ) {
-    const geometry = engine.rust.create_legacy_terrain_geometry(
-      true,
-      true,
-      false,
-    );
     const sceneids = scenes
       ? scenes.reduce((acc, scene) => acc | scene.id, 0)
       : 1;
-    const mesh = engine.rust.new_mesh_from_js(
-      0,
-      0,
-      sceneids,
-      RigidBody.off,
-      ...create_rust_label('terrain'),
-      true,
-    );
-    engine.rust.set_geometry(mesh, geometry);
-
+    const mesh = engine.rust.create_legacy_terrain_geometry(sceneids);
     super(
       {
         can_collide: true,

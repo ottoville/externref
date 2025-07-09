@@ -150,11 +150,7 @@ export type rustWasm = {
     label_cap: number,
   ): rust_pointer<'mesh_id'>;
   have_rigid_body(mesh_id: rust_pointer<'mesh_id'>): boolean;
-  create_legacy_terrain_geometry(
-    camera_can_collide_to: boolean,
-    static_faces: boolean,
-    strip: boolean,
-  ): rust_pointer<'geometry'>;
+  create_legacy_terrain_geometry(scenes: number): rust_pointer<'mesh_id'>;
   create_ui_geometry(positions_count: number): rust_pointer<'geometry'>;
   create_water_geometry(): rust_pointer<'geometry'>;
   set_geometry(
