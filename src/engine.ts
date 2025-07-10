@@ -101,6 +101,7 @@ export type rustWasm = {
   create_terraintool_mesh(): rust_pointer<'mesh_id'>;
   create_zones_light_mesh(scene: number): rust_pointer<'mesh_id'>;
   create_sun_mesh(scene: number): rust_pointer<'mesh_id'>;
+  create_water_mesh(scene: number): rust_pointer<'mesh_id'>;
   create_octasphere(
     point_light: number,
     directional_light: number,
@@ -156,7 +157,6 @@ export type rustWasm = {
   have_rigid_body(mesh_id: rust_pointer<'mesh_id'>): boolean;
   create_legacy_terrain_geometry(scenes: number): rust_pointer<'mesh_id'>;
   create_ui_geometry(positions_count: number): rust_pointer<'geometry'>;
-  create_water_geometry(): rust_pointer<'geometry'>;
   set_geometry(
     mesh_id: rust_pointer<'mesh_id'>,
     geometry: rust_pointer<'geometry'>,

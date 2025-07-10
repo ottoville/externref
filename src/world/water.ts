@@ -8,10 +8,8 @@ import {
 } from '../GPU/Shaders/Water.vert.js';
 declare const engine: Engine;
 import { BindGroup } from '../webgpu-ts/index.js';
-import { RigidBody } from 'MainNode.js';
 import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
 import { DataNode } from '../nodes/DataNode.js';
-import { create_rust_label } from '../utils.js';
 
 export class Sea extends DataNode {
   override drawable:
@@ -21,17 +19,9 @@ export class Sea extends DataNode {
     return engine.rust.create_cuboid_collider(50000, 3, 50000, 0, false);
   }
   constructor(scenes: Scene[]) {
-    const geometry = engine.rust.create_water_geometry();
-    const mesh = engine.rust.new_mesh_from_js(
-      0,
-      0,
+    const mesh = engine.rust.create_water_mesh(
       scenes.reduce((acc, scene) => acc | scene.id, 0),
-      RigidBody.off,
-      ...create_rust_label('water'),
-      false,
     );
-    engine.rust.set_geometry(mesh, geometry);
-
     super(
       {
         can_collide: false,
