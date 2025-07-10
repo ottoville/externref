@@ -130,6 +130,7 @@ pub unsafe extern "C" fn create_box_mesh(
     rigid_body: u32,
     camera_can_collide_to: bool,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+    let mut meshes = ENGINE.meshes.lock().unwrap();
     let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
         point_light,
         directional_light,
@@ -138,11 +139,11 @@ pub unsafe extern "C" fn create_box_mesh(
         String::from("Box"),
         None,
         None,
-        ENGINE.meshes.lock().unwrap(),
+        &mut meshes,
         camera_can_collide_to,
     );
     let geometry = create_box_geometry();
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }

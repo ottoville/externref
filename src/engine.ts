@@ -96,7 +96,9 @@ export type rustWasm = {
     height: number,
     camera_can_collide_to: boolean,
   ): rust_pointer<'geometry'>;
-
+  create_plane_mesh(): rust_pointer<'mesh_id'>;
+  create_plants_mesh(): rust_pointer<'mesh_id'>;
+  create_terraintool_mesh(): rust_pointer<'mesh_id'>;
   create_octasphere(
     point_light: number,
     directional_light: number,
@@ -299,9 +301,9 @@ export type rustWasm = {
     rw: number,
   ): void;
   faces_pointer(mesh_id: rust_pointer<'mesh_id'>): number;
-  create_bounding_box_geometry(
-    mesh_id: rust_pointer<'mesh_id'>,
-  ): rust_pointer<'geometry'>;
+  create_bounding_box_mesh(
+    target_mesh_id: rust_pointer<'mesh_id'>,
+  ): rust_pointer<'mesh_id'>;
 
   create_elevator(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'elevator'>;
   destroy_elevator(elevator_ptr: rust_pointer<'elevator'>): void;

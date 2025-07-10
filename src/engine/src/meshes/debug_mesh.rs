@@ -10,7 +10,7 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
     label_cap: usize,
 ) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let meshes= ENGINE.meshes.lock().unwrap();
+    let mut meshes= ENGINE.meshes.lock().unwrap();
 
     let target = &meshes[&*target_mesh_id];
 
@@ -33,10 +33,10 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
         label,
         None,
         Some(target.mesh_property.clone()),
-        meshes,
+        &mut meshes,
         false
     );
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    let mesh = &mut meshes[&mesh_id];
     let mut geometry = Geometry::new(
         false,
         false,
@@ -56,7 +56,7 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
     label_cap: usize,
 ) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let meshes= ENGINE.meshes.lock().unwrap();
+    let mut meshes= ENGINE.meshes.lock().unwrap();
     let target = &meshes[&*target_mesh_id];
 
     let target_vertices = &target.get_geometry().vertices;
@@ -69,11 +69,9 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
         label,
         None,
         Some(target.mesh_property.clone()),
-        meshes,
+        &mut meshes,
         false
     );
-    let mut meshes= ENGINE.meshes.lock().unwrap();
-
     let mesh = &mut meshes[&mesh_id];
 
     mesh.positions_count = Some(positions_count);

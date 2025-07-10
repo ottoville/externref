@@ -6,7 +6,7 @@ import type { Scene } from '../Scene.js';
 import type { Engine } from '../engine.js';
 import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
 import { createGrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
-import { MainNode, RigidBody } from '../MainNode.js';
+import { MainNode } from '../MainNode.js';
 import { allocate_vec } from '../nodes/DataNode.js';
 import { BindGroup, Buffer, BufferUsageEnums } from '../webgpu-ts/index.js';
 import type { PTDresult } from 'paintGround/paintGround.js';
@@ -54,14 +54,7 @@ export class Plants extends MainNode {
       .catch((err) => engine.showError(err));
   }
   constructor(scene: Scene, terrainP: Promise<Terrain>) {
-    const mesh = engine.rust.new_mesh_from_js(
-      0,
-      0,
-      1,
-      RigidBody.off,
-      ...create_rust_label('Plants'),
-      false,
-    );
+    const mesh = engine.rust.create_plants_mesh();
     super(mesh);
 
     const indirectBuffer = new Buffer({

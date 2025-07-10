@@ -1,7 +1,7 @@
 ﻿import type { Terrain } from '../world/Terrain.js';
 import { WorkerReturn, WorkerThread } from '../WorkerThread.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
-import { MainNode, RigidBody } from '../MainNode.js';
+import { MainNode } from '../MainNode.js';
 import type { GPU } from '../GPU.js';
 import type { Engine, ListenerObj } from '../engine.js';
 import type { Scene } from '../Scene.js';
@@ -19,7 +19,6 @@ import {
   type UIRectangleNodeProps,
 } from '../ui/UIRectangleNode.js';
 import { UIRectangleNodeHover } from '../ui/UIRectangleNodeHover.js';
-import { create_rust_label } from '../utils.js';
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
@@ -179,14 +178,7 @@ export class TerrainTool extends MainNode {
   scene: Scene;
 
   constructor(public terrain: Terrain) {
-    const mesh = engine.rust.new_mesh_from_js(
-      0,
-      0,
-      1,
-      RigidBody.off,
-      ...create_rust_label('TerrainTool'),
-      false,
-    );
+    const mesh = engine.rust.create_terraintool_mesh();
     super(mesh);
     engine.addInputListener(this.#pointerdownf);
     this.positions_count = 4;

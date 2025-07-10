@@ -43,7 +43,7 @@ pub unsafe extern "C" fn create_octasphere(
         &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
             .to_string(),
     );
-
+    let mut meshes = ENGINE.meshes.lock().unwrap();
     let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
         point_light,
         directional_light,
@@ -52,12 +52,12 @@ pub unsafe extern "C" fn create_octasphere(
         label,
         None,
         None,
-        ENGINE.meshes.lock().unwrap(),
+        &mut meshes,
         camera_can_collide_to,
     );
     let geometry =
         create_octasphere_geometry(num_subdivisions, half_width, half_height, half_depth);
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }

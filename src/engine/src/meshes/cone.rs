@@ -33,6 +33,7 @@ pub unsafe extern "C" fn create_cone_mesh(
         &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
             .to_string(),
     );
+    let mut meshes = ENGINE.meshes.lock().unwrap();
     let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
         point_light,
         directional_light,
@@ -41,11 +42,11 @@ pub unsafe extern "C" fn create_cone_mesh(
         label,
         None,
         None,
-        ENGINE.meshes.lock().unwrap(),
+        &mut meshes,
         camera_can_collide_to,
     );
     let geometry = create_cone_geometry(bottom_faces);
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }

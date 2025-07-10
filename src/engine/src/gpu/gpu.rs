@@ -688,23 +688,24 @@ fn test_gpu_queue() {
                 assert_eq!(queue.len(), 0);
             });
         }
+        let mesh_id = {
+            let mut meshes = ENGINE.meshes.lock().unwrap();
 
-        let mesh_id = Mesh::new(
-            0.0,
-            1.0,
-            0.0,
-            0,
-            String::from("sun"),
-            None,
-            None,
-            ENGINE.meshes.lock().unwrap(),
-            false,
-        );
-
-        {
-            let mesh = &ENGINE.meshes.lock().unwrap()[&mesh_id];
+            let mesh_id = Mesh::new(
+                0.0,
+                1.0,
+                0.0,
+                0,
+                String::from("sun"),
+                None,
+                None,
+                &mut meshes,
+                false,
+            );
+            let mesh = &meshes[&mesh_id];
             assert_eq!(mesh.on_gpu_queue, true);
-        }
+            mesh_id
+        };
 
         process_gpu_queue(
             0.0,

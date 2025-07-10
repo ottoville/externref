@@ -10,10 +10,8 @@ import {
   BufferUsageEnums,
   VertexBufferLayouts,
 } from '../../../webgpu-ts/index.js';
-import { RigidBody } from '../../../MainNode.js';
 import { IndexedDataNode } from '../../../nodes/IndexedDataNode.js';
 import { PositionVertice } from '../../Shaders/structs/Structs.js';
-import { create_rust_label } from '../../../utils.js';
 declare const engine: Engine;
 const buffer = new VertexBufferLayouts([
   {
@@ -26,9 +24,8 @@ export class BoundingBoxMesh extends IndexedDataNode {
     | DrawableIndexed<RenderPipelineProps<DebugBoundingBoxVertShader>>
     | undefined;
   constructor(targetNode: DrawableIndexed) {
-    const geometry = engine.rust.create_bounding_box_geometry(
-      targetNode.node.id,
-    );
+    const mesh = engine.rust.create_bounding_box_mesh(targetNode.node.id);
+    const geometry = engine.rust.get_geometry(mesh);
     const vertices_view = engine.rust.vertices_pointer(geometry, false);
     const vertices_len = engine.rust.vertices_count(geometry) * 4;
 
@@ -45,15 +42,6 @@ export class BoundingBoxMesh extends IndexedDataNode {
     view.set(
       new Float32Array(engine.rust.memory.buffer, vertices_view, vertices_len),
     );
-    const mesh = engine.rust.new_mesh_from_js(
-      0,
-      0,
-      1,
-      RigidBody.off,
-      ...create_rust_label('BoundingBox_' + targetNode.node.label),
-      false,
-    );
-    engine.rust.set_geometry(mesh, geometry);
     super({}, mesh);
     this.positions_count = 26;
 

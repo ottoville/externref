@@ -7,12 +7,11 @@ use crate::{
 };
 
 #[no_mangle]
-
 pub unsafe extern "C" fn create_tiled_mesh_geometry(
     width: usize,
     height: usize,
     character_can_collide_to: bool,
-) -> *const Geometry {
+) -> *mut Geometry {
     let mut geometry = Box::new(Geometry::new(
         character_can_collide_to,
         false,

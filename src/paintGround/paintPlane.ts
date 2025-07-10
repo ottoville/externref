@@ -9,9 +9,7 @@ import {
   createPlaneAtGroundHeightVertShader,
 } from '../GPU/Shaders/PlaneAtGroundHeight.vert.js';
 import type { RenderPipelineProps } from '../GPU/RenderPipeline.js';
-import { RigidBody } from 'MainNode.js';
 import { IndexedDataNode } from '../nodes/IndexedDataNode.js';
-import { create_rust_label } from '../utils.js';
 declare const engine: Engine;
 
 class PlaneMesh extends IndexedDataNode {
@@ -21,20 +19,12 @@ class PlaneMesh extends IndexedDataNode {
   constructor(
     renderPipeline: RenderPipelineProps<PlaneAtGroundHeightVertShader>,
   ) {
-    const geometry = engine.rust.create_tiled_mesh_geometry(100, 100, false);
+    const mesh = engine.rust.create_plane_mesh();
+    const geometry = engine.rust.get_geometry(mesh);
     const pos_ptr = engine.rust.vertices_pointer(geometry, false);
     const pos_len =
       engine.rust.vertices_stride(geometry) *
       engine.rust.vertices_count(geometry);
-    const mesh = engine.rust.new_mesh_from_js(
-      0,
-      0,
-      1,
-      RigidBody.off,
-      ...create_rust_label('plane'),
-      false,
-    );
-    engine.rust.set_geometry(mesh, geometry);
 
     super({}, mesh);
     this.drawable = new DrawableIndexed({

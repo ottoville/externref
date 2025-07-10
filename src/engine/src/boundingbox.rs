@@ -1,4 +1,4 @@
-use terramath::{Vec3wgslF32, VectorMath};
+use terramath::VectorMath;
 
 use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use crate::mesh::{Mesh, ENGINE};
@@ -19,13 +19,24 @@ pub const BOUNDING_BOX_INDICES: [usize; 26] = [
     0, 1, 2, 3, 4, 5, 6, 7, 4, 6, 1, 5, 2, 0, 3, 7, 0, 6, 2, 4, 0, 7, 1, 3, 5, 7,
 ];
 #[no_mangle]
-pub unsafe extern "C" fn create_bounding_box_geometry(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-) -> *mut Geometry {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+pub unsafe extern "C" fn create_bounding_box_mesh(
+    target_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+    let mut meshes = ENGINE.meshes.lock().unwrap();
+    let target_mesh = &mut meshes[&*target_mesh_id];
+    let geometry = create_bounding_box_geometry(target_mesh);
+
+    let mut label = String::from("BoundingBox_");
+    label.push_str(&target_mesh.label);
+    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> =
+        Mesh::new(0.0, 0.0, 1.0, 0, label, None, None, &mut meshes, false);
+    let mesh = &mut meshes[&mesh_id];
+    mesh.geometry = Some(Box::new(geometry));
+    Box::into_raw(Box::new(mesh_id))
+}
+pub fn create_bounding_box_geometry(mesh: &mut Mesh) -> Geometry {
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
-    let mut bb_geometry: Box<Geometry> =
-        Box::new(Geometry::new(false, false, true, "boundingbox".to_string()));
+    let mut bb_geometry = Geometry::new(false, false, true, "boundingbox".to_string());
     if let Some(geometry) = &mut mesh.geometry {
         geometry.update_bounding_box(&mesh_property.get_transformation());
         /*
@@ -76,7 +87,7 @@ pub unsafe extern "C" fn create_bounding_box_geometry(
         bb_geometry.set_vertices(VertexKind::Position(vectors));
 
         bb_geometry.set_indices(BOUNDING_BOX_INDICES.to_vec());
-        return Box::into_raw(bb_geometry);
+        return bb_geometry;
     } else {
         panic!("Mesh {} has no geometry", mesh.label)
     }
@@ -109,7 +120,7 @@ fn test_bounding_box() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
-        let meshes = ENGINE.meshes.lock().unwrap();
+        let mut meshes = ENGINE.meshes.lock().unwrap();
         let id = Mesh::new(
             0.0,
             0.0,
@@ -118,16 +129,21 @@ fn test_bounding_box() {
             String::from("box"),
             None,
             None,
-            meshes,
+            &mut meshes,
             false,
         );
-        let m = &mut ENGINE.meshes.lock().unwrap()[&id];
+        let m = &mut meshes[&id];
         let mut geometry = Geometry::new(false, false, false, "bounding box".to_string());
         let vertices = VertexKind::PositionAndNormal(create_box_vertices());
         geometry.set_vertices(vertices);
         geometry.indices = Some(Indices {
             indices: BOX_INDICES.to_vec(),
-            gpu_buffer: GPUBuffer::new(&Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)), 4, String::from("test"), false),
+            gpu_buffer: GPUBuffer::new(
+                &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+                4,
+                String::from("test"),
+                false,
+            ),
         });
         {
             let mut mesh_property = m.mesh_property.lock().unwrap();

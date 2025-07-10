@@ -162,6 +162,7 @@ pub unsafe extern "C" fn create_legacy_terrain_geometry(
         &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
             .to_string(),
     );
+    let mut meshes = ENGINE.meshes.lock().unwrap();
     let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
         0.0,
         0.0,
@@ -170,7 +171,7 @@ pub unsafe extern "C" fn create_legacy_terrain_geometry(
         label,
         None,
         None,
-        ENGINE.meshes.lock().unwrap(),
+        &mut meshes,
         true,
     );
     let mut geometry = Box::new(Geometry::new(
@@ -187,7 +188,7 @@ pub unsafe extern "C" fn create_legacy_terrain_geometry(
         },
     ]));
     geometry.set_indices(vec![0, 0, 0]);
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(geometry);
     Box::into_raw(Box::new(mesh_id))
 }

@@ -48,6 +48,7 @@ pub unsafe extern "C" fn new_character_mesh(
 ) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
     let geometry = create_box_geometry();
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
+    let mut meshes = ENGINE.meshes.lock().unwrap();
     let mesh_id = Mesh::new(
         0.0,
         0.0,
@@ -56,10 +57,10 @@ pub unsafe extern "C" fn new_character_mesh(
         label,
         None,
         None,
-        ENGINE.meshes.lock().unwrap(),
+        &mut meshes,
         false
     );
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
+    let mesh = &mut meshes[&mesh_id];
     mesh.character = Some(Character {
         impulse: [0.0; 3],
         shape: Box::new(Ball::new(3.0)),

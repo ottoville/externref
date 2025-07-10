@@ -77,7 +77,7 @@ pub unsafe extern "C" fn new_mesh_from_js(
         label,
         None,
         None,
-        ENGINE.meshes.lock().unwrap(),
+        &mut ENGINE.meshes.lock().unwrap(),
         camera_can_collide_to,
     )));
 }
@@ -530,7 +530,7 @@ impl Mesh {
         label: String,
         externref: Option<Resource<JSMesh>>,
         mesh_property_opt: Option<Arc<Mutex<MeshProperty>>>,
-        mut meshes: MutexGuard<'_, ExplicitGenerationalFreeList<Mesh>>,
+        meshes: &mut MutexGuard<'_, ExplicitGenerationalFreeList<Mesh>>,
         camera_can_collide_to: bool,
     ) -> ExplicitGenerationalFreeListIndex<Mesh> {
         let engine = &mut ENGINE.engine2.lock().unwrap();

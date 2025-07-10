@@ -6,3 +6,6 @@ mod debug_mesh;
 mod cone;
 mod icosphere;
 mod water;
+mod plane;
+pub mod plants;
+pub mod terraintool;
