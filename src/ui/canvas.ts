@@ -27,7 +27,6 @@ import { CreateFPSMeter } from './FPS.js';
 import { UIRectangleTextureView } from './UIRectangleTextureView.js';
 import { RightTriangularPrism } from '../GPU/Meshes/right_triangular_prism.js';
 import { MeshCamera } from '../controllers/MeshCamera.js';
-import { create_rust_label } from '../utils.js';
 import { Box } from '../GPU/Meshes/Box.js';
 
 declare const engine: Engine;
@@ -35,14 +34,7 @@ declare const engine: Engine;
 class Light extends MainNode {
   drawable = undefined;
   constructor(scene: Scene) {
-    const mesh = engine.rust.new_mesh_from_js(
-      0,
-      1,
-      scene.id,
-      RigidBody.off,
-      ...create_rust_label('Light'),
-      false,
-    );
+    const mesh = engine.rust.create_zones_light_mesh(scene.id);
     super(mesh);
   }
 }

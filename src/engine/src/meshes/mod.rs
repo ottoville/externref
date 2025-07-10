@@ -9,3 +9,5 @@ mod water;
 mod plane;
 pub mod plants;
 pub mod terraintool;
+pub mod zones;
+pub mod sun;

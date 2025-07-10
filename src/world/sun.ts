@@ -1,5 +1,5 @@
 ﻿import type { Scene } from '../Scene.js';
-import { MainNode, RigidBody } from '../MainNode.js';
+import { MainNode } from '../MainNode.js';
 import { Angle } from '../Math.js';
 import { DrawableSimple } from '../GPU/Drawables/DrawableSimple.js';
 import type { Engine } from '../engine.js';
@@ -11,7 +11,6 @@ import {
 } from '../GPU/Shaders/Sun.vert.js';
 import { createSingleColorFragShader } from '../GPU/Shaders/SingleColor.frag.js';
 import { DataNode } from '../nodes/DataNode.js';
-import { create_rust_label } from '../utils.js';
 declare const engine: Engine;
 
 const zAngle = Math.cos(Math.PI * 0.2);
@@ -53,13 +52,8 @@ export class Sun extends MainNode {
   };
   drawable: DrawableSimple<RenderPipelineProps<SunVertShader>> | undefined;
   constructor(gpu: GPU, scenes: Scene[]) {
-    const mesh = engine.rust.new_mesh_from_js(
-      0,
-      1,
+    const mesh = engine.rust.create_sun_mesh(
       scenes.reduce((acc, scene) => acc | scene.id, 0),
-      RigidBody.off,
-      ...create_rust_label('sun'),
-      false,
     );
     super(mesh);
     this.positions_count = 14;

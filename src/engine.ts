@@ -99,6 +99,8 @@ export type rustWasm = {
   create_plane_mesh(): rust_pointer<'mesh_id'>;
   create_plants_mesh(): rust_pointer<'mesh_id'>;
   create_terraintool_mesh(): rust_pointer<'mesh_id'>;
+  create_zones_light_mesh(scene: number): rust_pointer<'mesh_id'>;
+  create_sun_mesh(scene: number): rust_pointer<'mesh_id'>;
   create_octasphere(
     point_light: number,
     directional_light: number,
