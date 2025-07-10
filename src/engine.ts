@@ -130,17 +130,6 @@ export type rustWasm = {
     camera_can_collide_to: boolean,
   ): rust_pointer<'mesh_id'>;
   process_gpu_queue(time: number, updateViewPipeline: GPUComputePipeline): void;
-
-  new_mesh_from_js(
-    point_light: number,
-    directional_light: number,
-    scenes: number,
-    rigid_body: RigidBody,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
-    camera_can_collide_to: boolean,
-  ): rust_pointer<'mesh_id'>;
   destroy_mesh(mesh_id: rust_pointer<'mesh_id'>): void;
   create_debug_mesh_wireframe(
     target_mesh_id: rust_pointer<'mesh_id'>,
@@ -156,11 +145,7 @@ export type rustWasm = {
   ): rust_pointer<'mesh_id'>;
   have_rigid_body(mesh_id: rust_pointer<'mesh_id'>): boolean;
   create_legacy_terrain_geometry(scenes: number): rust_pointer<'mesh_id'>;
-  create_ui_geometry(positions_count: number): rust_pointer<'geometry'>;
-  set_geometry(
-    mesh_id: rust_pointer<'mesh_id'>,
-    geometry: rust_pointer<'geometry'>,
-  ): rust_pointer<'geometry'>;
+  create_ui_mesh(positions_count: number): rust_pointer<'mesh_id'>;
   get_geometry(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'geometry'>;
   create_rtp_mesh(
     point_light: number,

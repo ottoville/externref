@@ -56,31 +56,6 @@ pub unsafe extern "C" fn compare_mesh_id(
 ) -> bool {
     (*id).compare_with_raw(idx, generation)
 }
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn new_mesh_from_js(
-    point_light: f32,
-    directional_light: f32,
-    scenes: f32,
-    rigid_body: u32,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
-    camera_can_collide_to: bool,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    return Box::into_raw(Box::new(Mesh::new(
-        point_light,
-        directional_light,
-        scenes,
-        rigid_body,
-        label,
-        None,
-        None,
-        &mut ENGINE.meshes.lock().unwrap(),
-        camera_can_collide_to,
-    )));
-}
 #[no_mangle]
 pub unsafe extern "C" fn destroy_mesh(mesh_id_ptr: *mut ExplicitGenerationalFreeListIndex<Mesh>) {
     let mesh = Box::from_raw(mesh_id_ptr);
@@ -93,16 +68,6 @@ pub unsafe extern "C" fn get_geometry(
     let mesh = &ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.geometry.as_ref().unwrap().as_ref() as *const Geometry
 }
-#[no_mangle]
-pub unsafe extern "C" fn set_geometry(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-    geometry: *mut Geometry,
-) -> *mut Geometry {
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
-    mesh.geometry = Some(Box::from_raw(geometry));
-    mesh.geometry.as_mut().unwrap().as_mut() as *mut Geometry
-}
-
 #[no_mangle]
 pub unsafe extern "C" fn add_collider(
     mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
