@@ -1,7 +1,6 @@
 ﻿import type { Engine, ListenerObj } from './engine.js';
 import type { Scene } from './Scene.js';
 import { ARROW_KEYS } from './controllers/CameraController.js';
-import { create_rust_label } from './utils.js';
 import { IndexedSingleColoredMesh } from './GPU/AbstractMeshes/IndexedSingleColoredMesh.js';
 import { DataNode } from './nodes/DataNode.js';
 declare const engine: Engine;
@@ -19,10 +18,7 @@ export class Human extends IndexedSingleColoredMesh {
     const sceneids = scenes
       ? scenes.reduce((acc, scene) => acc | scene.id, 0)
       : 1;
-    const mesh = engine.rust.new_character_mesh(
-      sceneids,
-      ...create_rust_label('human'),
-    );
+    const mesh = engine.rust.new_character_mesh(sceneids);
     super(
       {
         can_collide: false,

@@ -8,7 +8,6 @@ import {
   StructProperty,
   VertexBufferLayouts,
 } from 'webgpu-ts/index.js';
-import { create_rust_label } from '../../../utils.js';
 declare const engine: Engine;
 export function createWireFrameMesh(
   targetNode: DrawableDirect<IndexedDataNode>,
@@ -43,10 +42,7 @@ export function createWireFrameMesh(
         buffer,
       ),
     });
-    const mesh = engine.rust.create_debug_mesh_wireframe(
-      targetNode.node.id,
-      ...create_rust_label('wireframe_' + targetNode.node.label),
-    );
+    const mesh = engine.rust.create_debug_mesh_wireframe(targetNode.node.id);
     const node = new IndexedDataNode(
       {
         can_collide: false,

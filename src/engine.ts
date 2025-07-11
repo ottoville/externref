@@ -133,15 +133,9 @@ export type rustWasm = {
   destroy_mesh(mesh_id: rust_pointer<'mesh_id'>): void;
   create_debug_mesh_wireframe(
     target_mesh_id: rust_pointer<'mesh_id'>,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
   ): rust_pointer<'mesh_id'>;
   create_debug_mesh_normals(
     target_mesh_id: rust_pointer<'mesh_id'>,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
   ): rust_pointer<'mesh_id'>;
   have_rigid_body(mesh_id: rust_pointer<'mesh_id'>): boolean;
   create_legacy_terrain_geometry(scenes: number): rust_pointer<'mesh_id'>;
@@ -440,12 +434,7 @@ export type rustWasm = {
     y: number,
     z: number,
   ): boolean;
-  new_character_mesh(
-    scenes: number,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
-  ): rust_pointer<'mesh_id'>;
+  new_character_mesh(scenes: number): rust_pointer<'mesh_id'>;
   set_mesh_externref(
     mesh_id: rust_pointer<'mesh_id'>,
     externref: Externref<false, MainNode>,

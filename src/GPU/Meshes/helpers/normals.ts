@@ -21,15 +21,11 @@ import {
   colorFragmentFunction,
   gpu_memory_index_size,
 } from '../../Shaders/ShaderBuilders.js';
-import { create_rust_label } from '../../../utils.js';
 
 export class NormalsMesh extends DataNode {
   override drawable: DrawableSimple<RenderPipelineProps>;
   constructor(targetNode: DrawableDirect<DataNode>) {
-    const mesh = engine.rust.create_debug_mesh_normals(
-      targetNode.node.id,
-      ...create_rust_label('normals_' + targetNode.node.label),
-    );
+    const mesh = engine.rust.create_debug_mesh_normals(targetNode.node.id);
     super({}, mesh);
     const gpuVertexBuffer = targetNode.vertexBuffers[0]?.buffer;
     if (!gpuVertexBuffer) {

@@ -1,22 +1,27 @@
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex, mesh::{Mesh, ENGINE}, Geometry
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
+    mesh::{Mesh, ENGINE},
+    Geometry,
 };
 
 #[no_mangle]
 pub unsafe extern "C" fn create_debug_mesh_wireframe(
     target_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
 ) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let mut meshes= ENGINE.meshes.lock().unwrap();
+    let mut meshes = ENGINE.meshes.lock().unwrap();
+    let target_mesh = &meshes[&*target_mesh_id];
 
-    let target = &meshes[&*target_mesh_id];
-
-    let target_indices = &target.get_geometry().indices;
+    let mut label = String::from("Wireframe_");
+    label.push_str(&target_mesh.label);
+    let target_indices = &target_mesh.get_geometry().indices;
     let mut indices: Vec<usize> = vec![0; target_indices.as_ref().unwrap().indices.len() * 2];
-    for (i, target_triangle) in target_indices.as_ref().unwrap().indices.chunks_exact(3).enumerate() {
+    for (i, target_triangle) in target_indices
+        .as_ref()
+        .unwrap()
+        .indices
+        .chunks_exact(3)
+        .enumerate()
+    {
         indices[i * 6] = target_triangle[0];
         indices[i * 6 + 1] = target_triangle[1];
         indices[i * 6 + 2] = target_triangle[1];
@@ -32,9 +37,9 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
         0,
         label,
         None,
-        Some(target.mesh_property.clone()),
+        Some(target_mesh.mesh_property.clone()),
         &mut meshes,
-        false
+        false,
     );
     let mesh = &mut meshes[&mesh_id];
     let mut geometry = Geometry::new(
@@ -51,15 +56,14 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
 #[no_mangle]
 pub unsafe extern "C" fn create_debug_mesh_normals(
     target_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
 ) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let mut meshes= ENGINE.meshes.lock().unwrap();
-    let target = &meshes[&*target_mesh_id];
+    let mut meshes = ENGINE.meshes.lock().unwrap();
+    let target_mesh = &meshes[&*target_mesh_id];
 
-    let target_vertices = &target.get_geometry().vertices;
+    let mut label = String::from("Normals_");
+    label.push_str(&target_mesh.label);
+
+    let target_vertices = &target_mesh.get_geometry().vertices;
     let positions_count = target_vertices.as_ref().unwrap().length() * 2;
     let mesh_id = Mesh::new(
         0.0,
@@ -68,9 +72,9 @@ pub unsafe extern "C" fn create_debug_mesh_normals(
         0,
         label,
         None,
-        Some(target.mesh_property.clone()),
+        Some(target_mesh.mesh_property.clone()),
         &mut meshes,
-        false
+        false,
     );
     let mesh = &mut meshes[&mesh_id];
 

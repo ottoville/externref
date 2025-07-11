@@ -42,24 +42,11 @@ pub unsafe extern "C" fn move_character(
 #[no_mangle]
 pub unsafe extern "C" fn new_character_mesh(
     scenes: f32,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
 ) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
     let geometry = create_box_geometry();
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
+    let label = String::from("Human");
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id = Mesh::new(
-        0.0,
-        0.0,
-        scenes,
-        0,
-        label,
-        None,
-        None,
-        &mut meshes,
-        false
-    );
+    let mesh_id = Mesh::new(0.0, 0.0, scenes, 0, label, None, None, &mut meshes, false);
     let mesh = &mut meshes[&mesh_id];
     mesh.character = Some(Character {
         impulse: [0.0; 3],
