@@ -56,4 +56,11 @@ export const DeviceExports = {
       }),
     );
   },
+  create_gpu_command_encoder(
+    { externref: device }: Externref<true, GPUDevice>,
+    label_vec_ptr: rust_pointer<'label'>,
+  ): GPUCommandEncoder {
+    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    return device.createCommandEncoder({ label });
+  },
 };

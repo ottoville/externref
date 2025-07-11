@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use externref::{externref, Resource};
 
-use crate::MULTIVALUE_USIZE;
+use crate::{gpu::gpu::{create_gpu_command_encoder, JSDevice}, MULTIVALUE_USIZE};
 
 use super::{
     bindgroup::BindGroupResources, buffer::{buffer::JSBuffer, copy_dst::CopyDst, copy_src::CopySrc}, command_buffer::{CommandBuffer, JSCommandBuffer}, compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder}, render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder}, renderpass::JSRenderPassDescriptor
@@ -10,11 +10,6 @@ use super::{
 
 pub struct JSCommandEncoder(());
 
-#[cfg(test)]
-unsafe fn create_gpu_command_encoder(_label: *const usize) -> Resource<JSCommandEncoder> {
-    use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
-}
 #[cfg(test)]
 pub unsafe fn copy_buffer_to_buffer(
     _command_encoder: &Resource<JSCommandEncoder>,
@@ -57,7 +52,6 @@ fn finish(
 #[link(wasm_import_module = "commandencoder")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    fn create_gpu_command_encoder(label: *const usize) -> Resource<JSCommandEncoder>;
     fn finish(
         command_encoder: &Resource<JSCommandEncoder>,
         label: *const usize,
@@ -90,13 +84,13 @@ pub struct GPUCommandEncoder {
     owned_by_js: bool,
 }
 impl GPUCommandEncoder {
-    pub fn new(label: String) -> GPUCommandEncoder {
+    pub fn new(device: &Resource<JSDevice>, label: String) -> GPUCommandEncoder {
         unsafe {
             MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
             MULTIVALUE_USIZE[1] = label.len();
             MULTIVALUE_USIZE[2] = label.capacity();
 
-            let externref = create_gpu_command_encoder(MULTIVALUE_USIZE.as_ptr());
+            let externref = create_gpu_command_encoder(device, MULTIVALUE_USIZE.as_ptr());
             return GPUCommandEncoder {
                 externref,
                 label,

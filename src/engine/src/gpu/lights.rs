@@ -105,7 +105,7 @@ fn test_lights() {
 
         swapbuffers.queue_submited();
         lights.push(FreeIndexIndex(1));
-        let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
+        let mut command_encoder = GPUCommandEncoder::new(&Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)), String::from("test"));
         assert_eq!(lights.dirty, true);
         lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.dirty, false);

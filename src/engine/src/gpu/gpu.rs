@@ -10,6 +10,7 @@ use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeL
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
+use crate::gpu::command_encoder::JSCommandEncoder;
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::Projection;
@@ -91,6 +92,11 @@ pub fn serialize_terrain(
     indices_len: usize,
 ) {
 }
+#[cfg(test)]
+pub unsafe fn create_gpu_command_encoder(_device: &Resource<JSDevice>, _label: *const usize) -> Resource<JSCommandEncoder> {
+    use externref::ExternRef;
+    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+}
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "device")]
@@ -110,6 +116,7 @@ extern "C" {
         mapped: bool,
         owned_by_js: bool,
     ) -> Resource<JSBuffer>;
+    pub fn create_gpu_command_encoder(device: &Resource<JSDevice>, label: *const usize) -> Resource<JSCommandEncoder>;
 
 }
 #[cfg(target_arch = "wasm32")]
@@ -403,7 +410,7 @@ impl GPU {
         device_pixel_ratio: f32,
     ) {
         self.device_pixel_ratio = device_pixel_ratio;
-        let mut command_encoder = GPUCommandEncoder::new(String::from("screen_resize"));
+        let mut command_encoder = GPUCommandEncoder::new(&self.device, String::from("screen_resize"));
         for projection in &self.projections {
             {
                 let new_projection_buffer = projection
@@ -494,7 +501,7 @@ impl GPU {
             camera.check_inputs();
         }
         self.time = time;
-        let mut command_encoder = GPUCommandEncoder::new(String::from("handle_gpu_queue_encoder"));
+        let mut command_encoder = GPUCommandEncoder::new(&self.device, String::from("handle_gpu_queue_encoder"));
         self.swap_buffers.get(&self.device, 8, |temp_buffer| {
             temp_buffer.set_mapped_range(&self.time, 0);
             command_encoder.copy_buffer_to_buffer(
@@ -508,7 +515,7 @@ impl GPU {
 
         // TODO: reuse already allocated memory from previous iteration, thus allowing constant string
         let mut renderloop_command_encoder =
-            GPUCommandEncoder::new(String::from("renderloop_commandEncoder"));
+            GPUCommandEncoder::new(&self.device, String::from("renderloop_commandEncoder"));
 
         //Lights
         self.directional_lights.update_buffer(

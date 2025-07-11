@@ -200,7 +200,7 @@ fn test_bindgroup() {
         let gpu = gpuopt2.as_mut().unwrap();
 
         assert_eq!(Arc::strong_count(&rawbuffer), 3);
-        let command_encoder = GPUCommandEncoder::new(String::from("test"));
+        let command_encoder = GPUCommandEncoder::new(&Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)), String::from("test"));
 
         let mut renderpass_encoder = command_encoder.begin_render_pass(
             &String::from("test"),
@@ -267,7 +267,7 @@ fn test_bindgroup_buffer_resize() {
 
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-        let mut command_encoder = GPUCommandEncoder::new(String::from("test"));
+        let mut command_encoder = GPUCommandEncoder::new(&Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)), String::from("test"));
 
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),

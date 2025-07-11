@@ -39,12 +39,6 @@ export const CommandEncoderInterface = {
       copySize,
     );
   },
-  create_gpu_command_encoder(
-    label_vec_ptr: rust_pointer<'label'>,
-  ): GPUCommandEncoder {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
-    return engine.gpu!.device.createCommandEncoder({ label });
-  },
   finish(
     commandEncoder: GPUCommandEncoder,
     label_vec_ptr: rust_pointer<'label'>,
