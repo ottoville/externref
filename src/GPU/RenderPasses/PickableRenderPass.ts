@@ -49,21 +49,7 @@ export class PickableRenderPass<
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
   }
-  createPickBuffer(gpu: GPU) {
-    let rowBytes =
-      this.size.width *
-      gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId.renderTarget
-        .texture.bytes_per_fixel;
 
-    const offset = rowBytes % 256;
-    if (offset !== 0) rowBytes = rowBytes - offset + 256;
-
-    return gpu.device.createBuffer({
-      label: 'pickBuffer',
-      size: rowBytes * this.size.height,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    });
-  }
   override resize(width: number, height: number) {
     super.resize(width, height);
     //update picking
@@ -82,7 +68,19 @@ export class PickableRenderPass<
       this.gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId
         .renderTarget.texture.bytes_per_fixel;
 
-    this.pickBuffer = this.createPickBuffer(this.gpu);
+    let rowBytes =
+      width *
+      this.gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId
+        .renderTarget.texture.bytes_per_fixel;
+
+    const offset = rowBytes % 256;
+    if (offset !== 0) rowBytes = rowBytes - offset + 256;
+
+    this.pickBuffer = this.gpu.device.createBuffer({
+      label: 'pickBuffer',
+      size: rowBytes * height,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
   }
 
   doPick(mesh: boolean, mouse_x: number, mouse_y: number) {
