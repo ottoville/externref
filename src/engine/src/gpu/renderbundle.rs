@@ -10,10 +10,9 @@ use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{
-        buffer::{
-            buffer::{GPUBuffer, JSBuffer},
-            usages::INDEX_USAGE,
-        }, externref_trait::HaveExternref, render_commands::RenderCommands
+        buffer::buffer::{GPUBuffer, JSBuffer},
+        externref_trait::HaveExternref,
+        render_commands::RenderCommands,
     },
     MULTIVALUE_USIZE,
 };
@@ -293,7 +292,7 @@ impl RenderCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
         &mut self.buffers
     }
 
-    fn after_set_buffer(&mut self, buffer: &mut GPUBuffer<INDEX_USAGE>) {
+    fn after_set_buffer(&mut self, buffer: &mut GPUBuffer<false, false, false, false, true>) {
         buffer
             .renderbundles
             .push(Arc::downgrade(&self.renderbundle));

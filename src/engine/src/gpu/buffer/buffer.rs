@@ -4,13 +4,11 @@ use std::sync::{Mutex, Weak};
 
 use externref::{externref, Resource};
 
+use crate::gpu::buffer::mapped_buffer::MappedGPUBuffer;
 use crate::gpu::bufferbinding::BufferBinding;
 use crate::gpu::gpu::create_gpu_buffer;
 use crate::gpu::gpu::JSDevice;
 use crate::gpu::renderbundle::RenderBundle;
-
-use super::mapped_buffer::MappedGPUBuffer;
-use super::usages::COPYSRC_USAGE;
 
 thread_local! {
     static LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };
@@ -31,12 +29,23 @@ extern "C" {
 #[cfg(feature = "webgpu")]
 #[externref]
 pub unsafe extern "C" fn get_raw_buffer(
-    buffer: *const GPUBuffer<COPYSRC_USAGE>,
+    buffer: *const GPUBuffer<false, false, true>,
 ) -> &'static Resource<JSBuffer> {
     &(*buffer).externref
 }
 
-pub struct GPUBuffer<const U: u32> {
+pub struct GPUBuffer<
+    const MAP_READ: bool,
+    const MAP_WRITE: bool = false,
+    const COPY_SRC: bool = false,
+    const COPY_DST: bool = false,
+    const INDEX: bool = false,
+    const VERTEX: bool = false,
+    const UNIFORM: bool = false,
+    const STORAGE: bool = false,
+    const INDIRECT: bool = false,
+    const QUERY_RESOLVE: bool = false,
+> {
     pub externref: Arc<Resource<JSBuffer>>,
     pub label: String,
     pub owned_by_js: bool,
@@ -44,59 +53,64 @@ pub struct GPUBuffer<const U: u32> {
     pub buffer_bindings: Vec<Weak<Mutex<BufferBinding>>>,
     pub renderbundles: Vec<Weak<Mutex<Option<RenderBundle>>>>,
 }
-
-//////////////////////////////
-pub trait GpuBuffer {
-    fn externref(&self) -> &Resource<JSBuffer>;
-    fn externref_arc(&self) -> Arc<Resource<JSBuffer>>;
-    fn label(&self) -> &String;
-    fn owned_by_js(&self) -> bool;
-    fn usages(&self) -> u32;
-    fn size(&self) -> usize;
-    fn set_size(&mut self, size: usize);
-    fn replace_externref(&mut self, externref: Arc<Resource<JSBuffer>>) -> Arc<Resource<JSBuffer>>;
-    fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>);
-    fn take_externref(self) -> Arc<Resource<JSBuffer>>;
-}
-impl<const U: u32> GpuBuffer for GPUBuffer<U> {
-    fn externref(&self) -> &Resource<JSBuffer> {
-        &self.externref
-    }
-    fn externref_arc(&self) -> Arc<Resource<JSBuffer>> {
-        self.externref.clone()
-    }
-    fn take_externref(self) -> Arc<Resource<JSBuffer>> {
-        self.externref
-    }
-    fn label(&self) -> &String {
-        &self.label
-    }
-    fn owned_by_js(&self) -> bool {
-        self.owned_by_js
-    }
-    fn usages(&self) -> u32 {
-        U
-    }
-    fn size(&self) -> usize {
-        self.size
-    }
-    fn set_size(&mut self, size: usize) {
-        self.size = size;
-    }
-    fn replace_externref(&mut self, externref: Arc<Resource<JSBuffer>>) -> Arc<Resource<JSBuffer>> {
-        self.make_dirty();
-        return std::mem::replace(&mut self.externref, externref);
-    }
-
-    fn add_buffer_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>) {
-        self.buffer_bindings.push(bind_group);
-    }
-}
-impl<const U: u32> GPUBuffer<U> {
-    pub fn replace(&mut self, buffer: Self) {
-        self.replace_externref(buffer.externref);
-        self.set_size(buffer.size);
-        self.make_dirty();
+impl<
+        const MAP_READ: bool,
+        const MAP_WRITE: bool,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const INDEX: bool,
+        const VERTEX: bool,
+        const UNIFORM: bool,
+        const STORAGE: bool,
+        const INDIRECT: bool,
+        const QUERY_RESOLVE: bool,
+    >
+    GPUBuffer<
+        MAP_READ,
+        MAP_WRITE,
+        COPY_SRC,
+        COPY_DST,
+        INDEX,
+        VERTEX,
+        UNIFORM,
+        STORAGE,
+        INDIRECT,
+        QUERY_RESOLVE,
+    >
+{
+    pub const fn usages() -> u32 {
+        let mut usages = 0;
+        if MAP_READ {
+            usages |= 0x0001;
+        }
+        if MAP_WRITE {
+            usages |= 0x0002;
+        }
+        if COPY_SRC {
+            usages |= 0x0004;
+        }
+        if COPY_DST {
+            usages |= 0x0008;
+        }
+        if INDEX {
+            usages |= 0x0010;
+        }
+        if VERTEX {
+            usages |= 0x0020;
+        }
+        if UNIFORM {
+            usages |= 0x0040;
+        }
+        if STORAGE {
+            usages |= 0x0080;
+        }
+        if INDIRECT {
+            usages |= 0x0100;
+        }
+        if QUERY_RESOLVE {
+            usages |= 0x0200;
+        }
+        return usages;
     }
     fn inner_new(
         device: &Resource<JSDevice>,
@@ -111,8 +125,10 @@ impl<const U: u32> GPUBuffer<U> {
             l[2] = label.capacity();
             l.as_ptr()
         });
-        let externref =
-            unsafe { create_gpu_buffer(device, size, label_ptr, U, mapped, owned_by_js) };
+
+        let externref = unsafe {
+            create_gpu_buffer(device, size, label_ptr, Self::usages(), mapped, owned_by_js)
+        };
         GPUBuffer {
             externref: Arc::new(externref),
             label,
@@ -122,27 +138,38 @@ impl<const U: u32> GPUBuffer<U> {
             renderbundles: Vec::new(),
         }
     }
-    pub fn new(
-        device: &Resource<JSDevice>,
-        size: usize,
-        label: String,
-        owned_by_js: bool,
-    ) -> GPUBuffer<U> {
-        return GPUBuffer::<U>::inner_new(device, size, label, owned_by_js, false);
+    pub fn new(device: &Resource<JSDevice>, size: usize, label: String, owned_by_js: bool) -> Self {
+        return GPUBuffer::<
+            MAP_READ,
+            MAP_WRITE,
+            COPY_SRC,
+            COPY_DST,
+            INDEX,
+            VERTEX,
+            UNIFORM,
+            STORAGE,
+            INDIRECT,
+            QUERY_RESOLVE,
+        >::inner_new(device, size, label, owned_by_js, false);
     }
     pub fn new_mapped(
         device: &Resource<JSDevice>,
         size: usize,
         label: String,
         owned_by_js: bool,
-    ) -> MappedGPUBuffer<GPUBuffer<U>> {
-        return MappedGPUBuffer::new(GPUBuffer::<U>::inner_new(
-            device,
-            size,
-            label,
-            owned_by_js,
-            true,
-        ));
+    ) -> MappedGPUBuffer<
+        MAP_READ,
+        MAP_WRITE,
+        COPY_SRC,
+        COPY_DST,
+        INDEX,
+        VERTEX,
+        UNIFORM,
+        STORAGE,
+        INDIRECT,
+        QUERY_RESOLVE,
+    > {
+        return MappedGPUBuffer::new(Self::inner_new(device, size, label, owned_by_js, true));
     }
     pub fn map_state(&self) -> u32 {
         #[cfg(feature = "webgpu")]
@@ -175,8 +202,30 @@ impl<const U: u32> GPUBuffer<U> {
             l.as_ptr()
         });
         self.externref = Arc::new(unsafe {
-            create_gpu_buffer(device, size, label_ptr, U, false, self.owned_by_js)
+            create_gpu_buffer(
+                device,
+                size,
+                label_ptr,
+                Self::usages(),
+                false,
+                self.owned_by_js,
+            )
         });
+        self.make_dirty();
+    }
+    pub fn take_externref(self) -> Arc<Resource<JSBuffer>> {
+        self.externref
+    }
+    pub fn replace_externref(
+        &mut self,
+        externref: Arc<Resource<JSBuffer>>,
+    ) -> Arc<Resource<JSBuffer>> {
+        self.make_dirty();
+        return std::mem::replace(&mut self.externref, externref);
+    }
+    pub fn replace(&mut self, buffer: Self) {
+        self.replace_externref(buffer.externref);
+        self.size = buffer.size;
         self.make_dirty();
     }
 }

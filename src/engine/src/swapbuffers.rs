@@ -4,16 +4,14 @@ use externref::Resource;
 
 use crate::{
     gpu::{
-        buffer::{
-            buffer::GPUBuffer, mappadle_buffer::MappadleGPUBufferWrite, mapped_buffer::MappedGPUBuffer, usages::MAP_WRITE_COPYSRC_USAGE
-        },
+        buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer},
         gpu::JSDevice,
     },
     mesh::ENGINE,
 };
 pub struct SwapBuffers {
-    mapped: BTreeMap<usize, Vec<MappedGPUBuffer<GPUBuffer<MAP_WRITE_COPYSRC_USAGE>>>>,
-    onqueue: Vec<GPUBuffer<MAP_WRITE_COPYSRC_USAGE>>,
+    mapped: BTreeMap<usize, Vec<MappedGPUBuffer<false, true, true>>>,
+    onqueue: Vec<GPUBuffer<false, true, true>>,
 }
 impl SwapBuffers {
     pub fn new() -> SwapBuffers {
@@ -26,10 +24,7 @@ impl SwapBuffers {
      * Check if there are free buffer with given size
      * TODO: Remove buffers not used for a while.
      */
-    fn get_existing(
-        &mut self,
-        size: usize,
-    ) -> Option<MappedGPUBuffer<GPUBuffer<MAP_WRITE_COPYSRC_USAGE>>> {
+    fn get_existing(&mut self, size: usize) -> Option<MappedGPUBuffer<false, true, true>> {
         let (got_size, len, buffer) = {
             let (got_size, pool) = self
                 .mapped
@@ -44,7 +39,7 @@ impl SwapBuffers {
         }
         return buffer;
     }
-    pub fn get<F: FnOnce(&MappedGPUBuffer<GPUBuffer<MAP_WRITE_COPYSRC_USAGE>>)>(
+    pub fn get<F: FnOnce(&MappedGPUBuffer<false, true, true>)>(
         &mut self,
         device: &Resource<JSDevice>,
         size: usize,
@@ -86,8 +81,8 @@ impl SwapBuffers {
 #[cfg(test)]
 #[test]
 fn test_swap_buffers() {
+    use crate::gpu::{self, gpu::init_gpu};
     use externref::ExternRef;
-     use crate::gpu::{self, gpu::init_gpu};
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         init_gpu(

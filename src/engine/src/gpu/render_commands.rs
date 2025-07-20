@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::buffer::buffer::JSBuffer;
-use crate::gpu::buffer::usages::INDEX_USAGE;
 use crate::gpu::externref_trait::HaveExternref;
 use externref::externref;
 use externref::Resource;
@@ -54,7 +53,7 @@ extern "C" {
 
 pub trait RenderCommands<T>: HaveExternref<T> {
     fn buffers(&mut self) -> &mut Vec<Arc<Resource<JSBuffer>>>;
-    fn after_set_buffer(&mut self, buffer: &mut GPUBuffer<INDEX_USAGE>);
+    fn after_set_buffer(&mut self, buffer: &mut GPUBuffer<false, false, false, false, true>);
     fn draw_indexed(
         &self,
         index_count: u32,
@@ -92,7 +91,7 @@ pub trait RenderCommands<T>: HaveExternref<T> {
     }
     fn set_indexbuffer(
         &mut self,
-        buffer: &mut GPUBuffer<INDEX_USAGE>,
+        buffer: &mut GPUBuffer<false, false, false, false, true>,
         index_format: u32,
         offset: u32,
         size: Option<NonZeroUsize>,
@@ -103,15 +102,7 @@ pub trait RenderCommands<T>: HaveExternref<T> {
             Some(s) => s.get(),
             None => buffer.size,
         };
-        unsafe {
-            set_indexbuffer(
-                ptr,
-                &buffer.externref,
-                index_format,
-                offset,
-                buffer_size,
-            )
-        };
+        unsafe { set_indexbuffer(ptr, &buffer.externref, index_format, offset, buffer_size) };
         self.buffers().push(buffer.externref.clone());
         self.after_set_buffer(buffer);
     }

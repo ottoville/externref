@@ -1,10 +1,8 @@
 use std::ops::Deref;
 
-use super::buffer::{GPUBuffer, GpuBuffer};
-use super::usages::COPYSRC_USAGE;
 use externref::{externref, Resource};
 
-use crate::gpu::buffer::buffer::JSBuffer;
+use crate::gpu::buffer::buffer::{GPUBuffer, JSBuffer};
 use crate::gpu::gpu::JSDevice;
 
 #[cfg(test)]
@@ -47,8 +45,31 @@ extern "C" {
     pub fn unmap(buffer: &Resource<JSBuffer>);
 }
 
-// Todo: set inner buffer to private
-pub struct MappedGPUBuffer<B: GpuBuffer>(B);
+pub struct MappedGPUBuffer<
+    const MAP_READ: bool,
+    const MAP_WRITE: bool = false,
+    const COPY_SRC: bool = false,
+    const COPY_DST: bool = false,
+    const INDEX: bool = false,
+    const VERTEX: bool = false,
+    const UNIFORM: bool = false,
+    const STORAGE: bool = false,
+    const INDIRECT: bool = false,
+    const QUERY_RESOLVE: bool = false,
+>(
+    GPUBuffer<
+        MAP_READ,
+        MAP_WRITE,
+        COPY_SRC,
+        COPY_DST,
+        INDEX,
+        VERTEX,
+        UNIFORM,
+        STORAGE,
+        INDIRECT,
+        QUERY_RESOLVE,
+    >,
+);
 
 #[no_mangle]
 #[cfg(feature = "webgpu")]
@@ -60,24 +81,63 @@ pub unsafe extern "C" fn create_mapped_GPU_buffer_copysrc(
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
-) -> *const MappedGPUBuffer<GPUBuffer<COPYSRC_USAGE>> {
+) -> *const MappedGPUBuffer<false, false, true> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new_mapped(device, length, label, true)))
+    Box::into_raw(Box::new(GPUBuffer::new_mapped(
+        device, length, label, true,
+    )))
 }
 
-impl<B: GpuBuffer> MappedGPUBuffer<B> {
-    pub fn new(buffer: B) -> MappedGPUBuffer<B> {
+impl<
+        const MAP_READ: bool,
+        const MAP_WRITE: bool,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const INDEX: bool,
+        const VERTEX: bool,
+        const UNIFORM: bool,
+        const STORAGE: bool,
+        const INDIRECT: bool,
+        const QUERY_RESOLVE: bool,
+    >
+    MappedGPUBuffer<
+        MAP_READ,
+        MAP_WRITE,
+        COPY_SRC,
+        COPY_DST,
+        INDEX,
+        VERTEX,
+        UNIFORM,
+        STORAGE,
+        INDIRECT,
+        QUERY_RESOLVE,
+    >
+{
+    pub fn new(
+        buffer: GPUBuffer<
+            MAP_READ,
+            MAP_WRITE,
+            COPY_SRC,
+            COPY_DST,
+            INDEX,
+            VERTEX,
+            UNIFORM,
+            STORAGE,
+            INDIRECT,
+            QUERY_RESOLVE,
+        >,
+    ) -> Self {
         MappedGPUBuffer(buffer)
     }
     pub fn get_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
         unsafe {
-            get_mapped_range(&self.0.externref(), ptr, size, buffer_offset);
+            get_mapped_range(&self.0.externref, ptr, size, buffer_offset);
         }
     }
     pub fn get_mapped_range<T>(&self, data: &mut T, buffer_offset: usize) {
         unsafe {
             get_mapped_range(
-                &self.0.externref(),
+                &self.0.externref,
                 data as *const T as usize,
                 size_of::<T>(),
                 buffer_offset,
@@ -86,29 +146,78 @@ impl<B: GpuBuffer> MappedGPUBuffer<B> {
     }
     pub fn set_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
         unsafe {
-            set_mapped_range(&self.0.externref(), ptr, size, buffer_offset);
+            set_mapped_range(&self.0.externref, ptr, size, buffer_offset);
         }
     }
     pub fn set_mapped_range<T>(&self, data: &T, buffer_offset: usize) {
         unsafe {
             set_mapped_range(
-                &self.0.externref(),
+                &self.0.externref,
                 data as *const T as usize,
                 size_of::<T>(),
                 buffer_offset,
             );
         }
     }
-    pub fn unmap(self) -> B {
+    pub fn unmap(
+        self,
+    ) -> GPUBuffer<
+        MAP_READ,
+        MAP_WRITE,
+        COPY_SRC,
+        COPY_DST,
+        INDEX,
+        VERTEX,
+        UNIFORM,
+        STORAGE,
+        INDIRECT,
+        QUERY_RESOLVE,
+    > {
         unsafe {
-            unmap(&self.0.externref());
+            unmap(&self.0.externref);
         }
         self.0
     }
 }
-impl<B: GpuBuffer> Deref for MappedGPUBuffer<B> {
-    type Target = B;
-    fn deref(&self) -> &B {
+
+impl<
+        const MAP_READ: bool,
+        const MAP_WRITE: bool,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const INDEX: bool,
+        const VERTEX: bool,
+        const UNIFORM: bool,
+        const STORAGE: bool,
+        const INDIRECT: bool,
+        const QUERY_RESOLVE: bool,
+    > Deref
+    for MappedGPUBuffer<
+        MAP_READ,
+        MAP_WRITE,
+        COPY_SRC,
+        COPY_DST,
+        INDEX,
+        VERTEX,
+        UNIFORM,
+        STORAGE,
+        INDIRECT,
+        QUERY_RESOLVE,
+    >
+{
+    type Target = GPUBuffer<
+        MAP_READ,
+        MAP_WRITE,
+        COPY_SRC,
+        COPY_DST,
+        INDEX,
+        VERTEX,
+        UNIFORM,
+        STORAGE,
+        INDIRECT,
+        QUERY_RESOLVE,
+    >;
+    fn deref(&self) -> &Self::Target {
         &self.0
     }
 }

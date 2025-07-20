@@ -6,16 +6,13 @@ use externref::{externref, Resource};
 use terramath::MatrixMath;
 
 use crate::gpu::binding_commands::BindingCommands;
+use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::command_buffer::CommandBuffer;
 use crate::gpu::gpu::GPU;
 use crate::projection::Projection;
 use crate::{
     gpu::{
         bindgroup::{BindGroup, JSBindGroupLayout},
-        buffer::{
-            buffer::GPUBuffer,
-            usages::{STORAGE_USAGE, UNIFORM_COPYDST_USAGE},
-        },
         bufferbinding::BufferBinding,
         command_encoder::GPUCommandEncoder,
         compute_pass_encoder::ComputePassEncoder,
@@ -268,8 +265,9 @@ pub struct Camera {
     before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
     pub on_update_position: Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>) + Send>>,
     projection_view_inverted_is_dirty: bool,
-    buffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
-    cluster_array_buffer: Arc<Mutex<GPUBuffer<STORAGE_USAGE>>>,
+    buffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, true>>>,
+    cluster_array_buffer:
+        Arc<Mutex<GPUBuffer<false, false, false, false, false, false, false, true>>>,
     update_view_bind_group: Arc<BindGroup>,
     pub update_clusters_bind_group: Arc<BindGroup>,
     pub uniform_bindgroup: Arc<BindGroup>,
@@ -289,7 +287,15 @@ impl Camera {
         let mut maybegpu = ENGINE.gpu.lock().unwrap();
         let gpu = maybegpu.as_mut().unwrap();
 
-        let camerauniform_buffer = Arc::new(Mutex::new(GPUBuffer::<UNIFORM_COPYDST_USAGE>::new(
+        let camerauniform_buffer = Arc::new(Mutex::new(GPUBuffer::<
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true,
+        >::new(
             &gpu.device,
             UNIFORM_BUFFER_SIZE,
             String::from("camerauniformBuffer"),
@@ -300,7 +306,16 @@ impl Camera {
             0,
             NonZero::new(UNIFORM_BUFFER_SIZE),
         );
-        let cluster_array_buffer = Arc::new(Mutex::new(GPUBuffer::<STORAGE_USAGE>::new(
+        let cluster_array_buffer = Arc::new(Mutex::new(GPUBuffer::<
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+        >::new(
             &gpu.device,
             CLUSTER_SIZE_IN_BYTES as usize,
             String::from("clusterArrayBuffer"),

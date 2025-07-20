@@ -3,10 +3,7 @@ use std::sync::{Arc, Mutex};
 use externref::Resource;
 use terramath::MatrixMath;
 
-use crate::gpu::{
-    buffer::{buffer::GPUBuffer, usages::UNIFORM_USAGE},
-    gpu::JSDevice,
-};
+use crate::gpu::{buffer::buffer::GPUBuffer, gpu::JSDevice};
 
 const PROJECTION_BUFFER_SIZE: usize = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 pub const TILE_COUNT: [f32; 3] = [32.0, 18.0, 48.0];
@@ -22,14 +19,14 @@ pub struct InnerProjection {
 }
 pub struct Projection {
     pub inner_projection: InnerProjection,
-    pub buffer: Arc<Mutex<GPUBuffer<UNIFORM_USAGE>>>,
+    pub buffer: Arc<Mutex<GPUBuffer<false, false, false, false, false, false, true>>>,
 }
 impl InnerProjection {
     pub fn create_buffer(
         &self,
         device: &Resource<JSDevice>,
         aspect_ratio: f32,
-    ) -> GPUBuffer<UNIFORM_USAGE> {
+    ) -> GPUBuffer<false, false, false, false, false, false, true> {
         let f = 1.0 / (self.fow / 2.0).tan();
         let nf = 1.0 / (self.planes.near_plane - self.planes.far_plane);
         let mut projectionlock = self.projection_reversed_z.lock().unwrap();
@@ -43,9 +40,14 @@ impl InnerProjection {
             [f / aspect_ratio, 0.0, 0.0, 0.0],
             [0.0, f, 0.0, 0.0],
             [0.0, 0.0, self.planes.far_plane * nf, -1.0],
-            [0.0, 0.0, self.planes.far_plane * self.planes.near_plane * nf, 0.0],
+            [
+                0.0,
+                0.0,
+                self.planes.far_plane * self.planes.near_plane * nf,
+                0.0,
+            ],
         ];
-        let buffer = GPUBuffer::<UNIFORM_USAGE>::new_mapped(
+        let buffer = GPUBuffer::<false, false, false, false, false, false, true>::new_mapped(
             device,
             PROJECTION_BUFFER_SIZE,
             String::from("uniform_projection"),

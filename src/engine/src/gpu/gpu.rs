@@ -5,11 +5,13 @@ use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
 
 use externref::{externref, Resource};
+use logger::Logger;
 
 use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
+use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::command_encoder::JSCommandEncoder;
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
@@ -19,20 +21,15 @@ use crate::GPUMesh;
 
 use super::bindgroup::{BindGroup, JSBindGroup, JSBindGroupLayout};
 use super::binding_commands::BindingCommands;
-use super::buffer::buffer::{GpuBuffer, JSBuffer};
-use super::buffer::copy_src::CopySrc;
-use super::buffer::usages::{COPYSRC_USAGE, UNIFORM_COPYDST_USAGE, UNIFORM_USAGE};
+use super::buffer::buffer::JSBuffer;
 use super::bufferbinding::BufferBinding;
 use super::command_buffer::{CommandBuffer, JSCommandBuffer};
 use super::command_encoder::GPUCommandEncoder;
 use super::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSComputePipeline};
 use super::lights::Lights;
 use super::queue::JSQueue;
+use super::queue::Queue;
 use super::renderpass::{JSRenderPass, JSRenderPassDescriptor, Renderpass};
-use super::{
-    buffer::{buffer::GPUBuffer, usages::UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE},
-    queue::Queue,
-};
 pub const GPU_MEMORY_INDEX_SIZE: usize = 256;
 pub const DEFAULT_MAX_INSTANCES: usize = 10;
 
@@ -93,7 +90,10 @@ pub fn serialize_terrain(
 ) {
 }
 #[cfg(test)]
-pub unsafe fn create_gpu_command_encoder(_device: &Resource<JSDevice>, _label: *const usize) -> Resource<JSCommandEncoder> {
+pub unsafe fn create_gpu_command_encoder(
+    _device: &Resource<JSDevice>,
+    _label: *const usize,
+) -> Resource<JSCommandEncoder> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
 }
@@ -116,7 +116,10 @@ extern "C" {
         mapped: bool,
         owned_by_js: bool,
     ) -> Resource<JSBuffer>;
-    pub fn create_gpu_command_encoder(device: &Resource<JSDevice>, label: *const usize) -> Resource<JSCommandEncoder>;
+    pub fn create_gpu_command_encoder(
+        device: &Resource<JSDevice>,
+        label: *const usize,
+    ) -> Resource<JSCommandEncoder>;
 
 }
 #[cfg(target_arch = "wasm32")]
@@ -148,7 +151,7 @@ extern "C" {
 }
 #[externref]
 #[no_mangle]
-pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<COPYSRC_USAGE>>) {
+pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<false, false, true>>) {
     TEMP_GPU_BUFFERS.lock().unwrap().push((*buffer).externref);
 }
 /**
@@ -205,14 +208,13 @@ pub unsafe extern "C" fn init_gpu(
 ) -> usize {
     let mut gpu = ENGINE.gpu.lock().unwrap();
     if force || gpu.is_none() {
-        let gpu_buffer = Arc::new(Mutex::new(
-            GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
+        let gpu_buffer: Arc<Mutex<GPUBuffer<false, false, true, true, false, false, true, true>>> =
+            Arc::new(Mutex::new(GPUBuffer::new(
                 &device,
                 GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
                 String::from("GPUMeshes"),
                 false,
-            ),
-        ));
+            )));
 
         let positions_buffer_binding = BufferBinding::new(
             gpu_buffer.clone(),
@@ -244,14 +246,19 @@ pub unsafe extern "C" fn init_gpu(
                 point_lights_buffer_binding,
             ],
         );
-        let timebuffer = Arc::new(Mutex::new(GPUBuffer::<UNIFORM_COPYDST_USAGE>::new(
+        let timebuffer = Arc::new(Mutex::new(GPUBuffer::new(
             &device,
             8,
             String::from("timeBuffer"),
             false,
         )));
         let screen_dimension_buffer_screen =
-            GPUBuffer::<UNIFORM_USAGE>::new(&device, 16, String::from("screen_buffer"), false);
+            GPUBuffer::<false, false, false, false, false, false, true>::new(
+                &device,
+                16,
+                String::from("screen_dimension_buffer"),
+                false,
+            );
         let render_pass_screen = Renderpass {
             label: String::from("renderPassScreen"),
             size: [NonZeroU32::new_unchecked(1); 2],
@@ -272,7 +279,12 @@ pub unsafe extern "C" fn init_gpu(
             }],
         };
         let screen_dimension_buffer_screen_water =
-            GPUBuffer::<UNIFORM_USAGE>::new(&device, 16, String::from("screen_buffer"), false);
+            GPUBuffer::<false, false, false, false, false, false, true>::new(
+                &device,
+                16,
+                String::from("screen_buffer_water"),
+                false,
+            );
 
         let render_pass_water = Renderpass {
             label: String::from("renderPassWater"),
@@ -297,7 +309,12 @@ pub unsafe extern "C" fn init_gpu(
             }],
         };
         let screen_dimension_buffer_screen_pick =
-            GPUBuffer::<UNIFORM_USAGE>::new(&device, 16, String::from("screen_buffer"), false);
+            GPUBuffer::<false, false, false, false, false, false, true>::new(
+                &device,
+                16,
+                String::from("screen_buffer_pick"),
+                false,
+            );
 
         let pick_render_pass = Renderpass {
             label: String::from("renderPassPick"),
@@ -386,7 +403,7 @@ pub struct JSDevice(());
 pub struct GPU {
     pub device: Resource<JSDevice>,
     pub queue: Queue,
-    pub gpu_buffer: Arc<Mutex<GPUBuffer<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>>>,
+    pub gpu_buffer: Arc<Mutex<GPUBuffer<false, false, true, true, false, false, true, true>>>,
     pub bind_group_position: Arc<BindGroup>,
     pub pending_command_buffers: Vec<CommandBuffer>,
     pub projections: Vec<Arc<Projection>>,
@@ -396,7 +413,7 @@ pub struct GPU {
     pub point_lights: Lights,
     pub directional_lights: Lights,
     pub swap_buffers: SwapBuffers,
-    pub timebuffer: Arc<Mutex<GPUBuffer<UNIFORM_COPYDST_USAGE>>>,
+    pub timebuffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, true>>>,
     pub time: f32,
     pub device_pixel_ratio: f32,
 }
@@ -410,7 +427,8 @@ impl GPU {
         device_pixel_ratio: f32,
     ) {
         self.device_pixel_ratio = device_pixel_ratio;
-        let mut command_encoder = GPUCommandEncoder::new(&self.device, String::from("screen_resize"));
+        let mut command_encoder =
+            GPUCommandEncoder::new(&self.device, String::from("screen_resize"));
         for projection in &self.projections {
             {
                 let new_projection_buffer = projection
@@ -501,7 +519,8 @@ impl GPU {
             camera.check_inputs();
         }
         self.time = time;
-        let mut command_encoder = GPUCommandEncoder::new(&self.device, String::from("handle_gpu_queue_encoder"));
+        let mut command_encoder =
+            GPUCommandEncoder::new(&self.device, String::from("handle_gpu_queue_encoder"));
         self.swap_buffers.get(&self.device, 8, |temp_buffer| {
             temp_buffer.set_mapped_range(&self.time, 0);
             command_encoder.copy_buffer_to_buffer(

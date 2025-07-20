@@ -2,9 +2,11 @@ use std::sync::Arc;
 
 use externref::{externref, Resource};
 
+use crate::gpu::buffer::buffer::GPUBuffer;
+
 use super::{
     bindgroup::BindGroupResources,
-    buffer::{buffer::JSBuffer, copy_dst::CopyDst},
+    buffer::buffer::JSBuffer,
     command_buffer::{CommandBuffer, JSCommandBuffer},
 };
 
@@ -76,21 +78,34 @@ impl Queue {
             submit(&self.externref, boxed);
         }
     }
-    pub fn write_buffer<T: CopyDst>(
+    pub fn write_buffer<
+        const MAP_READ: bool,
+        const MAP_WRITE: bool,
+        const COPY_SRC: bool,
+        const INDEX: bool,
+        const VERTEX: bool,
+        const UNIFORM: bool,
+        const STORAGE: bool,
+        const INDIRECT: bool,
+        const QUERY_RESOLVE: bool,
+    >(
         &self,
-        buffer: T,
+        buffer: GPUBuffer<
+            MAP_READ,
+            MAP_WRITE,
+            COPY_SRC,
+            true,
+            INDEX,
+            VERTEX,
+            UNIFORM,
+            STORAGE,
+            INDIRECT,
+            QUERY_RESOLVE,
+        >,
         ptr: usize,
         size: usize,
         buffer_offset: usize,
     ) {
-        unsafe {
-            write_buffer(
-                &self.externref,
-                buffer.externref(),
-                ptr,
-                size,
-                buffer_offset,
-            )
-        }
+        unsafe { write_buffer(&self.externref, &buffer.externref, ptr, size, buffer_offset) }
     }
 }

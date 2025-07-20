@@ -8,12 +8,8 @@ use externref::Resource;
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     gpu::{
-        bindgroup::BindGroup,
-        binding_commands::BindingCommands,
-        buffer::{buffer::GPUBuffer, usages::UNIFORM_USAGE},
-        compute_pass_encoder::ComputePassEncoder,
-        gpu::JSDevice,
-        renderbundle::get_camera_by_id,
+        bindgroup::BindGroup, binding_commands::BindingCommands, buffer::buffer::GPUBuffer,
+        compute_pass_encoder::ComputePassEncoder, gpu::JSDevice, renderbundle::get_camera_by_id,
     },
     projection::TILE_COUNT,
 };
@@ -33,12 +29,13 @@ impl CameraGroup {
         cameras: &ExplicitGenerationalFreeList<Camera>,
         computepass: &mut ComputePassEncoder,
     ) {
-        let screen_dimension_buffer = GPUBuffer::<UNIFORM_USAGE>::new_mapped(
-            device,
-            16,
-            String::from("screen_buffer"),
-            false,
-        );
+        let screen_dimension_buffer =
+            GPUBuffer::<false, false, false, false, false, false, true>::new_mapped(
+                device,
+                16,
+                String::from("screen_buffer"),
+                false,
+            );
         let data = [
             width.get() as f32,
             height.get() as f32,

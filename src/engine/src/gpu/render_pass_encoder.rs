@@ -1,6 +1,9 @@
 use externref::{externref, Resource};
 
-use crate::gpu::{binding_commands::BindingCommands, buffer::usages::INDEX_USAGE, externref_trait::HaveExternref, render_commands::RenderCommands};
+use crate::gpu::{
+    binding_commands::BindingCommands, externref_trait::HaveExternref,
+    render_commands::RenderCommands,
+};
 
 use super::{
     command_encoder::GPUCommandEncoder,
@@ -76,7 +79,7 @@ impl RenderCommands<JSRenderPassEncoder> for RenderPassEncoder {
     }
     fn after_set_buffer(
         &mut self,
-        buffer: &mut super::buffer::buffer::GPUBuffer<INDEX_USAGE>,
+        buffer: &mut super::buffer::buffer::GPUBuffer<false, false, false, false, true>,
     ) {
         todo!()
     }

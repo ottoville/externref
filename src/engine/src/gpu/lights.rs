@@ -4,14 +4,12 @@ use externref::Resource;
 
 use super::command_encoder::GPUCommandEncoder;
 use super::gpu::JSDevice;
-use crate::allocators::freeindex::FreeIndexIndex;
+use crate::{allocators::freeindex::FreeIndexIndex, gpu::buffer::buffer::GPUBuffer};
 use crate::swapbuffers::SwapBuffers;
-
-use super::buffer::{buffer::GPUBuffer, usages::STORAGE_COPYDST_USAGE};
 
 pub struct Lights {
     pub lights: Vec<FreeIndexIndex>,
-    pub buffer: Arc<Mutex<GPUBuffer<STORAGE_COPYDST_USAGE>>>,
+    pub buffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, false, true>>>,
     label: String,
     dirty: bool,
 }
@@ -20,7 +18,7 @@ impl Lights {
     pub fn new(device: &Resource<JSDevice>, label: String) -> Lights {
         Lights {
             lights: vec![FreeIndexIndex(0)],
-            buffer: Arc::new(Mutex::new(GPUBuffer::<STORAGE_COPYDST_USAGE>::new(
+            buffer: Arc::new(Mutex::new(GPUBuffer::new(
                 device,
                 16,
                 label.to_string(),

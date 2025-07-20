@@ -14,12 +14,7 @@ pub use crate::boundingbox::BoundingBox;
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     gpu::{
-        buffer::{
-            buffer::GPUBuffer,
-            mappadle_buffer::MappadleGPUBufferRead,
-            mapped_buffer::MappedGPUBuffer,
-            usages::{INDEX_USAGE, MAP_READ_COPYDST_USAGE},
-        },
+        buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer},
         gpu::serialize_terrain,
     },
     indices::Indices,
@@ -91,8 +86,8 @@ pub unsafe extern "C" fn have_vertices(
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
     mesh_id: *mut ExplicitGenerationalFreeListIndex<Mesh>,
-    indices_buffer: *mut GPUBuffer<MAP_READ_COPYDST_USAGE>,
-    vertices_buffer: *mut GPUBuffer<MAP_READ_COPYDST_USAGE>,
+    indices_buffer: *mut GPUBuffer<true, false, false, true>,
+    vertices_buffer: *mut GPUBuffer<true, false, false, true>,
 ) {
     let gate = Rc::new(Cell::new(false));
     let gate2 = gate.clone();
@@ -118,7 +113,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
         0,
         None,
         Box::into_raw(Box::new(
-            move |buffer: MappedGPUBuffer<GPUBuffer<MAP_READ_COPYDST_USAGE>>| {
+            move |buffer: MappedGPUBuffer<true, false, false, true>| {
                 let mut indices: Vec<usize> = vec![0; buffer.size / 4];
                 buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
                 let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
@@ -133,7 +128,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
         0,
         None,
         Box::into_raw(Box::new(
-            move |buffer: MappedGPUBuffer<GPUBuffer<MAP_READ_COPYDST_USAGE>>| {
+            move |buffer: MappedGPUBuffer<true, false, false, true>| {
                 let mut vertices: Vec<PositionAndNormalAndUV> =
                     Vec::with_capacity(buffer.size / size_of::<PositionAndNormalAndUV>());
                 buffer.get_mapped_range_raw(vertices.as_mut_ptr() as usize, buffer.size, 0);
@@ -185,7 +180,9 @@ pub unsafe extern "C" fn create_legacy_terrain_geometry(
 }
 static UI_ID: AtomicU32 = AtomicU32::new(0);
 #[no_mangle]
-pub unsafe extern "C" fn create_ui_mesh(position_count: usize) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+pub unsafe extern "C" fn create_ui_mesh(
+    position_count: usize,
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     // TODO: prepend actual ui element label
     let mut label = String::from("UIRectangle");
     label.push_str(
@@ -574,8 +571,12 @@ impl<'vert> Geometry {
         let mut label = String::from("index_");
         label.push_str(&self.label);
 
-        let mapped =
-            GPUBuffer::<INDEX_USAGE>::new_mapped(&gpu.device, indices.len() * 4, label, false);
+        let mapped = GPUBuffer::<false, false, false, false, true>::new_mapped(
+            &gpu.device,
+            indices.len() * 4,
+            label,
+            false,
+        );
         mapped.set_mapped_range_raw(indices.as_ptr() as usize, indices.len() * 4, 0);
 
         match &mut self.indices {

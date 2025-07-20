@@ -2,10 +2,21 @@ use std::sync::Arc;
 
 use externref::{externref, Resource};
 
-use crate::{gpu::gpu::{create_gpu_command_encoder, JSDevice}, MULTIVALUE_USIZE};
+use crate::{
+    gpu::{
+        buffer::buffer::GPUBuffer,
+        gpu::{create_gpu_command_encoder, JSDevice},
+    },
+    MULTIVALUE_USIZE,
+};
 
 use super::{
-    bindgroup::BindGroupResources, buffer::{buffer::JSBuffer, copy_dst::CopyDst, copy_src::CopySrc}, command_buffer::{CommandBuffer, JSCommandBuffer}, compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder}, render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder}, renderpass::JSRenderPassDescriptor
+    bindgroup::BindGroupResources,
+    buffer::buffer::JSBuffer,
+    command_buffer::{CommandBuffer, JSCommandBuffer},
+    compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder},
+    render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder},
+    renderpass::JSRenderPassDescriptor,
 };
 
 pub struct JSCommandEncoder(());
@@ -144,21 +155,62 @@ impl GPUCommandEncoder {
     pub fn take_externref(self) -> Resource<JSCommandEncoder> {
         self.externref
     }
-    pub fn copy_buffer_to_buffer(
+    pub fn copy_buffer_to_buffer<
+        const MAP_READ0: bool,
+        const MAP_WRITE0: bool,
+        const COPY_DST0: bool,
+        const INDEX0: bool,
+        const VERTEX0: bool,
+        const UNIFORM0: bool,
+        const STORAGE0: bool,
+        const INDIRECT0: bool,
+        const QUERY_RESOLVE0: bool,
+        const MAP_READ1: bool,
+        const MAP_WRITE1: bool,
+        const COPY_SRC1: bool,
+        const INDEX1: bool,
+        const VERTEX1: bool,
+        const UNIFORM1: bool,
+        const STORAGE1: bool,
+        const INDIRECT1: bool,
+        const QUERY_RESOLVE1: bool,
+    >(
         &mut self,
-        source: &dyn CopySrc,
-        destination: &dyn CopyDst,
+        source: &GPUBuffer<
+            MAP_READ0,
+            MAP_WRITE0,
+            true,
+            COPY_DST0,
+            INDEX0,
+            VERTEX0,
+            UNIFORM0,
+            STORAGE0,
+            INDIRECT0,
+            QUERY_RESOLVE0,
+        >,
+        destination: &GPUBuffer<
+            MAP_READ1,
+            MAP_WRITE1,
+            COPY_SRC1,
+            true,
+            INDEX1,
+            VERTEX1,
+            UNIFORM1,
+            STORAGE1,
+            INDIRECT1,
+            QUERY_RESOLVE1,
+        >,
         source_offset: usize,
         destination_offset: usize,
         copy_size: usize,
     ) {
-        self.buffers.push(source.externref_arc());
-        self.buffers.push(destination.externref_arc());
+        self.buffers.push(source.externref.clone());
+        self.buffers.push(destination.externref.clone());
         unsafe {
             copy_buffer_to_buffer(
                 &self.externref,
-                source.externref(),
-                destination.externref(),
+                &source.externref,
+                &destination.externref,
                 source_offset,
                 destination_offset,
                 copy_size,

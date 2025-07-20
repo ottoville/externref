@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, Mutex, Weak},
 };
 
-use crate::gpu::buffer::uniform::BindGroupBindable;
+use crate::gpu::buffer::bindable::BindGroupBindable;
 
 use super::bindgroup::BindGroup;
 

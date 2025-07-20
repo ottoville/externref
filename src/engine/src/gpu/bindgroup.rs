@@ -73,7 +73,7 @@ impl BindGroup {
                 .buffer
                 .lock()
                 .unwrap()
-                .add_buffer_binding(Arc::downgrade(buffer_binding_mutex));
+                .add_binding(Arc::downgrade(buffer_binding_mutex));
         }
         return bind_group;
     }
@@ -125,13 +125,7 @@ fn test_bindgroup() {
     use crate::engine;
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
-    use crate::gpu::{
-        binding_commands::BindingCommands,
-        buffer::{
-            buffer::GPUBuffer,
-            usages::{STORAGE_USAGE, UNIFORM_COPYDST_USAGE},
-        },
-    };
+    use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
     use crate::mesh::ENGINE;
     use externref::ExternRef;
 
@@ -156,8 +150,12 @@ fn test_bindgroup() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
-        let buffer =
-            GPUBuffer::<UNIFORM_COPYDST_USAGE>::new(&device, 4, String::from("test"), false);
+        let buffer = GPUBuffer::<false, false, false, true, false, false, true>::new(
+            &device,
+            4,
+            String::from("test"),
+            false,
+        );
         let rawbuffer = buffer.externref.clone();
         let bindgroup = BindGroup::new(
             String::from("test"),
@@ -200,7 +198,10 @@ fn test_bindgroup() {
         let gpu = gpuopt2.as_mut().unwrap();
 
         assert_eq!(Arc::strong_count(&rawbuffer), 3);
-        let command_encoder = GPUCommandEncoder::new(&Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)), String::from("test"));
+        let command_encoder = GPUCommandEncoder::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+            String::from("test"),
+        );
 
         let mut renderpass_encoder = command_encoder.begin_render_pass(
             &String::from("test"),
@@ -249,25 +250,18 @@ fn test_bindgroup_buffer_resize() {
     use super::gpu::{create_bind_group, init_gpu};
     use super::renderbundle::{RenderBundle, RenderBundleEncoder};
     use crate::engine;
-    use crate::gpu::buffer::copy_src::CopySrc;
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
-    use crate::gpu::{
-        binding_commands::BindingCommands,
-        buffer::{
-            buffer::GPUBuffer,
-            usages::{
-                COPYSRC_USAGE, STORAGE_USAGE, UNIFORM_COPYDST_USAGE,
-                UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE,
-            },
-        },
-    };
+    use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
     use crate::mesh::ENGINE;
     use externref::ExternRef;
 
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-        let mut command_encoder = GPUCommandEncoder::new(&Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)), String::from("test"));
+        let mut command_encoder = GPUCommandEncoder::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+            String::from("test"),
+        );
 
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
@@ -288,7 +282,7 @@ fn test_bindgroup_buffer_resize() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
-        let buffer = GPUBuffer::<UNIFORM_STORAGE_COPYSRC_COPYDST_USAGE>::new(
+        let buffer = GPUBuffer::<false, false, true, true, false, false, true, true>::new(
             &device,
             4,
             String::from("test"),

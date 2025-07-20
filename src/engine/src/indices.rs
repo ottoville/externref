@@ -3,8 +3,7 @@ use logger::LoggerArray;
 
 use crate::{
     gpu::{
-        buffer::{buffer::GPUBuffer, usages::INDEX_USAGE},
-        render_commands::RenderCommands,
+        buffer::buffer::GPUBuffer, render_commands::RenderCommands,
         renderbundle::RenderBundleEncoder,
     },
     Geometry,
@@ -42,5 +41,5 @@ pub unsafe extern "C" fn render_indexed(
 }
 pub struct Indices {
     pub indices: Vec<usize>,
-    pub gpu_buffer: GPUBuffer<INDEX_USAGE>,
+    pub gpu_buffer: GPUBuffer<false, false, false, false, true>,
 }
