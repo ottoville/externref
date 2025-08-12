@@ -30,22 +30,23 @@ export function create_rust_vec_ptr<T>(ptr: rust_pointer<rust_vec_ptr<T>>) {
 export type Rust_Iterator<T> = rust_pointer<'iterator'> & {
   __iterator_brand: T;
 };
-export function rust_iterator_to_js<T>(
+export function rust_iterator_to_js<T, E>(
   rust_iterator: Rust_Iterator<T>,
-  rust_next: (rust_iterator: Rust_Iterator<T>) => T | null,
+  null_value: E,
+  rust_next: (rust_iterator: Rust_Iterator<T>) => T | E,
 ): Iterable<T> {
   const iterator = {
-    next(): IteratorResult<T, null> {
+    next(): IteratorResult<T, E> {
       const item = rust_next(rust_iterator);
-      if (item) {
+      if (item !== null_value) {
         return {
           done: false,
-          value: item,
+          value: item as T,
         };
       }
       return {
         done: true,
-        value: null,
+        value: null_value,
       };
     },
     [Symbol.iterator]() {

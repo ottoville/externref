@@ -3,15 +3,13 @@ use std::{
     sync::{Arc, Mutex, Weak},
 };
 
-use crate::gpu::buffer::bindable::BindGroupBindable;
-
-use super::bindgroup::BindGroup;
+use crate::gpu::{bindgroup::BindGroupTrait, buffer::bindable::BindGroupBindable};
 
 pub struct BufferBinding {
     pub buffer: Arc<Mutex<dyn BindGroupBindable + Send>>,
     pub offset: usize,
     pub size: Option<NonZeroUsize>,
-    pub bindgroups: Vec<Weak<BindGroup>>,
+    pub bindgroups: Vec<Weak<dyn BindGroupTrait>>,
 }
 impl BufferBinding {
     pub fn new(

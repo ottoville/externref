@@ -11,15 +11,20 @@ use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeL
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
+use crate::gpu::bindgroup_layout::{BindGroupLayout, GPUBufferBindingLayout, JSBindGroupLayout};
 use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::command_encoder::JSCommandEncoder;
+use crate::gpu::shader::{
+    SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
+    SHADER_STAGE_VERTEX, SHADER_STAGE_VERTEX_AND_FRAGMENT,
+};
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
-use crate::projection::Projection;
+use crate::projection::{Projection, PROJECTION_BUFFER_SIZE};
 use crate::swapbuffers::SwapBuffers;
 use crate::GPUMesh;
 
-use super::bindgroup::{BindGroup, JSBindGroup, JSBindGroupLayout};
+use super::bindgroup::{BindGroup, JSBindGroup};
 use super::binding_commands::BindingCommands;
 use super::buffer::buffer::JSBuffer;
 use super::bufferbinding::BufferBinding;
@@ -97,6 +102,16 @@ pub unsafe fn create_gpu_command_encoder(
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
 }
+#[cfg(test)]
+pub fn create_bind_group_layout(
+    _device: &Resource<JSDevice>,
+    _label: *const usize,
+    _entries: *mut std::slice::Iter<'_, &dyn super::bindgroup_layout::BindingLayout>,
+) -> Resource<JSBindGroupLayout> {
+    use externref::ExternRef;
+    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+}
+
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "device")]
@@ -108,6 +123,11 @@ extern "C" {
         label: *const usize,
         entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
     ) -> Resource<JSBindGroup>;
+    pub fn create_bind_group_layout(
+        device: &Resource<JSDevice>,
+        label: *const usize,
+        entries: *mut std::slice::Iter<'_, &dyn super::bindgroup_layout::BindingLayout>,
+    ) -> Resource<JSBindGroupLayout>;
     pub fn create_gpu_buffer(
         device: &Resource<JSDevice>,
         length: usize,
@@ -197,10 +217,7 @@ pub unsafe extern "C" fn drop_gpu_lock(gpu: *mut MutexGuard<'static, Option<GPU>
 pub unsafe extern "C" fn init_gpu(
     device: Resource<JSDevice>,
     queue: Resource<JSQueue>,
-    layout: Resource<JSBindGroupLayout>,
     force: bool,
-    size_bindgroup_layout: Resource<JSBindGroupLayout>,
-    position_bindgroup_layout: Resource<JSBindGroupLayout>,
     js_render_pass_screen: Resource<JSRenderPass>,
     js_render_pass_water: Resource<JSRenderPass>,
     js_render_pass_canvas: Resource<JSRenderPass>,
@@ -208,6 +225,78 @@ pub unsafe extern "C" fn init_gpu(
 ) -> usize {
     let mut gpu = ENGINE.gpu.lock().unwrap();
     if force || gpu.is_none() {
+        // LAYOUT UpdateViewLayout2
+        let directional_lights =
+            GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(0, 2, false, 16);
+        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(1, 2, false, 512);
+        let point_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(2, 2, false, 16);
+
+        let update_view_layout = BindGroupLayout::new(
+            &device,
+            String::from("UpdateViewLayout"),
+            [&directional_lights, &meshes, &point_lights],
+        );
+
+        // LAYOUT sizeBindGroupLayout
+        let screen_dimensions =
+            GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, 0, false, 16);
+        let size_bindgroup_layout = BindGroupLayout::new(
+            &device,
+            String::from("sizeBindGroupLayout"),
+            [&screen_dimensions],
+        );
+
+        // LAYOUT BindGroupLayoutPosition
+        let world = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new(
+            0,
+            0,
+            true,
+            GPU_MEMORY_INDEX_SIZE as u32,
+        );
+        let position_bindgroup_layout =
+            BindGroupLayout::new(&device, String::from("BindGroupLayoutPosition"), [&world]);
+
+        // LAYOUT UpdateClustersLayout
+        let clusters = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(0, 1, false, 7962624);
+        let view_uniforms = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(1, 0, false, 144);
+        let update_clusters_layout = BindGroupLayout::new(
+            &device,
+            String::from("UpdateClustersLayout"),
+            [&clusters, &view_uniforms],
+        );
+
+        // LAYOUT uniformBindGroupLayoutWithTime
+        let clusters_array =
+            GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(0, 2, false, 7962624);
+        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(1, 2, false, 512);
+        let projection = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(
+            2,
+            0,
+            false,
+            PROJECTION_BUFFER_SIZE as u32,
+        );
+        let scene =
+            GPUBufferBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new(3, 0, false, 144);
+        let time = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX>::new(4, 0, false, 4);
+        let uniform_bind_group_layout_with_time = BindGroupLayout::new(
+            &device,
+            String::from("uniformBindGroupLayoutWithTime"),
+            [&clusters_array, &meshes, &projection, &scene, &time],
+        );
+
+        // LAYOUT clustersLayout
+        let screentoview = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+            1,
+            0,
+            false,
+            PROJECTION_BUFFER_SIZE as u32,
+        );
+        let clusters_layout = BindGroupLayout::new(
+            &device,
+            String::from("clusters_layout"),
+            [&clusters, &screentoview],
+        );
+
         let gpu_buffer: Arc<Mutex<GPUBuffer<false, false, true, true, false, false, true, true>>> =
             Arc::new(Mutex::new(GPUBuffer::new(
                 &device,
@@ -224,8 +313,8 @@ pub unsafe extern "C" fn init_gpu(
 
         let bind_group_position = BindGroup::new(
             String::from("BindGroupPosition"),
-            Arc::new(position_bindgroup_layout),
-            vec![positions_buffer_binding],
+            &position_bindgroup_layout,
+            [positions_buffer_binding],
         );
 
         let projection = Projection::new(&device);
@@ -236,11 +325,10 @@ pub unsafe extern "C" fn init_gpu(
             BufferBinding::new(directional_lights.buffer.clone(), 0, None);
         let point_lights_buffer_binding = BufferBinding::new(point_lights.buffer.clone(), 0, None);
         let meshes_buffer_binding = BufferBinding::new(gpu_buffer.clone(), 0, None);
-        let layout_arc = Arc::new(size_bindgroup_layout);
         let update_view_bindgroup = BindGroup::new(
             String::from("updateViewBindGroup"),
-            Arc::new(layout),
-            vec![
+            &update_view_layout,
+            [
                 directional_lights_buffer_binding,
                 meshes_buffer_binding,
                 point_lights_buffer_binding,
@@ -269,8 +357,8 @@ pub unsafe extern "C" fn init_gpu(
                 cameras: Vec::with_capacity(2),
                 bind_group: Some(BindGroup::new(
                     String::from("sizeBindGroup"),
-                    layout_arc.clone(),
-                    vec![BufferBinding::new(
+                    &size_bindgroup_layout,
+                    [BufferBinding::new(
                         Arc::new(Mutex::new(screen_dimension_buffer_screen)),
                         0,
                         None,
@@ -299,8 +387,8 @@ pub unsafe extern "C" fn init_gpu(
                 cameras: Vec::with_capacity(2),
                 bind_group: Some(BindGroup::new(
                     String::from("sizeBindGroup"),
-                    layout_arc.clone(),
-                    vec![BufferBinding::new(
+                    &size_bindgroup_layout,
+                    [BufferBinding::new(
                         Arc::new(Mutex::new(screen_dimension_buffer_screen_water)),
                         0,
                         None,
@@ -326,8 +414,8 @@ pub unsafe extern "C" fn init_gpu(
                 cameras: Vec::with_capacity(2),
                 bind_group: Some(BindGroup::new(
                     String::from("sizeBindGroup"),
-                    layout_arc,
-                    vec![BufferBinding::new(
+                    &size_bindgroup_layout,
+                    [BufferBinding::new(
                         Arc::new(Mutex::new(screen_dimension_buffer_screen_pick)),
                         0,
                         None,
@@ -345,10 +433,12 @@ pub unsafe extern "C" fn init_gpu(
         };
         let _ = gpu.insert(GPU {
             device,
-            queue: Queue { externref: queue },
+            queue: Queue {
+                externref: queue,
+                pending_command_buffers: Vec::with_capacity(8),
+            },
             gpu_buffer: gpu_buffer,
             bind_group_position,
-            pending_command_buffers: Vec::with_capacity(8),
             projections: vec![Arc::new(projection)],
             cameras: ExplicitGenerationalFreeList::new(4),
             renderpasses: vec![
@@ -364,6 +454,9 @@ pub unsafe extern "C" fn init_gpu(
             timebuffer,
             time: 0.0,
             device_pixel_ratio: 1.0,
+            update_clusters_layout,
+            clusters_layout,
+            uniform_bind_group_layout_with_time,
         });
     }
     let gpu_unwrapped = gpu.as_ref().unwrap();
@@ -380,6 +473,7 @@ pub unsafe extern "C" fn push_to_pending_command_buffers(buffer: Resource<JSComm
         .unwrap()
         .as_mut()
         .unwrap()
+        .queue
         .pending_command_buffers
         .push(CommandBuffer {
             externref: buffer,
@@ -404,18 +498,20 @@ pub struct GPU {
     pub device: Resource<JSDevice>,
     pub queue: Queue,
     pub gpu_buffer: Arc<Mutex<GPUBuffer<false, false, true, true, false, false, true, true>>>,
-    pub bind_group_position: Arc<BindGroup>,
-    pub pending_command_buffers: Vec<CommandBuffer>,
+    pub bind_group_position: Arc<BindGroup<1>>,
     pub projections: Vec<Arc<Projection>>,
     pub cameras: ExplicitGenerationalFreeList<Camera>,
     pub renderpasses: Vec<Renderpass>,
-    update_view_bindgroup: Arc<BindGroup>,
+    update_view_bindgroup: Arc<BindGroup<3>>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
     pub swap_buffers: SwapBuffers,
     pub timebuffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, true>>>,
     pub time: f32,
     pub device_pixel_ratio: f32,
+    pub update_clusters_layout: BindGroupLayout<2>,
+    pub uniform_bind_group_layout_with_time: BindGroupLayout<5>,
+    pub clusters_layout: BindGroupLayout<2>,
 }
 impl GPU {
     fn on_resize(
@@ -443,7 +539,7 @@ impl GPU {
         }
         for camera in self.cameras.iter_mut() {
             camera.update_view(
-                &mut self.pending_command_buffers,
+                &mut self.queue.pending_command_buffers,
                 &self.device,
                 &mut command_encoder,
                 &mut self.swap_buffers,
@@ -484,7 +580,7 @@ impl GPU {
             }
         }
         self.queue
-            .submit(&mut vec![computepassencoder.end().finish(String::from("resize"))].drain(..));
+            .submit([computepassencoder.end().finish(String::from("resize"))]);
     }
     pub fn get_camera_by_id(&self, camera_id: usize) -> &Camera {
         for camera in self.cameras.iter() {
@@ -550,7 +646,7 @@ impl GPU {
         //Cameras
         for camera in self.cameras.iter_mut() {
             if camera.update_view(
-                &mut self.pending_command_buffers,
+                &mut self.queue.pending_command_buffers,
                 &self.device,
                 &mut command_encoder,
                 &mut self.swap_buffers,
@@ -658,15 +754,12 @@ impl GPU {
         }
         // Update mesh positions etc
         self.queue
-            .submit(&mut vec![command_encoder.finish(String::from("renderloop"))].drain(..));
+            .submit([command_encoder.finish(String::from("renderloop"))]);
         // Every other than depends on mesh positions etc
-        self.queue
-            .submit(&mut self.pending_command_buffers.drain(..));
+        self.queue.drain_command_buffers();
         // Draw commands last so everything is up to date
-        self.queue.submit(
-            &mut vec![renderloop_command_encoder.finish(String::from("renderloop_renderencoder"))]
-                .drain(..),
-        );
+        self.queue
+            .submit([renderloop_command_encoder.finish(String::from("renderloop_renderencoder"))]);
         TEMP_GPU_BUFFERS.lock().unwrap().clear();
         #[cfg(not(test))]
         self.swap_buffers.queue_submited();
@@ -682,10 +775,7 @@ fn test_gpu_queue() {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),

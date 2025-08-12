@@ -165,10 +165,7 @@ fn test_calculate_normals() {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             true,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),

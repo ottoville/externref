@@ -55,7 +55,7 @@ impl HaveExternref<JSComputePassEncoder> for ComputePassEncoder {
     }
 }
 impl BindingCommands<JSComputePassEncoder> for ComputePassEncoder {
-    fn after_set_bindgroup(&mut self, _bindgroup: &BindGroup) {}
+    fn after_set_bindgroup<const N: usize>(&mut self, _bindgroup: &BindGroup<N>) {}
 
     fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {
         &mut self.command_encoder.bindgroups

@@ -34,14 +34,14 @@ extern "C" {
     );
 }
 pub trait BindingCommands<T>: HaveExternref<T> {
-    fn after_set_bindgroup(&mut self, bindgroup: &BindGroup);
+    fn after_set_bindgroup<const N: usize>(&mut self, bindgroup: &BindGroup<N>);
     // Hold references to prevent buffer being CG't before command encoder has been executed
     fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>>;
-    fn set_bindgroup(
+    fn set_bindgroup<const N: usize>(
         &mut self,
         device: &Resource<JSDevice>,
         index: u32,
-        bindgroup: &BindGroup,
+        bindgroup: &BindGroup<N>,
         dynamic_offsets: &[u32],
     ) {
         let externref = self.externref();

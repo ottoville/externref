@@ -7,6 +7,7 @@ export const QueueInterface = {
   submit(queue: GPUQueue, iterator: Rust_Iterator<GPUCommandBuffer>): void {
     const buffersIterator = rust_iterator_to_js(
       iterator,
+      null,
       engine.rust.drain_command_buffers,
     );
     queue.submit(buffersIterator);

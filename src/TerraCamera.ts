@@ -16,12 +16,7 @@ export class TerraCamera {
 
   onUpdatePosition: Set<(x: number, y: number, z: number) => void> = new Set();
   id: number;
-  constructor(
-    label: string,
-    gpu: GPU,
-    renderPasses: RenderPass[],
-    parent?: TerraCamera,
-  ) {
+  constructor(label: string, renderPasses: RenderPass[], parent?: TerraCamera) {
     renderPasses.forEach((renderPass) => {
       renderPass.perspectiveCameras.push(this);
     });
@@ -35,11 +30,8 @@ export class TerraCamera {
       if (label === 'waterCamera') {
         this.id = engine.rust.add_child_to_camera_water(
           parent.id,
-          gpu.pipelineLayouts.updateClustersLayout,
-          gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
           this,
           ...create_rust_label(label),
-          gpu.pipelineLayouts.clustersLayout,
           ptr,
           len,
           cap,
@@ -47,11 +39,8 @@ export class TerraCamera {
       } else {
         this.id = engine.rust.add_child_to_camera(
           parent.id,
-          gpu.pipelineLayouts.updateClustersLayout,
-          gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
           this,
           ...create_rust_label(label),
-          gpu.pipelineLayouts.clustersLayout,
           ptr,
           len,
           cap,
@@ -59,11 +48,8 @@ export class TerraCamera {
       }
     } else {
       this.id = engine.rust.add_camera(
-        gpu.pipelineLayouts.updateClustersLayout,
-        gpu.pipelineLayouts.uniformBindGroupLayoutWithTime,
         this,
         ...create_rust_label(label),
-        gpu.pipelineLayouts.clustersLayout,
         ptr,
         len,
         cap,

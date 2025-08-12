@@ -4,8 +4,8 @@ use externref::Resource;
 
 use super::command_encoder::GPUCommandEncoder;
 use super::gpu::JSDevice;
-use crate::{allocators::freeindex::FreeIndexIndex, gpu::buffer::buffer::GPUBuffer};
 use crate::swapbuffers::SwapBuffers;
+use crate::{allocators::freeindex::FreeIndexIndex, gpu::buffer::buffer::GPUBuffer};
 
 pub struct Lights {
     pub lights: Vec<FreeIndexIndex>,
@@ -70,31 +70,36 @@ impl Lights {
 #[cfg(test)]
 #[test]
 fn test_lights() {
-    use externref::ExternRef;
-
+    use crate::gpu::bindgroup_layout::{
+        BindGroupLayout, GPUBufferBindingLayout, JSBindGroupLayout,
+    };
+    use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use crate::gpu::{
         bindgroup::BindGroup, bufferbinding::BufferBinding, gpu::init_gpu, queue::Queue,
     };
+    use externref::ExternRef;
     unsafe {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0));
-        let layout = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         let mut lights = Lights::new(&device, String::from("GPUPointLights"));
+        let layout = BindGroupLayout::new(
+            &device,
+            String::from("test"),
+            [&GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, 0, false, 16)],
+        );
+
         let bindgroup = BindGroup::new(
             String::from("test"),
-            Arc::new(layout),
-            vec![BufferBinding::new(lights.buffer.clone(), 0, None)],
+            &layout,
+            [BufferBinding::new(lights.buffer.clone(), 0, None)],
         );
         bindgroup.get_bindgroup(&device);
 
@@ -103,7 +108,10 @@ fn test_lights() {
 
         swapbuffers.queue_submited();
         lights.push(FreeIndexIndex(1));
-        let mut command_encoder = GPUCommandEncoder::new(&Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)), String::from("test"));
+        let mut command_encoder = GPUCommandEncoder::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            String::from("test"),
+        );
         assert_eq!(lights.dirty, true);
         lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.dirty, false);
@@ -118,8 +126,9 @@ fn test_lights() {
         assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
         let queue = Queue {
             externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+            pending_command_buffers: Vec::new(),
         };
-        queue.submit(&mut vec![command_encoder.finish(String::from("test"))].drain(..));
+        queue.submit([command_encoder.finish(String::from("test"))]);
         swapbuffers.queue_submited();
     }
 }

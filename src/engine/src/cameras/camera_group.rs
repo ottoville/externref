@@ -18,7 +18,7 @@ use super::camera::{Camera, CLUSTER_DISPATCH_SIZE};
 
 pub struct CameraGroup {
     pub cameras: Vec<usize>,
-    pub bind_group: Option<Arc<BindGroup>>,
+    pub bind_group: Option<Arc<BindGroup<1>>>,
 }
 impl CameraGroup {
     pub fn update_size_bind_group(

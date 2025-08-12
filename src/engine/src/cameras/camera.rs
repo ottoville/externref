@@ -12,11 +12,8 @@ use crate::gpu::gpu::GPU;
 use crate::projection::Projection;
 use crate::{
     gpu::{
-        bindgroup::{BindGroup, JSBindGroupLayout},
-        bufferbinding::BufferBinding,
-        command_encoder::GPUCommandEncoder,
-        compute_pass_encoder::ComputePassEncoder,
-        gpu::JSDevice,
+        bindgroup::BindGroup, bufferbinding::BufferBinding, command_encoder::GPUCommandEncoder,
+        compute_pass_encoder::ComputePassEncoder, gpu::JSDevice,
     },
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
@@ -77,13 +74,10 @@ pub unsafe extern "C" fn update_camera_direction(camera: *mut &mut Camera, x: f3
 #[no_mangle]
 pub unsafe extern "C" fn add_child_to_camera(
     camera_id: usize,
-    layout: Resource<JSBindGroupLayout>,
-    layout2: Resource<JSBindGroupLayout>,
     externref: Resource<JSCamera>,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
-    clusters_layout: Resource<JSBindGroupLayout>,
     renderpasses_ptr: *mut usize,
     renderpasses_len: usize,
     renderpasses_cap: usize,
@@ -96,16 +90,7 @@ pub unsafe extern "C" fn add_child_to_camera(
         let gpu = gpuoption.as_mut().unwrap();
         gpu.projections[0].clone()
     };
-    let camera = Camera::new(
-        layout2,
-        None,
-        externref,
-        label,
-        layout,
-        clusters_layout,
-        projection,
-        renderpasses,
-    );
+    let camera = Camera::new(None, externref, label, projection, renderpasses);
     let mut gpuoption = ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
     let id = camera.id;
@@ -116,13 +101,10 @@ pub unsafe extern "C" fn add_child_to_camera(
 #[no_mangle]
 pub unsafe extern "C" fn add_child_to_camera_water(
     camera_id: usize,
-    layout: Resource<JSBindGroupLayout>,
-    layout2: Resource<JSBindGroupLayout>,
     externref: Resource<JSCamera>,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
-    clusters_layout: Resource<JSBindGroupLayout>,
     renderpasses_ptr: *mut usize,
     renderpasses_len: usize,
     renderpasses_cap: usize,
@@ -135,7 +117,6 @@ pub unsafe extern "C" fn add_child_to_camera_water(
         gpu.projections[0].clone()
     };
     let camera = Camera::new(
-        layout2,
         Some(Box::new(|do_update_view, direction, position| {
             if (do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
                 position[1] -= (position[1] - 3.0) * 2.0;
@@ -147,8 +128,6 @@ pub unsafe extern "C" fn add_child_to_camera_water(
         })),
         externref,
         label,
-        layout,
-        clusters_layout,
         projection,
         renderpasses,
     );
@@ -161,13 +140,10 @@ pub unsafe extern "C" fn add_child_to_camera_water(
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn add_camera(
-    layout: Resource<JSBindGroupLayout>,
-    layout2: Resource<JSBindGroupLayout>,
     externref: Resource<JSCamera>,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
-    clusters_layout: Resource<JSBindGroupLayout>,
     renderpasses_ptr: *mut usize,
     renderpasses_len: usize,
     renderpasses_cap: usize,
@@ -179,16 +155,7 @@ pub unsafe extern "C" fn add_camera(
         let gpu = gpuoption.as_mut().unwrap();
         gpu.projections[0].clone()
     };
-    let camera = Camera::new(
-        layout2,
-        None,
-        externref,
-        label,
-        layout,
-        clusters_layout,
-        projection,
-        renderpasses,
-    );
+    let camera = Camera::new(None, externref, label, projection, renderpasses);
 
     let mut gpuoption = ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
@@ -268,19 +235,16 @@ pub struct Camera {
     buffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, true>>>,
     cluster_array_buffer:
         Arc<Mutex<GPUBuffer<false, false, false, false, false, false, false, true>>>,
-    update_view_bind_group: Arc<BindGroup>,
-    pub update_clusters_bind_group: Arc<BindGroup>,
-    pub uniform_bindgroup: Arc<BindGroup>,
+    update_view_bind_group: Arc<BindGroup<2>>,
+    pub update_clusters_bind_group: Arc<BindGroup<2>>,
+    pub uniform_bindgroup: Arc<BindGroup<5>>,
     pub controller: Option<Box<dyn CameraController + Send>>,
 }
 impl Camera {
     pub fn new(
-        layout2: Resource<JSBindGroupLayout>,
         before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
         externref: Resource<JSCamera>,
         label: String,
-        layout: Resource<JSBindGroupLayout>,
-        clusters_layout: Resource<JSBindGroupLayout>,
         projection: Arc<Projection>,
         renderpasses: Vec<usize>,
     ) -> Camera {
@@ -329,16 +293,16 @@ impl Camera {
         );
         let update_view_bind_group = BindGroup::new(
             String::from("updateViewBindGroup2"),
-            Arc::new(layout),
-            vec![cluster_array_buffer_binding.clone(), buffer_binding.clone()],
+            &gpu.update_clusters_layout,
+            [cluster_array_buffer_binding.clone(), buffer_binding.clone()],
         );
 
         let projection_binding = BufferBinding::new(projection.buffer.clone(), 0, None);
 
         let update_clusters_bind_group = BindGroup::new(
             String::from("update_clusters_bind_group"),
-            Arc::new(clusters_layout),
-            vec![
+            &gpu.clusters_layout,
+            [
                 cluster_array_buffer_binding.clone(),
                 projection_binding.clone(),
             ],
@@ -348,8 +312,8 @@ impl Camera {
 
         let uniform_bindgroup = BindGroup::new(
             String::from("uniformBindGroup"),
-            Arc::new(layout2),
-            vec![
+            &gpu.uniform_bind_group_layout_with_time,
+            [
                 cluster_array_buffer_binding,
                 gpu_buffer_binding,
                 projection_binding,
@@ -596,10 +560,7 @@ fn test_child_camera() {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -609,22 +570,16 @@ fn test_child_camera() {
             std::mem::transmute::<usize, ExternRef>(0),
         )));
         let mut camera = Camera::new(
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             None,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             projection.clone(),
             Vec::new(),
         );
         let child_1 = Camera::new(
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             None,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("camera1.0"),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             Arc::new(Projection::new(&Resource::new_non_null(
                 std::mem::transmute::<usize, ExternRef>(0),
             ))),

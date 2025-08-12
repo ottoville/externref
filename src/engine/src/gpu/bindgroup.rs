@@ -1,8 +1,9 @@
+use std::sync::Mutex;
 use std::sync::{Arc, Weak};
-use std::{rc::Rc, sync::Mutex};
 
 use externref::Resource;
 
+use crate::gpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
 use crate::MULTIVALUE_USIZE;
 
 use super::buffer::buffer::JSBuffer;
@@ -13,7 +14,7 @@ use super::renderbundle::RenderBundle;
 
 #[no_mangle]
 pub unsafe extern "C" fn iterate_bindings(
-    iterator: *mut std::slice::Iter<'_, Rc<Mutex<BufferBinding>>>,
+    iterator: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
 ) -> *const usize {
     use std::ptr;
 
@@ -40,35 +41,48 @@ pub unsafe extern "C" fn iterate_bindings(
     }
 }
 pub struct JSBindGroup(());
-pub struct JSBindGroupLayout(());
 
-pub struct BindGroup {
+pub struct BindGroup<const N: usize> {
     pub resources: Mutex<Option<Arc<BindGroupResources>>>,
     label: String,
     layout: Arc<Resource<JSBindGroupLayout>>,
-    pub bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
+    pub bufferbindings: [Arc<Mutex<BufferBinding>>; N],
     pub renderbundles: Mutex<Vec<Weak<Mutex<Option<RenderBundle>>>>>,
+}
+pub trait BindGroupTrait: Send + Sync {
+    fn make_dirty(&self);
+}
+impl<const N: usize> BindGroupTrait for BindGroup<N> {
+    fn make_dirty(&self) {
+        self.resources.lock().unwrap().take();
+        for somerenderbundle in self.renderbundles.lock().unwrap().iter() {
+            if let Some(renderbundle) = somerenderbundle.upgrade() {
+                renderbundle.lock().unwrap().take();
+            }
+        }
+    }
 }
 pub struct BindGroupResources {
     pub externref: Resource<JSBindGroup>,
     pub rawbuffers: Vec<Arc<Resource<JSBuffer>>>,
 }
-impl BindGroup {
+impl<const N: usize> BindGroup<N> {
     pub fn new(
         label: String,
-        layout: Arc<Resource<JSBindGroupLayout>>,
-        bufferbindings: Vec<Arc<Mutex<BufferBinding>>>,
-    ) -> Arc<BindGroup> {
+        layout: &BindGroupLayout<N>,
+        bufferbindings: [Arc<Mutex<BufferBinding>>; N],
+    ) -> Arc<BindGroup<N>> {
         let bind_group = Arc::new(BindGroup {
             resources: Mutex::new(None),
             label,
-            layout,
+            layout: layout.externref.clone(),
             bufferbindings,
             renderbundles: Mutex::new(Vec::new()),
         });
         for buffer_binding_mutex in bind_group.bufferbindings.iter() {
             let mut buffer_binding = buffer_binding_mutex.lock().unwrap();
-            buffer_binding.bindgroups.push(Arc::downgrade(&bind_group));
+            let weak = Arc::downgrade(&bind_group);
+            buffer_binding.bindgroups.push(weak);
             buffer_binding
                 .buffer
                 .lock()
@@ -107,14 +121,6 @@ impl BindGroup {
         });
         return extenref_resources.clone();
     }
-    pub fn make_dirty(&self) {
-        self.resources.lock().unwrap().take();
-        for somerenderbundle in self.renderbundles.lock().unwrap().iter() {
-            if let Some(renderbundle) = somerenderbundle.upgrade() {
-                renderbundle.lock().unwrap().take();
-            }
-        }
-    }
 }
 
 #[cfg(test)]
@@ -123,20 +129,20 @@ fn test_bindgroup() {
     use super::gpu::{create_bind_group, init_gpu};
     use super::renderbundle::{RenderBundle, RenderBundleEncoder};
     use crate::engine;
+    use crate::gpu::bindgroup_layout::{
+        BindGroupLayout, GPUBufferBindingLayout, JSBindGroupLayout,
+    };
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
+    use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
     use crate::mesh::ENGINE;
     use externref::ExternRef;
-
     unsafe {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -157,13 +163,15 @@ fn test_bindgroup() {
             false,
         );
         let rawbuffer = buffer.externref.clone();
+        let layout = BindGroupLayout::new(
+            &device,
+            String::from("test"),
+            [&GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, 0, false, 16)],
+        );
         let bindgroup = BindGroup::new(
             String::from("test"),
-            Arc::new(Resource::new_non_null(std::mem::transmute::<
-                usize,
-                ExternRef,
-            >(1))),
-            vec![BufferBinding::new(Arc::new(Mutex::new(buffer)), 0, None)],
+            &layout,
+            [BufferBinding::new(Arc::new(Mutex::new(buffer)), 0, None)],
         );
         {
             //Externref is not set yet, as it is set lazily
@@ -172,7 +180,7 @@ fn test_bindgroup() {
             assert_eq!(Arc::strong_count(&rawbuffer), 2);
         }
 
-        renderbundle_encoder.set_bindgroup(&device, 0, &*bindgroup, &[]);
+        renderbundle_encoder.set_bindgroup(&device, 0, &bindgroup, &[]);
         let rawbindgroup = bindgroup
             .resources
             .lock()
@@ -232,10 +240,11 @@ fn test_bindgroup() {
 
             let queue = Queue {
                 externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                pending_command_buffers: Vec::new(),
             };
             //bindgroup 2 ref: test, command_buffer
             assert_eq!(Arc::strong_count(&rawbindgroup), 2);
-            queue.submit(&mut vec![command_buffer].drain(..));
+            queue.submit([command_buffer]);
         }
         {
             //bindgroup 1 ref: test
@@ -250,12 +259,15 @@ fn test_bindgroup_buffer_resize() {
     use super::gpu::{create_bind_group, init_gpu};
     use super::renderbundle::{RenderBundle, RenderBundleEncoder};
     use crate::engine;
+    use crate::gpu::bindgroup_layout::{
+        BindGroupLayout, GPUBufferBindingLayout, JSBindGroupLayout,
+    };
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
+    use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
     use crate::mesh::ENGINE;
     use externref::ExternRef;
-
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         let mut command_encoder = GPUCommandEncoder::new(
@@ -266,10 +278,7 @@ fn test_bindgroup_buffer_resize() {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             false,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -290,13 +299,15 @@ fn test_bindgroup_buffer_resize() {
         );
         let rawbuffer = buffer.externref.clone();
         let buffer_arc = Arc::new(Mutex::new(buffer));
+        let layout = BindGroupLayout::new(
+            &device,
+            String::from("test"),
+            [&GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, 0, false, 16)],
+        );
         let bindgroup = BindGroup::new(
             String::from("test"),
-            Arc::new(Resource::new_non_null(std::mem::transmute::<
-                usize,
-                ExternRef,
-            >(1))),
-            vec![BufferBinding::new(buffer_arc.clone(), 0, None)],
+            &layout,
+            [BufferBinding::new(buffer_arc.clone(), 0, None)],
         );
         {
             //Externref is not set yet, as it is set lazily
@@ -305,7 +316,7 @@ fn test_bindgroup_buffer_resize() {
             assert_eq!(Arc::strong_count(&rawbuffer), 2);
         }
 
-        renderbundle_encoder.set_bindgroup(&device, 0, &*bindgroup, &[]);
+        renderbundle_encoder.set_bindgroup(&device, 0, &bindgroup, &[]);
         let rawbindgroup = bindgroup
             .resources
             .lock()
@@ -370,10 +381,11 @@ fn test_bindgroup_buffer_resize() {
 
             let queue = Queue {
                 externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                pending_command_buffers: Vec::new(),
             };
             //bindgroup 2 ref: test, command_buffer
             assert_eq!(Arc::strong_count(&rawbindgroup), 2);
-            queue.submit(&mut vec![command_buffer].drain(..));
+            queue.submit([command_buffer]);
         }
         {
             //bindgroup 1 ref: test

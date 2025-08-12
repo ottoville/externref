@@ -13,3 +13,5 @@ pub mod renderpass;
 pub mod render_pass_encoder;
 pub mod render_commands;
 pub mod externref_trait;
+pub mod bindgroup_layout;
+pub mod shader;

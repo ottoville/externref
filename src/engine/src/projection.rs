@@ -5,7 +5,7 @@ use terramath::MatrixMath;
 
 use crate::gpu::{buffer::buffer::GPUBuffer, gpu::JSDevice};
 
-const PROJECTION_BUFFER_SIZE: usize = 224; // 64+64+64+8+4+4+4+4 + ALIGN
+pub const PROJECTION_BUFFER_SIZE: usize = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 pub const TILE_COUNT: [f32; 3] = [32.0, 18.0, 48.0];
 struct Planes {
     near_plane: f32,

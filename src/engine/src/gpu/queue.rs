@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::{
+    cell::{Cell, RefCell},
+    sync::Arc,
+};
 
 use externref::{externref, Resource};
 
@@ -12,12 +15,10 @@ use super::{
 
 pub struct JSQueue(());
 
+type IteratorPtr<'a> = *mut &'a mut dyn Iterator<Item = Resource<JSCommandBuffer>>;
+
 #[cfg(test)]
-unsafe fn submit(
-    _queue: &Resource<JSQueue>,
-    _iterator: *mut &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>),
-) {
-}
+unsafe fn submit(_queue: &Resource<JSQueue>, _iterator: IteratorPtr) {}
 #[cfg(test)]
 unsafe fn write_buffer(
     _queue: &Resource<JSQueue>,
@@ -33,10 +34,7 @@ unsafe fn write_buffer(
 #[link(wasm_import_module = "queue")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    fn submit(
-        queue: &Resource<JSQueue>,
-        iterator: *mut &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>),
-    );
+    fn submit(queue: &Resource<JSQueue>, iterator: IteratorPtr);
     pub fn write_buffer(
         queue: &Resource<JSQueue>,
         buffer: &Resource<JSBuffer>,
@@ -46,37 +44,59 @@ extern "C" {
     );
 
 }
-static mut COMMAND_BUFFER_EXTERNREF: Option<Resource<JSCommandBuffer>> = None;
-
+thread_local! {
+    static COMMAND_BUFFER_EXTERNREF: Cell<Option<Resource<JSCommandBuffer>>> = const { Cell::new(None) };
+    static BUFFERS_AND_BINDGROUPS: RefCell<(Vec<Vec<Arc<Resource<JSBuffer>>>>, Vec<Vec<Arc<BindGroupResources>>>)> = const { RefCell::new((Vec::new(),Vec::new())) };
+}
 #[externref]
 #[no_mangle]
-pub unsafe extern "C" fn drain_command_buffers(
-    iterator_ptr: *mut &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>),
-) -> Option<&Resource<JSCommandBuffer>> {
+pub unsafe extern "C" fn drain_command_buffers<'a>(
+    iterator_ptr: IteratorPtr,
+) -> Option<&'a Resource<JSCommandBuffer>> {
     let next = (*iterator_ptr).next();
     if next.is_none() {
         drop(Box::from_raw(iterator_ptr));
     }
-    COMMAND_BUFFER_EXTERNREF = next;
-    return COMMAND_BUFFER_EXTERNREF.as_ref();
+    COMMAND_BUFFER_EXTERNREF.set(next);
+    let value = COMMAND_BUFFER_EXTERNREF.with(|n| {
+        return n.as_ptr();
+    });
+    return (*value).as_ref();
 }
 pub struct Queue {
     pub externref: Resource<JSQueue>,
+    pub pending_command_buffers: Vec<CommandBuffer>,
 }
 impl Queue {
-    pub fn submit(&self, command_buffers: &mut (dyn Iterator<Item = CommandBuffer>)) {
+    fn inner_submit<I: Iterator<Item = CommandBuffer>>(
+        externref: &Resource<JSQueue>,
+        command_buffers: I,
+    ) {
         // Maintain reference for buffers until submit has been fully executed
-        let mut buffers: Vec<Vec<Arc<Resource<JSBuffer>>>> = Vec::new();
-        let mut bindgroups: Vec<Vec<Arc<BindGroupResources>>> = Vec::new();
-        let mapped = &mut command_buffers.map(|c: CommandBuffer| {
-            buffers.push(c.buffers);
-            bindgroups.push(c.bindgroups);
+        let mut mapped = command_buffers.map(|c| {
+            BUFFERS_AND_BINDGROUPS.with_borrow_mut(|(buffers, bindgroups)| {
+                buffers.push(c.buffers);
+                bindgroups.push(c.bindgroups);
+            });
             return c.externref;
-        }) as &mut (dyn Iterator<Item = Resource<JSCommandBuffer>>);
-        let boxed = Box::into_raw(Box::new(mapped));
+        });
+
+        let b: Box<&mut dyn Iterator<Item = Resource<JSCommandBuffer>>> = Box::new(&mut mapped);
+        let boxed = Box::into_raw(b);
         unsafe {
-            submit(&self.externref, boxed);
+            submit(externref, boxed);
         }
+        BUFFERS_AND_BINDGROUPS.with_borrow_mut(|(buffers, bindgroups)| {
+            buffers.clear();
+            bindgroups.clear();
+        })
+    }
+    pub fn drain_command_buffers(&mut self) {
+        let mapped = self.pending_command_buffers.drain(..);
+        Queue::inner_submit(&self.externref, mapped);
+    }
+    pub fn submit<const N: usize>(&self, command_buffers: [CommandBuffer; N]) {
+        Queue::inner_submit(&self.externref, command_buffers.into_iter());
     }
     pub fn write_buffer<
         const MAP_READ: bool,

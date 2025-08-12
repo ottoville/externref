@@ -1,7 +1,7 @@
 use externref::{externref, Resource};
 
 use crate::gpu::{
-    binding_commands::BindingCommands, externref_trait::HaveExternref,
+    bindgroup::BindGroup, binding_commands::BindingCommands, externref_trait::HaveExternref,
     render_commands::RenderCommands,
 };
 
@@ -64,7 +64,7 @@ impl HaveExternref<JSRenderPassEncoder> for RenderPassEncoder {
     }
 }
 impl BindingCommands<JSRenderPassEncoder> for RenderPassEncoder {
-    fn after_set_bindgroup(&mut self, bindgroup: &super::bindgroup::BindGroup) {
+    fn after_set_bindgroup<const N: usize>(&mut self, bindgroup: &BindGroup<N>) {
         todo!()
     }
 

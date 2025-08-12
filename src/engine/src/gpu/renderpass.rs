@@ -106,7 +106,7 @@ impl Renderpass {
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         gpu_buffer: usize,
-        bind_group_position: &Arc<BindGroup>,
+        bind_group_position: &Arc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
             let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };

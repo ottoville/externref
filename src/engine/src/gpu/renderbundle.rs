@@ -42,7 +42,7 @@ unsafe fn do_record(
     _record: &Resource<JSFunction>,
     _encoder: &Resource<JSRenderBundleEncoder>,
     _gpu_buffer_externref: usize,
-    _bind_group_position: *const Arc<BindGroup>,
+    _bind_group_position: *const Arc<BindGroup<1>>,
     _bindgroup_start_index: u32,
 ) {
 }
@@ -75,7 +75,7 @@ extern "C" {
         record: &Resource<JSFunction>,
         encoder: &Resource<JSRenderBundleEncoder>,
         gpu_buffer_externref: usize,
-        bind_group_position: *const Arc<BindGroup>,
+        bind_group_position: *const Arc<BindGroup<1>>,
         bindgroup_start_index: u32,
     );
 }
@@ -99,7 +99,7 @@ pub fn get_camera_by_id(
 pub unsafe extern "C" fn renderbundle_set_bindgroup(
     renderbundle: *mut RenderBundleEncoder,
     index: u32,
-    bindgroup: *const Arc<BindGroup>,
+    bindgroup: *const Arc<BindGroup<1>>,
     device: &Resource<JSDevice>,
 ) {
     (*renderbundle).set_bindgroup(&*device, index, &(*bindgroup), &[]);
@@ -109,7 +109,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup(
 pub unsafe extern "C" fn renderbundle_set_bindgroup_1(
     renderbundle: *mut RenderBundleEncoder,
     index: u32,
-    bindgroup: *const Arc<BindGroup>,
+    bindgroup: *const Arc<BindGroup<1>>,
     device: &Resource<JSDevice>,
     dynamic_offset: u32,
 ) {
@@ -120,7 +120,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup_1(
 pub unsafe extern "C" fn renderbundle_set_bindgroup_2(
     renderbundle: *mut RenderBundleEncoder,
     index: u32,
-    bindgroup: *const Arc<BindGroup>,
+    bindgroup: *const Arc<BindGroup<1>>,
     device: &Resource<JSDevice>,
     dynamic_offset1: u32,
     dynamic_offset2: u32,
@@ -188,7 +188,7 @@ impl RenderBundleEncoder {
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         gpu_buffer: usize,
-        bind_group_position: &Arc<BindGroup>,
+        bind_group_position: &Arc<BindGroup<1>>,
         cb: F,
     ) where
         F: FnOnce(&RenderBundle),
@@ -275,7 +275,7 @@ impl HaveExternref<JSRenderBundleEncoder> for RenderBundleEncoder {
     }
 }
 impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
-    fn after_set_bindgroup(&mut self, bindgroup: &BindGroup) {
+    fn after_set_bindgroup<const N: usize>(&mut self, bindgroup: &BindGroup<N>) {
         bindgroup
             .renderbundles
             .lock()

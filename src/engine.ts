@@ -343,10 +343,7 @@ export type rustWasm = {
   init_gpu(
     device: Externref<true, GPUDevice>,
     queue: GPUQueue,
-    layout: GPU['pipelineLayouts']['updateViewLayout'],
     force: boolean,
-    size_bindgroup_layout: GPU['pipelineLayouts']['sizeBindGroupLayout'],
-    position_bindgroup_layout: GPU['pipelineLayouts']['BindGroupLayoutPosition'],
     renderPassScreen: RenderPass,
     renderPassWater: RenderPass,
     renderPassCanvas: RenderPass,
@@ -357,39 +354,30 @@ export type rustWasm = {
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
   ): GPUCommandBuffer | null;
   add_camera(
-    layout: GPU['pipelineLayouts']['updateClustersLayout'],
-    layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
     label_cap: number,
-    cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
     renderpasses_ptr: number,
     renderpasses_len: number,
     renderpasses_cap: number,
   ): number;
   add_child_to_camera(
     camera_id: number,
-    layout: GPU['pipelineLayouts']['updateClustersLayout'],
-    layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
     label_cap: number,
-    cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
     renderpasses_ptr: number,
     renderpasses_len: number,
     renderpasses_cap: number,
   ): number;
   add_child_to_camera_water(
     camera_id: number,
-    layout: GPU['pipelineLayouts']['updateClustersLayout'],
-    layout2: GPU['pipelineLayouts']['uniformBindGroupLayoutWithTime'],
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
     label_cap: number,
-    cluster_layout: GPU['pipelineLayouts']['clustersLayout'],
     renderpasses_ptr: number,
     renderpasses_len: number,
     renderpasses_cap: number,
@@ -427,6 +415,7 @@ export type rustWasm = {
     computepass: rust_pointer<'computepass'>,
   ): GPUComputePassEncoder;
   iterate_bindings(iterator: Rust_Iterator<number>): number;
+  iterate_binding_layouts(iterator: Rust_Iterator<number>): number;
   move_character(
     character_mesh_id: rust_pointer<'mesh_id'>,
     dt: number,
