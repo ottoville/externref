@@ -230,7 +230,7 @@ pub struct Camera {
     pub do_update_view: u32,
     pub id: usize,
     before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
-    pub on_update_position: Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>) + Send>>,
+    pub on_update_position: Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>, &Resource<JSDevice>) + Send>>,
     projection_view_inverted_is_dirty: bool,
     buffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, true>>>,
     cluster_array_buffer:
@@ -440,7 +440,7 @@ impl Camera {
             }
             if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
                 for cb in self.on_update_position.iter() {
-                    cb(&self.position, pending_command_buffers);
+                    cb(&self.position, pending_command_buffers, device);
                 }
                 // To use with JS interop
                 self.on_update_position();

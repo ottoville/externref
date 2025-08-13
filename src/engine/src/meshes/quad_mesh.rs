@@ -1,7 +1,9 @@
 use terramath::Vec3wgslF32;
 
 use crate::{
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     math2::Vec2wgslF32,
+    mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormalAndUV, VertexKind},
     Geometry,
 };
@@ -10,22 +12,39 @@ use crate::{
 pub unsafe extern "C" fn create_tiled_mesh_geometry(
     width: usize,
     height: usize,
-    character_can_collide_to: bool,
-) -> *mut Geometry {
-    let mut geometry = Box::new(Geometry::new(
-        character_can_collide_to,
+    camera_can_collide_to: bool,
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+    let mut geometry = Geometry::new(
+        camera_can_collide_to,
         false,
         false,
         "quad_mesh_geometry".to_string(),
-    ));
+    );
     let (positions, indices) = create_tiled_mesh(width, height);
 
     geometry.set_indices(indices.to_vec());
     geometry.set_vertices(VertexKind::PositionAndNormalAndUV(positions));
-    Box::into_raw(geometry)
+
+    let label: String = String::from("quad_mesh");
+    let mut meshes = ENGINE.meshes.lock().unwrap();
+    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+        0.0,
+        0.0,
+        1.0,
+        0,
+        label,
+        None,
+        None,
+        &mut meshes,
+        camera_can_collide_to,
+    );
+    let mesh = &mut meshes[&mesh_id];
+    mesh.geometry = Some(Box::new(geometry));
+
+    Box::into_raw(Box::new(mesh_id))
 }
 
-fn create_tiled_mesh(
+pub fn create_tiled_mesh(
     faces_x_count: usize,
     faces_y_count: usize,
 ) -> (Vec<PositionAndNormalAndUV>, Vec<usize>) {
