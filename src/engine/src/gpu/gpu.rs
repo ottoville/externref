@@ -18,6 +18,7 @@ use crate::gpu::shader::{
     SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
     SHADER_STAGE_VERTEX, SHADER_STAGE_VERTEX_AND_FRAGMENT,
 };
+use crate::gpu::renderpass::RenderPassTrait;
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::{Projection, PROJECTION_BUFFER_SIZE};
@@ -442,10 +443,10 @@ pub unsafe extern "C" fn init_gpu(
             projections: vec![Arc::new(projection)],
             cameras: ExplicitGenerationalFreeList::new(4),
             renderpasses: vec![
-                render_pass_screen,
-                render_pass_water,
-                pick_render_pass,
-                render_pass_canvas,
+                Box::new(render_pass_screen),
+                Box::new(render_pass_water),
+                Box::new(pick_render_pass),
+                Box::new(render_pass_canvas),
             ],
             update_view_bindgroup,
             point_lights,
@@ -501,7 +502,7 @@ pub struct GPU {
     pub bind_group_position: Arc<BindGroup<1>>,
     pub projections: Vec<Arc<Projection>>,
     pub cameras: ExplicitGenerationalFreeList<Camera>,
-    pub renderpasses: Vec<Renderpass>,
+    pub renderpasses: Vec<Box<dyn RenderPassTrait + Send>>,
     update_view_bindgroup: Arc<BindGroup<3>>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
@@ -522,6 +523,7 @@ impl GPU {
         pipeline: &Resource<JSComputePipeline>,
         device_pixel_ratio: f32,
     ) {
+        
         self.device_pixel_ratio = device_pixel_ratio;
         let mut command_encoder =
             GPUCommandEncoder::new(&self.device, String::from("screen_resize"));
@@ -561,22 +563,17 @@ impl GPU {
                 &mut computepassencoder,
             );
             unsafe {
-                resize_renderpass(
-                    &renderpass.jsrenderpass,
-                    renderpass.size[0],
-                    renderpass.size[1],
-                );
+                let size = renderpass.size();
+                resize_renderpass(&renderpass.jsrenderpass(), size[0], size[1]);
             }
         }
         // Call onResize after all renderPasses have resizes so callbacks
         // can refer updated render target of other renderpasses.
         for renderpass in &self.renderpasses {
             unsafe {
-                renderpass_on_resize(
-                    &renderpass.jsrenderpass,
-                    renderpass.size[0],
-                    renderpass.size[1],
-                );
+                let size = renderpass.size();
+
+                renderpass_on_resize(&renderpass.jsrenderpass(), size[0], size[1]);
             }
         }
         self.queue
@@ -784,15 +781,13 @@ fn test_gpu_queue() {
         for id in 0..4 {
             let mut gpuopt = ENGINE.gpu.lock().unwrap();
             let gpu = gpuopt.as_mut().unwrap();
-            gpu.renderpasses[id].jsrenderpass =
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-            gpu.renderpasses[id].bundle = Some(RenderBundleEncoder::new(
+            gpu.renderpasses[id].set_bundle(RenderBundleEncoder::new(
                 String::from("test"),
                 &gpu.device,
                 Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
                 Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             ));
-            gpu.renderpasses[id].bundle.as_mut().unwrap();
+            gpu.renderpasses[id].get_bundle();
         }
         process_gpu_queue(
             0.0,

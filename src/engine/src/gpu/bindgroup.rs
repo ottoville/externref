@@ -216,7 +216,7 @@ fn test_bindgroup() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderbundle_encoder.record_renderbundle(
-            &gpu.renderpasses[0].cameragroups,
+            &gpu.renderpasses[0].cameragroups(),
             &gpu.device,
             &gpu.cameras,
             1,
@@ -356,7 +356,7 @@ fn test_bindgroup_buffer_resize() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderbundle_encoder.record_renderbundle(
-            &gpu.renderpasses[0].cameragroups,
+            &gpu.renderpasses[0].cameragroups(),
             &gpu.device,
             &gpu.cameras,
             1,

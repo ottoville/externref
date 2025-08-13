@@ -1,17 +1,19 @@
 use std::{
     cell::LazyCell,
-    num::{NonZero, NonZeroU32},
-    sync::Arc,
+    num::{NonZero, NonZeroU32, NonZeroUsize},
+    sync::{Arc, Mutex},
 };
 
 use externref::{externref, Resource};
+use logger::LoggerArray;
 use terramath::VectorMath;
 
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
-    gpu::gpu::GPU,
+    gpu::{compute_pass_encoder::JSComputePipeline, gpu::GPU, queue::Queue},
     mesh::ENGINE,
+    swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
 };
 
@@ -31,16 +33,17 @@ pub unsafe extern "C" fn link_renderpass(
     id: usize,
     descriptor: Resource<JSRenderBundleDescriptor>,
     record: Resource<JSFunction>,
-) -> *mut RenderBundleEncoder {
+) -> *const RenderBundleEncoder {
     let mut gpuopt = ENGINE.gpu.lock().unwrap();
     let gpu = gpuopt.as_mut().unwrap();
-    gpu.renderpasses[id].bundle = Some(RenderBundleEncoder::new(
-        gpu.renderpasses[id].label.clone(),
+    let label = gpu.renderpasses[id].label().to_string();
+    gpu.renderpasses[id].set_bundle(RenderBundleEncoder::new(
+        label,
         &gpu.device,
         descriptor,
         record,
     ));
-    gpu.renderpasses[id].bundle.as_mut().unwrap()
+    gpu.renderpasses[id].get_bundle()
 }
 #[no_mangle]
 pub unsafe extern "C" fn pick_position(
@@ -57,7 +60,7 @@ pub unsafe extern "C" fn pick_position(
 pub unsafe extern "C" fn get_renderpass_size(id: usize) -> *const [NonZero<u32>; 2] {
     let mut gpuopt = ENGINE.gpu.lock().unwrap();
     let gpu = gpuopt.as_mut().unwrap();
-    &gpu.renderpasses[id].size
+    &gpu.renderpasses[id].size()
 }
 pub struct JSRenderPassDescriptor(());
 pub struct JSRenderPass(());
@@ -70,21 +73,9 @@ pub struct Renderpass {
     pub size: [NonZeroU32; 2],
     pub size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
 }
-impl Renderpass {
-    pub fn pick_position(&self, gpu: &GPU, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32 {
-        let x = (mouse_x as f32 / self.size[0].get() as f32) * 2.0 - 1.0;
-        let y = -((mouse_y as f32 / self.size[1].get() as f32) * 2.0 - 1.0);
-        let camera_id = self.cameragroups[0].cameras[0];
-        let camera = gpu.get_camera_by_id(camera_id);
-        let result = [x, y, z].transform(&camera.projection_view_inverted);
-        unsafe {
-            MULTIVALUE_F32[0] = result[0];
-            MULTIVALUE_F32[1] = result[1];
-            MULTIVALUE_F32[2] = result[2];
-            return MULTIVALUE_F32.as_ptr();
-        }
-    }
-    pub fn resize(
+pub trait RenderPassTrait {
+    fn cameragroups(&mut self) -> &mut Vec<CameraGroup>;
+    fn resize(
         &mut self,
         mut width: NonZeroU32,
         mut height: NonZeroU32,
@@ -92,15 +83,37 @@ impl Renderpass {
         cameras: &ExplicitGenerationalFreeList<Camera>,
         computepass: &mut ComputePassEncoder,
     ) {
-        if let Some(size_modifier) = self.size_modifier {
-            size_modifier(&mut width, &mut height)
-        }
-        self.size = [width, height];
-        for cameragroup in &mut self.cameragroups {
-            cameragroup.update_size_bind_group(device, width, height, &(*cameras), computepass);
-        }
     }
-    pub fn render(
+    fn render(
+        &mut self,
+        command_encoder: GPUCommandEncoder,
+        device: &Resource<JSDevice>,
+        cameras: &ExplicitGenerationalFreeList<Camera>,
+        gpu_buffer: usize,
+        bind_group_position: &Arc<BindGroup<1>>,
+    ) -> GPUCommandEncoder;
+    fn jsrenderpass(&self) -> &Resource<JSRenderPass>;
+    fn size(&self) -> [NonZeroU32; 2];
+    fn set_bundle(&mut self, bundle: RenderBundleEncoder);
+    fn get_bundle(&self) -> &RenderBundleEncoder;
+    fn label(&self) -> &str;
+    fn pick_position(&self, gpu: &GPU, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32;
+    fn do_pick(
+        &mut self,
+        device: &Resource<JSDevice>,
+        swap_buffers: &mut SwapBuffers,
+        queue: &Queue,
+        pickpipeline: &Resource<JSComputePipeline>,
+        mouse_x: u32,
+        mouse_y: u32,
+    );
+}
+impl RenderPassTrait for Renderpass {
+    fn jsrenderpass(&self) -> &Resource<JSRenderPass> {
+        &self.jsrenderpass
+    }
+
+    fn render(
         &mut self,
         command_encoder: GPUCommandEncoder,
         device: &Resource<JSDevice>,
@@ -126,5 +139,67 @@ impl Renderpass {
 
             return renderpass_encoder.end();
         });
+    }
+
+    fn size(&self) -> [NonZeroU32; 2] {
+        self.size
+    }
+
+    fn resize(
+        &mut self,
+        mut width: NonZeroU32,
+        mut height: NonZeroU32,
+        device: &Resource<JSDevice>,
+        cameras: &ExplicitGenerationalFreeList<Camera>,
+        computepass: &mut ComputePassEncoder,
+    ) {
+        if let Some(size_modifier) = self.size_modifier {
+            size_modifier(&mut width, &mut height)
+        }
+        self.size = [width, height];
+        for cameragroup in &mut self.cameragroups {
+            cameragroup.update_size_bind_group(device, width, height, &(*cameras), computepass);
+        }
+    }
+
+    fn set_bundle(&mut self, bundle: RenderBundleEncoder) {
+        self.bundle = Some(bundle);
+    }
+
+    fn label(&self) -> &str {
+        &self.label
+    }
+
+    fn get_bundle(&self) -> &RenderBundleEncoder {
+        self.bundle.as_ref().unwrap()
+    }
+
+    fn pick_position(&self, gpu: &GPU, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32 {
+        let x = (mouse_x as f32 / self.size[0].get() as f32) * 2.0 - 1.0;
+        let y = -((mouse_y as f32 / self.size[1].get() as f32) * 2.0 - 1.0);
+        let camera_id = self.cameragroups[0].cameras[0];
+        let camera = gpu.get_camera_by_id(camera_id);
+        let result = [x, y, z].transform(&camera.projection_view_inverted);
+        unsafe {
+            MULTIVALUE_F32[0] = result[0];
+            MULTIVALUE_F32[1] = result[1];
+            MULTIVALUE_F32[2] = result[2];
+            return MULTIVALUE_F32.as_ptr();
+        }
+    }
+
+    fn cameragroups(&mut self) -> &mut Vec<CameraGroup> {
+        &mut self.cameragroups
+    }
+    fn do_pick(
+        &mut self,
+        device: &Resource<JSDevice>,
+        swap_buffers: &mut SwapBuffers,
+        queue: &Queue,
+        pickpipeline: &Resource<JSComputePipeline>,
+        mouse_x: u32,
+        mouse_y: u32,
+    ) {
+        todo!()
     }
 }

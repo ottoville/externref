@@ -352,7 +352,7 @@ impl Camera {
             controller: None,
         };
         for renderpass_id in renderpasses {
-            gpu.renderpasses[renderpass_id].cameragroups[0]
+            gpu.renderpasses[renderpass_id].cameragroups()[0]
                 .cameras
                 .push(camera.id);
         }
