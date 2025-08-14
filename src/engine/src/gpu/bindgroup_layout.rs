@@ -5,18 +5,37 @@ use std::{cell::RefCell, sync::Arc};
 use externref::externref;
 use externref::Resource;
 
-use crate::gpu::gpu::{create_bind_group_layout, JSDevice};
+use crate::gpu::{
+    gpu::{create_bind_group_layout, JSDevice},
+    texture::TextureViewDimension,
+};
 
 thread_local! {
     static LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };
+}
+pub enum BufferBindingType {
+    Uniform,
+    Storage,
+    ReadOnlyStorage,
 }
 #[cfg(test)]
 pub unsafe fn create_bind_group_layout_entry_buffer(
     _binding: u32,
     _visibility: u32,
-    _bindingtype: u32,
+    _bindingtype: BufferBindingType,
     _has_dynamic_offset: bool,
     _min_binding_size: u32,
+) -> Resource<JSGPUBindGroupLayoutEntry> {
+    use externref::ExternRef;
+    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+}
+#[cfg(test)]
+pub fn create_bind_group_layout_entry_texture(
+    _binding: u32,
+    _visibility: u32,
+    _sample_type: u32,
+    _view_dimension: TextureViewDimension,
+    _multisampled: bool,
 ) -> Resource<JSGPUBindGroupLayoutEntry> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
@@ -29,11 +48,17 @@ extern "C" {
     pub fn create_bind_group_layout_entry_buffer(
         binding: u32,
         visibility: u32,
-        bindingtype: u32,
+        bindingtype: BufferBindingType,
         has_dynamic_offset: bool,
         min_binding_size: u32,
     ) -> Resource<JSGPUBindGroupLayoutEntry>;
-
+    pub fn create_bind_group_layout_entry_texture(
+        binding: u32,
+        visibility: u32,
+        sample_type: u32,
+        view_dimension: TextureViewDimension,
+        multisampled: bool,
+    ) -> Resource<JSGPUBindGroupLayoutEntry>;
 }
 #[no_mangle]
 pub unsafe extern "C" fn iterate_binding_layouts(
@@ -70,7 +95,7 @@ pub trait BindingLayout {
 impl<const VISIBILITY: u32> GPUBufferBindingLayout<VISIBILITY> {
     pub fn new(
         binding: u32,
-        bindingtype: u32,
+        bindingtype: BufferBindingType,
         has_dynamic_offset: bool,
         min_binding_size: u32,
     ) -> Self {
@@ -86,6 +111,25 @@ impl<const VISIBILITY: u32> GPUBufferBindingLayout<VISIBILITY> {
         GPUBufferBindingLayout { binding, externref }
     }
 }
+impl<const VISIBILITY: u32> GPUTextureBindingLayout<VISIBILITY> {
+    pub fn new(
+        binding: u32,
+        sample_type: u32,
+        view_dimension: TextureViewDimension,
+        multisampled: bool,
+    ) -> Self {
+        let externref = unsafe {
+            create_bind_group_layout_entry_texture(
+                binding,
+                VISIBILITY,
+                sample_type,
+                view_dimension,
+                multisampled,
+            )
+        };
+        GPUTextureBindingLayout { binding, externref }
+    }
+}
 pub struct GPUBufferBindingLayout<const VISIBILITY: u32> {
     binding: u32,
     externref: Resource<JSGPUBindGroupLayoutEntry>,
@@ -98,7 +142,10 @@ impl<const VISIBILITY: u32> BindingLayout for GPUBufferBindingLayout<VISIBILITY>
 }
 
 pub struct GPUSamplerBindingLayout {}
-pub struct GPUTextureBindingLayout {}
+pub struct GPUTextureBindingLayout<const VISIBILITY: u32> {
+    binding: u32,
+    externref: Resource<JSGPUBindGroupLayoutEntry>,
+}
 pub struct GPUStorageTextureBindingLayout {}
 pub struct GPUExternalTextureBindingLayout {}
 

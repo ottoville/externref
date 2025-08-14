@@ -28,6 +28,7 @@ import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 import { RenderPassEncoderInterface } from './wasm-interfaces/RenderPassEncoder.js';
 import { RenderCommandsInterface } from './wasm-interfaces/RenderCommandsInterface.js';
 import { serialize_terrain } from './world/Terrain.js';
+import { TextureExports } from './wasm-interfaces/TextureInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -888,6 +889,7 @@ export class Engine {
       renderbundleencoder: RenderbundleEncoderInterface,
       rendercommands: RenderCommandsInterface,
       renderpassencoder: RenderPassEncoderInterface,
+      texture: TextureExports,
     };
     try {
       if (

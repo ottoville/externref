@@ -130,7 +130,7 @@ fn test_bindgroup() {
     use super::renderbundle::{RenderBundle, RenderBundleEncoder};
     use crate::engine;
     use crate::gpu::bindgroup_layout::{
-        BindGroupLayout, GPUBufferBindingLayout, JSBindGroupLayout,
+        BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
     };
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
@@ -166,7 +166,14 @@ fn test_bindgroup() {
         let layout = BindGroupLayout::new(
             &device,
             String::from("test"),
-            [&GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, 0, false, 16)],
+            [
+                &GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+                    0,
+                    BufferBindingType::Uniform,
+                    false,
+                    16,
+                ),
+            ],
         );
         let bindgroup = BindGroup::new(
             String::from("test"),
@@ -260,7 +267,7 @@ fn test_bindgroup_buffer_resize() {
     use super::renderbundle::{RenderBundle, RenderBundleEncoder};
     use crate::engine;
     use crate::gpu::bindgroup_layout::{
-        BindGroupLayout, GPUBufferBindingLayout, JSBindGroupLayout,
+        BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
     };
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
@@ -302,7 +309,14 @@ fn test_bindgroup_buffer_resize() {
         let layout = BindGroupLayout::new(
             &device,
             String::from("test"),
-            [&GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, 0, false, 16)],
+            [
+                &GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+                    0,
+                    BufferBindingType::Uniform,
+                    false,
+                    16,
+                ),
+            ],
         );
         let bindgroup = BindGroup::new(
             String::from("test"),

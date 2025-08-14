@@ -71,7 +71,7 @@ impl Lights {
 #[test]
 fn test_lights() {
     use crate::gpu::bindgroup_layout::{
-        BindGroupLayout, GPUBufferBindingLayout, JSBindGroupLayout,
+        BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
     };
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use crate::gpu::{
@@ -93,7 +93,14 @@ fn test_lights() {
         let layout = BindGroupLayout::new(
             &device,
             String::from("test"),
-            [&GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, 0, false, 16)],
+            [
+                &GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+                    0,
+                    BufferBindingType::Uniform,
+                    false,
+                    16,
+                ),
+            ],
         );
 
         let bindgroup = BindGroup::new(

@@ -1,14 +1,15 @@
-use std::cell::RefCell;
+use std::cell::Cell;
 use std::sync::Arc;
 
 use externref::Resource;
 
+use crate::gpu::buffer::buffer::create_buffer;
 use crate::gpu::buffer::buffer::GPUBuffer;
+use crate::gpu::command_encoder::copy_buffer_to_buffer;
 use crate::gpu::command_encoder::GPUCommandEncoder;
 use crate::gpu::gpu::JSDevice;
-use crate::gpu::{command_encoder::copy_buffer_to_buffer, gpu::create_gpu_buffer};
 thread_local! {
-    static LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };
+    static LABEL:Cell<[usize; 3]> = const { Cell::new([0;3]) };
 }
 impl<
         const MAP_READ: bool,
@@ -43,14 +44,14 @@ impl<
         command_encoder: &mut GPUCommandEncoder,
         size: usize,
     ) {
-        let label_ptr = LABEL.with_borrow_mut(|l| {
-            l[0] = self.label.as_ptr() as usize;
-            l[1] = self.label.len();
-            l[2] = self.label.capacity();
-            l.as_ptr()
-        });
+        LABEL.set([
+            self.label.as_ptr() as usize,
+            self.label.len(),
+            self.label.capacity(),
+        ]);
+        let label_ptr = LABEL.with(|l| l.as_ptr());
         unsafe {
-            let new_externref = create_gpu_buffer(
+            let new_externref = create_buffer(
                 device,
                 size,
                 label_ptr,

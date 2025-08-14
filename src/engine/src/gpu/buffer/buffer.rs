@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{Cell};
 use std::sync::Arc;
 use std::sync::{Mutex, Weak};
 
@@ -6,15 +6,43 @@ use externref::{externref, Resource};
 
 use crate::gpu::buffer::mapped_buffer::MappedGPUBuffer;
 use crate::gpu::bufferbinding::BufferBinding;
-use crate::gpu::gpu::create_gpu_buffer;
 use crate::gpu::gpu::JSDevice;
 use crate::gpu::renderbundle::RenderBundle;
 
 thread_local! {
-    static LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };
+    static LABEL:Cell<[usize; 3]> = const { Cell::new([0;3]) };
 }
 
 pub struct JSBuffer(());
+
+
+#[cfg(test)]
+pub unsafe fn create_buffer(
+    _device: &Resource<JSDevice>,
+    _length: usize,
+    _label: *mut [usize; 3],
+    _usages: u32,
+    _mapped: bool,
+    _owned_by_js: bool,
+) -> Resource<JSBuffer> {
+    use externref::ExternRef;
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
+}
+
+#[cfg(target_arch = "wasm32")]
+#[externref]
+#[link(wasm_import_module = "device")]
+#[cfg(any(not(test), rust_analyzer))]
+extern "C" {
+    pub fn create_buffer(
+        device: &Resource<JSDevice>,
+        length: usize,
+        label: *mut [usize; 3],
+        usages: u32,
+        mapped: bool,
+        owned_by_js: bool,
+    ) -> Resource<JSBuffer>;
+}
 
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
@@ -119,15 +147,17 @@ impl<
         owned_by_js: bool,
         mapped: bool,
     ) -> Self {
-        let label_ptr = LABEL.with_borrow_mut(|l| {
-            l[0] = label.as_ptr() as usize;
-            l[1] = label.len();
-            l[2] = label.capacity();
+        LABEL.set([
+            label.as_ptr() as usize,
+            label.len(),
+            label.capacity()
+        ]);
+        let label_ptr = LABEL.with(|l| {
             l.as_ptr()
         });
 
         let externref = unsafe {
-            create_gpu_buffer(device, size, label_ptr, Self::usages(), mapped, owned_by_js)
+            create_buffer(device, size, label_ptr, Self::usages(), mapped, owned_by_js)
         };
         GPUBuffer {
             externref: Arc::new(externref),
@@ -195,14 +225,17 @@ impl<
     }
     pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: usize) {
         self.size = size;
-        let label_ptr = LABEL.with_borrow_mut(|l| {
-            l[0] = self.label.as_ptr() as usize;
-            l[1] = self.label.len();
-            l[2] = self.label.capacity();
+
+        LABEL.set([
+            self.label.as_ptr() as usize,
+            self.label.len(),
+            self.label.capacity()
+        ]);
+        let label_ptr = LABEL.with(|l| {
             l.as_ptr()
         });
         self.externref = Arc::new(unsafe {
-            create_gpu_buffer(
+            create_buffer(
                 device,
                 size,
                 label_ptr,

@@ -79,7 +79,7 @@ const exportObj = {
   },
   device: {
     create_bind_group() {},
-    create_gpu_buffer() {},
+    create_buffer() {},
   },
   renderbundleencoder: {
     create_renderbundle_encoder() {},

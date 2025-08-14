@@ -11,14 +11,15 @@ use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeL
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
-use crate::gpu::bindgroup_layout::{BindGroupLayout, GPUBufferBindingLayout, JSBindGroupLayout};
+use crate::gpu::bindgroup_layout::{BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout};
 use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::command_encoder::JSCommandEncoder;
+use crate::gpu::renderpass::RenderPassTrait;
 use crate::gpu::shader::{
     SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
     SHADER_STAGE_VERTEX, SHADER_STAGE_VERTEX_AND_FRAGMENT,
 };
-use crate::gpu::renderpass::RenderPassTrait;
+use crate::gpu::texture::JSTexture;
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::{Projection, PROJECTION_BUFFER_SIZE};
@@ -54,18 +55,7 @@ pub unsafe fn create_bind_group(
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
-#[cfg(test)]
-pub unsafe fn create_gpu_buffer(
-    _device: &Resource<JSDevice>,
-    _length: usize,
-    _label: *const usize,
-    _usages: u32,
-    _mapped: bool,
-    _owned_by_js: bool,
-) -> Resource<JSBuffer> {
-    use externref::ExternRef;
-    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
-}
+
 #[cfg(test)]
 pub unsafe fn get_renderpass_descriptor(
     _renderpass: &Resource<JSRenderPass>,
@@ -129,19 +119,10 @@ extern "C" {
         label: *const usize,
         entries: *mut std::slice::Iter<'_, &dyn super::bindgroup_layout::BindingLayout>,
     ) -> Resource<JSBindGroupLayout>;
-    pub fn create_gpu_buffer(
-        device: &Resource<JSDevice>,
-        length: usize,
-        label: *const usize,
-        usages: u32,
-        mapped: bool,
-        owned_by_js: bool,
-    ) -> Resource<JSBuffer>;
     pub fn create_gpu_command_encoder(
         device: &Resource<JSDevice>,
         label: *const usize,
     ) -> Resource<JSCommandEncoder>;
-
 }
 #[cfg(target_arch = "wasm32")]
 #[externref]
@@ -228,9 +209,9 @@ pub unsafe extern "C" fn init_gpu(
     if force || gpu.is_none() {
         // LAYOUT UpdateViewLayout2
         let directional_lights =
-            GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(0, 2, false, 16);
-        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(1, 2, false, 512);
-        let point_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(2, 2, false, 16);
+            GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(0, BufferBindingType::ReadOnlyStorage, false, 16);
+        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(1, BufferBindingType::ReadOnlyStorage, false, 512);
+        let point_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(2, BufferBindingType::ReadOnlyStorage, false, 16);
 
         let update_view_layout = BindGroupLayout::new(
             &device,
@@ -240,7 +221,7 @@ pub unsafe extern "C" fn init_gpu(
 
         // LAYOUT sizeBindGroupLayout
         let screen_dimensions =
-            GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, 0, false, 16);
+            GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, BufferBindingType::Uniform, false, 16);
         let size_bindgroup_layout = BindGroupLayout::new(
             &device,
             String::from("sizeBindGroupLayout"),
@@ -250,7 +231,7 @@ pub unsafe extern "C" fn init_gpu(
         // LAYOUT BindGroupLayoutPosition
         let world = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new(
             0,
-            0,
+            BufferBindingType::Uniform,
             true,
             GPU_MEMORY_INDEX_SIZE as u32,
         );
@@ -258,8 +239,8 @@ pub unsafe extern "C" fn init_gpu(
             BindGroupLayout::new(&device, String::from("BindGroupLayoutPosition"), [&world]);
 
         // LAYOUT UpdateClustersLayout
-        let clusters = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(0, 1, false, 7962624);
-        let view_uniforms = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(1, 0, false, 144);
+        let clusters = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(0, BufferBindingType::Storage, false, 7962624);
+        let view_uniforms = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(1, BufferBindingType::Uniform, false, 144);
         let update_clusters_layout = BindGroupLayout::new(
             &device,
             String::from("UpdateClustersLayout"),
@@ -268,17 +249,17 @@ pub unsafe extern "C" fn init_gpu(
 
         // LAYOUT uniformBindGroupLayoutWithTime
         let clusters_array =
-            GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(0, 2, false, 7962624);
-        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(1, 2, false, 512);
+            GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(0, BufferBindingType::ReadOnlyStorage, false, 7962624);
+        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(1, BufferBindingType::ReadOnlyStorage, false, 512);
         let projection = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(
             2,
-            0,
+            BufferBindingType::Uniform,
             false,
             PROJECTION_BUFFER_SIZE as u32,
         );
         let scene =
-            GPUBufferBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new(3, 0, false, 144);
-        let time = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX>::new(4, 0, false, 4);
+            GPUBufferBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new(3, BufferBindingType::Uniform, false, 144);
+        let time = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX>::new(4, BufferBindingType::Uniform, false, 4);
         let uniform_bind_group_layout_with_time = BindGroupLayout::new(
             &device,
             String::from("uniformBindGroupLayoutWithTime"),
@@ -288,7 +269,7 @@ pub unsafe extern "C" fn init_gpu(
         // LAYOUT clustersLayout
         let screentoview = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
             1,
-            0,
+            BufferBindingType::Uniform,
             false,
             PROJECTION_BUFFER_SIZE as u32,
         );
@@ -523,7 +504,6 @@ impl GPU {
         pipeline: &Resource<JSComputePipeline>,
         device_pixel_ratio: f32,
     ) {
-        
         self.device_pixel_ratio = device_pixel_ratio;
         let mut command_encoder =
             GPUCommandEncoder::new(&self.device, String::from("screen_resize"));

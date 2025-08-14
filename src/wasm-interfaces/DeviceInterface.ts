@@ -2,8 +2,24 @@ import { Rust_Iterator, rust_iterator_to_js, stringFromPtr } from '../utils.js';
 import type { Engine } from '../engine.js';
 import { Externref } from '../externref.js';
 import { BGLayout, ShaderStage } from '../webgpu-ts/index.js';
+import {
+  textureFormatMapping,
+  viewDimensionMapping,
+} from './TextureInterface.js';
 
 declare const engine: Engine;
+const sampleTypeMapping = {
+  0: 'float',
+  1: 'unfilterable-float',
+  2: 'depth',
+  3: 'sint',
+  4: 'uint',
+} as const;
+const bufferBindingTypeMapping = {
+  0: 'uniform',
+  1: 'storage',
+  2: 'read-only-storage',
+} as const;
 export const DeviceExports = {
   create_bind_group(
     { externref: device }: Externref<true, GPUDevice>,
@@ -65,7 +81,7 @@ export const DeviceExports = {
   create_bind_group_layout_entry_buffer(
     binding: number,
     visibility: ShaderStage,
-    type: number, // 0: "uniform" | 1: "storage" |  2: "read-only-storage"
+    type: keyof typeof bufferBindingTypeMapping,
     hasDynamicOffset: number,
     minBindingSize: number,
   ): GPUBindGroupLayoutEntry {
@@ -74,13 +90,29 @@ export const DeviceExports = {
       buffer: {
         hasDynamicOffset: hasDynamicOffset > 0 ? true : false,
         minBindingSize,
-        type:
-          type === 0 ? 'uniform' : type === 1 ? 'storage' : 'read-only-storage',
+        type: bufferBindingTypeMapping[type],
       },
       visibility,
     };
   },
-  create_gpu_buffer(
+  create_bind_group_layout_entry_texture(
+    binding: number,
+    visibility: ShaderStage,
+    sampleType: keyof typeof sampleTypeMapping,
+    viewDimension: keyof typeof viewDimensionMapping,
+    multisampled: number,
+  ): GPUBindGroupLayoutEntry {
+    return {
+      binding,
+      texture: {
+        multisampled: multisampled > 0 ? true : false,
+        sampleType: sampleTypeMapping[sampleType],
+        viewDimension: viewDimensionMapping[viewDimension],
+      },
+      visibility,
+    };
+  },
+  create_buffer(
     { externref: device }: Externref<true, GPUDevice>,
     size: number,
     label_vec_ptr: rust_pointer<'label'>,
@@ -105,5 +137,48 @@ export const DeviceExports = {
   ): GPUCommandEncoder {
     const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
     return device.createCommandEncoder({ label });
+  },
+  create_texture(
+    { externref: device }: Externref<true, GPUDevice>,
+    width: number,
+    height: number,
+    depthOrArrayLayers: number,
+    label_vec_ptr: rust_pointer<'label'>,
+    usage: number,
+    mipLevelCount: number,
+    sampleCount: number,
+    dimension: 1 | 2 | 3,
+    format: keyof typeof textureFormatMapping,
+    viewFormats_ptr: rust_pointer<'viewformats'>,
+  ): GPUTexture {
+    const [ptr, len] = new Uint32Array(
+      engine.rust.memory.buffer,
+      viewFormats_ptr,
+      2,
+    );
+
+    const viewFormats = Array.from(
+      new Uint32Array(engine.rust.memory.buffer, ptr, len),
+    ).map(
+      (mapping) =>
+        textureFormatMapping[mapping as keyof typeof textureFormatMapping],
+    );
+
+    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+
+    return device.createTexture({
+      dimension: (dimension + 'd') as `${typeof dimension}d`,
+      format: textureFormatMapping[format],
+      label,
+      mipLevelCount,
+      sampleCount,
+      size: {
+        depthOrArrayLayers,
+        height,
+        width,
+      },
+      usage,
+      viewFormats,
+    });
   },
 };
