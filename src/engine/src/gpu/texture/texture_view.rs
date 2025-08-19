@@ -3,16 +3,17 @@
 use externref::externref;
 use externref::Resource;
 
-use crate::gpu::texture::texture::{JSTexture};
+use crate::gpu::texture::texture::JSTexture;
 
 #[cfg(test)]
 pub unsafe fn create_texture_view(
     _texture: &Resource<JSTexture>,
-    _label: *mut [usize; 3],
-    _format: TextureFormat,
-    _dimension: TextureViewDimension,
+    _label_ptr: usize,
+    _label_len: usize,
+    _format: super::texture_formats::TextureFormat,
+    _dimension: super::texture::TextureViewDimension,
     _usage: u32,
-    _aspect: TextureAspect,
+    _aspect: super::texture::TextureAspect,
     _baseMipLevel: u32,
     _mipLevelCount: u32,
     _baseArrayLayer: u32,
@@ -29,7 +30,8 @@ pub unsafe fn create_texture_view(
 extern "C" {
     pub fn create_texture_view(
         texture: &Resource<JSTexture>,
-        label: *mut [usize; 3],
+        label_ptr: usize,
+        label_len: usize,
         format: super::texture_formats::TextureFormat,
         dimension: super::texture::TextureViewDimension,
         usage: u32,

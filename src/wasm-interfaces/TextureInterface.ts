@@ -1,6 +1,7 @@
-import { stringFromPtr } from '../utils.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
+
+const textDecoder = new TextDecoder();
 
 export const textureFormatMapping = [
   'r8unorm',
@@ -118,9 +119,10 @@ export const viewDimensionMapping = [
 const textureAspectMapping = ['all', 'stencil-only', 'depth-only'] as const;
 
 export const TextureExports = {
-  create_view(
+  create_texture_view(
     texture: GPUTexture,
-    label_vec_ptr: rust_pointer<'label'>,
+    label_ptr: number,
+    label_len: number,
     format: number,
     dimension: number,
     usage: number,
@@ -130,8 +132,9 @@ export const TextureExports = {
     baseArrayLayer: number,
     arrayLayerCount: number,
   ): GPUTextureView {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
-
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
     return texture.createView({
       arrayLayerCount,
       aspect: textureAspectMapping[aspect]!,

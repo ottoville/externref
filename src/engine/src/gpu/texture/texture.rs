@@ -75,11 +75,6 @@ extern "C" {
     ) -> Resource<JSTexture>;
 
 }
-
-thread_local! {
-    static LABEL:Cell<[usize; 3]> = const { Cell::new([0;3]) };
-}
-
 pub struct Texture<
     F: TextureFormatTrait,
     VF,
@@ -223,12 +218,11 @@ where
         base_array_layer: u32,
         array_layer_count: u32,
     ) -> TextureView {
-        LABEL.set([label.as_ptr() as usize, label.len(), label.capacity()]);
-        let label_ptr = LABEL.with(|l| l.as_ptr());
         let externref = unsafe {
             create_texture_view(
                 &self.externref,
-                label_ptr,
+                label.as_ptr() as usize,
+                label.len(),
                 format,
                 dimension,
                 usage,
