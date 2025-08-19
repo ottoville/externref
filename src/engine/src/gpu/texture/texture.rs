@@ -33,6 +33,26 @@ pub enum TextureAspect {
 }
 pub struct JSTexture(());
 
+#[cfg(test)]
+pub unsafe fn create_texture(
+    _device: &Resource<JSDevice>,
+    _width: usize,
+    _height: usize,
+    _depth_or_array_layers: usize,
+    _label_ptr: usize,
+    _label_len: usize,
+    _usages: u32,
+    _mip_level_count: u32,
+    _sample_count: u32,
+    _dimension: u32,
+    _format: TextureFormat,
+    _viewformats_ptr: usize,
+    _viewformats_len: usize,
+) -> Resource<JSTexture> {
+    use externref::ExternRef;
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
+}
+
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "device")]
@@ -43,7 +63,8 @@ extern "C" {
         width: usize,
         height: usize,
         depthOrArrayLayers: usize,
-        label: *mut [usize; 3],
+        label_ptr: usize,
+        label_len: usize,
         usages: u32,
         mipLevelCount: u32,
         sampleCount: u32,
@@ -166,15 +187,14 @@ where
         sample_count: u32,
         view_formats: [VF; N],
     ) -> Self {
-        LABEL.set([label.as_ptr() as usize, label.len(), label.capacity()]);
-        let label_ptr = LABEL.with(|l| l.as_ptr());
         let externref = unsafe {
             create_texture(
                 device,
                 width,
                 height,
                 depth_or_array_layers,
-                label_ptr,
+                label.as_ptr() as usize,
+                label.len(),
                 Self::usages(),
                 mip_level_count,
                 sample_count,

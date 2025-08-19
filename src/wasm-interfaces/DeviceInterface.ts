@@ -8,6 +8,9 @@ import {
 } from './TextureInterface.js';
 
 declare const engine: Engine;
+
+const textDecoder = new TextDecoder();
+
 const sampleTypeMapping = {
   0: 'float',
   1: 'unfilterable-float',
@@ -143,7 +146,8 @@ export const DeviceExports = {
     width: number,
     height: number,
     depthOrArrayLayers: number,
-    label_vec_ptr: rust_pointer<'label'>,
+    label_ptr: number,
+    label_len: number,
     usage: number,
     mipLevelCount: number,
     sampleCount: number,
@@ -159,8 +163,9 @@ export const DeviceExports = {
         viewformats_len,
       ),
     ).map((mapping) => textureFormatMapping[mapping]!);
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
-
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
     return device.createTexture({
       dimension: (dimension + 'd') as `${typeof dimension}d`,
       format: textureFormatMapping[format]!,
