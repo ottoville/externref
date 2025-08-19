@@ -99,7 +99,7 @@ export const DeviceExports = {
     binding: number,
     visibility: ShaderStage,
     sampleType: keyof typeof sampleTypeMapping,
-    viewDimension: keyof typeof viewDimensionMapping,
+    viewDimension: number,
     multisampled: number,
   ): GPUBindGroupLayoutEntry {
     return {
@@ -107,7 +107,7 @@ export const DeviceExports = {
       texture: {
         multisampled: multisampled > 0 ? true : false,
         sampleType: sampleTypeMapping[sampleType],
-        viewDimension: viewDimensionMapping[viewDimension],
+        viewDimension: viewDimensionMapping[viewDimension]!,
       },
       visibility,
     };
@@ -148,27 +148,22 @@ export const DeviceExports = {
     mipLevelCount: number,
     sampleCount: number,
     dimension: 1 | 2 | 3,
-    format: keyof typeof textureFormatMapping,
-    viewFormats_ptr: rust_pointer<'viewformats'>,
+    format: number,
+    viewformats_ptr: number,
+    viewformats_len: number,
   ): GPUTexture {
-    const [ptr, len] = new Uint32Array(
-      engine.rust.memory.buffer,
-      viewFormats_ptr,
-      2,
-    );
-
     const viewFormats = Array.from(
-      new Uint32Array(engine.rust.memory.buffer, ptr, len),
-    ).map(
-      (mapping) =>
-        textureFormatMapping[mapping as keyof typeof textureFormatMapping],
-    );
-
+      new Uint8Array(
+        engine.rust.memory.buffer,
+        viewformats_ptr,
+        viewformats_len,
+      ),
+    ).map((mapping) => textureFormatMapping[mapping]!);
     const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
 
     return device.createTexture({
       dimension: (dimension + 'd') as `${typeof dimension}d`,
-      format: textureFormatMapping[format],
+      format: textureFormatMapping[format]!,
       label,
       mipLevelCount,
       sampleCount,

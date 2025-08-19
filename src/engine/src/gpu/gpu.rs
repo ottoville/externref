@@ -11,7 +11,9 @@ use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeL
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
-use crate::gpu::bindgroup_layout::{BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout};
+use crate::gpu::bindgroup_layout::{
+    BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
+};
 use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::command_encoder::JSCommandEncoder;
 use crate::gpu::renderpass::RenderPassTrait;
@@ -19,7 +21,8 @@ use crate::gpu::shader::{
     SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
     SHADER_STAGE_VERTEX, SHADER_STAGE_VERTEX_AND_FRAGMENT,
 };
-use crate::gpu::texture::JSTexture;
+use crate::gpu::texture::texture::Texture;
+use crate::gpu::texture::texture_formats::{TextureFormat, BGRA8UNORM};
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::{Projection, PROJECTION_BUFFER_SIZE};
@@ -208,10 +211,24 @@ pub unsafe extern "C" fn init_gpu(
     let mut gpu = ENGINE.gpu.lock().unwrap();
     if force || gpu.is_none() {
         // LAYOUT UpdateViewLayout2
-        let directional_lights =
-            GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(0, BufferBindingType::ReadOnlyStorage, false, 16);
-        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(1, BufferBindingType::ReadOnlyStorage, false, 512);
-        let point_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(2, BufferBindingType::ReadOnlyStorage, false, 16);
+        let directional_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+            0,
+            BufferBindingType::ReadOnlyStorage,
+            false,
+            16,
+        );
+        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+            1,
+            BufferBindingType::ReadOnlyStorage,
+            false,
+            512,
+        );
+        let point_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+            2,
+            BufferBindingType::ReadOnlyStorage,
+            false,
+            16,
+        );
 
         let update_view_layout = BindGroupLayout::new(
             &device,
@@ -220,8 +237,12 @@ pub unsafe extern "C" fn init_gpu(
         );
 
         // LAYOUT sizeBindGroupLayout
-        let screen_dimensions =
-            GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(0, BufferBindingType::Uniform, false, 16);
+        let screen_dimensions = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+            0,
+            BufferBindingType::Uniform,
+            false,
+            16,
+        );
         let size_bindgroup_layout = BindGroupLayout::new(
             &device,
             String::from("sizeBindGroupLayout"),
@@ -239,8 +260,18 @@ pub unsafe extern "C" fn init_gpu(
             BindGroupLayout::new(&device, String::from("BindGroupLayoutPosition"), [&world]);
 
         // LAYOUT UpdateClustersLayout
-        let clusters = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(0, BufferBindingType::Storage, false, 7962624);
-        let view_uniforms = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(1, BufferBindingType::Uniform, false, 144);
+        let clusters = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+            0,
+            BufferBindingType::Storage,
+            false,
+            7962624,
+        );
+        let view_uniforms = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+            1,
+            BufferBindingType::Uniform,
+            false,
+            144,
+        );
         let update_clusters_layout = BindGroupLayout::new(
             &device,
             String::from("UpdateClustersLayout"),
@@ -248,18 +279,36 @@ pub unsafe extern "C" fn init_gpu(
         );
 
         // LAYOUT uniformBindGroupLayoutWithTime
-        let clusters_array =
-            GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(0, BufferBindingType::ReadOnlyStorage, false, 7962624);
-        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(1, BufferBindingType::ReadOnlyStorage, false, 512);
+        let clusters_array = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(
+            0,
+            BufferBindingType::ReadOnlyStorage,
+            false,
+            7962624,
+        );
+        let meshes = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(
+            1,
+            BufferBindingType::ReadOnlyStorage,
+            false,
+            512,
+        );
         let projection = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(
             2,
             BufferBindingType::Uniform,
             false,
             PROJECTION_BUFFER_SIZE as u32,
         );
-        let scene =
-            GPUBufferBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new(3, BufferBindingType::Uniform, false, 144);
-        let time = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX>::new(4, BufferBindingType::Uniform, false, 4);
+        let scene = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new(
+            3,
+            BufferBindingType::Uniform,
+            false,
+            144,
+        );
+        let time = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX>::new(
+            4,
+            BufferBindingType::Uniform,
+            false,
+            4,
+        );
         let uniform_bind_group_layout_with_time = BindGroupLayout::new(
             &device,
             String::from("uniformBindGroupLayoutWithTime"),
@@ -329,6 +378,16 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("screen_dimension_buffer"),
                 false,
             );
+        let screen_render_target = Texture::<BGRA8UNORM, TextureFormat, 2, false, false, true, false, true>::new(
+            &device,
+            300,
+            300,
+            1,
+            String::from("diffuseTexture"),
+            1,
+            1,
+            [TextureFormat::BGRA8UNORM],
+        );
         let render_pass_screen = Renderpass {
             label: String::from("renderPassScreen"),
             size: [NonZeroU32::new_unchecked(1); 2],
@@ -347,6 +406,7 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
+            render_targets: vec![Box::new(screen_render_target)],
         };
         let screen_dimension_buffer_screen_water =
             GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -377,6 +437,7 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
+            render_targets: Vec::new(),
         };
         let screen_dimension_buffer_screen_pick =
             GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -404,6 +465,7 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
+            render_targets: Vec::new(),
         };
         let render_pass_canvas = Renderpass {
             label: String::from("renderPassCanvas"),
@@ -412,6 +474,7 @@ pub unsafe extern "C" fn init_gpu(
             jsrenderpass: js_render_pass_canvas,
             bundle: None,
             cameragroups: Vec::new(),
+            render_targets: Vec::new(),
         };
         let _ = gpu.insert(GPU {
             device,
