@@ -5,10 +5,7 @@ use std::{cell::RefCell, sync::Arc};
 use externref::externref;
 use externref::Resource;
 
-use crate::gpu::{
-    gpu::{create_bind_group_layout, JSDevice},
-    texture::TextureViewDimension,
-};
+use crate::gpu::{gpu::{create_bind_group_layout, JSDevice}, texture::texture::TextureViewDimension};
 
 thread_local! {
     static LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };

@@ -11,7 +11,7 @@ use terramath::VectorMath;
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
-    gpu::{compute_pass_encoder::JSComputePipeline, gpu::GPU, queue::Queue},
+    gpu::{compute_pass_encoder::JSComputePipeline, gpu::GPU, queue::Queue, texture::render_attachment_texture::RenderAttachmentTexture},
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
@@ -72,6 +72,7 @@ pub struct Renderpass {
     pub label: String,
     pub size: [NonZeroU32; 2],
     pub size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
+    pub render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>>,
 }
 pub trait RenderPassTrait {
     fn cameragroups(&mut self) -> &mut Vec<CameraGroup>;
