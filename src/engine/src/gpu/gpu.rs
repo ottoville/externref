@@ -378,7 +378,7 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("screen_dimension_buffer"),
                 false,
             );
-        let screen_render_target = Texture::<BGRA8UNORM, TextureFormat, 2, false, false, true, false, true>::new(
+        let screen_render_target = Texture::<BGRA8UNORM, 2, false, false, true, false, true>::new(
             &device,
             300,
             300,
@@ -386,7 +386,6 @@ pub unsafe extern "C" fn init_gpu(
             String::from("diffuseTexture"),
             1,
             1,
-            [TextureFormat::BGRA8UNORM],
         );
         let render_pass_screen = Renderpass {
             label: String::from("renderPassScreen"),

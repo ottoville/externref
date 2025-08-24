@@ -11,18 +11,18 @@ declare const engine: Engine;
 
 const textDecoder = new TextDecoder();
 
-const sampleTypeMapping = {
-  0: 'float',
-  1: 'unfilterable-float',
-  2: 'depth',
-  3: 'sint',
-  4: 'uint',
-} as const;
-const bufferBindingTypeMapping = {
-  0: 'uniform',
-  1: 'storage',
-  2: 'read-only-storage',
-} as const;
+const sampleTypeMapping = [
+  'float',
+  'unfilterable-float',
+  'depth',
+  'sint',
+  'uint',
+] as const;
+const bufferBindingTypeMapping = [
+  'uniform',
+  'storage',
+  'read-only-storage',
+] as const;
 export const DeviceExports = {
   create_bind_group(
     { externref: device }: Externref<true, GPUDevice>,
@@ -84,7 +84,7 @@ export const DeviceExports = {
   create_bind_group_layout_entry_buffer(
     binding: number,
     visibility: ShaderStage,
-    type: keyof typeof bufferBindingTypeMapping,
+    type: number,
     hasDynamicOffset: number,
     minBindingSize: number,
   ): GPUBindGroupLayoutEntry {
@@ -93,7 +93,7 @@ export const DeviceExports = {
       buffer: {
         hasDynamicOffset: hasDynamicOffset > 0 ? true : false,
         minBindingSize,
-        type: bufferBindingTypeMapping[type],
+        type: bufferBindingTypeMapping[type]!,
       },
       visibility,
     };
@@ -101,7 +101,7 @@ export const DeviceExports = {
   create_bind_group_layout_entry_texture(
     binding: number,
     visibility: ShaderStage,
-    sampleType: keyof typeof sampleTypeMapping,
+    sampleType: number,
     viewDimension: number,
     multisampled: number,
   ): GPUBindGroupLayoutEntry {
@@ -109,7 +109,7 @@ export const DeviceExports = {
       binding,
       texture: {
         multisampled: multisampled > 0 ? true : false,
-        sampleType: sampleTypeMapping[sampleType],
+        sampleType: sampleTypeMapping[sampleType]!,
         viewDimension: viewDimensionMapping[viewDimension]!,
       },
       visibility,
@@ -118,12 +118,15 @@ export const DeviceExports = {
   create_buffer(
     { externref: device }: Externref<true, GPUDevice>,
     size: number,
-    label_vec_ptr: rust_pointer<'label'>,
+    label_ptr: number,
+    label_len: number,
     usage: number,
     mappedAtCreation: boolean,
     ownedByJS: boolean,
   ) {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
     return new Externref(
       ownedByJS,
       device.createBuffer({
@@ -157,7 +160,7 @@ export const DeviceExports = {
     viewformats_len: number,
   ): GPUTexture {
     const viewFormats = Array.from(
-      new Uint8Array(
+      new Uint32Array(
         engine.rust.memory.buffer,
         viewformats_ptr,
         viewformats_len,

@@ -1,4 +1,3 @@
-use std::cell::{Cell};
 use std::sync::Arc;
 use std::sync::{Mutex, Weak};
 
@@ -9,18 +8,14 @@ use crate::gpu::bufferbinding::BufferBinding;
 use crate::gpu::gpu::JSDevice;
 use crate::gpu::renderbundle::RenderBundle;
 
-thread_local! {
-    static LABEL:Cell<[usize; 3]> = const { Cell::new([0;3]) };
-}
-
 pub struct JSBuffer(());
-
 
 #[cfg(test)]
 pub unsafe fn create_buffer(
     _device: &Resource<JSDevice>,
     _length: usize,
-    _label: *mut [usize; 3],
+    _label_ptr: usize,
+    _label_len: usize,
     _usages: u32,
     _mapped: bool,
     _owned_by_js: bool,
@@ -37,7 +32,8 @@ extern "C" {
     pub fn create_buffer(
         device: &Resource<JSDevice>,
         length: usize,
-        label: *mut [usize; 3],
+        label_ptr: usize,
+        label_len: usize,
         usages: u32,
         mapped: bool,
         owned_by_js: bool,
@@ -147,17 +143,16 @@ impl<
         owned_by_js: bool,
         mapped: bool,
     ) -> Self {
-        LABEL.set([
-            label.as_ptr() as usize,
-            label.len(),
-            label.capacity()
-        ]);
-        let label_ptr = LABEL.with(|l| {
-            l.as_ptr()
-        });
-
         let externref = unsafe {
-            create_buffer(device, size, label_ptr, Self::usages(), mapped, owned_by_js)
+            create_buffer(
+                device,
+                size,
+                label.as_ptr() as usize,
+                label.len(),
+                Self::usages(),
+                mapped,
+                owned_by_js,
+            )
         };
         GPUBuffer {
             externref: Arc::new(externref),
@@ -225,20 +220,12 @@ impl<
     }
     pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: usize) {
         self.size = size;
-
-        LABEL.set([
-            self.label.as_ptr() as usize,
-            self.label.len(),
-            self.label.capacity()
-        ]);
-        let label_ptr = LABEL.with(|l| {
-            l.as_ptr()
-        });
         self.externref = Arc::new(unsafe {
             create_buffer(
                 device,
                 size,
-                label_ptr,
+                self.label.as_ptr() as usize,
+                self.label.len(),
                 Self::usages(),
                 false,
                 self.owned_by_js,

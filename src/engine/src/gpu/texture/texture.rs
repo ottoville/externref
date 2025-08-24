@@ -1,4 +1,4 @@
-use std::{cell::Cell, marker::PhantomData};
+use std::marker::PhantomData;
 
 #[cfg(any(not(test), rust_analyzer))]
 #[cfg(target_arch = "wasm32")]
@@ -8,7 +8,7 @@ use externref::Resource;
 use crate::gpu::{
     gpu::JSDevice,
     texture::{
-        texture_formats::{TextureFormat, TextureFormatTrait},
+        texture_formats::{TextureFormat, TextureFormatSRGB},
         texture_view::{create_texture_view, TextureView},
     },
 };
@@ -45,7 +45,7 @@ pub unsafe fn create_texture(
     _mip_level_count: u32,
     _sample_count: u32,
     _dimension: u32,
-    _format: TextureFormat,
+    _format: u32,
     _viewformats_ptr: usize,
     _viewformats_len: usize,
 ) -> Resource<JSTexture> {
@@ -69,87 +69,72 @@ extern "C" {
         mipLevelCount: u32,
         sampleCount: u32,
         dimension: u32,
-        format: TextureFormat,
+        format: u32,
         viewformats_ptr: usize,
         viewformats_len: usize,
     ) -> Resource<JSTexture>;
 
 }
 pub struct Texture<
-    F: TextureFormatTrait,
-    VF,
+    F: TextureFormat,
     const DIMENSION: u32,
     const COPY_SRC: bool = false,
     const COPY_DST: bool = false,
     const TEXTURE_BINDING: bool = false,
     const STORAGE_BINDING: bool = false,
     const RENDER_ATTACHMENT: bool = false,
+    const srgb_multiview: bool = false,
 > {
     externref: Resource<JSTexture>,
     label: String,
     format: PhantomData<F>,
-    view_formats: PhantomData<VF>,
 }
 
 pub trait TextureDimensionTrait {}
 
 impl<
-        F: TextureFormatTrait,
-        VF,
+        F: TextureFormat,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
     > TextureDimensionTrait
-    for Texture<F, VF, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
+    for Texture<F, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
 {
 }
 impl<
-        F: TextureFormatTrait,
-        VF,
+        F: TextureFormat,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
     > TextureDimensionTrait
-    for Texture<F, VF, 2, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
+    for Texture<F, 2, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
 {
 }
 
 impl<
-        F: TextureFormatTrait,
-        VF,
+        F: TextureFormat,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
     > TextureDimensionTrait
-    for Texture<F, VF, 3, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
+    for Texture<F, 3, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
 {
 }
 impl<
-        F: TextureFormatTrait,
-        VF,
+        F: TextureFormat,
         const DIMENSION: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
-    >
-    Texture<
-        F,
-        VF,
-        DIMENSION,
-        COPY_SRC,
-        COPY_DST,
-        TEXTURE_BINDING,
-        STORAGE_BINDING,
-        RENDER_ATTACHMENT,
-    >
+    > Texture<F, DIMENSION, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
 where
     Self: TextureDimensionTrait,
 {
@@ -172,7 +157,7 @@ where
         }
         return usages;
     }
-    pub fn new<const N: usize>(
+    pub fn new(
         device: &Resource<JSDevice>,
         width: usize,
         height: usize,
@@ -180,7 +165,6 @@ where
         label: String,
         mip_level_count: u32,
         sample_count: u32,
-        view_formats: [VF; N],
     ) -> Self {
         let externref = unsafe {
             create_texture(
@@ -195,21 +179,64 @@ where
                 sample_count,
                 DIMENSION,
                 F::to_number(),
-                view_formats.as_ptr() as usize,
-                N,
+                0,
+                0,
             )
         };
         Texture {
             label,
             externref,
             format: PhantomData,
-            view_formats: PhantomData,
+        }
+    }
+    pub fn new_with_srgb_multiview(
+        device: &Resource<JSDevice>,
+        width: usize,
+        height: usize,
+        depth_or_array_layers: usize,
+        label: String,
+        mip_level_count: u32,
+        sample_count: u32,
+    ) -> Texture<
+        F,
+        DIMENSION,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+        true,
+    >
+    where
+        F: TextureFormatSRGB,
+    {
+        let variants = [F::to_number(), F::to_srgb()];
+        let externref = unsafe {
+            create_texture(
+                device,
+                width,
+                height,
+                depth_or_array_layers,
+                label.as_ptr() as usize,
+                label.len(),
+                Self::usages(),
+                mip_level_count,
+                sample_count,
+                DIMENSION,
+                F::to_number(),
+                variants.as_ptr() as usize,
+                variants.len(),
+            )
+        };
+        Texture {
+            label,
+            externref,
+            format: PhantomData,
         }
     }
     pub fn create_view(
         &self,
         label: String,
-        format: TextureFormat,
         dimension: TextureViewDimension,
         usage: u32,
         aspect: TextureAspect,
@@ -223,7 +250,57 @@ where
                 &self.externref,
                 label.as_ptr() as usize,
                 label.len(),
-                format,
+                F::to_number(),
+                dimension,
+                usage,
+                aspect,
+                base_mip_level,
+                mip_level_count,
+                base_array_layer,
+                array_layer_count,
+            )
+        };
+        return TextureView { externref };
+    }
+}
+
+impl<
+        F: TextureFormatSRGB,
+        const DIMENSION: u32,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const TEXTURE_BINDING: bool,
+        const STORAGE_BINDING: bool,
+        const RENDER_ATTACHMENT: bool,
+    >
+    Texture<
+        F,
+        DIMENSION,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+        true,
+    >
+{
+    pub fn create_srgb_view(
+        &self,
+        label: String,
+        dimension: TextureViewDimension,
+        usage: u32,
+        aspect: TextureAspect,
+        base_mip_level: u32,
+        mip_level_count: u32,
+        base_array_layer: u32,
+        array_layer_count: u32,
+    ) -> TextureView {
+        let externref = unsafe {
+            create_texture_view(
+                &self.externref,
+                label.as_ptr() as usize,
+                label.len(),
+                F::to_srgb(),
                 dimension,
                 usage,
                 aspect,

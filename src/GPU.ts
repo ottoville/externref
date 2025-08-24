@@ -135,19 +135,6 @@ export class GPU {
   readonly updateViewShader: UpdateView;
   destroyed = false;
   fps = 0;
-  screenRenderTargets: {
-    gRenderTargetDiffuse: MSAARenderTarget<
-      RenderpassTarget<
-        RenderpassTargetOptions<
-          RenderpassTargetTextureParams<
-            RENDER_TARGET_FORMAT,
-            Exclude<RENDER_TARGET_TEXTURE, STORAGE_BINDING_TEXTURE> &
-              TEXTURE_BINDING_TEXTURE
-          >
-        >
-      >
-    >;
-  };
   shaders: ReturnType<typeof createShaderBuilders>;
   pipelineLayouts: ReturnType<typeof createPipelineLayouts>;
   meshUniforms: Struct<{
@@ -354,7 +341,7 @@ export class GPU {
       rootLayout: this.pipelineLayouts.rootCameralayout,
       sampleCount: 1,
     });
-    this.screenRenderTargets = {
+    const screenRenderTargets = {
       gRenderTargetDiffuse: new MSAARenderTarget(
         {
           context: {
@@ -399,7 +386,7 @@ export class GPU {
 
     this.renderPassScreen = new PickableRenderPassMSAA(
       {
-        colorRenderTargets: this.screenRenderTargets,
+        colorRenderTargets: screenRenderTargets,
         entryPoint: 'main',
         id: 0,
         label: 'renderPassScreen',

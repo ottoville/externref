@@ -10,14 +10,14 @@ pub unsafe fn create_texture_view(
     _texture: &Resource<JSTexture>,
     _label_ptr: usize,
     _label_len: usize,
-    _format: super::texture_formats::TextureFormat,
+    _format: u32,
     _dimension: super::texture::TextureViewDimension,
     _usage: u32,
     _aspect: super::texture::TextureAspect,
-    _baseMipLevel: u32,
-    _mipLevelCount: u32,
-    _baseArrayLayer: u32,
-    _arrayLayerCount: u32,
+    _base_mip_level: u32,
+    _mip_level_count: u32,
+    _base_array_layer: u32,
+    _array_layer_count: u32,
 ) -> Resource<JSTextureView> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
@@ -32,7 +32,7 @@ extern "C" {
         texture: &Resource<JSTexture>,
         label_ptr: usize,
         label_len: usize,
-        format: super::texture_formats::TextureFormat,
+        format: u32,
         dimension: super::texture::TextureViewDimension,
         usage: u32,
         aspect: super::texture::TextureAspect,
