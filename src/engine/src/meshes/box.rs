@@ -170,6 +170,7 @@ fn test_calculate_normals() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         )
     };
     let mut geometry = Geometry::new(true, false, false, "box_geometry".to_string());

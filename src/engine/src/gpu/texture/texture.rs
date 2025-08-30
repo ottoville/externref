@@ -73,17 +73,18 @@ extern "C" {
         viewformats_ptr: usize,
         viewformats_len: usize,
     ) -> Resource<JSTexture>;
-
 }
+
 pub struct Texture<
     F: TextureFormat,
     const DIMENSION: u32,
+    const SAMPLE_COUNT: u32,
     const COPY_SRC: bool = false,
     const COPY_DST: bool = false,
     const TEXTURE_BINDING: bool = false,
     const STORAGE_BINDING: bool = false,
     const RENDER_ATTACHMENT: bool = false,
-    const srgb_multiview: bool = false,
+    const SRGB_MULTIVIEW: bool = false,
 > {
     externref: Resource<JSTexture>,
     label: String,
@@ -99,19 +100,42 @@ impl<
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
+        const SRGB_MULTIVIEW: bool,
     > TextureDimensionTrait
-    for Texture<F, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
+    for Texture<
+        F,
+        1,
+        1,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+        SRGB_MULTIVIEW,
+    >
 {
 }
 impl<
         F: TextureFormat,
+        const SAMPLE_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
+        const SRGB_MULTIVIEW: bool,
     > TextureDimensionTrait
-    for Texture<F, 2, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
+    for Texture<
+        F,
+        2,
+        SAMPLE_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+        SRGB_MULTIVIEW,
+    >
 {
 }
 
@@ -123,18 +147,31 @@ impl<
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
     > TextureDimensionTrait
-    for Texture<F, 3, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
+    for Texture<F, 3, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
 {
 }
 impl<
         F: TextureFormat,
         const DIMENSION: u32,
+        const SAMPLE_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
-    > Texture<F, DIMENSION, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
+        const SRGB_MULTIVIEW: bool,
+    >
+    Texture<
+        F,
+        DIMENSION,
+        SAMPLE_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+        SRGB_MULTIVIEW,
+    >
 where
     Self: TextureDimensionTrait,
 {
@@ -164,7 +201,6 @@ where
         depth_or_array_layers: usize,
         label: String,
         mip_level_count: u32,
-        sample_count: u32,
     ) -> Self {
         let externref = unsafe {
             create_texture(
@@ -176,7 +212,7 @@ where
                 label.len(),
                 Self::usages(),
                 mip_level_count,
-                sample_count,
+                SAMPLE_COUNT,
                 DIMENSION,
                 F::to_number(),
                 0,
@@ -189,17 +225,17 @@ where
             format: PhantomData,
         }
     }
-    pub fn new_with_srgb_multiview(
+    pub fn new_with_srgb_multiview<VF: TextureFormat>(
         device: &Resource<JSDevice>,
         width: usize,
         height: usize,
         depth_or_array_layers: usize,
         label: String,
         mip_level_count: u32,
-        sample_count: u32,
     ) -> Texture<
         F,
         DIMENSION,
+        SAMPLE_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
@@ -208,7 +244,7 @@ where
         true,
     >
     where
-        F: TextureFormatSRGB,
+        F: TextureFormatSRGB<VF>,
     {
         let variants = [F::to_number(), F::to_srgb()];
         let externref = unsafe {
@@ -221,7 +257,7 @@ where
                 label.len(),
                 Self::usages(),
                 mip_level_count,
-                sample_count,
+                SAMPLE_COUNT,
                 DIMENSION,
                 F::to_number(),
                 variants.as_ptr() as usize,
@@ -244,7 +280,7 @@ where
         mip_level_count: u32,
         base_array_layer: u32,
         array_layer_count: u32,
-    ) -> TextureView {
+    ) -> TextureView<F> {
         let externref = unsafe {
             create_texture_view(
                 &self.externref,
@@ -260,13 +296,17 @@ where
                 array_layer_count,
             )
         };
-        return TextureView { externref };
+        return TextureView {
+            externref,
+            format: PhantomData,
+        };
     }
 }
 
 impl<
-        F: TextureFormatSRGB,
+        F: TextureFormat,
         const DIMENSION: u32,
+        const SAMPLE_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
@@ -276,6 +316,7 @@ impl<
     Texture<
         F,
         DIMENSION,
+        SAMPLE_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
@@ -284,7 +325,7 @@ impl<
         true,
     >
 {
-    pub fn create_srgb_view(
+    pub fn create_srgb_view<VF: TextureFormat>(
         &self,
         label: String,
         dimension: TextureViewDimension,
@@ -294,7 +335,10 @@ impl<
         mip_level_count: u32,
         base_array_layer: u32,
         array_layer_count: u32,
-    ) -> TextureView {
+    ) -> TextureView<VF>
+    where
+        F: TextureFormatSRGB<VF>,
+    {
         let externref = unsafe {
             create_texture_view(
                 &self.externref,
@@ -310,6 +354,9 @@ impl<
                 array_layer_count,
             )
         };
-        return TextureView { externref };
+        return TextureView {
+            externref,
+            format: PhantomData,
+        };
     }
 }

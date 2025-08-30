@@ -160,6 +160,7 @@ fn test_icosphere() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
         let geometry = create_icosphere_geometry(1);
         assert_eq!(

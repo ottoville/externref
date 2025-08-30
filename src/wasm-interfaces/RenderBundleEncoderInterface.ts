@@ -2,17 +2,29 @@ import { Externref } from 'externref.js';
 import { stringFromPtr } from '../utils.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
+const textDecoder = new TextDecoder();
 
 export const RenderbundleEncoderInterface = {
   create_renderbundle_encoder(
     device: Externref<true, GPUDevice>,
     // TODO pass individual params of descriptor
     descriptor: GPURenderBundleEncoderDescriptor,
-    label_vec_ptr: rust_pointer<'label'>,
+    label_ptr: number,
+    label_len: number,
+    sampleCount: number,
+    depthReadOnly: boolean,
+    stencilReadOnly: boolean,
   ) {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
-
-    return device.externref.createRenderBundleEncoder({ ...descriptor, label });
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
+    return device.externref.createRenderBundleEncoder({
+      ...descriptor,
+      depthReadOnly,
+      label,
+      sampleCount,
+      stencilReadOnly,
+    });
   },
 
   do_record(

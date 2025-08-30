@@ -28,7 +28,8 @@ import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 import { RenderPassEncoderInterface } from './wasm-interfaces/RenderPassEncoder.js';
 import { RenderCommandsInterface } from './wasm-interfaces/RenderCommandsInterface.js';
 import { serialize_terrain } from './world/Terrain.js';
-import { TextureExports } from './wasm-interfaces/TextureInterface.js';
+import { TextureInterface } from './wasm-interfaces/TextureInterface.js';
+import { CanvasInterface } from './wasm-interfaces/CanvasInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -349,6 +350,7 @@ export type rustWasm = {
     renderPassWater: RenderPass,
     renderPassCanvas: RenderPass,
     pickRenderPass: RenderPass,
+    canvas: HTMLCanvasElement,
   ): number;
   push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
   drain_command_buffers(
@@ -441,6 +443,8 @@ export type rustWasm = {
       bind_group_position: rust_pointer<'bind_group_position'>,
       bindgroup_start_index: number,
     ) => void,
+    depth_read_only: boolean,
+    stencil_read_only: boolean,
   ): rust_pointer<'renderbundleencoder'>;
   renderbundle_set_bindgroup(
     renderbundle: rust_pointer<'renderbundleencoder'>,
@@ -769,6 +773,7 @@ export class Engine {
       bindcommands: BindCommandsInterface,
       buffer: BufferExports,
       camera: CameraInterface,
+      canvas: CanvasInterface,
       commandencoder: CommandEncoderInterface,
       computepassencoder: ComputePassEncoderInterface,
       console: {
@@ -889,7 +894,7 @@ export class Engine {
       renderbundleencoder: RenderbundleEncoderInterface,
       rendercommands: RenderCommandsInterface,
       renderpassencoder: RenderPassEncoderInterface,
-      texture: TextureExports,
+      texture: TextureInterface,
     };
     try {
       if (

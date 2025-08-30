@@ -87,6 +87,7 @@ fn test_lights() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0));
         let mut lights = Lights::new(&device, String::from("GPUPointLights"));

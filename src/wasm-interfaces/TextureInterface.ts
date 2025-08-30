@@ -118,7 +118,7 @@ export const viewDimensionMapping = [
 
 const textureAspectMapping = ['all', 'stencil-only', 'depth-only'] as const;
 
-export const TextureExports = {
+export const TextureInterface = {
   create_texture_view(
     texture: GPUTexture,
     label_ptr: number,

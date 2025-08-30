@@ -69,7 +69,6 @@ export class RenderPass<
         colorFormats: Object.values(this.props.colorRenderTargets).map((rt) => {
           return rt.renderTargetOptions.context.format;
         }),
-        sampleCount: this.props.sampleCount ?? 1,
         ...GPURenderBundleEncoderDescriptor,
       },
       (
@@ -99,6 +98,8 @@ export class RenderPass<
           },
         });
       },
+      false,
+      false,
     );
   }
   resize(width: number, height: number) {

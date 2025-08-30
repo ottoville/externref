@@ -16,3 +16,4 @@ pub mod externref_trait;
 pub mod bindgroup_layout;
 pub mod shader;
 pub mod texture;
+pub mod canvas;

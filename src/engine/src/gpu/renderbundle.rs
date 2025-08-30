@@ -32,7 +32,11 @@ pub struct JSRenderBundle(());
 unsafe fn create_renderbundle_encoder(
     _device: &Resource<JSDevice>,
     _descriptor: &Resource<JSRenderBundleDescriptor>,
-    _label: *const usize,
+    _label_ptr: usize,
+    _label_len: usize,
+    _samplecount: u32,
+    _depth_read_only: bool,
+    _stencil_read_only: bool,
 ) -> Resource<JSRenderBundleEncoder> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
@@ -64,7 +68,11 @@ extern "C" {
     fn create_renderbundle_encoder(
         device: &Resource<JSDevice>,
         descriptor: &Resource<JSRenderBundleDescriptor>,
-        label: *const usize,
+        label_ptr: usize,
+        label_len: usize,
+        samplecount: u32,
+        _depth_read_only: bool,
+        _stencil_read_only: bool,
     ) -> Resource<JSRenderBundleEncoder>;
     fn finish(
         //TODO: take ownership of encoder
@@ -144,6 +152,10 @@ pub struct RenderBundleEncoder {
     pub buffers: Vec<Arc<Resource<JSBuffer>>>,
     label: String,
     record: Resource<JSFunction>,
+    samplecount: u32,
+    depth_read_only: bool,
+    stencil_read_only: bool,
+    depth_stencil_format: Option<u32>,
 }
 pub struct RenderBundle {
     pub bindgroups: Vec<Arc<BindGroupResources>>,
@@ -159,17 +171,20 @@ impl RenderBundleEncoder {
         device: &Resource<JSDevice>,
         descriptor: Resource<JSRenderBundleDescriptor>,
         record: Resource<JSFunction>,
+        samplecount: u32,
+        depth_read_only: bool,
+        stencil_read_only: bool,
+        depth_stencil_format: Option<u32>,
     ) -> Self {
-        unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-        }
         let externref = unsafe {
             Arc::new(create_renderbundle_encoder(
                 &device,
                 &descriptor,
-                MULTIVALUE_USIZE.as_ptr(),
+                label.as_ptr() as usize,
+                label.len(),
+                samplecount,
+                depth_read_only,
+                stencil_read_only,
             ))
         };
         RenderBundleEncoder {
@@ -180,6 +195,10 @@ impl RenderBundleEncoder {
             buffers: Vec::new(),
             label,
             record,
+            samplecount,
+            depth_read_only,
+            stencil_read_only,
+            depth_stencil_format,
         }
     }
     pub fn record_renderbundle<F>(
@@ -253,14 +272,14 @@ impl RenderBundleEncoder {
         // Create bundeEncoder ready for next time it is called
         // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.
         unsafe {
-            MULTIVALUE_USIZE[0] = self.label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = self.label.len();
-            MULTIVALUE_USIZE[2] = self.label.capacity();
-
             self.externref = Arc::new(create_renderbundle_encoder(
                 device,
                 &self.descriptor,
-                MULTIVALUE_USIZE.as_ptr(),
+                self.label.as_ptr() as usize,
+                self.label.len(),
+                self.samplecount,
+                self.depth_read_only,
+                self.stencil_read_only,
             ));
         }
     }

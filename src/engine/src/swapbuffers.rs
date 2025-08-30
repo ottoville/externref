@@ -93,6 +93,7 @@ fn test_swap_buffers() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         let mut swap = SwapBuffers::new();
         swap.get(&device, 110, |_buffer| {});

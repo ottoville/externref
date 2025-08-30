@@ -166,6 +166,7 @@ fn test_cone() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
         let geometry = create_cone_geometry(4);
         assert_eq!(

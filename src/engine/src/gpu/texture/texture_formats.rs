@@ -3,176 +3,93 @@ pub trait TextureFormat {
     where
         Self: Sized;
 }
-pub trait TextureFormatSRGB: TextureFormat {
-    fn to_srgb() -> u32;
+pub trait TextureFormatSRGB<F: TextureFormat>: TextureFormat {
+    fn to_srgb() -> u32 {
+        F::to_number()
+    }
 }
 
-impl TextureFormatSRGB for RGBA8UNORM {
-    fn to_srgb() -> u32 {
-        RGBA8UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for BGRA8UNORM {
-    fn to_srgb() -> u32 {
-        BGRA8UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for BC1_RGBA_UNORM {
-    fn to_srgb() -> u32 {
-        BC1_RGBA_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for BC2_RGBA_UNORM {
-    fn to_srgb() -> u32 {
-        BC2_RGBA_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for BC3_RGBA_UNORM {
-    fn to_srgb() -> u32 {
-        BC3_RGBA_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for BC7_RGBA_UNORM {
-    fn to_srgb() -> u32 {
-        BC7_RGBA_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ETC2_RGB8UNORM {
-    fn to_srgb() -> u32 {
-        ETC2_RGB8UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ETC2_RGB8A1UNORM {
-    fn to_srgb() -> u32 {
-        ETC2_RGB8A1UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_4X4_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_4X4_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_5X4_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_5X4_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_5X5_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_5X5_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_6X5_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_6X5_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_6X6_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_6X6_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_8X5_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_8X5_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_8X6_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_8X6_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_8X8_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_8X8_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_10X5_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_10X5_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_10X6_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_10X6_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_10X8_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_10X8_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_10X10_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_10X10_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_12X10_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_12X10_UNORM_SRGB::to_number()
-    }
-}
-impl TextureFormatSRGB for ASTC_12X12_UNORM {
-    fn to_srgb() -> u32 {
-        ASTC_12X12_UNORM_SRGB::to_number()
-    }
-}
-pub struct TFORMAT<const U: u32>();
-impl<const U: u32> TextureFormat for TFORMAT<U> {
+impl TextureFormatSRGB<RGBA8UNORM_SRGB> for RGBA8UNORM {}
+impl TextureFormatSRGB<BGRA8UNORM_SRGB> for BGRA8UNORM {}
+impl TextureFormatSRGB<BC1_RGBA_UNORM_SRGB> for BC1_RGBA_UNORM {}
+impl TextureFormatSRGB<BC2_RGBA_UNORM_SRGB> for BC2_RGBA_UNORM {}
+impl TextureFormatSRGB<BC3_RGBA_UNORM_SRGB> for BC3_RGBA_UNORM {}
+impl TextureFormatSRGB<BC7_RGBA_UNORM_SRGB> for BC7_RGBA_UNORM {}
+impl TextureFormatSRGB<ETC2_RGB8UNORM_SRGB> for ETC2_RGB8UNORM {}
+impl TextureFormatSRGB<ETC2_RGB8A1UNORM_SRGB> for ETC2_RGB8A1UNORM {}
+impl TextureFormatSRGB<ASTC_4X4_UNORM_SRGB> for ASTC_4X4_UNORM {}
+impl TextureFormatSRGB<ASTC_5X4_UNORM_SRGB> for ASTC_5X4_UNORM {}
+impl TextureFormatSRGB<ASTC_5X5_UNORM_SRGB> for ASTC_5X5_UNORM {}
+impl TextureFormatSRGB<ASTC_6X5_UNORM_SRGB> for ASTC_6X5_UNORM {}
+impl TextureFormatSRGB<ASTC_6X6_UNORM_SRGB> for ASTC_6X6_UNORM {}
+impl TextureFormatSRGB<ASTC_8X5_UNORM_SRGB> for ASTC_8X5_UNORM {}
+impl TextureFormatSRGB<ASTC_8X6_UNORM_SRGB> for ASTC_8X6_UNORM {}
+impl TextureFormatSRGB<ASTC_8X8_UNORM_SRGB> for ASTC_8X8_UNORM {}
+impl TextureFormatSRGB<ASTC_10X5_UNORM_SRGB> for ASTC_10X5_UNORM {}
+impl TextureFormatSRGB<ASTC_10X6_UNORM_SRGB> for ASTC_10X6_UNORM {}
+impl TextureFormatSRGB<ASTC_10X8_UNORM_SRGB> for ASTC_10X8_UNORM {}
+impl TextureFormatSRGB<ASTC_10X10_UNORM_SRGB> for ASTC_10X10_UNORM {}
+impl TextureFormatSRGB<ASTC_12X10_UNORM_SRGB> for ASTC_12X10_UNORM {}
+impl TextureFormatSRGB<ASTC_12X12_UNORM_SRGB> for ASTC_12X12_UNORM {}
+pub struct TFORMAT<const U: u32, const RENDER_ATTACHMENT: bool = false, const DEPTH: bool = false>
+();
+impl<const U: u32, const RENDER_ATTACHMENT: bool, const DEPTH: bool> TextureFormat
+    for TFORMAT<U, RENDER_ATTACHMENT, DEPTH>
+{
     fn to_number() -> u32 {
         U
     }
 }
 
-pub type R8UNORM = TFORMAT<0>;
-pub type R8SNORM = TFORMAT<1>;
-pub type R8UINT = TFORMAT<2>;
-pub type R8SINT = TFORMAT<3>;
-pub type R16UNORM = TFORMAT<4>;
-pub type R16SNORM = TFORMAT<5>;
-pub type R16UINT = TFORMAT<6>;
-pub type R16SINT = TFORMAT<7>;
-pub type R16FLOAT = TFORMAT<8>;
-pub type RG8UNORM = TFORMAT<9>;
-pub type RG8SNORM = TFORMAT<10>;
-pub type RG8UINT = TFORMAT<11>;
-pub type RG8SINT = TFORMAT<12>;
-pub type R32UINT = TFORMAT<13>;
-pub type R32SINT = TFORMAT<14>;
-pub type R32FLOAT = TFORMAT<15>;
-pub type RG16UNORM = TFORMAT<16>;
-pub type RG16SNORM = TFORMAT<17>;
-pub type RG16UINT = TFORMAT<18>;
-pub type RG16SINT = TFORMAT<19>;
-pub type RG16FLOAT = TFORMAT<20>;
-pub type RGBA8UNORM = TFORMAT<21>;
-pub type RGBA8UNORM_SRGB = TFORMAT<22>;
-pub type RGBA8SNORM = TFORMAT<23>;
-pub type RGBA8UINT = TFORMAT<24>;
-pub type RGBA8SINT = TFORMAT<25>;
-pub type BGRA8UNORM = TFORMAT<26>;
-pub type BGRA8UNORM_SRGB = TFORMAT<27>;
+pub type R8UNORM = TFORMAT<0, true>;
+pub type R8SNORM = TFORMAT<1, true>;
+pub type R8UINT = TFORMAT<2, true>;
+pub type R8SINT = TFORMAT<3, true>;
+pub type R16UNORM = TFORMAT<4, true>;
+pub type R16SNORM = TFORMAT<5, true>;
+pub type R16UINT = TFORMAT<6, true>;
+pub type R16SINT = TFORMAT<7, true>;
+pub type R16FLOAT = TFORMAT<8, true>;
+pub type RG8UNORM = TFORMAT<9, true>;
+pub type RG8SNORM = TFORMAT<10, true>;
+pub type RG8UINT = TFORMAT<11, true>;
+pub type RG8SINT = TFORMAT<12, true>;
+pub type R32UINT = TFORMAT<13, true>;
+pub type R32SINT = TFORMAT<14, true>;
+pub type R32FLOAT = TFORMAT<15, true>;
+pub type RG16UNORM = TFORMAT<16, true>;
+pub type RG16SNORM = TFORMAT<17, true>;
+pub type RG16UINT = TFORMAT<18, true>;
+pub type RG16SINT = TFORMAT<19, true>;
+pub type RG16FLOAT = TFORMAT<20, true>;
+pub type RGBA8UNORM = TFORMAT<21, true>;
+pub type RGBA8UNORM_SRGB = TFORMAT<22, true>;
+pub type RGBA8SNORM = TFORMAT<23, true>;
+pub type RGBA8UINT = TFORMAT<24, true>;
+pub type RGBA8SINT = TFORMAT<25, true>;
+pub type BGRA8UNORM = TFORMAT<26, true>;
+pub type BGRA8UNORM_SRGB = TFORMAT<27, true>;
 pub type RGB9E5UFLOAT = TFORMAT<28>;
-pub type RGB10A2UINT = TFORMAT<29>;
-pub type RGB10A2UNORM = TFORMAT<30>;
-pub type RG11B10UFLOAT = TFORMAT<31>;
-pub type RG32UINT = TFORMAT<32>;
-pub type RG32SINT = TFORMAT<33>;
-pub type RG32FLOAT = TFORMAT<34>;
-pub type RGBA16UNORM = TFORMAT<35>;
-pub type RGBA16SNORM = TFORMAT<36>;
-pub type RGBA16UINT = TFORMAT<37>;
-pub type RGBA16SINT = TFORMAT<38>;
-pub type RGBA16FLOAT = TFORMAT<39>;
-pub type RGBA32UINT = TFORMAT<40>;
-pub type RGBA32SINT = TFORMAT<41>;
-pub type RGBA32FLOAT = TFORMAT<42>;
+pub type RGB10A2UINT = TFORMAT<29, true>;
+pub type RGB10A2UNORM = TFORMAT<30, true>;
+pub type RG11B10UFLOAT = TFORMAT<31, true>;
+pub type RG32UINT = TFORMAT<32, true>;
+pub type RG32SINT = TFORMAT<33, true>;
+pub type RG32FLOAT = TFORMAT<34, true>;
+pub type RGBA16UNORM = TFORMAT<35, true>;
+pub type RGBA16SNORM = TFORMAT<36, true>;
+pub type RGBA16UINT = TFORMAT<37, true>;
+pub type RGBA16SINT = TFORMAT<38, true>;
+pub type RGBA16FLOAT = TFORMAT<39, true>;
+pub type RGBA32UINT = TFORMAT<40, true>;
+pub type RGBA32SINT = TFORMAT<41, true>;
+pub type RGBA32FLOAT = TFORMAT<42, true>;
 pub type STENCIL8 = TFORMAT<42>;
-pub type DEPTH16UNORM = TFORMAT<44>;
-pub type DEPTH24PLUS = TFORMAT<45>;
-pub type DEPTH24PLUS_STENCIL8 = TFORMAT<46>;
-pub type DEPTH32FLOAT = TFORMAT<47>;
-pub type DEPTH32FLOAT_STENCIL8 = TFORMAT<48>;
+pub type DEPTH16UNORM = TFORMAT<44, true, true>;
+pub type DEPTH24PLUS = TFORMAT<45, true, true>;
+pub type DEPTH24PLUS_STENCIL8 = TFORMAT<46, true, true>;
+pub type DEPTH32FLOAT = TFORMAT<47, true, true>;
+pub type DEPTH32FLOAT_STENCIL8 = TFORMAT<48, true, true>;
 pub type BC1_RGBA_UNORM = TFORMAT<49>;
 pub type BC1_RGBA_UNORM_SRGB = TFORMAT<50>;
 pub type BC2_RGBA_UNORM = TFORMAT<51>;

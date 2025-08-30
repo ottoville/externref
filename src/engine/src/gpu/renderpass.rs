@@ -1,17 +1,24 @@
 use std::{
     cell::LazyCell,
-    num::{NonZero, NonZeroU32, NonZeroUsize},
-    sync::{Arc, Mutex},
+    num::{NonZero, NonZeroU32},
+    sync::Arc,
 };
 
 use externref::{externref, Resource};
-use logger::LoggerArray;
 use terramath::VectorMath;
 
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
-    gpu::{compute_pass_encoder::JSComputePipeline, gpu::GPU, queue::Queue, texture::render_attachment_texture::RenderAttachmentTexture},
+    gpu::{
+        compute_pass_encoder::JSComputePipeline,
+        gpu::GPU,
+        queue::Queue,
+        texture::{depth_texture::DepthTexture, render_attachment_texture::{
+            RenderAttachmentTexture, RenderAttachmentTextureMultiSampled,
+            RenderAttachmentTextureSingleSampled,
+        }},
+    },
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
@@ -33,15 +40,31 @@ pub unsafe extern "C" fn link_renderpass(
     id: usize,
     descriptor: Resource<JSRenderBundleDescriptor>,
     record: Resource<JSFunction>,
+    depth_read_only: bool,
+    stencil_read_only: bool,
 ) -> *const RenderBundleEncoder {
     let mut gpuopt = ENGINE.gpu.lock().unwrap();
     let gpu = gpuopt.as_mut().unwrap();
     let label = gpu.renderpasses[id].label().to_string();
-    gpu.renderpasses[id].set_bundle(RenderBundleEncoder::new(
+    let renderpass = &mut gpu.renderpasses[id];
+    //TODO TODO TODO
+    //TODO TODO TODO
+    //TODO TODO TODO
+    let formats: Vec<u32> = renderpass
+        .render_targets()
+        .iter()
+        .map(|rendertarget| rendertarget.to_number())
+        .collect();
+
+    renderpass.set_bundle(RenderBundleEncoder::new(
         label,
         &gpu.device,
         descriptor,
         record,
+        renderpass.sample_count(),
+        depth_read_only,
+        stencil_read_only,
+        renderpass.depthStencilFormat(),
     ));
     gpu.renderpasses[id].get_bundle()
 }
@@ -66,15 +89,76 @@ pub struct JSRenderPassDescriptor(());
 pub struct JSRenderPass(());
 
 pub struct Renderpass {
-    pub bundle: Option<RenderBundleEncoder>,
-    pub cameragroups: Vec<CameraGroup>,
-    pub jsrenderpass: Resource<JSRenderPass>,
-    pub label: String,
-    pub size: [NonZeroU32; 2],
-    pub size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
-    pub render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>>,
+    bundle: Option<RenderBundleEncoder>,
+    cameragroups: Vec<CameraGroup>,
+    jsrenderpass: Resource<JSRenderPass>,
+    label: String,
+    size: [NonZeroU32; 2],
+    size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
+    render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>>,
+    depth_render_target: Option<Box<dyn DepthTexture + Send>>,
+    sample_count: u32,
+}
+impl Renderpass {
+    pub fn new_singlesampled<const N: usize>(
+        label: String,
+        size: [NonZero<u32>; 2],
+        size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
+        jsrenderpass: Resource<JSRenderPass>,
+        bundle: Option<RenderBundleEncoder>,
+        cameragroups: Vec<CameraGroup>,
+        render_targets: [Box<dyn RenderAttachmentTextureSingleSampled + Send>; N],
+        depth_render_target: Option<Box<dyn DepthTexture + Send>>,
+    ) -> Self {
+        let render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>> = render_targets
+            .into_iter()
+            .map(|rt| rt as Box<dyn RenderAttachmentTexture + Send>)
+            .collect();
+        Renderpass {
+            label,
+            size,
+            size_modifier,
+            jsrenderpass,
+            bundle,
+            cameragroups,
+            render_targets,
+            sample_count: 1,
+            depth_render_target,
+        }
+    }
+    pub fn new_multisampled<const N: usize>(
+        label: String,
+        size: [NonZero<u32>; 2],
+        size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
+        jsrenderpass: Resource<JSRenderPass>,
+        bundle: Option<RenderBundleEncoder>,
+        cameragroups: Vec<CameraGroup>,
+        render_targets: [Box<dyn RenderAttachmentTextureMultiSampled + Send>; N],
+        depth_render_target: Option<Box<dyn DepthTexture + Send>>,
+    ) -> Self {
+        // Upcast each Box<dyn RenderAttachmentTextureMultiSampled + Send> to Box<dyn RenderAttachmentTexture + Send>
+        let render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>> = render_targets
+            .into_iter()
+            .map(|rt| rt as Box<dyn RenderAttachmentTexture + Send>)
+            .collect();
+
+        Renderpass {
+            label,
+            size,
+            size_modifier,
+            jsrenderpass,
+            bundle,
+            cameragroups,
+            render_targets,
+            sample_count: 4,
+            depth_render_target,
+        }
+    }
 }
 pub trait RenderPassTrait {
+    fn render_targets(&self) -> &Vec<Box<dyn RenderAttachmentTexture + Send>>;
+    fn sample_count(&self) -> u32;
+    fn depthStencilFormat(&self) -> Option<u32>;
     fn cameragroups(&mut self) -> &mut Vec<CameraGroup>;
     fn resize(
         &mut self,
@@ -202,5 +286,20 @@ impl RenderPassTrait for Renderpass {
         mouse_y: u32,
     ) {
         todo!()
+    }
+
+    fn render_targets(&self) -> &Vec<Box<dyn RenderAttachmentTexture + Send>> {
+        &self.render_targets
+    }
+
+    fn sample_count(&self) -> u32 {
+        self.sample_count
+    }
+
+    fn depthStencilFormat(&self) -> Option<u32> {
+        match &self.depth_render_target {
+            Some(format) => Some(format.to_number()),
+            None => None,
+        }
     }
 }

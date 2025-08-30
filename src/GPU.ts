@@ -495,6 +495,7 @@ export class GPU {
       this.renderPassWater,
       this.renderPassCanvas,
       this.pickRenderPass,
+      canvas,
     );
     this.renderPassScreen.link_renderpass(this);
     this.renderPassWater.link_renderpass(this);
@@ -603,11 +604,6 @@ export class GPU {
       height: 1080,
       width: 1920,
     };
-    context.configure({
-      device: this.device,
-      format: this.#presentationFormat,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
     this.#ro = new window.ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) return;

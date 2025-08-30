@@ -147,6 +147,7 @@ fn test_bindgroup() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
 
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
@@ -155,6 +156,10 @@ fn test_bindgroup() {
             &device,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            1,
+            false,
+            false,
+            None,
         );
         let buffer = GPUBuffer::<false, false, false, true, false, false, true>::new(
             &device,
@@ -290,6 +295,7 @@ fn test_bindgroup_buffer_resize() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
 
         let mut renderbundle_encoder = RenderBundleEncoder::new(
@@ -297,6 +303,10 @@ fn test_bindgroup_buffer_resize() {
             &device,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            1,
+            false,
+            false,
+            None,
         );
         let buffer = GPUBuffer::<false, false, true, true, false, false, true, true>::new(
             &device,

@@ -1,9 +1,11 @@
+use std::marker::PhantomData;
+
 #[cfg(any(not(test), rust_analyzer))]
 #[cfg(target_arch = "wasm32")]
 use externref::externref;
 use externref::Resource;
 
-use crate::gpu::texture::texture::JSTexture;
+use crate::gpu::texture::{texture::JSTexture, texture_formats::TextureFormat};
 
 #[cfg(test)]
 pub unsafe fn create_texture_view(
@@ -44,6 +46,7 @@ extern "C" {
 }
 pub struct JSTextureView(());
 
-pub struct TextureView {
+pub struct TextureView<F: TextureFormat> {
     pub externref: Resource<JSTextureView>,
+    pub format: PhantomData<F>,
 }
