@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
-use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::{panic, usize};
 
@@ -24,6 +24,9 @@ use terramath::VectorMathF32;
 
 #[cfg(test)]
 unsafe fn mesh_on_physic_tick(_mesh: *const Mesh, _delta: f32, _externref: &Resource<JSMesh>) {}
+#[cfg(test)]
+pub unsafe fn get_preferred_canvas_format() -> u32 {1}
+
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
@@ -31,7 +34,12 @@ unsafe fn mesh_on_physic_tick(_mesh: *const Mesh, _delta: f32, _externref: &Reso
 extern "C" {
     fn mesh_on_physic_tick(mesh: *const Mesh, delta: f32, externref: &Resource<JSMesh>);
     pub fn vertices_change(mesh: &Resource<JSMesh>);
-
+}
+#[cfg(target_arch = "wasm32")]
+#[externref]
+#[link(wasm_import_module = "gpu")]
+extern "C" {
+    pub fn get_preferred_canvas_format() -> u32;
 }
 
 #[no_mangle]

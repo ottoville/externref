@@ -31,56 +31,56 @@ impl TextureFormatSRGB<ASTC_10X8_UNORM_SRGB> for ASTC_10X8_UNORM {}
 impl TextureFormatSRGB<ASTC_10X10_UNORM_SRGB> for ASTC_10X10_UNORM {}
 impl TextureFormatSRGB<ASTC_12X10_UNORM_SRGB> for ASTC_12X10_UNORM {}
 impl TextureFormatSRGB<ASTC_12X12_UNORM_SRGB> for ASTC_12X12_UNORM {}
-pub struct TFORMAT<const U: u32, const RENDER_ATTACHMENT: bool = false, const DEPTH: bool = false>
+pub struct TFORMAT<const U: u32, const RENDER_ATTACHMENT: bool = false, const DEPTH: bool = false, const MULTISAMPLING: bool = false>
 ();
-impl<const U: u32, const RENDER_ATTACHMENT: bool, const DEPTH: bool> TextureFormat
-    for TFORMAT<U, RENDER_ATTACHMENT, DEPTH>
+impl<const U: u32, const RENDER_ATTACHMENT: bool, const DEPTH: bool, const MULTISAMPLING: bool> TextureFormat
+    for TFORMAT<U, RENDER_ATTACHMENT, DEPTH, MULTISAMPLING>
 {
     fn to_number() -> u32 {
         U
     }
 }
 
-pub type R8UNORM = TFORMAT<0, true>;
-pub type R8SNORM = TFORMAT<1, true>;
-pub type R8UINT = TFORMAT<2, true>;
-pub type R8SINT = TFORMAT<3, true>;
-pub type R16UNORM = TFORMAT<4, true>;
-pub type R16SNORM = TFORMAT<5, true>;
-pub type R16UINT = TFORMAT<6, true>;
-pub type R16SINT = TFORMAT<7, true>;
-pub type R16FLOAT = TFORMAT<8, true>;
-pub type RG8UNORM = TFORMAT<9, true>;
-pub type RG8SNORM = TFORMAT<10, true>;
-pub type RG8UINT = TFORMAT<11, true>;
-pub type RG8SINT = TFORMAT<12, true>;
+pub type R8UNORM = TFORMAT<0, true, false, true>;
+pub type R8SNORM = TFORMAT<1, true, false, true>;
+pub type R8UINT = TFORMAT<2, true, false, true>;
+pub type R8SINT = TFORMAT<3, true, false, true>;
+pub type R16UNORM = TFORMAT<4, true, false, true>;
+pub type R16SNORM = TFORMAT<5, true, false, true>;
+pub type R16UINT = TFORMAT<6, true, false, true>;
+pub type R16SINT = TFORMAT<7, true, false, true>;
+pub type R16FLOAT = TFORMAT<8, true, false, true>;
+pub type RG8UNORM = TFORMAT<9, true, false, true>;
+pub type RG8SNORM = TFORMAT<10, true, false, true>;
+pub type RG8UINT = TFORMAT<11, true, false, true>;
+pub type RG8SINT = TFORMAT<12, true, false, true>;
 pub type R32UINT = TFORMAT<13, true>;
 pub type R32SINT = TFORMAT<14, true>;
-pub type R32FLOAT = TFORMAT<15, true>;
-pub type RG16UNORM = TFORMAT<16, true>;
-pub type RG16SNORM = TFORMAT<17, true>;
-pub type RG16UINT = TFORMAT<18, true>;
-pub type RG16SINT = TFORMAT<19, true>;
-pub type RG16FLOAT = TFORMAT<20, true>;
-pub type RGBA8UNORM = TFORMAT<21, true>;
-pub type RGBA8UNORM_SRGB = TFORMAT<22, true>;
-pub type RGBA8SNORM = TFORMAT<23, true>;
-pub type RGBA8UINT = TFORMAT<24, true>;
-pub type RGBA8SINT = TFORMAT<25, true>;
-pub type BGRA8UNORM = TFORMAT<26, true>;
-pub type BGRA8UNORM_SRGB = TFORMAT<27, true>;
+pub type R32FLOAT = TFORMAT<15, true, false, true>;
+pub type RG16UNORM = TFORMAT<16, true, false, true>;
+pub type RG16SNORM = TFORMAT<17, true, false, true>;
+pub type RG16UINT = TFORMAT<18, true, false, true>;
+pub type RG16SINT = TFORMAT<19, true, false, true>;
+pub type RG16FLOAT = TFORMAT<20, true, false, true>;
+pub type RGBA8UNORM = TFORMAT<21, true, false, true>;
+pub type RGBA8UNORM_SRGB = TFORMAT<22, true, true>;
+pub type RGBA8SNORM = TFORMAT<23, true, false, true>;
+pub type RGBA8UINT = TFORMAT<24, true, false, true>;
+pub type RGBA8SINT = TFORMAT<25, true, false, true>;
+pub type BGRA8UNORM = TFORMAT<26, true, false, true>;
+pub type BGRA8UNORM_SRGB = TFORMAT<27, true, false, true>;
 pub type RGB9E5UFLOAT = TFORMAT<28>;
-pub type RGB10A2UINT = TFORMAT<29, true>;
-pub type RGB10A2UNORM = TFORMAT<30, true>;
-pub type RG11B10UFLOAT = TFORMAT<31, true>;
+pub type RGB10A2UINT = TFORMAT<29, true, false, true>;
+pub type RGB10A2UNORM = TFORMAT<30, true, false, true>;
+pub type RG11B10UFLOAT = TFORMAT<31, true, false, true>;
 pub type RG32UINT = TFORMAT<32, true>;
 pub type RG32SINT = TFORMAT<33, true>;
 pub type RG32FLOAT = TFORMAT<34, true>;
-pub type RGBA16UNORM = TFORMAT<35, true>;
-pub type RGBA16SNORM = TFORMAT<36, true>;
-pub type RGBA16UINT = TFORMAT<37, true>;
-pub type RGBA16SINT = TFORMAT<38, true>;
-pub type RGBA16FLOAT = TFORMAT<39, true>;
+pub type RGBA16UNORM = TFORMAT<35, true, false, true>;
+pub type RGBA16SNORM = TFORMAT<36, true, false, true>;
+pub type RGBA16UINT = TFORMAT<37, true, false, true>;
+pub type RGBA16SINT = TFORMAT<38, true, false, true>;
+pub type RGBA16FLOAT = TFORMAT<39, true, false, true>;
 pub type RGBA32UINT = TFORMAT<40, true>;
 pub type RGBA32SINT = TFORMAT<41, true>;
 pub type RGBA32FLOAT = TFORMAT<42, true>;

@@ -10,19 +10,22 @@ use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeL
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
+use crate::engine::get_preferred_canvas_format;
 use crate::gpu::bindgroup_layout::{
     BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
 };
 use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::canvas::{Canvas, JSCanvas};
+use crate::gpu::canvas_context::CanvasContext;
 use crate::gpu::command_encoder::JSCommandEncoder;
 use crate::gpu::renderpass::RenderPassTrait;
+use crate::gpu::renderpass_msaa::RenderpassMSAA;
 use crate::gpu::shader::{
     SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
     SHADER_STAGE_VERTEX, SHADER_STAGE_VERTEX_AND_FRAGMENT,
 };
 use crate::gpu::texture::texture::Texture;
-use crate::gpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT};
+use crate::gpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT};
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::{Projection, PROJECTION_BUFFER_SIZE};
@@ -215,6 +218,8 @@ pub unsafe extern "C" fn init_gpu(
             externref: js_canvas,
         };
         let context = canvas.get_webgpu_context();
+        let format_num = get_preferred_canvas_format();
+        let context2 = CanvasContext { format: format_num };
 
         // LAYOUT UpdateViewLayout2
         let directional_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
@@ -402,12 +407,11 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("depthTexture_renderPassScreen"),
                 1,
             );
-        let render_pass_screen = Renderpass::new_multisampled(
+        let render_pass_screen = RenderpassMSAA::new(
             String::from("renderPassScreen"),
             [NonZeroU32::new_unchecked(1); 2],
             None,
             js_render_pass_screen,
-            None,
             vec![CameraGroup {
                 cameras: Vec::with_capacity(2),
                 bind_group: Some(BindGroup::new(
@@ -448,7 +452,7 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("depthTexture_renderPassWater"),
                 1,
             );
-        let render_pass_water = Renderpass::new_singlesampled(
+        let render_pass_water = Renderpass::new(
             String::from("renderPassWater"),
             [NonZeroU32::new_unchecked(1); 2],
             Some(|w, h| {
@@ -456,7 +460,6 @@ pub unsafe extern "C" fn init_gpu(
                 *h = NonZeroU32::new_unchecked(h.get() >> 2);
             }),
             js_render_pass_water,
-            None,
             vec![CameraGroup {
                 cameras: Vec::with_capacity(2),
                 bind_group: Some(BindGroup::new(
@@ -479,13 +482,19 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("screen_buffer_pick"),
                 false,
             );
-
-        let pick_render_pass = Renderpass::new_singlesampled(
-            String::from("renderPassPick"),
+        let pick_render_target = Texture::<RG32UINT, 2, 1, true, false, true, false, true>::new(
+            &device,
+            300,
+            300,
+            1,
+            String::from("idTexture"),
+            1,
+        );
+        let pick_render_pass = Renderpass::new(
+            String::from("pickRenderPass"),
             [NonZeroU32::new_unchecked(1); 2],
             None,
             js_pick_render_pass,
-            None,
             vec![CameraGroup {
                 cameras: Vec::with_capacity(2),
                 bind_group: Some(BindGroup::new(
@@ -498,17 +507,16 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
-            [],
+            [Box::new(pick_render_target)],
             None,
         );
-        let render_pass_canvas = Renderpass::new_singlesampled(
+        let render_pass_canvas = Renderpass::new(
             String::from("renderPassCanvas"),
             [NonZeroU32::new_unchecked(1); 2],
             None,
             js_render_pass_canvas,
-            None,
             Vec::new(),
-            [],
+            [Box::new(context2)],
             None,
         );
         let _ = gpu.insert(GPU {
@@ -865,7 +873,7 @@ fn test_gpu_queue() {
             gpu.renderpasses[id].set_bundle(RenderBundleEncoder::new(
                 String::from("test"),
                 &gpu.device,
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+                Vec::new(),
                 Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
                 1,
                 false,

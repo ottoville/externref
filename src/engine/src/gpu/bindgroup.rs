@@ -154,7 +154,7 @@ fn test_bindgroup() {
         let mut renderbundle_encoder = RenderBundleEncoder::new(
             String::from("test"),
             &device,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Vec::new(),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             1,
             false,
@@ -301,7 +301,7 @@ fn test_bindgroup_buffer_resize() {
         let mut renderbundle_encoder = RenderBundleEncoder::new(
             String::from("test"),
             &device,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Vec::new(),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             1,
             false,

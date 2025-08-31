@@ -27,16 +27,24 @@ pub struct JSRenderBundleEncoder(());
 pub struct JSFunction(());
 pub struct JSRenderBundleDescriptor(());
 pub struct JSRenderBundle(());
-
 #[cfg(test)]
-unsafe fn create_renderbundle_encoder(
-    _device: &Resource<JSDevice>,
-    _descriptor: &Resource<JSRenderBundleDescriptor>,
+unsafe fn create_renderbundle_encoder_descriptor(
+    _color_formats_ptr: usize,
+    _color_formats_len: usize,
     _label_ptr: usize,
     _label_len: usize,
     _samplecount: u32,
     _depth_read_only: bool,
     _stencil_read_only: bool,
+    _depth_stencil_format: i32,
+) -> Resource<JSRenderBundleDescriptor> {
+    use externref::ExternRef;
+    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+}
+#[cfg(test)]
+unsafe fn create_renderbundle_encoder(
+    _device: &Resource<JSDevice>,
+    _descriptor: &Resource<JSRenderBundleDescriptor>,
 ) -> Resource<JSRenderBundleEncoder> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
@@ -65,14 +73,19 @@ fn finish(
 #[link(wasm_import_module = "renderbundleencoder")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    fn create_renderbundle_encoder(
-        device: &Resource<JSDevice>,
-        descriptor: &Resource<JSRenderBundleDescriptor>,
+    fn create_renderbundle_encoder_descriptor(
+        color_formats_ptr: usize,
+        color_formats_len: usize,
         label_ptr: usize,
         label_len: usize,
         samplecount: u32,
-        _depth_read_only: bool,
-        _stencil_read_only: bool,
+        depth_read_only: bool,
+        stencil_read_only: bool,
+        depth_stencil_format: i32,
+    ) -> Resource<JSRenderBundleDescriptor>;
+    fn create_renderbundle_encoder(
+        device: &Resource<JSDevice>,
+        descriptor: &Resource<JSRenderBundleDescriptor>,
     ) -> Resource<JSRenderBundleEncoder>;
     fn finish(
         //TODO: take ownership of encoder
@@ -150,12 +163,7 @@ pub struct RenderBundleEncoder {
     descriptor: Resource<JSRenderBundleDescriptor>,
     pub bindgroups: Vec<Arc<BindGroupResources>>,
     pub buffers: Vec<Arc<Resource<JSBuffer>>>,
-    label: String,
     record: Resource<JSFunction>,
-    samplecount: u32,
-    depth_read_only: bool,
-    stencil_read_only: bool,
-    depth_stencil_format: Option<u32>,
 }
 pub struct RenderBundle {
     pub bindgroups: Vec<Arc<BindGroupResources>>,
@@ -169,36 +177,36 @@ impl RenderBundleEncoder {
     pub fn new(
         label: String,
         device: &Resource<JSDevice>,
-        descriptor: Resource<JSRenderBundleDescriptor>,
+        color_formats: Vec<u32>,
         record: Resource<JSFunction>,
         samplecount: u32,
         depth_read_only: bool,
         stencil_read_only: bool,
         depth_stencil_format: Option<u32>,
     ) -> Self {
-        let externref = unsafe {
-            Arc::new(create_renderbundle_encoder(
-                &device,
-                &descriptor,
+        let descriptor = unsafe {
+            create_renderbundle_encoder_descriptor(
+                color_formats.as_ptr() as usize,
+                color_formats.len(),
                 label.as_ptr() as usize,
                 label.len(),
                 samplecount,
                 depth_read_only,
                 stencil_read_only,
-            ))
+                match depth_stencil_format {
+                    Some(format) => format as i32,
+                    None => -1,
+                },
+            )
         };
+        let externref = unsafe { Arc::new(create_renderbundle_encoder(&device, &descriptor)) };
         RenderBundleEncoder {
             externref,
             renderbundle: Arc::new(Mutex::new(None)),
             descriptor,
             bindgroups: Vec::new(),
             buffers: Vec::new(),
-            label,
             record,
-            samplecount,
-            depth_read_only,
-            stencil_read_only,
-            depth_stencil_format,
         }
     }
     pub fn record_renderbundle<F>(
@@ -272,15 +280,7 @@ impl RenderBundleEncoder {
         // Create bundeEncoder ready for next time it is called
         // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.
         unsafe {
-            self.externref = Arc::new(create_renderbundle_encoder(
-                device,
-                &self.descriptor,
-                self.label.as_ptr() as usize,
-                self.label.len(),
-                self.samplecount,
-                self.depth_read_only,
-                self.stencil_read_only,
-            ));
+            self.externref = Arc::new(create_renderbundle_encoder(device, &self.descriptor));
         }
     }
     // Only from legacy JS objects

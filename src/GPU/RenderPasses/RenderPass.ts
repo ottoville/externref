@@ -61,16 +61,10 @@ export class RenderPass<
   }
   onRenderPipelinesChange: Set<() => void> = new Set();
   link_renderpass(gpu: GPU) {
-    const { id, GPURenderBundleEncoderDescriptor } = this.props;
+    const { id } = this.props;
 
     const rust_renderbundle = engine.rust.link_renderpass(
       id,
-      {
-        colorFormats: Object.values(this.props.colorRenderTargets).map((rt) => {
-          return rt.renderTargetOptions.context.format;
-        }),
-        ...GPURenderBundleEncoderDescriptor,
-      },
       (
         renderBundleEncoder2,
         gpu_buffer,

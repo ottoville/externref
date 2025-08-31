@@ -14,10 +14,12 @@ use crate::{
         compute_pass_encoder::JSComputePipeline,
         gpu::GPU,
         queue::Queue,
-        texture::{depth_texture::DepthTexture, render_attachment_texture::{
-            RenderAttachmentTexture, RenderAttachmentTextureMultiSampled,
-            RenderAttachmentTextureSingleSampled,
-        }},
+        texture::{
+            depth_texture::DepthTexture,
+            render_attachment_texture::{
+                RenderAttachmentTexture, RenderAttachmentTextureSingleSampled,
+            },
+        },
     },
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
@@ -29,7 +31,7 @@ use super::{
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::ComputePassEncoder,
     gpu::{get_renderpass_descriptor, JSDevice},
-    renderbundle::{JSFunction, JSRenderBundleDescriptor, RenderBundleEncoder},
+    renderbundle::{JSFunction, RenderBundleEncoder},
 };
 thread_local! {
     static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass")) };
@@ -38,7 +40,6 @@ thread_local! {
 #[no_mangle]
 pub unsafe extern "C" fn link_renderpass(
     id: usize,
-    descriptor: Resource<JSRenderBundleDescriptor>,
     record: Resource<JSFunction>,
     depth_read_only: bool,
     stencil_read_only: bool,
@@ -47,9 +48,6 @@ pub unsafe extern "C" fn link_renderpass(
     let gpu = gpuopt.as_mut().unwrap();
     let label = gpu.renderpasses[id].label().to_string();
     let renderpass = &mut gpu.renderpasses[id];
-    //TODO TODO TODO
-    //TODO TODO TODO
-    //TODO TODO TODO
     let formats: Vec<u32> = renderpass
         .render_targets()
         .iter()
@@ -59,7 +57,7 @@ pub unsafe extern "C" fn link_renderpass(
     renderpass.set_bundle(RenderBundleEncoder::new(
         label,
         &gpu.device,
-        descriptor,
+        formats,
         record,
         renderpass.sample_count(),
         depth_read_only,
@@ -97,15 +95,13 @@ pub struct Renderpass {
     size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
     render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>>,
     depth_render_target: Option<Box<dyn DepthTexture + Send>>,
-    sample_count: u32,
 }
 impl Renderpass {
-    pub fn new_singlesampled<const N: usize>(
+    pub fn new<const N: usize>(
         label: String,
         size: [NonZero<u32>; 2],
         size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
         jsrenderpass: Resource<JSRenderPass>,
-        bundle: Option<RenderBundleEncoder>,
         cameragroups: Vec<CameraGroup>,
         render_targets: [Box<dyn RenderAttachmentTextureSingleSampled + Send>; N],
         depth_render_target: Option<Box<dyn DepthTexture + Send>>,
@@ -119,38 +115,9 @@ impl Renderpass {
             size,
             size_modifier,
             jsrenderpass,
-            bundle,
+            bundle: None,
             cameragroups,
             render_targets,
-            sample_count: 1,
-            depth_render_target,
-        }
-    }
-    pub fn new_multisampled<const N: usize>(
-        label: String,
-        size: [NonZero<u32>; 2],
-        size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
-        jsrenderpass: Resource<JSRenderPass>,
-        bundle: Option<RenderBundleEncoder>,
-        cameragroups: Vec<CameraGroup>,
-        render_targets: [Box<dyn RenderAttachmentTextureMultiSampled + Send>; N],
-        depth_render_target: Option<Box<dyn DepthTexture + Send>>,
-    ) -> Self {
-        // Upcast each Box<dyn RenderAttachmentTextureMultiSampled + Send> to Box<dyn RenderAttachmentTexture + Send>
-        let render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>> = render_targets
-            .into_iter()
-            .map(|rt| rt as Box<dyn RenderAttachmentTexture + Send>)
-            .collect();
-
-        Renderpass {
-            label,
-            size,
-            size_modifier,
-            jsrenderpass,
-            bundle,
-            cameragroups,
-            render_targets,
-            sample_count: 4,
             depth_render_target,
         }
     }
@@ -293,7 +260,7 @@ impl RenderPassTrait for Renderpass {
     }
 
     fn sample_count(&self) -> u32 {
-        self.sample_count
+        1
     }
 
     fn depthStencilFormat(&self) -> Option<u32> {

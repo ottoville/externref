@@ -5,7 +5,14 @@ use crate::gpu::texture::{
 };
 
 pub trait RenderAttachmentFormat: TextureFormat {}
-impl<const U: u32> RenderAttachmentFormat for TFORMAT<U, true> {}
+impl<const U: u32, const MULTISAMPLING: bool> RenderAttachmentFormat
+    for TFORMAT<U, true, false, MULTISAMPLING>
+{
+}
+
+pub trait SampledTextureFormat: TextureFormat {}
+
+impl<const U: u32> SampledTextureFormat for TFORMAT<U, true, false, true> {}
 
 /*
 If descriptor.usage includes the RENDER_ATTACHMENT bit:
@@ -33,7 +40,9 @@ impl<
         STORAGE_BINDING,
         true,
         SRGB_MULTIVIEW,
-    > where Texture<
+    >
+where
+    Texture<
         F,
         2,
         SAMPLE_COUNT,
@@ -43,7 +52,7 @@ impl<
         STORAGE_BINDING,
         true,
         SRGB_MULTIVIEW,
-    > : ValidTexture
+    >: ValidTexture,
 {
 }
 // 3-dimensioned texture, enforce 1 samplecount
@@ -65,13 +74,16 @@ pub trait RenderAttachmentTextureMultiSampled: RenderAttachmentTexture {}
 // descriptor.usage must include the RENDER_ATTACHMENT bit.
 // https://www.w3.org/TR/webgpu/#abstract-opdef-validating-gputexturedescriptor
 impl<
-        F: RenderAttachmentFormat,
+        F: SampledTextureFormat,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const SRGB_MULTIVIEW: bool,
     > RenderAttachmentTextureMultiSampled
     for Texture<F, 2, 4, COPY_SRC, COPY_DST, TEXTURE_BINDING, false, true, SRGB_MULTIVIEW>
+where
+    Texture<F, 2, 4, COPY_SRC, COPY_DST, TEXTURE_BINDING, false, true, SRGB_MULTIVIEW>:
+        RenderAttachmentTexture,
 {
 }
 pub trait RenderAttachmentTextureSingleSampled: RenderAttachmentTexture {}

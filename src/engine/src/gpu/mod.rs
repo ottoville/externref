@@ -17,3 +17,5 @@ pub mod bindgroup_layout;
 pub mod shader;
 pub mod texture;
 pub mod canvas;
+pub mod renderpass_msaa;
+pub mod canvas_context;

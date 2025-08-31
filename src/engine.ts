@@ -30,6 +30,7 @@ import { RenderCommandsInterface } from './wasm-interfaces/RenderCommandsInterfa
 import { serialize_terrain } from './world/Terrain.js';
 import { TextureInterface } from './wasm-interfaces/TextureInterface.js';
 import { CanvasInterface } from './wasm-interfaces/CanvasInterface.js';
+import { GPUInterface } from './wasm-interfaces/GPUInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -436,7 +437,6 @@ export type rustWasm = {
   ): rust_pointer<'impulse'>;
   link_renderpass(
     id: number,
-    descriptor: GPURenderBundleEncoderDescriptor,
     cb: (
       renderBundleEncoder: GPURenderBundleEncoder,
       gpu_buffer: number,
@@ -890,6 +890,7 @@ export class Engine {
           mesh.onVerticesChange();
         },
       },
+      gpu: GPUInterface,
       queue: QueueInterface,
       renderbundleencoder: RenderbundleEncoderInterface,
       rendercommands: RenderCommandsInterface,
