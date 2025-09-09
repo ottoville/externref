@@ -1,8 +1,10 @@
-use crate::gpu::texture::{texture::Texture, texture_formats::TextureFormat};
+use crate::texture::{texture::Texture, texture_formats::TextureFormat};
 
 pub trait ValidTexture {
     fn to_number(&self) -> u32;
 }
+
+
 
 // Single sampled
 impl<

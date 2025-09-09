@@ -1,4 +1,49 @@
+const storeOptMapping = ['store', 'discard'] as const;
 export const RenderPassEncoderInterface = {
+  create_render_pass_color_attachment_clear(
+    view: GPUTexture | GPUTextureView,
+    depthSlice: GPUIntegerCoordinate,
+    resolveTarget: GPUTexture | GPUTextureView | null,
+    clearValueR: number,
+    clearValueG: number,
+    clearValueB: number,
+    clearValueA: number,
+    storeOp: number,
+  ): GPURenderPassColorAttachment {
+    const attachment: GPURenderPassColorAttachment = {
+      clearValue: [clearValueR, clearValueG, clearValueB, clearValueA],
+      loadOp: 'clear',
+      storeOp: storeOptMapping[storeOp]!,
+      view,
+    };
+    if (depthSlice >= 0) {
+      attachment.depthSlice = depthSlice;
+    }
+    if (resolveTarget !== null) {
+      attachment.resolveTarget = resolveTarget;
+    }
+    return attachment;
+  },
+  create_render_pass_color_attachment_load(
+    view: GPUTexture | GPUTextureView,
+    depthSlice: GPUIntegerCoordinate,
+    resolveTarget: GPUTexture | GPUTextureView | null,
+    storeOp: number,
+  ): GPURenderPassColorAttachment {
+    const attachment: GPURenderPassColorAttachment = {
+      loadOp: 'load',
+      storeOp: storeOptMapping[storeOp]!,
+      view,
+    };
+    if (depthSlice >= 0) {
+      attachment.depthSlice = depthSlice;
+    }
+    if (resolveTarget !== null) {
+      attachment.resolveTarget = resolveTarget;
+    }
+    return attachment;
+  },
+
   end(commandEncoder: GPURenderPassEncoder) {
     commandEncoder.end();
   },

@@ -1,8 +1,4 @@
-use crate::gpu::texture::{
-    texture::Texture,
-    texture_formats::{TextureFormat, TFORMAT},
-    valid_texture::ValidTexture,
-};
+use crate::texture::{texture::Texture, texture_formats::{TextureFormat, TFORMAT}, valid_texture::ValidTexture};
 
 pub trait DepthTexture: ValidTexture {}
 

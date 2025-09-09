@@ -1,15 +1,12 @@
-use std::marker::PhantomData;
-
-#[cfg(any(not(test), rust_analyzer))]
-#[cfg(target_arch = "wasm32")]
 use externref::externref;
 use externref::Resource;
+use std::{marker::PhantomData, num::NonZeroU32};
 
-use crate::gpu::{
-    gpu::JSDevice,
+use crate::{
+    device::JSDevice,
     texture::{
         texture_formats::{TextureFormat, TextureFormatSRGB},
-        texture_view::{create_texture_view, TextureView},
+        texture_view::TextureView,
     },
 };
 
@@ -33,7 +30,7 @@ pub enum TextureAspect {
 }
 pub struct JSTexture(());
 
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_texture(
     _device: &Resource<JSDevice>,
     _width: usize,
@@ -75,6 +72,32 @@ extern "C" {
     ) -> Resource<JSTexture>;
 }
 
+pub const fn usages_from_bools<
+    const COPY_SRC: bool,
+    const COPY_DST: bool,
+    const TEXTURE_BINDING: bool,
+    const STORAGE_BINDING: bool,
+    const RENDER_ATTACHMENT: bool,
+>() -> u32 {
+    let mut usages = 0;
+    if COPY_SRC {
+        usages |= 0x0001;
+    }
+    if COPY_DST {
+        usages |= 0x0002;
+    }
+    if TEXTURE_BINDING {
+        usages |= 0x0004;
+    }
+    if STORAGE_BINDING {
+        usages |= 0x0008;
+    }
+    if RENDER_ATTACHMENT {
+        usages |= 0x0010;
+    }
+    return usages;
+}
+
 pub struct Texture<
     F: TextureFormat,
     const DIMENSION: u32,
@@ -86,20 +109,20 @@ pub struct Texture<
     const RENDER_ATTACHMENT: bool = false,
     const SRGB_MULTIVIEW: bool = false,
 > {
-    externref: Resource<JSTexture>,
+    pub externref: Resource<JSTexture>,
     label: String,
     format: PhantomData<F>,
 }
 
 pub trait TextureDimensionTrait {}
 
+// when dimension is 1 enforce sample count 1 and no render attachment
 impl<
         F: TextureFormat,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
-        const RENDER_ATTACHMENT: bool,
         const SRGB_MULTIVIEW: bool,
     > TextureDimensionTrait
     for Texture<
@@ -110,11 +133,13 @@ impl<
         COPY_DST,
         TEXTURE_BINDING,
         STORAGE_BINDING,
-        RENDER_ATTACHMENT,
+        false,
         SRGB_MULTIVIEW,
     >
 {
 }
+
+// 2 dimension
 impl<
         F: TextureFormat,
         const SAMPLE_COUNT: u32,
@@ -138,6 +163,7 @@ impl<
     >
 {
 }
+// 3 dimension
 
 impl<
         F: TextureFormat,
@@ -176,24 +202,29 @@ where
     Self: TextureDimensionTrait,
 {
     pub const fn usages() -> u32 {
-        let mut usages = 0;
-        if COPY_SRC {
-            usages |= 0x0001;
-        }
-        if COPY_DST {
-            usages |= 0x0002;
-        }
-        if TEXTURE_BINDING {
-            usages |= 0x0004;
-        }
-        if STORAGE_BINDING {
-            usages |= 0x0008;
-        }
-        if RENDER_ATTACHMENT {
-            usages |= 0x0010;
-        }
-        return usages;
+        return usages_from_bools::<
+            COPY_SRC,
+            COPY_DST,
+            TEXTURE_BINDING,
+            STORAGE_BINDING,
+            RENDER_ATTACHMENT,
+        >();
     }
+    /// # Creates new texture
+    /// ## Should panic, 4 dimension texture does not exist
+    /// ```compile_fail
+    /// use crate::webgpu::texture::{texture::Texture, texture_formats::BGRA8UNORM};
+    /// use externref::{ExternRef, Resource};
+    /// let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }; 
+    /// let texture = Texture::<BGRA8UNORM, 4, 1, false, false, true, false, true>::new(
+    ///     &device,
+    ///    300,
+    ///    300,
+    ///    1,
+    ///    String::from("test"),
+    ///    1,
+    /// );
+    /// ```
     pub fn new(
         device: &Resource<JSDevice>,
         width: usize,
@@ -270,36 +301,56 @@ where
             format: PhantomData,
         }
     }
-    pub fn create_view(
+    pub fn create_view<
+        const COPY_SRC2: bool,
+        const COPY_DST2: bool,
+        const TEXTURE_BINDING2: bool,
+        const STORAGE_BINDING2: bool,
+        const RENDER_ATTACHMENT2: bool,
+    >(
         &self,
         label: String,
         dimension: TextureViewDimension,
-        usage: u32,
         aspect: TextureAspect,
         base_mip_level: u32,
-        mip_level_count: u32,
+        mip_level_count: NonZeroU32,
         base_array_layer: u32,
-        array_layer_count: u32,
-    ) -> TextureView<F> {
-        let externref = unsafe {
-            create_texture_view(
-                &self.externref,
-                label.as_ptr() as usize,
-                label.len(),
-                F::to_number(),
-                dimension,
-                usage,
-                aspect,
-                base_mip_level,
-                mip_level_count,
-                base_array_layer,
-                array_layer_count,
-            )
-        };
-        return TextureView {
-            externref,
-            format: PhantomData,
-        };
+        array_layer_count: NonZeroU32,
+    ) -> TextureView<
+        F,
+        DIMENSION,
+        SAMPLE_COUNT,
+        COPY_SRC2,
+        COPY_DST2,
+        TEXTURE_BINDING2,
+        STORAGE_BINDING2,
+        RENDER_ATTACHMENT2,
+    > {
+        // TODO: panic on compile of view usage is not subset of texture usage
+
+        let view_usages = usages_from_bools::<
+            COPY_SRC2,
+            COPY_DST2,
+            TEXTURE_BINDING2,
+            STORAGE_BINDING2,
+            RENDER_ATTACHMENT2,
+        >();
+        debug_assert!(
+            Self::usages() & view_usages == view_usages,
+            "texture view usages of {} is not subset of usages of {}",
+            label,
+            self.label
+        );
+        return TextureView::new(
+            self,
+            label,
+            dimension,
+            aspect,
+            base_mip_level,
+            mip_level_count,
+            base_array_layer,
+            array_layer_count,
+        );
     }
 }
 
@@ -325,38 +376,82 @@ impl<
         true,
     >
 {
-    pub fn create_srgb_view<VF: TextureFormat>(
+    pub fn create_srgb_view<
+        const COPY_SRC2: bool,
+        const COPY_DST2: bool,
+        const TEXTURE_BINDING2: bool,
+        const STORAGE_BINDING2: bool,
+        const RENDER_ATTACHMENT2: bool,
+        VF: TextureFormat,
+    >(
         &self,
         label: String,
         dimension: TextureViewDimension,
-        usage: u32,
         aspect: TextureAspect,
         base_mip_level: u32,
-        mip_level_count: u32,
+        mip_level_count: NonZeroU32,
         base_array_layer: u32,
-        array_layer_count: u32,
-    ) -> TextureView<VF>
+        array_layer_count: NonZeroU32,
+    ) -> TextureView<
+        VF,
+        DIMENSION,
+        SAMPLE_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+    >
     where
         F: TextureFormatSRGB<VF>,
+        Self: TextureDimensionTrait,
     {
-        let externref = unsafe {
-            create_texture_view(
-                &self.externref,
-                label.as_ptr() as usize,
-                label.len(),
-                F::to_srgb(),
-                dimension,
-                usage,
-                aspect,
-                base_mip_level,
-                mip_level_count,
-                base_array_layer,
-                array_layer_count,
-            )
-        };
-        return TextureView {
-            externref,
-            format: PhantomData,
-        };
+        let view_usages = usages_from_bools::<
+            COPY_SRC2,
+            COPY_DST2,
+            TEXTURE_BINDING2,
+            STORAGE_BINDING2,
+            RENDER_ATTACHMENT2,
+        >();
+        debug_assert!(
+            Self::usages() & view_usages == view_usages,
+            "texture view usages of {} is not subset of usages of {}",
+            label,
+            self.label
+        );
+        return TextureView::<
+            VF,
+            DIMENSION,
+            SAMPLE_COUNT,
+            COPY_SRC,
+            COPY_DST,
+            TEXTURE_BINDING,
+            STORAGE_BINDING,
+            RENDER_ATTACHMENT,
+        >::new_srgb(
+            self,
+            label,
+            dimension,
+            aspect,
+            base_mip_level,
+            mip_level_count,
+            base_array_layer,
+            array_layer_count,
+        );
     }
+}
+#[cfg(test)]
+#[test]
+fn test_texture() {
+    use crate::texture::texture_formats::BGRA8UNORM;
+    use externref::ExternRef;
+    let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
+    let texture = Texture::<BGRA8UNORM, 2, 4, false, false, true, false, true>::new(
+        &device,
+        300,
+        300,
+        1,
+        String::from("test"),
+        1,
+    );
 }

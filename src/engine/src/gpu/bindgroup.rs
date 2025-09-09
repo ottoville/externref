@@ -2,6 +2,7 @@ use std::sync::Mutex;
 use std::sync::{Arc, Weak};
 
 use externref::Resource;
+use webgpu::device::JSDevice;
 
 use crate::gpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
 use crate::MULTIVALUE_USIZE;
@@ -9,7 +10,6 @@ use crate::MULTIVALUE_USIZE;
 use super::buffer::buffer::JSBuffer;
 use super::bufferbinding::BufferBinding;
 use super::gpu::create_bind_group;
-use super::gpu::JSDevice;
 use super::renderbundle::RenderBundle;
 
 #[no_mangle]

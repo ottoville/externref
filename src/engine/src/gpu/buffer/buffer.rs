@@ -2,10 +2,10 @@ use std::sync::Arc;
 use std::sync::{Mutex, Weak};
 
 use externref::{externref, Resource};
+use webgpu::device::JSDevice;
 
 use crate::gpu::buffer::mapped_buffer::MappedGPUBuffer;
 use crate::gpu::bufferbinding::BufferBinding;
-use crate::gpu::gpu::JSDevice;
 use crate::gpu::renderbundle::RenderBundle;
 
 pub struct JSBuffer(());

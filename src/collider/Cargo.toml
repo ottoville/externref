@@ -14,6 +14,6 @@ terramath = { path = "../terramath" }
 logger = { path = "../logger" }
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.50"
+wasm-bindgen-test = "0.3.51"
 
 

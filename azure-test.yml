@@ -53,3 +53,10 @@ steps:
     script: 'cargo test --target wasm32-unknown-unknown'
     pwsh: true
     workingDirectory: './src/collider'
+- task: PowerShell@2
+  displayName: webgpu library unit test
+  inputs:
+    targetType: 'inline'
+    script: 'cargo test'
+    pwsh: true
+    workingDirectory: './src/webgpu'

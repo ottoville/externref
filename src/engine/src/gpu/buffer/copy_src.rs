@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use externref::Resource;
+use webgpu::device::JSDevice;
 
 use crate::gpu::buffer::buffer::create_buffer;
 use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::command_encoder::copy_buffer_to_buffer;
 use crate::gpu::command_encoder::GPUCommandEncoder;
-use crate::gpu::gpu::JSDevice;
 
 impl<
         const MAP_READ: bool,

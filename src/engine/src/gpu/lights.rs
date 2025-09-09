@@ -1,9 +1,9 @@
 use std::sync::{Arc, Mutex};
 
 use externref::Resource;
+use webgpu::device::JSDevice;
 
 use super::command_encoder::GPUCommandEncoder;
-use super::gpu::JSDevice;
 use crate::swapbuffers::SwapBuffers;
 use crate::{allocators::freeindex::FreeIndexIndex, gpu::buffer::buffer::GPUBuffer};
 

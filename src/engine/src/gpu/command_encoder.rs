@@ -1,12 +1,10 @@
 use std::sync::Arc;
 
 use externref::{externref, Resource};
+use webgpu::device::JSDevice;
 
 use crate::{
-    gpu::{
-        buffer::buffer::GPUBuffer,
-        gpu::{create_gpu_command_encoder, JSDevice},
-    },
+    gpu::{buffer::buffer::GPUBuffer, gpu::create_gpu_command_encoder},
     MULTIVALUE_USIZE,
 };
 

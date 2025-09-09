@@ -4,6 +4,7 @@ use std::{num::NonZero, ptr, sync::Mutex};
 
 use externref::{externref, Resource};
 use terramath::MatrixMath;
+use webgpu::device::JSDevice;
 
 use crate::gpu::binding_commands::BindingCommands;
 use crate::gpu::buffer::buffer::GPUBuffer;
@@ -13,7 +14,7 @@ use crate::projection::Projection;
 use crate::{
     gpu::{
         bindgroup::BindGroup, bufferbinding::BufferBinding, command_encoder::GPUCommandEncoder,
-        compute_pass_encoder::ComputePassEncoder, gpu::JSDevice,
+        compute_pass_encoder::ComputePassEncoder,
     },
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
@@ -230,7 +231,8 @@ pub struct Camera {
     pub do_update_view: u32,
     pub id: usize,
     before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
-    pub on_update_position: Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>, &Resource<JSDevice>) + Send>>,
+    pub on_update_position:
+        Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>, &Resource<JSDevice>) + Send>>,
     projection_view_inverted_is_dirty: bool,
     buffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, true>>>,
     cluster_array_buffer:

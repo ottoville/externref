@@ -1,14 +1,33 @@
-use std::{cell::LazyCell, num::{NonZero, NonZeroU32}, sync::Arc};
+use std::{
+    cell::LazyCell,
+    num::{NonZero, NonZeroU32},
+    sync::Arc,
+};
 
 use externref::Resource;
 use terramath::VectorMath;
+use webgpu::{
+    device::JSDevice,
+    texture::{
+        depth_texture::DepthTexture,
+        render_attachment_texture::{RenderAttachmentTexture, RenderAttachmentTextureMultiSampled},
+    },
+};
 
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeList, cameras::{camera::Camera, camera_group::CameraGroup}, gpu::{
-        bindgroup::BindGroup, command_encoder::GPUCommandEncoder, compute_pass_encoder::{ComputePassEncoder, JSComputePipeline}, gpu::{get_renderpass_descriptor, JSDevice, GPU}, queue::Queue, renderbundle::RenderBundleEncoder, renderpass::{JSRenderPass, RenderPassTrait}, texture::{
-            depth_texture::DepthTexture, render_attachment_texture::{RenderAttachmentTexture, RenderAttachmentTextureMultiSampled},
-        }
-    }, swapbuffers::SwapBuffers, MULTIVALUE_F32
+    allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
+    cameras::{camera::Camera, camera_group::CameraGroup},
+    gpu::{
+        bindgroup::BindGroup,
+        command_encoder::GPUCommandEncoder,
+        compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
+        gpu::{get_renderpass_descriptor, GPU},
+        queue::Queue,
+        renderbundle::RenderBundleEncoder,
+        renderpass::{JSRenderPass, RenderPassTrait},
+    },
+    swapbuffers::SwapBuffers,
+    MULTIVALUE_F32,
 };
 thread_local! {
     static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass")) };

@@ -5,6 +5,7 @@ use std::{
 };
 
 use externref::{externref, Resource};
+use webgpu::device::JSDevice;
 
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
@@ -20,7 +21,6 @@ use crate::{
 use super::{
     bindgroup::{BindGroup, BindGroupResources},
     binding_commands::BindingCommands,
-    gpu::JSDevice,
 };
 
 pub struct JSRenderBundleEncoder(());

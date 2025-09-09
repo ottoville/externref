@@ -5,6 +5,9 @@ use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
 
 use externref::{externref, Resource};
+use webgpu::device::JSDevice;
+use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
+use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT};
 
 use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use crate::allocators::stack_allocator::StackAllocator;
@@ -24,8 +27,6 @@ use crate::gpu::shader::{
     SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
     SHADER_STAGE_VERTEX, SHADER_STAGE_VERTEX_AND_FRAGMENT,
 };
-use crate::gpu::texture::texture::Texture;
-use crate::gpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT};
 use crate::mesh::ENGINE;
 use crate::mesh_property::MeshProperty;
 use crate::projection::{Projection, PROJECTION_BUFFER_SIZE};
@@ -407,6 +408,25 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("depthTexture_renderPassScreen"),
                 1,
             );
+        let screen_render_target_view = screen_render_target
+            .create_view::<false, false, true, false, true>(
+                String::from("renderPassScreen_view"),
+                TextureViewDimension::d2,
+                TextureAspect::all,
+                0,
+                NonZeroU32::new_unchecked(1),
+                0,
+                NonZeroU32::new_unchecked(1),
+            );
+        /* let screen_render_target_view2 = screen_render_target.create_srgb_view::<false, false, true, false, true, _>(
+            String::from("renderPassScreen_view"),
+            TextureViewDimension::d2,
+            TextureAspect::all,
+            0,
+            NonZeroU32::new_unchecked(1),
+            0,
+            NonZeroU32::new_unchecked(1),
+        );*/
         let render_pass_screen = RenderpassMSAA::new(
             String::from("renderPassScreen"),
             [NonZeroU32::new_unchecked(1); 2],
@@ -424,7 +444,7 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
-            [Box::new(screen_render_target)],
+            [Box::new(screen_render_target_view)],
             Some(Box::new(depth_render_target)),
         );
         let screen_dimension_buffer_screen_water =
@@ -443,6 +463,16 @@ pub unsafe extern "C" fn init_gpu(
             String::from("diffuseTextureWater"),
             1,
         );
+        let water_render_target_view = water_render_target
+            .create_view::<false, false, true, false, true>(
+                String::from("diffuseTextureWater_view"),
+                TextureViewDimension::d2,
+                TextureAspect::all,
+                0,
+                NonZeroU32::new_unchecked(1),
+                0,
+                NonZeroU32::new_unchecked(1),
+            );
         let depth_render_target_water =
             Texture::<DEPTH32FLOAT, 2, 4, true, false, false, false, true>::new(
                 &device,
@@ -472,7 +502,7 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
-            [Box::new(water_render_target)],
+            [Box::new(water_render_target_view)],
             Some(Box::new(depth_render_target_water)),
         );
         let screen_dimension_buffer_screen_pick =
@@ -490,6 +520,16 @@ pub unsafe extern "C" fn init_gpu(
             String::from("idTexture"),
             1,
         );
+        let pick_render_target_view = pick_render_target
+            .create_view::<true, false, true, false, true>(
+                String::from("idTexture_view"),
+                TextureViewDimension::d2,
+                TextureAspect::all,
+                0,
+                NonZeroU32::new_unchecked(1),
+                0,
+                NonZeroU32::new_unchecked(1),
+            );
         let pick_render_pass = Renderpass::new(
             String::from("pickRenderPass"),
             [NonZeroU32::new_unchecked(1); 2],
@@ -507,7 +547,7 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
-            [Box::new(pick_render_target)],
+            [Box::new(pick_render_target_view)],
             None,
         );
         let render_pass_canvas = Renderpass::new(
@@ -581,7 +621,6 @@ pub unsafe extern "C" fn process_gpu_queue(
 
     gpu.process_gpu_queue(time, update_view_pipeline);
 }
-pub struct JSDevice(());
 
 pub struct GPU {
     pub device: Resource<JSDevice>,

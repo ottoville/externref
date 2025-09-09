@@ -1,12 +1,10 @@
 use std::{collections::BTreeMap, sync::Arc};
 
 use externref::Resource;
+use webgpu::device::JSDevice;
 
 use crate::{
-    gpu::{
-        buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer},
-        gpu::JSDevice,
-    },
+    gpu::buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer},
     mesh::ENGINE,
 };
 pub struct SwapBuffers {

@@ -135,6 +135,7 @@ export const TextureInterface = {
     const label = textDecoder.decode(
       new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
     );
+    console.log('create_texture_view', textureFormatMapping[format]);
     return texture.createView({
       arrayLayerCount,
       aspect: textureAspectMapping[aspect]!,

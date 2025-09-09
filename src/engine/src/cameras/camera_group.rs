@@ -4,12 +4,13 @@ use std::{
 };
 
 use externref::Resource;
+use webgpu::device::JSDevice;
 
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     gpu::{
         bindgroup::BindGroup, binding_commands::BindingCommands, buffer::buffer::GPUBuffer,
-        compute_pass_encoder::ComputePassEncoder, gpu::JSDevice, renderbundle::get_camera_by_id,
+        compute_pass_encoder::ComputePassEncoder, renderbundle::get_camera_by_id,
     },
     projection::TILE_COUNT,
 };

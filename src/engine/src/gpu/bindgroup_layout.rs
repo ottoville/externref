@@ -4,8 +4,9 @@ use std::{cell::RefCell, sync::Arc};
 #[cfg(target_arch = "wasm32")]
 use externref::externref;
 use externref::Resource;
+use webgpu::{device::JSDevice, texture::texture::TextureViewDimension};
 
-use crate::gpu::{gpu::{create_bind_group_layout, JSDevice}, texture::texture::TextureViewDimension};
+use crate::gpu::gpu::create_bind_group_layout;
 
 thread_local! {
     static LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };

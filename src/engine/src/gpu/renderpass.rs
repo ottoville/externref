@@ -6,21 +6,20 @@ use std::{
 
 use externref::{externref, Resource};
 use terramath::VectorMath;
+use webgpu::{
+    device::JSDevice,
+    texture::{
+        depth_texture::DepthTexture,
+        render_attachment_texture::{
+            RenderAttachmentTexture, RenderAttachmentTextureSingleSampled,
+        },
+    },
+};
 
 use crate::{
     allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
-    gpu::{
-        compute_pass_encoder::JSComputePipeline,
-        gpu::GPU,
-        queue::Queue,
-        texture::{
-            depth_texture::DepthTexture,
-            render_attachment_texture::{
-                RenderAttachmentTexture, RenderAttachmentTextureSingleSampled,
-            },
-        },
-    },
+    gpu::{compute_pass_encoder::JSComputePipeline, gpu::GPU, queue::Queue},
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
@@ -30,7 +29,7 @@ use super::{
     bindgroup::BindGroup,
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::ComputePassEncoder,
-    gpu::{get_renderpass_descriptor, JSDevice},
+    gpu::get_renderpass_descriptor,
     renderbundle::{JSFunction, RenderBundleEncoder},
 };
 thread_local! {
@@ -174,6 +173,15 @@ impl RenderPassTrait for Renderpass {
         bind_group_position: &Arc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
+            /*let formats: Vec<u32> = self.render_targets
+                .iter()
+                .map(|rendertarget| rendertarget.to_number())
+                .collect();
+
+            if let Some(depth_render_target) = &self.depth_render_target {
+
+            }*/
+
             let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
             let mut renderpass_encoder = command_encoder.begin_render_pass(label, &descriptor);
             if let Some(bundle) = self.bundle.as_mut() {
