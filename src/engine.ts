@@ -31,6 +31,7 @@ import { serialize_terrain } from './world/Terrain.js';
 import { TextureInterface } from './wasm-interfaces/TextureInterface.js';
 import { CanvasInterface } from './wasm-interfaces/CanvasInterface.js';
 import { GPUInterface } from './wasm-interfaces/GPUInterface.js';
+import { CanvasContextInterface } from './wasm-interfaces/CanvasContextInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -896,6 +897,7 @@ export class Engine {
       rendercommands: RenderCommandsInterface,
       renderpassencoder: RenderPassEncoderInterface,
       texture: TextureInterface,
+      webgpucontext: CanvasContextInterface,
     };
     try {
       if (

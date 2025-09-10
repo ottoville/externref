@@ -8,7 +8,6 @@ pub trait TextureFormatSRGB<F: TextureFormat>: TextureFormat {
         F::to_number()
     }
 }
-
 impl TextureFormatSRGB<RGBA8UNORM_SRGB> for RGBA8UNORM {}
 impl TextureFormatSRGB<BGRA8UNORM_SRGB> for BGRA8UNORM {}
 impl TextureFormatSRGB<BC1_RGBA_UNORM_SRGB> for BC1_RGBA_UNORM {}
@@ -31,10 +30,14 @@ impl TextureFormatSRGB<ASTC_10X8_UNORM_SRGB> for ASTC_10X8_UNORM {}
 impl TextureFormatSRGB<ASTC_10X10_UNORM_SRGB> for ASTC_10X10_UNORM {}
 impl TextureFormatSRGB<ASTC_12X10_UNORM_SRGB> for ASTC_12X10_UNORM {}
 impl TextureFormatSRGB<ASTC_12X12_UNORM_SRGB> for ASTC_12X12_UNORM {}
-pub struct TFORMAT<const U: u32, const RENDER_ATTACHMENT: bool = false, const DEPTH: bool = false, const MULTISAMPLING: bool = false>
-();
-impl<const U: u32, const RENDER_ATTACHMENT: bool, const DEPTH: bool, const MULTISAMPLING: bool> TextureFormat
-    for TFORMAT<U, RENDER_ATTACHMENT, DEPTH, MULTISAMPLING>
+pub struct TFORMAT<
+    const U: u32,
+    const RENDER_ATTACHMENT: bool = false,
+    const DEPTH: bool = false,
+    const MULTISAMPLING: bool = false,
+>();
+impl<const U: u32, const RENDER_ATTACHMENT: bool, const DEPTH: bool, const MULTISAMPLING: bool>
+    TextureFormat for TFORMAT<U, RENDER_ATTACHMENT, DEPTH, MULTISAMPLING>
 {
     fn to_number() -> u32 {
         U

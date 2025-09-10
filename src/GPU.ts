@@ -580,12 +580,6 @@ export class GPU {
             (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');
     */
 
-    context.configure({
-      device: device,
-      format: this.#presentationFormat,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-
     this.UIPipeline = createUI(this);
 
     //Scene layoyt is iterated manually so remove it not to iterate it twise.

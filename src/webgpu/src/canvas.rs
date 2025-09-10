@@ -1,12 +1,10 @@
-#[cfg(any(not(test), rust_analyzer))]
-#[cfg(target_arch = "wasm32")]
 use externref::externref;
 use externref::Resource;
+use crate::canvas_context::{JSGPUCanvasContext, UnconfiguredCanvasContext};
 
-#[cfg(test)]
-pub unsafe fn get_webgpu_context(
-    _canvas: &Resource<JSCanvas>,
-) -> Resource<JSGPUCanvasContext> {
+
+#[cfg(not(target_arch = "wasm32"))]
+pub unsafe fn get_webgpu_context(_canvas: &Resource<JSCanvas>) -> Resource<JSGPUCanvasContext> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
@@ -21,15 +19,15 @@ extern "C" {
     pub fn get_webgpu_context(canvas: &Resource<JSCanvas>) -> Resource<JSGPUCanvasContext>;
 }
 
-
 pub struct JSCanvas(());
-pub struct JSGPUCanvasContext(());
 
 pub struct Canvas {
     pub externref: Resource<JSCanvas>,
 }
 impl Canvas {
-    pub fn get_webgpu_context(&self) -> Resource<JSGPUCanvasContext> {
-        unsafe { get_webgpu_context(&self.externref) }
+    pub fn get_webgpu_context(&self) -> UnconfiguredCanvasContext {
+        UnconfiguredCanvasContext {
+            context: unsafe { get_webgpu_context(&self.externref) },
+        }
     }
 }

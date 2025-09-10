@@ -1,6 +1,8 @@
+use externref::Resource;
+
 use crate::texture::{
     texture_formats::{TextureFormat, TFORMAT},
-    texture_view::TextureView,
+    texture_view::{JSTextureView, TextureView},
 };
 
 pub trait RenderAttachmentFormat: TextureFormat {}
@@ -267,7 +269,7 @@ descriptor.dimension must be either "2d" or "3d".
 pub trait RenderAttachmentTexture {
     fn to_number(&self) -> u32;
 
-    //fn get_attachment(&self);
+    fn get_attachment(&mut self) -> &Resource<JSTextureView>;
 }
 impl<
         F: RenderAttachmentFormat,
@@ -282,6 +284,10 @@ impl<
 {
     fn to_number(&self) -> u32 {
         F::to_number()
+    }
+    
+    fn get_attachment(&mut self) -> &Resource<JSTextureView> {
+        &self.externref
     }
 }
 

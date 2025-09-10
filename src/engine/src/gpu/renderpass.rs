@@ -180,7 +180,8 @@ impl RenderPassTrait for Renderpass {
 
             if let Some(depth_render_target) = &self.depth_render_target {
 
-            }*/
+            }
+            */
 
             let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
             let mut renderpass_encoder = command_encoder.begin_render_pass(label, &descriptor);

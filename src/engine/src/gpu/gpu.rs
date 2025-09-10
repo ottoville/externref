@@ -5,9 +5,12 @@ use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
 
 use externref::{externref, Resource};
+use webgpu::canvas::{Canvas, JSCanvas};
+use webgpu::canvas_context::{AlphaMode, ColorSpace};
 use webgpu::device::JSDevice;
+use webgpu::texture::render_attachment_texture::RenderAttachmentTextureSingleSampled;
 use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
-use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT};
+use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT, RGBA8UNORM};
 
 use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use crate::allocators::stack_allocator::StackAllocator;
@@ -18,8 +21,6 @@ use crate::gpu::bindgroup_layout::{
     BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
 };
 use crate::gpu::buffer::buffer::GPUBuffer;
-use crate::gpu::canvas::{Canvas, JSCanvas};
-use crate::gpu::canvas_context::CanvasContext;
 use crate::gpu::command_encoder::JSCommandEncoder;
 use crate::gpu::renderpass::RenderPassTrait;
 use crate::gpu::renderpass_msaa::RenderpassMSAA;
@@ -218,9 +219,7 @@ pub unsafe extern "C" fn init_gpu(
         let canvas = Canvas {
             externref: js_canvas,
         };
-        let context = canvas.get_webgpu_context();
-        let format_num = get_preferred_canvas_format();
-        let context2 = CanvasContext { format: format_num };
+        let unconfigured_context = canvas.get_webgpu_context();
 
         // LAYOUT UpdateViewLayout2
         let directional_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
@@ -550,15 +549,44 @@ pub unsafe extern "C" fn init_gpu(
             [Box::new(pick_render_target_view)],
             None,
         );
+
+        let format_num = get_preferred_canvas_format();
+        let render_target: Box<dyn RenderAttachmentTextureSingleSampled + Send> =
+            if format_num == 21 {
+                Box::new(
+                    unconfigured_context.configure::<RGBA8UNORM, false, false, false, false, true>(
+                        &device,
+                        ColorSpace::SRGB,
+                        None,
+                        AlphaMode::Opaque,
+                    ),
+                )
+            } else {
+                Box::new(
+                    unconfigured_context.configure::<BGRA8UNORM, false, false, false, false, true>(
+                        &device,
+                        ColorSpace::SRGB,
+                        None,
+                        AlphaMode::Opaque,
+                    ),
+                )
+            };
         let render_pass_canvas = Renderpass::new(
             String::from("renderPassCanvas"),
             [NonZeroU32::new_unchecked(1); 2],
             None,
             js_render_pass_canvas,
             Vec::new(),
-            [Box::new(context2)],
+            [render_target],
             None,
         );
+        let renderpasses: Vec<Box<dyn RenderPassTrait + Send>> = vec![
+            Box::new(render_pass_screen),
+            Box::new(render_pass_water),
+            Box::new(pick_render_pass),
+            Box::new(render_pass_canvas),
+        ];
+
         let _ = gpu.insert(GPU {
             device,
             queue: Queue {
@@ -569,12 +597,7 @@ pub unsafe extern "C" fn init_gpu(
             bind_group_position,
             projections: vec![Arc::new(projection)],
             cameras: ExplicitGenerationalFreeList::new(4),
-            renderpasses: vec![
-                Box::new(render_pass_screen),
-                Box::new(render_pass_water),
-                Box::new(pick_render_pass),
-                Box::new(render_pass_canvas),
-            ],
+            renderpasses,
             update_view_bindgroup,
             point_lights,
             directional_lights,

@@ -110,8 +110,8 @@ pub struct Texture<
     const SRGB_MULTIVIEW: bool = false,
 > {
     pub externref: Resource<JSTexture>,
-    label: String,
-    format: PhantomData<F>,
+    pub label: String,
+    pub format: PhantomData<F>,
 }
 
 pub trait TextureDimensionTrait {}
@@ -275,7 +275,7 @@ where
         true,
     >
     where
-        F: TextureFormatSRGB<VF>,
+        F: TextureFormatSRGB<VF>, // Should be F: TextureFormatSRGB<F>  ??
     {
         let variants = [F::to_number(), F::to_srgb()];
         let externref = unsafe {
