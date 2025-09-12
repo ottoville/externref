@@ -12,7 +12,6 @@ import { BindGroup, Buffer, BufferUsageEnums } from '../webgpu-ts/index.js';
 import type { PTDresult } from 'paintGround/paintGround.js';
 import { createGrassVertShader } from '../GPU/Shaders/Grass.vert.js';
 import { create_rust_label } from '../utils.js';
-import { Externref } from '../externref.js';
 declare const engine: Engine;
 
 /**
@@ -212,7 +211,7 @@ export class Plants extends MainNode {
             const data2 = new Uint32Array([7, (data.buffer.byteLength / 4) * 2])
               .buffer;
             const swapBuffer2 = engine.rust.create_mapped_GPU_buffer_copysrc(
-              new Externref(true, scene.gpu.device),
+              scene.gpu.device,
               data2.byteLength,
               ...create_rust_label('_swap'),
             );

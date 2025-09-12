@@ -1,4 +1,3 @@
-import { Externref } from 'externref.js';
 import { stringFromPtr } from '../utils.js';
 import type { Engine } from '../engine.js';
 import { textureFormatMapping } from './TextureInterface.js';
@@ -7,10 +6,10 @@ const textDecoder = new TextDecoder();
 
 export const RenderbundleEncoderInterface = {
   create_renderbundle_encoder(
-    device: Externref<true, GPUDevice>,
+    device: GPUDevice,
     descriptor: GPURenderBundleEncoderDescriptor,
   ): GPURenderBundleEncoder {
-    return device.externref.createRenderBundleEncoder(descriptor);
+    return device.createRenderBundleEncoder(descriptor);
   },
   create_renderbundle_encoder_descriptor(
     color_formats_ptr: number,

@@ -1,1 +1,66 @@
-pub struct JSDevice(());
+use crate::bindgroup_layout::JSBindGroupLayout;
+use crate::binding_layout::BindingLayout;
+use crate::texture::texture::JSTexture;
+use externref::externref;
+use externref::Resource;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub unsafe fn create_texture(
+    _device: &Resource<JSDevice>,
+    _width: usize,
+    _height: usize,
+    _depth_or_array_layers: u32,
+    _label_ptr: usize,
+    _label_len: usize,
+    _usages: u32,
+    _mip_level_count: u32,
+    _sample_count: u32,
+    _dimension: u32,
+    _format: u32,
+    _viewformats_ptr: usize,
+    _viewformats_len: usize,
+) -> Resource<JSTexture> {
+    use externref::ExternRef;
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn create_bind_group_layout(
+    _device: &Resource<JSDevice>,
+    _label_ptr: usize,
+    _label_len: usize,
+
+    _entries: *mut std::slice::Iter<'_, &dyn BindingLayout>,
+) -> Resource<JSBindGroupLayout> {
+    use externref::ExternRef;
+    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+}
+#[cfg(target_arch = "wasm32")]
+#[externref]
+#[link(wasm_import_module = "device")]
+#[cfg(any(not(test), rust_analyzer))]
+extern "C" {
+    pub fn create_bind_group_layout(
+        device: &Resource<JSDevice>,
+        label_ptr: usize,
+        label_len: usize,
+        entries: *mut std::slice::Iter<'_, &dyn BindingLayout>,
+    ) -> Resource<JSBindGroupLayout>;
+    pub fn create_texture(
+        device: &Resource<JSDevice>,
+        width: usize,
+        height: usize,
+        depthOrArrayLayers: u32,
+        label_ptr: usize,
+        label_len: usize,
+        usages: u32,
+        mipLevelCount: u32,
+        sampleCount: u32,
+        dimension: u32,
+        format: u32,
+        viewformats_ptr: usize,
+        viewformats_len: usize,
+    ) -> Resource<JSTexture>;
+
+}
+pub struct JSDevice();

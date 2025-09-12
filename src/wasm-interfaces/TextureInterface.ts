@@ -147,4 +147,7 @@ export const TextureInterface = {
       usage,
     });
   },
+  destroy(texture: GPUTexture) {
+    texture.destroy();
+  },
 };

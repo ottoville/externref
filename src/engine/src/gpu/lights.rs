@@ -70,9 +70,9 @@ impl Lights {
 #[cfg(test)]
 #[test]
 fn test_lights() {
-    use crate::gpu::bindgroup_layout::{
-        BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
-    };
+    use crate::gpu::bindgroup_layout::{BufferBindingType, GPUBufferBindingLayout};
+    use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
+
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use crate::gpu::{
         bindgroup::BindGroup, bufferbinding::BufferBinding, gpu::init_gpu, queue::Queue,

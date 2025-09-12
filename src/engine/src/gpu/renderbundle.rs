@@ -123,7 +123,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup(
     bindgroup: *const Arc<BindGroup<1>>,
     device: &Resource<JSDevice>,
 ) {
-    (*renderbundle).set_bindgroup(&*device, index, &(*bindgroup), &[]);
+    (*renderbundle).set_bindgroup(device, index, &(*bindgroup), &[]);
 }
 #[no_mangle]
 #[externref]
@@ -134,7 +134,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup_1(
     device: &Resource<JSDevice>,
     dynamic_offset: u32,
 ) {
-    (*renderbundle).set_bindgroup(&*device, index, &(*bindgroup), &[dynamic_offset]);
+    (*renderbundle).set_bindgroup(device, index, &(*bindgroup), &[dynamic_offset]);
 }
 #[no_mangle]
 #[externref]
@@ -147,7 +147,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup_2(
     dynamic_offset2: u32,
 ) {
     (*renderbundle).set_bindgroup(
-        &*device,
+        device,
         index,
         &(*bindgroup),
         &[dynamic_offset1, dynamic_offset2],

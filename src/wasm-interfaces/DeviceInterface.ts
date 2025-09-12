@@ -25,7 +25,7 @@ const bufferBindingTypeMapping = [
 ] as const;
 export const DeviceExports = {
   create_bind_group(
-    { externref: device }: Externref<true, GPUDevice>,
+    device: GPUDevice,
     layout: BGLayout | GPUBindGroupLayout,
     label_vec_ptr: rust_pointer<'label'>,
     iterator: Rust_Iterator<number>,
@@ -63,12 +63,14 @@ export const DeviceExports = {
   },
 
   create_bind_group_layout(
-    { externref: device }: Externref<true, GPUDevice>,
-    label_vec_ptr: rust_pointer<'label'>,
-
+    device: GPUDevice,
+    label_ptr: number,
+    label_len: number,
     iterator: Rust_Iterator<number>,
   ) {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
     const groupIterator = rust_iterator_to_js(
       iterator,
       -1,
@@ -116,7 +118,7 @@ export const DeviceExports = {
     };
   },
   create_buffer(
-    { externref: device }: Externref<true, GPUDevice>,
+    device: GPUDevice,
     size: number,
     label_ptr: number,
     label_len: number,
@@ -138,14 +140,14 @@ export const DeviceExports = {
     );
   },
   create_gpu_command_encoder(
-    { externref: device }: Externref<true, GPUDevice>,
+    device: GPUDevice,
     label_vec_ptr: rust_pointer<'label'>,
   ): GPUCommandEncoder {
     const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
     return device.createCommandEncoder({ label });
   },
   create_texture(
-    { externref: device }: Externref<true, GPUDevice>,
+    device: GPUDevice,
     width: number,
     height: number,
     depthOrArrayLayers: number,
@@ -183,5 +185,8 @@ export const DeviceExports = {
       usage,
       viewFormats,
     });
+  },
+  destroy(device: GPUDevice) {
+    device.destroy();
   },
 };

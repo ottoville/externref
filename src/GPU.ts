@@ -46,7 +46,6 @@ import {
 import { StructProperty } from './webgpu-ts/index.js';
 import { createPipelineLayouts } from './GPU/Shaders/Pipelinelayouts.js';
 import { createUI } from './GPU/UI.js';
-import { Externref } from './externref.js';
 import { PickableRenderPassMSAA } from './GPU/RenderPasses/PickableRenderPassMSAA.js';
 
 declare const engine: Engine;
@@ -488,7 +487,7 @@ export class GPU {
       sampleCount: 1,
     });
     const bindGroup_index = engine.rust.init_gpu(
-      new Externref(true, device),
+      device,
       device.queue,
       true,
       this.renderPassScreen,
@@ -531,14 +530,14 @@ export class GPU {
               rust_renderbundle_encoder,
               bindGroupStartIndex++,
               this.bind_group_position!,
-              new Externref(true, engine.gpu!.device),
+              engine.gpu!.device,
             );
           } else if (offsets.length === 1) {
             engine.rust.renderbundle_set_bindgroup_1(
               rust_renderbundle_encoder,
               bindGroupStartIndex++,
               this.bind_group_position!,
-              new Externref(true, engine.gpu!.device),
+              engine.gpu!.device,
               offsets[0]!,
             );
           } else if (offsets.length === 2) {
@@ -546,7 +545,7 @@ export class GPU {
               rust_renderbundle_encoder,
               bindGroupStartIndex++,
               this.bind_group_position!,
-              new Externref(true, engine.gpu!.device),
+              engine.gpu!.device,
               offsets[0]!,
               offsets[1]!,
             );

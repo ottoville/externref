@@ -2,9 +2,9 @@ use std::sync::Mutex;
 use std::sync::{Arc, Weak};
 
 use externref::Resource;
+use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
 use webgpu::device::JSDevice;
 
-use crate::gpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
 use crate::MULTIVALUE_USIZE;
 
 use super::buffer::buffer::JSBuffer;
@@ -129,9 +129,9 @@ fn test_bindgroup() {
     use super::gpu::{create_bind_group, init_gpu};
     use super::renderbundle::{RenderBundle, RenderBundleEncoder};
     use crate::engine;
-    use crate::gpu::bindgroup_layout::{
-        BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
-    };
+    use crate::gpu::bindgroup_layout::{BufferBindingType, GPUBufferBindingLayout};
+    use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
+
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
@@ -271,15 +271,14 @@ fn test_bindgroup_buffer_resize() {
     use super::gpu::{create_bind_group, init_gpu};
     use super::renderbundle::{RenderBundle, RenderBundleEncoder};
     use crate::engine;
-    use crate::gpu::bindgroup_layout::{
-        BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
-    };
+    use crate::gpu::bindgroup_layout::{BufferBindingType, GPUBufferBindingLayout};
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
     use crate::mesh::ENGINE;
     use externref::ExternRef;
+    use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         let mut command_encoder = GPUCommandEncoder::new(

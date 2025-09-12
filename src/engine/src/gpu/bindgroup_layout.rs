@@ -1,16 +1,12 @@
-use std::{cell::RefCell, sync::Arc};
-
 #[cfg(any(not(test), rust_analyzer))]
 #[cfg(target_arch = "wasm32")]
 use externref::externref;
 use externref::Resource;
-use webgpu::{device::JSDevice, texture::texture::TextureViewDimension};
+use webgpu::{
+    binding_layout::{BindingLayout, JSGPUBindGroupLayoutEntry},
+    texture::texture::TextureViewDimension,
+};
 
-use crate::gpu::gpu::create_bind_group_layout;
-
-thread_local! {
-    static LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };
-}
 pub enum BufferBindingType {
     Uniform,
     Storage,
@@ -79,17 +75,6 @@ pub unsafe extern "C" fn iterate_binding_layouts(
     }
 }
 
-pub struct JSBindGroupLayout(());
-pub struct JSGPUBindGroupLayoutEntry(());
-
-pub struct BindGroupLayout<const N: usize> {
-    label: String,
-    pub externref: Arc<Resource<JSBindGroupLayout>>,
-}
-
-pub trait BindingLayout {
-    fn externref(&self) -> &Resource<JSGPUBindGroupLayoutEntry>;
-}
 impl<const VISIBILITY: u32> GPUBufferBindingLayout<VISIBILITY> {
     pub fn new(
         binding: u32,
@@ -146,26 +131,3 @@ pub struct GPUTextureBindingLayout<const VISIBILITY: u32> {
 }
 pub struct GPUStorageTextureBindingLayout {}
 pub struct GPUExternalTextureBindingLayout {}
-
-impl<const N: usize> BindGroupLayout<N> {
-    pub fn new(
-        device: &Resource<JSDevice>,
-        label: String,
-        entries: [&dyn BindingLayout; N],
-    ) -> Self {
-        let bindinglayout_iterator = Box::new(entries.iter());
-        let label_ptr = LABEL.with_borrow_mut(|l| {
-            l[0] = label.as_ptr() as usize;
-            l[1] = label.len();
-            l[2] = label.capacity();
-            l.as_ptr()
-        });
-        let externref = unsafe {
-            create_bind_group_layout(device, label_ptr, Box::into_raw(bindinglayout_iterator))
-        };
-        BindGroupLayout {
-            label,
-            externref: Arc::new(externref),
-        }
-    }
-}

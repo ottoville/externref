@@ -345,7 +345,7 @@ export type rustWasm = {
   drop_camera_lock(camera: rust_mutex<'locked', 'camera'>): void;
 
   init_gpu(
-    device: Externref<true, GPUDevice>,
+    device: GPUDevice,
     queue: GPUQueue,
     force: boolean,
     renderPassScreen: RenderPass,
@@ -451,7 +451,7 @@ export type rustWasm = {
     renderbundle: rust_pointer<'renderbundleencoder'>,
     index: number,
     bindgroup: rust_pointer<'bind_group_position'>,
-    device: Externref<true, GPUDevice>,
+    device: GPUDevice,
   ): void;
   render_indexed(
     renderbundle: rust_pointer<'renderbundleencoder'>,
@@ -465,14 +465,14 @@ export type rustWasm = {
     renderbundle: rust_pointer<'renderbundleencoder'>,
     index: number,
     bindgroup: rust_pointer<'bind_group_position'>,
-    device: Externref<true, GPUDevice>,
+    device: GPUDevice,
     dynamic_offset: number,
   ): void;
   renderbundle_set_bindgroup_2(
     renderbundle: rust_pointer<'renderbundleencoder'>,
     index: number,
     bindgroup: rust_pointer<'bind_group_position'>,
-    device: Externref<true, GPUDevice>,
+    device: GPUDevice,
     dynamic_offset1: number,
     dynamic_offset2: number,
   ): void;

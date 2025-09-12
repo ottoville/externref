@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
+use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
 use webgpu::canvas::{Canvas, JSCanvas};
 use webgpu::canvas_context::{AlphaMode, ColorSpace};
 use webgpu::device::JSDevice;
@@ -17,9 +18,7 @@ use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
 use crate::engine::get_preferred_canvas_format;
-use crate::gpu::bindgroup_layout::{
-    BindGroupLayout, BufferBindingType, GPUBufferBindingLayout, JSBindGroupLayout,
-};
+use crate::gpu::bindgroup_layout::{BufferBindingType, GPUBufferBindingLayout};
 use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::command_encoder::JSCommandEncoder;
 use crate::gpu::renderpass::RenderPassTrait;
@@ -101,15 +100,6 @@ pub unsafe fn create_gpu_command_encoder(
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
 }
-#[cfg(test)]
-pub fn create_bind_group_layout(
-    _device: &Resource<JSDevice>,
-    _label: *const usize,
-    _entries: *mut std::slice::Iter<'_, &dyn super::bindgroup_layout::BindingLayout>,
-) -> Resource<JSBindGroupLayout> {
-    use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
-}
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
@@ -122,11 +112,6 @@ extern "C" {
         label: *const usize,
         entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
     ) -> Resource<JSBindGroup>;
-    pub fn create_bind_group_layout(
-        device: &Resource<JSDevice>,
-        label: *const usize,
-        entries: *mut std::slice::Iter<'_, &dyn super::bindgroup_layout::BindingLayout>,
-    ) -> Resource<JSBindGroupLayout>;
     pub fn create_gpu_command_encoder(
         device: &Resource<JSDevice>,
         label: *const usize,

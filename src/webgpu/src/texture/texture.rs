@@ -1,7 +1,8 @@
 use externref::externref;
 use externref::Resource;
-use std::{marker::PhantomData, num::NonZeroU32};
+use std::marker::PhantomData;
 
+use crate::device::create_texture;
 use crate::{
     device::JSDevice,
     texture::{
@@ -31,47 +32,14 @@ pub enum TextureAspect {
 pub struct JSTexture(());
 
 #[cfg(not(target_arch = "wasm32"))]
-pub unsafe fn create_texture(
-    _device: &Resource<JSDevice>,
-    _width: usize,
-    _height: usize,
-    _depth_or_array_layers: u32,
-    _label_ptr: usize,
-    _label_len: usize,
-    _usages: u32,
-    _mip_level_count: u32,
-    _sample_count: u32,
-    _dimension: u32,
-    _format: u32,
-    _viewformats_ptr: usize,
-    _viewformats_len: usize,
-) -> Resource<JSTexture> {
-    use externref::ExternRef;
-    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
-}
+unsafe fn destroy(_texture: &Resource<JSTexture>) {}
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
-#[link(wasm_import_module = "device")]
-#[cfg(any(not(test), rust_analyzer))]
+#[link(wasm_import_module = "texture")]
 extern "C" {
-    pub fn create_texture(
-        device: &Resource<JSDevice>,
-        width: usize,
-        height: usize,
-        depthOrArrayLayers: u32,
-        label_ptr: usize,
-        label_len: usize,
-        usages: u32,
-        mipLevelCount: u32,
-        sampleCount: u32,
-        dimension: u32,
-        format: u32,
-        viewformats_ptr: usize,
-        viewformats_len: usize,
-    ) -> Resource<JSTexture>;
+    fn destroy(texture: &Resource<JSTexture>);
 }
-
 pub const fn usages_from_bools<
     const COPY_SRC: bool,
     const COPY_DST: bool,
@@ -479,6 +447,39 @@ impl<
         >(self, label, dimension, aspect);
     }
 }
+
+impl<
+        F: TextureFormat,
+        const DIMENSION: u32,
+        const SAMPLE_COUNT: u32,
+        const DEPTH_OR_ARRAY_LAYERS: u32,
+        const MIP_LEVEL_COUNT: u32,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const TEXTURE_BINDING: bool,
+        const STORAGE_BINDING: bool,
+        const RENDER_ATTACHMENT: bool,
+        const SRGB_MULTIVIEW: bool,
+    > Drop
+    for Texture<
+        F,
+        DIMENSION,
+        SAMPLE_COUNT,
+        DEPTH_OR_ARRAY_LAYERS,
+        MIP_LEVEL_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+        SRGB_MULTIVIEW,
+    >
+{
+    fn drop(&mut self) {
+        unsafe { destroy(&self.externref) };
+    }
+}
+
 #[cfg(test)]
 #[test]
 fn test_texture() {

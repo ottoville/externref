@@ -1,4 +1,3 @@
-import type { Externref } from 'externref';
 import { textureFormatMapping } from './TextureInterface.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
@@ -9,7 +8,7 @@ const alphaModeMapping = ['opaque', 'premultiplied'] as const;
 export const CanvasContextInterface = {
   configure(
     canvas: GPUCanvasContext,
-    { externref: device }: Externref<true, GPUDevice>,
+    device: GPUDevice,
     format: number,
     usage: number,
     viewformats_ptr: number,

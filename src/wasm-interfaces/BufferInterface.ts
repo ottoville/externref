@@ -5,7 +5,7 @@ declare const engine: Engine;
 
 export type BufferInterface = {
   create_mapped_GPU_buffer_copysrc(
-    device: Externref<true, GPUDevice>,
+    device: GPUDevice,
     length: number,
     label_ptr: number,
     label_len: number,
