@@ -1,6 +1,10 @@
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex, mesh::{Mesh, ENGINE}, vertices::{Position, VertexKind}, Geometry
+    mesh::{Mesh, ENGINE},
+    vertices::{Position, VertexKind},
+    Geometry,
 };
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+
 #[no_mangle]
 pub unsafe extern "C" fn create_water_mesh(
     scenes: f32,
@@ -8,17 +12,8 @@ pub unsafe extern "C" fn create_water_mesh(
     let label = String::from("Water");
 
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
-        0.0,
-        0.0,
-        scenes,
-        0,
-        label,
-        None,
-        None,
-        &mut meshes,
-        false,
-    );
+    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> =
+        Mesh::new(0.0, 0.0, scenes, 0, label, None, None, &mut meshes, false);
     let geometry = create_water_geometry();
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));

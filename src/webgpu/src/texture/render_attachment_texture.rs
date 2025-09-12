@@ -32,22 +32,16 @@ descriptor.dimension must be either "2d" or "3d".
 /// unsafe {
 /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
 /// let multisampled_textureview: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(
-///        Texture::<BGRA8UNORM, 2, 4, false, false, true, false, true>::new(
+///        Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, false, true>::new(
 ///            &device,
 ///            300,
 ///            300,
-///            1,
 ///            String::from("diffuseTexture"),
-///            1,
 ///        )
-///        .create_view::<false, false, true, false, true>(
+///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
 ///            TextureViewDimension::d2,
 ///            TextureAspect::all,
-///            1,
-///            NonZeroU32::new_unchecked(1),
-///            1,
-///            NonZeroU32::new_unchecked(1),
 ///        )
 ///    );
 /// }
@@ -64,22 +58,16 @@ descriptor.dimension must be either "2d" or "3d".
 /// unsafe {
 /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
 /// let multisampled_textureview: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(
-///        Texture::<BGRA8UNORM, 2, 3, false, false, true, false, true>::new(
+///        Texture::<BGRA8UNORM, 2, 3,1,1, false, false, true, false, true>::new(
 ///            &device,
 ///            300,
 ///            300,
-///            1,
 ///            String::from("diffuseTexture"),
-///            1,
 ///        )
-///        .create_view::<false, false, true, false, true>(
+///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
 ///            TextureViewDimension::d2,
 ///            TextureAspect::all,
-///            1,
-///            NonZeroU32::new_unchecked(1),
-///            1,
-///            NonZeroU32::new_unchecked(1),
 ///        )
 ///    );
 /// }
@@ -96,42 +84,30 @@ descriptor.dimension must be either "2d" or "3d".
 /// unsafe {
 /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
 /// let multisampled_textureview_1d: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(
-///        Texture::<BGRA8UNORM, 1, 2, false, false, true, false, true>::new(
+///        Texture::<BGRA8UNORM, 1, 2,1,1, false, false, true, false, true>::new(
 ///            &device,
 ///            300,
 ///            300,
-///            1,
 ///            String::from("diffuseTexture"),
-///            1,
 ///        )
-///        .create_view::<false, false, true, false, true>(
+///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
 ///            TextureViewDimension::d2,
 ///            TextureAspect::all,
-///            1,
-///            NonZeroU32::new_unchecked(1),
-///            1,
-///            NonZeroU32::new_unchecked(1),
 ///        )
 ///    );
 /// }
 /// let multisampled_textureview3d: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(
-///        Texture::<BGRA8UNORM, 3, 2, false, false, true, false, true>::new(
+///        Texture::<BGRA8UNORM, 3, 2,1,1, false, false, true, false, true>::new(
 ///            &device,
 ///            300,
 ///            300,
-///            1,
 ///            String::from("diffuseTexture"),
-///            1,
 ///        )
-///        .create_view::<false, false, true, false, true>(
+///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
 ///            TextureViewDimension::d2,
 ///            TextureAspect::all,
-///            1,
-///            NonZeroU32::new_unchecked(1),
-///            1,
-///            NonZeroU32::new_unchecked(1),
 ///        )
 ///    );
 /// }
@@ -148,22 +124,16 @@ descriptor.dimension must be either "2d" or "3d".
 /// unsafe {
 /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
 /// let multisampled_textureview: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(
-///        Texture::<R32SINT, 2, 4, false, false, false, false, true>::new(
+///        Texture::<R32SINT, 2, 4,1,1, false, false, false, false, true>::new(
 ///            &device,
 ///            300,
 ///            300,
-///            1,
 ///            String::from("diffuseTexture"),
-///            1,
 ///        )
-///        .create_view::<false, false, true, false, true>(
+///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
 ///            TextureViewDimension::d2,
 ///            TextureAspect::all,
-///            1,
-///            NonZeroU32::new_unchecked(1),
-///            1,
-///            NonZeroU32::new_unchecked(1),
 ///        )
 ///    );
 /// }
@@ -180,24 +150,20 @@ descriptor.dimension must be either "2d" or "3d".
 /// unsafe {
 /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
 /// let multisampled_texture_without_render_bit: Box<dyn ValidTexture> = Box::new(
-///        Texture::<BGRA8UNORM, 2, 4, false, false, true, false, false>::new(
+///        Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, false, false>::new(
 ///            &device,
 ///            300,
 ///            300,
-///            1,
 ///            String::from("diffuseTexture"),
-///            1,
 ///        )
 ///    );
 /// }
 /// let multisampled_texture_with_storage_bit: Box<dyn ValidTexture> = Box::new(
-///        Texture::<BGRA8UNORM, 2, 4, false, false, true, true, true>::new(
+///        Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, true, true>::new(
 ///            &device,
 ///            300,
 ///            300,
-///            1,
 ///            String::from("diffuseTexture"),
-///            1,
 ///        )
 ///    );
 /// }
@@ -214,22 +180,16 @@ descriptor.dimension must be either "2d" or "3d".
 /// unsafe {
 /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
 /// let renderable_textureview: Box<dyn RenderAttachmentTexture> = Box::new(
-///        Texture::<RGB9E5UFLOAT, 2, 1, false, false, false, false, true>::new(
+///        Texture::<RGB9E5UFLOAT, 2, 1,1,1, false, false, false, false, true>::new(
 ///            &device,
 ///            300,
 ///            300,
-///            1,
 ///            String::from("diffuseTexture"),
-///            1,
 ///        )
-///        .create_view::<false, false, true, false, true>(
+///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
 ///            TextureViewDimension::d2,
 ///            TextureAspect::all,
-///            1,
-///            NonZeroU32::new_unchecked(1),
-///            1,
-///            NonZeroU32::new_unchecked(1),
 ///        )
 ///    );
 /// }
@@ -246,22 +206,16 @@ descriptor.dimension must be either "2d" or "3d".
 /// unsafe {
 /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
 /// let renderable_textureview: Box<dyn RenderAttachmentTexture> = Box::new(
-///        Texture::<BGRA8UNORM, 1, 1, false, false, false, false, true>::new(
+///        Texture::<BGRA8UNORM, 1, 1,1,1, false, false, false, false, true>::new(
 ///            &device,
 ///            300,
 ///            300,
-///            1,
 ///            String::from("diffuseTexture"),
-///            1,
 ///        )
-///        .create_view::<false, false, true, false, true>(
+///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
 ///            TextureViewDimension::d2,
 ///            TextureAspect::all,
-///            1,
-///            NonZeroU32::new_unchecked(1),
-///            1,
-///            NonZeroU32::new_unchecked(1),
 ///        )
 ///    );
 /// }

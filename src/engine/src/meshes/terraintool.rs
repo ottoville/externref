@@ -1,9 +1,6 @@
-use std::sync::atomic::AtomicU32;
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 
-use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
-    mesh::{Mesh, ENGINE},
-};
+use crate::mesh::{Mesh, ENGINE};
 
 #[no_mangle]
 pub unsafe extern "C" fn create_terraintool_mesh() -> *mut ExplicitGenerationalFreeListIndex<Mesh> {

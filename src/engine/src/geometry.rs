@@ -11,8 +11,9 @@ use rapier3d::{
 use terramath::{CrossProduct, Plane, Vec3wgslF32, VectorMath, VectorMathF32};
 
 pub use crate::boundingbox::BoundingBox;
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     gpu::{
         buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer},
         gpu::serialize_terrain,

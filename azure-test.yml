@@ -60,3 +60,10 @@ steps:
     script: 'cargo test'
     pwsh: true
     workingDirectory: './src/webgpu'
+- task: PowerShell@2
+  displayName: allocators library unit test
+  inputs:
+    targetType: 'inline'
+    script: 'cargo test'
+    pwsh: true
+    workingDirectory: './src/allocators'

@@ -1,9 +1,7 @@
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use logger::Logger;
 
-use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
-    mesh::{Mesh, ENGINE},
-};
+use crate::mesh::{Mesh, ENGINE};
 
 pub struct DrawableDirect {
     instance_count: u32,

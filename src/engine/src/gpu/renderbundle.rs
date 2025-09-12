@@ -4,11 +4,11 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use webgpu::device::JSDevice;
 
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{
         buffer::buffer::{GPUBuffer, JSBuffer},

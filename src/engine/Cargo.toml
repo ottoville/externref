@@ -26,6 +26,7 @@ terramath = { path = "../terramath" }
 collider = { path = "../collider" }
 logger = { path = "../logger" }
 webgpu = { path = "../webgpu" }
+allocators = { path = "../allocators" }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.51"

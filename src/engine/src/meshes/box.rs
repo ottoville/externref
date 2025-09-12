@@ -1,7 +1,7 @@
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use terramath::Vec3wgslF32;
 
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormal, VertexKind},
     Geometry,

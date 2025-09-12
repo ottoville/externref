@@ -1,7 +1,8 @@
 use std::sync::atomic::AtomicU32;
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     mesh::{Mesh, ENGINE},
 };
 static ID: AtomicU32 = AtomicU32::new(0);

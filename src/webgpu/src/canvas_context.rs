@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, num::NonZeroU32};
+use std::marker::PhantomData;
 
 use crate::{
     device::JSDevice,
@@ -31,7 +31,6 @@ pub unsafe fn configure(
     _color_space: ColorSpace,
     _tone_mapping: i32,
     _alpha_mode: AlphaMode,
-
 ) {
 }
 
@@ -280,11 +279,21 @@ impl<
     }
     pub fn get_current_texture(
         &self,
-    ) -> Texture<F, 2, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
-    {
+    ) -> Texture<
+        F,
+        2,
+        1,
+        1,
+        1,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+    > {
         let texture = Texture {
             externref: unsafe { get_current_texture(&self.context) },
-            label: String::from("TODO: REMOVE THIS ALLOCATION"),
+            label: None,
             format: PhantomData,
         };
         return texture;
@@ -317,14 +326,10 @@ impl<
         let texture = self.get_current_texture();
         let view = self
             .view
-            .insert(texture.create_view::<COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>(
+            .insert(texture.create_view::<COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT, 1, 0, 1, 0>(
                 String::from("TODO: REMOVE THIS ALLOCATION"),
                 TextureViewDimension::d2,
                 TextureAspect::all,
-                1,
-                unsafe { NonZeroU32::new_unchecked(1) },
-                1,
-                unsafe { NonZeroU32::new_unchecked(1) },
             ));
         return &view.externref;
     }

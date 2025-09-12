@@ -1,9 +1,12 @@
 use std::sync::atomic::AtomicU32;
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use terramath::Vec3wgslF32;
 
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex, mesh::{Mesh, ENGINE}, vertices::{PositionAndNormal, VertexKind}, Geometry
+    mesh::{Mesh, ENGINE},
+    vertices::{PositionAndNormal, VertexKind},
+    Geometry,
 };
 static ID: AtomicU32 = AtomicU32::new(0);
 
@@ -127,12 +130,7 @@ pub unsafe extern "C" fn create_rtp_mesh(
     Box::into_raw(Box::new(mesh_id))
 }
 pub fn create_rtp_geometry() -> Geometry {
-    let mut geometry = Geometry::new(
-        true,
-        false,
-        false,
-        "rtp_geometry".to_string(),
-    );
+    let mut geometry = Geometry::new(true, false, false, "rtp_geometry".to_string());
     geometry.set_indices(RTP_INDICES.to_vec());
     geometry.set_vertices(VertexKind::PositionAndNormal(create_rtp_vertices()));
     return geometry;

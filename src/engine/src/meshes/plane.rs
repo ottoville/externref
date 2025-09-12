@@ -1,5 +1,6 @@
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     mesh::{Mesh, ENGINE},
     meshes::quad_mesh::create_tiled_mesh,
     vertices::VertexKind,

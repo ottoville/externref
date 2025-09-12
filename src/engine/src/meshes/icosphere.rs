@@ -1,9 +1,9 @@
 use std::{collections::HashMap, sync::atomic::AtomicU32};
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use terramath::VectorMathF32;
 
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormal, VertexKind},
     Geometry,

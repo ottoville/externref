@@ -1,6 +1,7 @@
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use std::sync::{LazyLock, RwLock};
 
-use crate::{allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex, mesh::{Mesh, ENGINE}};
+use crate::mesh::{Mesh, ENGINE};
 
 #[no_mangle]
 pub unsafe extern "C" fn devtools_pointer() -> *const f32 {
@@ -39,14 +40,18 @@ pub unsafe extern "C" fn get_point_lights_count() -> usize {
     }
 }
 #[no_mangle]
-pub extern "C" fn get_mesh_directional_light(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) -> f32 {
+pub extern "C" fn get_mesh_directional_light(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> f32 {
     let meshes = &ENGINE.meshes.lock().unwrap();
     let mesh = &meshes[unsafe { &*mesh_id }];
     let mesh_property = mesh.mesh_property.lock().unwrap();
     mesh_property.gpu_memory.directional_light
 }
 #[no_mangle]
-pub extern "C" fn get_mesh_point_light(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) -> f32 {
+pub extern "C" fn get_mesh_point_light(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+) -> f32 {
     let meshes = &ENGINE.meshes.lock().unwrap();
     let mesh = &meshes[unsafe { &*mesh_id }];
     let mesh_property = mesh.mesh_property.lock().unwrap();
@@ -54,14 +59,20 @@ pub extern "C" fn get_mesh_point_light(mesh_id: *const ExplicitGenerationalFreeL
     mesh_property.gpu_memory.point_light_squared
 }
 #[no_mangle]
-pub extern "C" fn set_mesh_directional_light(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>, light: f32) {
+pub extern "C" fn set_mesh_directional_light(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    light: f32,
+) {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
 
     mesh_property.set_directional_light(light);
 }
 #[no_mangle]
-pub extern "C" fn set_mesh_point_light(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>, light: f32) {
+pub extern "C" fn set_mesh_point_light(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    light: f32,
+) {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
 

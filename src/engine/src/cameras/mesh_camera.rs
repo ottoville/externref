@@ -1,7 +1,6 @@
-use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
-    mesh::{Mesh, ENGINE},
-};
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+
+use crate::mesh::{Mesh, ENGINE};
 
 use super::{
     camera::{Camera, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},

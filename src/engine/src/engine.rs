@@ -4,10 +4,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{LazyLock, Mutex, MutexGuard};
 use std::{panic, usize};
 
-use crate::allocators::explicit_generational_freelist::{
+use crate::allocators::freeindex::FreeIndex;
+use allocators::explicit_generational_freelist::{
     ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
 };
-use crate::allocators::freeindex::FreeIndex;
 
 use crate::gpu::gpu::GPU;
 
@@ -25,8 +25,9 @@ use terramath::VectorMathF32;
 #[cfg(test)]
 unsafe fn mesh_on_physic_tick(_mesh: *const Mesh, _delta: f32, _externref: &Resource<JSMesh>) {}
 #[cfg(test)]
-pub unsafe fn get_preferred_canvas_format() -> u32 {1}
-
+pub unsafe fn get_preferred_canvas_format() -> u32 {
+    1
+}
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
@@ -76,7 +77,10 @@ pub unsafe extern "C" fn physic_tick(delta: f32) {
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_mouse_position(x: f32, y: f32) {
-    MOUSE_POSITION.store(((y.to_bits() as u64) << 32) | (x.to_bits() as u64), Ordering::Relaxed);
+    MOUSE_POSITION.store(
+        ((y.to_bits() as u64) << 32) | (x.to_bits() as u64),
+        Ordering::Relaxed,
+    );
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_mouse_position() -> u32 {
@@ -400,11 +404,7 @@ impl Engine2 {
         }
         return None;
     }
-    pub fn add_collider_to_mesh<'a>(
-        &mut self,
-        collider: Collider,
-        mesh: &mut Mesh,
-    ) {
+    pub fn add_collider_to_mesh<'a>(&mut self, collider: Collider, mesh: &mut Mesh) {
         match mesh.rigid_body_handle {
             Some(rigid_body_handle) => {
                 let collider_handle = self.collider_set.insert_with_parent(

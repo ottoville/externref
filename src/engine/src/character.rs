@@ -1,7 +1,7 @@
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use core::f32;
 
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     engine::Engine2,
     mesh::{JSMesh, Mesh, ENGINE},
     meshes::r#box::create_box_geometry,

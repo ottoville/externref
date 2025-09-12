@@ -35,7 +35,7 @@ pub unsafe fn create_texture(
     _device: &Resource<JSDevice>,
     _width: usize,
     _height: usize,
-    _depth_or_array_layers: usize,
+    _depth_or_array_layers: u32,
     _label_ptr: usize,
     _label_len: usize,
     _usages: u32,
@@ -59,7 +59,7 @@ extern "C" {
         device: &Resource<JSDevice>,
         width: usize,
         height: usize,
-        depthOrArrayLayers: usize,
+        depthOrArrayLayers: u32,
         label_ptr: usize,
         label_len: usize,
         usages: u32,
@@ -102,6 +102,8 @@ pub struct Texture<
     F: TextureFormat,
     const DIMENSION: u32,
     const SAMPLE_COUNT: u32,
+    const DEPTH_OR_ARRAY_LAYERS: u32 = 1,
+    const MIP_LEVEL_COUNT: u32 = 1,
     const COPY_SRC: bool = false,
     const COPY_DST: bool = false,
     const TEXTURE_BINDING: bool = false,
@@ -110,7 +112,7 @@ pub struct Texture<
     const SRGB_MULTIVIEW: bool = false,
 > {
     pub externref: Resource<JSTexture>,
-    pub label: String,
+    pub label: Option<String>,
     pub format: PhantomData<F>,
 }
 
@@ -119,6 +121,7 @@ pub trait TextureDimensionTrait {}
 // when dimension is 1 enforce sample count 1 and no render attachment
 impl<
         F: TextureFormat,
+        const MIP_LEVEL_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
@@ -129,6 +132,8 @@ impl<
         F,
         1,
         1,
+        1,
+        MIP_LEVEL_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
@@ -143,6 +148,8 @@ impl<
 impl<
         F: TextureFormat,
         const SAMPLE_COUNT: u32,
+        const DEPTH_OR_ARRAY_LAYERS: u32,
+        const MIP_LEVEL_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
@@ -153,7 +160,9 @@ impl<
     for Texture<
         F,
         2,
+        DEPTH_OR_ARRAY_LAYERS,
         SAMPLE_COUNT,
+        MIP_LEVEL_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
@@ -167,19 +176,34 @@ impl<
 
 impl<
         F: TextureFormat,
+        const DEPTH_OR_ARRAY_LAYERS: u32,
+        const MIP_LEVEL_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
     > TextureDimensionTrait
-    for Texture<F, 3, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT>
+    for Texture<
+        F,
+        3,
+        1,
+        DEPTH_OR_ARRAY_LAYERS,
+        MIP_LEVEL_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+    >
 {
 }
 impl<
         F: TextureFormat,
         const DIMENSION: u32,
         const SAMPLE_COUNT: u32,
+        const DEPTH_OR_ARRAY_LAYERS: u32,
+        const MIP_LEVEL_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
@@ -191,6 +215,8 @@ impl<
         F,
         DIMENSION,
         SAMPLE_COUNT,
+        DEPTH_OR_ARRAY_LAYERS,
+        MIP_LEVEL_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
@@ -215,34 +241,27 @@ where
     /// ```compile_fail
     /// use crate::webgpu::texture::{texture::Texture, texture_formats::BGRA8UNORM};
     /// use externref::{ExternRef, Resource};
-    /// let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }; 
-    /// let texture = Texture::<BGRA8UNORM, 4, 1, false, false, true, false, true>::new(
+    /// let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
+    /// let texture = Texture::<BGRA8UNORM, 4, 1,1,1, false, false, true, false, true>::new(
     ///     &device,
     ///    300,
     ///    300,
-    ///    1,
     ///    String::from("test"),
-    ///    1,
     /// );
     /// ```
-    pub fn new(
-        device: &Resource<JSDevice>,
-        width: usize,
-        height: usize,
-        depth_or_array_layers: usize,
-        label: String,
-        mip_level_count: u32,
-    ) -> Self {
+    pub fn new(device: &Resource<JSDevice>, width: usize, height: usize, label: String) -> Self {
+        // descriptor.mipLevelCount must be > zero.
+        const { assert!(MIP_LEVEL_COUNT > 0) };
         let externref = unsafe {
             create_texture(
                 device,
                 width,
                 height,
-                depth_or_array_layers,
+                DEPTH_OR_ARRAY_LAYERS,
                 label.as_ptr() as usize,
                 label.len(),
                 Self::usages(),
-                mip_level_count,
+                MIP_LEVEL_COUNT,
                 SAMPLE_COUNT,
                 DIMENSION,
                 F::to_number(),
@@ -251,7 +270,7 @@ where
             )
         };
         Texture {
-            label,
+            label: Some(label),
             externref,
             format: PhantomData,
         }
@@ -260,13 +279,13 @@ where
         device: &Resource<JSDevice>,
         width: usize,
         height: usize,
-        depth_or_array_layers: usize,
         label: String,
-        mip_level_count: u32,
     ) -> Texture<
         F,
         DIMENSION,
+        DEPTH_OR_ARRAY_LAYERS,
         SAMPLE_COUNT,
+        MIP_LEVEL_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
@@ -275,19 +294,21 @@ where
         true,
     >
     where
-        F: TextureFormatSRGB<VF>, // Should be F: TextureFormatSRGB<F>  ??
+        F: TextureFormatSRGB<VF>,
     {
+        const { assert!(MIP_LEVEL_COUNT > 0) };
+
         let variants = [F::to_number(), F::to_srgb()];
         let externref = unsafe {
             create_texture(
                 device,
                 width,
                 height,
-                depth_or_array_layers,
+                DEPTH_OR_ARRAY_LAYERS,
                 label.as_ptr() as usize,
                 label.len(),
                 Self::usages(),
-                mip_level_count,
+                MIP_LEVEL_COUNT,
                 SAMPLE_COUNT,
                 DIMENSION,
                 F::to_number(),
@@ -296,7 +317,7 @@ where
             )
         };
         Texture {
-            label,
+            label: Some(label),
             externref,
             format: PhantomData,
         }
@@ -307,15 +328,15 @@ where
         const TEXTURE_BINDING2: bool,
         const STORAGE_BINDING2: bool,
         const RENDER_ATTACHMENT2: bool,
+        const ARRAY_LAYER_COUNT: u32,
+        const BASE_ARRAY_LAYER: u32,
+        const VIEW_MIP_LEVEL_COUNT: u32,
+        const BASE_MIP_LEVEL: u32,
     >(
         &self,
         label: String,
         dimension: TextureViewDimension,
         aspect: TextureAspect,
-        base_mip_level: u32,
-        mip_level_count: NonZeroU32,
-        base_array_layer: u32,
-        array_layer_count: NonZeroU32,
     ) -> TextureView<
         F,
         DIMENSION,
@@ -339,18 +360,25 @@ where
             Self::usages() & view_usages == view_usages,
             "texture view usages of {} is not subset of usages of {}",
             label,
-            self.label
+            match &self.label {
+                Some(l) => l.clone(),
+                None => String::from("unlabeled_texture"),
+            }
         );
-        return TextureView::new(
-            self,
-            label,
-            dimension,
-            aspect,
-            base_mip_level,
-            mip_level_count,
-            base_array_layer,
-            array_layer_count,
-        );
+        return TextureView::new::<
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            ARRAY_LAYER_COUNT,
+            BASE_ARRAY_LAYER,
+            _,
+            _,
+            BASE_ARRAY_LAYER,
+            VIEW_MIP_LEVEL_COUNT,
+        >(self, label, dimension, aspect);
     }
 }
 
@@ -358,6 +386,8 @@ impl<
         F: TextureFormat,
         const DIMENSION: u32,
         const SAMPLE_COUNT: u32,
+        const DEPTH_OR_ARRAY_LAYERS: u32,
+        const MIP_LEVEL_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
@@ -368,6 +398,8 @@ impl<
         F,
         DIMENSION,
         SAMPLE_COUNT,
+        DEPTH_OR_ARRAY_LAYERS,
+        MIP_LEVEL_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
@@ -383,15 +415,15 @@ impl<
         const STORAGE_BINDING2: bool,
         const RENDER_ATTACHMENT2: bool,
         VF: TextureFormat,
+        const ARRAY_LAYER_COUNT: u32,
+        const BASE_ARRAY_LAYER: u32,
+        const BASE_MIP_LEVEL: u32,
+        const VIEW_MIP_LEVEL_COUNT: u32,
     >(
         &self,
         label: String,
         dimension: TextureViewDimension,
         aspect: TextureAspect,
-        base_mip_level: u32,
-        mip_level_count: NonZeroU32,
-        base_array_layer: u32,
-        array_layer_count: NonZeroU32,
     ) -> TextureView<
         VF,
         DIMENSION,
@@ -417,7 +449,10 @@ impl<
             Self::usages() & view_usages == view_usages,
             "texture view usages of {} is not subset of usages of {}",
             label,
-            self.label
+            match &self.label {
+                Some(l) => l.clone(),
+                None => String::from("unlabeled_texture"),
+            }
         );
         return TextureView::<
             VF,
@@ -428,16 +463,20 @@ impl<
             TEXTURE_BINDING,
             STORAGE_BINDING,
             RENDER_ATTACHMENT,
-        >::new_srgb(
-            self,
-            label,
-            dimension,
-            aspect,
-            base_mip_level,
-            mip_level_count,
-            base_array_layer,
-            array_layer_count,
-        );
+        >::new_srgb::<
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            ARRAY_LAYER_COUNT,
+            BASE_ARRAY_LAYER,
+            _,
+            _,
+            BASE_ARRAY_LAYER,
+            VIEW_MIP_LEVEL_COUNT,
+        >(self, label, dimension, aspect);
     }
 }
 #[cfg(test)]
@@ -446,12 +485,10 @@ fn test_texture() {
     use crate::texture::texture_formats::BGRA8UNORM;
     use externref::ExternRef;
     let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
-    let texture = Texture::<BGRA8UNORM, 2, 4, false, false, true, false, true>::new(
+    let texture = Texture::<BGRA8UNORM, 2, 4, 1, 1, false, false, true, false, true>::new(
         &device,
         300,
         300,
-        1,
         String::from("test"),
-        1,
     );
 }

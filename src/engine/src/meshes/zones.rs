@@ -1,7 +1,10 @@
-use crate::{allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex, mesh::{Mesh, ENGINE}};
+use crate::mesh::{Mesh, ENGINE};
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 
 #[no_mangle]
-pub unsafe extern "C" fn create_zones_light_mesh(scenes: f32) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+pub unsafe extern "C" fn create_zones_light_mesh(
+    scenes: f32,
+) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let label = String::from("Plants");
     let mut meshes = ENGINE.meshes.lock().unwrap();
     let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> =

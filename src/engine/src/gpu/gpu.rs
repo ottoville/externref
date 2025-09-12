@@ -4,6 +4,7 @@ use std::ptr;
 use std::sync::MutexGuard;
 use std::sync::{Arc, Mutex};
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use webgpu::canvas::{Canvas, JSCanvas};
 use webgpu::canvas_context::{AlphaMode, ColorSpace};
@@ -12,7 +13,6 @@ use webgpu::texture::render_attachment_texture::RenderAttachmentTextureSingleSam
 use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
 use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT, RGBA8UNORM};
 
-use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
@@ -390,32 +390,24 @@ pub unsafe extern "C" fn init_gpu(
                 false,
             );
         let screen_render_target =
-            Texture::<BGRA8UNORM, 2, 4, false, false, true, false, true>::new(
+            Texture::<BGRA8UNORM, 2, 4, 1, 1, false, false, true, false, true>::new(
                 &device,
                 300,
                 300,
-                1,
                 String::from("diffuseTexture"),
-                1,
             );
         let depth_render_target =
-            Texture::<DEPTH32FLOAT, 2, 4, true, false, true, false, true>::new(
+            Texture::<DEPTH32FLOAT, 2, 4, 1, 1, true, false, true, false, true>::new(
                 &device,
                 300,
                 300,
-                1,
                 String::from("depthTexture_renderPassScreen"),
-                1,
             );
         let screen_render_target_view = screen_render_target
-            .create_view::<false, false, true, false, true>(
+            .create_view::<false, false, true, false, true, 1, 0, 1, 0>(
                 String::from("renderPassScreen_view"),
                 TextureViewDimension::d2,
                 TextureAspect::all,
-                0,
-                NonZeroU32::new_unchecked(1),
-                0,
-                NonZeroU32::new_unchecked(1),
             );
         /* let screen_render_target_view2 = screen_render_target.create_srgb_view::<false, false, true, false, true, _>(
             String::from("renderPassScreen_view"),
@@ -454,32 +446,25 @@ pub unsafe extern "C" fn init_gpu(
                 false,
             );
 
-        let water_render_target = Texture::<BGRA8UNORM, 2, 1, false, false, true, false, true>::new(
-            &device,
-            300,
-            300,
-            1,
-            String::from("diffuseTextureWater"),
-            1,
-        );
-        let water_render_target_view = water_render_target
-            .create_view::<false, false, true, false, true>(
-                String::from("diffuseTextureWater_view"),
-                TextureViewDimension::d2,
-                TextureAspect::all,
-                0,
-                NonZeroU32::new_unchecked(1),
-                0,
-                NonZeroU32::new_unchecked(1),
-            );
-        let depth_render_target_water =
-            Texture::<DEPTH32FLOAT, 2, 4, true, false, false, false, true>::new(
+        let water_render_target =
+            Texture::<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>::new(
                 &device,
                 300,
                 300,
-                1,
+                String::from("diffuseTextureWater"),
+            );
+        let water_render_target_view = water_render_target
+            .create_view::<false, false, true, false, true, 1, 0, 1, 0>(
+                String::from("diffuseTextureWater_view"),
+                TextureViewDimension::d2,
+                TextureAspect::all,
+            );
+        let depth_render_target_water =
+            Texture::<DEPTH32FLOAT, 2, 4, 1, 1, true, false, false, false, true>::new(
+                &device,
+                300,
+                300,
                 String::from("depthTexture_renderPassWater"),
-                1,
             );
         let render_pass_water = Renderpass::new(
             String::from("renderPassWater"),
@@ -511,23 +496,18 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("screen_buffer_pick"),
                 false,
             );
-        let pick_render_target = Texture::<RG32UINT, 2, 1, true, false, true, false, true>::new(
-            &device,
-            300,
-            300,
-            1,
-            String::from("idTexture"),
-            1,
-        );
+        let pick_render_target =
+            Texture::<RG32UINT, 2, 1, 1, 1, true, false, true, false, true>::new(
+                &device,
+                300,
+                300,
+                String::from("idTexture"),
+            );
         let pick_render_target_view = pick_render_target
-            .create_view::<true, false, true, false, true>(
+            .create_view::<true, false, true, false, true, 1, 0, 1, 0>(
                 String::from("idTexture_view"),
                 TextureViewDimension::d2,
                 TextureAspect::all,
-                0,
-                NonZeroU32::new_unchecked(1),
-                0,
-                NonZeroU32::new_unchecked(1),
             );
         let pick_render_pass = Renderpass::new(
             String::from("pickRenderPass"),

@@ -1,9 +1,9 @@
 use terramath::VectorMath;
 
-use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use crate::mesh::{Mesh, ENGINE};
 use crate::vertices::{Position, VertexKind};
 use crate::Geometry;
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 
 pub struct BoundingBox {
     pub min: [f32; 3],

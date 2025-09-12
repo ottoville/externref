@@ -4,6 +4,7 @@ use std::{
     sync::Arc,
 };
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use terramath::VectorMath;
 use webgpu::{
@@ -12,12 +13,11 @@ use webgpu::{
         depth_texture::DepthTexture,
         render_attachment_texture::{
             RenderAttachmentTexture, RenderAttachmentTextureSingleSampled,
-        },
+        }, texture_view::JSTextureView,
     },
 };
 
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{compute_pass_encoder::JSComputePipeline, gpu::GPU, queue::Queue},
     mesh::ENGINE,
@@ -173,15 +173,15 @@ impl RenderPassTrait for Renderpass {
         bind_group_position: &Arc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
-            /*let formats: Vec<u32> = self.render_targets
-                .iter()
-                .map(|rendertarget| rendertarget.to_number())
+            /*let views: Vec<&Resource<JSTextureView>> = self.render_targets
+                .iter_mut()
+                .map(|rendertarget| rendertarget.get_attachment())
                 .collect();
 
             if let Some(depth_render_target) = &self.depth_render_target {
 
-            }
-            */
+            }*/
+            
 
             let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
             let mut renderpass_encoder = command_encoder.begin_render_pass(label, &descriptor);

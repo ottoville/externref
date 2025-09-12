@@ -1,9 +1,9 @@
 use std::{cell::RefCell, sync::atomic::AtomicU32};
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use terramath::{CrossProduct, Quaternion, Vec3wgslF32, VectorMath, VectorMathF32};
 
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormalAndColor, VertexKind},
     Geometry,

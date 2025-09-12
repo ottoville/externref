@@ -23,7 +23,8 @@ pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
 use crate::Collider;
 
-use allocators::{explicit_generational_freelist::ExplicitGenerationalFreeListIndex, freeindex::FreeIndexIndex};
+use ::allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+use allocators::freeindex::FreeIndexIndex;
 use math2::Mat3wgslF32;
 use mesh::{Mesh, ENGINE};
 use rapier3d::prelude::*;

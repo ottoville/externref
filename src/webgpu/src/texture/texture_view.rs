@@ -18,9 +18,9 @@ pub unsafe fn create_texture_view(
     _usage: u32,
     _aspect: TextureAspect,
     _base_mip_level: u32,
-    _mip_level_count: NonZeroU32,
+    _mip_level_count: u32,
     _base_array_layer: u32,
-    _array_layer_count: NonZeroU32,
+    _array_layer_count: u32,
 ) -> Resource<JSTextureView> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
@@ -39,9 +39,9 @@ extern "C" {
         usage: u32,
         aspect: TextureAspect,
         baseMipLevel: u32,
-        mipLevelCount: NonZeroU32,
+        mipLevelCount: u32,
         baseArrayLayer: u32,
-        arrayLayerCount: NonZeroU32,
+        arrayLayerCount: u32,
     ) -> Resource<JSTextureView>;
 }
 pub struct JSTextureView(());
@@ -107,11 +107,19 @@ impl<
         const STORAGE_BINDING2: bool,
         const RENDER_ATTACHMENT2: bool,
         const SRGB_MULTIVIEW: bool,
+        const ARRAY_LAYER_COUNT: u32,
+        const BASE_ARRAY_LAYER: u32,
+        const TEXTURE_DEPTH_OR_ARRAY_LAYERS: u32,
+        const TEXTURE_MIP_LEVEL_COUNT: u32,
+        const BASE_MIP_LEVEL: u32,
+        const MIP_LEVEL_COUNT: u32,
     >(
         texture: &Texture<
             F,
             DIMENSION,
             SAMPLE_COUNT,
+            TEXTURE_DEPTH_OR_ARRAY_LAYERS,
+            TEXTURE_MIP_LEVEL_COUNT,
             COPY_SRC2,
             COPY_DST2,
             TEXTURE_BINDING2,
@@ -122,10 +130,6 @@ impl<
         label: String,
         dimension: TextureViewDimension,
         aspect: TextureAspect,
-        base_mip_level: u32,
-        mip_level_count: NonZeroU32,
-        base_array_layer: u32,
-        array_layer_count: NonZeroU32,
     ) -> TextureView<
         F,
         DIMENSION,
@@ -136,6 +140,15 @@ impl<
         STORAGE_BINDING,
         RENDER_ATTACHMENT,
     > {
+        // descriptor.mipLevelCount must be > 0.
+        const { assert!(MIP_LEVEL_COUNT > 0) };
+        // descriptor.baseMipLevel + descriptor.mipLevelCount must be ≤ this.mipLevelCount.
+        const { assert!(BASE_MIP_LEVEL + MIP_LEVEL_COUNT <= TEXTURE_MIP_LEVEL_COUNT) };
+        // descriptor.arrayLayerCount must be > 0.
+        const { assert!(ARRAY_LAYER_COUNT > 0) };
+        // descriptor.baseArrayLayer + descriptor.arrayLayerCount must be ≤ the array layer count of this.
+        const { assert!(BASE_ARRAY_LAYER + ARRAY_LAYER_COUNT <= TEXTURE_DEPTH_OR_ARRAY_LAYERS) };
+
         let externref = unsafe {
             create_texture_view(
                 &texture.externref,
@@ -145,10 +158,10 @@ impl<
                 dimension,
                 Self::usages(),
                 aspect,
-                base_mip_level,
-                mip_level_count,
-                base_array_layer,
-                array_layer_count,
+                BASE_MIP_LEVEL,
+                MIP_LEVEL_COUNT,
+                BASE_ARRAY_LAYER,
+                ARRAY_LAYER_COUNT,
             )
         };
         return TextureView {
@@ -163,11 +176,19 @@ impl<
         const STORAGE_BINDING2: bool,
         const RENDER_ATTACHMENT2: bool,
         VF: TextureFormatSRGB<F>,
+        const ARRAY_LAYER_COUNT: u32,
+        const BASE_ARRAY_LAYER: u32,
+        const TEXTURE_DEPTH_OR_ARRAY_LAYERS: u32,
+        const TEXTURE_MIP_LEVEL_COUNT: u32,
+        const BASE_MIP_LEVEL: u32,
+        const MIP_LEVEL_COUNT: u32,
     >(
         texture: &Texture<
             VF,
             DIMENSION,
             SAMPLE_COUNT,
+            TEXTURE_DEPTH_OR_ARRAY_LAYERS,
+            TEXTURE_MIP_LEVEL_COUNT,
             COPY_SRC2,
             COPY_DST2,
             TEXTURE_BINDING2,
@@ -178,10 +199,6 @@ impl<
         label: String,
         dimension: TextureViewDimension,
         aspect: TextureAspect,
-        base_mip_level: u32,
-        mip_level_count: NonZeroU32,
-        base_array_layer: u32,
-        array_layer_count: NonZeroU32,
     ) -> TextureView<
         F,
         DIMENSION,
@@ -192,6 +209,15 @@ impl<
         STORAGE_BINDING,
         RENDER_ATTACHMENT,
     > {
+        // descriptor.mipLevelCount must be > 0.
+        const { assert!(MIP_LEVEL_COUNT > 0) };
+        // descriptor.baseMipLevel + descriptor.mipLevelCount must be ≤ this.mipLevelCount.
+        const { assert!(BASE_MIP_LEVEL + MIP_LEVEL_COUNT <= TEXTURE_MIP_LEVEL_COUNT) };
+        // descriptor.arrayLayerCount must be > 0.
+        const { assert!(ARRAY_LAYER_COUNT > 0) };
+        // descriptor.baseArrayLayer + descriptor.arrayLayerCount must be ≤ the array layer count of this.
+        const { assert!(BASE_ARRAY_LAYER + ARRAY_LAYER_COUNT <= TEXTURE_DEPTH_OR_ARRAY_LAYERS) };
+
         let externref = unsafe {
             create_texture_view(
                 &texture.externref,
@@ -201,10 +227,10 @@ impl<
                 dimension,
                 Self::usages(),
                 aspect,
-                base_mip_level,
-                mip_level_count,
-                base_array_layer,
-                array_layer_count,
+                BASE_MIP_LEVEL,
+                MIP_LEVEL_COUNT,
+                BASE_ARRAY_LAYER,
+                ARRAY_LAYER_COUNT,
             )
         };
         return TextureView {
@@ -224,22 +250,16 @@ fn texture_view_usages() {
     use externref::ExternRef;
     let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
     unsafe {
-        let texture = Texture::<BGRA8UNORM, 2, 4, false, false, true, false, true>::new(
+        let texture = Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, false, true>::new(
             &device,
             300,
             300,
-            1,
             String::from("testtexture"),
-            1,
         )
-        .create_view::<true, false, true, false, true>(
+        .create_view::<true, false, true, false, true,1,0,1,0>(
             String::from("testtextureview"),
             TextureViewDimension::d2,
             TextureAspect::all,
-            1,
-            NonZeroU32::new_unchecked(1),
-            1,
-            NonZeroU32::new_unchecked(1),
         );
     }
 }

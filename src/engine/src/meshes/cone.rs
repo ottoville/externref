@@ -1,7 +1,8 @@
 use std::{f32::consts::TAU, ops::Neg, sync::atomic::AtomicU32};
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex,
     mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormal, VertexKind},
     Geometry,

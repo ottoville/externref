@@ -1,6 +1,4 @@
 use crate::allocators::explicit_freelist::ExplicitFreeList;
-use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
-use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use crate::character::Character;
 pub use crate::drawable::DrawCommand;
 #[cfg(target_arch = "wasm32")]
@@ -12,9 +10,11 @@ use crate::mesh_property::MeshProperty;
 pub use crate::GPUMesh;
 use crate::MULTIVALUE_F32;
 use crate::MULTIVALUE_USIZE;
+use allocators::explicit_generational_freelist::{
+    ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
+};
 use collider::ColliderSphere;
 use core::panic;
-use externref::externref;
 use externref::Resource;
 use rapier3d::prelude::*;
 use std::num::NonZeroU32;
@@ -433,19 +433,19 @@ impl Mesh {
             .collect();
         let positions_count = vertices.length();
         geometry.create_faces(NonZeroUsize::new(positions_count));
-         
-            ColliderBuilder::trimesh(
-                newvertices,
-                geometry
-                    .faces
-                    .iter()
-                    .map(|v| [v[0] as u32, v[1] as u32, v[2] as u32])
-                    .collect(),
-            )
-            .unwrap()
-            .density(2.0)
-            .restitution(0.5)
-            .build()    
+
+        ColliderBuilder::trimesh(
+            newvertices,
+            geometry
+                .faces
+                .iter()
+                .map(|v| [v[0] as u32, v[1] as u32, v[2] as u32])
+                .collect(),
+        )
+        .unwrap()
+        .density(2.0)
+        .restitution(0.5)
+        .build()
     }
     pub fn check_collision(
         &mut self,

@@ -1,4 +1,8 @@
-use crate::texture::{texture::Texture, texture_formats::{TextureFormat, TFORMAT}, valid_texture::ValidTexture};
+use crate::texture::{
+    texture::Texture,
+    texture_formats::{TextureFormat, TFORMAT},
+    valid_texture::ValidTexture,
+};
 
 pub trait DepthTexture: ValidTexture {}
 
@@ -9,6 +13,8 @@ impl<const U: u32> DepthTextureFormat for TFORMAT<U, true, true> {}
 impl<
         F: DepthTextureFormat,
         const SAMPLE_COUNT: u32,
+        const DEPTH_OR_ARRAY_LAYERS: u32,
+        const MIP_LEVEL_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
@@ -19,22 +25,28 @@ impl<
         F,
         2,
         SAMPLE_COUNT,
+        DEPTH_OR_ARRAY_LAYERS,
+        MIP_LEVEL_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
         false, // https://www.w3.org/TR/webgpu/#depth-formats
         RENDER_ATTACHMENT,
         SRGB_MULTIVIEW,
-    > where Texture<
+    >
+where
+    Texture<
         F,
         2,
         SAMPLE_COUNT,
+        DEPTH_OR_ARRAY_LAYERS,
+        MIP_LEVEL_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
         false, // https://www.w3.org/TR/webgpu/#depth-formats
         RENDER_ATTACHMENT,
         SRGB_MULTIVIEW,
-    > : ValidTexture
+    >: ValidTexture,
 {
 }

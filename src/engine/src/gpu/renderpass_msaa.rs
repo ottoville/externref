@@ -4,6 +4,7 @@ use std::{
     sync::Arc,
 };
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
 use terramath::VectorMath;
 use webgpu::{
@@ -15,7 +16,6 @@ use webgpu::{
 };
 
 use crate::{
-    allocators::explicit_generational_freelist::ExplicitGenerationalFreeList,
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{
         bindgroup::BindGroup,

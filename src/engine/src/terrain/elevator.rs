@@ -1,8 +1,8 @@
 use terramath::Vec3wgslF32;
 
-use crate::allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 pub use crate::mesh::Mesh;
 use crate::{mesh::ENGINE, Geometry};
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use std::collections::HashSet;
 
 pub struct Elevator {
@@ -163,25 +163,19 @@ impl Elevator {
                 self.selected_indices
                     .insert(indices.indices[face_index * 3 + 2]);
             }
-            let v1_ptr = std::slice::from_ref(
-                vertices
-                    .get_position(indices.indices[face_index * 3]),
-            )
-            .as_ptr() as *mut v128;
+            let v1_ptr =
+                std::slice::from_ref(vertices.get_position(indices.indices[face_index * 3]))
+                    .as_ptr() as *mut v128;
             let v1 = v128_load(v1_ptr);
 
-            let v2_ptr = std::slice::from_ref(
-                vertices
-                    .get_position(indices.indices[face_index * 3 + 1]),
-            )
-            .as_ptr() as *mut v128;
+            let v2_ptr =
+                std::slice::from_ref(vertices.get_position(indices.indices[face_index * 3 + 1]))
+                    .as_ptr() as *mut v128;
             let v2 = v128_load(v2_ptr);
 
-            let v3_ptr = std::slice::from_ref(
-                vertices
-                    .get_position(indices.indices[face_index * 3 + 2]),
-            )
-            .as_ptr() as *mut v128;
+            let v3_ptr =
+                std::slice::from_ref(vertices.get_position(indices.indices[face_index * 3 + 2]))
+                    .as_ptr() as *mut v128;
             let v3 = v128_load(v3_ptr);
 
             let v1v2 = f32x4_sub(v1, v2);
@@ -212,8 +206,8 @@ impl Elevator {
         }
         for vertex_index in self.selected_indices.iter() {
             let faces = &self.faces_of_vertices[*vertex_index];
-            let norm_ptr = std::slice::from_ref(vertices.get_position(*vertex_index + 4))
-                .as_ptr() as *mut v128;
+            let norm_ptr = std::slice::from_ref(vertices.get_position(*vertex_index + 4)).as_ptr()
+                as *mut v128;
 
             let mut norm_v = f32x4_splat(0.0);
             for face_index in faces.iter() {
@@ -286,7 +280,14 @@ impl Elevator {
         let position_count = geometry.indices.as_ref().unwrap().indices.len();
         let mut faces_of_vertices: Vec<Vec<usize>> = vec![Vec::with_capacity(6); position_count];
 
-        for (i, indice) in geometry.indices.as_ref().unwrap().indices.iter().enumerate() {
+        for (i, indice) in geometry
+            .indices
+            .as_ref()
+            .unwrap()
+            .indices
+            .iter()
+            .enumerate()
+        {
             faces_of_vertices[*indice].push(i / 3);
         }
         Elevator {
