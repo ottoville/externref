@@ -112,6 +112,7 @@ impl UnconfiguredCanvasContext {
             format: PhantomData,
             context: self.context,
             view: None,
+            currentTexture: None
         };
     }
     pub fn configure_with_srgb_multiview<
@@ -167,6 +168,7 @@ impl UnconfiguredCanvasContext {
             format: PhantomData,
             context: self.context,
             view: None,
+            currentTexture: None
         };
     }
 }
@@ -182,6 +184,20 @@ pub struct CanvasContext<
 > {
     pub format: PhantomData<F>,
     context: Resource<JSGPUCanvasContext>,
+    currentTexture: Option<
+        Texture<
+            F,
+            2,
+            1,
+            1,
+            1,
+            COPY_SRC,
+            COPY_DST,
+            TEXTURE_BINDING,
+            STORAGE_BINDING,
+            RENDER_ATTACHMENT,
+        >,
+    >,
     view: Option<
         TextureView<
             F,
@@ -323,11 +339,16 @@ impl<
     }
 
     fn get_attachment(&mut self) -> &Resource<JSTextureView> {
-        let texture = self.get_current_texture();
-        let view = self
-            .view
-            .insert(texture.create_view::<COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT, 1, 0, 1, 0>(
-                String::from("TODO: REMOVE THIS ALLOCATION"),
+        // Maintain the texture in order not to drop it
+        let texture = self.currentTexture.insert(self.get_current_texture());
+        let label = if let Some(oldview) = self.view.take() {
+            oldview.label
+        } else {
+            String::from("canvas_context_texture_view")
+        };
+
+        let view = self.view.insert(texture.create_view::<COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT, 1, 0, 1, 0>(
+                label,
                 TextureViewDimension::d2,
                 TextureAspect::all,
             ));

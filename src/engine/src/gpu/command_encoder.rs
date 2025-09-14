@@ -1,10 +1,13 @@
-use std::sync::Arc;
+use std::{cell::Cell, sync::Arc};
 
 use externref::{externref, Resource};
 use webgpu::device::JSDevice;
 
 use crate::{
-    gpu::{buffer::buffer::GPUBuffer, gpu::create_gpu_command_encoder},
+    gpu::{
+        buffer::buffer::GPUBuffer, gpu::create_gpu_command_encoder,
+        render_pass_encoder::JSRenderPassColorAttachment,
+    },
     MULTIVALUE_USIZE,
 };
 
@@ -29,6 +32,9 @@ pub unsafe fn copy_buffer_to_buffer(
     _copy_size: usize,
 ) {
 }
+type ColorAttachmentsPtr<'a> =
+    *mut &'a mut dyn Iterator<Item = Resource<JSRenderPassColorAttachment>>;
+
 #[cfg(test)]
 unsafe fn begin_compute_pass(
     _command_encoder: &Resource<JSCommandEncoder>,
@@ -41,7 +47,9 @@ unsafe fn begin_compute_pass(
 unsafe fn begin_render_pass(
     _command_encoder: &Resource<JSCommandEncoder>,
     _descriptor: &Resource<JSRenderPassDescriptor>,
-    _label: *const usize,
+    _label_ptr: usize,
+    _label_len: usize,
+    _views: ColorAttachmentsPtr,
 ) -> Resource<JSRenderPassEncoder> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
@@ -72,7 +80,9 @@ extern "C" {
     fn begin_render_pass(
         command_encoder: &Resource<JSCommandEncoder>,
         descriptor: &Resource<JSRenderPassDescriptor>,
-        label: *const usize,
+        label_ptr: usize,
+        label_len: usize,
+        views: ColorAttachmentsPtr,
     ) -> Resource<JSRenderPassEncoder>;
     pub fn copy_buffer_to_buffer(
         command_encoder: &Resource<JSCommandEncoder>,
@@ -82,6 +92,24 @@ extern "C" {
         destinationOffset: usize,
         copySize: usize,
     );
+}
+thread_local! {
+    static COLORATTACHMENT_EXTERNREF: Cell<Option<Resource<JSRenderPassColorAttachment>>> = const { Cell::new(None) };
+}
+#[externref]
+#[no_mangle]
+pub unsafe extern "C" fn iterate_colorattachments<'a>(
+    iterator_ptr: ColorAttachmentsPtr,
+) -> Option<&'a Resource<JSRenderPassColorAttachment>> {
+    let next = (*iterator_ptr).next();
+    if next.is_none() {
+        drop(Box::from_raw(iterator_ptr));
+    }
+    COLORATTACHMENT_EXTERNREF.set(next);
+    let value = COLORATTACHMENT_EXTERNREF.with(|n| {
+        return n.as_ptr();
+    });
+    return (*value).as_ref();
 }
 
 pub struct GPUCommandEncoder {
@@ -133,17 +161,23 @@ impl GPUCommandEncoder {
             }
         }
     }
-    pub fn begin_render_pass(
+    pub fn begin_render_pass<I: Iterator<Item = Resource<JSRenderPassColorAttachment>>>(
         self,
         label: &String,
         descriptor: &Resource<JSRenderPassDescriptor>,
+        mut views: I,
     ) -> RenderPassEncoder {
+        let b: Box<&mut dyn Iterator<Item = Resource<JSRenderPassColorAttachment>>> =
+                    Box::new(&mut views);
+        
         unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-            let externref =
-                begin_render_pass(&self.externref, descriptor, MULTIVALUE_USIZE.as_ptr());
+            let externref = begin_render_pass(
+                &self.externref,
+                descriptor,
+                label.as_ptr() as usize,
+                label.len(),
+                Box::into_raw(b),
+            );
             RenderPassEncoder {
                 command_encoder: self,
                 externref,

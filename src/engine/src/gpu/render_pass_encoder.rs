@@ -16,6 +16,20 @@ unsafe fn execute_bundles(
     _bundle: &Resource<JSRenderBundle>,
 ) {
 }
+#[cfg(test)]
+pub unsafe fn create_render_pass_color_attachment_clear(
+    _view: &Resource<JSTextureView>,
+    _depth_slice: i32,
+    _resolve_target: Option<&Resource<JSTextureView>>,
+    _clear_value_r: f64,
+    _clear_value_g: f64,
+    _clear_value_b: f64,
+    _clear_value_a: f64,
+    _store_opt: StoreOpt,
+) -> Resource<JSRenderPassColorAttachment> {
+    use externref::ExternRef;
+    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+}
 
 pub enum StoreOpt {
     Store,
@@ -29,9 +43,9 @@ pub enum StoreOpt {
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn create_render_pass_color_attachment_clear(
-        view: Resource<JSTextureView>,
+        view: &Resource<JSTextureView>,
         depth_slice: i32,
-        resolveTarget: Resource<JSTextureView>,
+        resolveTarget: Option<&Resource<JSTextureView>>,
         clearValueR: f64,
         clearValueG: f64,
         clearValueB: f64,
@@ -39,9 +53,9 @@ extern "C" {
         store_opt: StoreOpt,
     ) -> Resource<JSRenderPassColorAttachment>;
     pub fn create_render_pass_color_attachment_load(
-        view: Resource<JSTextureView>,
+        view: &Resource<JSTextureView>,
         depth_slice: i32,
-        resolveTarget: Resource<JSTextureView>,
+        resolveTarget: &Resource<JSTextureView>,
         store_opt: StoreOpt,
     ) -> Resource<JSRenderPassColorAttachment>;
 

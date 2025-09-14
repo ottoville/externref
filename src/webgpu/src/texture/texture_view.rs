@@ -58,6 +58,7 @@ pub struct TextureView<
 > {
     pub externref: Resource<JSTextureView>,
     pub format: PhantomData<F>,
+    pub label: String
 }
 impl<
         F: TextureFormat,
@@ -167,6 +168,7 @@ impl<
         return TextureView {
             externref,
             format: PhantomData,
+            label
         };
     }
     pub fn new_srgb<
@@ -236,6 +238,7 @@ impl<
         return TextureView {
             externref,
             format: PhantomData,
+            label
         };
     }
 }

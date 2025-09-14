@@ -18,7 +18,6 @@ use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
 use crate::engine::get_preferred_canvas_format;
-use crate::gpu::bindgroup_layout::{BufferBindingType, GPUBufferBindingLayout};
 use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::command_encoder::JSCommandEncoder;
 use crate::gpu::renderpass::RenderPassTrait;
@@ -32,6 +31,7 @@ use crate::mesh_property::MeshProperty;
 use crate::projection::{Projection, PROJECTION_BUFFER_SIZE};
 use crate::swapbuffers::SwapBuffers;
 use crate::GPUMesh;
+use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
 
 use super::bindgroup::{BindGroup, JSBindGroup};
 use super::binding_commands::BindingCommands;

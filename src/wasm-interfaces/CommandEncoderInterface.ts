@@ -1,8 +1,9 @@
 import { Externref } from 'externref.js';
 import type { Engine } from '../engine.js';
-import { stringFromPtr } from '../utils.js';
+import { Rust_Iterator, rust_iterator_to_js, stringFromPtr } from '../utils.js';
 
 declare const engine: Engine;
+const textDecoder = new TextDecoder();
 
 export const CommandEncoderInterface = {
   begin_compute_pass(
@@ -15,9 +16,19 @@ export const CommandEncoderInterface = {
   begin_render_pass(
     commandEncoder: GPUCommandEncoder,
     renderpass: GPURenderPassDescriptor,
-    label_vec_ptr: rust_pointer<'label'>,
+    label_ptr: number,
+    label_len: number,
+    iterator: Rust_Iterator<GPURenderPassColorAttachment | null>,
   ): GPURenderPassEncoder {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    const attachmentsIterator = rust_iterator_to_js(
+      iterator,
+      null,
+      engine.rust.iterate_colorattachments,
+    );
+    console.log('color attachments from rust', [...attachmentsIterator]);
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
     return commandEncoder.beginRenderPass({
       ...renderpass,
       label,

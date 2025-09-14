@@ -129,7 +129,7 @@ fn test_bindgroup() {
     use super::gpu::{create_bind_group, init_gpu};
     use super::renderbundle::{RenderBundle, RenderBundleEncoder};
     use crate::engine;
-    use crate::gpu::bindgroup_layout::{BufferBindingType, GPUBufferBindingLayout};
+    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
     use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
 
     use crate::gpu::command_encoder::GPUCommandEncoder;
@@ -138,6 +138,9 @@ fn test_bindgroup() {
     use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
     use crate::mesh::ENGINE;
     use externref::ExternRef;
+
+    use crate::gpu::render_pass_encoder::JSRenderPassColorAttachment;
+
     unsafe {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
@@ -222,10 +225,11 @@ fn test_bindgroup() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),
         );
-
+        let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
         let mut renderpass_encoder = command_encoder.begin_render_pass(
             &String::from("test"),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            attachments.into_iter(),
         );
         renderbundle_encoder.record_renderbundle(
             &gpu.renderpasses[0].cameragroups(),
@@ -271,14 +275,16 @@ fn test_bindgroup_buffer_resize() {
     use super::gpu::{create_bind_group, init_gpu};
     use super::renderbundle::{RenderBundle, RenderBundleEncoder};
     use crate::engine;
-    use crate::gpu::bindgroup_layout::{BufferBindingType, GPUBufferBindingLayout};
+    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
+    use crate::gpu::render_pass_encoder::JSRenderPassColorAttachment;
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
     use crate::mesh::ENGINE;
     use externref::ExternRef;
     use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
+
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         let mut command_encoder = GPUCommandEncoder::new(
@@ -373,10 +379,12 @@ fn test_bindgroup_buffer_resize() {
 
         //buffer ref count is 3: test, command_encoder, rawbindgroup
         assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
 
         let mut renderpass_encoder = command_encoder.begin_render_pass(
             &String::from("test"),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            attachments.into_iter(),
         );
         renderbundle_encoder.record_renderbundle(
             &gpu.renderpasses[0].cameragroups(),

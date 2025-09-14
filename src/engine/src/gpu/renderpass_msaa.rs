@@ -12,6 +12,7 @@ use webgpu::{
     texture::{
         depth_texture::DepthTexture,
         render_attachment_texture::{RenderAttachmentTexture, RenderAttachmentTextureMultiSampled},
+        texture_view::JSTextureView,
     },
 };
 
@@ -23,6 +24,7 @@ use crate::{
         compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
         gpu::{get_renderpass_descriptor, GPU},
         queue::Queue,
+        render_pass_encoder::{create_render_pass_color_attachment_clear, StoreOpt},
         renderbundle::RenderBundleEncoder,
         renderpass::{JSRenderPass, RenderPassTrait},
     },
@@ -30,7 +32,7 @@ use crate::{
     MULTIVALUE_F32,
 };
 thread_local! {
-    static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass")) };
+    static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass_msaa")) };
 }
 pub struct RenderpassMSAA {
     pub bundle: Option<RenderBundleEncoder>,
@@ -83,8 +85,27 @@ impl RenderPassTrait for RenderpassMSAA {
         bind_group_position: &Arc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
+            let attachments = self.render_targets.iter_mut().map(|rendertarget| {
+                let view = rendertarget.get_attachment();
+                unsafe {
+                    create_render_pass_color_attachment_clear(
+                        view,
+                        0,
+                        None,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        StoreOpt::Discard,
+                    )
+                }
+            });
+
+            // if let Some(depth_render_target) = &self.depth_render_target {}
+
             let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
-            let mut renderpass_encoder = command_encoder.begin_render_pass(label, &descriptor);
+            let mut renderpass_encoder =
+                command_encoder.begin_render_pass(label, &descriptor, attachments);
             if let Some(bundle) = self.bundle.as_mut() {
                 bundle.record_renderbundle(
                     &self.cameragroups,

@@ -4,3 +4,4 @@ pub mod canvas_context;
 pub mod canvas;
 pub mod bindgroup_layout;
 pub mod binding_layout;
+pub mod buffer_binding_layout;

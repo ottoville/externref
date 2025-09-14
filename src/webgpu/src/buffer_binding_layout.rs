@@ -1,8 +1,6 @@
-#[cfg(any(not(test), rust_analyzer))]
-#[cfg(target_arch = "wasm32")]
 use externref::externref;
 use externref::Resource;
-use webgpu::{
+use crate::{
     binding_layout::{BindingLayout, JSGPUBindGroupLayoutEntry},
     texture::texture::TextureViewDimension,
 };
@@ -12,7 +10,7 @@ pub enum BufferBindingType {
     Storage,
     ReadOnlyStorage,
 }
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_bind_group_layout_entry_buffer(
     _binding: u32,
     _visibility: u32,
@@ -23,7 +21,7 @@ pub unsafe fn create_bind_group_layout_entry_buffer(
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
 }
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 pub fn create_bind_group_layout_entry_texture(
     _binding: u32,
     _visibility: u32,

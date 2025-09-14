@@ -13,13 +13,19 @@ use webgpu::{
         depth_texture::DepthTexture,
         render_attachment_texture::{
             RenderAttachmentTexture, RenderAttachmentTextureSingleSampled,
-        }, texture_view::JSTextureView,
+        },
+        texture_view::JSTextureView,
     },
 };
 
 use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
-    gpu::{compute_pass_encoder::JSComputePipeline, gpu::GPU, queue::Queue},
+    gpu::{
+        compute_pass_encoder::JSComputePipeline,
+        gpu::GPU,
+        queue::Queue,
+        render_pass_encoder::{create_render_pass_color_attachment_clear, StoreOpt},
+    },
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
@@ -173,18 +179,27 @@ impl RenderPassTrait for Renderpass {
         bind_group_position: &Arc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
-            /*let views: Vec<&Resource<JSTextureView>> = self.render_targets
-                .iter_mut()
-                .map(|rendertarget| rendertarget.get_attachment())
-                .collect();
+            let attachments = self.render_targets.iter_mut().map(|rendertarget| {
+                let view = rendertarget.get_attachment();
+                unsafe {
+                    create_render_pass_color_attachment_clear(
+                        view,
+                        0,
+                        None,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        StoreOpt::Discard,
+                    )
+                }
+            });
 
-            if let Some(depth_render_target) = &self.depth_render_target {
-
-            }*/
-            
+            // if let Some(depth_render_target) = &self.depth_render_target {}
 
             let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
-            let mut renderpass_encoder = command_encoder.begin_render_pass(label, &descriptor);
+            let mut renderpass_encoder =
+                command_encoder.begin_render_pass(label, &descriptor, attachments);
             if let Some(bundle) = self.bundle.as_mut() {
                 bundle.record_renderbundle(
                     &self.cameragroups,
