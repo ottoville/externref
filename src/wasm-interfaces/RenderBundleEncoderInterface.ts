@@ -1,4 +1,3 @@
-import { stringFromPtr } from '../utils.js';
 import type { Engine } from '../engine.js';
 import { textureFormatMapping } from './TextureInterface.js';
 declare const engine: Engine;
@@ -61,9 +60,12 @@ export const RenderbundleEncoderInterface = {
   // TODO share interface with commandencoderinterface
   finish(
     commandEncoder: GPURenderBundleEncoder,
-    label_vec_ptr: rust_pointer<'label'>,
+    label_ptr: number,
+    label_len: number,
   ) {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
     return commandEncoder.finish({ label });
   },
 };

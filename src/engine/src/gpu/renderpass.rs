@@ -8,23 +8,16 @@ use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use terramath::VectorMath;
 use webgpu::{
+    color_attachment::{create_render_pass_color_attachment_clear, ColorAttachment, StoreOpt},
     device::JSDevice,
-    texture::{
-        depth_texture::DepthTexture,
-        render_attachment_texture::{
-            RenderAttachmentTexture, RenderAttachmentTextureSingleSampled,
-        },
-        texture_view::JSTextureView,
-    },
+    texture::depth_texture::DepthTexture,
 };
 
 use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{
-        compute_pass_encoder::JSComputePipeline,
-        gpu::GPU,
-        queue::Queue,
-        render_pass_encoder::{create_render_pass_color_attachment_clear, StoreOpt},
+        compute_pass_encoder::JSComputePipeline, gpu::GPU, queue::Queue,
+        renderbundle_encoder::RenderBundleEncoder,
     },
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
@@ -32,11 +25,9 @@ use crate::{
 };
 
 use super::{
-    bindgroup::BindGroup,
-    command_encoder::GPUCommandEncoder,
-    compute_pass_encoder::ComputePassEncoder,
-    gpu::get_renderpass_descriptor,
-    renderbundle::{JSFunction, RenderBundleEncoder},
+    bindgroup::BindGroup, command_encoder::GPUCommandEncoder,
+    compute_pass_encoder::ComputePassEncoder, gpu::get_renderpass_descriptor,
+    renderbundle::JSFunction,
 };
 thread_local! {
     static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass")) };
@@ -56,7 +47,7 @@ pub unsafe extern "C" fn link_renderpass(
     let formats: Vec<u32> = renderpass
         .render_targets()
         .iter()
-        .map(|rendertarget| rendertarget.to_number())
+        .map(|rendertarget| rendertarget.texture_view.to_number())
         .collect();
 
     renderpass.set_bundle(RenderBundleEncoder::new(
@@ -67,7 +58,7 @@ pub unsafe extern "C" fn link_renderpass(
         renderpass.sample_count(),
         depth_read_only,
         stencil_read_only,
-        renderpass.depthStencilFormat(),
+        renderpass.depth_stencil_format(),
     ));
     gpu.renderpasses[id].get_bundle()
 }
@@ -98,7 +89,7 @@ pub struct Renderpass {
     label: String,
     size: [NonZeroU32; 2],
     size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
-    render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>>,
+    render_targets: Vec<ColorAttachment>,
     depth_render_target: Option<Box<dyn DepthTexture + Send>>,
 }
 impl Renderpass {
@@ -108,13 +99,9 @@ impl Renderpass {
         size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
-        render_targets: [Box<dyn RenderAttachmentTextureSingleSampled + Send>; N],
+        render_targets: [ColorAttachment; N],
         depth_render_target: Option<Box<dyn DepthTexture + Send>>,
     ) -> Self {
-        let render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>> = render_targets
-            .into_iter()
-            .map(|rt| rt as Box<dyn RenderAttachmentTexture + Send>)
-            .collect();
         Renderpass {
             label,
             size,
@@ -122,15 +109,15 @@ impl Renderpass {
             jsrenderpass,
             bundle: None,
             cameragroups,
-            render_targets,
+            render_targets: Vec::from(render_targets),
             depth_render_target,
         }
     }
 }
 pub trait RenderPassTrait {
-    fn render_targets(&self) -> &Vec<Box<dyn RenderAttachmentTexture + Send>>;
+    fn render_targets(&self) -> &Vec<ColorAttachment>;
     fn sample_count(&self) -> u32;
-    fn depthStencilFormat(&self) -> Option<u32>;
+    fn depth_stencil_format(&self) -> Option<u32>;
     fn cameragroups(&mut self) -> &mut Vec<CameraGroup>;
     fn resize(
         &mut self,
@@ -180,16 +167,16 @@ impl RenderPassTrait for Renderpass {
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
             let attachments = self.render_targets.iter_mut().map(|rendertarget| {
-                let view = rendertarget.get_attachment();
+                let view = rendertarget.texture_view.get_attachment();
                 unsafe {
                     create_render_pass_color_attachment_clear(
                         view,
                         0,
                         None,
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0,
+                        rendertarget.clear_value_r,
+                        rendertarget.clear_value_g,
+                        rendertarget.clear_value_b,
+                        rendertarget.clear_value_a,
                         StoreOpt::Discard,
                     )
                 }
@@ -279,7 +266,7 @@ impl RenderPassTrait for Renderpass {
         todo!()
     }
 
-    fn render_targets(&self) -> &Vec<Box<dyn RenderAttachmentTexture + Send>> {
+    fn render_targets(&self) -> &Vec<ColorAttachment> {
         &self.render_targets
     }
 
@@ -287,7 +274,7 @@ impl RenderPassTrait for Renderpass {
         1
     }
 
-    fn depthStencilFormat(&self) -> Option<u32> {
+    fn depth_stencil_format(&self) -> Option<u32> {
         match &self.depth_render_target {
             Some(format) => Some(format.to_number()),
             None => None,

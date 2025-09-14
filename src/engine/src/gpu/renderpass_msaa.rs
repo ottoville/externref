@@ -8,12 +8,12 @@ use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
 use terramath::VectorMath;
 use webgpu::{
-    device::JSDevice,
-    texture::{
-        depth_texture::DepthTexture,
-        render_attachment_texture::{RenderAttachmentTexture, RenderAttachmentTextureMultiSampled},
-        texture_view::JSTextureView,
+    color_attachment::{
+        create_render_pass_color_attachment_clear, ColorAttachment, ColorAttachmentMultiSampled,
+        StoreOpt,
     },
+    device::JSDevice,
+    texture::depth_texture::DepthTexture,
 };
 
 use crate::{
@@ -24,8 +24,7 @@ use crate::{
         compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
         gpu::{get_renderpass_descriptor, GPU},
         queue::Queue,
-        render_pass_encoder::{create_render_pass_color_attachment_clear, StoreOpt},
-        renderbundle::RenderBundleEncoder,
+        renderbundle_encoder::RenderBundleEncoder,
         renderpass::{JSRenderPass, RenderPassTrait},
     },
     swapbuffers::SwapBuffers,
@@ -41,7 +40,7 @@ pub struct RenderpassMSAA {
     pub label: String,
     pub size: [NonZeroU32; 2],
     pub size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
-    pub render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>>,
+    pub render_targets: Vec<ColorAttachment>,
     depth_render_target: Option<Box<dyn DepthTexture + Send>>,
 }
 impl RenderpassMSAA {
@@ -51,14 +50,9 @@ impl RenderpassMSAA {
         size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
-        render_targets: [Box<dyn RenderAttachmentTextureMultiSampled + Send>; N],
+        render_targets: [ColorAttachmentMultiSampled; N],
         depth_render_target: Option<Box<dyn DepthTexture + Send>>,
     ) -> Self {
-        // Upcast each Box<dyn RenderAttachmentTextureMultiSampled + Send> to Box<dyn RenderAttachmentTexture + Send>
-        let render_targets: Vec<Box<dyn RenderAttachmentTexture + Send>> = render_targets
-            .into_iter()
-            .map(|rt| rt as Box<dyn RenderAttachmentTexture + Send>)
-            .collect();
         RenderpassMSAA {
             label,
             size,
@@ -66,7 +60,7 @@ impl RenderpassMSAA {
             jsrenderpass,
             bundle: None,
             cameragroups,
-            render_targets,
+            render_targets: Vec::from(render_targets.map(|render_target| render_target.0)),
             depth_render_target,
         }
     }
@@ -86,16 +80,16 @@ impl RenderPassTrait for RenderpassMSAA {
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
             let attachments = self.render_targets.iter_mut().map(|rendertarget| {
-                let view = rendertarget.get_attachment();
+                let view = rendertarget.texture_view.get_attachment();
                 unsafe {
                     create_render_pass_color_attachment_clear(
                         view,
                         0,
                         None,
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0,
+                        rendertarget.clear_value_r,
+                        rendertarget.clear_value_g,
+                        rendertarget.clear_value_b,
+                        rendertarget.clear_value_a,
                         StoreOpt::Discard,
                     )
                 }
@@ -185,7 +179,7 @@ impl RenderPassTrait for RenderpassMSAA {
         todo!()
     }
 
-    fn render_targets(&self) -> &Vec<Box<dyn RenderAttachmentTexture + Send>> {
+    fn render_targets(&self) -> &Vec<ColorAttachment> {
         &self.render_targets
     }
 
@@ -193,7 +187,7 @@ impl RenderPassTrait for RenderpassMSAA {
         4
     }
 
-    fn depthStencilFormat(&self) -> Option<u32> {
+    fn depth_stencil_format(&self) -> Option<u32> {
         match &self.depth_render_target {
             Some(format) => Some(format.to_number()),
             None => None,

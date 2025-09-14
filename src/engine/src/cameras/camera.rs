@@ -2,6 +2,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, MutexGuard};
 use std::{num::NonZero, ptr, sync::Mutex};
 
+use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use terramath::MatrixMath;
 use webgpu::device::JSDevice;
@@ -183,7 +184,21 @@ pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: usize
         camera.projection_view_inverted_is_dirty = false;
     }
 }
-
+pub fn get_camera_by_id(
+    cameras: &ExplicitGenerationalFreeList<Camera>,
+    camera_id: usize,
+) -> &Camera {
+    for camera in cameras.iter() {
+        if camera.id == camera_id {
+            return camera;
+        } else {
+            if let Some(child_camera) = camera.find_child(camera_id) {
+                return child_camera;
+            }
+        }
+    }
+    panic!("Camera not found");
+}
 pub struct JSCamera(());
 static NEXT_CAMERA_ID: AtomicUsize = AtomicUsize::new(0);
 

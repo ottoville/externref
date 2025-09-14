@@ -1,13 +1,10 @@
 use std::{cell::Cell, sync::Arc};
 
 use externref::{externref, Resource};
-use webgpu::device::JSDevice;
+use webgpu::{color_attachment::JSRenderPassColorAttachment, device::JSDevice};
 
 use crate::{
-    gpu::{
-        buffer::buffer::GPUBuffer, gpu::create_gpu_command_encoder,
-        render_pass_encoder::JSRenderPassColorAttachment,
-    },
+    gpu::{buffer::buffer::GPUBuffer, gpu::create_gpu_command_encoder},
     MULTIVALUE_USIZE,
 };
 
@@ -57,7 +54,8 @@ unsafe fn begin_render_pass(
 #[cfg(test)]
 fn finish(
     _command_encoder: &Resource<JSCommandEncoder>,
-    _label: *const usize,
+    _label_ptr: usize,
+    _label_len: usize,
 ) -> Resource<JSCommandBuffer> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
@@ -69,9 +67,11 @@ fn finish(
 #[link(wasm_import_module = "commandencoder")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
+    // TODO share interface with renderbunde encoder
     fn finish(
         command_encoder: &Resource<JSCommandEncoder>,
-        label: *const usize,
+        label_ptr: usize,
+        label_len: usize,
     ) -> Resource<JSCommandBuffer>;
     fn begin_compute_pass(
         command_encoder: &Resource<JSCommandEncoder>,
@@ -138,15 +138,10 @@ impl GPUCommandEncoder {
         }
     }
     pub fn finish(self, label: String) -> CommandBuffer {
-        unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-            CommandBuffer {
-                buffers: self.buffers,
-                bindgroups: self.bindgroups,
-                externref: finish(&self.externref, MULTIVALUE_USIZE.as_ptr()),
-            }
+        CommandBuffer {
+            buffers: self.buffers,
+            bindgroups: self.bindgroups,
+            externref: unsafe { finish(&self.externref, label.as_ptr() as usize, label.len()) },
         }
     }
     pub fn begin_compute_pass(self, label: String) -> ComputePassEncoder {
@@ -168,8 +163,8 @@ impl GPUCommandEncoder {
         mut views: I,
     ) -> RenderPassEncoder {
         let b: Box<&mut dyn Iterator<Item = Resource<JSRenderPassColorAttachment>>> =
-                    Box::new(&mut views);
-        
+            Box::new(&mut views);
+
         unsafe {
             let externref = begin_render_pass(
                 &self.externref,

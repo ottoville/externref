@@ -9,8 +9,8 @@ use externref::{externref, Resource};
 use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
 use webgpu::canvas::{Canvas, JSCanvas};
 use webgpu::canvas_context::{AlphaMode, ColorSpace};
+use webgpu::color_attachment::{ColorAttachment, ColorAttachmentMultiSampled};
 use webgpu::device::JSDevice;
-use webgpu::texture::render_attachment_texture::RenderAttachmentTextureSingleSampled;
 use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
 use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT, RGBA8UNORM};
 
@@ -390,19 +390,10 @@ pub unsafe extern "C" fn init_gpu(
             );
         let screen_render_target_view = screen_render_target
             .create_view::<false, false, true, false, true, 1, 0, 1, 0>(
-                String::from("renderPassScreen_view"),
+                String::from("diffuseTextureView"),
                 TextureViewDimension::d2,
                 TextureAspect::all,
             );
-        /* let screen_render_target_view2 = screen_render_target.create_srgb_view::<false, false, true, false, true, _>(
-            String::from("renderPassScreen_view"),
-            TextureViewDimension::d2,
-            TextureAspect::all,
-            0,
-            NonZeroU32::new_unchecked(1),
-            0,
-            NonZeroU32::new_unchecked(1),
-        );*/
         let render_pass_screen = RenderpassMSAA::new(
             String::from("renderPassScreen"),
             [NonZeroU32::new_unchecked(1); 2],
@@ -420,7 +411,13 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
-            [Box::new(screen_render_target_view)],
+            [ColorAttachmentMultiSampled::new(
+                screen_render_target_view,
+                0.53,
+                0.8,
+                0.92,
+                0.0,
+            )],
             Some(Box::new(depth_render_target)),
         );
         let screen_dimension_buffer_screen_water =
@@ -440,7 +437,7 @@ pub unsafe extern "C" fn init_gpu(
             );
         let water_render_target_view = water_render_target
             .create_view::<false, false, true, false, true, 1, 0, 1, 0>(
-                String::from("diffuseTextureWater_view"),
+                String::from("diffuseTextureWaterView"),
                 TextureViewDimension::d2,
                 TextureAspect::all,
             );
@@ -471,7 +468,13 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
-            [Box::new(water_render_target_view)],
+            [ColorAttachment::new(
+                water_render_target_view,
+                0.023,
+                0.25,
+                0.45,
+                1.0,
+            )],
             Some(Box::new(depth_render_target_water)),
         );
         let screen_dimension_buffer_screen_pick =
@@ -511,31 +514,44 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
-            [Box::new(pick_render_target_view)],
+            [ColorAttachment::new(
+                pick_render_target_view,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+            )],
             None,
         );
 
         let format_num = get_preferred_canvas_format();
-        let render_target: Box<dyn RenderAttachmentTextureSingleSampled + Send> =
-            if format_num == 21 {
-                Box::new(
-                    unconfigured_context.configure::<RGBA8UNORM, false, false, false, false, true>(
-                        &device,
-                        ColorSpace::SRGB,
-                        None,
-                        AlphaMode::Opaque,
-                    ),
-                )
-            } else {
-                Box::new(
-                    unconfigured_context.configure::<BGRA8UNORM, false, false, false, false, true>(
-                        &device,
-                        ColorSpace::SRGB,
-                        None,
-                        AlphaMode::Opaque,
-                    ),
-                )
-            };
+        let render_target: ColorAttachment = if format_num == 21 {
+            ColorAttachment::new(
+                unconfigured_context.configure::<RGBA8UNORM, false, false, false, false, true>(
+                    &device,
+                    ColorSpace::SRGB,
+                    None,
+                    AlphaMode::Opaque,
+                ),
+                0.53,
+                0.8,
+                0.92,
+                1.0,
+            )
+        } else {
+            ColorAttachment::new(
+                unconfigured_context.configure::<BGRA8UNORM, false, false, false, false, true>(
+                    &device,
+                    ColorSpace::SRGB,
+                    None,
+                    AlphaMode::Opaque,
+                ),
+                0.53,
+                0.8,
+                0.92,
+                1.0,
+            )
+        };
         let render_pass_canvas = Renderpass::new(
             String::from("renderPassCanvas"),
             [NonZeroU32::new_unchecked(1); 2],
@@ -880,7 +896,7 @@ impl GPU {
 #[cfg(test)]
 #[test]
 fn test_gpu_queue() {
-    use crate::gpu::renderbundle::RenderBundleEncoder;
+    use crate::gpu::renderbundle_encoder::RenderBundleEncoder;
     use crate::mesh::Mesh;
     use externref::ExternRef;
     unsafe {

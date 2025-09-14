@@ -26,6 +26,7 @@ export const CommandEncoderInterface = {
       engine.rust.iterate_colorattachments,
     );
     console.log('color attachments from rust', [...attachmentsIterator]);
+    console.log('color attachments', renderpass.colorAttachments);
     const label = textDecoder.decode(
       new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
     );
@@ -52,9 +53,12 @@ export const CommandEncoderInterface = {
   },
   finish(
     commandEncoder: GPUCommandEncoder,
-    label_vec_ptr: rust_pointer<'label'>,
+    label_ptr: number,
+    label_len: number,
   ): GPUCommandBuffer {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
     return commandEncoder.finish({ label });
   },
 };

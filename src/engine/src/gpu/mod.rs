@@ -15,3 +15,4 @@ pub mod render_commands;
 pub mod externref_trait;
 pub mod shader;
 pub mod renderpass_msaa;
+pub mod renderbundle_encoder;

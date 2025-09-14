@@ -1,5 +1,4 @@
 use externref::{externref, Resource};
-use webgpu::texture::texture_view::JSTextureView;
 
 use crate::gpu::{
     bindgroup::BindGroup, binding_commands::BindingCommands, externref_trait::HaveExternref,
@@ -16,25 +15,6 @@ unsafe fn execute_bundles(
     _bundle: &Resource<JSRenderBundle>,
 ) {
 }
-#[cfg(test)]
-pub unsafe fn create_render_pass_color_attachment_clear(
-    _view: &Resource<JSTextureView>,
-    _depth_slice: i32,
-    _resolve_target: Option<&Resource<JSTextureView>>,
-    _clear_value_r: f64,
-    _clear_value_g: f64,
-    _clear_value_b: f64,
-    _clear_value_a: f64,
-    _store_opt: StoreOpt,
-) -> Resource<JSRenderPassColorAttachment> {
-    use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
-}
-
-pub enum StoreOpt {
-    Store,
-    Discard,
-}
 
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
@@ -42,23 +22,6 @@ pub enum StoreOpt {
 #[link(wasm_import_module = "renderpassencoder")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    pub fn create_render_pass_color_attachment_clear(
-        view: &Resource<JSTextureView>,
-        depth_slice: i32,
-        resolveTarget: Option<&Resource<JSTextureView>>,
-        clearValueR: f64,
-        clearValueG: f64,
-        clearValueB: f64,
-        clearValueA: f64,
-        store_opt: StoreOpt,
-    ) -> Resource<JSRenderPassColorAttachment>;
-    pub fn create_render_pass_color_attachment_load(
-        view: &Resource<JSTextureView>,
-        depth_slice: i32,
-        resolveTarget: &Resource<JSTextureView>,
-        store_opt: StoreOpt,
-    ) -> Resource<JSRenderPassColorAttachment>;
-
     fn execute_bundles(
         renderpassencoder: &Resource<JSRenderPassEncoder>,
         bundle: &Resource<JSRenderBundle>,
@@ -68,7 +31,6 @@ extern "C" {
 }
 
 pub struct JSRenderPassEncoder(());
-pub struct JSRenderPassColorAttachment(());
 
 pub struct RenderPassEncoder {
     pub command_encoder: GPUCommandEncoder,

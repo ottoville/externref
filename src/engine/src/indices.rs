@@ -4,7 +4,7 @@ use logger::LoggerArray;
 use crate::{
     gpu::{
         buffer::buffer::GPUBuffer, render_commands::RenderCommands,
-        renderbundle::RenderBundleEncoder,
+        renderbundle_encoder::RenderBundleEncoder,
     },
     Geometry,
 };

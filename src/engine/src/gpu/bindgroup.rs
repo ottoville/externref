@@ -127,10 +127,12 @@ impl<const N: usize> BindGroup<N> {
 #[test]
 fn test_bindgroup() {
     use super::gpu::{create_bind_group, init_gpu};
-    use super::renderbundle::{RenderBundle, RenderBundleEncoder};
+    use super::renderbundle::RenderBundle;
+    use crate::gpu::renderbundle_encoder::RenderBundleEncoder;
+
     use crate::engine;
-    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
     use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
+    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
 
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
@@ -139,7 +141,7 @@ fn test_bindgroup() {
     use crate::mesh::ENGINE;
     use externref::ExternRef;
 
-    use crate::gpu::render_pass_encoder::JSRenderPassColorAttachment;
+    use webgpu::color_attachment::JSRenderPassColorAttachment;
 
     unsafe {
         init_gpu(
@@ -273,17 +275,19 @@ fn test_bindgroup() {
 #[test]
 fn test_bindgroup_buffer_resize() {
     use super::gpu::{create_bind_group, init_gpu};
-    use super::renderbundle::{RenderBundle, RenderBundleEncoder};
+    use super::renderbundle::RenderBundle;
+    use crate::gpu::renderbundle_encoder::RenderBundleEncoder;
+
     use crate::engine;
-    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
     use crate::gpu::command_encoder::GPUCommandEncoder;
     use crate::gpu::queue::Queue;
-    use crate::gpu::render_pass_encoder::JSRenderPassColorAttachment;
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
     use crate::mesh::ENGINE;
     use externref::ExternRef;
     use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
+    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
+    use webgpu::color_attachment::JSRenderPassColorAttachment;
 
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
