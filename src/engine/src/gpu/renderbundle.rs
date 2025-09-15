@@ -2,9 +2,7 @@ use std::sync::Arc;
 
 use externref::Resource;
 
-use crate::gpu::buffer::buffer::JSBuffer;
-
-use super::bindgroup::BindGroupResources;
+use crate::gpu::{bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::JSBuffer};
 
 pub struct JSFunction(());
 pub struct JSRenderBundleDescriptor(());

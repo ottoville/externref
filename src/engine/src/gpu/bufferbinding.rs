@@ -3,7 +3,9 @@ use std::{
     sync::{Arc, Mutex, Weak},
 };
 
-use crate::gpu::{bindgroup::BindGroupTrait, buffer::bindable::BindGroupBindable};
+use webgpu::bindgroup::bindgroup_trait::BindGroupTrait;
+
+use crate::gpu::buffer::bindable::BindGroupBindable;
 
 pub struct BufferBinding {
     pub buffer: Arc<Mutex<dyn BindGroupBindable + Send>>,

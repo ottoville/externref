@@ -75,7 +75,7 @@ fn test_lights() {
 
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use crate::gpu::{
-        bindgroup::BindGroup, bufferbinding::BufferBinding, gpu::init_gpu, queue::Queue,
+        bindgroup::bindgroup::BindGroup, bufferbinding::BufferBinding, gpu::init_gpu, queue::Queue,
     };
     use externref::ExternRef;
     unsafe {

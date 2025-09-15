@@ -7,6 +7,7 @@ use externref::{externref, Resource};
 use terramath::MatrixMath;
 use webgpu::device::JSDevice;
 
+use crate::gpu::bindgroup::bindgroup::BindGroup;
 use crate::gpu::binding_commands::BindingCommands;
 use crate::gpu::buffer::buffer::GPUBuffer;
 use crate::gpu::command_buffer::CommandBuffer;
@@ -14,7 +15,7 @@ use crate::gpu::gpu::GPU;
 use crate::projection::Projection;
 use crate::{
     gpu::{
-        bindgroup::BindGroup, bufferbinding::BufferBinding, command_encoder::GPUCommandEncoder,
+        bufferbinding::BufferBinding, command_encoder::GPUCommandEncoder,
         compute_pass_encoder::ComputePassEncoder,
     },
     mesh::ENGINE,

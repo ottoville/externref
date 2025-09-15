@@ -14,7 +14,7 @@ use crate::{
         camera_group::CameraGroup,
     },
     gpu::{
-        bindgroup::{BindGroup, BindGroupResources},
+        bindgroup::{bindgroup::BindGroup, bindgroup_resources::BindGroupResources},
         binding_commands::BindingCommands,
         buffer::buffer::{GPUBuffer, JSBuffer},
         externref_trait::HaveExternref,

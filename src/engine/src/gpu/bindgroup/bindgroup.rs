@@ -2,15 +2,16 @@ use std::sync::Mutex;
 use std::sync::{Arc, Weak};
 
 use externref::Resource;
+use webgpu::bindgroup::bindgroup_trait::BindGroupTrait;
 use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
 use webgpu::device::JSDevice;
 
+use crate::gpu::bindgroup::bindgroup_resources::BindGroupResources;
+use crate::gpu::buffer::buffer::JSBuffer;
+use crate::gpu::bufferbinding::BufferBinding;
+use crate::gpu::gpu::create_bind_group;
+use crate::gpu::renderbundle::RenderBundle;
 use crate::MULTIVALUE_USIZE;
-
-use super::buffer::buffer::JSBuffer;
-use super::bufferbinding::BufferBinding;
-use super::gpu::create_bind_group;
-use super::renderbundle::RenderBundle;
 
 #[no_mangle]
 pub unsafe extern "C" fn iterate_bindings(
@@ -49,9 +50,7 @@ pub struct BindGroup<const N: usize> {
     pub bufferbindings: [Arc<Mutex<BufferBinding>>; N],
     pub renderbundles: Mutex<Vec<Weak<Mutex<Option<RenderBundle>>>>>,
 }
-pub trait BindGroupTrait: Send + Sync {
-    fn make_dirty(&self);
-}
+
 impl<const N: usize> BindGroupTrait for BindGroup<N> {
     fn make_dirty(&self) {
         self.resources.lock().unwrap().take();
@@ -62,10 +61,7 @@ impl<const N: usize> BindGroupTrait for BindGroup<N> {
         }
     }
 }
-pub struct BindGroupResources {
-    pub externref: Resource<JSBindGroup>,
-    pub rawbuffers: Vec<Arc<Resource<JSBuffer>>>,
-}
+
 impl<const N: usize> BindGroup<N> {
     pub fn new(
         label: String,
@@ -126,23 +122,26 @@ impl<const N: usize> BindGroup<N> {
 #[cfg(test)]
 #[test]
 fn test_bindgroup() {
-    use super::gpu::{create_bind_group, init_gpu};
-    use super::renderbundle::RenderBundle;
-    use crate::gpu::renderbundle_encoder::RenderBundleEncoder;
+    use super::super::renderbundle::RenderBundle;
 
     use crate::engine;
-    use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
-    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
+    use webgpu::{
+        bindgroup_layout::{BindGroupLayout, JSBindGroupLayout},
+        buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout},
+        color_attachment::JSRenderPassColorAttachment,
+    };
 
-    use crate::gpu::command_encoder::GPUCommandEncoder;
-    use crate::gpu::queue::Queue;
-    use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
-    use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
+    use crate::gpu::{
+        binding_commands::BindingCommands,
+        buffer::buffer::GPUBuffer,
+        command_encoder::GPUCommandEncoder,
+        gpu::{create_bind_group, init_gpu},
+        queue::Queue,
+        renderbundle_encoder::RenderBundleEncoder,
+        shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT,
+    };
     use crate::mesh::ENGINE;
     use externref::ExternRef;
-
-    use webgpu::color_attachment::JSRenderPassColorAttachment;
-
     unsafe {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
@@ -274,20 +273,22 @@ fn test_bindgroup() {
 #[cfg(test)]
 #[test]
 fn test_bindgroup_buffer_resize() {
-    use super::gpu::{create_bind_group, init_gpu};
-    use super::renderbundle::RenderBundle;
-    use crate::gpu::renderbundle_encoder::RenderBundleEncoder;
+    use super::super::gpu::{create_bind_group, init_gpu};
+    use super::super::renderbundle::RenderBundle;
 
     use crate::engine;
-    use crate::gpu::command_encoder::GPUCommandEncoder;
-    use crate::gpu::queue::Queue;
-    use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
-    use crate::gpu::{binding_commands::BindingCommands, buffer::buffer::GPUBuffer};
+    use crate::gpu::{
+        binding_commands::BindingCommands, buffer::buffer::GPUBuffer,
+        command_encoder::GPUCommandEncoder, queue::Queue,
+        renderbundle_encoder::RenderBundleEncoder, shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT,
+    };
     use crate::mesh::ENGINE;
     use externref::ExternRef;
-    use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
-    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
-    use webgpu::color_attachment::JSRenderPassColorAttachment;
+    use webgpu::{
+        bindgroup_layout::{BindGroupLayout, JSBindGroupLayout},
+        buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout},
+        color_attachment::JSRenderPassColorAttachment,
+    };
 
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));

@@ -3,10 +3,12 @@ use std::{ptr, sync::Arc};
 use externref::{externref, Resource};
 use webgpu::device::JSDevice;
 
-use crate::gpu::externref_trait::HaveExternref;
-
-use super::{
-    bindgroup::{BindGroup, BindGroupResources, JSBindGroup},
+use crate::gpu::{
+    bindgroup::{
+        bindgroup::{BindGroup, JSBindGroup},
+        bindgroup_resources::BindGroupResources,
+    },
+    externref_trait::HaveExternref,
 };
 
 #[cfg(test)]

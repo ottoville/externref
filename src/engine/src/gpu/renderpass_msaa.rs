@@ -8,10 +8,7 @@ use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
 use terramath::VectorMath;
 use webgpu::{
-    color_attachment::{
-        create_render_pass_color_attachment_clear, ColorAttachment, ColorAttachmentMultiSampled,
-        StoreOpt,
-    },
+    color_attachment::{ColorAttachment, ColorAttachmentMultiSampled},
     device::JSDevice,
     texture::depth_texture::DepthTexture,
 };
@@ -19,7 +16,7 @@ use webgpu::{
 use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{
-        bindgroup::BindGroup,
+        bindgroup::bindgroup::BindGroup,
         command_encoder::GPUCommandEncoder,
         compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
         gpu::{get_renderpass_descriptor, GPU},
@@ -79,21 +76,10 @@ impl RenderPassTrait for RenderpassMSAA {
         bind_group_position: &Arc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
-            let attachments = self.render_targets.iter_mut().map(|rendertarget| {
-                let view = rendertarget.texture_view.get_attachment();
-                unsafe {
-                    create_render_pass_color_attachment_clear(
-                        view,
-                        0,
-                        None,
-                        rendertarget.clear_value_r,
-                        rendertarget.clear_value_g,
-                        rendertarget.clear_value_b,
-                        rendertarget.clear_value_a,
-                        StoreOpt::Discard,
-                    )
-                }
-            });
+            let attachments = self
+                .render_targets
+                .iter_mut()
+                .map(|rendertarget| rendertarget.get_attachment());
 
             // if let Some(depth_render_target) = &self.depth_render_target {}
 

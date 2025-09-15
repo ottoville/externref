@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 use externref::Resource;
 
-use super::{bindgroup::BindGroupResources, buffer::buffer::JSBuffer};
+use crate::gpu::bindgroup::bindgroup_resources::BindGroupResources;
+
+use super::buffer::buffer::JSBuffer;
 
 pub struct JSCommandBuffer(());
 

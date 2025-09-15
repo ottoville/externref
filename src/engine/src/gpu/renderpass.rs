@@ -8,16 +8,14 @@ use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use terramath::VectorMath;
 use webgpu::{
-    color_attachment::{create_render_pass_color_attachment_clear, ColorAttachment, StoreOpt},
-    device::JSDevice,
-    texture::depth_texture::DepthTexture,
+    color_attachment::ColorAttachment, device::JSDevice, texture::depth_texture::DepthTexture,
 };
 
 use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{
-        compute_pass_encoder::JSComputePipeline, gpu::GPU, queue::Queue,
-        renderbundle_encoder::RenderBundleEncoder,
+        bindgroup::bindgroup::BindGroup, compute_pass_encoder::JSComputePipeline, gpu::GPU,
+        queue::Queue, renderbundle_encoder::RenderBundleEncoder,
     },
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
@@ -25,9 +23,8 @@ use crate::{
 };
 
 use super::{
-    bindgroup::BindGroup, command_encoder::GPUCommandEncoder,
-    compute_pass_encoder::ComputePassEncoder, gpu::get_renderpass_descriptor,
-    renderbundle::JSFunction,
+    command_encoder::GPUCommandEncoder, compute_pass_encoder::ComputePassEncoder,
+    gpu::get_renderpass_descriptor, renderbundle::JSFunction,
 };
 thread_local! {
     static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass")) };
@@ -166,21 +163,10 @@ impl RenderPassTrait for Renderpass {
         bind_group_position: &Arc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         return RENDERPASS_LABEL.with(|label| {
-            let attachments = self.render_targets.iter_mut().map(|rendertarget| {
-                let view = rendertarget.texture_view.get_attachment();
-                unsafe {
-                    create_render_pass_color_attachment_clear(
-                        view,
-                        0,
-                        None,
-                        rendertarget.clear_value_r,
-                        rendertarget.clear_value_g,
-                        rendertarget.clear_value_b,
-                        rendertarget.clear_value_a,
-                        StoreOpt::Discard,
-                    )
-                }
-            });
+            let attachments = self
+                .render_targets
+                .iter_mut()
+                .map(|rendertarget| rendertarget.get_attachment());
 
             // if let Some(depth_render_target) = &self.depth_render_target {}
 

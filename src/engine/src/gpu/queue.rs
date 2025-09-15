@@ -5,10 +5,9 @@ use std::{
 
 use externref::{externref, Resource};
 
-use crate::gpu::buffer::buffer::GPUBuffer;
+use crate::gpu::{bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::GPUBuffer};
 
 use super::{
-    bindgroup::BindGroupResources,
     buffer::buffer::JSBuffer,
     command_buffer::{CommandBuffer, JSCommandBuffer},
 };

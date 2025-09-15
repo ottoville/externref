@@ -14,7 +14,7 @@ pub unsafe fn create_render_pass_color_attachment_clear(
     _clear_value_g: f64,
     _clear_value_b: f64,
     _clear_value_a: f64,
-    _store_opt: StoreOpt,
+    _store_opt: u32,
 ) -> Resource<JSRenderPassColorAttachment> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
@@ -33,7 +33,7 @@ extern "C" {
         clearValueG: f64,
         clearValueB: f64,
         clearValueA: f64,
-        store_opt: StoreOpt,
+        store_opt: u32,
     ) -> Resource<JSRenderPassColorAttachment>;
     pub fn create_render_pass_color_attachment_load(
         view: &Resource<JSTextureView>,
@@ -44,16 +44,18 @@ extern "C" {
 
 }
 pub struct JSRenderPassColorAttachment(());
+#[derive(Copy, Clone)]
 pub enum StoreOpt {
     Store,
     Discard,
 }
 pub struct ColorAttachment {
     pub texture_view: Box<dyn RenderAttachmentTexture + Send>,
-    pub clear_value_r: f64,
-    pub clear_value_g: f64,
-    pub clear_value_b: f64,
-    pub clear_value_a: f64,
+    storeopt: StoreOpt,
+    clear_value_r: f64,
+    clear_value_g: f64,
+    clear_value_b: f64,
+    clear_value_a: f64,
 }
 impl ColorAttachment {
     pub fn new(
@@ -65,10 +67,26 @@ impl ColorAttachment {
     ) -> Self {
         ColorAttachment {
             texture_view: Box::new(texture_view),
+            storeopt: StoreOpt::Store,
             clear_value_r,
             clear_value_g,
             clear_value_b,
             clear_value_a,
+        }
+    }
+    pub fn get_attachment(&mut self) -> Resource<JSRenderPassColorAttachment> {
+        let view = self.texture_view.get_attachment();
+        unsafe {
+            create_render_pass_color_attachment_clear(
+                view,
+                0,
+                None,
+                self.clear_value_r,
+                self.clear_value_g,
+                self.clear_value_b,
+                self.clear_value_a,
+                self.storeopt as u32,
+            )
         }
     }
 }
@@ -83,6 +101,7 @@ impl ColorAttachmentMultiSampled {
     ) -> Self {
         ColorAttachmentMultiSampled(ColorAttachment {
             texture_view: Box::new(texture_view),
+            storeopt: StoreOpt::Discard,
             clear_value_r,
             clear_value_g,
             clear_value_b,

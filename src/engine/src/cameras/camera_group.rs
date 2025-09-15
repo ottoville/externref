@@ -10,8 +10,8 @@ use webgpu::device::JSDevice;
 use crate::{
     cameras::camera::get_camera_by_id,
     gpu::{
-        bindgroup::BindGroup, binding_commands::BindingCommands, buffer::buffer::GPUBuffer,
-        compute_pass_encoder::ComputePassEncoder,
+        bindgroup::bindgroup::BindGroup, binding_commands::BindingCommands,
+        buffer::buffer::GPUBuffer, compute_pass_encoder::ComputePassEncoder,
     },
     projection::TILE_COUNT,
 };

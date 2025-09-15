@@ -2,13 +2,12 @@ use std::sync::Arc;
 
 use externref::{externref, Resource};
 
-use crate::gpu::externref_trait::HaveExternref;
-
-use super::{
-    bindgroup::{BindGroup, BindGroupResources},
-    binding_commands::BindingCommands,
-    command_encoder::GPUCommandEncoder,
+use crate::gpu::{
+    bindgroup::{bindgroup::BindGroup, bindgroup_resources::BindGroupResources},
+    externref_trait::HaveExternref,
 };
+
+use super::{binding_commands::BindingCommands, command_encoder::GPUCommandEncoder};
 
 #[cfg(test)]
 unsafe fn dispatch_workgroups(

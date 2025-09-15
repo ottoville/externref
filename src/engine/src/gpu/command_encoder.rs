@@ -4,12 +4,14 @@ use externref::{externref, Resource};
 use webgpu::{color_attachment::JSRenderPassColorAttachment, device::JSDevice};
 
 use crate::{
-    gpu::{buffer::buffer::GPUBuffer, gpu::create_gpu_command_encoder},
+    gpu::{
+        bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::GPUBuffer,
+        gpu::create_gpu_command_encoder,
+    },
     MULTIVALUE_USIZE,
 };
 
 use super::{
-    bindgroup::BindGroupResources,
     buffer::buffer::JSBuffer,
     command_buffer::{CommandBuffer, JSCommandBuffer},
     compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder},
