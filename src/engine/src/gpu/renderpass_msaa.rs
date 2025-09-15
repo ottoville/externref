@@ -8,7 +8,10 @@ use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
 use terramath::VectorMath;
 use webgpu::{
+    bindgroup::bindgroup::BindGroup,
     color_attachment::{ColorAttachment, ColorAttachmentMultiSampled},
+    command_encoder::GPUCommandEncoder,
+    compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
     device::JSDevice,
     texture::depth_texture::DepthTexture,
 };
@@ -16,9 +19,6 @@ use webgpu::{
 use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{
-        bindgroup::bindgroup::BindGroup,
-        command_encoder::GPUCommandEncoder,
-        compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
         gpu::{get_renderpass_descriptor, GPU},
         queue::Queue,
         renderbundle_encoder::RenderBundleEncoder,
@@ -155,12 +155,12 @@ impl RenderPassTrait for RenderpassMSAA {
     }
     fn do_pick(
         &mut self,
-        device: &Resource<JSDevice>,
-        swap_buffers: &mut SwapBuffers,
-        queue: &Queue,
-        pickpipeline: &Resource<JSComputePipeline>,
-        mouse_x: u32,
-        mouse_y: u32,
+        _device: &Resource<JSDevice>,
+        _swap_buffers: &mut SwapBuffers,
+        _queue: &Queue,
+        _pickpipeline: &Resource<JSComputePipeline>,
+        _mouse_x: u32,
+        _mouse_y: u32,
     ) {
         todo!()
     }

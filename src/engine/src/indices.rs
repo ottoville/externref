@@ -1,13 +1,8 @@
 use externref::externref;
 use logger::LoggerArray;
+use webgpu::{buffer::buffer::GPUBuffer, render_commands::RenderCommands};
 
-use crate::{
-    gpu::{
-        buffer::buffer::GPUBuffer, render_commands::RenderCommands,
-        renderbundle_encoder::RenderBundleEncoder,
-    },
-    Geometry,
-};
+use crate::{gpu::renderbundle_encoder::RenderBundleEncoder, Geometry};
 
 #[externref]
 #[no_mangle]

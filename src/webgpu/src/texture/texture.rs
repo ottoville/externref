@@ -486,7 +486,7 @@ fn test_texture() {
     use crate::texture::texture_formats::BGRA8UNORM;
     use externref::ExternRef;
     let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
-    let texture = Texture::<BGRA8UNORM, 2, 4, 1, 1, false, false, true, false, true>::new(
+    Texture::<BGRA8UNORM, 2, 4, 1, 1, false, false, true, false, true>::new(
         &device,
         300,
         300,

@@ -11,7 +11,6 @@ use crate::{
         texture_view::{JSTextureView, TextureView},
     },
 };
-use externref::externref;
 use externref::Resource;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -35,7 +34,7 @@ pub unsafe fn configure(
 }
 
 #[cfg(target_arch = "wasm32")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "webgpucontext")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
@@ -112,7 +111,7 @@ impl UnconfiguredCanvasContext {
             format: PhantomData,
             context: self.context,
             view: None,
-            currentTexture: None
+            current_texture: None,
         };
     }
     pub fn configure_with_srgb_multiview<
@@ -168,7 +167,7 @@ impl UnconfiguredCanvasContext {
             format: PhantomData,
             context: self.context,
             view: None,
-            currentTexture: None
+            current_texture: None,
         };
     }
 }
@@ -184,7 +183,7 @@ pub struct CanvasContext<
 > {
     pub format: PhantomData<F>,
     context: Resource<JSGPUCanvasContext>,
-    currentTexture: Option<
+    current_texture: Option<
         Texture<
             F,
             2,
@@ -340,7 +339,7 @@ impl<
 
     fn get_attachment(&mut self) -> &Resource<JSTextureView> {
         // Maintain the texture in order not to drop it
-        let texture = self.currentTexture.insert(self.get_current_texture());
+        let texture = self.current_texture.insert(self.get_current_texture());
         let label = if let Some(oldview) = self.view.take() {
             oldview.label
         } else {
@@ -388,7 +387,7 @@ fn context_with_srgb_view() {
             externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
         };
         let unconfigured_context = canvas.get_webgpu_context();
-        let context = unconfigured_context
+        unconfigured_context
             .configure_with_srgb_multiview::<RGBA8UNORM, false, false, false, false, true, _>(
                 &device,
                 ColorSpace::SRGB,

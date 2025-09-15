@@ -1,9 +1,9 @@
 use std::{ptr, sync::Arc};
 
-use externref::{externref, Resource};
-use webgpu::device::JSDevice;
+use externref::{Resource};
+use crate::device::JSDevice;
 
-use crate::gpu::{
+use crate::{
     bindgroup::{
         bindgroup::{BindGroup, JSBindGroup},
         bindgroup_resources::BindGroupResources,
@@ -11,7 +11,7 @@ use crate::gpu::{
     externref_trait::HaveExternref,
 };
 
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn set_bindgroup(
     _resource: usize,
     _index: u32,
@@ -22,8 +22,7 @@ pub unsafe fn set_bindgroup(
 }
 
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "bindcommands")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {

@@ -4,14 +4,15 @@ import { Externref } from '../externref.js';
 declare const engine: Engine;
 
 export type BufferInterface = {
-  create_mapped_GPU_buffer_copysrc(
+  create_mapped_gpu_buffer_copysrc(
     device: GPUDevice,
     length: number,
     label_ptr: number,
     label_len: number,
     label_cap: number,
   ): rust_pointer<'GPUBuffer'>;
-  create_mappadle_GPU_buffer_copydst_mapread(
+  create_mappadle_gpu_buffer_copydst_mapread(
+    device: GPUDevice,
     length: number,
     label_ptr: number,
     label_len: number,

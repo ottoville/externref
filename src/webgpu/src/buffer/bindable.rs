@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex, Weak};
 
 use externref::Resource;
 
-use crate::gpu::{
+use crate::{
     buffer::buffer::{GPUBuffer, JSBuffer},
     bufferbinding::BufferBinding,
 };

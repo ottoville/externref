@@ -106,7 +106,8 @@ fn test_bounding_box() {
     use externref::ExternRef;
     use externref::Resource;
     unsafe {
-        use crate::{gpu::buffer::buffer::GPUBuffer, indices::Indices};
+        use crate::indices::Indices;
+        use webgpu::buffer::buffer::GPUBuffer;
 
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),

@@ -5,16 +5,12 @@ use std::{
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
-use webgpu::device::JSDevice;
-
-use crate::{
-    cameras::camera::get_camera_by_id,
-    gpu::{
-        bindgroup::bindgroup::BindGroup, binding_commands::BindingCommands,
-        buffer::buffer::GPUBuffer, compute_pass_encoder::ComputePassEncoder,
-    },
-    projection::TILE_COUNT,
+use webgpu::{
+    bindgroup::bindgroup::BindGroup, binding_commands::BindingCommands, buffer::buffer::GPUBuffer,
+    compute_pass_encoder::ComputePassEncoder, device::JSDevice,
 };
+
+use crate::{cameras::camera::get_camera_by_id, projection::TILE_COUNT};
 
 use super::camera::{Camera, CLUSTER_DISPATCH_SIZE};
 

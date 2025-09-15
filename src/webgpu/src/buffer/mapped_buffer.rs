@@ -2,9 +2,9 @@ use std::ops::Deref;
 
 use externref::{externref, Resource};
 
-use crate::gpu::buffer::buffer::{GPUBuffer, JSBuffer};
-
-#[cfg(test)]
+use crate::buffer::buffer::{GPUBuffer, JSBuffer};
+use crate::device::JSDevice;
+#[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn set_mapped_range(
     _buffer: &Resource<JSBuffer>,
     _offset: usize,
@@ -12,19 +12,18 @@ pub unsafe fn set_mapped_range(
     _buffer_offset: usize,
 ) {
 }
-#[cfg(test)]
-fn get_mapped_range(
+#[cfg(not(target_arch = "wasm32"))]
+unsafe fn get_mapped_range(
     _buffer: &Resource<JSBuffer>,
     _offset: usize,
     _size: usize,
     _buffer_offset: usize,
 ) {
 }
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn unmap(_buffer: &Resource<JSBuffer>) {}
 
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
 #[externref]
 #[link(wasm_import_module = "buffer")]
 #[cfg(any(not(test), rust_analyzer))]
@@ -71,11 +70,9 @@ pub struct MappedGPUBuffer<
 );
 
 #[no_mangle]
-#[cfg(feature = "webgpu")]
-#[cfg(any(not(test), rust_analyzer))]
 #[externref]
-pub unsafe extern "C" fn create_mapped_GPU_buffer_copysrc(
-    device: &Resource<webgpu::device::JSDevice>,
+pub unsafe extern "C" fn create_mapped_gpu_buffer_copysrc(
+    device: &Resource<JSDevice>,
     length: usize,
     label_ptr: *mut u8,
     label_len: usize,

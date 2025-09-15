@@ -8,28 +8,28 @@ pub trait TextureFormatSRGB<F: TextureFormat>: TextureFormat {
         F::to_number()
     }
 }
-impl TextureFormatSRGB<RGBA8UNORM_SRGB> for RGBA8UNORM {}
-impl TextureFormatSRGB<BGRA8UNORM_SRGB> for BGRA8UNORM {}
-impl TextureFormatSRGB<BC1_RGBA_UNORM_SRGB> for BC1_RGBA_UNORM {}
-impl TextureFormatSRGB<BC2_RGBA_UNORM_SRGB> for BC2_RGBA_UNORM {}
-impl TextureFormatSRGB<BC3_RGBA_UNORM_SRGB> for BC3_RGBA_UNORM {}
-impl TextureFormatSRGB<BC7_RGBA_UNORM_SRGB> for BC7_RGBA_UNORM {}
-impl TextureFormatSRGB<ETC2_RGB8UNORM_SRGB> for ETC2_RGB8UNORM {}
-impl TextureFormatSRGB<ETC2_RGB8A1UNORM_SRGB> for ETC2_RGB8A1UNORM {}
-impl TextureFormatSRGB<ASTC_4X4_UNORM_SRGB> for ASTC_4X4_UNORM {}
-impl TextureFormatSRGB<ASTC_5X4_UNORM_SRGB> for ASTC_5X4_UNORM {}
-impl TextureFormatSRGB<ASTC_5X5_UNORM_SRGB> for ASTC_5X5_UNORM {}
-impl TextureFormatSRGB<ASTC_6X5_UNORM_SRGB> for ASTC_6X5_UNORM {}
-impl TextureFormatSRGB<ASTC_6X6_UNORM_SRGB> for ASTC_6X6_UNORM {}
-impl TextureFormatSRGB<ASTC_8X5_UNORM_SRGB> for ASTC_8X5_UNORM {}
-impl TextureFormatSRGB<ASTC_8X6_UNORM_SRGB> for ASTC_8X6_UNORM {}
-impl TextureFormatSRGB<ASTC_8X8_UNORM_SRGB> for ASTC_8X8_UNORM {}
-impl TextureFormatSRGB<ASTC_10X5_UNORM_SRGB> for ASTC_10X5_UNORM {}
-impl TextureFormatSRGB<ASTC_10X6_UNORM_SRGB> for ASTC_10X6_UNORM {}
-impl TextureFormatSRGB<ASTC_10X8_UNORM_SRGB> for ASTC_10X8_UNORM {}
-impl TextureFormatSRGB<ASTC_10X10_UNORM_SRGB> for ASTC_10X10_UNORM {}
-impl TextureFormatSRGB<ASTC_12X10_UNORM_SRGB> for ASTC_12X10_UNORM {}
-impl TextureFormatSRGB<ASTC_12X12_UNORM_SRGB> for ASTC_12X12_UNORM {}
+impl TextureFormatSRGB<Rgba8unormSrgb> for RGBA8UNORM {}
+impl TextureFormatSRGB<Bgra8unormSrgb> for BGRA8UNORM {}
+impl TextureFormatSRGB<Bc1RgbaUnormSrgb> for Bc1RgbaUnorm {}
+impl TextureFormatSRGB<Bc2RgbaUnormSrgb> for Bc2RgbaUnorm {}
+impl TextureFormatSRGB<Bc3RgbaUnormSrgb> for Bc3RgbaUnorm {}
+impl TextureFormatSRGB<Bc7RgbaUnormSrgb> for Bc7RgbaUnorm {}
+impl TextureFormatSRGB<Etc2Rgb8unormSrgb> for Etc2Rgb8unorm {}
+impl TextureFormatSRGB<Etc2Rgb8a1unormSrgb> for Etc2Rgb8a1unorm {}
+impl TextureFormatSRGB<Astc4x4UnormSrgb> for Astc4x4Unorm {}
+impl TextureFormatSRGB<Astc5x4UnormSrgb> for Astc5x4Unorm {}
+impl TextureFormatSRGB<Astc5x5UnormSrgb> for Astc5x5Unorm {}
+impl TextureFormatSRGB<Astc6x5UnormSrgb> for Astc6x5Unorm {}
+impl TextureFormatSRGB<Astc6x6UnormSrgb> for Astc6x6Unorm {}
+impl TextureFormatSRGB<Astc8x5UnormSrgb> for Astc8x5Unorm {}
+impl TextureFormatSRGB<Astc8x6UnormSrgb> for Astc8x6Unorm {}
+impl TextureFormatSRGB<Astc8x8UnormSrgb> for Astc8x8Unorm {}
+impl TextureFormatSRGB<Astc10x5UnormSrgb> for Astc10x5Unorm {}
+impl TextureFormatSRGB<Astc10x6UnormSrgb> for Astc10x6Unorm {}
+impl TextureFormatSRGB<Astc10x8UnormSrgb> for Astc10x8Unorm {}
+impl TextureFormatSRGB<Astc10x10UnormSrgb> for Astc10x10Unorm {}
+impl TextureFormatSRGB<Astc12x10UnormSrgb> for Astc12x10Unorm {}
+impl TextureFormatSRGB<Astc12x12UnormSrgb> for Astc12x12Unorm {}
 pub struct TFORMAT<
     const U: u32,
     const RENDER_ATTACHMENT: bool = false,
@@ -66,12 +66,12 @@ pub type RG16UINT = TFORMAT<18, true, false, true>;
 pub type RG16SINT = TFORMAT<19, true, false, true>;
 pub type RG16FLOAT = TFORMAT<20, true, false, true>;
 pub type RGBA8UNORM = TFORMAT<21, true, false, true>;
-pub type RGBA8UNORM_SRGB = TFORMAT<22, true, true>;
+pub type Rgba8unormSrgb = TFORMAT<22, true, true>;
 pub type RGBA8SNORM = TFORMAT<23, true, false, true>;
 pub type RGBA8UINT = TFORMAT<24, true, false, true>;
 pub type RGBA8SINT = TFORMAT<25, true, false, true>;
 pub type BGRA8UNORM = TFORMAT<26, true, false, true>;
-pub type BGRA8UNORM_SRGB = TFORMAT<27, true, false, true>;
+pub type Bgra8unormSrgb = TFORMAT<27, true, false, true>;
 pub type RGB9E5UFLOAT = TFORMAT<28>;
 pub type RGB10A2UINT = TFORMAT<29, true, false, true>;
 pub type RGB10A2UNORM = TFORMAT<30, true, false, true>;
@@ -90,58 +90,58 @@ pub type RGBA32FLOAT = TFORMAT<42, true>;
 pub type STENCIL8 = TFORMAT<42>;
 pub type DEPTH16UNORM = TFORMAT<44, true, true>;
 pub type DEPTH24PLUS = TFORMAT<45, true, true>;
-pub type DEPTH24PLUS_STENCIL8 = TFORMAT<46, true, true>;
+pub type Depth24plusStencil8 = TFORMAT<46, true, true>;
 pub type DEPTH32FLOAT = TFORMAT<47, true, true>;
-pub type DEPTH32FLOAT_STENCIL8 = TFORMAT<48, true, true>;
-pub type BC1_RGBA_UNORM = TFORMAT<49>;
-pub type BC1_RGBA_UNORM_SRGB = TFORMAT<50>;
-pub type BC2_RGBA_UNORM = TFORMAT<51>;
-pub type BC2_RGBA_UNORM_SRGB = TFORMAT<52>;
-pub type BC3_RGBA_UNORM = TFORMAT<53>;
-pub type BC3_RGBA_UNORM_SRGB = TFORMAT<54>;
-pub type BC4_R_UNORM = TFORMAT<55>;
-pub type BC4_R_SNORM = TFORMAT<56>;
-pub type BC5_RG_UNORM = TFORMAT<57>;
-pub type BC5_RG_SNORM = TFORMAT<58>;
-pub type BC6H_RGB_UFLOAT = TFORMAT<59>;
-pub type BC6H_RGB_FLOAT = TFORMAT<60>;
-pub type BC7_RGBA_UNORM = TFORMAT<61>;
-pub type BC7_RGBA_UNORM_SRGB = TFORMAT<62>;
-pub type ETC2_RGB8UNORM = TFORMAT<63>;
-pub type ETC2_RGB8UNORM_SRGB = TFORMAT<64>;
-pub type ETC2_RGB8A1UNORM = TFORMAT<65>;
-pub type ETC2_RGB8A1UNORM_SRGB = TFORMAT<66>;
-pub type ETC2_RGBA8UNORM = TFORMAT<67>;
-pub type ETC2_RGBA8UNORM_SRGB = TFORMAT<68>;
-pub type EAC_R11UNORM = TFORMAT<69>;
-pub type EAC_R11SNORM = TFORMAT<70>;
-pub type EAC_RG11UNORM = TFORMAT<71>;
-pub type EAC_RG11SNORM = TFORMAT<72>;
-pub type ASTC_4X4_UNORM = TFORMAT<73>;
-pub type ASTC_4X4_UNORM_SRGB = TFORMAT<74>;
-pub type ASTC_5X4_UNORM = TFORMAT<75>;
-pub type ASTC_5X4_UNORM_SRGB = TFORMAT<76>;
-pub type ASTC_5X5_UNORM = TFORMAT<77>;
-pub type ASTC_5X5_UNORM_SRGB = TFORMAT<78>;
-pub type ASTC_6X5_UNORM = TFORMAT<79>;
-pub type ASTC_6X5_UNORM_SRGB = TFORMAT<80>;
-pub type ASTC_6X6_UNORM = TFORMAT<81>;
-pub type ASTC_6X6_UNORM_SRGB = TFORMAT<82>;
-pub type ASTC_8X5_UNORM = TFORMAT<83>;
-pub type ASTC_8X5_UNORM_SRGB = TFORMAT<84>;
-pub type ASTC_8X6_UNORM = TFORMAT<85>;
-pub type ASTC_8X6_UNORM_SRGB = TFORMAT<86>;
-pub type ASTC_8X8_UNORM = TFORMAT<87>;
-pub type ASTC_8X8_UNORM_SRGB = TFORMAT<88>;
-pub type ASTC_10X5_UNORM = TFORMAT<89>;
-pub type ASTC_10X5_UNORM_SRGB = TFORMAT<90>;
-pub type ASTC_10X6_UNORM = TFORMAT<91>;
-pub type ASTC_10X6_UNORM_SRGB = TFORMAT<92>;
-pub type ASTC_10X8_UNORM = TFORMAT<93>;
-pub type ASTC_10X8_UNORM_SRGB = TFORMAT<94>;
-pub type ASTC_10X10_UNORM = TFORMAT<95>;
-pub type ASTC_10X10_UNORM_SRGB = TFORMAT<96>;
-pub type ASTC_12X10_UNORM = TFORMAT<97>;
-pub type ASTC_12X10_UNORM_SRGB = TFORMAT<98>;
-pub type ASTC_12X12_UNORM = TFORMAT<99>;
-pub type ASTC_12X12_UNORM_SRGB = TFORMAT<100>;
+pub type Depth32floatStencil8 = TFORMAT<48, true, true>;
+pub type Bc1RgbaUnorm = TFORMAT<49>;
+pub type Bc1RgbaUnormSrgb = TFORMAT<50>;
+pub type Bc2RgbaUnorm = TFORMAT<51>;
+pub type Bc2RgbaUnormSrgb = TFORMAT<52>;
+pub type Bc3RgbaUnorm = TFORMAT<53>;
+pub type Bc3RgbaUnormSrgb = TFORMAT<54>;
+pub type Bc4RUnorm = TFORMAT<55>;
+pub type Bc4RSnorm = TFORMAT<56>;
+pub type Bc5RgUnorm = TFORMAT<57>;
+pub type Bc5RgSnorm = TFORMAT<58>;
+pub type Bc6hRgbUfloat = TFORMAT<59>;
+pub type Bc6hRgbFloat = TFORMAT<60>;
+pub type Bc7RgbaUnorm = TFORMAT<61>;
+pub type Bc7RgbaUnormSrgb = TFORMAT<62>;
+pub type Etc2Rgb8unorm = TFORMAT<63>;
+pub type Etc2Rgb8unormSrgb = TFORMAT<64>;
+pub type Etc2Rgb8a1unorm = TFORMAT<65>;
+pub type Etc2Rgb8a1unormSrgb = TFORMAT<66>;
+pub type Etc2Rgba8unorm = TFORMAT<67>;
+pub type Etc2Rgba8unormSrgb = TFORMAT<68>;
+pub type EacR11unorm = TFORMAT<69>;
+pub type EacR11snorm = TFORMAT<70>;
+pub type EacRg11unorm = TFORMAT<71>;
+pub type EacRg11snorm = TFORMAT<72>;
+pub type Astc4x4Unorm = TFORMAT<73>;
+pub type Astc4x4UnormSrgb = TFORMAT<74>;
+pub type Astc5x4Unorm = TFORMAT<75>;
+pub type Astc5x4UnormSrgb = TFORMAT<76>;
+pub type Astc5x5Unorm = TFORMAT<77>;
+pub type Astc5x5UnormSrgb = TFORMAT<78>;
+pub type Astc6x5Unorm = TFORMAT<79>;
+pub type Astc6x5UnormSrgb = TFORMAT<80>;
+pub type Astc6x6Unorm = TFORMAT<81>;
+pub type Astc6x6UnormSrgb = TFORMAT<82>;
+pub type Astc8x5Unorm = TFORMAT<83>;
+pub type Astc8x5UnormSrgb = TFORMAT<84>;
+pub type Astc8x6Unorm = TFORMAT<85>;
+pub type Astc8x6UnormSrgb = TFORMAT<86>;
+pub type Astc8x8Unorm = TFORMAT<87>;
+pub type Astc8x8UnormSrgb = TFORMAT<88>;
+pub type Astc10x5Unorm = TFORMAT<89>;
+pub type Astc10x5UnormSrgb = TFORMAT<90>;
+pub type Astc10x6Unorm = TFORMAT<91>;
+pub type Astc10x6UnormSrgb = TFORMAT<92>;
+pub type Astc10x8Unorm = TFORMAT<93>;
+pub type Astc10x8UnormSrgb = TFORMAT<94>;
+pub type Astc10x10Unorm = TFORMAT<95>;
+pub type Astc10x10UnormSrgb = TFORMAT<96>;
+pub type Astc12x10Unorm = TFORMAT<97>;
+pub type Astc12x10UnormSrgb = TFORMAT<98>;
+pub type Astc12x12Unorm = TFORMAT<99>;
+pub type Astc12x12UnormSrgb = TFORMAT<100>;

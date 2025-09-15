@@ -474,7 +474,8 @@ TODO
       .match(new Request('/terrainTexture.webp'))
       .then(async (cachedtexture) => {
         const gpuReadBufferPositions =
-          engine.rust.create_mappadle_GPU_buffer_copydst_mapread(
+          engine.rust.create_mappadle_gpu_buffer_copydst_mapread(
+            gpu.device,
             this.terrainPositionAndUvsAndNormalsGPU.props.size,
             ...create_rust_label('terrainPositionAndUvsAndNormalsGPURead'),
           );
@@ -490,7 +491,8 @@ TODO
             0,
           );
           var gpuReadBufferIndices =
-            engine.rust.create_mappadle_GPU_buffer_copydst_mapread(
+            engine.rust.create_mappadle_gpu_buffer_copydst_mapread(
+              gpu.device,
               terrainIndicesGPU.props.size,
               ...create_rust_label(terrainIndicesGPU.props.label),
             );
@@ -559,7 +561,8 @@ TODO
           );
 
           var gpuReadBufferIndices =
-            engine.rust.create_mappadle_GPU_buffer_copydst_mapread(
+            engine.rust.create_mappadle_gpu_buffer_copydst_mapread(
+              gpu.device,
               terrainIndicesGPU.props.size,
               ...create_rust_label(terrainIndicesGPU.props.label),
             );

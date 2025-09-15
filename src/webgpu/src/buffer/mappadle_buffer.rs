@@ -1,26 +1,26 @@
-use crate::gpu::buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer};
 use std::num::NonZeroUsize;
 use std::ptr;
 
-use super::buffer::JSBuffer;
-use crate::mesh::ENGINE;
-use externref::Resource;
+use externref::{externref, Resource};
+
+use crate::buffer::buffer::{GPUBuffer, JSBuffer};
+use crate::buffer::mapped_buffer::MappedGPUBuffer;
+use crate::device::JSDevice;
 
 #[no_mangle]
-#[cfg(feature = "webgpu")]
-pub unsafe extern "C" fn create_mappadle_GPU_buffer_copydst_mapread(
+#[externref]
+pub unsafe extern "C" fn create_mappadle_gpu_buffer_copydst_mapread(
+    device: &Resource<JSDevice>,
     length: usize,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
 ) -> *const GPUBuffer<true, false, false, true> {
-    let gpuopt = ENGINE.gpu.lock().unwrap();
-    let gpu = gpuopt.as_ref().unwrap();
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new(&gpu.device, length, label, false)))
+    Box::into_raw(Box::new(GPUBuffer::new(device, length, label, false)))
 }
 
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 unsafe fn map_write_async(
     _buffer: usize,
     _offset: usize,
@@ -32,7 +32,7 @@ unsafe fn map_write_async(
         *Box::from_raw(gpubuffer as *mut GPUBuffer<false, true>),
     ));
 }
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 unsafe fn map_read_async(
     _buffer: usize,
     _offset: usize,
@@ -42,7 +42,6 @@ unsafe fn map_read_async(
 ) {
 }
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
 #[link(wasm_import_module = "buffer")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {

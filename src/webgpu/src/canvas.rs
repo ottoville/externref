@@ -1,4 +1,3 @@
-use externref::externref;
 use externref::Resource;
 use crate::canvas_context::{JSGPUCanvasContext, UnconfiguredCanvasContext};
 
@@ -10,7 +9,7 @@ pub unsafe fn get_webgpu_context(_canvas: &Resource<JSCanvas>) -> Resource<JSGPU
 }
 
 #[cfg(target_arch = "wasm32")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "canvas")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {

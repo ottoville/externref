@@ -1,9 +1,8 @@
-use externref::externref;
-use externref::Resource;
 use crate::{
     binding_layout::{BindingLayout, JSGPUBindGroupLayoutEntry},
     texture::texture::TextureViewDimension,
 };
+use externref::Resource;
 
 pub enum BufferBindingType {
     Uniform,
@@ -19,10 +18,10 @@ pub unsafe fn create_bind_group_layout_entry_buffer(
     _min_binding_size: u32,
 ) -> Resource<JSGPUBindGroupLayoutEntry> {
     use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(not(target_arch = "wasm32"))]
-pub fn create_bind_group_layout_entry_texture(
+pub unsafe fn create_bind_group_layout_entry_texture(
     _binding: u32,
     _visibility: u32,
     _sample_type: u32,
@@ -30,10 +29,10 @@ pub fn create_bind_group_layout_entry_texture(
     _multisampled: bool,
 ) -> Resource<JSGPUBindGroupLayoutEntry> {
     use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(target_arch = "wasm32")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "device")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {

@@ -1,4 +1,4 @@
-import { Rust_Iterator, rust_iterator_to_js, stringFromPtr } from '../utils.js';
+import { Rust_Iterator, rust_iterator_to_js } from '../utils.js';
 import type { Engine } from '../engine.js';
 import { Externref } from '../externref.js';
 import { BGLayout, ShaderStage } from '../webgpu-ts/index.js';
@@ -27,10 +27,13 @@ export const DeviceExports = {
   create_bind_group(
     device: GPUDevice,
     layout: BGLayout | GPUBindGroupLayout,
-    label_vec_ptr: rust_pointer<'label'>,
+    label_ptr: number,
+    label_len: number,
     iterator: Rust_Iterator<number>,
   ) {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
     const groupIterator = rust_iterator_to_js(
       iterator,
       0,
@@ -141,9 +144,12 @@ export const DeviceExports = {
   },
   create_gpu_command_encoder(
     device: GPUDevice,
-    label_vec_ptr: rust_pointer<'label'>,
+    label_ptr: number,
+    label_len: number,
   ): GPUCommandEncoder {
-    const label = stringFromPtr(engine.rust.memory, label_vec_ptr);
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
     return device.createCommandEncoder({ label });
   },
   create_texture(

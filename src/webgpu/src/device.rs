@@ -1,8 +1,12 @@
+use crate::bindgroup::bindgroup::JSBindGroup;
 use crate::bindgroup_layout::JSBindGroupLayout;
 use crate::binding_layout::BindingLayout;
+use crate::bufferbinding::BufferBinding;
+use crate::command_encoder::JSCommandEncoder;
 use crate::texture::texture::JSTexture;
 use externref::externref;
 use externref::Resource;
+use std::sync::{Arc, Mutex};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_texture(
@@ -25,7 +29,7 @@ pub unsafe fn create_texture(
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn create_bind_group_layout(
+pub unsafe fn create_bind_group_layout(
     _device: &Resource<JSDevice>,
     _label_ptr: usize,
     _label_len: usize,
@@ -34,6 +38,26 @@ pub fn create_bind_group_layout(
 ) -> Resource<JSBindGroupLayout> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+}
+#[cfg(not(target_arch = "wasm32"))]
+pub unsafe fn create_gpu_command_encoder(
+    _device: &Resource<JSDevice>,
+    _label_ptr: usize,
+    _label_len: usize,
+) -> Resource<JSCommandEncoder> {
+    use externref::ExternRef;
+    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+}
+#[cfg(not(target_arch = "wasm32"))]
+pub unsafe fn create_bind_group(
+    _device: &Resource<JSDevice>,
+    _layout: &Resource<JSBindGroupLayout>,
+    _label_ptr: usize,
+    _label_len: usize,
+    _entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
+) -> Resource<JSBindGroup> {
+    use externref::ExternRef;
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(target_arch = "wasm32")]
 #[externref]
@@ -61,6 +85,18 @@ extern "C" {
         viewformats_ptr: usize,
         viewformats_len: usize,
     ) -> Resource<JSTexture>;
+    pub fn create_bind_group(
+        device: &Resource<JSDevice>,
+        layout: &Resource<JSBindGroupLayout>,
+        label_ptr: usize,
+        label_len: usize,
+        entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
+    ) -> Resource<JSBindGroup>;
+    pub fn create_gpu_command_encoder(
+        device: &Resource<JSDevice>,
+        label_ptr: usize,
+        label_len: usize,
+    ) -> Resource<JSCommandEncoder>;
 
 }
 pub struct JSDevice();

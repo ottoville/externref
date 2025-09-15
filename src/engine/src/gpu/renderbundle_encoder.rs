@@ -6,21 +6,19 @@ use std::{
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
-use webgpu::device::JSDevice;
+use webgpu::{
+    bindgroup::{bindgroup::BindGroup, bindgroup_resources::BindGroupResources},
+    binding_commands::BindingCommands,
+    buffer::buffer::{GPUBuffer, JSBuffer},
+    device::JSDevice,
+    externref_trait::HaveExternref,
+    render_commands::RenderCommands,
+    renderbundle::{JSFunction, JSRenderBundle, JSRenderBundleDescriptor, RenderBundle},
+};
 
-use crate::{
-    cameras::{
-        camera::{get_camera_by_id, Camera},
-        camera_group::CameraGroup,
-    },
-    gpu::{
-        bindgroup::{bindgroup::BindGroup, bindgroup_resources::BindGroupResources},
-        binding_commands::BindingCommands,
-        buffer::buffer::{GPUBuffer, JSBuffer},
-        externref_trait::HaveExternref,
-        render_commands::RenderCommands,
-        renderbundle::{JSFunction, JSRenderBundle, JSRenderBundleDescriptor, RenderBundle},
-    },
+use crate::cameras::{
+    camera::{get_camera_by_id, Camera},
+    camera_group::CameraGroup,
 };
 
 #[no_mangle]
@@ -100,17 +98,16 @@ unsafe fn do_record(
 ) {
 }
 #[cfg(test)]
-fn finish(
+unsafe fn finish(
     _encoder: &Resource<JSRenderBundleEncoder>,
     _label_ptr: usize,
     _label_len: usize,
 ) -> Resource<JSRenderBundle> {
     use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
 #[externref]
 #[link(wasm_import_module = "renderbundleencoder")]
 #[cfg(any(not(test), rust_analyzer))]

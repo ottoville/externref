@@ -1,4 +1,4 @@
-use externref::{externref, Resource};
+use externref::Resource;
 
 use crate::texture::{
     render_attachment_texture::{RenderAttachmentTexture, RenderAttachmentTextureMultiSampled},
@@ -21,7 +21,7 @@ pub unsafe fn create_render_pass_color_attachment_clear(
 }
 
 #[cfg(target_arch = "wasm32")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "renderpassencoder")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
@@ -79,7 +79,7 @@ impl ColorAttachment {
         unsafe {
             create_render_pass_color_attachment_clear(
                 view,
-                0,
+                -1,
                 None,
                 self.clear_value_r,
                 self.clear_value_g,

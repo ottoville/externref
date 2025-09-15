@@ -9,15 +9,13 @@ use rapier3d::{
     pipeline::ActiveEvents,
 };
 use terramath::{CrossProduct, Plane, Vec3wgslF32, VectorMath, VectorMathF32};
+use webgpu::buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer};
 
 pub use crate::boundingbox::BoundingBox;
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 
 use crate::{
-    gpu::{
-        buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer},
-        gpu::serialize_terrain,
-    },
+    gpu::gpu::serialize_terrain,
     indices::Indices,
     math2::Vec2wgslF32,
     mesh::{Mesh, ENGINE},

@@ -6,11 +6,12 @@ use std::sync::{Arc, Mutex};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
-use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
+use webgpu::bindgroup_layout::BindGroupLayout;
 use webgpu::canvas::{Canvas, JSCanvas};
 use webgpu::canvas_context::{AlphaMode, ColorSpace};
 use webgpu::color_attachment::{ColorAttachment, ColorAttachmentMultiSampled};
 use webgpu::device::JSDevice;
+use webgpu::renderpass::renderpass_descriptor::JSRenderPassDescriptor;
 use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
 use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT, RGBA8UNORM};
 
@@ -18,10 +19,7 @@ use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
 use crate::engine::get_preferred_canvas_format;
-use crate::gpu::bindgroup::bindgroup::{BindGroup, JSBindGroup};
-use crate::gpu::buffer::buffer::GPUBuffer;
-use crate::gpu::command_encoder::JSCommandEncoder;
-use crate::gpu::renderpass::RenderPassTrait;
+use crate::gpu::renderpass::{JSRenderPass, RenderPassTrait, Renderpass};
 use crate::gpu::renderpass_msaa::RenderpassMSAA;
 use crate::gpu::shader::{
     SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
@@ -32,18 +30,19 @@ use crate::mesh_property::MeshProperty;
 use crate::projection::{Projection, PROJECTION_BUFFER_SIZE};
 use crate::swapbuffers::SwapBuffers;
 use crate::GPUMesh;
+use webgpu::bindgroup::bindgroup::BindGroup;
+use webgpu::buffer::buffer::GPUBuffer;
 use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
 
-use super::binding_commands::BindingCommands;
-use super::buffer::buffer::JSBuffer;
-use super::bufferbinding::BufferBinding;
-use super::command_buffer::{CommandBuffer, JSCommandBuffer};
-use super::command_encoder::GPUCommandEncoder;
-use super::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSComputePipeline};
 use super::lights::Lights;
 use super::queue::JSQueue;
 use super::queue::Queue;
-use super::renderpass::{JSRenderPass, JSRenderPassDescriptor, Renderpass};
+use webgpu::binding_commands::BindingCommands;
+use webgpu::buffer::buffer::JSBuffer;
+use webgpu::bufferbinding::BufferBinding;
+use webgpu::command_buffer::{CommandBuffer, JSCommandBuffer};
+use webgpu::command_encoder::GPUCommandEncoder;
+use webgpu::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSComputePipeline};
 pub const GPU_MEMORY_INDEX_SIZE: usize = 256;
 pub const DEFAULT_MAX_INSTANCES: usize = 10;
 
@@ -51,16 +50,6 @@ pub static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Arc<Resource<JSBuffer>>, 16>> 
     Mutex::new(StackAllocator::new());
 thread_local! {
     static GPU_QUEUE:RefCell<Vec<Arc<Mutex<MeshProperty>>    >> = const { RefCell::new(Vec::new()) };
-}
-#[cfg(test)]
-pub unsafe fn create_bind_group(
-    _device: &Resource<JSDevice>,
-    _layout: &Resource<JSBindGroupLayout>,
-    _label: *const usize,
-    _entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
-) -> Resource<JSBindGroup> {
-    use externref::ExternRef;
-    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 
 #[cfg(test)]
@@ -71,52 +60,28 @@ pub unsafe fn get_renderpass_descriptor(
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(test)]
-pub fn renderpass_on_resize(
+pub unsafe fn renderpass_on_resize(
     _renderpass: &Resource<JSRenderPass>,
-    width: NonZeroU32,
-    height: NonZeroU32,
+    _width: NonZeroU32,
+    _height: NonZeroU32,
 ) {
 }
 #[cfg(test)]
-pub fn resize_renderpass(
+pub unsafe fn resize_renderpass(
     _renderpass: &Resource<JSRenderPass>,
-    width: NonZeroU32,
-    height: NonZeroU32,
+    _width: NonZeroU32,
+    _height: NonZeroU32,
 ) {
 }
 #[cfg(test)]
 pub fn serialize_terrain(
-    vertices_ptr: usize,
-    vertices_len: usize,
-    indices_ptr: usize,
-    indices_len: usize,
+    _vertices_ptr: usize,
+    _vertices_len: usize,
+    _indices_ptr: usize,
+    _indices_len: usize,
 ) {
 }
-#[cfg(test)]
-pub unsafe fn create_gpu_command_encoder(
-    _device: &Resource<JSDevice>,
-    _label: *const usize,
-) -> Resource<JSCommandEncoder> {
-    use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
-}
 
-#[cfg(target_arch = "wasm32")]
-#[externref]
-#[link(wasm_import_module = "device")]
-#[cfg(any(not(test), rust_analyzer))]
-extern "C" {
-    pub fn create_bind_group(
-        device: &Resource<JSDevice>,
-        layout: &Resource<JSBindGroupLayout>,
-        label: *const usize,
-        entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
-    ) -> Resource<JSBindGroup>;
-    pub fn create_gpu_command_encoder(
-        device: &Resource<JSDevice>,
-        label: *const usize,
-    ) -> Resource<JSCommandEncoder>;
-}
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "env")]
@@ -961,6 +926,315 @@ fn test_gpu_queue() {
         {
             let mesh = &ENGINE.meshes.lock().unwrap()[&mesh_id];
             assert_eq!(mesh.on_gpu_queue, false);
+        }
+    }
+}
+#[cfg(test)]
+#[test]
+fn test_bindgroup_buffer_resize() {
+    use crate::gpu::{
+        gpu::init_gpu, queue::Queue, renderbundle_encoder::RenderBundleEncoder,
+        shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT,
+    };
+    use crate::mesh::ENGINE;
+    use externref::ExternRef;
+    use webgpu::{
+        bindgroup::bindgroup_trait::BindGroupTrait,
+        bindgroup_layout::{BindGroupLayout, JSBindGroupLayout},
+        binding_commands::BindingCommands,
+        buffer::buffer::GPUBuffer,
+        buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout},
+        color_attachment::JSRenderPassColorAttachment,
+        command_encoder::GPUCommandEncoder,
+        device::create_bind_group,
+        renderbundle::RenderBundle,
+    };
+    unsafe {
+        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
+        let mut command_encoder = GPUCommandEncoder::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+            String::from("test"),
+        );
+
+        init_gpu(
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            false,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+        );
+
+        let mut renderbundle_encoder = RenderBundleEncoder::new(
+            String::from("test"),
+            &device,
+            Vec::new(),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            1,
+            false,
+            false,
+            None,
+        );
+        let buffer = GPUBuffer::<false, false, true, true, false, false, true, true>::new(
+            &device,
+            4,
+            String::from("test"),
+            false,
+        );
+        let rawbuffer = buffer.externref.clone();
+        let buffer_arc = Arc::new(Mutex::new(buffer));
+        let layout = BindGroupLayout::new(
+            &device,
+            String::from("test"),
+            [
+                &GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+                    0,
+                    BufferBindingType::Uniform,
+                    false,
+                    16,
+                ),
+            ],
+        );
+        let bindgroup = BindGroup::new(
+            String::from("test"),
+            &layout,
+            [BufferBinding::new(buffer_arc.clone(), 0, None)],
+        );
+        {
+            //Externref is not set yet, as it is set lazily
+            assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
+            //buffer ref count is 2, one from test and other from bindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+        }
+
+        renderbundle_encoder.set_bindgroup(&device, 0, &bindgroup, &[]);
+        let rawbindgroup = bindgroup
+            .resources
+            .lock()
+            .as_ref()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .clone();
+        buffer_arc
+            .lock()
+            .unwrap()
+            .resize(&device, &mut command_encoder, 64);
+        drop(buffer_arc);
+
+        {
+            //bindgroup 2 ref: test, renderbundle_encoder
+            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            //buffer ref count is 3: test, command_encoder and rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        }
+        bindgroup.make_dirty();
+        {
+            //bindgroup 2 ref: test, renderbundle_encoder
+            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            //buffer ref count is 3: test, command_encoder and rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        }
+        let mut gpuopt = ENGINE.gpu.lock();
+        let gpuopt2 = gpuopt.as_mut().unwrap();
+        let gpu = gpuopt2.as_mut().unwrap();
+
+        //buffer ref count is 3: test, command_encoder, rawbindgroup
+        assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
+
+        let mut renderpass_encoder = command_encoder.begin_render_pass(
+            &String::from("test"),
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            attachments.into_iter(),
+        );
+        renderbundle_encoder.record_renderbundle(
+            &gpu.renderpasses[0].cameragroups(),
+            &gpu.device,
+            &gpu.cameras,
+            1,
+            &bindgroup,
+            |renderbundle| {
+                renderpass_encoder.execute_bundles(renderbundle);
+            },
+        );
+        drop(renderbundle_encoder);
+
+        {
+            //bindgroup 2 ref: test, renderpass_encoder
+            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            //buffer ref count is 3: test, command_encoder, rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        }
+        let command_encoder = renderpass_encoder.end();
+        {
+            let command_buffer = command_encoder.finish(String::from("test"));
+            //buffer ref count is 3: test, command_encoder, rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+
+            let queue = Queue {
+                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                pending_command_buffers: Vec::new(),
+            };
+            //bindgroup 2 ref: test, command_buffer
+            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            queue.submit([command_buffer]);
+        }
+        {
+            //bindgroup 1 ref: test
+            assert_eq!(Arc::strong_count(&rawbindgroup), 1);
+            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+        }
+    }
+}
+#[cfg(test)]
+#[test]
+fn test_bindgroup() {
+    use webgpu::{
+        bindgroup::bindgroup_trait::BindGroupTrait,
+        bindgroup_layout::{BindGroupLayout, JSBindGroupLayout},
+        buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout},
+        color_attachment::JSRenderPassColorAttachment,
+        renderbundle::RenderBundle,
+    };
+
+    use crate::gpu::{
+        gpu::init_gpu, queue::Queue, renderbundle_encoder::RenderBundleEncoder,
+        shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT,
+    };
+    use crate::mesh::ENGINE;
+    use externref::ExternRef;
+    use webgpu::{
+        binding_commands::BindingCommands, buffer::buffer::GPUBuffer,
+        command_encoder::GPUCommandEncoder, device::create_bind_group,
+    };
+    unsafe {
+        init_gpu(
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
+            false,
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+        );
+
+        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
+        let mut renderbundle_encoder = RenderBundleEncoder::new(
+            String::from("test"),
+            &device,
+            Vec::new(),
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            1,
+            false,
+            false,
+            None,
+        );
+        let buffer = GPUBuffer::<false, false, false, true, false, false, true>::new(
+            &device,
+            4,
+            String::from("test"),
+            false,
+        );
+        let rawbuffer = buffer.externref.clone();
+        let layout = BindGroupLayout::new(
+            &device,
+            String::from("test"),
+            [
+                &GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+                    0,
+                    BufferBindingType::Uniform,
+                    false,
+                    16,
+                ),
+            ],
+        );
+        let bindgroup = BindGroup::new(
+            String::from("test"),
+            &layout,
+            [BufferBinding::new(Arc::new(Mutex::new(buffer)), 0, None)],
+        );
+        {
+            //Externref is not set yet, as it is set lazily
+            assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
+            //buffer ref count is 2, one from test and other from bindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+        }
+
+        renderbundle_encoder.set_bindgroup(&device, 0, &bindgroup, &[]);
+        let rawbindgroup = bindgroup
+            .resources
+            .lock()
+            .as_ref()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .clone();
+        {
+            //bindgroup 3 ref: test, bindgroup, renderbundle_encoder
+            assert_eq!(Arc::strong_count(&rawbindgroup), 3);
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        }
+        bindgroup.make_dirty();
+        {
+            //bindgroup 2 ref: test, renderbundle_encoder
+            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            //buffer ref count is 3: test, command_encoder and rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        }
+        let mut gpuopt = ENGINE.gpu.lock();
+        let gpuopt2 = gpuopt.as_mut().unwrap();
+        let gpu = gpuopt2.as_mut().unwrap();
+
+        assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        let command_encoder = GPUCommandEncoder::new(
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+            String::from("test"),
+        );
+        let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
+        let mut renderpass_encoder = command_encoder.begin_render_pass(
+            &String::from("test"),
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+            attachments.into_iter(),
+        );
+        renderbundle_encoder.record_renderbundle(
+            &gpu.renderpasses[0].cameragroups(),
+            &gpu.device,
+            &gpu.cameras,
+            1,
+            &bindgroup,
+            |renderbundle| {
+                renderpass_encoder.execute_bundles(renderbundle);
+            },
+        );
+        drop(renderbundle_encoder);
+
+        {
+            //bindgroup 2 ref: test, renderpass_encoder
+            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            //buffer ref count is 3: test, command_encoder, rawbindgroup
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        }
+        let command_encoder = renderpass_encoder.end();
+        {
+            let command_buffer = command_encoder.finish(String::from("test"));
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+
+            let queue = Queue {
+                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                pending_command_buffers: Vec::new(),
+            };
+            //bindgroup 2 ref: test, command_buffer
+            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            queue.submit([command_buffer]);
+        }
+        {
+            //bindgroup 1 ref: test
+            assert_eq!(Arc::strong_count(&rawbindgroup), 1);
+            assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
     }
 }

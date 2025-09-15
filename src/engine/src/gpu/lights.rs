@@ -1,11 +1,12 @@
 use std::sync::{Arc, Mutex};
 
 use externref::Resource;
+use webgpu::buffer::buffer::GPUBuffer;
+use webgpu::command_encoder::GPUCommandEncoder;
 use webgpu::device::JSDevice;
 
-use super::command_encoder::GPUCommandEncoder;
+use crate::allocators::freeindex::FreeIndexIndex;
 use crate::swapbuffers::SwapBuffers;
-use crate::{allocators::freeindex::FreeIndexIndex, gpu::buffer::buffer::GPUBuffer};
 
 pub struct Lights {
     pub lights: Vec<FreeIndexIndex>,
@@ -74,10 +75,9 @@ fn test_lights() {
     use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
 
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
-    use crate::gpu::{
-        bindgroup::bindgroup::BindGroup, bufferbinding::BufferBinding, gpu::init_gpu, queue::Queue,
-    };
+    use crate::gpu::{gpu::init_gpu, queue::Queue};
     use externref::ExternRef;
+    use webgpu::{bindgroup::bindgroup::BindGroup, bufferbinding::BufferBinding};
     unsafe {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),

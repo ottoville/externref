@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
-use externref::{externref, Resource};
+use externref::Resource;
 
-use crate::gpu::{
+use crate::{
     bindgroup::{bindgroup::BindGroup, bindgroup_resources::BindGroupResources},
+    binding_commands::BindingCommands,
+    command_encoder::GPUCommandEncoder,
     externref_trait::HaveExternref,
 };
 
-use super::{binding_commands::BindingCommands, command_encoder::GPUCommandEncoder};
-
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 unsafe fn dispatch_workgroups(
     _computepassencoder: &Resource<JSComputePassEncoder>,
     _workgroup_count_x: u32,
@@ -17,15 +17,17 @@ unsafe fn dispatch_workgroups(
     _workgroup_count_z: u32,
 ) {
 }
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 unsafe fn set_pipeline(
     _computepassencoder: &Resource<JSComputePassEncoder>,
     _pipeline: &Resource<JSComputePipeline>,
 ) {
 }
+#[cfg(not(target_arch = "wasm32"))]
+unsafe fn end(_computepassencoder: &Resource<JSComputePassEncoder>) {}
+
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "computepassencoder")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
@@ -82,8 +84,6 @@ impl ComputePassEncoder {
         }
     }
     pub fn end(self) -> GPUCommandEncoder {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             end(&self.externref);
         }

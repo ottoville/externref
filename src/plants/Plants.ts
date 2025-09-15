@@ -210,7 +210,7 @@ export class Plants extends MainNode {
             );
             const data2 = new Uint32Array([7, (data.buffer.byteLength / 4) * 2])
               .buffer;
-            const swapBuffer2 = engine.rust.create_mapped_GPU_buffer_copysrc(
+            const swapBuffer2 = engine.rust.create_mapped_gpu_buffer_copysrc(
               scene.gpu.device,
               data2.byteLength,
               ...create_rust_label('_swap'),

@@ -1,27 +1,23 @@
 use std::{cell::Cell, sync::Arc};
 
-use externref::{externref, Resource};
-use webgpu::{color_attachment::JSRenderPassColorAttachment, device::JSDevice};
-
 use crate::{
-    gpu::{
-        bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::GPUBuffer,
-        gpu::create_gpu_command_encoder,
-    },
-    MULTIVALUE_USIZE,
-};
-
-use super::{
     buffer::buffer::JSBuffer,
+    color_attachment::JSRenderPassColorAttachment,
     command_buffer::{CommandBuffer, JSCommandBuffer},
     compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder},
-    render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder},
-    renderpass::JSRenderPassDescriptor,
+    device::{create_gpu_command_encoder, JSDevice},
+    renderpass::{
+        render_pass_encoder::{JSRenderPassEncoder, RenderPassEncoder},
+        renderpass_descriptor::JSRenderPassDescriptor,
+    },
 };
+use externref::{externref, Resource};
+
+use crate::{bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::GPUBuffer};
 
 pub struct JSCommandEncoder(());
 
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn copy_buffer_to_buffer(
     _command_encoder: &Resource<JSCommandEncoder>,
     _source: &Resource<JSBuffer>,
@@ -34,15 +30,16 @@ pub unsafe fn copy_buffer_to_buffer(
 type ColorAttachmentsPtr<'a> =
     *mut &'a mut dyn Iterator<Item = Resource<JSRenderPassColorAttachment>>;
 
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 unsafe fn begin_compute_pass(
     _command_encoder: &Resource<JSCommandEncoder>,
-    _label: *const usize,
+    _label_ptr: usize,
+    _label_len: usize,
 ) -> Resource<JSComputePassEncoder> {
     use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 unsafe fn begin_render_pass(
     _command_encoder: &Resource<JSCommandEncoder>,
     _descriptor: &Resource<JSRenderPassDescriptor>,
@@ -51,20 +48,19 @@ unsafe fn begin_render_pass(
     _views: ColorAttachmentsPtr,
 ) -> Resource<JSRenderPassEncoder> {
     use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
-#[cfg(test)]
-fn finish(
+#[cfg(not(target_arch = "wasm32"))]
+unsafe fn finish(
     _command_encoder: &Resource<JSCommandEncoder>,
     _label_ptr: usize,
     _label_len: usize,
 ) -> Resource<JSCommandBuffer> {
     use externref::ExternRef;
-    unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
 #[externref]
 #[link(wasm_import_module = "commandencoder")]
 #[cfg(any(not(test), rust_analyzer))]
@@ -77,7 +73,8 @@ extern "C" {
     ) -> Resource<JSCommandBuffer>;
     fn begin_compute_pass(
         command_encoder: &Resource<JSCommandEncoder>,
-        label: *const usize,
+        label_ptr: usize,
+        label_len: usize,
     ) -> Resource<JSComputePassEncoder>;
     fn begin_render_pass(
         command_encoder: &Resource<JSCommandEncoder>,
@@ -120,20 +117,15 @@ pub struct GPUCommandEncoder {
     pub buffers: Vec<Arc<Resource<JSBuffer>>>,
     pub bindgroups: Vec<Arc<BindGroupResources>>,
     label: String,
-    owned_by_js: bool,
 }
 impl GPUCommandEncoder {
     pub fn new(device: &Resource<JSDevice>, label: String) -> GPUCommandEncoder {
         unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-
-            let externref = create_gpu_command_encoder(device, MULTIVALUE_USIZE.as_ptr());
+            let externref =
+                create_gpu_command_encoder(device, label.as_ptr() as usize, label.len());
             return GPUCommandEncoder {
                 externref,
                 label,
-                owned_by_js: false,
                 buffers: Vec::new(),
                 bindgroups: Vec::new(),
             };
@@ -148,10 +140,8 @@ impl GPUCommandEncoder {
     }
     pub fn begin_compute_pass(self, label: String) -> ComputePassEncoder {
         unsafe {
-            MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-            MULTIVALUE_USIZE[1] = label.len();
-            MULTIVALUE_USIZE[2] = label.capacity();
-            let externref = begin_compute_pass(&self.externref, MULTIVALUE_USIZE.as_ptr());
+            let externref =
+                begin_compute_pass(&self.externref, label.as_ptr() as usize, label.len());
             ComputePassEncoder {
                 command_encoder: self,
                 externref,

@@ -2,14 +2,13 @@ use std::num::NonZeroUsize;
 use std::ptr;
 use std::sync::Arc;
 
-use crate::gpu::buffer::buffer::GPUBuffer;
-use crate::gpu::buffer::buffer::JSBuffer;
-use crate::gpu::externref_trait::HaveExternref;
-use externref::externref;
+use crate::buffer::buffer::GPUBuffer;
+use crate::buffer::buffer::JSBuffer;
+use crate::externref_trait::HaveExternref;
 use externref::Resource;
 use logger::LoggerArray;
 
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn set_indexbuffer(
     _resource: usize,
     _buffer: &Resource<JSBuffer>,
@@ -18,7 +17,7 @@ pub unsafe fn set_indexbuffer(
     _size: usize,
 ) {
 }
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn draw_indexed(
     _resource: usize,
     _index_count: u32,
@@ -29,8 +28,7 @@ pub unsafe fn draw_indexed(
 ) {
 }
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "rendercommands")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {

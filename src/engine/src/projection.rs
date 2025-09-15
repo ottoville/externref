@@ -4,7 +4,7 @@ use externref::Resource;
 use terramath::MatrixMath;
 use webgpu::device::JSDevice;
 
-use crate::gpu::buffer::buffer::GPUBuffer;
+use webgpu::buffer::buffer::GPUBuffer;
 
 pub const PROJECTION_BUFFER_SIZE: usize = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 pub const TILE_COUNT: [f32; 3] = [32.0, 18.0, 48.0];

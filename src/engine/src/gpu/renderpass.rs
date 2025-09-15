@@ -8,24 +8,24 @@ use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use terramath::VectorMath;
 use webgpu::{
-    color_attachment::ColorAttachment, device::JSDevice, texture::depth_texture::DepthTexture,
+    bindgroup::bindgroup::BindGroup,
+    color_attachment::ColorAttachment,
+    command_encoder::GPUCommandEncoder,
+    compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
+    device::JSDevice,
+    renderbundle::JSFunction,
+    texture::depth_texture::DepthTexture,
 };
 
 use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
-    gpu::{
-        bindgroup::bindgroup::BindGroup, compute_pass_encoder::JSComputePipeline, gpu::GPU,
-        queue::Queue, renderbundle_encoder::RenderBundleEncoder,
-    },
+    gpu::{gpu::GPU, queue::Queue, renderbundle_encoder::RenderBundleEncoder},
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
 };
 
-use super::{
-    command_encoder::GPUCommandEncoder, compute_pass_encoder::ComputePassEncoder,
-    gpu::get_renderpass_descriptor, renderbundle::JSFunction,
-};
+use super::gpu::get_renderpass_descriptor;
 thread_local! {
     static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass")) };
 }
@@ -76,7 +76,6 @@ pub unsafe extern "C" fn get_renderpass_size(id: usize) -> *const [NonZero<u32>;
     let gpu = gpuopt.as_mut().unwrap();
     &gpu.renderpasses[id].size()
 }
-pub struct JSRenderPassDescriptor(());
 pub struct JSRenderPass(());
 
 pub struct Renderpass {
@@ -118,13 +117,12 @@ pub trait RenderPassTrait {
     fn cameragroups(&mut self) -> &mut Vec<CameraGroup>;
     fn resize(
         &mut self,
-        mut width: NonZeroU32,
-        mut height: NonZeroU32,
-        device: &Resource<JSDevice>,
-        cameras: &ExplicitGenerationalFreeList<Camera>,
-        computepass: &mut ComputePassEncoder,
-    ) {
-    }
+        _width: NonZeroU32,
+        _height: NonZeroU32,
+        _device: &Resource<JSDevice>,
+        _cameras: &ExplicitGenerationalFreeList<Camera>,
+        _computepass: &mut ComputePassEncoder,
+    );
     fn render(
         &mut self,
         command_encoder: GPUCommandEncoder,
@@ -242,12 +240,12 @@ impl RenderPassTrait for Renderpass {
     }
     fn do_pick(
         &mut self,
-        device: &Resource<JSDevice>,
-        swap_buffers: &mut SwapBuffers,
-        queue: &Queue,
-        pickpipeline: &Resource<JSComputePipeline>,
-        mouse_x: u32,
-        mouse_y: u32,
+        _device: &Resource<JSDevice>,
+        _swap_buffers: &mut SwapBuffers,
+        _queue: &Queue,
+        _pickpipeline: &Resource<JSComputePipeline>,
+        _mouse_x: u32,
+        _mouse_y: u32,
     ) {
         todo!()
     }

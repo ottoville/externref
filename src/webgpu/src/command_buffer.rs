@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use externref::Resource;
 
-use crate::gpu::bindgroup::bindgroup_resources::BindGroupResources;
+use crate::bindgroup::bindgroup_resources::BindGroupResources;
 
 use super::buffer::buffer::JSBuffer;
 

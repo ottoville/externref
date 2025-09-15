@@ -1,26 +1,25 @@
-use externref::{externref, Resource};
+use externref::Resource;
 
-use crate::gpu::{
+use crate::{
     bindgroup::{bindgroup::BindGroup, bindgroup_resources::BindGroupResources},
     binding_commands::BindingCommands,
+    buffer::buffer::{GPUBuffer, JSBuffer},
+    command_encoder::GPUCommandEncoder,
     externref_trait::HaveExternref,
     render_commands::RenderCommands,
-};
-
-use super::{
-    command_encoder::GPUCommandEncoder,
     renderbundle::{JSRenderBundle, RenderBundle},
 };
-#[cfg(test)]
+
+#[cfg(not(target_arch = "wasm32"))]
 unsafe fn execute_bundles(
     _renderpassencoder: &Resource<JSRenderPassEncoder>,
     _bundle: &Resource<JSRenderBundle>,
 ) {
 }
-
+#[cfg(not(target_arch = "wasm32"))]
+unsafe fn end(_renderpassencoder: &Resource<JSRenderPassEncoder>) {}
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "renderpassencoder")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
@@ -53,8 +52,6 @@ impl RenderPassEncoder {
     }
     //TODO combine with compute pass encoder end
     pub fn end(self) -> GPUCommandEncoder {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
         unsafe {
             end(&self.externref);
         }
@@ -67,7 +64,7 @@ impl HaveExternref<JSRenderPassEncoder> for RenderPassEncoder {
     }
 }
 impl BindingCommands<JSRenderPassEncoder> for RenderPassEncoder {
-    fn after_set_bindgroup<const N: usize>(&mut self, bindgroup: &BindGroup<N>) {
+    fn after_set_bindgroup<const N: usize>(&mut self, _bindgroup: &BindGroup<N>) {
         todo!()
     }
 
@@ -76,14 +73,11 @@ impl BindingCommands<JSRenderPassEncoder> for RenderPassEncoder {
     }
 }
 impl RenderCommands<JSRenderPassEncoder> for RenderPassEncoder {
-    fn buffers(&mut self) -> &mut Vec<std::sync::Arc<Resource<super::buffer::buffer::JSBuffer>>> {
+    fn buffers(&mut self) -> &mut Vec<std::sync::Arc<Resource<JSBuffer>>> {
         // TODO: is it really necessary to save buffer reference in renderpassencoder
         todo!()
     }
-    fn after_set_buffer(
-        &mut self,
-        buffer: &mut super::buffer::buffer::GPUBuffer<false, false, false, false, true>,
-    ) {
+    fn after_set_buffer(&mut self, _buffer: &mut GPUBuffer<false, false, false, false, true>) {
         todo!()
     }
 }

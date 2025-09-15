@@ -5,23 +5,18 @@ use std::{num::NonZero, ptr, sync::Mutex};
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use terramath::MatrixMath;
+use webgpu::bufferbinding::BufferBinding;
+use webgpu::command_encoder::GPUCommandEncoder;
+use webgpu::compute_pass_encoder::ComputePassEncoder;
 use webgpu::device::JSDevice;
 
-use crate::gpu::bindgroup::bindgroup::BindGroup;
-use crate::gpu::binding_commands::BindingCommands;
-use crate::gpu::buffer::buffer::GPUBuffer;
-use crate::gpu::command_buffer::CommandBuffer;
 use crate::gpu::gpu::GPU;
 use crate::projection::Projection;
-use crate::{
-    gpu::{
-        bufferbinding::BufferBinding, command_encoder::GPUCommandEncoder,
-        compute_pass_encoder::ComputePassEncoder,
-    },
-    mesh::ENGINE,
-    swapbuffers::SwapBuffers,
-    MULTIVALUE_USIZE,
-};
+use crate::{mesh::ENGINE, swapbuffers::SwapBuffers, MULTIVALUE_USIZE};
+use webgpu::bindgroup::bindgroup::BindGroup;
+use webgpu::binding_commands::BindingCommands;
+use webgpu::buffer::buffer::GPUBuffer;
+use webgpu::command_buffer::CommandBuffer;
 
 use super::cameracontroller::CameraController;
 

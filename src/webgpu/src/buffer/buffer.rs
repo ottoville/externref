@@ -1,16 +1,15 @@
 use std::sync::Arc;
 use std::sync::{Mutex, Weak};
 
+use crate::buffer::mapped_buffer::MappedGPUBuffer;
+use crate::bufferbinding::BufferBinding;
+use crate::device::JSDevice;
+use crate::renderbundle::RenderBundle;
 use externref::{externref, Resource};
-use webgpu::device::JSDevice;
-
-use crate::gpu::buffer::mapped_buffer::MappedGPUBuffer;
-use crate::gpu::bufferbinding::BufferBinding;
-use crate::gpu::renderbundle::RenderBundle;
 
 pub struct JSBuffer(());
 
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_buffer(
     _device: &Resource<JSDevice>,
     _length: usize,
@@ -41,7 +40,6 @@ extern "C" {
 }
 
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
 #[externref]
 #[link(wasm_import_module = "buffer")]
 #[cfg(any(not(test), rust_analyzer))]
@@ -50,7 +48,6 @@ extern "C" {
 }
 
 #[no_mangle]
-#[cfg(feature = "webgpu")]
 #[externref]
 pub unsafe extern "C" fn get_raw_buffer(
     buffer: *const GPUBuffer<false, false, true>,
@@ -197,13 +194,12 @@ impl<
         return MappedGPUBuffer::new(Self::inner_new(device, size, label, owned_by_js, true));
     }
     pub fn map_state(&self) -> u32 {
-        #[cfg(feature = "webgpu")]
-        #[cfg(any(not(test), rust_analyzer))]
+        #[cfg(target_arch = "wasm32")]
         unsafe {
             map_state(&self.externref)
         }
 
-        #[cfg(test)]
+        #[cfg(not(target_arch = "wasm32"))]
         return 2;
     }
     pub fn make_dirty(&self) {

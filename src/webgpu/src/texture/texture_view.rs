@@ -1,6 +1,5 @@
-use std::{marker::PhantomData, num::NonZeroU32};
+use std::marker::PhantomData;
 
-use externref::externref;
 use externref::Resource;
 
 use crate::texture::{
@@ -27,7 +26,7 @@ pub unsafe fn create_texture_view(
 }
 
 #[cfg(target_arch = "wasm32")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "texture")]
 extern "C" {
     pub fn create_texture_view(
@@ -58,7 +57,7 @@ pub struct TextureView<
 > {
     pub externref: Resource<JSTextureView>,
     pub format: PhantomData<F>,
-    pub label: String
+    pub label: String,
 }
 impl<
         F: TextureFormat,
@@ -168,7 +167,7 @@ impl<
         return TextureView {
             externref,
             format: PhantomData,
-            label
+            label,
         };
     }
     pub fn new_srgb<
@@ -238,7 +237,7 @@ impl<
         return TextureView {
             externref,
             format: PhantomData,
-            label
+            label,
         };
     }
 }
@@ -252,17 +251,15 @@ fn texture_view_usages() {
     use crate::texture::texture_formats::BGRA8UNORM;
     use externref::ExternRef;
     let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
-    unsafe {
-        let texture = Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, false, true>::new(
-            &device,
-            300,
-            300,
-            String::from("testtexture"),
-        )
-        .create_view::<true, false, true, false, true,1,0,1,0>(
-            String::from("testtextureview"),
-            TextureViewDimension::d2,
-            TextureAspect::all,
-        );
-    }
+    Texture::<BGRA8UNORM, 2, 4, 1, 1, false, false, true, false, true>::new(
+        &device,
+        300,
+        300,
+        String::from("testtexture"),
+    )
+    .create_view::<true, false, true, false, true, 1, 0, 1, 0>(
+        String::from("testtextureview"),
+        TextureViewDimension::d2,
+        TextureAspect::all,
+    );
 }

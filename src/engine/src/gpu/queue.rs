@@ -4,11 +4,9 @@ use std::{
 };
 
 use externref::{externref, Resource};
-
-use crate::gpu::{bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::GPUBuffer};
-
-use super::{
-    buffer::buffer::JSBuffer,
+use webgpu::{
+    bindgroup::bindgroup_resources::BindGroupResources,
+    buffer::buffer::{GPUBuffer, JSBuffer},
     command_buffer::{CommandBuffer, JSCommandBuffer},
 };
 
@@ -28,7 +26,6 @@ unsafe fn write_buffer(
 ) {
 }
 #[cfg(target_arch = "wasm32")]
-#[cfg(feature = "webgpu")]
 #[externref]
 #[link(wasm_import_module = "queue")]
 #[cfg(any(not(test), rust_analyzer))]
