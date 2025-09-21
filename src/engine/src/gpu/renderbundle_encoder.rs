@@ -158,7 +158,7 @@ impl RenderBundleEncoder {
     pub fn new(
         label: String,
         device: &Resource<JSDevice>,
-        color_formats: Vec<u32>,
+        color_formats: &Vec<u32>,
         record: Resource<JSFunction>,
         samplecount: u32,
         depth_read_only: bool,

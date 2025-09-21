@@ -12,22 +12,22 @@ use crate::{
 };
 
 pub enum TextureDimension {
-    d1,
-    d2,
-    d3,
+    D1,
+    D2,
+    D3,
 }
 pub enum TextureViewDimension {
-    d1,
-    d2,
-    array_2d,
-    cube,
-    cube_array,
-    d3,
+    D1,
+    D2,
+    Array2d,
+    Cube,
+    CubeArray,
+    D3,
 }
 pub enum TextureAspect {
-    all,
-    stencil_only,
-    depth_only,
+    All,
+    StencilOnly,
+    DepthOnly,
 }
 pub struct JSTexture(());
 
@@ -326,12 +326,14 @@ where
         >();
         debug_assert!(
             Self::usages() & view_usages == view_usages,
-            "texture view usages of {} is not subset of usages of {}",
+            "texture view usages of {} ({}) is not subset of usages of {} ({})",
             label,
+            Self::usages(),
             match &self.label {
                 Some(l) => l.clone(),
                 None => String::from("unlabeled_texture"),
-            }
+            },
+            view_usages
         );
         return TextureView::new::<
             _,

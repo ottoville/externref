@@ -262,163 +262,169 @@ impl Collider {
         self.velocity_y = [self.scaled_velocity[1]; 4];
         self.velocity_z = [self.scaled_velocity[2]; 4];
     }
-    #[cfg(target_arch = "wasm32")]
     pub fn test_triangles(
         &mut self,
         plane_position: &Vec<ColliderPlane>,
         plane_positions_horizontal: &Vec<[[f32; 4]; 4]>,
         last_collider_world_vertices: &Vec<Vec3wgslF32>,
     ) {
-        use std::arch::wasm32::{
-            f32x4, f32x4_abs, f32x4_add, f32x4_div, f32x4_ge, f32x4_gt, f32x4_lt, f32x4_max,
-            f32x4_min, f32x4_sub, i32x4_all_true, v128_any_true, v128_bitselect, v128_load,
-            v128_or,
-        };
-        use terramath::simd_dot;
-        let scaled_velocity = unsafe { v128_load(self.scaled_velocity.as_ptr() as *const v128) };
-        let normalized_velocity_x =
-            unsafe { v128_load(self.normalized_velocity_x.as_ptr() as *const v128) };
-        let normalized_velocity_y =
-            unsafe { v128_load(self.normalized_velocity_y.as_ptr() as *const v128) };
-        let normalized_velocity_z =
-            unsafe { v128_load(self.normalized_velocity_z.as_ptr() as *const v128) };
-        let base_point_x = unsafe { v128_load(self.scaled_position_x.as_ptr() as *const v128) };
-        let base_point_y = unsafe { v128_load(self.scaled_position_y.as_ptr() as *const v128) };
-        let base_point_z = unsafe { v128_load(self.scaled_position_z.as_ptr() as *const v128) };
-        let velocity_x = unsafe { v128_load(self.velocity_x.as_ptr() as *const v128) };
-        let velocity_y = unsafe { v128_load(self.velocity_y.as_ptr() as *const v128) };
-        let velocity_z = unsafe { v128_load(self.velocity_z.as_ptr() as *const v128) };
-        let base_point = unsafe { v128_load(self.scaled_position.as_ptr() as *const v128) };
-        let mut plane_index = 0;
-        for plane_position_horizontal in plane_positions_horizontal {
-            unsafe {
-                let plane_x = v128_load(plane_position_horizontal[0].as_ptr() as *const v128);
-                let plane_y = v128_load(plane_position_horizontal[1].as_ptr() as *const v128);
-                let plane_z = v128_load(plane_position_horizontal[2].as_ptr() as *const v128);
-                let dot_over_zero = f32x4_gt(
-                    simd_dot(
-                        plane_x,
-                        normalized_velocity_x,
-                        plane_y,
-                        normalized_velocity_y,
-                        plane_z,
-                        normalized_velocity_z,
-                    ),
-                    f32x4(0.0, 0.0, 0.0, 0.0),
-                );
-                if !i32x4_all_true(dot_over_zero) {
-                    let signed_dist_to_triangle_plane = f32x4_add(
-                        v128_load(plane_position_horizontal[3].as_ptr() as *const v128),
+        #[cfg(target_arch = "wasm32")]
+        {
+            use std::arch::wasm32::{
+                f32x4, f32x4_abs, f32x4_add, f32x4_div, f32x4_ge, f32x4_gt, f32x4_lt, f32x4_max,
+                f32x4_min, f32x4_sub, i32x4_all_true, v128_any_true, v128_bitselect, v128_load,
+                v128_or,
+            };
+            use terramath::simd_dot;
+            let scaled_velocity =
+                unsafe { v128_load(self.scaled_velocity.as_ptr() as *const v128) };
+            let normalized_velocity_x =
+                unsafe { v128_load(self.normalized_velocity_x.as_ptr() as *const v128) };
+            let normalized_velocity_y =
+                unsafe { v128_load(self.normalized_velocity_y.as_ptr() as *const v128) };
+            let normalized_velocity_z =
+                unsafe { v128_load(self.normalized_velocity_z.as_ptr() as *const v128) };
+            let base_point_x = unsafe { v128_load(self.scaled_position_x.as_ptr() as *const v128) };
+            let base_point_y = unsafe { v128_load(self.scaled_position_y.as_ptr() as *const v128) };
+            let base_point_z = unsafe { v128_load(self.scaled_position_z.as_ptr() as *const v128) };
+            let velocity_x = unsafe { v128_load(self.velocity_x.as_ptr() as *const v128) };
+            let velocity_y = unsafe { v128_load(self.velocity_y.as_ptr() as *const v128) };
+            let velocity_z = unsafe { v128_load(self.velocity_z.as_ptr() as *const v128) };
+            let base_point = unsafe { v128_load(self.scaled_position.as_ptr() as *const v128) };
+            let mut plane_index = 0;
+            for plane_position_horizontal in plane_positions_horizontal {
+                unsafe {
+                    let plane_x = v128_load(plane_position_horizontal[0].as_ptr() as *const v128);
+                    let plane_y = v128_load(plane_position_horizontal[1].as_ptr() as *const v128);
+                    let plane_z = v128_load(plane_position_horizontal[2].as_ptr() as *const v128);
+                    let dot_over_zero = f32x4_gt(
                         simd_dot(
-                            base_point_x,
                             plane_x,
-                            base_point_y,
+                            normalized_velocity_x,
                             plane_y,
-                            base_point_z,
+                            normalized_velocity_y,
                             plane_z,
+                            normalized_velocity_z,
                         ),
+                        f32x4(0.0, 0.0, 0.0, 0.0),
                     );
-
-                    // Calculate dot angle between velocity and normal
-                    let normal_dot_velocity = simd_dot(
-                        plane_x, velocity_x, plane_y, velocity_y, plane_z, velocity_z,
-                    );
-
-                    let mut t0 = f32x4(0.0, 0.0, 0.0, 0.0);
-                    let mut returnvalue = f32x4(0.0, 0.0, 0.0, 0.0);
-                    //Todo: use constant for 0.0009 vec
-                    let embedded_in_plane = f32x4_lt(
-                        f32x4_abs(normal_dot_velocity),
-                        f32x4(0.0009, 0.0009, 0.0009, 0.0009),
-                    );
-                    if !i32x4_all_true(embedded_in_plane) {
-                        //Some is not embedded in plane
-                        //var t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity
-                        t0 = f32x4_div(
-                            f32x4_sub(f32x4(-1.0, -1.0, -1.0, -1.0), signed_dist_to_triangle_plane),
-                            normal_dot_velocity,
-                        );
-
-                        //var t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
-                        let mut t1 = f32x4_div(
-                            f32x4_sub(f32x4(1.0, 1.0, 1.0, 1.0), signed_dist_to_triangle_plane),
-                            normal_dot_velocity,
-                        );
-                        let max = f32x4_max(t0, t1);
-                        let min = f32x4_min(t0, t1);
-                        t0 = min;
-                        t1 = max;
-
-                        returnvalue = v128_or(
-                            f32x4_gt(t0, f32x4(1.0, 1.0, 1.0, 1.0)),
-                            f32x4_lt(t1, f32x4(0.0, 0.0, 0.0, 0.0)),
-                        );
-
-                        t0 = f32x4_max(t0, f32x4(0.0, 0.0, 0.0, 0.0));
-                    }
-                    // Check if movement is not at 90 degree angle with plane
-                    if v128_any_true(embedded_in_plane) {
-                        //Set t0 to zero when embedded in plane
-                        t0 = v128_bitselect(f32x4(0.0, 0.0, 0.0, 0.0), t0, embedded_in_plane);
-                        returnvalue = v128_bitselect(
-                            f32x4_ge(
-                                f32x4_abs(signed_dist_to_triangle_plane),
-                                f32x4(1.0, 1.0, 1.0, 1.0),
+                    if !i32x4_all_true(dot_over_zero) {
+                        let signed_dist_to_triangle_plane = f32x4_add(
+                            v128_load(plane_position_horizontal[3].as_ptr() as *const v128),
+                            simd_dot(
+                                base_point_x,
+                                plane_x,
+                                base_point_y,
+                                plane_y,
+                                base_point_z,
+                                plane_z,
                             ),
+                        );
+
+                        // Calculate dot angle between velocity and normal
+                        let normal_dot_velocity = simd_dot(
+                            plane_x, velocity_x, plane_y, velocity_y, plane_z, velocity_z,
+                        );
+
+                        let mut t0 = f32x4(0.0, 0.0, 0.0, 0.0);
+                        let mut returnvalue = f32x4(0.0, 0.0, 0.0, 0.0);
+                        //Todo: use constant for 0.0009 vec
+                        let embedded_in_plane = f32x4_lt(
+                            f32x4_abs(normal_dot_velocity),
+                            f32x4(0.0009, 0.0009, 0.0009, 0.0009),
+                        );
+                        if !i32x4_all_true(embedded_in_plane) {
+                            //Some is not embedded in plane
+                            //var t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity
+                            t0 = f32x4_div(
+                                f32x4_sub(
+                                    f32x4(-1.0, -1.0, -1.0, -1.0),
+                                    signed_dist_to_triangle_plane,
+                                ),
+                                normal_dot_velocity,
+                            );
+
+                            //var t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+                            let mut t1 = f32x4_div(
+                                f32x4_sub(f32x4(1.0, 1.0, 1.0, 1.0), signed_dist_to_triangle_plane),
+                                normal_dot_velocity,
+                            );
+                            let max = f32x4_max(t0, t1);
+                            let min = f32x4_min(t0, t1);
+                            t0 = min;
+                            t1 = max;
+
+                            returnvalue = v128_or(
+                                f32x4_gt(t0, f32x4(1.0, 1.0, 1.0, 1.0)),
+                                f32x4_lt(t1, f32x4(0.0, 0.0, 0.0, 0.0)),
+                            );
+
+                            t0 = f32x4_max(t0, f32x4(0.0, 0.0, 0.0, 0.0));
+                        }
+                        // Check if movement is not at 90 degree angle with plane
+                        if v128_any_true(embedded_in_plane) {
+                            //Set t0 to zero when embedded in plane
+                            t0 = v128_bitselect(f32x4(0.0, 0.0, 0.0, 0.0), t0, embedded_in_plane);
+                            returnvalue = v128_bitselect(
+                                f32x4_ge(
+                                    f32x4_abs(signed_dist_to_triangle_plane),
+                                    f32x4(1.0, 1.0, 1.0, 1.0),
+                                ),
+                                returnvalue,
+                                embedded_in_plane,
+                            );
+                        }
+                        returnvalue = v128_or(dot_over_zero, returnvalue);
+
+                        self.test_triangle::<0>(
                             returnvalue,
                             embedded_in_plane,
+                            &plane_position,
+                            plane_index,
+                            t0,
+                            scaled_velocity,
+                            self.scaled_speed_squared,
+                            base_point,
+                            last_collider_world_vertices,
+                        );
+                        self.test_triangle::<1>(
+                            returnvalue,
+                            embedded_in_plane,
+                            &plane_position,
+                            plane_index,
+                            t0,
+                            scaled_velocity,
+                            self.scaled_speed_squared,
+                            base_point,
+                            last_collider_world_vertices,
+                        );
+
+                        self.test_triangle::<2>(
+                            returnvalue,
+                            embedded_in_plane,
+                            &plane_position,
+                            plane_index,
+                            t0,
+                            scaled_velocity,
+                            self.scaled_speed_squared,
+                            base_point,
+                            last_collider_world_vertices,
+                        );
+
+                        self.test_triangle::<3>(
+                            returnvalue,
+                            embedded_in_plane,
+                            &plane_position,
+                            plane_index,
+                            t0,
+                            scaled_velocity,
+                            self.scaled_speed_squared,
+                            base_point,
+                            last_collider_world_vertices,
                         );
                     }
-                    returnvalue = v128_or(dot_over_zero, returnvalue);
-
-                    self.test_triangle::<0>(
-                        returnvalue,
-                        embedded_in_plane,
-                        &plane_position,
-                        plane_index,
-                        t0,
-                        scaled_velocity,
-                        self.scaled_speed_squared,
-                        base_point,
-                        last_collider_world_vertices,
-                    );
-                    self.test_triangle::<1>(
-                        returnvalue,
-                        embedded_in_plane,
-                        &plane_position,
-                        plane_index,
-                        t0,
-                        scaled_velocity,
-                        self.scaled_speed_squared,
-                        base_point,
-                        last_collider_world_vertices,
-                    );
-
-                    self.test_triangle::<2>(
-                        returnvalue,
-                        embedded_in_plane,
-                        &plane_position,
-                        plane_index,
-                        t0,
-                        scaled_velocity,
-                        self.scaled_speed_squared,
-                        base_point,
-                        last_collider_world_vertices,
-                    );
-
-                    self.test_triangle::<3>(
-                        returnvalue,
-                        embedded_in_plane,
-                        &plane_position,
-                        plane_index,
-                        t0,
-                        scaled_velocity,
-                        self.scaled_speed_squared,
-                        base_point,
-                        last_collider_world_vertices,
-                    );
+                    plane_index += 4;
                 }
-                plane_index += 4;
             }
         }
     }

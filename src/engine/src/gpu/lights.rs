@@ -71,13 +71,13 @@ impl Lights {
 #[cfg(test)]
 #[test]
 fn test_lights() {
-    use webgpu::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
+    use webgpu::bindgroup_layout::BindGroupLayout;
     use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
 
+    use crate::gpu::gpu::init_gpu;
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
-    use crate::gpu::{gpu::init_gpu, queue::Queue};
     use externref::ExternRef;
-    use webgpu::{bindgroup::bindgroup::BindGroup, bufferbinding::BufferBinding};
+    use webgpu::{bindgroup::bindgroup::BindGroup, bufferbinding::BufferBinding, queue::Queue};
     unsafe {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),

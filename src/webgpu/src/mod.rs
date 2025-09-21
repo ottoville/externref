@@ -17,3 +17,4 @@ pub mod binding_commands;
 pub mod externref_trait;
 pub mod renderpass;
 pub mod render_commands;
+pub mod queue;

@@ -9,8 +9,10 @@ use externref::{externref, Resource};
 use webgpu::bindgroup_layout::BindGroupLayout;
 use webgpu::canvas::{Canvas, JSCanvas};
 use webgpu::canvas_context::{AlphaMode, ColorSpace};
-use webgpu::color_attachment::{ColorAttachment, ColorAttachmentMultiSampled};
+use webgpu::color_attachment::multi_sampled_attachment::ColorAttachmentMultiSampled;
+use webgpu::color_attachment::single_sampled_attachment::ColorAttachmentSingleSampled;
 use webgpu::device::JSDevice;
+use webgpu::queue::{JSQueue, Queue};
 use webgpu::renderpass::renderpass_descriptor::JSRenderPassDescriptor;
 use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
 use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT, RGBA8UNORM};
@@ -19,8 +21,9 @@ use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
 use crate::engine::get_preferred_canvas_format;
-use crate::gpu::renderpass::{JSRenderPass, RenderPassTrait, Renderpass};
+use crate::gpu::renderpass::{JSRenderPass, Renderpass};
 use crate::gpu::renderpass_msaa::RenderpassMSAA;
+use crate::gpu::renderpass_trait::RenderPassTrait;
 use crate::gpu::shader::{
     SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
     SHADER_STAGE_VERTEX, SHADER_STAGE_VERTEX_AND_FRAGMENT,
@@ -35,8 +38,6 @@ use webgpu::buffer::buffer::GPUBuffer;
 use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
 
 use super::lights::Lights;
-use super::queue::JSQueue;
-use super::queue::Queue;
 use webgpu::binding_commands::BindingCommands;
 use webgpu::buffer::buffer::JSBuffer;
 use webgpu::bufferbinding::BufferBinding;
@@ -356,8 +357,15 @@ pub unsafe extern "C" fn init_gpu(
         let screen_render_target_view = screen_render_target
             .create_view::<false, false, true, false, true, 1, 0, 1, 0>(
                 String::from("diffuseTextureView"),
-                TextureViewDimension::d2,
-                TextureAspect::all,
+                TextureViewDimension::D2,
+                TextureAspect::All,
+            );
+        let resolve_target =
+            Texture::<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>::new(
+                &device,
+                300,
+                300,
+                String::from("diffuseTexture"),
             );
         let render_pass_screen = RenderpassMSAA::new(
             String::from("renderPassScreen"),
@@ -378,6 +386,11 @@ pub unsafe extern "C" fn init_gpu(
             }],
             [ColorAttachmentMultiSampled::new(
                 screen_render_target_view,
+                resolve_target.create_view::<false, false, true, false, true, 1, 0, 1, 0>(
+                    String::from("diffusetexturetarget"),
+                    TextureViewDimension::D2,
+                    TextureAspect::All,
+                ),
                 0.53,
                 0.8,
                 0.92,
@@ -403,8 +416,8 @@ pub unsafe extern "C" fn init_gpu(
         let water_render_target_view = water_render_target
             .create_view::<false, false, true, false, true, 1, 0, 1, 0>(
                 String::from("diffuseTextureWaterView"),
-                TextureViewDimension::d2,
-                TextureAspect::all,
+                TextureViewDimension::D2,
+                TextureAspect::All,
             );
         let depth_render_target_water =
             Texture::<DEPTH32FLOAT, 2, 4, 1, 1, true, false, false, false, true>::new(
@@ -433,7 +446,7 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
-            [ColorAttachment::new(
+            [ColorAttachmentSingleSampled::new(
                 water_render_target_view,
                 0.023,
                 0.25,
@@ -459,8 +472,8 @@ pub unsafe extern "C" fn init_gpu(
         let pick_render_target_view = pick_render_target
             .create_view::<true, false, true, false, true, 1, 0, 1, 0>(
                 String::from("idTexture_view"),
-                TextureViewDimension::d2,
-                TextureAspect::all,
+                TextureViewDimension::D2,
+                TextureAspect::All,
             );
         let pick_render_pass = Renderpass::new(
             String::from("pickRenderPass"),
@@ -479,7 +492,7 @@ pub unsafe extern "C" fn init_gpu(
                     )],
                 )),
             }],
-            [ColorAttachment::new(
+            [ColorAttachmentSingleSampled::new(
                 pick_render_target_view,
                 0.0,
                 1.0,
@@ -490,8 +503,8 @@ pub unsafe extern "C" fn init_gpu(
         );
 
         let format_num = get_preferred_canvas_format();
-        let render_target: ColorAttachment = if format_num == 21 {
-            ColorAttachment::new(
+        let render_target: ColorAttachmentSingleSampled = if format_num == 21 {
+            ColorAttachmentSingleSampled::new(
                 unconfigured_context.configure::<RGBA8UNORM, false, false, false, false, true>(
                     &device,
                     ColorSpace::SRGB,
@@ -504,7 +517,7 @@ pub unsafe extern "C" fn init_gpu(
                 1.0,
             )
         } else {
-            ColorAttachment::new(
+            ColorAttachmentSingleSampled::new(
                 unconfigured_context.configure::<BGRA8UNORM, false, false, false, false, true>(
                     &device,
                     ColorSpace::SRGB,
@@ -881,7 +894,7 @@ fn test_gpu_queue() {
             gpu.renderpasses[id].set_bundle(RenderBundleEncoder::new(
                 String::from("test"),
                 &gpu.device,
-                Vec::new(),
+                &Vec::new(),
                 Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
                 1,
                 false,
@@ -933,21 +946,20 @@ fn test_gpu_queue() {
 #[test]
 fn test_bindgroup_buffer_resize() {
     use crate::gpu::{
-        gpu::init_gpu, queue::Queue, renderbundle_encoder::RenderBundleEncoder,
+        gpu::init_gpu, renderbundle_encoder::RenderBundleEncoder,
         shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT,
     };
     use crate::mesh::ENGINE;
     use externref::ExternRef;
     use webgpu::{
         bindgroup::bindgroup_trait::BindGroupTrait,
-        bindgroup_layout::{BindGroupLayout, JSBindGroupLayout},
+        bindgroup_layout::BindGroupLayout,
         binding_commands::BindingCommands,
         buffer::buffer::GPUBuffer,
         buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout},
-        color_attachment::JSRenderPassColorAttachment,
+        color_attachment::color_attachment::JSRenderPassColorAttachment,
         command_encoder::GPUCommandEncoder,
-        device::create_bind_group,
-        renderbundle::RenderBundle,
+        queue::Queue,
     };
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
@@ -970,7 +982,7 @@ fn test_bindgroup_buffer_resize() {
         let mut renderbundle_encoder = RenderBundleEncoder::new(
             String::from("test"),
             &device,
-            Vec::new(),
+            &Vec::new(),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             1,
             false,
@@ -1094,21 +1106,20 @@ fn test_bindgroup_buffer_resize() {
 fn test_bindgroup() {
     use webgpu::{
         bindgroup::bindgroup_trait::BindGroupTrait,
-        bindgroup_layout::{BindGroupLayout, JSBindGroupLayout},
+        bindgroup_layout::BindGroupLayout,
         buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout},
-        color_attachment::JSRenderPassColorAttachment,
-        renderbundle::RenderBundle,
+        color_attachment::color_attachment::JSRenderPassColorAttachment,
     };
 
     use crate::gpu::{
-        gpu::init_gpu, queue::Queue, renderbundle_encoder::RenderBundleEncoder,
+        gpu::init_gpu, renderbundle_encoder::RenderBundleEncoder,
         shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT,
     };
     use crate::mesh::ENGINE;
     use externref::ExternRef;
     use webgpu::{
         binding_commands::BindingCommands, buffer::buffer::GPUBuffer,
-        command_encoder::GPUCommandEncoder, device::create_bind_group,
+        command_encoder::GPUCommandEncoder, queue::Queue,
     };
     unsafe {
         init_gpu(
@@ -1126,7 +1137,7 @@ fn test_bindgroup() {
         let mut renderbundle_encoder = RenderBundleEncoder::new(
             String::from("test"),
             &device,
-            Vec::new(),
+            &Vec::new(),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             1,
             false,

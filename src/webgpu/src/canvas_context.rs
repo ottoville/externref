@@ -348,8 +348,8 @@ impl<
 
         let view = self.view.insert(texture.create_view::<COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT, 1, 0, 1, 0>(
                 label,
-                TextureViewDimension::d2,
-                TextureAspect::all,
+                TextureViewDimension::D2,
+                TextureAspect::All,
             ));
         return &view.externref;
     }

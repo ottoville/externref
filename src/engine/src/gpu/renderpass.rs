@@ -9,17 +9,20 @@ use externref::{externref, Resource};
 use terramath::VectorMath;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
-    color_attachment::ColorAttachment,
+    color_attachment::{
+        color_attachment::ColorAttachment, single_sampled_attachment::ColorAttachmentSingleSampled,
+    },
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
     device::JSDevice,
+    queue::Queue,
     renderbundle::JSFunction,
     texture::depth_texture::DepthTexture,
 };
 
 use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
-    gpu::{gpu::GPU, queue::Queue, renderbundle_encoder::RenderBundleEncoder},
+    gpu::{gpu::GPU, renderbundle_encoder::RenderBundleEncoder, renderpass_trait::RenderPassTrait},
     mesh::ENGINE,
     swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
@@ -41,16 +44,11 @@ pub unsafe extern "C" fn link_renderpass(
     let gpu = gpuopt.as_mut().unwrap();
     let label = gpu.renderpasses[id].label().to_string();
     let renderpass = &mut gpu.renderpasses[id];
-    let formats: Vec<u32> = renderpass
-        .render_targets()
-        .iter()
-        .map(|rendertarget| rendertarget.texture_view.to_number())
-        .collect();
 
     renderpass.set_bundle(RenderBundleEncoder::new(
         label,
         &gpu.device,
-        formats,
+        renderpass.formats(),
         record,
         renderpass.sample_count(),
         depth_read_only,
@@ -78,26 +76,32 @@ pub unsafe extern "C" fn get_renderpass_size(id: usize) -> *const [NonZero<u32>;
 }
 pub struct JSRenderPass(());
 
-pub struct Renderpass {
+pub struct Renderpass<const N: usize> {
     bundle: Option<RenderBundleEncoder>,
     cameragroups: Vec<CameraGroup>,
     jsrenderpass: Resource<JSRenderPass>,
     label: String,
     size: [NonZeroU32; 2],
     size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
-    render_targets: Vec<ColorAttachment>,
+    render_targets: [ColorAttachmentSingleSampled; N],
     depth_render_target: Option<Box<dyn DepthTexture + Send>>,
+    formats: Vec<u32>,
 }
-impl Renderpass {
-    pub fn new<const N: usize>(
+impl<const N: usize> Renderpass<N> {
+    pub fn new(
         label: String,
         size: [NonZero<u32>; 2],
         size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
-        render_targets: [ColorAttachment; N],
+        render_targets: [ColorAttachmentSingleSampled; N],
         depth_render_target: Option<Box<dyn DepthTexture + Send>>,
     ) -> Self {
+        let mut formats = [0; N];
+        for n in 0..N {
+            formats[n] = render_targets[n].texture_view().to_number();
+        }
+
         Renderpass {
             label,
             size,
@@ -105,49 +109,14 @@ impl Renderpass {
             jsrenderpass,
             bundle: None,
             cameragroups,
-            render_targets: Vec::from(render_targets),
+            render_targets,
             depth_render_target,
+            formats: Vec::from(formats),
         }
     }
 }
-pub trait RenderPassTrait {
-    fn render_targets(&self) -> &Vec<ColorAttachment>;
-    fn sample_count(&self) -> u32;
-    fn depth_stencil_format(&self) -> Option<u32>;
-    fn cameragroups(&mut self) -> &mut Vec<CameraGroup>;
-    fn resize(
-        &mut self,
-        _width: NonZeroU32,
-        _height: NonZeroU32,
-        _device: &Resource<JSDevice>,
-        _cameras: &ExplicitGenerationalFreeList<Camera>,
-        _computepass: &mut ComputePassEncoder,
-    );
-    fn render(
-        &mut self,
-        command_encoder: GPUCommandEncoder,
-        device: &Resource<JSDevice>,
-        cameras: &ExplicitGenerationalFreeList<Camera>,
-        gpu_buffer: usize,
-        bind_group_position: &Arc<BindGroup<1>>,
-    ) -> GPUCommandEncoder;
-    fn jsrenderpass(&self) -> &Resource<JSRenderPass>;
-    fn size(&self) -> [NonZeroU32; 2];
-    fn set_bundle(&mut self, bundle: RenderBundleEncoder);
-    fn get_bundle(&self) -> &RenderBundleEncoder;
-    fn label(&self) -> &str;
-    fn pick_position(&self, gpu: &GPU, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32;
-    fn do_pick(
-        &mut self,
-        device: &Resource<JSDevice>,
-        swap_buffers: &mut SwapBuffers,
-        queue: &Queue,
-        pickpipeline: &Resource<JSComputePipeline>,
-        mouse_x: u32,
-        mouse_y: u32,
-    );
-}
-impl RenderPassTrait for Renderpass {
+
+impl<const N: usize> RenderPassTrait for Renderpass<N> {
     fn jsrenderpass(&self) -> &Resource<JSRenderPass> {
         &self.jsrenderpass
     }
@@ -187,7 +156,6 @@ impl RenderPassTrait for Renderpass {
             return renderpass_encoder.end();
         });
     }
-
     fn size(&self) -> [NonZeroU32; 2] {
         self.size
     }
@@ -213,14 +181,13 @@ impl RenderPassTrait for Renderpass {
         self.bundle = Some(bundle);
     }
 
-    fn label(&self) -> &str {
-        &self.label
-    }
-
     fn get_bundle(&self) -> &RenderBundleEncoder {
         self.bundle.as_ref().unwrap()
     }
 
+    fn label(&self) -> &str {
+        &self.label
+    }
     fn pick_position(&self, gpu: &GPU, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32 {
         let x = (mouse_x as f32 / self.size[0].get() as f32) * 2.0 - 1.0;
         let y = -((mouse_y as f32 / self.size[1].get() as f32) * 2.0 - 1.0);
@@ -249,11 +216,6 @@ impl RenderPassTrait for Renderpass {
     ) {
         todo!()
     }
-
-    fn render_targets(&self) -> &Vec<ColorAttachment> {
-        &self.render_targets
-    }
-
     fn sample_count(&self) -> u32 {
         1
     }
@@ -263,5 +225,8 @@ impl RenderPassTrait for Renderpass {
             Some(format) => Some(format.to_number()),
             None => None,
         }
+    }
+    fn formats(&self) -> &Vec<u32> {
+        &self.formats
     }
 }

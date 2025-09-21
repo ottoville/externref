@@ -2,7 +2,7 @@ use std::{cell::Cell, sync::Arc};
 
 use crate::{
     buffer::buffer::JSBuffer,
-    color_attachment::JSRenderPassColorAttachment,
+    color_attachment::color_attachment::JSRenderPassColorAttachment,
     command_buffer::{CommandBuffer, JSCommandBuffer},
     compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder},
     device::{create_gpu_command_encoder, JSDevice},

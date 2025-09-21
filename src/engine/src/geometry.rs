@@ -473,7 +473,6 @@ impl<'vert> Geometry {
         if self.collider_planes_parallel.len() == 0 {
             return;
         }
-        #[cfg(target_arch = "wasm32")]
         collider.test_triangles(
             &self.collider_planes.collider_planes,
             &self.collider_planes_parallel,

@@ -40,8 +40,8 @@ descriptor.dimension must be either "2d" or "3d".
 ///        )
 ///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
-///            TextureViewDimension::d2,
-///            TextureAspect::all,
+///            TextureViewDimension::D2,
+///            TextureAspect::All,
 ///        )
 ///    );
 /// }
@@ -66,13 +66,37 @@ descriptor.dimension must be either "2d" or "3d".
 ///        )
 ///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
-///            TextureViewDimension::d2,
-///            TextureAspect::all,
+///            TextureViewDimension::D2,
+///            TextureAspect::All,
 ///        )
 ///    );
 /// }
 /// ```
-/// ## Should panic, 1d and 3d texture only supports 1 sample count
+/// ## 1d texture, should compile
+/// ```
+/// use crate::webgpu::texture::{
+///                                 texture::{Texture,TextureAspect,TextureViewDimension},
+///                                 render_attachment_texture::RenderAttachmentTextureMultiSampled,
+///                                 texture_formats::BGRA8UNORM
+///                             };
+/// use externref::{ExternRef, Resource};
+/// use std::num::{NonZeroU32, NonZeroUsize};
+/// unsafe {
+/// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
+///        Texture::<BGRA8UNORM, 1, 1,1,1, false, false, true, false, false>::new(
+///            &device,
+///            300,
+///            300,
+///            String::from("diffuseTexture"),
+///        )
+///        .create_view::<false, false, true, false, false, 1,0,1,0>(
+///            String::from("test"),
+///            TextureViewDimension::D2,
+///            TextureAspect::All,
+///        );
+/// }
+/// ```
+/// ## Should panic, Same example as above but with 4 sample count, 1d and 3d texture only supports 1 sample count
 /// ```compile_fail
 /// use crate::webgpu::texture::{
 ///                                 texture::{Texture,TextureAspect,TextureViewDimension},
@@ -83,19 +107,17 @@ descriptor.dimension must be either "2d" or "3d".
 /// use std::num::{NonZeroU32, NonZeroUsize};
 /// unsafe {
 /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-/// let multisampled_textureview_1d: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(
-///        Texture::<BGRA8UNORM, 1, 2,1,1, false, false, true, false, true>::new(
+///        Texture::<BGRA8UNORM, 1, 4,1,1, false, false, true, false, false>::new(
 ///            &device,
 ///            300,
 ///            300,
 ///            String::from("diffuseTexture"),
 ///        )
-///        .create_view::<false, false, true, false, true, 1,0,1,0>(
+///        .create_view::<false, false, true, false, false, 1,0,1,0>(
 ///            String::from("test"),
-///            TextureViewDimension::d2,
-///            TextureAspect::all,
-///        )
-///    );
+///            TextureViewDimension::D2,
+///            TextureAspect::All,
+///        );
 /// }
 /// let multisampled_textureview3d: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(
 ///        Texture::<BGRA8UNORM, 3, 2,1,1, false, false, true, false, true>::new(
@@ -106,8 +128,8 @@ descriptor.dimension must be either "2d" or "3d".
 ///        )
 ///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
-///            TextureViewDimension::d2,
-///            TextureAspect::all,
+///            TextureViewDimension::D2,
+///            TextureAspect::All,
 ///        )
 ///    );
 /// }
@@ -132,8 +154,8 @@ descriptor.dimension must be either "2d" or "3d".
 ///        )
 ///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
-///            TextureViewDimension::d2,
-///            TextureAspect::all,
+///            TextureViewDimension::D2,
+///            TextureAspect::All,
 ///        )
 ///    );
 /// }
@@ -141,7 +163,7 @@ descriptor.dimension must be either "2d" or "3d".
 /// ## Should panic, if samplecount > 1, descriptor.usage must include the RENDER_ATTACHMENT bit AND must not include the STORAGE_BINDING bit.
 /// ```compile_fail
 /// use crate::webgpu::texture::{
-///                                 texture::{Texture,TextureAspect,TextureViewDimension},
+///                                 texture::{Texture,TextureViewDimension},
 ///                                 texture_formats::BGRA8UNORM,
 ///                                 valid_texture::ValidTexture
 ///                             };
@@ -188,8 +210,8 @@ descriptor.dimension must be either "2d" or "3d".
 ///        )
 ///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
-///            TextureViewDimension::d2,
-///            TextureAspect::all,
+///            TextureViewDimension::D2,
+///            TextureAspect::All,
 ///        )
 ///    );
 /// }
@@ -214,15 +236,14 @@ descriptor.dimension must be either "2d" or "3d".
 ///        )
 ///        .create_view::<false, false, true, false, true, 1,0,1,0>(
 ///            String::from("test"),
-///            TextureViewDimension::d2,
-///            TextureAspect::all,
+///            TextureViewDimension::D2,
+///            TextureAspect::All,
 ///        )
 ///    );
 /// }
 /// ```
 pub trait RenderAttachmentTexture {
     fn to_number(&self) -> u32;
-
     fn get_attachment(&mut self) -> &Resource<JSTextureView>;
 }
 impl<
@@ -234,12 +255,21 @@ impl<
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
     > RenderAttachmentTexture
-    for TextureView<F, DIMENSION, SAMPLE_COUNT, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, true>
+    for TextureView<
+        F,
+        DIMENSION,
+        SAMPLE_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        true,
+    >
 {
     fn to_number(&self) -> u32 {
         F::to_number()
     }
-    
+
     fn get_attachment(&mut self) -> &Resource<JSTextureView> {
         &self.externref
     }
@@ -273,4 +303,30 @@ impl<
     > RenderAttachmentTextureSingleSampled
     for TextureView<F, 2, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, true>
 {
+}
+
+#[cfg(test)]
+#[test]
+fn test() {
+    use crate::texture::{
+        render_attachment_texture::RenderAttachmentTextureMultiSampled,
+        texture::{Texture, TextureAspect, TextureViewDimension},
+        texture_formats::BGRA8UNORM,
+    };
+    use externref::{ExternRef, Resource};
+    use std::num::{NonZeroU32, NonZeroUsize};
+    unsafe {
+        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
+        Texture::<BGRA8UNORM, 1, 1, 1, 1, false, false, true, false, false>::new(
+            &device,
+            300,
+            300,
+            String::from("diffuseTexture"),
+        )
+        .create_view::<false, false, true, false, false, 1, 0, 1, 0>(
+            String::from("test"),
+            TextureViewDimension::D2,
+            TextureAspect::All,
+        );
+    }
 }

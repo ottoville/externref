@@ -80,7 +80,7 @@ impl SwapBuffers {
 #[cfg(test)]
 #[test]
 fn test_swap_buffers() {
-    use crate::gpu::{self, gpu::init_gpu};
+    use crate::gpu::gpu::init_gpu;
     use externref::ExternRef;
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));

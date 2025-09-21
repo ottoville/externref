@@ -9,10 +9,13 @@ use externref::Resource;
 use terramath::VectorMath;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
-    color_attachment::{ColorAttachment, ColorAttachmentMultiSampled},
+    color_attachment::{
+        color_attachment::ColorAttachment, multi_sampled_attachment::ColorAttachmentMultiSampled,
+    },
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
     device::JSDevice,
+    queue::Queue,
     texture::depth_texture::DepthTexture,
 };
 
@@ -20,9 +23,9 @@ use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{
         gpu::{get_renderpass_descriptor, GPU},
-        queue::Queue,
         renderbundle_encoder::RenderBundleEncoder,
-        renderpass::{JSRenderPass, RenderPassTrait},
+        renderpass::JSRenderPass,
+        renderpass_trait::RenderPassTrait,
     },
     swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
@@ -30,18 +33,19 @@ use crate::{
 thread_local! {
     static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass_msaa")) };
 }
-pub struct RenderpassMSAA {
+pub struct RenderpassMSAA<const N: usize> {
     pub bundle: Option<RenderBundleEncoder>,
     pub cameragroups: Vec<CameraGroup>,
     pub jsrenderpass: Resource<JSRenderPass>,
     pub label: String,
     pub size: [NonZeroU32; 2],
     pub size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
-    pub render_targets: Vec<ColorAttachment>,
-    depth_render_target: Option<Box<dyn DepthTexture + Send>>,
+    pub render_targets: [ColorAttachmentMultiSampled; N],
+    pub depth_render_target: Option<Box<dyn DepthTexture + Send>>,
+    formats: Vec<u32>,
 }
-impl RenderpassMSAA {
-    pub fn new<const N: usize>(
+impl<const N: usize> RenderpassMSAA<N> {
+    pub fn new(
         label: String,
         size: [NonZero<u32>; 2],
         size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
@@ -50,6 +54,10 @@ impl RenderpassMSAA {
         render_targets: [ColorAttachmentMultiSampled; N],
         depth_render_target: Option<Box<dyn DepthTexture + Send>>,
     ) -> Self {
+        let mut formats = [0; N];
+        for n in 0..N {
+            formats[n] = render_targets[n].texture_view().to_number();
+        }
         RenderpassMSAA {
             label,
             size,
@@ -57,12 +65,13 @@ impl RenderpassMSAA {
             jsrenderpass,
             bundle: None,
             cameragroups,
-            render_targets: Vec::from(render_targets.map(|render_target| render_target.0)),
+            render_targets,
             depth_render_target,
+            formats: Vec::from(formats),
         }
     }
 }
-impl RenderPassTrait for RenderpassMSAA {
+impl<const N: usize> RenderPassTrait for RenderpassMSAA<N> {
     fn jsrenderpass(&self) -> &Resource<JSRenderPass> {
         &self.jsrenderpass
     }
@@ -102,7 +111,6 @@ impl RenderPassTrait for RenderpassMSAA {
             return renderpass_encoder.end();
         });
     }
-
     fn size(&self) -> [NonZeroU32; 2] {
         self.size
     }
@@ -123,19 +131,16 @@ impl RenderPassTrait for RenderpassMSAA {
             cameragroup.update_size_bind_group(device, width, height, &(*cameras), computepass);
         }
     }
-
     fn set_bundle(&mut self, bundle: RenderBundleEncoder) {
         self.bundle = Some(bundle);
-    }
-
-    fn label(&self) -> &str {
-        &self.label
     }
 
     fn get_bundle(&self) -> &RenderBundleEncoder {
         self.bundle.as_ref().unwrap()
     }
-
+    fn label(&self) -> &str {
+        &self.label
+    }
     fn pick_position(&self, gpu: &GPU, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32 {
         let x = (mouse_x as f32 / self.size[0].get() as f32) * 2.0 - 1.0;
         let y = -((mouse_y as f32 / self.size[1].get() as f32) * 2.0 - 1.0);
@@ -165,8 +170,8 @@ impl RenderPassTrait for RenderpassMSAA {
         todo!()
     }
 
-    fn render_targets(&self) -> &Vec<ColorAttachment> {
-        &self.render_targets
+    fn formats(&self) -> &Vec<u32> {
+        &self.formats
     }
 
     fn sample_count(&self) -> u32 {

@@ -244,7 +244,7 @@ impl<
 
 #[cfg(test)]
 #[should_panic(
-    expected = "texture view usages of testtextureview is not subset of usages of testtexture"
+    expected = "texture view usages of testtextureview (20) is not subset of usages of testtexture (21)"
 )]
 #[test]
 fn texture_view_usages() {
@@ -259,7 +259,7 @@ fn texture_view_usages() {
     )
     .create_view::<true, false, true, false, true, 1, 0, 1, 0>(
         String::from("testtextureview"),
-        TextureViewDimension::d2,
-        TextureAspect::all,
+        TextureViewDimension::D2,
+        TextureAspect::All,
     );
 }

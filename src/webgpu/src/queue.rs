@@ -3,20 +3,20 @@ use std::{
     sync::Arc,
 };
 
-use externref::{externref, Resource};
-use webgpu::{
+use crate::{
     bindgroup::bindgroup_resources::BindGroupResources,
     buffer::buffer::{GPUBuffer, JSBuffer},
     command_buffer::{CommandBuffer, JSCommandBuffer},
 };
+use externref::{externref, Resource};
 
 pub struct JSQueue(());
 
 type IteratorPtr<'a> = *mut &'a mut dyn Iterator<Item = Resource<JSCommandBuffer>>;
 
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 unsafe fn submit(_queue: &Resource<JSQueue>, _iterator: IteratorPtr) {}
-#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 unsafe fn write_buffer(
     _queue: &Resource<JSQueue>,
     _buffer: &Resource<JSBuffer>,
