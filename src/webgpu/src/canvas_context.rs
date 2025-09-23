@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, sync::Arc};
 
 use crate::{
     device::JSDevice,
@@ -111,7 +111,6 @@ impl UnconfiguredCanvasContext {
             format: PhantomData,
             context: self.context,
             view: None,
-            current_texture: None,
         };
     }
     pub fn configure_with_srgb_multiview<
@@ -167,7 +166,6 @@ impl UnconfiguredCanvasContext {
             format: PhantomData,
             context: self.context,
             view: None,
-            current_texture: None,
         };
     }
 }
@@ -183,20 +181,6 @@ pub struct CanvasContext<
 > {
     pub format: PhantomData<F>,
     context: Resource<JSGPUCanvasContext>,
-    current_texture: Option<
-        Texture<
-            F,
-            2,
-            1,
-            1,
-            1,
-            COPY_SRC,
-            COPY_DST,
-            TEXTURE_BINDING,
-            STORAGE_BINDING,
-            RENDER_ATTACHMENT,
-        >,
-    >,
     view: Option<
         TextureView<
             F,
@@ -315,7 +299,7 @@ impl<
     }
 }
 impl<
-        F: TextureFormat,
+        F: TextureFormat + Sync + Send + 'static,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
@@ -338,24 +322,29 @@ impl<
     }
 
     fn get_attachment(&mut self) -> &Resource<JSTextureView> {
-        // Maintain the texture in order not to drop it
-        let texture = self.current_texture.insert(self.get_current_texture());
+        let atexture = Arc::new(self.get_current_texture());
         let label = if let Some(oldview) = self.view.take() {
             oldview.label
         } else {
             String::from("canvas_context_texture_view")
         };
-
-        let view = self.view.insert(texture.create_view::<COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, RENDER_ATTACHMENT, 1, 0, 1, 0>(
+        let view = self
+            .view
+            .insert(TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+                atexture,
                 label,
                 TextureViewDimension::D2,
                 TextureAspect::All,
             ));
         return &view.externref;
     }
+
+    fn resize(&mut self) {
+        todo!()
+    }
 }
 impl<
-        F: TextureFormat,
+        F: TextureFormat + Sync + Send + 'static,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,

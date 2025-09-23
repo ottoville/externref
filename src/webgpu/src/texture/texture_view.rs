@@ -1,10 +1,11 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, sync::Arc};
 
 use externref::Resource;
 
 use crate::texture::{
-    texture::{JSTexture, Texture, TextureAspect, TextureViewDimension},
+    texture::{usages_from_bools, JSTexture, Texture, TextureAspect, TextureViewDimension},
     texture_formats::{TextureFormat, TextureFormatSRGB},
+    valid_texture::ValidTexture,
 };
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -58,9 +59,10 @@ pub struct TextureView<
     pub externref: Resource<JSTextureView>,
     pub format: PhantomData<F>,
     pub label: String,
+    pub texture: Arc<dyn ValidTexture + Send + Sync>,
 }
 impl<
-        F: TextureFormat,
+        F: TextureFormat + Sync + Send,
         const DIMENSION: u32,
         const SAMPLE_COUNT: u32,
         const COPY_SRC: bool,
@@ -114,18 +116,20 @@ impl<
         const BASE_MIP_LEVEL: u32,
         const MIP_LEVEL_COUNT: u32,
     >(
-        texture: &Texture<
-            F,
-            DIMENSION,
-            SAMPLE_COUNT,
-            TEXTURE_DEPTH_OR_ARRAY_LAYERS,
-            TEXTURE_MIP_LEVEL_COUNT,
-            COPY_SRC2,
-            COPY_DST2,
-            TEXTURE_BINDING2,
-            STORAGE_BINDING2,
-            RENDER_ATTACHMENT2,
-            SRGB_MULTIVIEW,
+        texture: Arc<
+            Texture<
+                F,
+                DIMENSION,
+                SAMPLE_COUNT,
+                TEXTURE_DEPTH_OR_ARRAY_LAYERS,
+                TEXTURE_MIP_LEVEL_COUNT,
+                COPY_SRC2,
+                COPY_DST2,
+                TEXTURE_BINDING2,
+                STORAGE_BINDING2,
+                RENDER_ATTACHMENT2,
+                SRGB_MULTIVIEW,
+            >,
         >,
         label: String,
         dimension: TextureViewDimension,
@@ -139,7 +143,22 @@ impl<
         TEXTURE_BINDING,
         STORAGE_BINDING,
         RENDER_ATTACHMENT,
-    > {
+    >
+    where
+        Texture<
+            F,
+            DIMENSION,
+            SAMPLE_COUNT,
+            TEXTURE_DEPTH_OR_ARRAY_LAYERS,
+            TEXTURE_MIP_LEVEL_COUNT,
+            COPY_SRC2,
+            COPY_DST2,
+            TEXTURE_BINDING2,
+            STORAGE_BINDING2,
+            RENDER_ATTACHMENT2,
+            SRGB_MULTIVIEW,
+        >: ValidTexture + 'static,
+    {
         // descriptor.mipLevelCount must be > 0.
         const { assert!(MIP_LEVEL_COUNT > 0) };
         // descriptor.baseMipLevel + descriptor.mipLevelCount must be ≤ this.mipLevelCount.
@@ -148,6 +167,25 @@ impl<
         const { assert!(ARRAY_LAYER_COUNT > 0) };
         // descriptor.baseArrayLayer + descriptor.arrayLayerCount must be ≤ the array layer count of this.
         const { assert!(BASE_ARRAY_LAYER + ARRAY_LAYER_COUNT <= TEXTURE_DEPTH_OR_ARRAY_LAYERS) };
+
+        let texture_usages = usages_from_bools::<
+            COPY_SRC2,
+            COPY_DST2,
+            TEXTURE_BINDING2,
+            STORAGE_BINDING2,
+            RENDER_ATTACHMENT2,
+        >();
+        debug_assert!(
+            Self::usages() & texture_usages == Self::usages(),
+            "texture view usages of {} ({}) is not subset of usages of {} ({})",
+            label,
+            Self::usages(),
+            match &texture.label {
+                Some(l) => l.clone(),
+                None => String::from("unlabeled_texture"),
+            },
+            texture_usages
+        );
 
         let externref = unsafe {
             create_texture_view(
@@ -168,6 +206,7 @@ impl<
             externref,
             format: PhantomData,
             label,
+            texture,
         };
     }
     pub fn new_srgb<
@@ -176,7 +215,7 @@ impl<
         const TEXTURE_BINDING2: bool,
         const STORAGE_BINDING2: bool,
         const RENDER_ATTACHMENT2: bool,
-        VF: TextureFormatSRGB<F>,
+        VF: TextureFormatSRGB<F> + Send + Sync,
         const ARRAY_LAYER_COUNT: u32,
         const BASE_ARRAY_LAYER: u32,
         const TEXTURE_DEPTH_OR_ARRAY_LAYERS: u32,
@@ -184,18 +223,20 @@ impl<
         const BASE_MIP_LEVEL: u32,
         const MIP_LEVEL_COUNT: u32,
     >(
-        texture: &Texture<
-            VF,
-            DIMENSION,
-            SAMPLE_COUNT,
-            TEXTURE_DEPTH_OR_ARRAY_LAYERS,
-            TEXTURE_MIP_LEVEL_COUNT,
-            COPY_SRC2,
-            COPY_DST2,
-            TEXTURE_BINDING2,
-            STORAGE_BINDING2,
-            RENDER_ATTACHMENT2,
-            true,
+        texture: Arc<
+            Texture<
+                VF,
+                DIMENSION,
+                SAMPLE_COUNT,
+                TEXTURE_DEPTH_OR_ARRAY_LAYERS,
+                TEXTURE_MIP_LEVEL_COUNT,
+                COPY_SRC2,
+                COPY_DST2,
+                TEXTURE_BINDING2,
+                STORAGE_BINDING2,
+                RENDER_ATTACHMENT2,
+                true,
+            >,
         >,
         label: String,
         dimension: TextureViewDimension,
@@ -209,7 +250,22 @@ impl<
         TEXTURE_BINDING,
         STORAGE_BINDING,
         RENDER_ATTACHMENT,
-    > {
+    >
+    where
+        Texture<
+            VF,
+            DIMENSION,
+            SAMPLE_COUNT,
+            TEXTURE_DEPTH_OR_ARRAY_LAYERS,
+            TEXTURE_MIP_LEVEL_COUNT,
+            COPY_SRC2,
+            COPY_DST2,
+            TEXTURE_BINDING2,
+            STORAGE_BINDING2,
+            RENDER_ATTACHMENT2,
+            true,
+        >: ValidTexture + 'static,
+    {
         // descriptor.mipLevelCount must be > 0.
         const { assert!(MIP_LEVEL_COUNT > 0) };
         // descriptor.baseMipLevel + descriptor.mipLevelCount must be ≤ this.mipLevelCount.
@@ -218,6 +274,25 @@ impl<
         const { assert!(ARRAY_LAYER_COUNT > 0) };
         // descriptor.baseArrayLayer + descriptor.arrayLayerCount must be ≤ the array layer count of this.
         const { assert!(BASE_ARRAY_LAYER + ARRAY_LAYER_COUNT <= TEXTURE_DEPTH_OR_ARRAY_LAYERS) };
+
+        let texture_usages = usages_from_bools::<
+            COPY_SRC2,
+            COPY_DST2,
+            TEXTURE_BINDING2,
+            STORAGE_BINDING2,
+            RENDER_ATTACHMENT2,
+        >();
+        debug_assert!(
+            Self::usages() & texture_usages == texture_usages,
+            "texture view usages of {} ({}) is not subset of usages of {} ({})",
+            label,
+            Self::usages(),
+            match &texture.label {
+                Some(l) => l.clone(),
+                None => String::from("unlabeled_texture"),
+            },
+            texture_usages
+        );
 
         let externref = unsafe {
             create_texture_view(
@@ -238,28 +313,84 @@ impl<
             externref,
             format: PhantomData,
             label,
+            texture,
         };
     }
 }
 
 #[cfg(test)]
 #[should_panic(
-    expected = "texture view usages of testtextureview (20) is not subset of usages of testtexture (21)"
+    expected = "texture view usages of testtextureview (21) is not subset of usages of testtexture (20)"
 )]
 #[test]
 fn texture_view_usages() {
     use crate::texture::texture_formats::BGRA8UNORM;
     use externref::ExternRef;
     let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
-    Texture::<BGRA8UNORM, 2, 4, 1, 1, false, false, true, false, true>::new(
-        &device,
-        300,
-        300,
-        String::from("testtexture"),
-    )
-    .create_view::<true, false, true, false, true, 1, 0, 1, 0>(
+    let texture = Arc::new(Texture::<
+        BGRA8UNORM,
+        2,
+        4,
+        1,
+        1,
+        false,
+        false,
+        true,
+        false,
+        true,
+    >::new(&device, 300, 300, String::from("testtexture")));
+
+    TextureView::<_, _, _, true, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+        texture,
         String::from("testtextureview"),
         TextureViewDimension::D2,
         TextureAspect::All,
     );
+}
+
+#[cfg(test)]
+#[test]
+fn test_create_texture_view() {
+    use crate::texture::{
+        texture::{Texture, TextureAspect, TextureViewDimension},
+        texture_formats::BGRA8UNORM,
+    };
+    use externref::{ExternRef, Resource};
+    use std::sync::Arc;
+    unsafe {
+        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
+        let texture = Arc::new(Texture::<
+            BGRA8UNORM,
+            1,
+            1,
+            1,
+            1,
+            false,
+            false,
+            true,
+            false,
+            false,
+        >::new(
+            &device, 300, 300, String::from("diffuseTexture")
+        ));
+        TextureView::<_, _, _, false, false, true, false, false>::new::<
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            1,
+            0,
+            _,
+            _,
+            0,
+            1,
+        >(
+            texture,
+            String::from("test"),
+            TextureViewDimension::D2,
+            TextureAspect::All,
+        );
+    }
 }

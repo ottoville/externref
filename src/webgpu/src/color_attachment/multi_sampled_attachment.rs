@@ -6,7 +6,7 @@ use crate::{
             create_render_pass_color_attachment_clear, ColorAttachment,
             JSRenderPassColorAttachment, StoreOpt,
         },
-        single_sampled_attachment::ColorAttachmentSingleSampled,
+        color_attachment_single_sampled::ColorAttachmentSingleSampled,
     },
     texture::{
         render_attachment_texture::{

@@ -9,13 +9,14 @@ use externref::{externref, Resource};
 use webgpu::bindgroup_layout::BindGroupLayout;
 use webgpu::canvas::{Canvas, JSCanvas};
 use webgpu::canvas_context::{AlphaMode, ColorSpace};
+use webgpu::color_attachment::color_attachment_single_sampled::ColorAttachmentSingleSampled;
 use webgpu::color_attachment::multi_sampled_attachment::ColorAttachmentMultiSampled;
-use webgpu::color_attachment::single_sampled_attachment::ColorAttachmentSingleSampled;
 use webgpu::device::JSDevice;
 use webgpu::queue::{JSQueue, Queue};
 use webgpu::renderpass::renderpass_descriptor::JSRenderPassDescriptor;
 use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
 use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT, RGBA8UNORM};
+use webgpu::texture::texture_view::TextureView;
 
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
@@ -340,13 +341,20 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("screen_dimension_buffer"),
                 false,
             );
-        let screen_render_target =
-            Texture::<BGRA8UNORM, 2, 4, 1, 1, false, false, true, false, true>::new(
-                &device,
-                300,
-                300,
-                String::from("diffuseTexture"),
-            );
+        let screen_render_target = Arc::new(Texture::<
+            BGRA8UNORM,
+            2,
+            4,
+            1,
+            1,
+            false,
+            false,
+            true,
+            false,
+            true,
+        >::new(
+            &device, 300, 300, String::from("diffuseTexture")
+        ));
         let depth_render_target =
             Texture::<DEPTH32FLOAT, 2, 4, 1, 1, true, false, true, false, true>::new(
                 &device,
@@ -354,19 +362,28 @@ pub unsafe extern "C" fn init_gpu(
                 300,
                 String::from("depthTexture_renderPassScreen"),
             );
-        let screen_render_target_view = screen_render_target
-            .create_view::<false, false, true, false, true, 1, 0, 1, 0>(
+
+        let screen_render_target_view: TextureView<_, _, _, false, false, true, false, true> =
+            TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+                screen_render_target,
                 String::from("diffuseTextureView"),
                 TextureViewDimension::D2,
                 TextureAspect::All,
             );
-        let resolve_target =
-            Texture::<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>::new(
-                &device,
-                300,
-                300,
-                String::from("diffuseTexture"),
-            );
+        let resolve_target = Arc::new(Texture::<
+            BGRA8UNORM,
+            2,
+            1,
+            1,
+            1,
+            false,
+            false,
+            true,
+            false,
+            true,
+        >::new(
+            &device, 300, 300, String::from("diffuseTexture")
+        ));
         let render_pass_screen = RenderpassMSAA::new(
             String::from("renderPassScreen"),
             [NonZeroU32::new_unchecked(1); 2],
@@ -386,7 +403,21 @@ pub unsafe extern "C" fn init_gpu(
             }],
             [ColorAttachmentMultiSampled::new(
                 screen_render_target_view,
-                resolve_target.create_view::<false, false, true, false, true, 1, 0, 1, 0>(
+                TextureView::<_, _, _, false, false, true, false, true>::new::<
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    1,
+                    0,
+                    _,
+                    _,
+                    0,
+                    1,
+                >(
+                    resolve_target,
                     String::from("diffusetexturetarget"),
                     TextureViewDimension::D2,
                     TextureAspect::All,
@@ -407,14 +438,24 @@ pub unsafe extern "C" fn init_gpu(
             );
 
         let water_render_target =
-            Texture::<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>::new(
-                &device,
-                300,
-                300,
-                String::from("diffuseTextureWater"),
-            );
-        let water_render_target_view = water_render_target
-            .create_view::<false, false, true, false, true, 1, 0, 1, 0>(
+            Arc::new(Texture::<
+                BGRA8UNORM,
+                2,
+                1,
+                1,
+                1,
+                false,
+                false,
+                true,
+                false,
+                true,
+            >::new(
+                &device, 300, 300, String::from("diffuseTextureWater")
+            ));
+
+        let water_render_target_view: TextureView<_, _, _, false, false, true, false, true> =
+            TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+                water_render_target,
                 String::from("diffuseTextureWaterView"),
                 TextureViewDimension::D2,
                 TextureAspect::All,
@@ -462,15 +503,24 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("screen_buffer_pick"),
                 false,
             );
-        let pick_render_target =
-            Texture::<RG32UINT, 2, 1, 1, 1, true, false, true, false, true>::new(
-                &device,
-                300,
-                300,
-                String::from("idTexture"),
-            );
-        let pick_render_target_view = pick_render_target
-            .create_view::<true, false, true, false, true, 1, 0, 1, 0>(
+        let pick_render_target = Arc::new(Texture::<
+            RG32UINT,
+            2,
+            1,
+            1,
+            1,
+            true,
+            false,
+            true,
+            false,
+            true,
+        >::new(
+            &device, 300, 300, String::from("idTexture")
+        ));
+
+        let pick_render_target_view: TextureView<_, _, _, true, false, true, false, true> =
+            TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+                pick_render_target,
                 String::from("idTexture_view"),
                 TextureViewDimension::D2,
                 TextureAspect::All,

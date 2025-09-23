@@ -35,6 +35,7 @@ export const CommandEncoderInterface = {
     );
     return commandEncoder.beginRenderPass({
       ...renderpass,
+      // colorAttachments: attachmentsIterator,
       label,
     });
   },

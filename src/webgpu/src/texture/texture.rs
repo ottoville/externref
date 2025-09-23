@@ -1,14 +1,10 @@
-use externref::externref;
 use externref::Resource;
 use std::marker::PhantomData;
 
 use crate::device::create_texture;
 use crate::{
     device::JSDevice,
-    texture::{
-        texture_formats::{TextureFormat, TextureFormatSRGB},
-        texture_view::TextureView,
-    },
+    texture::texture_formats::{TextureFormat, TextureFormatSRGB},
 };
 
 pub enum TextureDimension {
@@ -35,7 +31,7 @@ pub struct JSTexture(());
 unsafe fn destroy(_texture: &Resource<JSTexture>) {}
 
 #[cfg(target_arch = "wasm32")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "texture")]
 extern "C" {
     fn destroy(texture: &Resource<JSTexture>);
@@ -289,164 +285,6 @@ where
             externref,
             format: PhantomData,
         }
-    }
-    pub fn create_view<
-        const COPY_SRC2: bool,
-        const COPY_DST2: bool,
-        const TEXTURE_BINDING2: bool,
-        const STORAGE_BINDING2: bool,
-        const RENDER_ATTACHMENT2: bool,
-        const ARRAY_LAYER_COUNT: u32,
-        const BASE_ARRAY_LAYER: u32,
-        const VIEW_MIP_LEVEL_COUNT: u32,
-        const BASE_MIP_LEVEL: u32,
-    >(
-        &self,
-        label: String,
-        dimension: TextureViewDimension,
-        aspect: TextureAspect,
-    ) -> TextureView<
-        F,
-        DIMENSION,
-        SAMPLE_COUNT,
-        COPY_SRC2,
-        COPY_DST2,
-        TEXTURE_BINDING2,
-        STORAGE_BINDING2,
-        RENDER_ATTACHMENT2,
-    > {
-        // TODO: panic on compile of view usage is not subset of texture usage
-
-        let view_usages = usages_from_bools::<
-            COPY_SRC2,
-            COPY_DST2,
-            TEXTURE_BINDING2,
-            STORAGE_BINDING2,
-            RENDER_ATTACHMENT2,
-        >();
-        debug_assert!(
-            Self::usages() & view_usages == view_usages,
-            "texture view usages of {} ({}) is not subset of usages of {} ({})",
-            label,
-            Self::usages(),
-            match &self.label {
-                Some(l) => l.clone(),
-                None => String::from("unlabeled_texture"),
-            },
-            view_usages
-        );
-        return TextureView::new::<
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            ARRAY_LAYER_COUNT,
-            BASE_ARRAY_LAYER,
-            _,
-            _,
-            BASE_ARRAY_LAYER,
-            VIEW_MIP_LEVEL_COUNT,
-        >(self, label, dimension, aspect);
-    }
-}
-
-impl<
-        F: TextureFormat,
-        const DIMENSION: u32,
-        const SAMPLE_COUNT: u32,
-        const DEPTH_OR_ARRAY_LAYERS: u32,
-        const MIP_LEVEL_COUNT: u32,
-        const COPY_SRC: bool,
-        const COPY_DST: bool,
-        const TEXTURE_BINDING: bool,
-        const STORAGE_BINDING: bool,
-        const RENDER_ATTACHMENT: bool,
-    >
-    Texture<
-        F,
-        DIMENSION,
-        SAMPLE_COUNT,
-        DEPTH_OR_ARRAY_LAYERS,
-        MIP_LEVEL_COUNT,
-        COPY_SRC,
-        COPY_DST,
-        TEXTURE_BINDING,
-        STORAGE_BINDING,
-        RENDER_ATTACHMENT,
-        true,
-    >
-{
-    pub fn create_srgb_view<
-        const COPY_SRC2: bool,
-        const COPY_DST2: bool,
-        const TEXTURE_BINDING2: bool,
-        const STORAGE_BINDING2: bool,
-        const RENDER_ATTACHMENT2: bool,
-        VF: TextureFormat,
-        const ARRAY_LAYER_COUNT: u32,
-        const BASE_ARRAY_LAYER: u32,
-        const BASE_MIP_LEVEL: u32,
-        const VIEW_MIP_LEVEL_COUNT: u32,
-    >(
-        &self,
-        label: String,
-        dimension: TextureViewDimension,
-        aspect: TextureAspect,
-    ) -> TextureView<
-        VF,
-        DIMENSION,
-        SAMPLE_COUNT,
-        COPY_SRC,
-        COPY_DST,
-        TEXTURE_BINDING,
-        STORAGE_BINDING,
-        RENDER_ATTACHMENT,
-    >
-    where
-        F: TextureFormatSRGB<VF>,
-        Self: TextureDimensionTrait,
-    {
-        let view_usages = usages_from_bools::<
-            COPY_SRC2,
-            COPY_DST2,
-            TEXTURE_BINDING2,
-            STORAGE_BINDING2,
-            RENDER_ATTACHMENT2,
-        >();
-        debug_assert!(
-            Self::usages() & view_usages == view_usages,
-            "texture view usages of {} is not subset of usages of {}",
-            label,
-            match &self.label {
-                Some(l) => l.clone(),
-                None => String::from("unlabeled_texture"),
-            }
-        );
-        return TextureView::<
-            VF,
-            DIMENSION,
-            SAMPLE_COUNT,
-            COPY_SRC,
-            COPY_DST,
-            TEXTURE_BINDING,
-            STORAGE_BINDING,
-            RENDER_ATTACHMENT,
-        >::new_srgb::<
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            ARRAY_LAYER_COUNT,
-            BASE_ARRAY_LAYER,
-            _,
-            _,
-            BASE_ARRAY_LAYER,
-            VIEW_MIP_LEVEL_COUNT,
-        >(self, label, dimension, aspect);
     }
 }
 

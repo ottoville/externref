@@ -10,7 +10,7 @@ use terramath::VectorMath;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
     color_attachment::{
-        color_attachment::ColorAttachment, single_sampled_attachment::ColorAttachmentSingleSampled,
+        color_attachment::ColorAttachment, color_attachment_single_sampled::ColorAttachmentSingleSampled,
     },
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
@@ -175,6 +175,9 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
         for cameragroup in &mut self.cameragroups {
             cameragroup.update_size_bind_group(device, width, height, &(*cameras), computepass);
         }
+        /*for render_target in self.render_targets.iter_mut() {
+            render_target.resize()
+        }*/
     }
 
     fn set_bundle(&mut self, bundle: RenderBundleEncoder) {

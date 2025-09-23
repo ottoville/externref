@@ -686,7 +686,7 @@ impl MatrixMath<f32> for [[f32; 2]; 2] {
     fn invert(&self) -> Self {
         todo!()
     }
-    fn multiply(&self, other: &Self) -> Self {
+    fn multiply(&self, _other: &Self) -> Self {
         todo!()
     }
 }
@@ -831,7 +831,7 @@ impl MatrixMath<f32> for [[f32; 3]; 3] {
         todo!()
     }
 
-    fn multiply(&self, other: &Self) -> Self {
+    fn multiply(&self, _other: &Self) -> Self {
         todo!()
     }
 

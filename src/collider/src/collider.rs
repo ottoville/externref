@@ -653,7 +653,6 @@ fn test_check_for_lowest_root() {
     collider.lowest_root = 1.0;
     let collider_ptr = Box::into_raw(collider);
     unsafe {
-        use mem;
         use std::arch::wasm32::f32x4;
         //let v1 = u32x4(0x439C4000, 0x426C2C2B, 0xC3C35000, 0x00000010);
         let v1 = f32x4(

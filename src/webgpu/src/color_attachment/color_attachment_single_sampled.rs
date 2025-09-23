@@ -48,12 +48,15 @@ impl ColorAttachmentSingleSampled {
             )
         }
     }
+    pub fn resize(&mut self) {
+        self.texture_view.resize();
+    }
 }
 
 impl ColorAttachment for ColorAttachmentSingleSampled {
     fn texture_view(
         &self,
-    ) -> &Box<dyn crate::texture::render_attachment_texture::RenderAttachmentTexture + Send> {
+    ) -> &Box<dyn RenderAttachmentTexture + Send> {
         &self.texture_view
     }
 }

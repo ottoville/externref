@@ -116,7 +116,6 @@ pub struct GPUCommandEncoder {
     // Hold references to prevent buffer being CG't before command encoder has been executed
     pub buffers: Vec<Arc<Resource<JSBuffer>>>,
     pub bindgroups: Vec<Arc<BindGroupResources>>,
-    label: String,
 }
 impl GPUCommandEncoder {
     pub fn new(device: &Resource<JSDevice>, label: String) -> GPUCommandEncoder {
@@ -125,7 +124,6 @@ impl GPUCommandEncoder {
                 create_gpu_command_encoder(device, label.as_ptr() as usize, label.len());
             return GPUCommandEncoder {
                 externref,
-                label,
                 buffers: Vec::new(),
                 bindgroups: Vec::new(),
             };
