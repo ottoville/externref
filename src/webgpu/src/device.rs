@@ -11,8 +11,8 @@ use std::sync::{Arc, Mutex};
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_texture(
     _device: &Resource<JSDevice>,
-    _width: usize,
-    _height: usize,
+    _width: u32,
+    _height: u32,
     _depth_or_array_layers: u32,
     _label_ptr: usize,
     _label_len: usize,
@@ -72,8 +72,8 @@ extern "C" {
     ) -> Resource<JSBindGroupLayout>;
     pub fn create_texture(
         device: &Resource<JSDevice>,
-        width: usize,
-        height: usize,
+        width: u32,
+        height: u32,
         depthOrArrayLayers: u32,
         label_ptr: usize,
         label_len: usize,

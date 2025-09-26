@@ -189,7 +189,7 @@ impl<
 
         let externref = unsafe {
             create_texture_view(
-                &texture.externref,
+                &texture.externref.lock().unwrap(),
                 label.as_ptr() as usize,
                 label.len(),
                 F::to_number(),
@@ -296,7 +296,7 @@ impl<
 
         let externref = unsafe {
             create_texture_view(
-                &texture.externref,
+                &texture.externref.lock().unwrap(),
                 label.as_ptr() as usize,
                 label.len(),
                 VF::to_srgb(),
@@ -326,6 +326,7 @@ impl<
 fn texture_view_usages() {
     use crate::texture::texture_formats::BGRA8UNORM;
     use externref::ExternRef;
+    use std::num::NonZeroU32;
     let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
     let texture = Arc::new(Texture::<
         BGRA8UNORM,
@@ -338,7 +339,12 @@ fn texture_view_usages() {
         true,
         false,
         true,
-    >::new(&device, 300, 300, String::from("testtexture")));
+    >::new(
+        &device,
+        unsafe { NonZeroU32::new_unchecked(300) },
+        unsafe { NonZeroU32::new_unchecked(300) },
+        String::from("testtexture"),
+    ));
 
     TextureView::<_, _, _, true, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
         texture,
@@ -356,6 +362,7 @@ fn test_create_texture_view() {
         texture_formats::BGRA8UNORM,
     };
     use externref::{ExternRef, Resource};
+    use std::num::NonZeroU32;
     use std::sync::Arc;
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
@@ -371,7 +378,10 @@ fn test_create_texture_view() {
             false,
             false,
         >::new(
-            &device, 300, 300, String::from("diffuseTexture")
+            &device,
+            NonZeroU32::new_unchecked(300),
+            NonZeroU32::new_unchecked(300),
+            String::from("diffuseTexture"),
         ));
         TextureView::<_, _, _, false, false, true, false, false>::new::<
             _,

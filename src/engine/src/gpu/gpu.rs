@@ -7,10 +7,11 @@ use std::sync::{Arc, Mutex};
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use webgpu::bindgroup_layout::BindGroupLayout;
-use webgpu::canvas::{Canvas, JSCanvas};
-use webgpu::canvas_context::{AlphaMode, ColorSpace};
+use webgpu::canvas::{CanvasNoContext, CanvasWithContext, JSCanvas};
+use webgpu::color_attachment::color_attachment_multi_sampled::ColorAttachmentMultiSampled;
 use webgpu::color_attachment::color_attachment_single_sampled::ColorAttachmentSingleSampled;
-use webgpu::color_attachment::multi_sampled_attachment::ColorAttachmentMultiSampled;
+use webgpu::context::canvas_context::{AlphaMode, ColorSpace};
+use webgpu::context::unconfigured_webgpu_context::UnconfiguredWebgpuContext;
 use webgpu::device::JSDevice;
 use webgpu::queue::{JSQueue, Queue};
 use webgpu::renderpass::renderpass_descriptor::JSRenderPassDescriptor;
@@ -168,10 +169,10 @@ pub unsafe extern "C" fn init_gpu(
 ) -> usize {
     let mut gpu = ENGINE.gpu.lock().unwrap();
     if force || gpu.is_none() {
-        let canvas = Canvas {
+        let canvas = CanvasNoContext {
             externref: js_canvas,
         };
-        let unconfigured_context = canvas.get_webgpu_context();
+        let canvas: CanvasWithContext<UnconfiguredWebgpuContext> = canvas.get_webgpu_context();
 
         // LAYOUT UpdateViewLayout2
         let directional_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
@@ -353,13 +354,16 @@ pub unsafe extern "C" fn init_gpu(
             false,
             true,
         >::new(
-            &device, 300, 300, String::from("diffuseTexture")
+            &device,
+            NonZeroU32::new_unchecked(300),
+            NonZeroU32::new_unchecked(300),
+            String::from("diffuseTexture"),
         ));
         let depth_render_target =
             Texture::<DEPTH32FLOAT, 2, 4, 1, 1, true, false, true, false, true>::new(
                 &device,
-                300,
-                300,
+                NonZeroU32::new_unchecked(300),
+                NonZeroU32::new_unchecked(300),
                 String::from("depthTexture_renderPassScreen"),
             );
 
@@ -382,7 +386,10 @@ pub unsafe extern "C" fn init_gpu(
             false,
             true,
         >::new(
-            &device, 300, 300, String::from("diffuseTexture")
+            &device,
+            NonZeroU32::new_unchecked(300),
+            NonZeroU32::new_unchecked(300),
+            String::from("diffuseTexture"),
         ));
         let render_pass_screen = RenderpassMSAA::new(
             String::from("renderPassScreen"),
@@ -437,21 +444,23 @@ pub unsafe extern "C" fn init_gpu(
                 false,
             );
 
-        let water_render_target =
-            Arc::new(Texture::<
-                BGRA8UNORM,
-                2,
-                1,
-                1,
-                1,
-                false,
-                false,
-                true,
-                false,
-                true,
-            >::new(
-                &device, 300, 300, String::from("diffuseTextureWater")
-            ));
+        let water_render_target = Arc::new(Texture::<
+            BGRA8UNORM,
+            2,
+            1,
+            1,
+            1,
+            false,
+            false,
+            true,
+            false,
+            true,
+        >::new(
+            &device,
+            NonZeroU32::new_unchecked(300),
+            NonZeroU32::new_unchecked(300),
+            String::from("diffuseTextureWater"),
+        ));
 
         let water_render_target_view: TextureView<_, _, _, false, false, true, false, true> =
             TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
@@ -463,8 +472,8 @@ pub unsafe extern "C" fn init_gpu(
         let depth_render_target_water =
             Texture::<DEPTH32FLOAT, 2, 4, 1, 1, true, false, false, false, true>::new(
                 &device,
-                300,
-                300,
+                NonZeroU32::new_unchecked(300),
+                NonZeroU32::new_unchecked(300),
                 String::from("depthTexture_renderPassWater"),
             );
         let render_pass_water = Renderpass::new(
@@ -515,7 +524,10 @@ pub unsafe extern "C" fn init_gpu(
             false,
             true,
         >::new(
-            &device, 300, 300, String::from("idTexture")
+            &device,
+            NonZeroU32::new_unchecked(300),
+            NonZeroU32::new_unchecked(300),
+            String::from("idTexture"),
         ));
 
         let pick_render_target_view: TextureView<_, _, _, true, false, true, false, true> =
@@ -555,12 +567,14 @@ pub unsafe extern "C" fn init_gpu(
         let format_num = get_preferred_canvas_format();
         let render_target: ColorAttachmentSingleSampled = if format_num == 21 {
             ColorAttachmentSingleSampled::new(
-                unconfigured_context.configure::<RGBA8UNORM, false, false, false, false, true>(
-                    &device,
-                    ColorSpace::SRGB,
-                    None,
-                    AlphaMode::Opaque,
-                ),
+                canvas
+                    .configure::<RGBA8UNORM, false, false, false, false, true>(
+                        &device,
+                        ColorSpace::SRGB,
+                        None,
+                        AlphaMode::Opaque,
+                    )
+                    .context,
                 0.53,
                 0.8,
                 0.92,
@@ -568,12 +582,14 @@ pub unsafe extern "C" fn init_gpu(
             )
         } else {
             ColorAttachmentSingleSampled::new(
-                unconfigured_context.configure::<BGRA8UNORM, false, false, false, false, true>(
-                    &device,
-                    ColorSpace::SRGB,
-                    None,
-                    AlphaMode::Opaque,
-                ),
+                canvas
+                    .configure::<BGRA8UNORM, false, false, false, false, true>(
+                        &device,
+                        ColorSpace::SRGB,
+                        None,
+                        AlphaMode::Opaque,
+                    )
+                    .context,
                 0.53,
                 0.8,
                 0.92,
@@ -617,7 +633,6 @@ pub unsafe extern "C" fn init_gpu(
             update_clusters_layout,
             clusters_layout,
             uniform_bind_group_layout_with_time,
-            canvas,
         });
     }
     let gpu_unwrapped = gpu.as_ref().unwrap();
@@ -672,7 +687,6 @@ pub struct GPU {
     pub update_clusters_layout: BindGroupLayout<2>,
     pub uniform_bind_group_layout_with_time: BindGroupLayout<5>,
     pub clusters_layout: BindGroupLayout<2>,
-    pub canvas: Canvas,
 }
 impl GPU {
     fn on_resize(

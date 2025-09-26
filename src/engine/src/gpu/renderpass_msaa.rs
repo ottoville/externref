@@ -10,7 +10,7 @@ use terramath::VectorMath;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
     color_attachment::{
-        color_attachment::ColorAttachment, multi_sampled_attachment::ColorAttachmentMultiSampled,
+        color_attachment::ColorAttachment, color_attachment_multi_sampled::ColorAttachmentMultiSampled,
     },
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},

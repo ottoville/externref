@@ -1,11 +1,12 @@
+use std::num::NonZero;
+
 use externref::Resource;
 
 use crate::{
     color_attachment::color_attachment::{
         create_render_pass_color_attachment_clear, ColorAttachment, JSRenderPassColorAttachment,
         StoreOpt,
-    },
-    texture::render_attachment_texture::RenderAttachmentTexture,
+    }, device::JSDevice, texture::render_attachment_texture::RenderAttachmentTexture
 };
 
 pub struct ColorAttachmentSingleSampled {
@@ -48,8 +49,8 @@ impl ColorAttachmentSingleSampled {
             )
         }
     }
-    pub fn resize(&mut self) {
-        self.texture_view.resize();
+    pub fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
+        self.texture_view.resize(device, width, height);
     }
 }
 

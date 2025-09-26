@@ -1,5 +1,7 @@
 use externref::Resource;
 use std::marker::PhantomData;
+use std::num::NonZero;
+use std::sync::Mutex;
 
 use crate::device::create_texture;
 use crate::{
@@ -75,12 +77,14 @@ pub struct Texture<
     const RENDER_ATTACHMENT: bool = false,
     const SRGB_MULTIVIEW: bool = false,
 > {
-    pub externref: Resource<JSTexture>,
+    pub externref: Mutex<Resource<JSTexture>>,
     pub label: Option<String>,
     pub format: PhantomData<F>,
 }
 
-pub trait TextureDimensionTrait {}
+pub trait TextureDimensionTrait {
+    fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>);
+}
 
 // when dimension is 1 enforce sample count 1 and no render attachment
 impl<
@@ -106,6 +110,9 @@ impl<
         SRGB_MULTIVIEW,
     >
 {
+    fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
+        self.resize(device, width, height);
+    }
 }
 
 // 2 dimension
@@ -135,6 +142,9 @@ impl<
         SRGB_MULTIVIEW,
     >
 {
+    fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
+        self.resize(device, width, height);
+    }
 }
 // 3 dimension
 
@@ -161,6 +171,9 @@ impl<
         RENDER_ATTACHMENT,
     >
 {
+    fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
+        self.resize(device, width, height);
+    }
 }
 impl<
         F: TextureFormat,
@@ -200,27 +213,55 @@ where
             RENDER_ATTACHMENT,
         >();
     }
+    fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
+        let mut externref = self.externref.lock().unwrap();
+        *externref = unsafe {
+            create_texture(
+                device,
+                width.get(),
+                height.get(),
+                DEPTH_OR_ARRAY_LAYERS,
+                self.label.as_ref().unwrap().as_ptr() as usize,
+                self.label.as_ref().unwrap().len(),
+                Self::usages(),
+                MIP_LEVEL_COUNT,
+                SAMPLE_COUNT,
+                DIMENSION,
+                F::to_number(),
+                0,
+                0,
+            )
+        };
+    }
     /// # Creates new texture
     /// ## Should panic, 4 dimension texture does not exist
     /// ```compile_fail
     /// use crate::webgpu::texture::{texture::Texture, texture_formats::BGRA8UNORM};
     /// use externref::{ExternRef, Resource};
-    /// let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
+    /// use std::num::NonZeroU32
+    /// unsafe {
+    /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
     /// let texture = Texture::<BGRA8UNORM, 4, 1,1,1, false, false, true, false, true>::new(
     ///     &device,
-    ///    300,
-    ///    300,
+    ///    NonZeroU32::new_unchecked(300),
+    ///    NonZeroU32::new_unchecked(300),
     ///    String::from("test"),
     /// );
+    /// }
     /// ```
-    pub fn new(device: &Resource<JSDevice>, width: usize, height: usize, label: String) -> Self {
+    pub fn new(
+        device: &Resource<JSDevice>,
+        width: NonZero<u32>,
+        height: NonZero<u32>,
+        label: String,
+    ) -> Self {
         // descriptor.mipLevelCount must be > zero.
         const { assert!(MIP_LEVEL_COUNT > 0) };
         let externref = unsafe {
             create_texture(
                 device,
-                width,
-                height,
+                width.get(),
+                height.get(),
                 DEPTH_OR_ARRAY_LAYERS,
                 label.as_ptr() as usize,
                 label.len(),
@@ -235,14 +276,14 @@ where
         };
         Texture {
             label: Some(label),
-            externref,
+            externref: Mutex::new(externref),
             format: PhantomData,
         }
     }
     pub fn new_with_srgb_multiview<VF: TextureFormat>(
         device: &Resource<JSDevice>,
-        width: usize,
-        height: usize,
+        width: NonZero<u32>,
+        height: NonZero<u32>,
         label: String,
     ) -> Texture<
         F,
@@ -266,8 +307,8 @@ where
         let externref = unsafe {
             create_texture(
                 device,
-                width,
-                height,
+                width.get(),
+                height.get(),
                 DEPTH_OR_ARRAY_LAYERS,
                 label.as_ptr() as usize,
                 label.len(),
@@ -282,7 +323,7 @@ where
         };
         Texture {
             label: Some(label),
-            externref,
+            externref: Mutex::new(externref),
             format: PhantomData,
         }
     }
@@ -316,7 +357,7 @@ impl<
     >
 {
     fn drop(&mut self) {
-        unsafe { destroy(&self.externref) };
+        unsafe { destroy(&self.externref.lock().unwrap()) };
     }
 }
 
@@ -325,11 +366,14 @@ impl<
 fn test_texture() {
     use crate::texture::texture_formats::BGRA8UNORM;
     use externref::ExternRef;
+    use std::num::NonZeroU32;
     let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
-    Texture::<BGRA8UNORM, 2, 4, 1, 1, false, false, true, false, true>::new(
-        &device,
-        300,
-        300,
-        String::from("test"),
-    );
+    unsafe {
+        Texture::<BGRA8UNORM, 2, 4, 1, 1, false, false, true, false, true>::new(
+            &device,
+            NonZeroU32::new_unchecked(300),
+            NonZeroU32::new_unchecked(300),
+            String::from("test"),
+        );
+    }
 }

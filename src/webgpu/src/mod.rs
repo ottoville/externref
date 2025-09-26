@@ -1,6 +1,5 @@
 pub mod device;
 pub mod texture;
-pub mod canvas_context;
 pub mod canvas;
 pub mod bindgroup_layout;
 pub mod binding_layout;
@@ -18,3 +17,4 @@ pub mod externref_trait;
 pub mod renderpass;
 pub mod render_commands;
 pub mod queue;
+pub mod context;
