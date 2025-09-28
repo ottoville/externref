@@ -1,3 +1,5 @@
+use std::num::NonZero;
+
 use externref::Resource;
 
 use crate::{
@@ -7,14 +9,13 @@ use crate::{
             JSRenderPassColorAttachment, StoreOpt,
         },
         color_attachment_single_sampled::ColorAttachmentSingleSampled,
-    },
-    texture::{
+    }, device::JSDevice, texture::{
         render_attachment_texture::{
             RenderAttachmentFormat, RenderAttachmentTextureMultiSampled,
             RenderAttachmentTextureSingleSampled,
         },
         texture_view::TextureView,
-    },
+    }
 };
 
 pub struct ColorAttachmentMultiSampled {
@@ -71,6 +72,10 @@ impl ColorAttachmentMultiSampled {
                 self.attachment.storeopt as u32,
             )
         }
+    }
+    pub fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
+        self.attachment.texture_view.resize(device, width, height);
+        self.resolve_target.resize(device, width, height);
     }
 }
 impl ColorAttachment for ColorAttachmentMultiSampled {

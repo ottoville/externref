@@ -593,10 +593,6 @@ export class GPU {
       this.updateViewShader[1].createComputePipeline('main');
 
     let resizeHandler: null | ReturnType<typeof setTimeout> = null;
-    const maxResolution = {
-      height: 1080,
-      width: 1920,
-    };
     this.#ro = new window.ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) return;
@@ -608,25 +604,9 @@ export class GPU {
       if (resizeHandler) clearTimeout(resizeHandler);
       resizeHandler = setTimeout(async () => {
         try {
-          const aspectRatio =
-            entry.devicePixelContentBoxSize[0]!.inlineSize /
-            entry.devicePixelContentBoxSize[0]!.blockSize;
-          canvas.width = Math.min(
-            entry.devicePixelContentBoxSize[0]!.inlineSize,
-            maxResolution.width,
-          );
-
-          canvas.height = canvas.width / aspectRatio;
-
-          if (canvas.height > maxResolution.height) {
-            canvas.height = maxResolution.height;
-            canvas.width = canvas.height * aspectRatio;
-          }
-
           engine.rust.on_resize(
-            aspectRatio,
-            canvas.width,
-            canvas.height,
+            entry.devicePixelContentBoxSize[0]!.inlineSize,
+            entry.devicePixelContentBoxSize[0]!.blockSize,
             await computePipelineClustersP,
             window.devicePixelRatio,
           );
@@ -643,7 +623,9 @@ export class GPU {
     if (!canvas.parentElement) {
       throw new Error('Canvas must have parent element');
     }
-    this.#ro.observe(canvas.parentElement);
+    this.#ro.observe(canvas.parentElement, {
+      box: 'device-pixel-content-box',
+    });
   }
   #renderStarted = false;
   onceAfterRender: (() => void)[] = [];

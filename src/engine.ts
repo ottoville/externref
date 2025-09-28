@@ -414,7 +414,6 @@ export type rustWasm = {
     z: number,
   ): void;
   on_resize(
-    aspect_ratio: number,
     width: number,
     height: number,
     pipeline: GPUComputePipeline,

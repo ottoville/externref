@@ -123,7 +123,6 @@ pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<false, f
 #[externref]
 #[no_mangle]
 unsafe extern "C" fn on_resize(
-    aspect_ratio: f32,
     width: u32,
     height: u32,
     pipeline: &Resource<JSComputePipeline>,
@@ -131,7 +130,7 @@ unsafe extern "C" fn on_resize(
 ) {
     let gpuoption = &mut ENGINE.gpu.lock().unwrap();
     let gpu = gpuoption.as_mut().unwrap();
-    gpu.on_resize(aspect_ratio, width, height, pipeline, device_pixel_ratio);
+    gpu.on_resize(width, height, pipeline, device_pixel_ratio);
 }
 
 #[no_mangle]
@@ -688,15 +687,25 @@ pub struct GPU {
     pub uniform_bind_group_layout_with_time: BindGroupLayout<5>,
     pub clusters_layout: BindGroupLayout<2>,
 }
+const MAX_RESOLUTION: [u32; 2] = [1920, 1080];
 impl GPU {
     fn on_resize(
         &mut self,
-        aspect_ratio: f32,
-        width: u32,
-        height: u32,
+        mut width: u32,
+        mut height: u32,
         pipeline: &Resource<JSComputePipeline>,
         device_pixel_ratio: f32,
     ) {
+        let aspect_ratio = width as f32 / height as f32;
+
+        width = width.min(MAX_RESOLUTION[0]);
+        height = (width as f32 / aspect_ratio) as u32;
+
+        if height > MAX_RESOLUTION[1] {
+            height = MAX_RESOLUTION[1];
+            width = (height as f32 * aspect_ratio) as u32;
+        }
+
         self.device_pixel_ratio = device_pixel_ratio;
         let mut command_encoder =
             GPUCommandEncoder::new(&self.device, String::from("screen_resize"));

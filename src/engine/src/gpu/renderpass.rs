@@ -175,9 +175,9 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
         for cameragroup in &mut self.cameragroups {
             cameragroup.update_size_bind_group(device, width, height, &(*cameras), computepass);
         }
-        /*for render_target in self.render_targets.iter_mut() {
-            render_target.resize()
-        }*/
+        for render_target in self.render_targets.iter_mut() {
+            render_target.resize(device, width, height);
+        }
     }
 
     fn set_bundle(&mut self, bundle: RenderBundleEncoder) {
