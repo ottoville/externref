@@ -2,7 +2,10 @@ use std::{cell::Cell, sync::Arc};
 
 use crate::{
     buffer::buffer::JSBuffer,
-    color_attachment::color_attachment::JSRenderPassColorAttachment,
+    color_attachment::{
+        color_attachment::JSRenderPassColorAttachment,
+        depth_stencil_attachment::{DepthStencilAttachment, JSRenderPassDepthStencilAttachment},
+    },
     command_buffer::{CommandBuffer, JSCommandBuffer},
     compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder},
     device::{create_gpu_command_encoder, JSDevice},
@@ -46,6 +49,7 @@ unsafe fn begin_render_pass(
     _label_ptr: usize,
     _label_len: usize,
     _views: ColorAttachmentsPtr,
+    _depth_stencil_attachment: Option<&Resource<JSRenderPassDepthStencilAttachment>>,
 ) -> Resource<JSRenderPassEncoder> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
@@ -82,6 +86,7 @@ extern "C" {
         label_ptr: usize,
         label_len: usize,
         views: ColorAttachmentsPtr,
+        depth_stencil_attachment: Option<&Resource<JSRenderPassDepthStencilAttachment>>,
     ) -> Resource<JSRenderPassEncoder>;
     pub fn copy_buffer_to_buffer(
         command_encoder: &Resource<JSCommandEncoder>,
@@ -151,7 +156,13 @@ impl GPUCommandEncoder {
         label: &String,
         descriptor: &Resource<JSRenderPassDescriptor>,
         mut views: I,
+        depth_render_target: &Option<DepthStencilAttachment>,
     ) -> RenderPassEncoder {
+        let depth_externref = match depth_render_target {
+            Some(depth_render_target2) => Some(&depth_render_target2.externref),
+            None => None,
+        };
+
         let b: Box<&mut dyn Iterator<Item = Resource<JSRenderPassColorAttachment>>> =
             Box::new(&mut views);
 
@@ -162,6 +173,7 @@ impl GPUCommandEncoder {
                 label.as_ptr() as usize,
                 label.len(),
                 Box::into_raw(b),
+                depth_externref,
             );
             RenderPassEncoder {
                 command_encoder: self,

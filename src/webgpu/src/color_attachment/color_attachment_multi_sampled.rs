@@ -69,7 +69,7 @@ impl ColorAttachmentMultiSampled {
                 self.attachment.clear_value_g,
                 self.attachment.clear_value_b,
                 self.attachment.clear_value_a,
-                self.attachment.storeopt as u32,
+                self.attachment.storeopt,
             )
         }
     }

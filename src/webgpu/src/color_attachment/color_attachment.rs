@@ -13,7 +13,7 @@ pub unsafe fn create_render_pass_color_attachment_clear(
     _clear_value_g: f64,
     _clear_value_b: f64,
     _clear_value_a: f64,
-    _store_opt: u32,
+    _store_opt: StoreOpt,
 ) -> Resource<JSRenderPassColorAttachment> {
     use externref::ExternRef;
     unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) }
@@ -32,7 +32,7 @@ extern "C" {
         clearValueG: f64,
         clearValueB: f64,
         clearValueA: f64,
-        store_opt: u32,
+        store_opt: StoreOpt,
     ) -> Resource<JSRenderPassColorAttachment>;
     pub fn create_render_pass_color_attachment_load(
         view: &Resource<JSTextureView>,
@@ -40,10 +40,10 @@ extern "C" {
         resolveTarget: &Resource<JSTextureView>,
         store_opt: StoreOpt,
     ) -> Resource<JSRenderPassColorAttachment>;
-
 }
 pub struct JSRenderPassColorAttachment(());
 #[derive(Copy, Clone)]
+#[repr(C)]
 pub enum StoreOpt {
     Store,
     Discard,

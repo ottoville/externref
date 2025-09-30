@@ -15,9 +15,9 @@ pub unsafe fn get_webgpu_context(_canvas: &Resource<JSCanvas>) -> Resource<JSGPU
 
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn set_width(_canvas: &Resource<JSCanvas>, _width: u32) {}
+pub unsafe fn set_width(_canvas: &Resource<JSCanvas>, _width: u32) {}
 #[cfg(not(target_arch = "wasm32"))]
-pub fn set_height(_canvas: &Resource<JSCanvas>, _width: u32) {}
+pub unsafe fn set_height(_canvas: &Resource<JSCanvas>, _width: u32) {}
 
 
 #[cfg(target_arch = "wasm32")]

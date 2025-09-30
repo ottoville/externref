@@ -1,52 +1,30 @@
 use crate::texture::{
-    texture::Texture,
-    texture_formats::{TextureFormat, TFORMAT},
-    valid_texture::ValidTexture,
+    render_attachment_texture::{RenderAttachmentFormat, RenderAttachmentTexture},
+    texture_formats::TFORMAT,
+    texture_view::TextureView,
 };
 
-pub trait DepthTexture: ValidTexture {}
-
-pub trait DepthTextureFormat: TextureFormat {}
+pub trait DepthTexture: RenderAttachmentTexture {}
+pub trait DepthTextureFormat: RenderAttachmentFormat {}
 
 impl<const U: u32> DepthTextureFormat for TFORMAT<U, true, true> {}
 // 2-dimensioned texture
 impl<
         F: DepthTextureFormat,
         const SAMPLE_COUNT: u32,
-        const DEPTH_OR_ARRAY_LAYERS: u32,
-        const MIP_LEVEL_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
-        const RENDER_ATTACHMENT: bool,
-        const SRGB_MULTIVIEW: bool,
     > DepthTexture
-    for Texture<
+    for TextureView<
         F,
         2,
         SAMPLE_COUNT,
-        DEPTH_OR_ARRAY_LAYERS,
-        MIP_LEVEL_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
         false, // https://www.w3.org/TR/webgpu/#depth-formats
-        RENDER_ATTACHMENT,
-        SRGB_MULTIVIEW,
+        true,
     >
-where
-    Texture<
-        F,
-        2,
-        SAMPLE_COUNT,
-        DEPTH_OR_ARRAY_LAYERS,
-        MIP_LEVEL_COUNT,
-        COPY_SRC,
-        COPY_DST,
-        TEXTURE_BINDING,
-        false, // https://www.w3.org/TR/webgpu/#depth-formats
-        RENDER_ATTACHMENT,
-        SRGB_MULTIVIEW,
-    >: ValidTexture,
 {
 }

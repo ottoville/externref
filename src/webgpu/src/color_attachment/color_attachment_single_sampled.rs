@@ -6,7 +6,9 @@ use crate::{
     color_attachment::color_attachment::{
         create_render_pass_color_attachment_clear, ColorAttachment, JSRenderPassColorAttachment,
         StoreOpt,
-    }, device::JSDevice, texture::render_attachment_texture::RenderAttachmentTexture
+    },
+    device::JSDevice,
+    texture::render_attachment_texture::RenderAttachmentTexture,
 };
 
 pub struct ColorAttachmentSingleSampled {
@@ -45,7 +47,7 @@ impl ColorAttachmentSingleSampled {
                 self.clear_value_g,
                 self.clear_value_b,
                 self.clear_value_a,
-                self.storeopt as u32,
+                self.storeopt,
             )
         }
     }
@@ -55,9 +57,7 @@ impl ColorAttachmentSingleSampled {
 }
 
 impl ColorAttachment for ColorAttachmentSingleSampled {
-    fn texture_view(
-        &self,
-    ) -> &Box<dyn RenderAttachmentTexture + Send> {
+    fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture + Send> {
         &self.texture_view
     }
 }

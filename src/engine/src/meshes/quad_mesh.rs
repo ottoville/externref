@@ -1,5 +1,5 @@
-use terramath::Vec3wgslF32;
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+use terramath::Vec3wgslF32;
 
 use crate::{
     math2::Vec2wgslF32,
@@ -13,12 +13,28 @@ pub unsafe extern "C" fn create_tiled_mesh_geometry(
     width: usize,
     height: usize,
     camera_can_collide_to: bool,
+    i: i32,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+    let mut label = String::from("ring_");
+    label.push_str(&i.to_string());
+    Box::into_raw(Box::new(create_tiled_mesh_geometry2(
+        width,
+        height,
+        camera_can_collide_to,
+        label,
+    )))
+}
+pub fn create_tiled_mesh_geometry2(
+    width: usize,
+    height: usize,
+    camera_can_collide_to: bool,
+    label: String,
+) -> ExplicitGenerationalFreeListIndex<Mesh> {
     let mut geometry = Geometry::new(
         camera_can_collide_to,
         false,
         false,
-        "quad_mesh_geometry".to_string(),
+        label,
     );
     let (positions, indices) = create_tiled_mesh(width, height);
 
@@ -41,9 +57,8 @@ pub unsafe extern "C" fn create_tiled_mesh_geometry(
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
 
-    Box::into_raw(Box::new(mesh_id))
+    mesh_id
 }
-
 pub fn create_tiled_mesh(
     faces_x_count: usize,
     faces_y_count: usize,

@@ -1,4 +1,5 @@
 use std::{
+    cell::Cell,
     marker::PhantomData,
     num::NonZero,
     sync::{Arc, Mutex},
@@ -25,7 +26,9 @@ use crate::{
         texture_view::{create_texture_view, JSTextureView},
     },
 };
-
+thread_local! {
+    static VIEW: Cell<Option<Resource<JSTextureView>>> = const { Cell::new(None) };
+}
 pub struct ConfiguredWebgpuContext<
     F: TextureFormat,
     const COPY_SRC: bool,
@@ -37,7 +40,6 @@ pub struct ConfiguredWebgpuContext<
 > {
     pub format: PhantomData<F>,
     pub context: Resource<JSGPUCanvasContext>,
-    pub view: Option<Resource<JSTextureView>>,
     pub label: String,
     pub canvas: Arc<dyn Canvas + Sync + Send>,
 }
@@ -144,7 +146,6 @@ impl<
             context: ConfiguredWebgpuContext {
                 format: PhantomData,
                 context: self.context.context,
-                view: None,
                 label: String::from("canvas_context_texture_view"),
                 canvas,
             },
@@ -208,7 +209,6 @@ impl<
             context: ConfiguredWebgpuContext {
                 format: PhantomData,
                 context: self.context.context,
-                view: None,
                 label: String::from("canvas_context_texture_view"),
                 canvas,
             },
@@ -258,7 +258,7 @@ impl<
     fn to_number(&self) -> u32 {
         F::to_number()
     }
-    fn get_attachment(&mut self) -> &Resource<JSTextureView> {
+    fn get_attachment(&self) -> &Resource<JSTextureView> {
         let texture = unsafe { get_current_texture(&self.context) };
 
         let view: Resource<JSTextureView> = unsafe {
@@ -282,8 +282,11 @@ impl<
                 1,
             )
         };
-
-        return self.view.insert(view);
+        let p = VIEW.with(|v: &Cell<Option<Resource<JSTextureView>>>| unsafe {
+            v.set(Some(view));
+            v.as_ptr().as_ref().unwrap().as_ref().unwrap()
+        });
+        return p;
     }
 
     fn resize(&self, _device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {

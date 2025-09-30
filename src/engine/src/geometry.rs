@@ -558,6 +558,7 @@ impl<'vert> Geometry {
         self.bounding_box.need_init = true;
         if self.camera_can_collide_to {
             self.allocate_collider_planes();
+            self.rebuild_triangle_planes();
         }
     }
     /**

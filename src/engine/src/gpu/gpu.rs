@@ -8,8 +8,10 @@ use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use webgpu::bindgroup_layout::BindGroupLayout;
 use webgpu::canvas::{CanvasNoContext, CanvasWithContext, JSCanvas};
+use webgpu::color_attachment::color_attachment::StoreOpt;
 use webgpu::color_attachment::color_attachment_multi_sampled::ColorAttachmentMultiSampled;
 use webgpu::color_attachment::color_attachment_single_sampled::ColorAttachmentSingleSampled;
+use webgpu::color_attachment::depth_stencil_attachment::DepthStencilAttachment;
 use webgpu::context::canvas_context::{AlphaMode, ColorSpace};
 use webgpu::context::unconfigured_webgpu_context::UnconfiguredWebgpuContext;
 use webgpu::device::JSDevice;
@@ -358,14 +360,30 @@ pub unsafe extern "C" fn init_gpu(
             NonZeroU32::new_unchecked(300),
             String::from("diffuseTexture"),
         ));
-        let depth_render_target =
-            Texture::<DEPTH32FLOAT, 2, 4, 1, 1, true, false, true, false, true>::new(
-                &device,
-                NonZeroU32::new_unchecked(300),
-                NonZeroU32::new_unchecked(300),
-                String::from("depthTexture_renderPassScreen"),
+        let depth_render_target = Arc::new(Texture::<
+            DEPTH32FLOAT,
+            2,
+            4,
+            1,
+            1,
+            true,
+            false,
+            true,
+            false,
+            true,
+        >::new(
+            &device,
+            NonZeroU32::new_unchecked(300),
+            NonZeroU32::new_unchecked(300),
+            String::from("depthTexture_renderPassScreen2"),
+        ));
+        let depth_render_target_view: TextureView<_, _, _, true, false, true, false, true> =
+            TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+                depth_render_target,
+                String::from("depthTexture_renderPassScreen2_view"),
+                TextureViewDimension::D2,
+                TextureAspect::DepthOnly,
             );
-
         let screen_render_target_view: TextureView<_, _, _, false, false, true, false, true> =
             TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
                 screen_render_target,
@@ -433,7 +451,15 @@ pub unsafe extern "C" fn init_gpu(
                 0.92,
                 0.0,
             )],
-            Some(Box::new(depth_render_target)),
+            Some(DepthStencilAttachment::new(
+                depth_render_target_view,
+                0.0,
+                false,
+                0.0,
+                StoreOpt::Discard,
+                StoreOpt::Store,
+                false,
+            )),
         );
         let screen_dimension_buffer_screen_water =
             GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -468,12 +494,29 @@ pub unsafe extern "C" fn init_gpu(
                 TextureViewDimension::D2,
                 TextureAspect::All,
             );
-        let depth_render_target_water =
-            Texture::<DEPTH32FLOAT, 2, 4, 1, 1, true, false, false, false, true>::new(
-                &device,
-                NonZeroU32::new_unchecked(300),
-                NonZeroU32::new_unchecked(300),
-                String::from("depthTexture_renderPassWater"),
+        let depth_render_target_water = Arc::new(Texture::<
+            DEPTH32FLOAT,
+            2,
+            4,
+            1,
+            1,
+            true,
+            false,
+            false,
+            false,
+            true,
+        >::new(
+            &device,
+            NonZeroU32::new_unchecked(300),
+            NonZeroU32::new_unchecked(300),
+            String::from("depthTexture_renderPassWater"),
+        ));
+        let depth_render_target_water_view: TextureView<_, _, _, true, false, false, false, true> =
+            TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+                depth_render_target_water,
+                String::from("depthTexture_renderPassWater_view"),
+                TextureViewDimension::D2,
+                TextureAspect::DepthOnly,
             );
         let render_pass_water = Renderpass::new(
             String::from("renderPassWater"),
@@ -502,7 +545,15 @@ pub unsafe extern "C" fn init_gpu(
                 0.45,
                 1.0,
             )],
-            Some(Box::new(depth_render_target_water)),
+            Some(DepthStencilAttachment::new(
+                depth_render_target_water_view,
+                0.0,
+                false,
+                0.0,
+                StoreOpt::Discard,
+                StoreOpt::Store,
+                false,
+            )),
         );
         let screen_dimension_buffer_screen_pick =
             GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -1134,6 +1185,7 @@ fn test_bindgroup_buffer_resize() {
             &String::from("test"),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             attachments.into_iter(),
+            &None,
         );
         renderbundle_encoder.record_renderbundle(
             &gpu.renderpasses[0].cameragroups(),
@@ -1283,6 +1335,7 @@ fn test_bindgroup() {
             &String::from("test"),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             attachments.into_iter(),
+            &None,
         );
         renderbundle_encoder.record_renderbundle(
             &gpu.renderpasses[0].cameragroups(),

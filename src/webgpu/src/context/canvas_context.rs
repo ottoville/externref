@@ -1,4 +1,4 @@
-use crate::{canvas::CanvasNoContext, device::JSDevice, texture::texture::JSTexture};
+use crate::{device::JSDevice, texture::texture::JSTexture};
 use externref::Resource;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -58,7 +58,7 @@ pub trait CanvasContextTrait {}
 
 #[test]
 fn context_with_srgb_view() {
-    use crate::canvas::Canvas;
+    use crate::canvas::CanvasNoContext;
     use crate::texture::texture_formats::RGBA8UNORM;
 
     use externref::ExternRef;

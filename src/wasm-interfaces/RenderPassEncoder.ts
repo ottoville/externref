@@ -43,7 +43,28 @@ export const RenderPassEncoderInterface = {
     }
     return attachment;
   },
-
+  create_render_pass_depth_stencil_attachment(
+    view: GPUTexture | GPUTextureView,
+    depthClearValue: number,
+    depthReadOnly: boolean,
+    stencilClearValue: number,
+    stencilStoreOp_enum: number,
+    depthStoreOp_enum: number,
+    stencilReadOnly: boolean,
+  ): GPURenderPassDepthStencilAttachment {
+    const attachment: GPURenderPassDepthStencilAttachment = {
+      depthClearValue,
+      depthLoadOp: 'clear',
+      depthReadOnly,
+      depthStoreOp: storeOptMapping[depthStoreOp_enum]!,
+      stencilClearValue,
+      stencilLoadOp: 'clear',
+      stencilReadOnly,
+      stencilStoreOp: storeOptMapping[stencilStoreOp_enum]!,
+      view,
+    };
+    return attachment;
+  },
   end(commandEncoder: GPURenderPassEncoder) {
     commandEncoder.end();
   },

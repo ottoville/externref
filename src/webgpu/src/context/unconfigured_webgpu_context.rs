@@ -75,7 +75,6 @@ impl CanvasWithContext<UnconfiguredWebgpuContext> {
             context: ConfiguredWebgpuContext {
                 format: PhantomData,
                 context: self.context.context,
-                view: None,
                 label: String::from("canvas_context_texture_view"),
                 canvas,
             },
@@ -139,7 +138,6 @@ impl CanvasWithContext<UnconfiguredWebgpuContext> {
             context: ConfiguredWebgpuContext {
                 format: PhantomData,
                 context: self.context.context,
-                view: None,
                 label: String::from("canvas_context_texture_view"),
                 canvas,
             },

@@ -22,6 +22,7 @@ export const CommandEncoderInterface = {
     label_ptr: number,
     label_len: number,
     _iterator: Rust_Iterator<GPURenderPassColorAttachment | null>,
+    _depthStencilAttachment: GPURenderPassDepthStencilAttachment | null,
   ): GPURenderPassEncoder {
     /*const attachmentsIterator = rust_iterator_to_js(
       iterator,
@@ -33,11 +34,15 @@ export const CommandEncoderInterface = {
     const label = textDecoder.decode(
       new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
     );
-    return commandEncoder.beginRenderPass({
+    const descriptor = {
       ...renderpass,
-      // colorAttachments: attachmentsIterator,
+      //colorAttachments: attachments,
       label,
-    });
+    };
+    /*if (depthStencilAttachment) {
+      descriptor.depthStencilAttachment = depthStencilAttachment;
+    }*/
+    return commandEncoder.beginRenderPass(descriptor);
   },
   copy_buffer_to_buffer(
     commandEncoder: GPUCommandEncoder,

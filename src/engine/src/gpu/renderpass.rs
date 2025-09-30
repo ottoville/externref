@@ -10,14 +10,15 @@ use terramath::VectorMath;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
     color_attachment::{
-        color_attachment::ColorAttachment, color_attachment_single_sampled::ColorAttachmentSingleSampled,
+        color_attachment::ColorAttachment,
+        color_attachment_single_sampled::ColorAttachmentSingleSampled,
+        depth_stencil_attachment::DepthStencilAttachment,
     },
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
     device::JSDevice,
     queue::Queue,
     renderbundle::JSFunction,
-    texture::depth_texture::DepthTexture,
 };
 
 use crate::{
@@ -84,7 +85,7 @@ pub struct Renderpass<const N: usize> {
     size: [NonZeroU32; 2],
     size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
     render_targets: [ColorAttachmentSingleSampled; N],
-    depth_render_target: Option<Box<dyn DepthTexture + Send>>,
+    depth_render_target: Option<DepthStencilAttachment>,
     formats: Vec<u32>,
 }
 impl<const N: usize> Renderpass<N> {
@@ -95,13 +96,12 @@ impl<const N: usize> Renderpass<N> {
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
         render_targets: [ColorAttachmentSingleSampled; N],
-        depth_render_target: Option<Box<dyn DepthTexture + Send>>,
+        depth_render_target: Option<DepthStencilAttachment>,
     ) -> Self {
         let mut formats = [0; N];
         for n in 0..N {
             formats[n] = render_targets[n].texture_view().to_number();
         }
-
         Renderpass {
             label,
             size,
@@ -135,11 +135,9 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
                 .iter_mut()
                 .map(|rendertarget| rendertarget.get_attachment());
 
-            // if let Some(depth_render_target) = &self.depth_render_target {}
-
             let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
             let mut renderpass_encoder =
-                command_encoder.begin_render_pass(label, &descriptor, attachments);
+                command_encoder.begin_render_pass(label, &descriptor, attachments, &self.depth_render_target);
             if let Some(bundle) = self.bundle.as_mut() {
                 bundle.record_renderbundle(
                     &self.cameragroups,
@@ -177,6 +175,9 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
         }
         for render_target in self.render_targets.iter_mut() {
             render_target.resize(device, width, height);
+        }
+        if let Some(depth_render_target) = &self.depth_render_target {
+            depth_render_target.resize(device, width, height);
         }
     }
 
@@ -225,7 +226,7 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
 
     fn depth_stencil_format(&self) -> Option<u32> {
         match &self.depth_render_target {
-            Some(format) => Some(format.to_number()),
+            Some(format) => Some(format.texture_view.to_number()),
             None => None,
         }
     }

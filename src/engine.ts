@@ -99,6 +99,7 @@ export type rustWasm = {
     width: number,
     height: number,
     camera_can_collide_to: boolean,
+    i: number,
   ): rust_pointer<'mesh_id'>;
   create_plane_mesh(): rust_pointer<'mesh_id'>;
   create_plants_mesh(): rust_pointer<'mesh_id'>;

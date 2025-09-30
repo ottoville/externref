@@ -11,8 +11,8 @@ use crate::{
 };
 
 pub trait RenderAttachmentFormat: TextureFormat {}
-impl<const U: u32, const MULTISAMPLING: bool> RenderAttachmentFormat
-    for TFORMAT<U, true, false, MULTISAMPLING>
+impl<const U: u32, const DEPTH: bool, const MULTISAMPLING: bool> RenderAttachmentFormat
+    for TFORMAT<U, true, DEPTH, MULTISAMPLING>
 {
 }
 
@@ -257,7 +257,7 @@ descriptor.dimension must be either "2d" or "3d".
 /// ```
 pub trait RenderAttachmentTexture {
     fn to_number(&self) -> u32;
-    fn get_attachment(&mut self) -> &Resource<JSTextureView>;
+    fn get_attachment(&self) -> &Resource<JSTextureView>;
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>);
 }
 impl<
@@ -284,7 +284,7 @@ impl<
         F::to_number()
     }
 
-    fn get_attachment(&mut self) -> &Resource<JSTextureView> {
+    fn get_attachment(&self) -> &Resource<JSTextureView> {
         &self.externref
     }
 
