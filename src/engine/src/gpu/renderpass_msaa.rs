@@ -42,7 +42,7 @@ pub struct RenderpassMSAA<const N: usize> {
     pub size: [NonZeroU32; 2],
     pub size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
     pub render_targets: [ColorAttachmentMultiSampled; N],
-    pub depth_render_target: Option<DepthStencilAttachment>,
+    pub depth_render_target: Option<DepthStencilAttachment<4>>,
     formats: Vec<u32>,
 }
 impl<const N: usize> RenderpassMSAA<N> {
@@ -53,7 +53,7 @@ impl<const N: usize> RenderpassMSAA<N> {
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
         render_targets: [ColorAttachmentMultiSampled; N],
-        depth_render_target: Option<DepthStencilAttachment>,
+        depth_render_target: Option<DepthStencilAttachment<4>>,
     ) -> Self {
         let mut formats = [0; N];
         for n in 0..N {

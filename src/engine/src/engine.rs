@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{LazyLock, Mutex, MutexGuard};
-use std::{panic, usize};
 
 use crate::allocators::freeindex::FreeIndex;
 use allocators::explicit_generational_freelist::{
@@ -13,7 +12,6 @@ use crate::gpu::gpu::GPU;
 
 use crate::mesh::JSMesh;
 pub use crate::mesh::Mesh;
-pub use crate::GPUMesh;
 use collider::{ColliderSphere, CLOSE_DISTANCE_SQRT};
 use externref::externref;
 use externref::Resource;
@@ -56,6 +54,8 @@ pub unsafe extern "C" fn drop_engine_lock(engine: *mut MutexGuard<'static, Engin
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub extern "C" fn init_engine2() -> usize {
+    pub use crate::GPUMesh;
+    use std::panic;
     String::from("Init engine").log();
     panic::set_hook(Box::new(|panic_info| {
         panic_info.to_string().error();

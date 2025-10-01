@@ -47,20 +47,13 @@ export const RenderPassEncoderInterface = {
     view: GPUTexture | GPUTextureView,
     depthClearValue: number,
     depthReadOnly: boolean,
-    stencilClearValue: number,
-    stencilStoreOp_enum: number,
     depthStoreOp_enum: number,
-    stencilReadOnly: boolean,
   ): GPURenderPassDepthStencilAttachment {
     const attachment: GPURenderPassDepthStencilAttachment = {
       depthClearValue,
       depthLoadOp: 'clear',
       depthReadOnly,
       depthStoreOp: storeOptMapping[depthStoreOp_enum]!,
-      stencilClearValue,
-      stencilLoadOp: 'clear',
-      stencilReadOnly,
-      stencilStoreOp: storeOptMapping[stencilStoreOp_enum]!,
       view,
     };
     return attachment;

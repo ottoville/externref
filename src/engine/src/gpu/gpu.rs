@@ -455,10 +455,7 @@ pub unsafe extern "C" fn init_gpu(
                 depth_render_target_view,
                 0.0,
                 false,
-                0.0,
-                StoreOpt::Discard,
                 StoreOpt::Store,
-                false,
             )),
         );
         let screen_dimension_buffer_screen_water =
@@ -497,7 +494,7 @@ pub unsafe extern "C" fn init_gpu(
         let depth_render_target_water = Arc::new(Texture::<
             DEPTH32FLOAT,
             2,
-            4,
+            1,
             1,
             1,
             true,
@@ -549,10 +546,7 @@ pub unsafe extern "C" fn init_gpu(
                 depth_render_target_water_view,
                 0.0,
                 false,
-                0.0,
-                StoreOpt::Discard,
                 StoreOpt::Store,
-                false,
             )),
         );
         let screen_dimension_buffer_screen_pick =
@@ -1181,7 +1175,7 @@ fn test_bindgroup_buffer_resize() {
         assert_eq!(Arc::strong_count(&rawbuffer), 3);
         let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
 
-        let mut renderpass_encoder = command_encoder.begin_render_pass(
+        let mut renderpass_encoder = command_encoder.begin_render_pass::<1,_>(
             &String::from("test"),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             attachments.into_iter(),
@@ -1331,7 +1325,7 @@ fn test_bindgroup() {
             String::from("test"),
         );
         let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
-        let mut renderpass_encoder = command_encoder.begin_render_pass(
+        let mut renderpass_encoder = command_encoder.begin_render_pass::<0,_>(
             &String::from("test"),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             attachments.into_iter(),

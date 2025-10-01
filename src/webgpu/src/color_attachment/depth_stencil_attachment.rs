@@ -12,10 +12,7 @@ pub unsafe fn create_render_pass_depth_stencil_attachment(
     _view: &Resource<JSTextureView>,
     _depth_clear_value: f32,
     _depth_read_only: bool,
-    _stencil_clear_value: f32,
-    _stencil_store_op_enum: StoreOpt,
     _depth_store_op_enum: StoreOpt,
-    _stencil_read_only: bool,
 ) -> Resource<JSRenderPassDepthStencilAttachment> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
@@ -29,37 +26,28 @@ extern "C" {
         view: &Resource<JSTextureView>,
         depth_clear_value: f32,
         depth_read_only: bool,
-        stencil_clear_Value: f32,
-        stencil_store_op_enum: StoreOpt,
         depth_store_op_enum: StoreOpt,
-        stencil_read_only: bool,
     ) -> Resource<JSRenderPassDepthStencilAttachment>;
 }
 pub struct JSRenderPassDepthStencilAttachment(());
 
-pub struct DepthStencilAttachment {
-    pub texture_view: Box<dyn DepthTexture + Send>,
+pub struct DepthStencilAttachment<const SAMPLE_COUNT: u32> {
+    pub texture_view: Box<dyn DepthTexture<SAMPLE_COUNT> + Send>,
     pub externref: Resource<JSRenderPassDepthStencilAttachment>,
 }
-impl DepthStencilAttachment {
+impl<const SAMPLE_COUNT: u32> DepthStencilAttachment<SAMPLE_COUNT> {
     pub fn new(
-        texture_view: impl DepthTexture + Send + 'static,
+        texture_view: impl DepthTexture<SAMPLE_COUNT> + Send + 'static,
         depth_clear_value: f32,
         depth_read_only: bool,
-        stencil_clear_value: f32,
-        stencil_store_op_enum: StoreOpt,
         depth_store_op_enum: StoreOpt,
-        stencil_read_only: bool,
     ) -> Self {
         let externref = unsafe {
             create_render_pass_depth_stencil_attachment(
                 texture_view.get_attachment(),
                 depth_clear_value,
                 depth_read_only,
-                stencil_clear_value,
-                stencil_store_op_enum,
                 depth_store_op_enum,
-                stencil_read_only,
             )
         };
         DepthStencilAttachment {

@@ -151,12 +151,12 @@ impl GPUCommandEncoder {
             }
         }
     }
-    pub fn begin_render_pass<I: Iterator<Item = Resource<JSRenderPassColorAttachment>>>(
+    pub fn begin_render_pass<const SAMPLE_COUNT: u32, I: Iterator<Item = Resource<JSRenderPassColorAttachment>>>(
         self,
         label: &String,
         descriptor: &Resource<JSRenderPassDescriptor>,
         mut views: I,
-        depth_render_target: &Option<DepthStencilAttachment>,
+        depth_render_target: &Option<DepthStencilAttachment<SAMPLE_COUNT>>,
     ) -> RenderPassEncoder {
         let depth_externref = match depth_render_target {
             Some(depth_render_target2) => Some(&depth_render_target2.externref),

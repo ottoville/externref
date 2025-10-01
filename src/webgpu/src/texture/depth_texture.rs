@@ -4,7 +4,7 @@ use crate::texture::{
     texture_view::TextureView,
 };
 
-pub trait DepthTexture: RenderAttachmentTexture {}
+pub trait DepthTexture<const SAMPLE_COUNT: u32>: RenderAttachmentTexture {}
 pub trait DepthTextureFormat: RenderAttachmentFormat {}
 
 impl<const U: u32> DepthTextureFormat for TFORMAT<U, true, true> {}
@@ -15,7 +15,7 @@ impl<
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
-    > DepthTexture
+    > DepthTexture<SAMPLE_COUNT>
     for TextureView<
         F,
         2,

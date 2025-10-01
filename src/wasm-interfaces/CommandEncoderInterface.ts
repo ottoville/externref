@@ -34,9 +34,9 @@ export const CommandEncoderInterface = {
     const label = textDecoder.decode(
       new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
     );
-    const descriptor = {
+    const descriptor: GPURenderPassDescriptor = {
       ...renderpass,
-      //colorAttachments: attachments,
+      //colorAttachments: attachmentsIterator,
       label,
     };
     /*if (depthStencilAttachment) {
