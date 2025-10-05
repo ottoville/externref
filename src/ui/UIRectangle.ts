@@ -108,9 +108,11 @@ export abstract class UIRectangle<
   };
   #texture?: RectangleTexture | undefined;
   uniformBuffer: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
-  textureView: TextureView<
-    Texture<TEXTURE_BINDING_TEXTURE, GPUTextureFormat, Texture2dSize>
-  >;
+  textureView:
+    | TextureView<
+        Texture<TEXTURE_BINDING_TEXTURE, GPUTextureFormat, Texture2dSize>
+      >
+    | GPUTextureView;
 
   protected createTextureView(
     copySource: ImageBitmap | OffscreenCanvas,
@@ -196,7 +198,9 @@ export abstract class UIRectangle<
       bottomRight: [number, number],
       bottomLeft: [number, number],
     ],
-  ): TextureView<Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>>;
+  ):
+    | TextureView<Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>>
+    | GPUTextureView;
   screenPosition = new Float32Array(2);
   protected updatePosition(width: number, height: number) {
     if (this.props.translate.x.value[1] === NumericUnit['%']) {
@@ -339,10 +343,12 @@ export abstract class UIRectangle<
     return this.updateBoundingBoxAndVertices({
       content_sizeX,
       content_sizeY,
+      height,
       outer_sizeX,
       outer_sizeY,
       textUV,
       vertices,
+      width,
     });
   }
   abstract updateBoundingBoxAndVertices(params: {
@@ -357,6 +363,8 @@ export abstract class UIRectangle<
       bottomRight: [number, number],
       bottomLeft: [number, number],
     ];
+    width: number;
+    height: number;
   }): void;
   #checkClickArea = (e: PointerEvent) => {
     return (
@@ -372,6 +380,7 @@ export abstract class UIRectangle<
       | TextureView<
           Texture<TEXTURE_BINDING_TEXTURE, GPUTextureFormat, Texture2dSize>
         >
+      | GPUTextureView
       | ImageBitmap
       | OffscreenCanvas,
     textUV: [
@@ -464,8 +473,7 @@ export abstract class UIRectangle<
         } as ListenerObj<'pointerdown'>);
       }
     }
-
-    if (!(texture instanceof TextureView)) {
+    if (texture instanceof ImageBitmap || texture instanceof OffscreenCanvas) {
       this.textureView = this.createTextureView(texture, textUV);
     } else {
       this.textureView = texture;

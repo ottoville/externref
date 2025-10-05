@@ -9,9 +9,9 @@ import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
 export class UIRectangleTextureView extends UIRectangle {
-  createTexture(): TextureView<
-    Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>
-  > {
+  createTexture():
+    | TextureView<Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>>
+    | GPUTextureView {
     return this.textureView;
   }
 
@@ -21,20 +21,23 @@ export class UIRectangleTextureView extends UIRectangle {
     content_sizeY,
     outer_sizeX,
     outer_sizeY,
+    width,
+    height,
   }: {
     vertices: Float32Array;
     content_sizeX: number;
     content_sizeY: number;
     outer_sizeX: number;
     outer_sizeY: number;
+    width: number;
+    height: number;
   }) {
     const { borderSize } = this.props;
-    const textureSize = this.textureView.texture.props.size;
     const uvs = {
       bottom: 0,
-      left: textureSize.width,
+      left: width,
       right: 0,
-      top: textureSize.height,
+      top: height,
     };
     vertices.set([
       -content_sizeX,
@@ -62,7 +65,6 @@ export class UIRectangleTextureView extends UIRectangle {
       uvs.left,
       uvs.bottom,
     ]);
-
     if (
       borderSize.width[0] > 0 ||
       (borderSize.height !== 'auto' && borderSize.height[0] > 0)
@@ -99,7 +101,7 @@ export class UIRectangleTextureView extends UIRectangle {
 
           outer_sizeX,
           -content_sizeY,
-          textureSize.width,
+          width,
           uvs.top,
           content_sizeX,
           -content_sizeY,
@@ -107,7 +109,7 @@ export class UIRectangleTextureView extends UIRectangle {
           uvs.top,
           outer_sizeX,
           content_sizeY,
-          textureSize.width,
+          width,
           uvs.bottom,
           content_sizeX,
           -content_sizeY,
@@ -119,14 +121,14 @@ export class UIRectangleTextureView extends UIRectangle {
           uvs.bottom,
           outer_sizeX,
           content_sizeY,
-          textureSize.width,
+          width,
           uvs.bottom,
           //bottom content_size
 
           -content_sizeX,
           -outer_sizeY,
           uvs.right,
-          textureSize.height,
+          height,
           -content_sizeX,
           -content_sizeY,
           uvs.right,
@@ -134,7 +136,7 @@ export class UIRectangleTextureView extends UIRectangle {
           content_sizeX,
           -outer_sizeY,
           uvs.left,
-          textureSize.height,
+          height,
           -content_sizeX,
           -content_sizeY,
           uvs.right,
@@ -142,7 +144,7 @@ export class UIRectangleTextureView extends UIRectangle {
           content_sizeX,
           -outer_sizeY,
           uvs.left,
-          textureSize.height,
+          height,
           content_sizeX,
           -content_sizeY,
           uvs.left,
@@ -207,7 +209,7 @@ export class UIRectangleTextureView extends UIRectangle {
           -outer_sizeX,
           -outer_sizeY,
           0,
-          textureSize.height,
+          height,
           -content_sizeX,
           -content_sizeY,
           uvs.right,
@@ -215,11 +217,11 @@ export class UIRectangleTextureView extends UIRectangle {
           -content_sizeX,
           -outer_sizeY,
           uvs.right,
-          textureSize.height,
+          height,
           -outer_sizeX,
           -outer_sizeY,
           0,
-          textureSize.height,
+          height,
           -content_sizeX,
           -content_sizeY,
           uvs.right,
@@ -233,7 +235,7 @@ export class UIRectangleTextureView extends UIRectangle {
 
           outer_sizeX,
           outer_sizeY,
-          textureSize.width,
+          width,
           0,
           content_sizeX,
           content_sizeY,
@@ -245,7 +247,7 @@ export class UIRectangleTextureView extends UIRectangle {
           0,
           outer_sizeX,
           outer_sizeY,
-          textureSize.width,
+          width,
           0,
           content_sizeX,
           content_sizeY,
@@ -253,15 +255,15 @@ export class UIRectangleTextureView extends UIRectangle {
           uvs.bottom,
           outer_sizeX,
           content_sizeY,
-          textureSize.width,
+          width,
           uvs.bottom,
 
           //bottom right corner
 
           outer_sizeX,
           -outer_sizeY,
-          textureSize.width,
-          textureSize.height,
+          width,
+          height,
           content_sizeX,
           -content_sizeY,
           uvs.left,
@@ -269,18 +271,18 @@ export class UIRectangleTextureView extends UIRectangle {
           content_sizeX,
           -outer_sizeY,
           uvs.left,
-          textureSize.height,
+          height,
           outer_sizeX,
           -outer_sizeY,
-          textureSize.width,
-          textureSize.height,
+          width,
+          height,
           content_sizeX,
           -content_sizeY,
           uvs.left,
           uvs.top,
           outer_sizeX,
           -content_sizeY,
-          textureSize.width,
+          width,
           uvs.top,
         ],
         24,
