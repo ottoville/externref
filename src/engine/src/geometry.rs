@@ -1,6 +1,7 @@
 use std::{cell::Cell, num::NonZeroUsize, rc::Rc, sync::atomic::AtomicU32};
 
 use collider::ColliderPlane;
+use externref::Resource;
 use logger::LoggerArray;
 use rapier3d::{
     geometry::{Collider, ColliderBuilder},
@@ -9,13 +10,13 @@ use rapier3d::{
     pipeline::ActiveEvents,
 };
 use terramath::{CrossProduct, Plane, Vec3wgslF32, VectorMath, VectorMathF32};
-use webgpu::buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer};
+use webgpu::{buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer}, device::JSDevice};
 
 pub use crate::boundingbox::BoundingBox;
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 
 use crate::{
-    gpu::gpu::serialize_terrain,
+    gpu::gpu::{serialize_terrain, GPU},
     indices::Indices,
     math2::Vec2wgslF32,
     mesh::{Mesh, ENGINE},
@@ -87,6 +88,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
     mesh_id: *mut ExplicitGenerationalFreeListIndex<Mesh>,
     indices_buffer: *mut GPUBuffer<true, false, false, true>,
     vertices_buffer: *mut GPUBuffer<true, false, false, true>,
+    gpu: *mut GPU
 ) {
     let gate = Rc::new(Cell::new(false));
     let gate2 = gate.clone();
@@ -112,12 +114,12 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
         0,
         None,
         Box::into_raw(Box::new(
-            move |buffer: MappedGPUBuffer<true, false, false, true>| {
+           move |buffer: MappedGPUBuffer<true, false, false, true>| {
                 let mut indices: Vec<usize> = vec![0; buffer.size / 4];
                 buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
                 let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
                 let geometry = mesh.geometry.as_mut().unwrap();
-                geometry.set_indices(indices);
+                geometry.set_indices(indices, &(*gpu).device);
                 // Execute callback if gate was "true", set it to "true" if it was "false"
                 gate.set(gate.get().then(|| then(mesh)).is_none());
             },
@@ -150,6 +152,7 @@ static ID: AtomicU32 = AtomicU32::new(0);
 #[no_mangle]
 pub unsafe extern "C" fn create_legacy_terrain_geometry(
     scenes: f32,
+    gpu: *mut GPU,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let mut label = String::from("Terrain");
     label.push_str(
@@ -172,7 +175,7 @@ pub unsafe extern "C" fn create_legacy_terrain_geometry(
             uv: Vec2wgslF32 { vec: [0.0; 2] },
         },
     ]));
-    geometry.set_indices(vec![0, 0, 0]);
+    geometry.set_indices(vec![0, 0, 0], &(*gpu).device);
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(geometry);
     Box::into_raw(Box::new(mesh_id))
@@ -564,14 +567,12 @@ impl<'vert> Geometry {
     /**
      * Set indices to geometry
      */
-    pub fn set_indices(&mut self, indices: Vec<usize>) {
-        let gpuopt = ENGINE.gpu.lock().unwrap();
-        let gpu = gpuopt.as_ref().unwrap();
+    pub fn set_indices(&mut self, indices: Vec<usize>, device: &Resource<JSDevice>) {
         let mut label = String::from("index_");
         label.push_str(&self.label);
 
         let mapped = GPUBuffer::<false, false, false, false, true>::new_mapped(
-            &gpu.device,
+            &device,
             indices.len() * 4,
             label,
             false,

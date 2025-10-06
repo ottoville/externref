@@ -3,6 +3,7 @@ use terramath::{MatrixMath, VectorMath, VectorMathF32};
 
 use crate::{
     cameras::camera::{VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
+    gpu::gpu::GPU,
     mesh::ENGINE,
 };
 
@@ -30,8 +31,12 @@ impl CameraMovement {
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn new_arc_rotate_camera(initial: bool, camera_id: usize) -> *mut ArcRotateCamera {
-    Box::into_raw(Box::new(ArcRotateCamera::new(initial, camera_id)))
+pub unsafe extern "C" fn new_arc_rotate_camera(
+    initial: bool,
+    camera_id: usize,
+    gpu: *mut GPU,
+) -> *mut ArcRotateCamera {
+    Box::into_raw(Box::new(ArcRotateCamera::new(initial, camera_id, &*gpu)))
 }
 #[no_mangle]
 pub unsafe extern "C" fn camera_move(
@@ -108,10 +113,11 @@ pub unsafe extern "C" fn restore_arc_rotate_camera(
     position_y: f32,
     position_z: f32,
     camera_id: usize,
+    gpu: *mut GPU,
 ) {
     (*arc_rotate_camera).restore(
         alpha, beta, radius, target_x, target_y, target_z, position_x, position_y, position_z,
-        camera_id,
+        camera_id, &mut *gpu,
     );
 }
 pub struct ArcRotateCamera {
@@ -267,7 +273,7 @@ impl CameraController for ArcRotateCamera {
     }
 }
 impl ArcRotateCamera {
-    pub fn new(initial: bool, camera_id: usize) -> Self {
+    pub fn new(initial: bool, camera_id: usize, gpu: &GPU) -> Self {
         let collision_radius = 2.0;
         let mut controller = ArcRotateCamera {
             alpha: 0.0,
@@ -303,8 +309,6 @@ impl ArcRotateCamera {
             lower_target_ylimit: f32::NEG_INFINITY,
         };
         if !initial {
-            let gpuopt = ENGINE.gpu.lock().unwrap();
-            let gpu = gpuopt.as_ref().unwrap();
             let camera = gpu.get_camera_by_id(camera_id);
             controller.target = camera.position.sub_vec(&camera.direction.multiply(100.0));
             controller.rebuild_angles_and_radius(&camera.position);
@@ -341,14 +345,13 @@ impl ArcRotateCamera {
         position_y: f32,
         position_z: f32,
         camera_id: usize,
+        gpu: &mut GPU,
     ) {
         self.alpha = alpha;
         self.beta = beta;
         self.radius = radius;
         self.target = [target_x, target_y, target_z, 0.0];
 
-        let mut gpuopt = ENGINE.gpu.lock().unwrap();
-        let gpu = gpuopt.as_mut().unwrap();
         let camera = gpu.get_camera_by_id_mut(camera_id);
 
         camera.update_position([position_x, position_y, position_z, 0.0]);

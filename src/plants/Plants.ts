@@ -237,6 +237,7 @@ export class Plants extends MainNode {
 
             engine.rust.push_to_pending_command_buffers(
               commandEncoder.finish(),
+              scene.gpu.gpu,
             );
           },
         );

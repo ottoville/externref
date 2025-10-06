@@ -65,7 +65,9 @@ impl Elevator {
         let scale = f32x4_splat(1.0 / f32::sqrt(squared_x + squared_y + squared_z));
         f32x4_mul(v, scale)
     }
+    #[cfg(target_arch = "wasm32")]
     unsafe fn _elevate(&mut self, mesh: &mut Mesh, radius: f32, full_height: f32) {
+        use std::arch::wasm32::*;
         let height_max = 500.0;
         let height_min = -500.0;
         let mut new_position = false;
@@ -82,55 +84,49 @@ impl Elevator {
             self.old_mouse_position[2] = self.mouse_position[2];
 
             let radius_sqrt = f32::powi(radius, 2);
-            #[cfg(target_arch = "wasm32")]
-            {
-                use std::arch::wasm32::*;
+            let v_radius_sqrt = f32x4_splat(radius_sqrt);
 
-                let v_radius_sqrt = f32x4_splat(radius_sqrt);
+            let mouse_x = f32x4_splat(self.mouse_position[0]);
+            let mouse_z = f32x4_splat(self.mouse_position[2]);
+            self.selected_vertices.clear();
+            self.offset = 0;
+            self.length = 0;
 
-                self.selected_vertices.clear();
-                self.offset = 0;
-                self.length = 0;
+            let selected_vertices = &mut self.selected_vertices;
 
-                let selected_vertices = &mut self.selected_vertices;
+            let enumers = self
+                .vertices_horizontal
+                .chunks(4)
+                .zip(self.vertices_horizontal.chunks(4).skip(2))
+                .step_by(3)
+                .enumerate();
+            enumers.for_each(|(i, (x, z))| {
+                let v_x = v128_load(x.as_ptr() as *const v128);
+                let s_x = f32x4_sub(v_x, mouse_x);
 
-                let enumers = self
-                    .vertices_horizontal
-                    .chunks(4)
-                    .zip(self.vertices_horizontal.chunks(4).skip(2))
-                    .step_by(3)
-                    .enumerate();
-                let mouse_x = f32x4_splat(self.mouse_position[0]);
-                let mouse_z = f32x4_splat(self.mouse_position[2]);
-
-                enumers.for_each(|(i, (x, z))| {
-                    let v_x = v128_load(x.as_ptr() as *const v128);
-                    let s_x = f32x4_sub(v_x, mouse_x);
-
-                    let v_z = v128_load(z.as_ptr() as *const v128);
-                    let s_z = f32x4_sub(v_z, mouse_z);
-                    let v_distance_sqrt = f32x4_add(f32x4_mul(s_x, s_x), f32x4_mul(s_z, s_z));
-                    if v128_any_true(f32x4_lt(v_distance_sqrt, v_radius_sqrt)) {
-                        let v_distance = f32x4_sqrt(v_distance_sqrt);
-                        let mut distance = f32x4_extract_lane::<0>(v_distance);
-                        if distance < radius {
-                            selected_vertices.push((i * 4, distance))
-                        }
-                        distance = f32x4_extract_lane::<1>(v_distance);
-                        if distance < radius {
-                            selected_vertices.push((i * 4 + 1, distance))
-                        }
-                        distance = f32x4_extract_lane::<2>(v_distance);
-                        if distance < radius {
-                            selected_vertices.push((i * 4 + 2, distance))
-                        }
-                        distance = f32x4_extract_lane::<3>(v_distance);
-                        if distance < radius {
-                            selected_vertices.push((i * 4 + 3, distance))
-                        }
+                let v_z = v128_load(z.as_ptr() as *const v128);
+                let s_z = f32x4_sub(v_z, mouse_z);
+                let v_distance_sqrt = f32x4_add(f32x4_mul(s_x, s_x), f32x4_mul(s_z, s_z));
+                if v128_any_true(f32x4_lt(v_distance_sqrt, v_radius_sqrt)) {
+                    let v_distance = f32x4_sqrt(v_distance_sqrt);
+                    let mut distance = f32x4_extract_lane::<0>(v_distance);
+                    if distance < radius {
+                        selected_vertices.push((i * 4, distance))
                     }
-                });
-            }
+                    distance = f32x4_extract_lane::<1>(v_distance);
+                    if distance < radius {
+                        selected_vertices.push((i * 4 + 1, distance))
+                    }
+                    distance = f32x4_extract_lane::<2>(v_distance);
+                    if distance < radius {
+                        selected_vertices.push((i * 4 + 2, distance))
+                    }
+                    distance = f32x4_extract_lane::<3>(v_distance);
+                    if distance < radius {
+                        selected_vertices.push((i * 4 + 3, distance))
+                    }
+                }
+            });
         }
         let radius_near = radius * 0.3;
         let radius_far = radius * 0.7;
@@ -158,84 +154,75 @@ impl Elevator {
             }
         }
         let indices = geometry.indices.as_ref().unwrap();
-        #[cfg(target_arch = "wasm32")]
-        {
-            use std::arch::wasm32::*;
+        for face_index in self.selected_faces.iter() {
+            if new_position {
+                self.selected_indices
+                    .insert(indices.indices[face_index * 3]);
+                self.selected_indices
+                    .insert(indices.indices[face_index * 3 + 1]);
+                self.selected_indices
+                    .insert(indices.indices[face_index * 3 + 2]);
+            }
+            let v1_ptr =
+                std::slice::from_ref(vertices.get_position(indices.indices[face_index * 3]))
+                    .as_ptr() as *mut v128;
+            let v1 = v128_load(v1_ptr);
 
-            for face_index in self.selected_faces.iter() {
-                if new_position {
-                    self.selected_indices
-                        .insert(indices.indices[face_index * 3]);
-                    self.selected_indices
-                        .insert(indices.indices[face_index * 3 + 1]);
-                    self.selected_indices
-                        .insert(indices.indices[face_index * 3 + 2]);
-                }
-                let v1_ptr =
-                    std::slice::from_ref(vertices.get_position(indices.indices[face_index * 3]))
-                        .as_ptr() as *mut v128;
-                let v1 = v128_load(v1_ptr);
+            let v2_ptr =
+                std::slice::from_ref(vertices.get_position(indices.indices[face_index * 3 + 1]))
+                    .as_ptr() as *mut v128;
+            let v2 = v128_load(v2_ptr);
 
-                let v2_ptr = std::slice::from_ref(
-                    vertices.get_position(indices.indices[face_index * 3 + 1]),
-                )
-                .as_ptr() as *mut v128;
-                let v2 = v128_load(v2_ptr);
+            let v3_ptr =
+                std::slice::from_ref(vertices.get_position(indices.indices[face_index * 3 + 2]))
+                    .as_ptr() as *mut v128;
+            let v3 = v128_load(v3_ptr);
 
-                let v3_ptr = std::slice::from_ref(
-                    vertices.get_position(indices.indices[face_index * 3 + 2]),
-                )
-                .as_ptr() as *mut v128;
-                let v3 = v128_load(v3_ptr);
+            let v1v2 = f32x4_sub(v1, v2);
+            let v3v2 = f32x4_sub(v3, v2);
 
-                let v1v2 = f32x4_sub(v1, v2);
-                let v3v2 = f32x4_sub(v3, v2);
+            let plane = if (face_index & 1) == 0 {
+                &mut geometry.planes.planes[half + (face_index >> 1)]
+            } else {
+                &mut geometry.planes.planes[face_index >> 1]
+            };
 
+            let v3v2_shuffled_yzxw = i32x4_shuffle::<1, 2, 0, 3>(v3v2, v3v2);
+            let v1v2_shuffled_yzxw = i32x4_shuffle::<1, 2, 0, 3>(v1v2, v1v2);
+
+            let cross_shuffled = f32x4_sub(
+                f32x4_mul(v1v2, v3v2_shuffled_yzxw),
+                f32x4_mul(v1v2_shuffled_yzxw, v3v2),
+            );
+
+            let normalized =
+                Elevator::normalize(i32x4_shuffle::<1, 2, 0, 3>(cross_shuffled, cross_shuffled));
+            let dot = f32x4_mul(normalized, v2);
+
+            v128_store(plane.norm.as_ptr() as *mut v128, normalized);
+            plane.d = -(f32x4_extract_lane::<0>(dot)
+                + f32x4_extract_lane::<1>(dot)
+                + f32x4_extract_lane::<2>(dot));
+        }
+        for vertex_index in self.selected_indices.iter() {
+            let faces = &self.faces_of_vertices[*vertex_index];
+            let norm_ptr = std::slice::from_ref(vertices.get_position(*vertex_index + 4)).as_ptr()
+                as *mut v128;
+
+            let mut norm_v = f32x4_splat(0.0);
+            for face_index in faces.iter() {
                 let plane = if (face_index & 1) == 0 {
                     &mut geometry.planes.planes[half + (face_index >> 1)]
                 } else {
                     &mut geometry.planes.planes[face_index >> 1]
                 };
-
-                let v3v2_shuffled_yzxw = i32x4_shuffle::<1, 2, 0, 3>(v3v2, v3v2);
-                let v1v2_shuffled_yzxw = i32x4_shuffle::<1, 2, 0, 3>(v1v2, v1v2);
-
-                let cross_shuffled = f32x4_sub(
-                    f32x4_mul(v1v2, v3v2_shuffled_yzxw),
-                    f32x4_mul(v1v2_shuffled_yzxw, v3v2),
-                );
-
-                let normalized = Elevator::normalize(i32x4_shuffle::<1, 2, 0, 3>(
-                    cross_shuffled,
-                    cross_shuffled,
-                ));
-                let dot = f32x4_mul(normalized, v2);
-
-                v128_store(plane.norm.as_ptr() as *mut v128, normalized);
-                plane.d = -(f32x4_extract_lane::<0>(dot)
-                    + f32x4_extract_lane::<1>(dot)
-                    + f32x4_extract_lane::<2>(dot));
+                let plane_vector = v128_load(plane.norm.as_ptr() as *mut v128);
+                norm_v = f32x4_add(norm_v, plane_vector)
             }
-            for vertex_index in self.selected_indices.iter() {
-                let faces = &self.faces_of_vertices[*vertex_index];
-                let norm_ptr = std::slice::from_ref(vertices.get_position(*vertex_index + 4))
-                    .as_ptr() as *mut v128;
 
-                let mut norm_v = f32x4_splat(0.0);
-                for face_index in faces.iter() {
-                    let plane = if (face_index & 1) == 0 {
-                        &mut geometry.planes.planes[half + (face_index >> 1)]
-                    } else {
-                        &mut geometry.planes.planes[face_index >> 1]
-                    };
-                    let plane_vector = v128_load(plane.norm.as_ptr() as *mut v128);
-                    norm_v = f32x4_add(norm_v, plane_vector)
-                }
-
-                let fc = f32x4_splat(1.0 / faces.len() as f32);
-                let normalized = Elevator::normalize(f32x4_mul(norm_v, fc));
-                v128_store(norm_ptr, normalized);
-            }
+            let fc = f32x4_splat(1.0 / faces.len() as f32);
+            let normalized = Elevator::normalize(f32x4_mul(norm_v, fc));
+            v128_store(norm_ptr, normalized);
         }
         if new_position && self.selected_vertices.len() > 0 {
             let stride = vertices.stride();

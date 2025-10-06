@@ -1,21 +1,22 @@
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use std::sync::{LazyLock, RwLock};
 
-use crate::mesh::{Mesh, ENGINE};
+use crate::{
+    gpu::gpu::GPU,
+    mesh::{Mesh, ENGINE},
+};
 
 #[no_mangle]
 pub unsafe extern "C" fn devtools_pointer() -> *const f32 {
     DEVTOOLS.read().unwrap().euler_angles.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_directional_lights_count() -> usize {
-    match ENGINE
-        .gpu
+pub unsafe extern "C" fn get_directional_lights_count(gpu: *mut GPU) -> usize {
+    match (&*gpu)
+        .directional_lights
+        .lights
         .lock()
         .unwrap()
-        .as_ref()
-        .unwrap()
-        .directional_lights
         .lights
         .first()
     {
@@ -24,17 +25,8 @@ pub unsafe extern "C" fn get_directional_lights_count() -> usize {
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_point_lights_count() -> usize {
-    match ENGINE
-        .gpu
-        .lock()
-        .unwrap()
-        .as_ref()
-        .unwrap()
-        .point_lights
-        .lights
-        .first()
-    {
+pub unsafe extern "C" fn get_point_lights_count(gpu: *mut GPU) -> usize {
+    match (&*gpu).point_lights.lights.lock().unwrap().lights.first() {
         Some(len) => len.0,
         None => 0,
     }

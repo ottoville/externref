@@ -1,5 +1,4 @@
-use std::{marker::PhantomData, sync::Arc};
-
+use std::{marker::PhantomData, rc::Rc};
 use externref::Resource;
 
 use crate::texture::{
@@ -59,7 +58,7 @@ pub struct TextureView<
     pub externref: Resource<JSTextureView>,
     pub format: PhantomData<F>,
     pub label: String,
-    pub texture: Arc<dyn ValidTexture + Send + Sync>,
+    pub texture: Rc<dyn ValidTexture>,
 }
 impl<
         F: TextureFormat + Sync + Send,
@@ -116,7 +115,7 @@ impl<
         const BASE_MIP_LEVEL: u32,
         const MIP_LEVEL_COUNT: u32,
     >(
-        texture: Arc<
+        texture: Rc<
             Texture<
                 F,
                 DIMENSION,
@@ -189,7 +188,7 @@ impl<
 
         let externref = unsafe {
             create_texture_view(
-                &texture.externref.lock().unwrap(),
+                &texture.externref.borrow(),
                 label.as_ptr() as usize,
                 label.len(),
                 F::to_number(),
@@ -223,7 +222,7 @@ impl<
         const BASE_MIP_LEVEL: u32,
         const MIP_LEVEL_COUNT: u32,
     >(
-        texture: Arc<
+        texture: Rc<
             Texture<
                 VF,
                 DIMENSION,
@@ -296,7 +295,7 @@ impl<
 
         let externref = unsafe {
             create_texture_view(
-                &texture.externref.lock().unwrap(),
+                &texture.externref.borrow(),
                 label.as_ptr() as usize,
                 label.len(),
                 VF::to_srgb(),
@@ -328,7 +327,7 @@ fn texture_view_usages() {
     use externref::ExternRef;
     use std::num::NonZeroU32;
     let device = unsafe { Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)) };
-    let texture = Arc::new(Texture::<
+    let texture = Rc::new(Texture::<
         BGRA8UNORM,
         2,
         4,
@@ -363,10 +362,9 @@ fn test_create_texture_view() {
     };
     use externref::{ExternRef, Resource};
     use std::num::NonZeroU32;
-    use std::sync::Arc;
     unsafe {
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-        let texture = Arc::new(Texture::<
+        let texture = Rc::new(Texture::<
             BGRA8UNORM,
             1,
             1,

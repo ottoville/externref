@@ -18,9 +18,8 @@ export class ArcRotateCamera extends CameraController {
   serialize(): void {
     if (this.#serializeRequested || !engine.DB) return;
     this.#serializeRequested = true;
-    const gpulock = engine.rust.get_gpu();
     const cameralock = engine.rust.get_camera_by_id_mut(
-      gpulock,
+      engine.gpu!.gpu,
       engine.gpu!.mainCamera.id,
     );
 
@@ -32,7 +31,6 @@ export class ArcRotateCamera extends CameraController {
       ) as unknown as readonly [number, number, number],
     ) as { 0: number; 1: number; 2: number } & Float32Array;
     engine.rust.drop_camera_lock(cameralock);
-    engine.rust.drop_gpu_lock(gpulock);
     const target = new Float32Array(
       engine.rust.memory.buffer,
       engine.rust.get_target_ptr(this.id),
@@ -70,6 +68,7 @@ export class ArcRotateCamera extends CameraController {
     this.id = engine.rust.new_arc_rotate_camera(
       initial && engine.DB !== undefined,
       camera.id,
+      engine.gpu!.gpu,
     );
 
     if (initial && engine.DB) {
@@ -97,6 +96,7 @@ export class ArcRotateCamera extends CameraController {
             result.data.position[1],
             result.data.position[2],
             this.camera.id,
+            engine.gpu!.gpu,
           );
         } else {
           // Use these default values for camera when there are no existing save
@@ -112,6 +112,7 @@ export class ArcRotateCamera extends CameraController {
             299.464,
             587.233,
             this.camera.id,
+            engine.gpu!.gpu,
           );
         }
       };

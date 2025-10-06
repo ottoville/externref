@@ -50,5 +50,5 @@ pub enum StoreOpt {
 }
 
 pub trait ColorAttachment {
-    fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture + Send>;
+    fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture>;
 }

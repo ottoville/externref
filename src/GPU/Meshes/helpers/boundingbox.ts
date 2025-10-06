@@ -24,7 +24,10 @@ export class BoundingBoxMesh extends IndexedDataNode {
     | DrawableIndexed<RenderPipelineProps<DebugBoundingBoxVertShader>>
     | undefined;
   constructor(targetNode: DrawableIndexed) {
-    const mesh = engine.rust.create_bounding_box_mesh(targetNode.node.id);
+    const mesh = engine.rust.create_bounding_box_mesh(
+      targetNode.node.id,
+      engine.gpu!.gpu,
+    );
     const geometry = engine.rust.get_geometry(mesh);
     const vertices_view = engine.rust.vertices_pointer(geometry, false);
     const vertices_len = engine.rust.vertices_count(geometry) * 4;

@@ -623,6 +623,7 @@ TODO
           this.mesh.id,
           gpuReadBufferIndices,
           gpuReadBufferPositions,
+          gpu.gpu,
         );
       })
       .catch((err) => engine.showError(err));

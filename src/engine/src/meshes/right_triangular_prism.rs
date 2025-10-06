@@ -1,9 +1,12 @@
 use std::sync::atomic::AtomicU32;
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+use externref::Resource;
 use terramath::Vec3wgslF32;
+use webgpu::device::JSDevice;
 
 use crate::{
+    gpu::gpu::GPU,
     mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormal, VertexKind},
     Geometry,
@@ -106,6 +109,7 @@ pub unsafe extern "C" fn create_rtp_mesh(
     scenes: f32,
     rigid_body: u32,
     camera_can_collide_to: bool,
+    gpu: *mut GPU,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let mut label = String::from("TriangularPrism");
     label.push_str(
@@ -124,14 +128,14 @@ pub unsafe extern "C" fn create_rtp_mesh(
         &mut meshes,
         camera_can_collide_to,
     );
-    let geometry = create_rtp_geometry();
+    let geometry = create_rtp_geometry(&(*gpu).device);
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }
-pub fn create_rtp_geometry() -> Geometry {
+pub fn create_rtp_geometry(device: &Resource<JSDevice>) -> Geometry {
     let mut geometry = Geometry::new(true, false, false, "rtp_geometry".to_string());
-    geometry.set_indices(RTP_INDICES.to_vec());
+    geometry.set_indices(RTP_INDICES.to_vec(), device);
     geometry.set_vertices(VertexKind::PositionAndNormal(create_rtp_vertices()));
     return geometry;
 }

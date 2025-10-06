@@ -14,9 +14,8 @@ function Camera(props: { camera: TerraCamera }) {
       setCameraPosition([x, y, z] as const);
     };
     props.camera.onUpdatePosition.add(listener);
-    const gpulock = engine.rust.get_gpu();
     const cameralock = engine.rust.get_camera_by_id_mut(
-      gpulock,
+      engine.gpu!.gpu,
       props.camera.id,
     );
 
@@ -28,7 +27,6 @@ function Camera(props: { camera: TerraCamera }) {
 
     listener(...position);
     engine.rust.drop_camera_lock(cameralock);
-    engine.rust.drop_gpu_lock(gpulock);
 
     return () => {
       props.camera.onUpdatePosition.delete(listener);
@@ -36,7 +34,7 @@ function Camera(props: { camera: TerraCamera }) {
   }, [props.camera]);
   const label = stringFromPtr(
     engine.rust.memory,
-    engine.rust.get_camera_label(props.camera.id),
+    engine.rust.get_camera_label(props.camera.id, engine.gpu!.gpu),
   );
   return (
     <li>
@@ -54,7 +52,10 @@ export function Cameras() {
   const cameras = new Array(engine.rust.get_cameras_count())
     .fill(0)
     .map((_v, camera_id) => {
-      const camera_index = engine.rust.get_camera_externref(camera_id);
+      const camera_index = engine.rust.get_camera_externref(
+        camera_id,
+        engine.gpu!.gpu,
+      );
       const camera = engine.rust.externrefs.get(camera_index) as TerraCamera;
 
       return <Camera key={camera.id} camera={camera}></Camera>;
@@ -72,6 +73,7 @@ export function Cameras() {
               setDebugCamera(false);
               engine.gpu!.mainCamera.attachControllerForCamera(
                 new ArcRotateCamera(engine.gpu!.mainCamera, true),
+                engine.gpu!.gpu,
               );
             }}
           >
@@ -91,6 +93,7 @@ export function Cameras() {
             setDebugCamera(true);
             engine.gpu!.mainCamera.attachControllerForCamera(
               new PositionCamera(engine.gpu!.mainCamera, true),
+              engine.gpu!.gpu,
             );
           }}
         >

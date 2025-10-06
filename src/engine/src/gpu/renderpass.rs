@@ -24,7 +24,6 @@ use webgpu::{
 use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
     gpu::{gpu::GPU, renderbundle_encoder::RenderBundleEncoder, renderpass_trait::RenderPassTrait},
-    mesh::ENGINE,
     swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
 };
@@ -40,15 +39,15 @@ pub unsafe extern "C" fn link_renderpass(
     record: Resource<JSFunction>,
     depth_read_only: bool,
     stencil_read_only: bool,
+    gpu_ptr: *mut GPU,
 ) -> *const RenderBundleEncoder {
-    let mut gpuopt = ENGINE.gpu.lock().unwrap();
-    let gpu = gpuopt.as_mut().unwrap();
+    let gpu = &mut (*gpu_ptr);
     let label = gpu.renderpasses[id].label().to_string();
     let renderpass = &mut gpu.renderpasses[id];
 
     renderpass.set_bundle(RenderBundleEncoder::new(
         label,
-        &gpu.device,
+        &(*gpu).device,
         renderpass.formats(),
         record,
         renderpass.sample_count(),
@@ -64,16 +63,15 @@ pub unsafe extern "C" fn pick_position(
     mouse_x: f32,
     mouse_y: f32,
     z: f32,
+    gpu_ptr: *mut GPU,
 ) -> *const f32 {
-    let gpuopt = ENGINE.gpu.lock().unwrap();
-    let gpu = gpuopt.as_ref().unwrap();
+    let gpu = &mut (*gpu_ptr);
     gpu.renderpasses[id].pick_position(gpu, mouse_x, mouse_y, z)
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_renderpass_size(id: usize) -> *const [NonZero<u32>; 2] {
-    let mut gpuopt = ENGINE.gpu.lock().unwrap();
-    let gpu = gpuopt.as_mut().unwrap();
-    &gpu.renderpasses[id].size()
+pub unsafe extern "C" fn get_renderpass_size(id: usize, gpu_ptr: *mut GPU) -> *const NonZero<u32> {
+    let gpu = &mut (*gpu_ptr);
+    gpu.renderpasses[id].size().as_ptr()
 }
 pub struct JSRenderPass(());
 
@@ -136,8 +134,12 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
                 .map(|rendertarget| rendertarget.get_attachment());
 
             let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
-            let mut renderpass_encoder =
-                command_encoder.begin_render_pass(label, &descriptor, attachments, &self.depth_render_target);
+            let mut renderpass_encoder = command_encoder.begin_render_pass(
+                label,
+                &descriptor,
+                attachments,
+                &self.depth_render_target,
+            );
             if let Some(bundle) = self.bundle.as_mut() {
                 bundle.record_renderbundle(
                     &self.cameragroups,

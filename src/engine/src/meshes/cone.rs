@@ -1,8 +1,11 @@
 use std::{f32::consts::TAU, ops::Neg, sync::atomic::AtomicU32};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+use externref::Resource;
+use webgpu::device::JSDevice;
 
 use crate::{
+    gpu::gpu::GPU,
     mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormal, VertexKind},
     Geometry,
@@ -28,6 +31,7 @@ pub unsafe extern "C" fn create_cone_mesh(
     rigid_body: u32,
     camera_can_collide_to: bool,
     bottom_faces: usize,
+    gpu: *mut GPU,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let mut label = String::from("Cone");
     label.push_str(
@@ -46,7 +50,7 @@ pub unsafe extern "C" fn create_cone_mesh(
         &mut meshes,
         camera_can_collide_to,
     );
-    let geometry = create_cone_geometry(bottom_faces);
+    let geometry = create_cone_geometry(bottom_faces, &(*gpu).device);
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
@@ -56,7 +60,7 @@ pub unsafe extern "C" fn create_cone_mesh(
  * @param bottom_faces How many triangles there are on botton. Total sides of cone will be faces + 2
  * @returns
  */
-pub fn create_cone_geometry(bottom_faces: usize) -> Geometry {
+pub fn create_cone_geometry(bottom_faces: usize, device: &Resource<JSDevice>) -> Geometry {
     debug_assert_eq!(bottom_faces % 2, 0);
     let side_faces = bottom_faces + 2;
     let half_side = side_faces / 2;
@@ -148,7 +152,7 @@ pub fn create_cone_geometry(bottom_faces: usize) -> Geometry {
 
     let mut geometry = Geometry::new(false, false, false, "Cone".to_string());
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
-    geometry.set_indices(indices);
+    geometry.set_indices(indices, device);
     return geometry;
 }
 #[cfg(test)]
@@ -162,14 +166,16 @@ fn test_cone() {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            true,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
-        let geometry = create_cone_geometry(4);
+        let geometry = create_cone_geometry(
+            4,
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+        );
         assert_eq!(
             geometry.indices.as_ref().unwrap().indices,
             vec![

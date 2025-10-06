@@ -42,7 +42,10 @@ export function createWireFrameMesh(
         buffer,
       ),
     });
-    const mesh = engine.rust.create_debug_mesh_wireframe(targetNode.node.id);
+    const mesh = engine.rust.create_debug_mesh_wireframe(
+      targetNode.node.id,
+      engine.gpu!.gpu,
+    );
     const node = new IndexedDataNode(
       {
         can_collide: false,

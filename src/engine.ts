@@ -100,8 +100,9 @@ export type rustWasm = {
     height: number,
     camera_can_collide_to: boolean,
     i: number,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'mesh_id'>;
-  create_plane_mesh(): rust_pointer<'mesh_id'>;
+  create_plane_mesh(gpu: rust_pointer<'GPU'>): rust_pointer<'mesh_id'>;
   create_plants_mesh(): rust_pointer<'mesh_id'>;
   create_terraintool_mesh(): rust_pointer<'mesh_id'>;
   create_zones_light_mesh(scene: number): rust_pointer<'mesh_id'>;
@@ -113,11 +114,11 @@ export type rustWasm = {
     scenes: number,
     rigid_body: RigidBody,
     camera_can_collide_to: boolean,
-
     num_subdivisions: number,
     half_width: number,
     half_height: number,
     half_depth: number,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'mesh_id'>;
   create_icosphere_mesh(
     point_light: number,
@@ -126,6 +127,7 @@ export type rustWasm = {
     rigid_body: RigidBody,
     camera_can_collide_to: boolean,
     order: number,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'mesh_id'>;
   create_box_mesh(
     point_light: number,
@@ -133,17 +135,26 @@ export type rustWasm = {
     scenes: number,
     rigid_body: RigidBody,
     camera_can_collide_to: boolean,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'mesh_id'>;
-  process_gpu_queue(time: number, updateViewPipeline: GPUComputePipeline): void;
+  process_gpu_queue(
+    time: number,
+    updateViewPipeline: GPUComputePipeline,
+    GPU: rust_pointer<'GPU'>,
+  ): void;
   destroy_mesh(mesh_id: rust_pointer<'mesh_id'>): void;
   create_debug_mesh_wireframe(
     target_mesh_id: rust_pointer<'mesh_id'>,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'mesh_id'>;
   create_debug_mesh_normals(
     target_mesh_id: rust_pointer<'mesh_id'>,
   ): rust_pointer<'mesh_id'>;
   have_rigid_body(mesh_id: rust_pointer<'mesh_id'>): boolean;
-  create_legacy_terrain_geometry(scenes: number): rust_pointer<'mesh_id'>;
+  create_legacy_terrain_geometry(
+    scenes: number,
+    gpu: rust_pointer<'GPU'>,
+  ): rust_pointer<'mesh_id'>;
   create_ui_mesh(positions_count: number): rust_pointer<'mesh_id'>;
   get_geometry(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'geometry'>;
   create_rtp_mesh(
@@ -152,6 +163,7 @@ export type rustWasm = {
     scenes: number,
     rigid_body: RigidBody,
     camera_can_collide_to: boolean,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'mesh_id'>;
   create_cone_mesh(
     point_light: number,
@@ -160,6 +172,7 @@ export type rustWasm = {
     rigid_body: RigidBody,
     camera_can_collide_to: boolean,
     faces: number,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'mesh_id'>;
   add_collider(
     mesh_id: rust_pointer<'mesh_id'>,
@@ -174,6 +187,7 @@ export type rustWasm = {
     mesh_id: rust_pointer<'mesh_id'>,
     indices: rust_pointer<'GPUBuffer'>,
     vertices: rust_pointer<'GPUBuffer'>,
+    gpu: rust_pointer<'GPU'>,
   ): void;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
@@ -289,6 +303,7 @@ export type rustWasm = {
   faces_pointer(mesh_id: rust_pointer<'mesh_id'>): number;
   create_bounding_box_mesh(
     target_mesh_id: rust_pointer<'mesh_id'>,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'mesh_id'>;
 
   create_elevator(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'elevator'>;
@@ -306,7 +321,7 @@ export type rustWasm = {
   init_engine2(): number;
   physic_tick(delta: number): void;
   set_mouse_position(x: number, y: number): void;
-  get_mouse_position(): number;
+  get_mouse_position(gpu: rust_pointer<'GPU'>): number;
   create_ball_collider(radius: number): rust_pointer<'collider'>;
   create_capsule_collider(
     half_height: number,
@@ -336,26 +351,27 @@ export type rustWasm = {
   add_onchange_callback(mesh_id: rust_pointer<'mesh_id'>): number;
   remove_onchange_callback(mesh_id: rust_pointer<'mesh_id'>, cb: number): void;
   get_engine(): rust_mutex<'locked', 'enginelock'>;
-  get_gpu(): rust_mutex<'locked', 'gpulock'>;
   get_camera_by_id_mut(
-    gpu: rust_mutex<'locked', 'gpulock'>,
+    gpu: rust_pointer<'GPU'>,
     camera_id: number,
   ): rust_mutex<'locked', 'camera'>;
   drop_engine_lock(engine: rust_mutex<'locked', 'enginelock'>): void;
-  drop_gpu_lock(gpu: rust_mutex<'locked', 'gpulock'>): void;
   drop_camera_lock(camera: rust_mutex<'locked', 'camera'>): void;
 
   init_gpu(
     device: GPUDevice,
     queue: GPUQueue,
-    force: boolean,
     renderPassScreen: RenderPass,
     renderPassWater: RenderPass,
     renderPassCanvas: RenderPass,
     pickRenderPass: RenderPass,
     canvas: HTMLCanvasElement,
-  ): number;
-  push_to_pending_command_buffers(buffer: GPUCommandBuffer): void;
+  ): rust_pointer<'GPU'>;
+  get_bindgroup_index(gpu: rust_pointer<'GPU'>): number;
+  push_to_pending_command_buffers(
+    buffer: GPUCommandBuffer,
+    gpu: rust_pointer<'GPU'>,
+  ): void;
   drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
   ): GPUCommandBuffer | null;
@@ -371,6 +387,7 @@ export type rustWasm = {
     renderpasses_ptr: number,
     renderpasses_len: number,
     renderpasses_cap: number,
+    gpu: rust_pointer<'GPU'>,
   ): number;
   add_child_to_camera(
     camera_id: number,
@@ -381,6 +398,7 @@ export type rustWasm = {
     renderpasses_ptr: number,
     renderpasses_len: number,
     renderpasses_cap: number,
+    gpu: rust_pointer<'GPU'>,
   ): number;
   add_child_to_camera_water(
     camera_id: number,
@@ -391,9 +409,13 @@ export type rustWasm = {
     renderpasses_ptr: number,
     renderpasses_len: number,
     renderpasses_cap: number,
+    gpu: rust_pointer<'GPU'>,
   ): number;
-  get_camera_label(camera_id: number): rust_pointer<'camera_label'>;
-  get_camera_externref(camera_id: number): number;
+  get_camera_label(
+    camera_id: number,
+    gpu: rust_pointer<'GPU'>,
+  ): rust_pointer<'camera_label'>;
+  get_camera_externref(camera_id: number, gpu: rust_pointer<'GPU'>): number;
   get_cameras_count(): number;
   get_camera_direction_ptr(
     camera: rust_mutex<'locked', 'camera'>,
@@ -401,7 +423,10 @@ export type rustWasm = {
   get_camera_position_ptr(
     camera: rust_mutex<'locked', 'camera'>,
   ): rust_pointer<'position'>;
-  update_camera_projection_view_inverted(camera_id: number): void;
+  update_camera_projection_view_inverted(
+    camera_id: number,
+    gpu: rust_pointer<'GPU'>,
+  ): void;
   update_camera_position(
     camera: rust_mutex<'locked', 'camera'>,
     x: number,
@@ -419,6 +444,7 @@ export type rustWasm = {
     height: number,
     pipeline: GPUComputePipeline,
     device_pixel_ratio: number,
+    GPU: rust_pointer<'GPU'>,
   ): void;
   get_raw_computepassencoder(
     computepass: rust_pointer<'computepass'>,
@@ -432,7 +458,10 @@ export type rustWasm = {
     y: number,
     z: number,
   ): boolean;
-  new_character_mesh(scenes: number): rust_pointer<'mesh_id'>;
+  new_character_mesh(
+    scenes: number,
+    gpu: rust_pointer<'GPU'>,
+  ): rust_pointer<'mesh_id'>;
   set_mesh_externref(
     mesh_id: rust_pointer<'mesh_id'>,
     externref: Externref<false, MainNode>,
@@ -450,6 +479,7 @@ export type rustWasm = {
     ) => void,
     depth_read_only: boolean,
     stencil_read_only: boolean,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'renderbundleencoder'>;
   renderbundle_set_bindgroup(
     renderbundle: rust_pointer<'renderbundleencoder'>,
@@ -489,6 +519,7 @@ export type rustWasm = {
   new_arc_rotate_camera(
     initial: boolean,
     camera_id: number,
+    gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'ArcRotateCamera'>;
   restore_arc_rotate_camera(
     controller: rust_pointer<'ArcRotateCamera'>,
@@ -502,6 +533,7 @@ export type rustWasm = {
     position_y: number,
     position_z: number,
     camera_id: number,
+    gpu: rust_pointer<'GPU'>,
   ): void;
   camera_wheel(
     controller: rust_pointer<'ArcRotateCamera'>,
@@ -534,8 +566,12 @@ export type rustWasm = {
     mouse_x: number,
     mouse_y: number,
     z: number,
+    gpu: rust_pointer<'GPU'>,
   ): number;
-  get_renderpass_size(id: number): rust_pointer<'array'>;
+  get_renderpass_size(
+    id: number,
+    gpu: rust_pointer<'GPU'>,
+  ): rust_pointer<'array'>;
   attach_archrotate_camera_controller(
     camera: rust_mutex<'locked', 'camera'>,
     controller: rust_pointer<'ArcRotateCamera'>,

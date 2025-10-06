@@ -17,9 +17,11 @@ export class LightsElement extends HTMLElement {
       shadowRoot.querySelector<HTMLInputElement>('#directional')!;
     const point = shadowRoot.querySelector<HTMLInputElement>('#point')!;
     directional.textContent = engine.rust
-      .get_directional_lights_count()
+      .get_directional_lights_count(engine.gpu!.gpu)
       .toString();
-    point.textContent = engine.rust.get_point_lights_count().toString();
+    point.textContent = engine.rust
+      .get_point_lights_count(engine.gpu!.gpu)
+      .toString();
   }
   disconnectedCallback() {}
 }

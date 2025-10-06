@@ -1,7 +1,7 @@
 use externref::Resource;
+use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::num::NonZero;
-use std::sync::Mutex;
 
 use crate::device::create_texture;
 use crate::{
@@ -77,7 +77,7 @@ pub struct Texture<
     const RENDER_ATTACHMENT: bool = false,
     const SRGB_MULTIVIEW: bool = false,
 > {
-    pub externref: Mutex<Resource<JSTexture>>,
+    pub externref: RefCell<Resource<JSTexture>>,
     pub label: Option<String>,
     pub format: PhantomData<F>,
 }
@@ -214,7 +214,7 @@ where
         >();
     }
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
-        let mut externref = self.externref.lock().unwrap();
+        let mut externref = self.externref.borrow_mut();
         *externref = unsafe {
             create_texture(
                 device,
@@ -276,7 +276,7 @@ where
         };
         Texture {
             label: Some(label),
-            externref: Mutex::new(externref),
+            externref: RefCell::new(externref),
             format: PhantomData,
         }
     }
@@ -323,7 +323,7 @@ where
         };
         Texture {
             label: Some(label),
-            externref: Mutex::new(externref),
+            externref: RefCell::new(externref),
             format: PhantomData,
         }
     }
@@ -357,7 +357,7 @@ impl<
     >
 {
     fn drop(&mut self) {
-        unsafe { destroy(&self.externref.lock().unwrap()) };
+        unsafe { destroy(&self.externref.borrow()) };
     }
 }
 

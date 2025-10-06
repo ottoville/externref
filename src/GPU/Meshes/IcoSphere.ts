@@ -31,6 +31,7 @@ export class IcoSphere extends IndexedSingleColoredMesh {
       rigid_body,
       false,
       order,
+      engine.gpu!.gpu,
     );
     super(
       {

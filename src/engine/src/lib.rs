@@ -21,12 +21,12 @@ mod vertices;
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
-use crate::Collider;
+use crate::{mesh::ENGINE, Collider};
 
 use ::allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 use allocators::freeindex::FreeIndexIndex;
 use math2::Mat3wgslF32;
-use mesh::{Mesh, ENGINE};
+use mesh::Mesh;
 use rapier3d::prelude::*;
 use vertices::{Position, Position2DAndUV, PositionAndNormal, PositionAndNormalAndUV};
 
@@ -152,8 +152,7 @@ pub struct GPUMesh {
 }
 impl GPUMesh {
     pub fn set_point_light(&mut self, range: f32, gpu_alignment: FreeIndexIndex) {
-        let maybegpu = &mut ENGINE.gpu.lock().unwrap();
-        let point_lights = &mut maybegpu.as_mut().unwrap().point_lights;
+        let point_lights = &mut ENGINE.point_lights.lock().unwrap();
 
         let old_value = self.point_light_squared;
         if range > 0.0 {
@@ -169,8 +168,7 @@ impl GPUMesh {
         }
     }
     pub fn set_directional_light(&mut self, range: f32, gpu_alignment: FreeIndexIndex) {
-        let maybegpu = &mut ENGINE.gpu.lock().unwrap();
-        let directional_lights = &mut maybegpu.as_mut().unwrap().directional_lights;
+        let directional_lights = &mut ENGINE.directional_lights.lock().unwrap();
         let old_value = self.directional_light;
         if range > 0.0 {
             self.directional_light = range;

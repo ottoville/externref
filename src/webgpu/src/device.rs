@@ -4,7 +4,6 @@ use crate::binding_layout::BindingLayout;
 use crate::bufferbinding::BufferBinding;
 use crate::command_encoder::JSCommandEncoder;
 use crate::texture::texture::JSTexture;
-use externref::externref;
 use externref::Resource;
 use std::sync::{Arc, Mutex};
 
@@ -60,7 +59,7 @@ pub unsafe fn create_bind_group(
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(target_arch = "wasm32")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "device")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {

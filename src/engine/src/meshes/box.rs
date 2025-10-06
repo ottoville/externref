@@ -1,7 +1,10 @@
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+use externref::Resource;
 use terramath::Vec3wgslF32;
+use webgpu::device::JSDevice;
 
 use crate::{
+    gpu::gpu::GPU,
     mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormal, VertexKind},
     Geometry,
@@ -129,6 +132,7 @@ pub unsafe extern "C" fn create_box_mesh(
     scenes: f32,
     rigid_body: u32,
     camera_can_collide_to: bool,
+    gpu: *mut GPU,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let mut meshes = ENGINE.meshes.lock().unwrap();
     let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
@@ -142,14 +146,14 @@ pub unsafe extern "C" fn create_box_mesh(
         &mut meshes,
         camera_can_collide_to,
     );
-    let geometry = create_box_geometry();
+    let geometry = create_box_geometry(&(*gpu).device);
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }
-pub fn create_box_geometry() -> Geometry {
+pub fn create_box_geometry(device: &Resource<JSDevice>) -> Geometry {
     let mut geometry = Geometry::new(true, false, false, "box_geometry".to_string());
-    geometry.set_indices(BOX_INDICES.to_vec());
+    geometry.set_indices(BOX_INDICES.to_vec(), device);
     geometry.set_vertices(VertexKind::PositionAndNormal(create_box_vertices()));
     return geometry;
 }
@@ -165,7 +169,6 @@ fn test_calculate_normals() {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            true,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
@@ -174,7 +177,9 @@ fn test_calculate_normals() {
         )
     };
     let mut geometry = Geometry::new(true, false, false, "box_geometry".to_string());
-    geometry.set_indices(BOX_INDICES.to_vec());
+    geometry.set_indices(BOX_INDICES.to_vec(), unsafe {
+        &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
+    });
     let vertices = create_box_vertices();
     let vertices2 = create_box_vertices();
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));

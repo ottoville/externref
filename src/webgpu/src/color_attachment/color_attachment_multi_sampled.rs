@@ -9,29 +9,31 @@ use crate::{
             JSRenderPassColorAttachment, StoreOpt,
         },
         color_attachment_single_sampled::ColorAttachmentSingleSampled,
-    }, device::JSDevice, texture::{
+    },
+    device::JSDevice,
+    texture::{
         render_attachment_texture::{
-            RenderAttachmentFormat, RenderAttachmentTextureMultiSampled,
+            RenderAttachmentFormat, RenderAttachmentTexture, RenderAttachmentTextureMultiSampled,
             RenderAttachmentTextureSingleSampled,
         },
         texture_view::TextureView,
-    }
+    },
 };
 
 pub struct ColorAttachmentMultiSampled {
     pub attachment: ColorAttachmentSingleSampled,
-    pub resolve_target: Box<dyn RenderAttachmentTextureSingleSampled + Send + 'static>,
+    pub resolve_target: Box<dyn RenderAttachmentTextureSingleSampled + 'static>,
 }
 
 impl ColorAttachmentMultiSampled {
     pub fn new<
-        F: RenderAttachmentFormat + Send + 'static,
+        F: RenderAttachmentFormat + 'static,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
     >(
-        texture_view: impl RenderAttachmentTextureMultiSampled + Send + 'static,
+        texture_view: impl RenderAttachmentTextureMultiSampled + 'static,
         resolve_target: TextureView<
             F,
             2,
@@ -79,9 +81,7 @@ impl ColorAttachmentMultiSampled {
     }
 }
 impl ColorAttachment for ColorAttachmentMultiSampled {
-    fn texture_view(
-        &self,
-    ) -> &Box<dyn crate::texture::render_attachment_texture::RenderAttachmentTexture + Send> {
+    fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture> {
         &self.attachment.texture_view
     }
 }

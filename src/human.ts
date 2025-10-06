@@ -18,7 +18,7 @@ export class Human extends IndexedSingleColoredMesh {
     const sceneids = scenes
       ? scenes.reduce((acc, scene) => acc | scene.id, 0)
       : 1;
-    const mesh = engine.rust.new_character_mesh(sceneids);
+    const mesh = engine.rust.new_character_mesh(sceneids, engine.gpu!.gpu);
     super(
       {
         can_collide: false,

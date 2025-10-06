@@ -25,9 +25,8 @@ export class MeshCamera extends CameraController {
   ) {
     super();
     this.id = engine.rust.new_mesh_camera(mesh_id);
-    const gpulock = engine.rust.get_gpu();
     const cameralock = engine.rust.get_camera_by_id_mut(
-      gpulock,
+      engine.gpu!.gpu,
       this.camera.id,
     );
     const direction = new Float32Array(
@@ -37,7 +36,6 @@ export class MeshCamera extends CameraController {
     );
     this.angle = Math.acos(direction[0]!);
     engine.rust.drop_camera_lock(cameralock);
-    engine.rust.drop_gpu_lock(gpulock);
   }
   deAttachCameraController() {
     document.exitPointerLock();

@@ -21,18 +21,6 @@ pub unsafe extern "C" fn create_mappadle_gpu_buffer_copydst_mapread(
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-unsafe fn map_write_async(
-    _buffer: usize,
-    _offset: usize,
-    _size: usize,
-    gpubuffer: usize,
-    callback: usize,
-) {
-    Box::from_raw(callback as *mut fn(MappedGPUBuffer<false, true>))(MappedGPUBuffer::new(
-        *Box::from_raw(gpubuffer as *mut GPUBuffer<false, true>),
-    ));
-}
-#[cfg(not(target_arch = "wasm32"))]
 unsafe fn map_read_async(
     _buffer: usize,
     _offset: usize,
@@ -40,6 +28,27 @@ unsafe fn map_read_async(
     _gpubuffer: usize,
     _callback: usize,
 ) {
+}
+type MapWriteCallback = *mut *mut dyn FnOnce(MappedGPUBuffer<false, true>);
+
+#[no_mangle]
+pub unsafe extern "C" fn buffer_mapped_write(
+    buffer: *mut GPUBuffer<false, true>,
+    callback: MapWriteCallback,
+) {
+    Box::from_raw(*Box::from_raw(callback))(MappedGPUBuffer::new(*Box::from_raw(buffer)));
+}
+#[cfg(not(target_arch = "wasm32"))]
+unsafe fn map_write_async(
+    _buffer: usize,
+    _offset: usize,
+    _size: usize,
+    gpubuffer: usize,
+    callback: usize,
+) {
+    Box::from_raw(*Box::from_raw(callback as MapWriteCallback))(MappedGPUBuffer::new(
+        *Box::from_raw(gpubuffer as *mut GPUBuffer<false, true>),
+    ));
 }
 #[cfg(target_arch = "wasm32")]
 #[link(wasm_import_module = "buffer")]
@@ -54,13 +63,7 @@ extern "C" {
     );
     fn map_read_async(buffer: usize, offset: usize, size: usize, gpubuffer: usize, callback: usize);
 }
-#[no_mangle]
-pub unsafe extern "C" fn buffer_mapped_write(
-    buffer: *mut GPUBuffer<false, true>,
-    callback: *mut fn(MappedGPUBuffer<false, true>),
-) {
-    Box::from_raw(callback)(MappedGPUBuffer::new(*Box::from_raw(buffer)));
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn buffer_mapped_read(
     buffer: *mut GPUBuffer<true>,
@@ -97,7 +100,7 @@ impl GPUBuffer<false, true, true> {
         self,
         offset: usize,
         size: Option<NonZeroUsize>,
-        cb: fn(MappedGPUBuffer<false, true, true>),
+        cb: *mut dyn FnOnce(MappedGPUBuffer<false, true, true>),
     ) {
         let actual_size = match size {
             Some(size) => size.get(),

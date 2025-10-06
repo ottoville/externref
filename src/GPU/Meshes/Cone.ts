@@ -28,6 +28,7 @@ export class Cone extends IndexedSingleColoredMesh {
       rigid_body,
       camera_can_collide_to,
       14,
+      engine.gpu!.gpu,
     );
     super(
       {

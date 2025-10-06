@@ -27,6 +27,7 @@ export class RightTriangularPrism extends IndexedSingleColoredMesh {
       scenes ? scenes.reduce((acc, scene) => acc | scene.id, 0) : 1,
       RigidBody.off,
       false,
+      engine.gpu!.gpu,
     );
 
     super(

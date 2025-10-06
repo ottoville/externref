@@ -36,7 +36,7 @@ export class RenderPass<
 
   onResize: Map<object, (width: number, height: number) => void> = new Map();
   public get size() {
-    const ptr = engine.rust.get_renderpass_size(this.props.id);
+    const ptr = engine.rust.get_renderpass_size(this.props.id, engine.gpu!.gpu);
     const size = [...new Uint32Array(engine.rust.memory.buffer, ptr, 2)] as [
       number,
       number,
@@ -94,6 +94,7 @@ export class RenderPass<
       },
       false,
       false,
+      gpu.gpu,
     );
   }
   resize(width: number, height: number) {

@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, sync::Arc};
+use std::{cell::RefCell, collections::BTreeMap, rc::Rc, sync::Arc};
 
 use externref::Resource;
 use webgpu::{
@@ -6,16 +6,14 @@ use webgpu::{
     device::JSDevice,
 };
 
-use crate::mesh::ENGINE;
-
 pub struct SwapBuffers {
-    mapped: BTreeMap<usize, Vec<MappedGPUBuffer<false, true, true>>>,
+    mapped: Rc<RefCell<BTreeMap<usize, Vec<MappedGPUBuffer<false, true, true>>>>>,
     onqueue: Vec<GPUBuffer<false, true, true>>,
 }
 impl SwapBuffers {
     pub fn new() -> SwapBuffers {
         SwapBuffers {
-            mapped: BTreeMap::new(),
+            mapped: Rc::new(RefCell::new(BTreeMap::new())),
             onqueue: Vec::with_capacity(16),
         }
     }
@@ -24,9 +22,9 @@ impl SwapBuffers {
      * TODO: Remove buffers not used for a while.
      */
     fn get_existing(&mut self, size: usize) -> Option<MappedGPUBuffer<false, true, true>> {
+        let mut borrowed = self.mapped.borrow_mut();
         let (got_size, len, buffer) = {
-            let (got_size, pool) = self
-                .mapped
+            let (got_size, pool) = borrowed
                 .range_mut(size..(size as f32 * 1.1).ceil() as usize)
                 .next()?;
             let buffer = pool.pop();
@@ -34,7 +32,7 @@ impl SwapBuffers {
             (*got_size, pool.len(), buffer)
         };
         if len == 0 {
-            self.mapped.remove(&got_size);
+            borrowed.remove(&got_size);
         }
         return buffer;
     }
@@ -60,17 +58,19 @@ impl SwapBuffers {
         while i < self.onqueue.len() {
             if Arc::strong_count(&self.onqueue[i].externref) == 1 {
                 let mappadle_buffer = self.onqueue.remove(i);
-                mappadle_buffer.map_write_async(0, None, |buffer| {
-                    let mut gpuotp = ENGINE.gpu.lock().unwrap();
-                    let gpu = gpuotp.as_mut().unwrap();
-                    let mapped = gpu
-                        .swap_buffers
-                        .mapped
-                        .entry(buffer.size)
-                        .or_insert(Vec::new());
-                    //["push to mapped", &buffer.size.to_string()].log();
-                    mapped.push(buffer);
-                });
+                let mappedrc = self.mapped.clone();
+                mappadle_buffer.map_write_async(
+                    0,
+                    None,
+                    Box::into_raw(Box::new(
+                        move |buffer: MappedGPUBuffer<false, true, true>| {
+                            let mut borrowed = mappedrc.borrow_mut();
+                            let mapped = borrowed.entry(buffer.size).or_insert(Vec::new());
+                            //["push to mapped", &buffer.size.to_string()].log();
+                            mapped.push(buffer);
+                        },
+                    )),
+                );
             } else {
                 i = i + 1;
             }
@@ -83,29 +83,22 @@ fn test_swap_buffers() {
     use crate::gpu::gpu::init_gpu;
     use externref::ExternRef;
     unsafe {
-        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-        init_gpu(
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            false,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-        );
+        let device: Resource<JSDevice> =
+            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         let mut swap = SwapBuffers::new();
         swap.get(&device, 110, |_buffer| {});
         swap.get(&device, 110, |_buffer| {});
         assert_eq!(swap.onqueue.len(), 2);
         swap.queue_submited();
         assert_eq!(swap.onqueue.len(), 0);
-        let mut gpuopt = ENGINE.gpu.lock().unwrap();
-        let gpuopt2 = gpuopt.as_mut().unwrap();
-        let buffers = gpuopt2.swap_buffers.mapped.get(&110usize).unwrap();
-        assert_eq!(buffers.len(), 2);
-        gpuopt2.swap_buffers.get(&device, 105, |_buffer| {});
-        let buffers = gpuopt2.swap_buffers.mapped.get(&110usize).unwrap();
+        {
+            let borrowed = swap.mapped.borrow();
+            let buffers = borrowed.get(&110usize).unwrap();
+            assert_eq!(buffers.len(), 2);
+        }
+        swap.get(&device, 105, |_buffer| {});
+        let borrowed = swap.mapped.borrow();
+        let buffers = borrowed.get(&110usize).unwrap();
         assert_eq!(buffers.len(), 1);
     }
 }

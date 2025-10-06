@@ -1,9 +1,12 @@
 use std::{cell::RefCell, sync::atomic::AtomicU32};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+use externref::Resource;
 use terramath::{CrossProduct, Quaternion, Vec3wgslF32, VectorMath, VectorMathF32};
+use webgpu::device::JSDevice;
 
 use crate::{
+    gpu::gpu::GPU,
     mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormalAndColor, VertexKind},
     Geometry,
@@ -37,6 +40,7 @@ pub unsafe extern "C" fn create_octasphere(
     half_width: f32,
     half_height: f32,
     half_depth: f32,
+    gpu: *mut GPU,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let mut label = String::from("OctaSphere");
     label.push_str(
@@ -55,8 +59,13 @@ pub unsafe extern "C" fn create_octasphere(
         &mut meshes,
         camera_can_collide_to,
     );
-    let geometry =
-        create_octasphere_geometry(num_subdivisions, half_width, half_height, half_depth);
+    let geometry = create_octasphere_geometry(
+        num_subdivisions,
+        half_width,
+        half_height,
+        half_depth,
+        &(*gpu).device,
+    );
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
@@ -67,6 +76,7 @@ pub fn create_octasphere_geometry(
     half_width: f32,
     half_height: f32,
     half_depth: f32,
+    device: &Resource<JSDevice>,
 ) -> Geometry {
     let n = (2u32).pow(num_subdivisions + 1) as usize;
     // (n * ((n + 1.0) / 2.0))
@@ -467,7 +477,7 @@ pub fn create_octasphere_geometry(
     }
     let mut geometry = Geometry::new(false, true, false, "octasphere_geometry".to_string());
     geometry.set_vertices(VertexKind::PositionAndNormalAndColor(vertices_and_normals));
-    geometry.set_indices(indices);
+    geometry.set_indices(indices, device);
     return geometry;
 }
 

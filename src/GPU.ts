@@ -159,6 +159,7 @@ export class GPU {
   mainCamera: TerraCamera;
   gpu_buffer?: number;
   bind_group_position?: rust_pointer<'bind_group_position'>;
+  gpu: rust_pointer<'GPU'>;
   /**
    * Create render pipeline. The function calculates hash and checks if existing render pipeline exists with same parameters.
    * @param desc
@@ -486,16 +487,16 @@ export class GPU {
       rootLayout: this.pipelineLayouts.canvasRootLayout,
       sampleCount: 1,
     });
-    const bindGroup_index = engine.rust.init_gpu(
+    this.gpu = engine.rust.init_gpu(
       device,
       device.queue,
-      true,
       this.renderPassScreen,
       this.renderPassWater,
       this.renderPassCanvas,
       this.pickRenderPass,
       canvas,
     );
+    const bindGroup_index = engine.rust.get_bindgroup_index(this.gpu);
     this.renderPassScreen.link_renderpass(this);
     this.renderPassWater.link_renderpass(this);
     this.renderPassCanvas.link_renderpass(this);
@@ -568,12 +569,18 @@ export class GPU {
         ],
       );
 
-    this.mainCamera = new TerraCamera('mainCamera', [
-      this.renderPassScreen,
-      this.pickRenderPass,
-    ]);
+    this.mainCamera = new TerraCamera(
+      'mainCamera',
+      [this.renderPassScreen, this.pickRenderPass],
+      this.gpu,
+    );
 
-    new TerraCamera('waterCamera', [this.renderPassWater], this.mainCamera);
+    new TerraCamera(
+      'waterCamera',
+      [this.renderPassWater],
+      this.gpu,
+      this.mainCamera,
+    );
     //TODO: this does not need to be canvas size
     /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
             (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');
@@ -609,11 +616,12 @@ export class GPU {
             entry.devicePixelContentBoxSize[0]!.blockSize,
             await computePipelineClustersP,
             window.devicePixelRatio,
+            this.gpu,
           );
 
           const updateViewPipeline = await updateViewPipelineP;
           this.#renderFrame = window.requestAnimationFrame((time) =>
-            this.#renderLoop(time, updateViewPipeline),
+            this.#renderLoop(time, updateViewPipeline, this.gpu),
           );
         } catch (e) {
           engine.showError(e);
@@ -639,6 +647,7 @@ export class GPU {
   readonly #renderLoop = (
     time: DOMHighResTimeStamp,
     updateViewPipeline: GPUComputePipeline,
+    gpu: rust_pointer<'GPU'>,
   ) => {
     //msPerFrame = performance.now() - startTime;
     //startTime = performance.now();
@@ -652,7 +661,7 @@ export class GPU {
     framecount++;
     //performance.mark('renderloopStart');
 
-    engine.rust.process_gpu_queue(time, updateViewPipeline);
+    engine.rust.process_gpu_queue(time, updateViewPipeline, gpu);
 
     this.device.queue
       .onSubmittedWorkDone()
@@ -663,7 +672,7 @@ export class GPU {
       .catch((err) => engine.showError(err));
     if (!this.#renderStarted) this.#renderStarted = true;
     this.#renderFrame = window.requestAnimationFrame((time2) =>
-      this.#renderLoop(time2, updateViewPipeline),
+      this.#renderLoop(time2, updateViewPipeline, gpu),
     );
   };
 }

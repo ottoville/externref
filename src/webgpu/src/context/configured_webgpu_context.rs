@@ -1,8 +1,8 @@
 use std::{
-    cell::Cell,
+    cell::{Cell, RefCell},
     marker::PhantomData,
     num::NonZero,
-    sync::{Arc, Mutex},
+    sync::{Arc},
 };
 
 use externref::Resource;
@@ -229,7 +229,7 @@ impl<
         RENDER_ATTACHMENT,
     > {
         let texture = Texture {
-            externref: Mutex::new(unsafe { get_current_texture(&self.context.context) }),
+            externref: RefCell::new(unsafe { get_current_texture(&self.context.context) }),
             label: None,
             format: PhantomData,
         };

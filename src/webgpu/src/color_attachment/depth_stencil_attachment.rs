@@ -32,12 +32,12 @@ extern "C" {
 pub struct JSRenderPassDepthStencilAttachment(());
 
 pub struct DepthStencilAttachment<const SAMPLE_COUNT: u32> {
-    pub texture_view: Box<dyn DepthTexture<SAMPLE_COUNT> + Send>,
+    pub texture_view: Box<dyn DepthTexture<SAMPLE_COUNT>>,
     pub externref: Resource<JSRenderPassDepthStencilAttachment>,
 }
 impl<const SAMPLE_COUNT: u32> DepthStencilAttachment<SAMPLE_COUNT> {
     pub fn new(
-        texture_view: impl DepthTexture<SAMPLE_COUNT> + Send + 'static,
+        texture_view: impl DepthTexture<SAMPLE_COUNT> + 'static,
         depth_clear_value: f32,
         depth_read_only: bool,
         depth_store_op_enum: StoreOpt,

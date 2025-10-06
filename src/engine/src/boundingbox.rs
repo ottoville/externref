@@ -1,5 +1,8 @@
+use externref::Resource;
 use terramath::VectorMath;
+use webgpu::device::JSDevice;
 
+use crate::gpu::gpu::GPU;
 use crate::mesh::{Mesh, ENGINE};
 use crate::vertices::{Position, VertexKind};
 use crate::Geometry;
@@ -21,10 +24,11 @@ pub const BOUNDING_BOX_INDICES: [usize; 26] = [
 #[no_mangle]
 pub unsafe extern "C" fn create_bounding_box_mesh(
     target_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    gpu: *mut GPU,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let mut meshes = ENGINE.meshes.lock().unwrap();
     let target_mesh = &mut meshes[&*target_mesh_id];
-    let geometry = create_bounding_box_geometry(target_mesh);
+    let geometry = create_bounding_box_geometry(target_mesh, &(*gpu).device);
 
     let mut label = String::from("BoundingBox_");
     label.push_str(&target_mesh.label);
@@ -34,7 +38,7 @@ pub unsafe extern "C" fn create_bounding_box_mesh(
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }
-pub fn create_bounding_box_geometry(mesh: &mut Mesh) -> Geometry {
+pub fn create_bounding_box_geometry(mesh: &mut Mesh, device: &Resource<JSDevice>) -> Geometry {
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     let mut bb_geometry = Geometry::new(false, false, true, "boundingbox".to_string());
     if let Some(geometry) = &mut mesh.geometry {
@@ -86,7 +90,7 @@ pub fn create_bounding_box_geometry(mesh: &mut Mesh) -> Geometry {
         ];
         bb_geometry.set_vertices(VertexKind::Position(vectors));
 
-        bb_geometry.set_indices(BOUNDING_BOX_INDICES.to_vec());
+        bb_geometry.set_indices(BOUNDING_BOX_INDICES.to_vec(), device);
         return bb_geometry;
     } else {
         panic!("Mesh {} has no geometry", mesh.label)
@@ -112,7 +116,6 @@ fn test_bounding_box() {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            true,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),

@@ -501,16 +501,15 @@ impl Mesh {
         let engine = &mut ENGINE.engine2.lock().unwrap();
         let mesh_property = mesh_property_opt.unwrap_or_else(|| {
             let gpu_mesh_alignment = engine.gpu_allocated.allocate();
-            {
-                let maybegpu = &mut ENGINE.gpu.lock().unwrap();
-                if let Some(gpu) = maybegpu.as_mut() {
-                    if point_light > 0.0 {
-                        gpu.point_lights.push(gpu_mesh_alignment);
-                    }
-                    if directional_light > 0.0 {
-                        gpu.directional_lights.push(gpu_mesh_alignment);
-                    }
-                };
+            if point_light > 0.0 {
+                ENGINE.point_lights.lock().unwrap().push(gpu_mesh_alignment);
+            }
+            if directional_light > 0.0 {
+                ENGINE
+                    .directional_lights
+                    .lock()
+                    .unwrap()
+                    .push(gpu_mesh_alignment);
             }
             Arc::new(Mutex::new(MeshProperty {
                 gpu_memory: GPUMesh {
@@ -687,22 +686,16 @@ impl Drop for Mesh {
         let mesh_property = self.mesh_property.lock().unwrap();
         if mesh_property.gpu_memory.point_light_squared > 0.0 {
             ENGINE
-                .gpu
+                .point_lights
                 .lock()
                 .unwrap()
-                .as_mut()
-                .unwrap()
-                .point_lights
                 .remove(mesh_property.gpu_mesh_alignment);
         }
         if mesh_property.gpu_memory.directional_light > 0.0 {
             ENGINE
-                .gpu
+                .directional_lights
                 .lock()
                 .unwrap()
-                .as_mut()
-                .unwrap()
-                .directional_lights
                 .remove(mesh_property.gpu_mesh_alignment);
         }
         #[cfg(feature = "webgpu")]

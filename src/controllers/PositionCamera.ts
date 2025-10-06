@@ -22,9 +22,8 @@ export class PositionCamera extends CameraController {
     super();
     this.id = engine.rust.new_position_camera();
 
-    const gpulock = engine.rust.get_gpu();
     const cameralock = engine.rust.get_camera_by_id_mut(
-      gpulock,
+      engine.gpu!.gpu,
       this.camera.id,
     );
 
@@ -74,7 +73,6 @@ export class PositionCamera extends CameraController {
       this.#angle = Math.acos(direction[0]!);
     }
     engine.rust.drop_camera_lock(cameralock);
-    engine.rust.drop_gpu_lock(gpulock);
   }
   attachCameraController() {
     document?.addEventListener('keydown', this.#keydownfunction);

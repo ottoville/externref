@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{LazyLock, Mutex, MutexGuard};
+use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 
-use crate::allocators::freeindex::FreeIndex;
+use crate::allocators::freeindex::{FreeIndex, FreeIndexIndex};
+use crate::gpu::gpu::GPU;
+use crate::gpu::lights::InnerLights;
 use allocators::explicit_generational_freelist::{
     ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
 };
-
-use crate::gpu::gpu::GPU;
 
 use crate::mesh::JSMesh;
 pub use crate::mesh::Mesh;
@@ -63,7 +63,6 @@ pub extern "C" fn init_engine2() -> usize {
     debug_assert!(std::mem::size_of::<GPUMesh>() % 8 == 0, "GPUMesh offset must be multiple of 8 https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange");
     std::mem::size_of::<GPUMesh>()
 }
-
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn physic_tick(delta: f32) {
@@ -83,12 +82,10 @@ pub unsafe extern "C" fn set_mouse_position(x: f32, y: f32) {
     );
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_mouse_position() -> u32 {
+pub unsafe extern "C" fn get_mouse_position(gpu: *mut GPU) -> u32 {
     let mouse_position = MOUSE_POSITION.load(Ordering::Relaxed);
-    let mut gpuopt = ENGINE.gpu.lock().unwrap();
-    let gpu = gpuopt.as_mut().unwrap();
-    let mouse_x = f32::from_bits((mouse_position & 0xFFFF_FFFF) as u32) * gpu.device_pixel_ratio;
-    let mouse_y = f32::from_bits((mouse_position >> 32) as u32) * gpu.device_pixel_ratio;
+    let mouse_x = f32::from_bits((mouse_position & 0xFFFF_FFFF) as u32) * (*gpu).device_pixel_ratio;
+    let mouse_y = f32::from_bits((mouse_position >> 32) as u32) * (*gpu).device_pixel_ratio;
     return ((mouse_y as u32) << 16) | (mouse_x as u32);
 }
 const GRAVITY: nalgebra::Matrix<
@@ -100,10 +97,11 @@ const GRAVITY: nalgebra::Matrix<
 pub static MOUSE_POSITION: AtomicU64 = AtomicU64::new(0);
 pub struct Engine {
     pub engine2: Mutex<Engine2>,
-    pub gpu: Mutex<Option<GPU>>,
     event_handler: ChannelEventCollector,
     pub character_controller: KinematicCharacterController,
     pub meshes: Mutex<ExplicitGenerationalFreeList<Mesh>>,
+    pub point_lights: Arc<Mutex<InnerLights>>,
+    pub directional_lights: Arc<Mutex<InnerLights>>,
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
@@ -148,10 +146,17 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
             camera_can_collide_meshes: Vec::new(),
             collider: collider::Collider::new(),
         }),
-        gpu: Mutex::new(None),
         meshes: Mutex::new(ExplicitGenerationalFreeList::new(100)),
         event_handler: ChannelEventCollector::new(collision_send, contact_send),
         character_controller: KinematicCharacterController::default(),
+        point_lights: Arc::new(Mutex::new(InnerLights {
+            lights: vec![FreeIndexIndex(0)],
+            dirty: false,
+        })),
+        directional_lights: Arc::new(Mutex::new(InnerLights {
+            lights: vec![FreeIndexIndex(0)],
+            dirty: false,
+        })),
     };
 });
 

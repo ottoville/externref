@@ -38,6 +38,7 @@ export class OctaSphere extends IndexedColoredMesh {
       width,
       height,
       depth,
+      engine.gpu!.gpu,
     );
     const geometry = engine.rust.get_geometry(mesh);
     const vertices = new Float32Array(

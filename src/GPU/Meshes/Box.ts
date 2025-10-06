@@ -23,7 +23,14 @@ export class Box extends IndexedSingleColoredMesh {
     can_collide?: boolean;
     color?: [number, number, number, number];
   }) {
-    const mesh = engine.rust.create_box_mesh(0, 0, 1, RigidBody.default, false);
+    const mesh = engine.rust.create_box_mesh(
+      0,
+      0,
+      1,
+      RigidBody.default,
+      false,
+      engine.gpu!.gpu,
+    );
     super(
       {
         can_collide,

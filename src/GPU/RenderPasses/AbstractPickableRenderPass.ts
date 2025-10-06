@@ -80,7 +80,7 @@ export abstract class AbstractPickableRenderPass<
     } else if (!mesh && this.pickPromise) {
       return this.pickPromise;
     }
-    const mouse_position = engine.rust.get_mouse_position();
+    const mouse_position = engine.rust.get_mouse_position(engine.gpu!.gpu);
     const mouse_x = mouse_position & 0xffff;
     const mouse_y = mouse_position >> 16;
     const pickPromise = this.doPick(mesh, mouse_x, mouse_y);
@@ -99,6 +99,7 @@ export abstract class AbstractPickableRenderPass<
         mouse_x,
         mouse_y,
         zAndID[0],
+        engine.gpu!.gpu,
       );
       const position = [
         ...new Float32Array(engine.rust.memory.buffer, ptr, 3),

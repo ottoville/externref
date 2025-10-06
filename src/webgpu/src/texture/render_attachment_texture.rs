@@ -35,11 +35,11 @@ descriptor.dimension must be either "2d" or "3d".
 /// use crate::webgpu::texture::texture_view::TextureView;
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
-/// use std::sync::Arc;
+/// use std::rc::Rc;
 
 /// unsafe {
 ///     let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-///     let texture = Arc::new(Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, false, true>::new(
+///     let texture = Rc::new(Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, false, true>::new(
 ///         &device,
 ///         NonZeroU32::new_unchecked(300),
 ///         NonZeroU32::new_unchecked(300),
@@ -63,11 +63,11 @@ descriptor.dimension must be either "2d" or "3d".
 /// use crate::webgpu::texture::texture_view::TextureView;
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
-/// use std::{sync::Arc};
+/// use std::rc::Rc;
 ///
 /// unsafe {
 ///     let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-///     let texture = Arc::new(Texture::<BGRA8UNORM, 2, 3,1,1, false, false, true, false, true>::new(
+///     let texture = Rc::new(Texture::<BGRA8UNORM, 2, 3,1,1, false, false, true, false, true>::new(
 ///         &device,
 ///         NonZeroU32::new_unchecked(300),
 ///         NonZeroU32::new_unchecked(300),
@@ -90,12 +90,12 @@ descriptor.dimension must be either "2d" or "3d".
 ///                             };
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
-/// use std::{sync::Arc};
+/// use std::rc::Rc;
 /// use crate::webgpu::texture::texture_view::TextureView;
 ///
 /// unsafe {
 ///        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-///        let texture = Arc::new(Texture::<BGRA8UNORM, 1, 1,1,1, false, false, true, false, false>::new(
+///        let texture = Rc::new(Texture::<BGRA8UNORM, 1, 1,1,1, false, false, true, false, false>::new(
 ///            &device,
 ///            NonZeroU32::new_unchecked(300),
 ///            NonZeroU32::new_unchecked(300),
@@ -118,12 +118,12 @@ descriptor.dimension must be either "2d" or "3d".
 ///                             };
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
-/// use std::{sync::Arc};
+/// use std::rc::Rc;
 /// use crate::webgpu::texture::texture_view::TextureView;
 ///
 /// unsafe {
 ///        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-///        let texture = Arc::new(Texture::<BGRA8UNORM, 1, 4,1,1, false, false, true, false, false>::new(
+///        let texture = Rc::new(Texture::<BGRA8UNORM, 1, 4,1,1, false, false, true, false, false>::new(
 ///            &device,
 ///            NonZeroU32::new_unchecked(300),
 ///            NonZeroU32::new_unchecked(300),
@@ -146,12 +146,12 @@ descriptor.dimension must be either "2d" or "3d".
 ///                             };
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
-/// use std::{sync::Arc};
+/// use std::rc::Rc;
 /// use crate::webgpu::texture::texture_view::TextureView;
 ///
 /// unsafe {
 ///        let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-///        let texture = Arc::new(Texture::<R32SINT, 2, 4,1,1, false, false, false, false, true>::new(
+///        let texture = Rc::new(Texture::<R32SINT, 2, 4,1,1, false, false, false, false, true>::new(
 ///            &device,
 ///            NonZeroU32::new_unchecked(300),
 ///            NonZeroU32::new_unchecked(300),
@@ -204,12 +204,12 @@ descriptor.dimension must be either "2d" or "3d".
 ///                             };
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
-/// use std::{sync::Arc};
+/// use std::rc::Rc;
 /// use crate::webgpu::texture::texture_view::TextureView;
 ///
 /// unsafe {
 ///    let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-///        let texture = Arc::new(Texture::<RGB9E5UFLOAT, 2, 1,1,1, false, false, false, false, true>::new(
+///        let texture = Rc::new(Texture::<RGB9E5UFLOAT, 2, 1,1,1, false, false, false, false, true>::new(
 ///            &device,
 ///            NonZeroU32::new_unchecked(300),
 ///            NonZeroU32::new_unchecked(300),
@@ -234,12 +234,12 @@ descriptor.dimension must be either "2d" or "3d".
 ///                             };
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
-/// use std::{sync::Arc};
+/// use std::rc::Rc;
 /// use crate::webgpu::texture::texture_view::TextureView;
 ///
 /// unsafe {
 ///     let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-///     let texture = Arc::new(Texture::<BGRA8UNORM, 1, 1,1,1, false, false, false, false, true>::new(
+///     let texture = Rc::new(Texture::<BGRA8UNORM, 1, 1,1,1, false, false, false, false, true>::new(
 ///            &device,
 ///            NonZeroU32::new_unchecked(300),
 ///            NonZeroU32::new_unchecked(300),

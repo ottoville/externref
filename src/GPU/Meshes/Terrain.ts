@@ -36,7 +36,10 @@ export class TerrainMesh extends IndexedDataNode {
     const sceneids = scenes
       ? scenes.reduce((acc, scene) => acc | scene.id, 0)
       : 1;
-    const mesh = engine.rust.create_legacy_terrain_geometry(sceneids);
+    const mesh = engine.rust.create_legacy_terrain_geometry(
+      sceneids,
+      engine.gpu!.gpu,
+    );
     super(
       {
         can_collide: true,

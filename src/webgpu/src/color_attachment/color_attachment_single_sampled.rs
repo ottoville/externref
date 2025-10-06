@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub struct ColorAttachmentSingleSampled {
-    pub texture_view: Box<dyn RenderAttachmentTexture + Send>,
+    pub texture_view: Box<dyn RenderAttachmentTexture>,
     pub storeopt: StoreOpt,
     pub clear_value_r: f64,
     pub clear_value_g: f64,
@@ -21,7 +21,7 @@ pub struct ColorAttachmentSingleSampled {
 }
 impl ColorAttachmentSingleSampled {
     pub fn new(
-        texture_view: impl RenderAttachmentTexture + Send + 'static,
+        texture_view: impl RenderAttachmentTexture + 'static,
         clear_value_r: f64,
         clear_value_g: f64,
         clear_value_b: f64,
@@ -57,7 +57,7 @@ impl ColorAttachmentSingleSampled {
 }
 
 impl ColorAttachment for ColorAttachmentSingleSampled {
-    fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture + Send> {
+    fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture> {
         &self.texture_view
     }
 }

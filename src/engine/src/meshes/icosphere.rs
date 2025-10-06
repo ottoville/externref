@@ -1,9 +1,12 @@
 use std::{collections::HashMap, sync::atomic::AtomicU32};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
+use externref::Resource;
 use terramath::VectorMathF32;
+use webgpu::device::JSDevice;
 
 use crate::{
+    gpu::gpu::GPU,
     mesh::{Mesh, ENGINE},
     vertices::{PositionAndNormal, VertexKind},
     Geometry,
@@ -41,6 +44,7 @@ pub unsafe extern "C" fn create_icosphere_mesh(
     rigid_body: u32,
     camera_can_collide_to: bool,
     order: usize,
+    gpu: *mut GPU,
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let mut label = String::from("Icosphere");
     label.push_str(
@@ -59,12 +63,12 @@ pub unsafe extern "C" fn create_icosphere_mesh(
         &mut meshes,
         camera_can_collide_to,
     );
-    let geometry = create_icosphere_geometry(order);
+    let geometry = create_icosphere_geometry(order, &(*gpu).device);
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }
-pub fn create_icosphere_geometry(order: usize) -> Geometry {
+pub fn create_icosphere_geometry(order: usize, device: &Resource<JSDevice>) -> Geometry {
     // set up a 20-triangle icosahedron
     let f: f32 = 1.618034; // (1 + 5 ** 0.5) / 2;
     let t: usize = 4usize.pow(order as u32);
@@ -141,7 +145,7 @@ pub fn create_icosphere_geometry(order: usize) -> Geometry {
     let mut geometry = Geometry::new(false, false, false, "Icosphere".to_string());
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     let flattened = indices.as_flattened_mut().to_vec();
-    geometry.set_indices(flattened);
+    geometry.set_indices(flattened, device);
     return geometry;
 }
 #[cfg(test)]
@@ -155,14 +159,16 @@ fn test_icosphere() {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
-            true,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
-        let geometry = create_icosphere_geometry(1);
+        let geometry = create_icosphere_geometry(
+            1,
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+        );
         assert_eq!(
             geometry.indices.as_ref().unwrap().indices,
             vec![
