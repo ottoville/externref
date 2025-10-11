@@ -1,12 +1,11 @@
-use std::num::NonZero;
+use std::num::{NonZero, NonZeroU32};
 
 use externref::Resource;
 
 use crate::{
     color_attachment::{
         color_attachment::{
-            create_render_pass_color_attachment_clear, ColorAttachment,
-            JSRenderPassColorAttachment, StoreOpt,
+            create_render_pass_color_attachment_clear, ColorAttachment, JSRenderPassColorAttachment,
         },
         color_attachment_single_sampled::ColorAttachmentSingleSampled,
     },
@@ -23,6 +22,8 @@ use crate::{
 pub struct ColorAttachmentMultiSampled {
     pub attachment: ColorAttachmentSingleSampled,
     pub resolve_target: Box<dyn RenderAttachmentTextureSingleSampled + 'static>,
+    version: NonZeroU32,
+    version_resolve_target: NonZeroU32,
 }
 
 impl ColorAttachmentMultiSampled {
@@ -50,18 +51,37 @@ impl ColorAttachmentMultiSampled {
         clear_value_a: f64,
     ) -> Self {
         ColorAttachmentMultiSampled {
-            attachment: ColorAttachmentSingleSampled {
-                texture_view: Box::new(texture_view),
-                storeopt: StoreOpt::Discard,
+            attachment: ColorAttachmentSingleSampled::new(
+                texture_view,
                 clear_value_r,
                 clear_value_g,
                 clear_value_b,
                 clear_value_a,
-            },
+            ),
             resolve_target: Box::new(resolve_target),
+            version: unsafe { NonZeroU32::new_unchecked(9999) },
+            version_resolve_target: unsafe { NonZeroU32::new_unchecked(9999) },
         }
     }
-    pub fn get_attachment(&mut self) -> Resource<JSRenderPassColorAttachment> {
+
+    pub fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
+        self.attachment.texture_view.resize(device, width, height);
+        self.resolve_target.resize(device, width, height);
+    }
+}
+impl ColorAttachment for ColorAttachmentMultiSampled {
+    fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture> {
+        &self.attachment.texture_view
+    }
+    fn get_attachment(&mut self) -> Resource<JSRenderPassColorAttachment> {
+        let some_new_version = self.attachment.texture_view.version();
+        if let Some(new_version) = some_new_version {
+            self.version = new_version;
+        }
+        let some_new_version = self.resolve_target.version();
+        if let Some(new_version) = some_new_version {
+            self.version_resolve_target = new_version;
+        }
         unsafe {
             create_render_pass_color_attachment_clear(
                 self.attachment.texture_view.get_attachment(),
@@ -75,13 +95,17 @@ impl ColorAttachmentMultiSampled {
             )
         }
     }
-    pub fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
-        self.attachment.texture_view.resize(device, width, height);
-        self.resolve_target.resize(device, width, height);
-    }
-}
-impl ColorAttachment for ColorAttachmentMultiSampled {
-    fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture> {
-        &self.attachment.texture_view
+    fn is_dirty(&self) -> bool {
+        let dirty = match self.attachment.texture_view.version() {
+            Some(version) => version != self.version,
+            None => false,
+        };
+        if dirty {
+            return false;
+        }
+        return match self.resolve_target.version() {
+            Some(version) => version != self.version_resolve_target,
+            None => false,
+        };
     }
 }

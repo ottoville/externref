@@ -1,5 +1,5 @@
-use std::{marker::PhantomData, rc::Rc};
 use externref::Resource;
+use std::{marker::PhantomData, num::NonZeroU32, rc::Rc};
 
 use crate::texture::{
     texture::{usages_from_bools, JSTexture, Texture, TextureAspect, TextureViewDimension},
@@ -59,6 +59,7 @@ pub struct TextureView<
     pub format: PhantomData<F>,
     pub label: String,
     pub texture: Rc<dyn ValidTexture>,
+    pub version: NonZeroU32,
 }
 impl<
         F: TextureFormat + Sync + Send,
@@ -206,6 +207,7 @@ impl<
             format: PhantomData,
             label,
             texture,
+            version: unsafe { NonZeroU32::new_unchecked(1) },
         };
     }
     pub fn new_srgb<
@@ -313,6 +315,7 @@ impl<
             format: PhantomData,
             label,
             texture,
+            version: unsafe { NonZeroU32::new_unchecked(1) },
         };
     }
 }

@@ -51,4 +51,6 @@ pub enum StoreOpt {
 
 pub trait ColorAttachment {
     fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture>;
+    fn get_attachment(&mut self) -> Resource<JSRenderPassColorAttachment>;
+    fn is_dirty(&self) -> bool;
 }

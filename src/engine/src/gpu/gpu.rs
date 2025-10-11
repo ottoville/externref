@@ -1162,11 +1162,9 @@ fn test_bindgroup_buffer_resize() {
         assert_eq!(Arc::strong_count(&rawbuffer), 3);
         let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
 
-        let mut renderpass_encoder = command_encoder.begin_render_pass::<1, _>(
-            &String::from("test"),
+        let mut renderpass_encoder = command_encoder.begin_render_pass(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            attachments.into_iter(),
-            &None,
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderbundle_encoder.record_renderbundle(
             &gpu.renderpasses[0].cameragroups(),
@@ -1306,11 +1304,9 @@ fn test_bindgroup() {
             String::from("test"),
         );
         let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
-        let mut renderpass_encoder = command_encoder.begin_render_pass::<0, _>(
-            &String::from("test"),
+        let mut renderpass_encoder = command_encoder.begin_render_pass(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            attachments.into_iter(),
-            &None,
+            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderbundle_encoder.record_renderbundle(
             &gpu.renderpasses[0].cameragroups(),

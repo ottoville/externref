@@ -1,8 +1,8 @@
 use std::{
     cell::{Cell, RefCell},
     marker::PhantomData,
-    num::NonZero,
-    sync::{Arc},
+    num::{NonZero, NonZeroU32},
+    sync::Arc,
 };
 
 use externref::Resource;
@@ -291,6 +291,10 @@ impl<
 
     fn resize(&self, _device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
         self.canvas.resize(width, height);
+    }
+    
+    fn version(&self) -> Option<NonZeroU32> {
+        None
     }
 }
 impl<

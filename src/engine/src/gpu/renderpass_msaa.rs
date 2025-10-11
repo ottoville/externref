@@ -1,5 +1,4 @@
 use std::{
-    cell::LazyCell,
     num::{NonZero, NonZeroU32},
     sync::Arc,
 };
@@ -18,6 +17,7 @@ use webgpu::{
     compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
     device::JSDevice,
     queue::Queue,
+    renderpass::renderpass_descriptor::JSRenderPassDescriptor,
 };
 
 use crate::{
@@ -25,15 +25,12 @@ use crate::{
     gpu::{
         gpu::{get_renderpass_descriptor, GPU},
         renderbundle_encoder::RenderBundleEncoder,
-        renderpass::JSRenderPass,
+        renderpass::{create_render_pass_descriptor2, JSRenderPass},
         renderpass_trait::RenderPassTrait,
     },
     swapbuffers::SwapBuffers,
     MULTIVALUE_F32,
 };
-thread_local! {
-    static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass_msaa")) };
-}
 pub struct RenderpassMSAA<const N: usize> {
     pub bundle: Option<RenderBundleEncoder>,
     pub cameragroups: Vec<CameraGroup>,
@@ -44,6 +41,7 @@ pub struct RenderpassMSAA<const N: usize> {
     pub render_targets: [ColorAttachmentMultiSampled; N],
     pub depth_render_target: Option<DepthStencilAttachment<4>>,
     formats: Vec<u32>,
+    descriptor: Resource<JSRenderPassDescriptor>,
 }
 impl<const N: usize> RenderpassMSAA<N> {
     pub fn new(
@@ -52,13 +50,16 @@ impl<const N: usize> RenderpassMSAA<N> {
         size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
-        render_targets: [ColorAttachmentMultiSampled; N],
+        mut render_targets: [ColorAttachmentMultiSampled; N],
         depth_render_target: Option<DepthStencilAttachment<4>>,
     ) -> Self {
         let mut formats = [0; N];
         for n in 0..N {
             formats[n] = render_targets[n].texture_view().to_number();
         }
+        let descriptor =
+            create_render_pass_descriptor2(&mut render_targets, &depth_render_target, &label);
+
         RenderpassMSAA {
             label,
             size,
@@ -69,6 +70,7 @@ impl<const N: usize> RenderpassMSAA<N> {
             render_targets,
             depth_render_target,
             formats: Vec::from(formats),
+            descriptor,
         }
     }
 }
@@ -85,34 +87,35 @@ impl<const N: usize> RenderPassTrait for RenderpassMSAA<N> {
         gpu_buffer: usize,
         bind_group_position: &Arc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
-        return RENDERPASS_LABEL.with(|label| {
-            let attachments = self
-                .render_targets
-                .iter_mut()
-                .map(|rendertarget| rendertarget.get_attachment());
-
-            let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
-            let mut renderpass_encoder = command_encoder.begin_render_pass(
-                label,
-                &descriptor,
-                attachments,
+        let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
+        let dirty = self
+            .render_targets
+            .iter()
+            .any(|render_target| render_target.is_dirty());
+        if dirty {
+            self.descriptor = create_render_pass_descriptor2(
+                &mut self.render_targets,
                 &self.depth_render_target,
+                &self.label,
             );
-            if let Some(bundle) = self.bundle.as_mut() {
-                bundle.record_renderbundle(
-                    &self.cameragroups,
-                    device,
-                    cameras,
-                    gpu_buffer,
-                    bind_group_position,
-                    |renderbundle| {
-                        renderpass_encoder.execute_bundles(renderbundle);
-                    },
-                );
-            }
+        }
 
-            return renderpass_encoder.end();
-        });
+        let mut renderpass_encoder =
+            command_encoder.begin_render_pass(&descriptor, &self.descriptor);
+        if let Some(bundle) = self.bundle.as_mut() {
+            bundle.record_renderbundle(
+                &self.cameragroups,
+                device,
+                cameras,
+                gpu_buffer,
+                bind_group_position,
+                |renderbundle| {
+                    renderpass_encoder.execute_bundles(renderbundle);
+                },
+            );
+        }
+
+        return renderpass_encoder.end();
     }
     fn size(&self) -> [NonZeroU32; 2] {
         self.size

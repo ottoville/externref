@@ -1,5 +1,4 @@
 use std::{
-    cell::LazyCell,
     num::{NonZero, NonZeroU32},
     sync::Arc,
 };
@@ -10,7 +9,7 @@ use terramath::VectorMath;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
     color_attachment::{
-        color_attachment::ColorAttachment,
+        color_attachment::{ColorAttachment, JSRenderPassColorAttachment},
         color_attachment_single_sampled::ColorAttachmentSingleSampled,
         depth_stencil_attachment::DepthStencilAttachment,
     },
@@ -19,6 +18,7 @@ use webgpu::{
     device::JSDevice,
     queue::Queue,
     renderbundle::JSFunction,
+    renderpass::renderpass_descriptor::{create_render_pass_descriptor, JSRenderPassDescriptor},
 };
 
 use crate::{
@@ -29,9 +29,6 @@ use crate::{
 };
 
 use super::gpu::get_renderpass_descriptor;
-thread_local! {
-    static RENDERPASS_LABEL:LazyCell<String> = const { LazyCell::new(||String::from("rust_renderpass")) };
-}
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn link_renderpass(
@@ -85,6 +82,30 @@ pub struct Renderpass<const N: usize> {
     render_targets: [ColorAttachmentSingleSampled; N],
     depth_render_target: Option<DepthStencilAttachment<1>>,
     formats: Vec<u32>,
+    descriptor: Resource<JSRenderPassDescriptor>,
+}
+pub fn create_render_pass_descriptor2<const N: usize, const D: u32, T: ColorAttachment>(
+    render_targets: &mut [T; N],
+    depth_render_target: &Option<DepthStencilAttachment<D>>,
+    label: &String,
+) -> Resource<JSRenderPassDescriptor> {
+    let mut attachments = render_targets
+        .iter_mut()
+        .map(|rendertarget| rendertarget.get_attachment());
+    let b: Box<&mut dyn Iterator<Item = Resource<JSRenderPassColorAttachment>>> =
+        Box::new(&mut attachments);
+    let depth_externref = match depth_render_target {
+        Some(depth_render_target2) => Some(&depth_render_target2.externref),
+        None => None,
+    };
+    unsafe {
+        create_render_pass_descriptor(
+            label.as_ptr() as usize,
+            label.len(),
+            Box::into_raw(b),
+            depth_externref,
+        )
+    }
 }
 impl<const N: usize> Renderpass<N> {
     pub fn new(
@@ -93,13 +114,15 @@ impl<const N: usize> Renderpass<N> {
         size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
-        render_targets: [ColorAttachmentSingleSampled; N],
+        mut render_targets: [ColorAttachmentSingleSampled; N],
         depth_render_target: Option<DepthStencilAttachment<1>>,
     ) -> Self {
         let mut formats = [0; N];
         for n in 0..N {
             formats[n] = render_targets[n].texture_view().to_number();
         }
+        let descriptor =
+            create_render_pass_descriptor2(&mut render_targets, &depth_render_target, &label);
         Renderpass {
             label,
             size,
@@ -110,6 +133,7 @@ impl<const N: usize> Renderpass<N> {
             render_targets,
             depth_render_target,
             formats: Vec::from(formats),
+            descriptor,
         }
     }
 }
@@ -127,34 +151,34 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
         gpu_buffer: usize,
         bind_group_position: &Arc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
-        return RENDERPASS_LABEL.with(|label| {
-            let attachments = self
-                .render_targets
-                .iter_mut()
-                .map(|rendertarget| rendertarget.get_attachment());
-
-            let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
-            let mut renderpass_encoder = command_encoder.begin_render_pass(
-                label,
-                &descriptor,
-                attachments,
+        let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
+        let dirty = self
+            .render_targets
+            .iter()
+            .any(|render_target| render_target.is_dirty());
+        if dirty {
+            self.descriptor = create_render_pass_descriptor2(
+                &mut self.render_targets,
                 &self.depth_render_target,
+                &self.label,
             );
-            if let Some(bundle) = self.bundle.as_mut() {
-                bundle.record_renderbundle(
-                    &self.cameragroups,
-                    device,
-                    cameras,
-                    gpu_buffer,
-                    bind_group_position,
-                    |renderbundle| {
-                        renderpass_encoder.execute_bundles(renderbundle);
-                    },
-                );
-            }
+        }
+        let mut renderpass_encoder =
+            command_encoder.begin_render_pass(&descriptor, &self.descriptor);
+        if let Some(bundle) = self.bundle.as_mut() {
+            bundle.record_renderbundle(
+                &self.cameragroups,
+                device,
+                cameras,
+                gpu_buffer,
+                bind_group_position,
+                |renderbundle| {
+                    renderpass_encoder.execute_bundles(renderbundle);
+                },
+            );
+        }
 
-            return renderpass_encoder.end();
-        });
+        return renderpass_encoder.end();
     }
     fn size(&self) -> [NonZeroU32; 2] {
         self.size

@@ -1,11 +1,7 @@
-use std::{cell::Cell, sync::Arc};
+use std::sync::Arc;
 
 use crate::{
     buffer::buffer::JSBuffer,
-    color_attachment::{
-        color_attachment::JSRenderPassColorAttachment,
-        depth_stencil_attachment::{DepthStencilAttachment, JSRenderPassDepthStencilAttachment},
-    },
     command_buffer::{CommandBuffer, JSCommandBuffer},
     compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder},
     device::{create_gpu_command_encoder, JSDevice},
@@ -14,7 +10,7 @@ use crate::{
         renderpass_descriptor::JSRenderPassDescriptor,
     },
 };
-use externref::{externref, Resource};
+use externref::Resource;
 
 use crate::{bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::GPUBuffer};
 
@@ -30,8 +26,6 @@ pub unsafe fn copy_buffer_to_buffer(
     _copy_size: usize,
 ) {
 }
-type ColorAttachmentsPtr<'a> =
-    *mut &'a mut dyn Iterator<Item = Resource<JSRenderPassColorAttachment>>;
 
 #[cfg(not(target_arch = "wasm32"))]
 unsafe fn begin_compute_pass(
@@ -46,10 +40,7 @@ unsafe fn begin_compute_pass(
 unsafe fn begin_render_pass(
     _command_encoder: &Resource<JSCommandEncoder>,
     _descriptor: &Resource<JSRenderPassDescriptor>,
-    _label_ptr: usize,
-    _label_len: usize,
-    _views: ColorAttachmentsPtr,
-    _depth_stencil_attachment: Option<&Resource<JSRenderPassDepthStencilAttachment>>,
+    _descriptor2: &Resource<JSRenderPassDescriptor>,
 ) -> Resource<JSRenderPassEncoder> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
@@ -65,7 +56,7 @@ unsafe fn finish(
 }
 
 #[cfg(target_arch = "wasm32")]
-#[externref]
+#[externref::externref]
 #[link(wasm_import_module = "commandencoder")]
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
@@ -83,10 +74,7 @@ extern "C" {
     fn begin_render_pass(
         command_encoder: &Resource<JSCommandEncoder>,
         descriptor: &Resource<JSRenderPassDescriptor>,
-        label_ptr: usize,
-        label_len: usize,
-        views: ColorAttachmentsPtr,
-        depth_stencil_attachment: Option<&Resource<JSRenderPassDepthStencilAttachment>>,
+        descriptor2: &Resource<JSRenderPassDescriptor>,
     ) -> Resource<JSRenderPassEncoder>;
     pub fn copy_buffer_to_buffer(
         command_encoder: &Resource<JSCommandEncoder>,
@@ -96,24 +84,6 @@ extern "C" {
         destinationOffset: usize,
         copySize: usize,
     );
-}
-thread_local! {
-    static COLORATTACHMENT_EXTERNREF: Cell<Option<Resource<JSRenderPassColorAttachment>>> = const { Cell::new(None) };
-}
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn iterate_colorattachments<'a>(
-    iterator_ptr: ColorAttachmentsPtr,
-) -> Option<&'a Resource<JSRenderPassColorAttachment>> {
-    let next = (*iterator_ptr).next();
-    if next.is_none() {
-        drop(Box::from_raw(iterator_ptr));
-    }
-    COLORATTACHMENT_EXTERNREF.set(next);
-    let value = COLORATTACHMENT_EXTERNREF.with(|n| {
-        return n.as_ptr();
-    });
-    return (*value).as_ref();
 }
 
 pub struct GPUCommandEncoder {
@@ -151,30 +121,13 @@ impl GPUCommandEncoder {
             }
         }
     }
-    pub fn begin_render_pass<const SAMPLE_COUNT: u32, I: Iterator<Item = Resource<JSRenderPassColorAttachment>>>(
+    pub fn begin_render_pass(
         self,
-        label: &String,
         descriptor: &Resource<JSRenderPassDescriptor>,
-        mut views: I,
-        depth_render_target: &Option<DepthStencilAttachment<SAMPLE_COUNT>>,
+        descriptor2: &Resource<JSRenderPassDescriptor>,
     ) -> RenderPassEncoder {
-        let depth_externref = match depth_render_target {
-            Some(depth_render_target2) => Some(&depth_render_target2.externref),
-            None => None,
-        };
-
-        let b: Box<&mut dyn Iterator<Item = Resource<JSRenderPassColorAttachment>>> =
-            Box::new(&mut views);
-
         unsafe {
-            let externref = begin_render_pass(
-                &self.externref,
-                descriptor,
-                label.as_ptr() as usize,
-                label.len(),
-                Box::into_raw(b),
-                depth_externref,
-            );
+            let externref = begin_render_pass(&self.externref, descriptor, descriptor2);
             RenderPassEncoder {
                 command_encoder: self,
                 externref,

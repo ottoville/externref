@@ -1,4 +1,4 @@
-use std::num::NonZero;
+use std::num::{NonZero, NonZeroU32};
 
 use externref::Resource;
 
@@ -259,6 +259,7 @@ pub trait RenderAttachmentTexture {
     fn to_number(&self) -> u32;
     fn get_attachment(&self) -> &Resource<JSTextureView>;
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>);
+    fn version(&self) -> Option<NonZeroU32>;
 }
 impl<
         F: RenderAttachmentFormat,
@@ -287,9 +288,13 @@ impl<
     fn get_attachment(&self) -> &Resource<JSTextureView> {
         &self.externref
     }
-
+ 
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
         self.texture.resize(device, width, height);
+    }
+
+    fn version(&self) -> Option<NonZeroU32> {
+        Some(self.version)
     }
 }
 
