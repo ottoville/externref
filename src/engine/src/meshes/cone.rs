@@ -1,8 +1,6 @@
 use std::{f32::consts::TAU, ops::Neg, sync::atomic::AtomicU32};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
-use externref::Resource;
-use webgpu::device::JSDevice;
 
 use crate::{
     gpu::gpu::GPU,
@@ -50,7 +48,7 @@ pub unsafe extern "C" fn create_cone_mesh(
         &mut meshes,
         camera_can_collide_to,
     );
-    let geometry = create_cone_geometry(bottom_faces, &(*gpu).device);
+    let geometry = create_cone_geometry(bottom_faces, &mut (*gpu));
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
@@ -60,7 +58,7 @@ pub unsafe extern "C" fn create_cone_mesh(
  * @param bottom_faces How many triangles there are on botton. Total sides of cone will be faces + 2
  * @returns
  */
-pub fn create_cone_geometry(bottom_faces: usize, device: &Resource<JSDevice>) -> Geometry {
+pub fn create_cone_geometry(bottom_faces: usize, gpu: &mut GPU) -> Geometry {
     debug_assert_eq!(bottom_faces % 2, 0);
     let side_faces = bottom_faces + 2;
     let half_side = side_faces / 2;
@@ -152,7 +150,7 @@ pub fn create_cone_geometry(bottom_faces: usize, device: &Resource<JSDevice>) ->
 
     let mut geometry = Geometry::new(false, false, false, "Cone".to_string());
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
-    geometry.set_indices(indices, device);
+    geometry.set_indices(indices, gpu);
     return geometry;
 }
 #[cfg(test)]
@@ -163,7 +161,7 @@ fn test_cone() {
     use externref::Resource;
 
     unsafe {
-        init_gpu(
+        let gpu = init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
@@ -174,7 +172,7 @@ fn test_cone() {
         );
         let geometry = create_cone_geometry(
             4,
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            &mut (*gpu),
         );
         assert_eq!(
             geometry.indices.as_ref().unwrap().indices,

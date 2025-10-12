@@ -216,8 +216,7 @@ export class Plants extends MainNode {
               ...create_rust_label('_swap'),
             );
             const srcOffset = 0;
-            const rawSwapBuffer =
-              engine.rust.get_raw_buffer(swapBuffer2).externref;
+            const rawSwapBuffer = engine.rust.get_raw_buffer(swapBuffer2);
             new Int8Array(rawSwapBuffer.getMappedRange()).set(
               new Int8Array(
                 data2,

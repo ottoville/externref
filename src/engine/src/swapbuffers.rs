@@ -47,7 +47,6 @@ impl SwapBuffers {
                 device,
                 size,
                 String::from(size.to_string() + "_swap_buffer"),
-                false,
             )
         });
         cb(&mapped_buffer);
@@ -80,7 +79,6 @@ impl SwapBuffers {
 #[cfg(test)]
 #[test]
 fn test_swap_buffers() {
-    use crate::gpu::gpu::init_gpu;
     use externref::ExternRef;
     unsafe {
         let device: Resource<JSDevice> =

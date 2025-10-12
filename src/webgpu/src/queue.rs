@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     bindgroup::bindgroup_resources::BindGroupResources,
-    buffer::buffer::{GPUBuffer, JSBuffer},
+    buffer::buffer::{BufferRef, GPUBuffer, JSBuffer},
     command_buffer::{CommandBuffer, JSCommandBuffer},
 };
 use externref::{externref, Resource};
@@ -42,7 +42,7 @@ extern "C" {
 }
 thread_local! {
     static COMMAND_BUFFER_EXTERNREF: Cell<Option<Resource<JSCommandBuffer>>> = const { Cell::new(None) };
-    static BUFFERS_AND_BINDGROUPS: RefCell<(Vec<Vec<Arc<Resource<JSBuffer>>>>, Vec<Vec<Arc<BindGroupResources>>>)> = const { RefCell::new((Vec::new(),Vec::new())) };
+    static BUFFERS_AND_BINDGROUPS: RefCell<(Vec<Vec<Arc<BufferRef>>>, Vec<Vec<Arc<BindGroupResources>>>)> = const { RefCell::new((Vec::new(),Vec::new())) };
 }
 #[externref]
 #[no_mangle]
@@ -122,6 +122,14 @@ impl Queue {
         size: usize,
         buffer_offset: usize,
     ) {
-        unsafe { write_buffer(&self.externref, &buffer.externref, ptr, size, buffer_offset) }
+        unsafe {
+            write_buffer(
+                &self.externref,
+                &buffer.externref.0,
+                ptr,
+                size,
+                buffer_offset,
+            )
+        }
     }
 }

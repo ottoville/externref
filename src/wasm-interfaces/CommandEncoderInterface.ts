@@ -1,4 +1,3 @@
-import { Externref } from 'externref.js';
 import type { Engine } from '../engine.js';
 import { Rust_Iterator, rust_iterator_to_js } from '../utils.js';
 
@@ -25,8 +24,8 @@ export const CommandEncoderInterface = {
   },
   copy_buffer_to_buffer(
     commandEncoder: GPUCommandEncoder,
-    { externref: source }: Externref<boolean, GPUBuffer>,
-    { externref: destination }: Externref<boolean, GPUBuffer>,
+    source: GPUBuffer,
+    destination: GPUBuffer,
     sourceOffset: GPUSize64,
     destinationOffset: GPUSize64,
     copySize: GPUSize64,

@@ -1,9 +1,7 @@
 use std::{collections::HashMap, sync::atomic::AtomicU32};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
-use externref::Resource;
 use terramath::VectorMathF32;
-use webgpu::device::JSDevice;
 
 use crate::{
     gpu::gpu::GPU,
@@ -63,12 +61,12 @@ pub unsafe extern "C" fn create_icosphere_mesh(
         &mut meshes,
         camera_can_collide_to,
     );
-    let geometry = create_icosphere_geometry(order, &(*gpu).device);
+    let geometry = create_icosphere_geometry(order, &mut (*gpu));
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }
-pub fn create_icosphere_geometry(order: usize, device: &Resource<JSDevice>) -> Geometry {
+pub fn create_icosphere_geometry(order: usize, gpu: &mut GPU) -> Geometry {
     // set up a 20-triangle icosahedron
     let f: f32 = 1.618034; // (1 + 5 ** 0.5) / 2;
     let t: usize = 4usize.pow(order as u32);
@@ -145,7 +143,7 @@ pub fn create_icosphere_geometry(order: usize, device: &Resource<JSDevice>) -> G
     let mut geometry = Geometry::new(false, false, false, "Icosphere".to_string());
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     let flattened = indices.as_flattened_mut().to_vec();
-    geometry.set_indices(flattened, device);
+    geometry.set_indices(flattened, gpu);
     return geometry;
 }
 #[cfg(test)]
@@ -156,7 +154,7 @@ fn test_icosphere() {
     use externref::Resource;
 
     unsafe {
-        init_gpu(
+        let gpu = init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
@@ -167,7 +165,7 @@ fn test_icosphere() {
         );
         let geometry = create_icosphere_geometry(
             1,
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
+            &mut  (*gpu),
         );
         assert_eq!(
             geometry.indices.as_ref().unwrap().indices,

@@ -39,7 +39,7 @@ use crate::projection::{Projection, PROJECTION_BUFFER_SIZE};
 use crate::swapbuffers::SwapBuffers;
 use crate::GPUMesh;
 use webgpu::bindgroup::bindgroup::BindGroup;
-use webgpu::buffer::buffer::GPUBuffer;
+use webgpu::buffer::buffer::{BufferRef, GPUBuffer};
 use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
 
 use super::lights::Lights;
@@ -52,7 +52,7 @@ use webgpu::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSC
 pub const GPU_MEMORY_INDEX_SIZE: usize = 256;
 pub const DEFAULT_MAX_INSTANCES: usize = 10;
 
-pub static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Arc<Resource<JSBuffer>>, 16>> =
+pub static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Arc<BufferRef>, 16>> =
     Mutex::new(StackAllocator::new());
 thread_local! {
     static GPU_QUEUE:RefCell<Vec<Arc<Mutex<MeshProperty>>    >> = const { RefCell::new(Vec::new()) };
@@ -163,6 +163,10 @@ pub unsafe extern "C" fn init_gpu(
     js_pick_render_pass: Resource<JSRenderPass>,
     js_canvas: Resource<JSCanvas>,
 ) -> *mut GPU {
+    {
+        // Delete indices that points to previous GPU
+        ENGINE.dropped_meshes.lock().unwrap().clear();
+    }
     let canvas = CanvasNoContext {
         externref: js_canvas,
     };
@@ -287,7 +291,6 @@ pub unsafe extern "C" fn init_gpu(
             &device,
             GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
             String::from("GPUMeshes"),
-            false,
         )));
 
     let positions_buffer_binding = BufferBinding::new(
@@ -331,14 +334,12 @@ pub unsafe extern "C" fn init_gpu(
         &device,
         8,
         String::from("timeBuffer"),
-        false,
     )));
     let screen_dimension_buffer_screen =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
             &device,
             16,
             String::from("screen_dimension_buffer"),
-            false,
         );
     let screen_render_target = Rc::new(Texture::<
         BGRA8UNORM,
@@ -460,7 +461,6 @@ pub unsafe extern "C" fn init_gpu(
             &device,
             16,
             String::from("screen_buffer_water"),
-            false,
         );
 
     let water_render_target = Rc::new(Texture::<
@@ -551,7 +551,6 @@ pub unsafe extern "C" fn init_gpu(
             &device,
             16,
             String::from("screen_buffer_pick"),
-            false,
         );
     let pick_render_target = Rc::new(Texture::<
         RG32UINT,
@@ -674,13 +673,14 @@ pub unsafe extern "C" fn init_gpu(
         update_clusters_layout,
         clusters_layout,
         uniform_bind_group_layout_with_time,
+        meshes: ExplicitGenerationalFreeList::new(2),
     };
     return Box::into_raw(Box::new(gpu));
 }
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn get_bindgroup_index(gpu: *const GPU) -> usize {
-    let externref = &*(*gpu).gpu_buffer.lock().unwrap().externref;
+    let externref = &(*gpu).gpu_buffer.lock().unwrap().externref.0;
     return ptr::read(externref as *const Resource<JSBuffer> as *const usize);
 }
 
@@ -706,9 +706,14 @@ pub unsafe extern "C" fn process_gpu_queue(
     (*gpu).process_gpu_queue(time, update_view_pipeline);
 }
 
+pub struct MeshGPU {
+    pub indices: GPUBuffer<false, false, false, false, true>,
+}
+
 pub struct GPU {
     pub device: Resource<JSDevice>,
     pub queue: Queue,
+    pub meshes: ExplicitGenerationalFreeList<MeshGPU>,
     pub gpu_buffer: Arc<Mutex<GPUBuffer<false, false, true, true, false, false, true, true>>>,
     pub bind_group_position: Arc<BindGroup<1>>,
     pub projections: Vec<Arc<Projection>>,
@@ -956,7 +961,7 @@ impl GPU {
             command_encoder = lights_pass.end();
         }
         let gpu_buffer_id = unsafe {
-            let externref = &*self.gpu_buffer.lock().unwrap().externref;
+            let externref = &self.gpu_buffer.lock().unwrap().externref.0;
             ptr::read(externref as *const Resource<JSBuffer> as *const usize)
         };
 
@@ -980,6 +985,13 @@ impl GPU {
         TEMP_GPU_BUFFERS.lock().unwrap().clear();
         #[cfg(not(test))]
         self.swap_buffers.queue_submited();
+        {
+            let mut meshes_lock = ENGINE.dropped_meshes.lock();
+            let dropped_meshes = meshes_lock.as_mut().unwrap();
+            dropped_meshes.drain(..).for_each(|mesh| {
+                self.meshes.remove(mesh);
+            });
+        }
     }
 }
 #[cfg(test)]
@@ -1101,7 +1113,6 @@ fn test_bindgroup_buffer_resize() {
             &device,
             4,
             String::from("test"),
-            false,
         );
         let rawbuffer = buffer.externref.clone();
         let buffer_arc = Arc::new(Mutex::new(buffer));
@@ -1250,7 +1261,6 @@ fn test_bindgroup() {
             &device,
             4,
             String::from("test"),
-            false,
         );
         let rawbuffer = buffer.externref.clone();
         let layout = BindGroupLayout::new(

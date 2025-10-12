@@ -41,12 +41,7 @@ impl Lights {
     ) -> Lights {
         Lights {
             lights: inner_lights,
-            buffer: Arc::new(Mutex::new(GPUBuffer::new(
-                device,
-                16,
-                label.to_string(),
-                false,
-            ))),
+            buffer: Arc::new(Mutex::new(GPUBuffer::new(device, 16, label.to_string()))),
             label,
         }
     }

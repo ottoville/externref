@@ -52,7 +52,6 @@ impl InnerProjection {
             device,
             PROJECTION_BUFFER_SIZE,
             String::from("uniform_projection"),
-            false,
         );
         let mut inverted = [[0.0; 4]; 4];
         let mut inverted_far_plane = [[0.0; 4]; 4];

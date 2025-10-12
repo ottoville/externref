@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 
 use crate::allocators::freeindex::{FreeIndex, FreeIndexIndex};
-use crate::gpu::gpu::GPU;
+use crate::gpu::gpu::{MeshGPU, GPU};
 use crate::gpu::lights::InnerLights;
 use allocators::explicit_generational_freelist::{
     ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
@@ -100,6 +100,7 @@ pub struct Engine {
     event_handler: ChannelEventCollector,
     pub character_controller: KinematicCharacterController,
     pub meshes: Mutex<ExplicitGenerationalFreeList<Mesh>>,
+    pub dropped_meshes: Mutex<Vec<ExplicitGenerationalFreeListIndex<MeshGPU>>>,
     pub point_lights: Arc<Mutex<InnerLights>>,
     pub directional_lights: Arc<Mutex<InnerLights>>,
 }
@@ -147,6 +148,7 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
             collider: collider::Collider::new(),
         }),
         meshes: Mutex::new(ExplicitGenerationalFreeList::new(100)),
+        dropped_meshes: Mutex::new(Vec::new()),
         event_handler: ChannelEventCollector::new(collision_send, contact_send),
         character_controller: KinematicCharacterController::default(),
         point_lights: Arc::new(Mutex::new(InnerLights {

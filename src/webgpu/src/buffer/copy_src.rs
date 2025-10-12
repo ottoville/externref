@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::buffer::buffer::BufferRef;
 use crate::command_encoder::copy_buffer_to_buffer;
 use crate::command_encoder::GPUCommandEncoder;
 use crate::device::JSDevice;
@@ -49,11 +50,10 @@ impl<
                 self.label.len(),
                 Self::usages(),
                 false,
-                self.owned_by_js,
             );
             copy_buffer_to_buffer(
                 &command_encoder.externref,
-                &self.externref,
+                &self.externref.0,
                 &new_externref,
                 0,
                 0,
@@ -62,7 +62,7 @@ impl<
             self.size = size;
             command_encoder
                 .buffers
-                .push(self.replace_externref(Arc::new(new_externref)));
+                .push(self.replace_externref(Arc::new(BufferRef(new_externref))));
         }
     }
 }

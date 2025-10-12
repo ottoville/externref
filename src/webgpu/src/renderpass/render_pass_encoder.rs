@@ -1,9 +1,11 @@
+use std::sync::Arc;
+
 use externref::Resource;
 
 use crate::{
     bindgroup::{bindgroup::BindGroup, bindgroup_resources::BindGroupResources},
     binding_commands::BindingCommands,
-    buffer::buffer::{GPUBuffer, JSBuffer},
+    buffer::buffer::{BufferRef, GPUBuffer},
     command_encoder::GPUCommandEncoder,
     externref_trait::HaveExternref,
     render_commands::RenderCommands,
@@ -68,12 +70,12 @@ impl BindingCommands<JSRenderPassEncoder> for RenderPassEncoder {
         todo!()
     }
 
-    fn bindgroups(&mut self) -> &mut Vec<std::sync::Arc<BindGroupResources>> {
+    fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {
         todo!()
     }
 }
 impl RenderCommands<JSRenderPassEncoder> for RenderPassEncoder {
-    fn buffers(&mut self) -> &mut Vec<std::sync::Arc<Resource<JSBuffer>>> {
+    fn buffers(&mut self) -> &mut Vec<Arc<BufferRef>> {
         // TODO: is it really necessary to save buffer reference in renderpassencoder
         todo!()
     }

@@ -3,7 +3,7 @@ use std::ptr;
 
 use externref::{externref, Resource};
 
-use crate::buffer::buffer::{GPUBuffer, JSBuffer};
+use crate::buffer::buffer::{BufferRef, GPUBuffer};
 use crate::buffer::mapped_buffer::MappedGPUBuffer;
 use crate::device::JSDevice;
 
@@ -17,7 +17,7 @@ pub unsafe extern "C" fn create_mappadle_gpu_buffer_copydst_mapread(
     label_cap: usize,
 ) -> *const GPUBuffer<true, false, false, true> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new(device, length, label, false)))
+    Box::into_raw(Box::new(GPUBuffer::new(device, length, label)))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -85,7 +85,7 @@ impl GPUBuffer<true, false, false, true> {
         };
         unsafe {
             map_read_async(
-                ptr::read(&*self.externref as *const Resource<JSBuffer> as *const usize),
+                ptr::read(&*self.externref as *const BufferRef as *const usize),
                 offset,
                 actual_size,
                 Box::into_raw(Box::new(self)) as usize,
@@ -108,7 +108,7 @@ impl GPUBuffer<false, true, true> {
         };
         unsafe {
             map_write_async(
-                ptr::read(&*self.externref as *const Resource<JSBuffer> as *const usize),
+                ptr::read(&*self.externref as *const BufferRef as *const usize),
                 offset,
                 actual_size,
                 Box::into_raw(Box::new(self)) as usize,

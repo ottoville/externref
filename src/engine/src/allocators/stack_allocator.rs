@@ -52,7 +52,7 @@ impl<T, const N: usize> Drop for StackAllocator<T, N> {
     }
 }
 
-struct StackAllocatorDrain<'a, T, const N: usize> {
+pub struct StackAllocatorDrain<'a, T, const N: usize> {
     stack_allocator: &'a mut StackAllocator<T, N>,
 }
 impl<'a, T, const N: usize> Iterator for StackAllocatorDrain<'a, T, N> {

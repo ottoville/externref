@@ -1,6 +1,4 @@
-use externref::Resource;
 use terramath::VectorMath;
-use webgpu::device::JSDevice;
 
 use crate::gpu::gpu::GPU;
 use crate::mesh::{Mesh, ENGINE};
@@ -28,7 +26,7 @@ pub unsafe extern "C" fn create_bounding_box_mesh(
 ) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
     let mut meshes = ENGINE.meshes.lock().unwrap();
     let target_mesh = &mut meshes[&*target_mesh_id];
-    let geometry = create_bounding_box_geometry(target_mesh, &(*gpu).device);
+    let geometry = create_bounding_box_geometry(target_mesh, &mut (*gpu));
 
     let mut label = String::from("BoundingBox_");
     label.push_str(&target_mesh.label);
@@ -38,7 +36,7 @@ pub unsafe extern "C" fn create_bounding_box_mesh(
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }
-pub fn create_bounding_box_geometry(mesh: &mut Mesh, device: &Resource<JSDevice>) -> Geometry {
+pub fn create_bounding_box_geometry(mesh: &mut Mesh, gpu: &mut GPU) -> Geometry {
     let mut mesh_property = mesh.mesh_property.lock().unwrap();
     let mut bb_geometry = Geometry::new(false, false, true, "boundingbox".to_string());
     if let Some(geometry) = &mut mesh.geometry {
@@ -90,7 +88,7 @@ pub fn create_bounding_box_geometry(mesh: &mut Mesh, device: &Resource<JSDevice>
         ];
         bb_geometry.set_vertices(VertexKind::Position(vectors));
 
-        bb_geometry.set_indices(BOUNDING_BOX_INDICES.to_vec(), device);
+        bb_geometry.set_indices(BOUNDING_BOX_INDICES.to_vec(), gpu);
         return bb_geometry;
     } else {
         panic!("Mesh {} has no geometry", mesh.label)
@@ -111,7 +109,6 @@ fn test_bounding_box() {
     use externref::Resource;
     unsafe {
         use crate::indices::Indices;
-        use webgpu::buffer::buffer::GPUBuffer;
 
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
@@ -140,12 +137,6 @@ fn test_bounding_box() {
         geometry.set_vertices(vertices);
         geometry.indices = Some(Indices {
             indices: BOX_INDICES.to_vec(),
-            gpu_buffer: GPUBuffer::new(
-                &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-                4,
-                String::from("test"),
-                false,
-            ),
         });
         {
             let mut mesh_property = m.mesh_property.lock().unwrap();

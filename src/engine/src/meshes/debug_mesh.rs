@@ -1,13 +1,15 @@
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 
 use crate::{
-    gpu::gpu::GPU, mesh::{Mesh, ENGINE}, Geometry
+    gpu::gpu::GPU,
+    mesh::{Mesh, ENGINE},
+    Geometry,
 };
 
 #[no_mangle]
 pub unsafe extern "C" fn create_debug_mesh_wireframe(
     target_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-    gpu: *mut GPU
+    gpu: *mut GPU,
 ) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
     let mut meshes = ENGINE.meshes.lock().unwrap();
     let target_mesh = &meshes[&*target_mesh_id];
@@ -49,7 +51,7 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
         false,
         String::from("debugmesh_geometry_wireframe"),
     );
-    geometry.set_indices(indices, &(*gpu).device);
+    geometry.set_indices(indices, &mut (*gpu));
     mesh.geometry = Some(Box::new(geometry));
     return Box::into_raw(Box::new(mesh_id));
 }

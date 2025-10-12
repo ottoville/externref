@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    buffer::buffer::JSBuffer,
+    buffer::buffer::{BufferRef, JSBuffer},
     command_buffer::{CommandBuffer, JSCommandBuffer},
     compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder},
     device::{create_gpu_command_encoder, JSDevice},
@@ -89,7 +89,7 @@ extern "C" {
 pub struct GPUCommandEncoder {
     pub externref: Resource<JSCommandEncoder>,
     // Hold references to prevent buffer being CG't before command encoder has been executed
-    pub buffers: Vec<Arc<Resource<JSBuffer>>>,
+    pub buffers: Vec<Arc<BufferRef>>,
     pub bindgroups: Vec<Arc<BindGroupResources>>,
 }
 impl GPUCommandEncoder {
@@ -191,8 +191,8 @@ impl GPUCommandEncoder {
         unsafe {
             copy_buffer_to_buffer(
                 &self.externref,
-                &source.externref,
-                &destination.externref,
+                &source.externref.0,
+                &destination.externref.0,
                 source_offset,
                 destination_offset,
                 copy_size,

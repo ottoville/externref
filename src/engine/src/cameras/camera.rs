@@ -259,7 +259,6 @@ impl Camera {
             &gpu.device,
             UNIFORM_BUFFER_SIZE,
             String::from("camerauniformBuffer"),
-            false,
         )));
         let buffer_binding = BufferBinding::new(
             camerauniform_buffer.clone(),
@@ -279,7 +278,6 @@ impl Camera {
             &gpu.device,
             CLUSTER_SIZE_IN_BYTES as usize,
             String::from("clusterArrayBuffer"),
-            false,
         )));
 
         let cluster_array_buffer_binding = BufferBinding::new(

@@ -1,7 +1,5 @@
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
-use externref::Resource;
 use terramath::Vec3wgslF32;
-use webgpu::device::JSDevice;
 
 use crate::{
     gpu::gpu::GPU,
@@ -146,14 +144,14 @@ pub unsafe extern "C" fn create_box_mesh(
         &mut meshes,
         camera_can_collide_to,
     );
-    let geometry = create_box_geometry(&(*gpu).device);
+    let geometry = create_box_geometry(&mut (*gpu));
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }
-pub fn create_box_geometry(device: &Resource<JSDevice>) -> Geometry {
+pub fn create_box_geometry(gpu: &mut GPU) -> Geometry {
     let mut geometry = Geometry::new(true, false, false, "box_geometry".to_string());
-    geometry.set_indices(BOX_INDICES.to_vec(), device);
+    geometry.set_indices(BOX_INDICES.to_vec(), gpu);
     geometry.set_vertices(VertexKind::PositionAndNormal(create_box_vertices()));
     return geometry;
 }
@@ -165,7 +163,7 @@ fn test_calculate_normals() {
     use externref::ExternRef;
     use externref::Resource;
 
-    unsafe {
+    let gpu = unsafe {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
@@ -178,13 +176,13 @@ fn test_calculate_normals() {
     };
     let mut geometry = Geometry::new(true, false, false, "box_geometry".to_string());
     geometry.set_indices(BOX_INDICES.to_vec(), unsafe {
-        &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
+        &mut (*gpu)
     });
     let vertices = create_box_vertices();
     let vertices2 = create_box_vertices();
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));
     geometry.calculate_normals();
-    if let Some(verts) = geometry.vertices {
+    if let Some(verts) = &geometry.vertices {
         if let VertexKind::PositionAndNormal(vertices) = verts {
             for n in 0..vertices.len() {
                 assert_eq!(vertices[n].normal.0, vertices2[n].normal.0);

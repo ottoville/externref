@@ -494,6 +494,7 @@ export type rustWasm = {
     first_index: number,
     base_vertex: number,
     first_instance: number,
+    gpu: rust_pointer<'GPU'>,
   ): void;
   renderbundle_set_bindgroup_1(
     renderbundle: rust_pointer<'renderbundleencoder'>,

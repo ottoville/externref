@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use externref::Resource;
 
-use crate::{bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::JSBuffer};
+use crate::{bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::BufferRef};
 
 pub struct JSFunction(());
 pub struct JSRenderBundleDescriptor(());
@@ -10,6 +10,6 @@ pub struct JSRenderBundle(());
 
 pub struct RenderBundle {
     pub bindgroups: Vec<Arc<BindGroupResources>>,
-    pub buffers: Vec<Arc<Resource<JSBuffer>>>,
+    pub buffers: Vec<Arc<BufferRef>>,
     pub externref: Resource<JSRenderBundle>,
 }

@@ -1,7 +1,5 @@
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
-use externref::Resource;
 use terramath::Vec3wgslF32;
-use webgpu::device::JSDevice;
 
 use crate::{
     gpu::gpu::GPU,
@@ -26,7 +24,7 @@ pub unsafe extern "C" fn create_tiled_mesh_geometry(
         height,
         camera_can_collide_to,
         label,
-        &(*gpu).device,
+        &mut (*gpu),
     )))
 }
 pub fn create_tiled_mesh_geometry2(
@@ -34,12 +32,12 @@ pub fn create_tiled_mesh_geometry2(
     height: usize,
     camera_can_collide_to: bool,
     label: String,
-    device: &Resource<JSDevice>,
+    gpu: &mut GPU,
 ) -> ExplicitGenerationalFreeListIndex<Mesh> {
     let mut geometry = Geometry::new(camera_can_collide_to, false, false, label);
     let (positions, indices) = create_tiled_mesh(width, height);
 
-    geometry.set_indices(indices.to_vec(), device);
+    geometry.set_indices(indices.to_vec(), gpu);
     geometry.set_vertices(VertexKind::PositionAndNormalAndUV(positions));
 
     let label: String = String::from("quad_mesh");

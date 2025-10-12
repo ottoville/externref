@@ -8,6 +8,7 @@ use crate::renderbundle::RenderBundle;
 use externref::{externref, Resource};
 
 pub struct JSBuffer(());
+pub struct BufferRef(pub Resource<JSBuffer>);
 
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_buffer(
@@ -17,11 +18,12 @@ pub unsafe fn create_buffer(
     _label_len: usize,
     _usages: u32,
     _mapped: bool,
-    _owned_by_js: bool,
 ) -> Resource<JSBuffer> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
+#[cfg(not(target_arch = "wasm32"))]
+unsafe fn destroy(_buffer: &Resource<JSBuffer>) {}
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
@@ -35,7 +37,6 @@ extern "C" {
         label_len: usize,
         usages: u32,
         mapped: bool,
-        owned_by_js: bool,
     ) -> Resource<JSBuffer>;
 }
 
@@ -45,6 +46,7 @@ extern "C" {
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn map_state(buffer: &Resource<JSBuffer>) -> u32;
+    fn destroy(buffer: &Resource<JSBuffer>);
 }
 
 #[no_mangle]
@@ -52,7 +54,7 @@ extern "C" {
 pub unsafe extern "C" fn get_raw_buffer(
     buffer: *const GPUBuffer<false, false, true>,
 ) -> &'static Resource<JSBuffer> {
-    &(*buffer).externref
+    &(&(*buffer).externref).0
 }
 
 pub struct GPUBuffer<
@@ -67,9 +69,8 @@ pub struct GPUBuffer<
     const INDIRECT: bool = false,
     const QUERY_RESOLVE: bool = false,
 > {
-    pub externref: Arc<Resource<JSBuffer>>,
+    pub externref: Arc<BufferRef>,
     pub label: String,
-    pub owned_by_js: bool,
     pub size: usize,
     pub buffer_bindings: Vec<Weak<Mutex<BufferBinding>>>,
     pub renderbundles: Vec<Weak<Mutex<Option<RenderBundle>>>>,
@@ -133,13 +134,7 @@ impl<
         }
         return usages;
     }
-    fn inner_new(
-        device: &Resource<JSDevice>,
-        size: usize,
-        label: String,
-        owned_by_js: bool,
-        mapped: bool,
-    ) -> Self {
+    fn inner_new(device: &Resource<JSDevice>, size: usize, label: String, mapped: bool) -> Self {
         let externref = unsafe {
             create_buffer(
                 device,
@@ -148,19 +143,17 @@ impl<
                 label.len(),
                 Self::usages(),
                 mapped,
-                owned_by_js,
             )
         };
         GPUBuffer {
-            externref: Arc::new(externref),
+            externref: Arc::new(BufferRef(externref)),
             label,
-            owned_by_js,
             size,
             buffer_bindings: Vec::new(),
             renderbundles: Vec::new(),
         }
     }
-    pub fn new(device: &Resource<JSDevice>, size: usize, label: String, owned_by_js: bool) -> Self {
+    pub fn new(device: &Resource<JSDevice>, size: usize, label: String) -> Self {
         return GPUBuffer::<
             MAP_READ,
             MAP_WRITE,
@@ -172,13 +165,12 @@ impl<
             STORAGE,
             INDIRECT,
             QUERY_RESOLVE,
-        >::inner_new(device, size, label, owned_by_js, false);
+        >::inner_new(device, size, label, false);
     }
     pub fn new_mapped(
         device: &Resource<JSDevice>,
         size: usize,
         label: String,
-        owned_by_js: bool,
     ) -> MappedGPUBuffer<
         MAP_READ,
         MAP_WRITE,
@@ -191,12 +183,12 @@ impl<
         INDIRECT,
         QUERY_RESOLVE,
     > {
-        return MappedGPUBuffer::new(Self::inner_new(device, size, label, owned_by_js, true));
+        return MappedGPUBuffer::new(Self::inner_new(device, size, label, true));
     }
     pub fn map_state(&self) -> u32 {
         #[cfg(target_arch = "wasm32")]
         unsafe {
-            map_state(&self.externref)
+            map_state(&self.externref.0)
         }
 
         #[cfg(not(target_arch = "wasm32"))]
@@ -216,7 +208,7 @@ impl<
     }
     pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: usize) {
         self.size = size;
-        self.externref = Arc::new(unsafe {
+        self.externref = Arc::new(BufferRef(unsafe {
             create_buffer(
                 device,
                 size,
@@ -224,18 +216,14 @@ impl<
                 self.label.len(),
                 Self::usages(),
                 false,
-                self.owned_by_js,
             )
-        });
+        }));
         self.make_dirty();
     }
-    pub fn take_externref(self) -> Arc<Resource<JSBuffer>> {
+    pub fn take_externref(self) -> Arc<BufferRef> {
         self.externref
     }
-    pub fn replace_externref(
-        &mut self,
-        externref: Arc<Resource<JSBuffer>>,
-    ) -> Arc<Resource<JSBuffer>> {
+    pub fn replace_externref(&mut self, externref: Arc<BufferRef>) -> Arc<BufferRef> {
         self.make_dirty();
         return std::mem::replace(&mut self.externref, externref);
     }
@@ -243,5 +231,10 @@ impl<
         self.replace_externref(buffer.externref);
         self.size = buffer.size;
         self.make_dirty();
+    }
+}
+impl Drop for BufferRef {
+    fn drop(&mut self) {
+        unsafe { destroy(&self.0) };
     }
 }

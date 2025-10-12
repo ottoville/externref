@@ -4,11 +4,11 @@ use std::sync::{Arc, Weak};
 
 use crate::bindgroup::bindgroup_trait::BindGroupTrait;
 use crate::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
+use crate::buffer::buffer::BufferRef;
 use crate::device::{create_bind_group, JSDevice};
 use externref::Resource;
 
 use crate::bindgroup::bindgroup_resources::BindGroupResources;
-use crate::buffer::buffer::JSBuffer;
 use crate::bufferbinding::BufferBinding;
 use crate::renderbundle::RenderBundle;
 
@@ -29,7 +29,7 @@ pub unsafe extern "C" fn iterate_bindings(
             let buffer = binding.buffer.lock().unwrap();
             return BUFFER_BINDING.with(|buffer_binding| {
                 buffer_binding.set([
-                    ptr::read(buffer.externref() as *const Resource<JSBuffer> as *const usize),
+                    ptr::read(buffer.externref() as *const BufferRef as *const usize),
                     binding.offset,
                     match binding.size {
                         Some(size) => size.get(),
@@ -120,5 +120,3 @@ impl<const N: usize> BindGroup<N> {
         return extenref_resources.clone();
     }
 }
-
-

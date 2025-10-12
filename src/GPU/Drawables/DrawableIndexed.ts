@@ -44,6 +44,7 @@ export class DrawableIndexed<
       this.#firstIndex,
       this.#baseVertex,
       this.firstInstance,
+      engine.gpu!.gpu,
     );
   }
 }

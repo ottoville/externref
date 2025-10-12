@@ -1,18 +1,15 @@
-use std::sync::{Arc, Mutex, Weak};
-
-use externref::Resource;
-
 use crate::{
-    buffer::buffer::{GPUBuffer, JSBuffer},
+    buffer::buffer::{BufferRef, GPUBuffer},
     bufferbinding::BufferBinding,
 };
+use std::sync::{Arc, Mutex, Weak};
 
 pub trait BindGroupBindable: BindGroupBindableMarker {}
 pub trait BindGroupBindableMarker {
     fn add_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>);
-    fn externref(&self) -> &Resource<JSBuffer>;
+    fn externref(&self) -> &BufferRef;
     fn size(&self) -> usize;
-    fn externref_arc(&self) -> Arc<Resource<JSBuffer>>;
+    fn externref_arc(&self) -> Arc<BufferRef>;
 }
 impl<
         const MAP_READ: bool,
@@ -43,14 +40,14 @@ impl<
         self.buffer_bindings.push(bind_group);
     }
 
-    fn externref(&self) -> &Resource<JSBuffer> {
+    fn externref(&self) -> &BufferRef {
         &self.externref
     }
 
     fn size(&self) -> usize {
         self.size
     }
-    fn externref_arc(&self) -> Arc<Resource<JSBuffer>> {
+    fn externref_arc(&self) -> Arc<BufferRef> {
         self.externref.clone()
     }
 }

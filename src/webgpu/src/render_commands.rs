@@ -2,6 +2,7 @@ use std::num::NonZeroUsize;
 use std::ptr;
 use std::sync::Arc;
 
+use crate::buffer::buffer::BufferRef;
 use crate::buffer::buffer::GPUBuffer;
 use crate::buffer::buffer::JSBuffer;
 use crate::externref_trait::HaveExternref;
@@ -50,7 +51,7 @@ extern "C" {
 }
 
 pub trait RenderCommands<T>: HaveExternref<T> {
-    fn buffers(&mut self) -> &mut Vec<Arc<Resource<JSBuffer>>>;
+    fn buffers(&mut self) -> &mut Vec<Arc<BufferRef>>;
     fn after_set_buffer(&mut self, buffer: &mut GPUBuffer<false, false, false, false, true>);
     fn draw_indexed(
         &self,
@@ -100,7 +101,7 @@ pub trait RenderCommands<T>: HaveExternref<T> {
             Some(s) => s.get(),
             None => buffer.size,
         };
-        unsafe { set_indexbuffer(ptr, &buffer.externref, index_format, offset, buffer_size) };
+        unsafe { set_indexbuffer(ptr, &buffer.externref.0, index_format, offset, buffer_size) };
         self.buffers().push(buffer.externref.clone());
         self.after_set_buffer(buffer);
     }

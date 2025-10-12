@@ -79,7 +79,7 @@ pub unsafe extern "C" fn create_mapped_gpu_buffer_copysrc(
     label_cap: usize,
 ) -> *const MappedGPUBuffer<false, false, true> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new_mapped(device, length, label, true)))
+    Box::into_raw(Box::new(GPUBuffer::new_mapped(device, length, label)))
 }
 
 impl<
@@ -125,13 +125,13 @@ impl<
     }
     pub fn get_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
         unsafe {
-            get_mapped_range(&self.0.externref, ptr, size, buffer_offset);
+            get_mapped_range(&self.0.externref.0, ptr, size, buffer_offset);
         }
     }
     pub fn get_mapped_range<T>(&self, data: &mut T, buffer_offset: usize) {
         unsafe {
             get_mapped_range(
-                &self.0.externref,
+                &self.0.externref.0,
                 data as *const T as usize,
                 size_of::<T>(),
                 buffer_offset,
@@ -140,13 +140,13 @@ impl<
     }
     pub fn set_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
         unsafe {
-            set_mapped_range(&self.0.externref, ptr, size, buffer_offset);
+            set_mapped_range(&self.0.externref.0, ptr, size, buffer_offset);
         }
     }
     pub fn set_mapped_range<T>(&self, data: &T, buffer_offset: usize) {
         unsafe {
             set_mapped_range(
-                &self.0.externref,
+                &self.0.externref.0,
                 data as *const T as usize,
                 size_of::<T>(),
                 buffer_offset,
@@ -168,7 +168,7 @@ impl<
         QUERY_RESOLVE,
     > {
         unsafe {
-            unmap(&self.0.externref);
+            unmap(&self.0.externref.0);
         }
         self.0
     }

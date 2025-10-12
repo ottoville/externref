@@ -2,7 +2,10 @@ use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListInde
 use core::f32;
 
 use crate::{
-    engine::Engine2, gpu::gpu::GPU, mesh::{JSMesh, Mesh, ENGINE}, meshes::r#box::create_box_geometry
+    engine::Engine2,
+    gpu::gpu::GPU,
+    mesh::{JSMesh, Mesh, ENGINE},
+    meshes::r#box::create_box_geometry,
 };
 use externref::{externref, Resource};
 use rapier3d::{
@@ -40,9 +43,9 @@ pub unsafe extern "C" fn move_character(
 #[no_mangle]
 pub unsafe extern "C" fn new_character_mesh(
     scenes: f32,
-    gpu: *mut GPU
+    gpu: *mut GPU,
 ) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
-    let geometry = create_box_geometry(&(*gpu).device);
+    let geometry = create_box_geometry(&mut (*gpu));
     let label = String::from("Human");
     let mut meshes = ENGINE.meshes.lock().unwrap();
     let mesh_id = Mesh::new(0.0, 0.0, scenes, 0, label, None, None, &mut meshes, false);

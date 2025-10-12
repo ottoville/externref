@@ -1,6 +1,5 @@
 import { Rust_Iterator, rust_iterator_to_js } from '../utils.js';
 import type { Engine } from '../engine.js';
-import { Externref } from '../externref.js';
 import { BGLayout, ShaderStage } from '../webgpu-ts/index.js';
 import {
   textureFormatMapping,
@@ -49,9 +48,7 @@ export const DeviceExports = {
         return {
           binding: i,
           resource: {
-            buffer: (
-              engine.rust.externrefs.get(index!) as Externref<false, GPUBuffer>
-            ).externref,
+            buffer: engine.rust.externrefs.get(index!) as GPUBuffer,
             offset: offset!,
             size: size!,
           },
@@ -127,20 +124,16 @@ export const DeviceExports = {
     label_len: number,
     usage: number,
     mappedAtCreation: boolean,
-    ownedByJS: boolean,
   ) {
     const label = textDecoder.decode(
       new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
     );
-    return new Externref(
-      ownedByJS,
-      device.createBuffer({
-        label,
-        mappedAtCreation,
-        size,
-        usage,
-      }),
-    );
+    return device.createBuffer({
+      label,
+      mappedAtCreation,
+      size,
+      usage,
+    });
   },
   create_gpu_command_encoder(
     device: GPUDevice,

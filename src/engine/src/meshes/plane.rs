@@ -18,7 +18,7 @@ pub unsafe extern "C" fn create_plane_mesh(
         Mesh::new(0.0, 0.0, 1.0, 0, label, None, None, &mut meshes, false);
     let (positions, indices) = create_tiled_mesh(100, 100);
     let mut geometry = Geometry::new(false, false, false, "plane_mesh_geometry".to_string());
-    geometry.set_indices(indices.to_vec(), &(*gpu).device);
+    geometry.set_indices(indices.to_vec(), &mut (*gpu));
     geometry.set_vertices(VertexKind::PositionAndNormalAndUV(positions));
 
     let mesh = &mut meshes[&mesh_id];

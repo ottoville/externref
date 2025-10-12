@@ -9,7 +9,7 @@ use externref::{externref, Resource};
 use webgpu::{
     bindgroup::{bindgroup::BindGroup, bindgroup_resources::BindGroupResources},
     binding_commands::BindingCommands,
-    buffer::buffer::{GPUBuffer, JSBuffer},
+    buffer::buffer::{BufferRef, GPUBuffer},
     device::JSDevice,
     externref_trait::HaveExternref,
     render_commands::RenderCommands,
@@ -151,7 +151,7 @@ pub struct RenderBundleEncoder {
     pub renderbundle: Arc<Mutex<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
     pub bindgroups: Vec<Arc<BindGroupResources>>,
-    pub buffers: Vec<Arc<Resource<JSBuffer>>>,
+    pub buffers: Vec<Arc<BufferRef>>,
     record: Resource<JSFunction>,
 }
 impl RenderBundleEncoder {
@@ -283,7 +283,7 @@ impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
     }
 }
 impl RenderCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
-    fn buffers(&mut self) -> &mut Vec<Arc<Resource<JSBuffer>>> {
+    fn buffers(&mut self) -> &mut Vec<Arc<BufferRef>> {
         &mut self.buffers
     }
 

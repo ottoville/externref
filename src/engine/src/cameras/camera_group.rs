@@ -32,7 +32,6 @@ impl CameraGroup {
                 device,
                 16,
                 String::from("screen_buffer"),
-                false,
             );
         let data = [
             width.get() as f32,

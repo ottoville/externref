@@ -1,6 +1,4 @@
 import type { Engine } from '../engine.js';
-import { Externref } from '../externref.js';
-
 declare const engine: Engine;
 
 export type BufferInterface = {
@@ -19,14 +17,15 @@ export type BufferInterface = {
     label_cap: number,
   ): rust_pointer<'GPUBuffer'>;
 
-  get_raw_buffer(
-    buffer: rust_pointer<'GPUBuffer'>,
-  ): Externref<false, GPUBuffer>;
+  get_raw_buffer(buffer: rust_pointer<'GPUBuffer'>): GPUBuffer;
 };
 
 export const BufferExports = {
+  destroy(buffer: GPUBuffer) {
+    buffer.destroy();
+  },
   get_mapped_range(
-    { externref: buffer }: Externref<boolean, GPUBuffer>,
+    buffer: GPUBuffer,
     offset: number,
     size: number,
     buffer_offset: GPUSize64,
@@ -42,9 +41,7 @@ export const BufferExports = {
     rust_buffer: rust_pointer<'buffer'>,
     cb: rust_pointer<'fn'>,
   ) {
-    const { externref: buffer } = engine.rust.externrefs.get(
-      index,
-    ) as Externref<boolean, GPUBuffer>;
+    const buffer = engine.rust.externrefs.get(index) as GPUBuffer;
     buffer
       .mapAsync(GPUMapMode.READ, offset, size)
       .then(() => {
@@ -58,7 +55,7 @@ export const BufferExports = {
         }
       });
   },
-  map_state({ externref: buffer }: Externref<boolean, GPUBuffer>) {
+  map_state(buffer: GPUBuffer) {
     const mapState = buffer.mapState;
     if (mapState === 'unmapped') return 0;
     if (mapState === 'pending') return 1;
@@ -71,9 +68,7 @@ export const BufferExports = {
     rust_buffer: rust_pointer<'buffer'>,
     cb: rust_pointer<'fn'>,
   ) {
-    const { externref: buffer } = engine.rust.externrefs.get(
-      index,
-    ) as Externref<boolean, GPUBuffer>;
+    const buffer = engine.rust.externrefs.get(index) as GPUBuffer;
 
     buffer
       .mapAsync(GPUMapMode.WRITE, offset, size)
@@ -89,7 +84,7 @@ export const BufferExports = {
       });
   },
   set_mapped_range(
-    { externref: buffer }: Externref<boolean, GPUBuffer>,
+    buffer: GPUBuffer,
     offset: number,
     size: number,
     buffer_offset: GPUSize64,
@@ -97,7 +92,7 @@ export const BufferExports = {
     const data = new Uint8Array(engine.rust.memory.buffer, offset, size);
     new Uint8Array(buffer.getMappedRange(buffer_offset, size)).set(data);
   },
-  unmap({ externref: buffer }: Externref<boolean, GPUBuffer>) {
+  unmap(buffer: GPUBuffer) {
     buffer.unmap();
   },
 };

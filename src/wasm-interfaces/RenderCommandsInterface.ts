@@ -1,4 +1,3 @@
-import { Externref } from 'externref.js';
 import type { Engine } from '../engine.js';
 declare const engine: Engine;
 
@@ -24,7 +23,7 @@ export const RenderCommandsInterface = {
   },
   set_indexbuffer(
     resource_index: number,
-    { externref: buffer }: Externref<boolean, GPUBuffer>,
+    buffer: GPUBuffer,
     indexFormat: 16 | 32,
     offset: GPUSize64,
     size: GPUSize64,

@@ -487,7 +487,7 @@ TODO
           commandEncoder.copyBufferToBuffer(
             this.terrainPositionAndUvsAndNormalsGPU.buffer, // source buffer
             0,
-            engine.rust.get_raw_buffer(gpuReadBufferPositions).externref, //destination buffer
+            engine.rust.get_raw_buffer(gpuReadBufferPositions), //destination buffer
             0,
           );
           var gpuReadBufferIndices =
@@ -499,7 +499,7 @@ TODO
           commandEncoder.copyBufferToBuffer(
             terrainIndicesGPU.buffer, // source buffer
             0,
-            engine.rust.get_raw_buffer(gpuReadBufferIndices).externref, //destination buffer
+            engine.rust.get_raw_buffer(gpuReadBufferIndices), //destination buffer
             0,
           );
 
@@ -538,7 +538,7 @@ TODO
           commandEncoder.copyBufferToBuffer(
             this.terrainPositionAndUvsAndNormalsGPU.buffer, // source buffer
             0,
-            engine.rust.get_raw_buffer(gpuReadBufferPositions).externref, //destination buffer
+            engine.rust.get_raw_buffer(gpuReadBufferPositions), //destination buffer
             0,
           );
 
@@ -569,7 +569,7 @@ TODO
           commandEncoder.copyBufferToBuffer(
             terrainIndicesGPU.buffer, // source buffer
             0,
-            engine.rust.get_raw_buffer(gpuReadBufferIndices).externref, //destination buffer
+            engine.rust.get_raw_buffer(gpuReadBufferIndices), //destination buffer
             0,
           );
           const gpuCommands = commandEncoder.finish();

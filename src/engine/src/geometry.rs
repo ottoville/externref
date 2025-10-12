@@ -1,7 +1,6 @@
 use std::{cell::Cell, num::NonZeroUsize, rc::Rc, sync::atomic::AtomicU32};
 
 use collider::ColliderPlane;
-use externref::Resource;
 use logger::LoggerArray;
 use rapier3d::{
     geometry::{Collider, ColliderBuilder},
@@ -10,13 +9,13 @@ use rapier3d::{
     pipeline::ActiveEvents,
 };
 use terramath::{CrossProduct, Plane, Vec3wgslF32, VectorMath, VectorMathF32};
-use webgpu::{buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer}, device::JSDevice};
+use webgpu::buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer};
 
 pub use crate::boundingbox::BoundingBox;
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 
 use crate::{
-    gpu::gpu::{serialize_terrain, GPU},
+    gpu::gpu::{serialize_terrain, MeshGPU, GPU},
     indices::Indices,
     math2::Vec2wgslF32,
     mesh::{Mesh, ENGINE},
@@ -88,7 +87,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
     mesh_id: *mut ExplicitGenerationalFreeListIndex<Mesh>,
     indices_buffer: *mut GPUBuffer<true, false, false, true>,
     vertices_buffer: *mut GPUBuffer<true, false, false, true>,
-    gpu: *mut GPU
+    gpu: *mut GPU,
 ) {
     let gate = Rc::new(Cell::new(false));
     let gate2 = gate.clone();
@@ -114,12 +113,12 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
         0,
         None,
         Box::into_raw(Box::new(
-           move |buffer: MappedGPUBuffer<true, false, false, true>| {
+            move |buffer: MappedGPUBuffer<true, false, false, true>| {
                 let mut indices: Vec<usize> = vec![0; buffer.size / 4];
                 buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
                 let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
                 let geometry = mesh.geometry.as_mut().unwrap();
-                geometry.set_indices(indices, &(*gpu).device);
+                geometry.set_indices(indices, &mut (*gpu));
                 // Execute callback if gate was "true", set it to "true" if it was "false"
                 gate.set(gate.get().then(|| then(mesh)).is_none());
             },
@@ -175,7 +174,7 @@ pub unsafe extern "C" fn create_legacy_terrain_geometry(
             uv: Vec2wgslF32 { vec: [0.0; 2] },
         },
     ]));
-    geometry.set_indices(vec![0, 0, 0], &(*gpu).device);
+    geometry.set_indices(vec![0, 0, 0], &mut (*gpu));
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(geometry);
     Box::into_raw(Box::new(mesh_id))
@@ -229,6 +228,7 @@ pub struct Geometry {
     pub last_collider_transform_matrix: [[f32; 4]; 4],
     pub static_faces: bool, // Used for terrain
     pub camera_can_collide_to: bool,
+    pub mesh_gpu: Option<ExplicitGenerationalFreeListIndex<MeshGPU>>,
 }
 
 fn dedup_index(old: usize, new: usize, indices: &mut Vec<usize>) {
@@ -377,6 +377,7 @@ impl<'vert> Geometry {
             label,
             collisions_transform_matrix: [[0.0; 4]; 4],
             last_collider_transform_matrix: [[0.0; 4]; 4],
+            mesh_gpu: None,
         }
     }
     pub fn create_faces(&mut self, override_positions_count: Option<NonZeroUsize>) {
@@ -567,28 +568,34 @@ impl<'vert> Geometry {
     /**
      * Set indices to geometry
      */
-    pub fn set_indices(&mut self, indices: Vec<usize>, device: &Resource<JSDevice>) {
+    pub fn set_indices(&mut self, indices: Vec<usize>, gpu: &mut GPU) {
         let mut label = String::from("index_");
         label.push_str(&self.label);
 
         let mapped = GPUBuffer::<false, false, false, false, true>::new_mapped(
-            &device,
+            &gpu.device,
             indices.len() * 4,
             label,
-            false,
         );
         mapped.set_mapped_range_raw(indices.as_ptr() as usize, indices.len() * 4, 0);
 
+        match &mut self.mesh_gpu {
+            Some(mesh_gpu_index) => {
+                let mesh_gpu = gpu.meshes.get_mut(&mesh_gpu_index).unwrap();
+                mesh_gpu.indices.replace(mapped.unmap());
+            }
+            None => {
+                self.mesh_gpu = Some(gpu.meshes.insert(MeshGPU {
+                    indices: mapped.unmap(),
+                }));
+            }
+        }
         match &mut self.indices {
             Some(inds) => {
                 inds.indices = indices;
-                inds.gpu_buffer.replace(mapped.unmap());
             }
             None => {
-                self.indices = Some(Indices {
-                    indices,
-                    gpu_buffer: mapped.unmap(),
-                });
+                self.indices = Some(Indices { indices });
             }
         }
         self.faces_dirty = true;
@@ -596,6 +603,15 @@ impl<'vert> Geometry {
         if self.camera_can_collide_to {
             self.allocate_collider_planes();
             self.rebuild_triangle_planes();
+        }
+    }
+}
+impl Drop for Geometry {
+    fn drop(&mut self) {
+        // Disabled in test because tests set up multiple GPU instances simultaniously messing up indices
+        #[cfg(not(test))]
+        if let Some(mesh_gpu) = &self.mesh_gpu {
+            ENGINE.dropped_meshes.lock().unwrap().push(mesh_gpu.clone());
         }
     }
 }

@@ -1,9 +1,7 @@
 use std::sync::atomic::AtomicU32;
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
-use externref::Resource;
 use terramath::Vec3wgslF32;
-use webgpu::device::JSDevice;
 
 use crate::{
     gpu::gpu::GPU,
@@ -128,14 +126,14 @@ pub unsafe extern "C" fn create_rtp_mesh(
         &mut meshes,
         camera_can_collide_to,
     );
-    let geometry = create_rtp_geometry(&(*gpu).device);
+    let geometry = create_rtp_geometry(&mut (*gpu));
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))
 }
-pub fn create_rtp_geometry(device: &Resource<JSDevice>) -> Geometry {
+pub fn create_rtp_geometry(gpu: &mut GPU) -> Geometry {
     let mut geometry = Geometry::new(true, false, false, "rtp_geometry".to_string());
-    geometry.set_indices(RTP_INDICES.to_vec(), device);
+    geometry.set_indices(RTP_INDICES.to_vec(), gpu);
     geometry.set_vertices(VertexKind::PositionAndNormal(create_rtp_vertices()));
     return geometry;
 }
