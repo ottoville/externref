@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use externref::Resource;
@@ -28,7 +30,7 @@ impl InnerLights {
     }
 }
 pub struct Lights {
-    pub buffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, false, true>>>,
+    pub buffer: Rc<RefCell<GPUBuffer<false, false, false, true, false, false, false, true>>>,
     label: String,
     pub lights: Arc<Mutex<InnerLights>>,
 }
@@ -41,7 +43,7 @@ impl Lights {
     ) -> Lights {
         Lights {
             lights: inner_lights,
-            buffer: Arc::new(Mutex::new(GPUBuffer::new(device, 16, label.to_string()))),
+            buffer: Rc::new(RefCell::new(GPUBuffer::new(device, 16, label.to_string()))),
             label,
         }
     }
@@ -58,7 +60,7 @@ impl Lights {
         }
         inner_lights.dirty = false;
         inner_lights.lights[0] = FreeIndexIndex(inner_lights.lights.len() - 1);
-        let mut buffer = self.buffer.lock().unwrap();
+        let mut buffer = self.buffer.borrow_mut();
         if inner_lights.lights.capacity() * 4 > buffer.size {
             buffer.resize_zeroed(device, inner_lights.lights.capacity() * 4);
         }
@@ -149,7 +151,7 @@ fn test_lights() {
             let inner_lights = lights.lights.lock().unwrap();
             assert_eq!(inner_lights.dirty, false);
         }
-        assert_eq!(lights.buffer.lock().as_ref().unwrap().size, 16);
+        assert_eq!(lights.buffer.borrow().size, 16);
         {
             let mut inner_lights = lights.lights.lock().unwrap();
             inner_lights.push(FreeIndexIndex(2));
@@ -158,7 +160,7 @@ fn test_lights() {
         }
 
         lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
-        assert_eq!(lights.buffer.lock().as_ref().unwrap().size, 32);
+        assert_eq!(lights.buffer.borrow().size, 32);
         assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
         let queue = Queue {
             externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),

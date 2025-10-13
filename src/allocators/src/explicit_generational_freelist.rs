@@ -62,7 +62,7 @@ impl<T> ExplicitGenerationalFreeList<T> {
             next_free: 0,
         }
     }
-    pub fn insert(&mut self, value: T) -> ExplicitGenerationalFreeListIndex<T> {
+    pub fn insert(&mut self, value: T) -> ExplicitGenerationalFreeListIndex<fn() ->T> {
         let idx = self.next_free;
         let generation = if idx == self.entries.len() as u32 {
             self.next_free += 1;
@@ -86,12 +86,12 @@ impl<T> ExplicitGenerationalFreeList<T> {
                 freeslot.generation
             }
         };
-        return ExplicitGenerationalFreeListIndex::<T> {
+        return ExplicitGenerationalFreeListIndex::<fn() ->T> {
             idx: InnerIndex { idx, generation },
             phantom: PhantomData,
         };
     }
-    pub fn remove(&mut self, index: ExplicitGenerationalFreeListIndex<T>) -> bool {
+    pub fn remove(&mut self, index: ExplicitGenerationalFreeListIndex<fn() ->T>) -> bool {
         let entry = unsafe { self.entries.get_unchecked_mut(index.idx.idx as usize) };
         if entry.generation == index.idx.generation {
             entry.next_free = Some(self.next_free);
@@ -117,7 +117,7 @@ impl<T> ExplicitGenerationalFreeList<T> {
             return Some(&mut *entry.data);
         })
     }
-    pub fn get(&self, index: &ExplicitGenerationalFreeListIndex<T>) -> Option<&T> {
+    pub fn get(&self, index: &ExplicitGenerationalFreeListIndex<fn() ->T>) -> Option<&T> {
         unsafe {
             let entry = self.entries.get_unchecked(index.idx.idx as usize);
             if entry.generation == index.idx.generation {
@@ -126,7 +126,7 @@ impl<T> ExplicitGenerationalFreeList<T> {
             return None;
         }
     }
-    pub fn get_mut(&mut self, index: &ExplicitGenerationalFreeListIndex<T>) -> Option<&mut T> {
+    pub fn get_mut(&mut self, index: &ExplicitGenerationalFreeListIndex<fn() ->T>) -> Option<&mut T> {
         unsafe {
             let entry = self.entries.get_unchecked_mut(index.idx.idx as usize);
             if entry.generation == index.idx.generation {
@@ -139,14 +139,14 @@ impl<T> ExplicitGenerationalFreeList<T> {
         self.entries.len()
     }
 }
-impl<T> Index<&ExplicitGenerationalFreeListIndex<T>> for ExplicitGenerationalFreeList<T> {
+impl<T> Index<&ExplicitGenerationalFreeListIndex<fn() ->T>> for ExplicitGenerationalFreeList<T> {
     type Output = T;
-    fn index(&self, index: &ExplicitGenerationalFreeListIndex<T>) -> &Self::Output {
+    fn index(&self, index: &ExplicitGenerationalFreeListIndex<fn() ->T>) -> &Self::Output {
         self.get(index).unwrap()
     }
 }
-impl<T> IndexMut<&ExplicitGenerationalFreeListIndex<T>> for ExplicitGenerationalFreeList<T> {
-    fn index_mut(&mut self, index: &ExplicitGenerationalFreeListIndex<T>) -> &mut Self::Output {
+impl<T> IndexMut<&ExplicitGenerationalFreeListIndex<fn() ->T>> for ExplicitGenerationalFreeList<T> {
+    fn index_mut(&mut self, index: &ExplicitGenerationalFreeListIndex<fn() ->T>) -> &mut Self::Output {
         self.get_mut(index).unwrap()
     }
 }

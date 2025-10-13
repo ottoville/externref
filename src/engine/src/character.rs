@@ -17,7 +17,7 @@ use terramath::VectorMath;
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn set_mesh_externref(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     externref: Resource<JSMesh>,
 ) {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn set_mesh_externref(
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn move_character(
-    character_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    character_mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     dt: f32,
     x: f32,
     y: f32,
@@ -44,7 +44,7 @@ pub unsafe extern "C" fn move_character(
 pub unsafe extern "C" fn new_character_mesh(
     scenes: f32,
     gpu: *mut GPU,
-) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *const ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let geometry = create_box_geometry(&mut (*gpu));
     let label = String::from("Human");
     let mut meshes = ENGINE.meshes.lock().unwrap();
@@ -65,7 +65,7 @@ pub unsafe extern "C" fn new_character_mesh(
 
 #[no_mangle]
 pub unsafe extern "C" fn get_impulse_from_id(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> *const f32 {
     ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .character
@@ -81,7 +81,7 @@ pub struct Character {
 impl Engine2 {
     pub fn move_character(
         &mut self,
-        character_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+        character_mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
         dt: f32,
         x: f32,
         y: f32,

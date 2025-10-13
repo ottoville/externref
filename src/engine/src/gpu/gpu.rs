@@ -286,8 +286,8 @@ pub unsafe extern "C" fn init_gpu(
         [&clusters, &screentoview],
     );
 
-    let gpu_buffer: Arc<Mutex<GPUBuffer<false, false, true, true, false, false, true, true>>> =
-        Arc::new(Mutex::new(GPUBuffer::new(
+    let gpu_buffer: Rc<RefCell<GPUBuffer<false, false, true, true, false, false, true, true>>> =
+        Rc::new(RefCell::new(GPUBuffer::new(
             &device,
             GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
             String::from("GPUMeshes"),
@@ -330,7 +330,7 @@ pub unsafe extern "C" fn init_gpu(
             point_lights_buffer_binding,
         ],
     );
-    let timebuffer = Arc::new(Mutex::new(GPUBuffer::new(
+    let timebuffer = Rc::new(RefCell::new(GPUBuffer::new(
         &device,
         8,
         String::from("timeBuffer"),
@@ -417,7 +417,7 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("sizeBindGroup"),
                 &size_bindgroup_layout,
                 [BufferBinding::new(
-                    Arc::new(Mutex::new(screen_dimension_buffer_screen)),
+                    Rc::new(RefCell::new(screen_dimension_buffer_screen)),
                     0,
                     None,
                 )],
@@ -526,7 +526,7 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("sizeBindGroup"),
                 &size_bindgroup_layout,
                 [BufferBinding::new(
-                    Arc::new(Mutex::new(screen_dimension_buffer_screen_water)),
+                    Rc::new(RefCell::new(screen_dimension_buffer_screen_water)),
                     0,
                     None,
                 )],
@@ -588,7 +588,7 @@ pub unsafe extern "C" fn init_gpu(
                 String::from("sizeBindGroup"),
                 &size_bindgroup_layout,
                 [BufferBinding::new(
-                    Arc::new(Mutex::new(screen_dimension_buffer_screen_pick)),
+                    Rc::new(RefCell::new(screen_dimension_buffer_screen_pick)),
                     0,
                     None,
                 )],
@@ -658,7 +658,7 @@ pub unsafe extern "C" fn init_gpu(
             externref: queue,
             pending_command_buffers: Vec::with_capacity(8),
         },
-        gpu_buffer: gpu_buffer,
+        gpu_buffer,
         bind_group_position,
         projections: vec![Arc::new(projection)],
         cameras: ExplicitGenerationalFreeList::new(4),
@@ -680,7 +680,7 @@ pub unsafe extern "C" fn init_gpu(
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn get_bindgroup_index(gpu: *const GPU) -> usize {
-    let externref = &(*gpu).gpu_buffer.lock().unwrap().externref.0;
+    let externref = &(*gpu).gpu_buffer.borrow().externref.0;
     return ptr::read(externref as *const Resource<JSBuffer> as *const usize);
 }
 
@@ -714,7 +714,7 @@ pub struct GPU {
     pub device: Resource<JSDevice>,
     pub queue: Queue,
     pub meshes: ExplicitGenerationalFreeList<MeshGPU>,
-    pub gpu_buffer: Arc<Mutex<GPUBuffer<false, false, true, true, false, false, true, true>>>,
+    pub gpu_buffer: Rc<RefCell<GPUBuffer<false, false, true, true, false, false, true, true>>>,
     pub bind_group_position: Arc<BindGroup<1>>,
     pub projections: Vec<Arc<Projection>>,
     pub cameras: ExplicitGenerationalFreeList<Camera>,
@@ -723,7 +723,7 @@ pub struct GPU {
     pub point_lights: Lights,
     pub directional_lights: Lights,
     pub swap_buffers: SwapBuffers,
-    pub timebuffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, true>>>,
+    pub timebuffer: Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>>,
     pub time: f32,
     pub device_pixel_ratio: f32,
     pub update_clusters_layout: BindGroupLayout<2>,
@@ -759,8 +759,7 @@ impl GPU {
                     .create_buffer(&self.device, aspect_ratio);
                 projection
                     .buffer
-                    .lock()
-                    .unwrap()
+                    .borrow_mut()
                     .replace_externref(new_projection_buffer.take_externref());
             }
         }
@@ -843,7 +842,7 @@ impl GPU {
             temp_buffer.set_mapped_range(&self.time, 0);
             command_encoder.copy_buffer_to_buffer(
                 &**temp_buffer,
-                &*self.timebuffer.lock().unwrap(),
+                &*self.timebuffer.borrow(),
                 0,
                 0,
                 4,
@@ -904,7 +903,7 @@ impl GPU {
                         &self.device,
                         std::mem::size_of::<GPUMesh>() * queue.len(),
                         |temp_buffer| {
-                            let mut wanted_size = { self.gpu_buffer.lock().unwrap().size };
+                            let mut wanted_size = { self.gpu_buffer.borrow().size };
 
                             for (i, mesh_property_m) in queue.iter_mut().enumerate() {
                                 let mut mesh_property = mesh_property_m.lock().unwrap();
@@ -927,7 +926,7 @@ impl GPU {
                                     i * std::mem::size_of::<GPUMesh>(),
                                 );
                             }
-                            let mut gpu_buffer = self.gpu_buffer.lock().unwrap();
+                            let mut gpu_buffer = self.gpu_buffer.borrow_mut();
                             // if MAX_INSTANCES was increased, resize the buffer
                             if gpu_buffer.size < wanted_size {
                                 gpu_buffer.resize(&self.device, &mut command_encoder, wanted_size);
@@ -961,7 +960,7 @@ impl GPU {
             command_encoder = lights_pass.end();
         }
         let gpu_buffer_id = unsafe {
-            let externref = &self.gpu_buffer.lock().unwrap().externref.0;
+            let externref = &self.gpu_buffer.borrow().externref.0;
             ptr::read(externref as *const Resource<JSBuffer> as *const usize)
         };
 
@@ -1115,7 +1114,7 @@ fn test_bindgroup_buffer_resize() {
             String::from("test"),
         );
         let rawbuffer = buffer.externref.clone();
-        let buffer_arc = Arc::new(Mutex::new(buffer));
+        let buffer_arc = Rc::new(RefCell::new(buffer));
         let layout = BindGroupLayout::new(
             &device,
             String::from("test"),
@@ -1150,8 +1149,7 @@ fn test_bindgroup_buffer_resize() {
             .unwrap()
             .clone();
         buffer_arc
-            .lock()
-            .unwrap()
+            .borrow_mut()
             .resize(&device, &mut command_encoder, 64);
         drop(buffer_arc);
 
@@ -1278,7 +1276,7 @@ fn test_bindgroup() {
         let bindgroup = BindGroup::new(
             String::from("test"),
             &layout,
-            [BufferBinding::new(Arc::new(Mutex::new(buffer)), 0, None)],
+            [BufferBinding::new(Rc::new(RefCell::new(buffer)), 0, None)],
         );
         {
             //Externref is not set yet, as it is set lazily
@@ -1313,7 +1311,6 @@ fn test_bindgroup() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),
         );
-        let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
         let mut renderpass_encoder = command_encoder.begin_render_pass(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),

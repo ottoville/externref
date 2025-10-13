@@ -1,11 +1,10 @@
+use crate::bindgroup::bindgroup::BindingsIteratorPtr;
 use crate::bindgroup::bindgroup::JSBindGroup;
 use crate::bindgroup_layout::JSBindGroupLayout;
 use crate::binding_layout::BindingLayout;
-use crate::bufferbinding::BufferBinding;
 use crate::command_encoder::JSCommandEncoder;
 use crate::texture::texture::JSTexture;
 use externref::Resource;
-use std::sync::{Arc, Mutex};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_texture(
@@ -53,7 +52,7 @@ pub unsafe fn create_bind_group(
     _layout: &Resource<JSBindGroupLayout>,
     _label_ptr: usize,
     _label_len: usize,
-    _entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
+    _entries: BindingsIteratorPtr<'_>,
 ) -> Resource<JSBindGroup> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
@@ -89,7 +88,7 @@ extern "C" {
         layout: &Resource<JSBindGroupLayout>,
         label_ptr: usize,
         label_len: usize,
-        entries: *mut std::slice::Iter<'_, Arc<Mutex<BufferBinding>>>,
+        entries: BindingsIteratorPtr<'_>,
     ) -> Resource<JSBindGroup>;
     pub fn create_gpu_command_encoder(
         device: &Resource<JSDevice>,

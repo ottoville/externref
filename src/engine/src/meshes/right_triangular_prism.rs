@@ -108,14 +108,14 @@ pub unsafe extern "C" fn create_rtp_mesh(
     rigid_body: u32,
     camera_can_collide_to: bool,
     gpu: *mut GPU,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut label = String::from("TriangularPrism");
     label.push_str(
         &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
             .to_string(),
     );
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+    let mesh_id = Mesh::new(
         point_light,
         directional_light,
         scenes,

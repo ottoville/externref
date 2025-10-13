@@ -57,7 +57,7 @@ pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry) -> usize {
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     ptr: *mut Plane,
     length: usize,
     cap: usize,
@@ -77,14 +77,14 @@ pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry) -> usize 
 }
 #[no_mangle]
 pub unsafe extern "C" fn have_vertices(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> bool {
     let mesh = &ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.get_geometry().vertices.is_some()
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
-    mesh_id: *mut ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     indices_buffer: *mut GPUBuffer<true, false, false, true>,
     vertices_buffer: *mut GPUBuffer<true, false, false, true>,
     gpu: *mut GPU,
@@ -152,15 +152,14 @@ static ID: AtomicU32 = AtomicU32::new(0);
 pub unsafe extern "C" fn create_legacy_terrain_geometry(
     scenes: f32,
     gpu: *mut GPU,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut label = String::from("Terrain");
     label.push_str(
         &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
             .to_string(),
     );
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> =
-        Mesh::new(0.0, 0.0, scenes, 0, label, None, None, &mut meshes, true);
+    let mesh_id = Mesh::new(0.0, 0.0, scenes, 0, label, None, None, &mut meshes, true);
     let mut geometry = Box::new(Geometry::new(
         true,
         true,
@@ -183,7 +182,7 @@ static UI_ID: AtomicU32 = AtomicU32::new(0);
 #[no_mangle]
 pub unsafe extern "C" fn create_ui_mesh(
     position_count: usize,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     // TODO: prepend actual ui element label
     let mut label = String::from("UIRectangle");
     label.push_str(
@@ -193,8 +192,7 @@ pub unsafe extern "C" fn create_ui_mesh(
     );
 
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> =
-        Mesh::new(0.0, 0.0, 1.0, 0, label, None, None, &mut meshes, false);
+    let mesh_id = Mesh::new(0.0, 0.0, 1.0, 0, label, None, None, &mut meshes, false);
     let geometry = create_ui_geometry(position_count);
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
@@ -228,7 +226,7 @@ pub struct Geometry {
     pub last_collider_transform_matrix: [[f32; 4]; 4],
     pub static_faces: bool, // Used for terrain
     pub camera_can_collide_to: bool,
-    pub mesh_gpu: Option<ExplicitGenerationalFreeListIndex<MeshGPU>>,
+    pub mesh_gpu: Option<ExplicitGenerationalFreeListIndex<fn() -> MeshGPU>>,
 }
 
 fn dedup_index(old: usize, new: usize, indices: &mut Vec<usize>) {

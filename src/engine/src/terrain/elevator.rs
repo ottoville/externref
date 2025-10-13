@@ -19,7 +19,7 @@ pub struct Elevator {
 
 #[no_mangle]
 pub unsafe extern "C" fn create_elevator(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> *mut Elevator {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
     Box::into_raw(Box::new(Elevator::new(mesh.get_geometry_mut())))
@@ -38,7 +38,7 @@ pub unsafe extern "C" fn mouse_position_pointer(elevator_ptr: *const Elevator) -
 #[cfg(target_arch = "wasm32")]
 pub unsafe extern "C" fn elevate(
     elevator_ptr: *mut Elevator,
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     radius: f32,
     height: f32,
 ) {

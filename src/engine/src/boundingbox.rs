@@ -21,17 +21,16 @@ pub const BOUNDING_BOX_INDICES: [usize; 26] = [
 ];
 #[no_mangle]
 pub unsafe extern "C" fn create_bounding_box_mesh(
-    target_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    target_mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     gpu: *mut GPU,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut meshes = ENGINE.meshes.lock().unwrap();
     let target_mesh = &mut meshes[&*target_mesh_id];
     let geometry = create_bounding_box_geometry(target_mesh, &mut (*gpu));
 
     let mut label = String::from("BoundingBox_");
     label.push_str(&target_mesh.label);
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> =
-        Mesh::new(0.0, 0.0, 1.0, 0, label, None, None, &mut meshes, false);
+    let mesh_id = Mesh::new(0.0, 0.0, 1.0, 0, label, None, None, &mut meshes, false);
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
     Box::into_raw(Box::new(mesh_id))

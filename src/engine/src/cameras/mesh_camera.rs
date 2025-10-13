@@ -10,7 +10,7 @@ use super::{
 
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh_camera(
-    mesh_id: *mut ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> *mut MeshCamera {
     Box::into_raw(Box::new(MeshCamera {
         arrow_keys_down: 0,
@@ -61,7 +61,7 @@ pub struct MeshCamera {
     pointer_movement_y: i32,
     angle: f32,
     v_angle: f32,
-    mesh_id: ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 }
 impl MeshCamera {
     fn keydownfunction(&mut self, key: String) {

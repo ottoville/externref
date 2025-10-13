@@ -39,14 +39,14 @@ pub unsafe extern "C" fn create_octasphere(
     half_height: f32,
     half_depth: f32,
     gpu: *mut GPU,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut label = String::from("OctaSphere");
     label.push_str(
         &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
             .to_string(),
     );
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+    let mesh_id = Mesh::new(
         point_light,
         directional_light,
         scenes,

@@ -9,7 +9,7 @@ pub struct DrawableDirect {
 }
 #[no_mangle]
 pub extern "C" fn get_instance_count(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> u32 {
     let mesh = &ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
 
@@ -23,7 +23,7 @@ pub extern "C" fn get_instance_count(
 }
 #[no_mangle]
 pub extern "C" fn get_first_instance(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> u32 {
     let mesh = &ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
 
@@ -37,7 +37,7 @@ pub extern "C" fn get_first_instance(
 }
 #[no_mangle]
 pub extern "C" fn set_instance_count(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     instance_count: u32,
 ) {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
@@ -56,7 +56,7 @@ pub extern "C" fn set_instance_count(
 }
 #[no_mangle]
 pub extern "C" fn set_first_instance(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     first_instance: u32,
 ) {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
@@ -74,7 +74,7 @@ pub extern "C" fn set_first_instance(
     }
 }
 #[no_mangle]
-pub extern "C" fn add_drawble(mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>) {
+pub extern "C" fn add_drawble(mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>) {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
 
     let d = DrawCommand {
@@ -90,7 +90,7 @@ pub extern "C" fn add_drawble(mesh_id: *const ExplicitGenerationalFreeListIndex<
 }
 #[no_mangle]
 pub extern "C" fn set_drawble_direct(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     instance_count: u32,
     first_instance: u32,
 ) {

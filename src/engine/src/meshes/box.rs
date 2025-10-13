@@ -131,9 +131,9 @@ pub unsafe extern "C" fn create_box_mesh(
     rigid_body: u32,
     camera_can_collide_to: bool,
     gpu: *mut GPU,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+    let mesh_id = Mesh::new(
         point_light,
         directional_light,
         scenes,
@@ -175,9 +175,7 @@ fn test_calculate_normals() {
         )
     };
     let mut geometry = Geometry::new(true, false, false, "box_geometry".to_string());
-    geometry.set_indices(BOX_INDICES.to_vec(), unsafe {
-        &mut (*gpu)
-    });
+    geometry.set_indices(BOX_INDICES.to_vec(), unsafe { &mut (*gpu) });
     let vertices = create_box_vertices();
     let vertices2 = create_box_vertices();
     geometry.set_vertices(VertexKind::PositionAndNormal(vertices));

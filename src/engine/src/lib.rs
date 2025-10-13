@@ -145,7 +145,7 @@ pub struct GPUMesh {
     ambient: [f32; 3],
     shadow: f32,
     spotlight: [f32; 4],
-    id: Option<ExplicitGenerationalFreeListIndex<Mesh>>,
+    id: Option<ExplicitGenerationalFreeListIndex<fn() -> Mesh>>,
     point_light_squared: f32,
     directional_light: f32,
     scenes: u32,

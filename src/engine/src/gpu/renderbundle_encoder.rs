@@ -1,7 +1,8 @@
 use std::{
-    cell::LazyCell,
+    cell::{LazyCell, RefCell},
     mem::replace,
-    sync::{Arc, Mutex},
+    rc::Rc,
+    sync::Arc,
 };
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
@@ -148,7 +149,7 @@ pub struct JSRenderBundleEncoder(());
 
 pub struct RenderBundleEncoder {
     pub externref: Arc<Resource<JSRenderBundleEncoder>>,
-    pub renderbundle: Arc<Mutex<Option<RenderBundle>>>,
+    pub renderbundle: Rc<RefCell<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
     pub bindgroups: Vec<Arc<BindGroupResources>>,
     pub buffers: Vec<Arc<BufferRef>>,
@@ -183,7 +184,7 @@ impl RenderBundleEncoder {
         let externref = unsafe { Arc::new(create_renderbundle_encoder(&device, &descriptor)) };
         RenderBundleEncoder {
             externref,
-            renderbundle: Arc::new(Mutex::new(None)),
+            renderbundle: Rc::new(RefCell::new(None)),
             descriptor,
             bindgroups: Vec::new(),
             buffers: Vec::new(),
@@ -202,8 +203,8 @@ impl RenderBundleEncoder {
         F: FnOnce(&RenderBundle),
     {
         {
-            let renderbundle_m = self.renderbundle.lock();
-            if let Some(renderbundle) = renderbundle_m.as_ref().unwrap().as_ref() {
+            let renderbundle_m = self.renderbundle.borrow();
+            if let Some(renderbundle) = renderbundle_m.as_ref() {
                 cb(renderbundle);
                 return;
             };
@@ -252,7 +253,7 @@ impl RenderBundleEncoder {
             externref,
         };
         cb(&renderbundle);
-        let _ = self.renderbundle.lock().unwrap().insert(renderbundle);
+        let _ = self.renderbundle.borrow_mut().insert(renderbundle);
         // Create bundeEncoder ready for next time it is called
         // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.
         unsafe {
@@ -261,7 +262,7 @@ impl RenderBundleEncoder {
     }
     // Only from legacy JS objects
     fn make_dirty(&mut self) {
-        self.renderbundle.lock().unwrap().take();
+        self.renderbundle.borrow_mut().take();
     }
 }
 impl HaveExternref<JSRenderBundleEncoder> for RenderBundleEncoder {
@@ -273,9 +274,8 @@ impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
     fn after_set_bindgroup<const N: usize>(&mut self, bindgroup: &BindGroup<N>) {
         bindgroup
             .renderbundles
-            .lock()
-            .unwrap()
-            .push(Arc::downgrade(&self.renderbundle));
+            .borrow_mut()
+            .push(Rc::downgrade(&self.renderbundle));
     }
 
     fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {
@@ -288,8 +288,6 @@ impl RenderCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
     }
 
     fn after_set_buffer(&mut self, buffer: &mut GPUBuffer<false, false, false, false, true>) {
-        buffer
-            .renderbundles
-            .push(Arc::downgrade(&self.renderbundle));
+        buffer.renderbundles.push(Rc::downgrade(&self.renderbundle));
     }
 }

@@ -33,7 +33,7 @@ pub unsafe extern "C" fn get_point_lights_count(gpu: *mut GPU) -> usize {
 }
 #[no_mangle]
 pub extern "C" fn get_mesh_directional_light(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> f32 {
     let meshes = &ENGINE.meshes.lock().unwrap();
     let mesh = &meshes[unsafe { &*mesh_id }];
@@ -42,7 +42,7 @@ pub extern "C" fn get_mesh_directional_light(
 }
 #[no_mangle]
 pub extern "C" fn get_mesh_point_light(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> f32 {
     let meshes = &ENGINE.meshes.lock().unwrap();
     let mesh = &meshes[unsafe { &*mesh_id }];
@@ -52,7 +52,7 @@ pub extern "C" fn get_mesh_point_light(
 }
 #[no_mangle]
 pub extern "C" fn set_mesh_directional_light(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     light: f32,
 ) {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];
@@ -62,7 +62,7 @@ pub extern "C" fn set_mesh_directional_light(
 }
 #[no_mangle]
 pub extern "C" fn set_mesh_point_light(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     light: f32,
 ) {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[unsafe { &*mesh_id }];

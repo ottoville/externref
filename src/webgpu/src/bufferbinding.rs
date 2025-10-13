@@ -1,32 +1,29 @@
-use std::{
-    num::NonZeroUsize,
-    sync::{Arc, Mutex, Weak},
-};
+use std::{cell::RefCell, num::NonZeroUsize, rc::Rc, sync::Weak};
 
 use crate::bindgroup::bindgroup_trait::BindGroupTrait;
 
 use crate::buffer::bindable::BindGroupBindable;
 
 pub struct BufferBinding {
-    pub buffer: Arc<Mutex<dyn BindGroupBindable + Send>>,
+    pub buffer: Rc<RefCell<dyn BindGroupBindable>>,
     pub offset: usize,
     pub size: Option<NonZeroUsize>,
     pub bindgroups: Vec<Weak<dyn BindGroupTrait>>,
 }
 impl BufferBinding {
     pub fn new(
-        buffer: Arc<Mutex<dyn BindGroupBindable + Send>>,
+        buffer: Rc<RefCell<dyn BindGroupBindable>>,
         offset: usize,
         size: Option<NonZeroUsize>,
-    ) -> Arc<Mutex<BufferBinding>> {
-        Arc::new(Mutex::new(BufferBinding {
+    ) -> Rc<RefCell<BufferBinding>> {
+        Rc::new(RefCell::new(BufferBinding {
             buffer,
             offset,
             size,
             bindgroups: Vec::new(),
         }))
     }
-    pub fn replace_buffer(&mut self, buffer: Arc<Mutex<dyn BindGroupBindable + Send>>) {
+    pub fn replace_buffer(&mut self, buffer: Rc<RefCell<dyn BindGroupBindable>>) {
         self.buffer = buffer;
         self.make_dirty();
     }

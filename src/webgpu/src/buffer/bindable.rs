@@ -2,11 +2,13 @@ use crate::{
     buffer::buffer::{BufferRef, GPUBuffer},
     bufferbinding::BufferBinding,
 };
-use std::sync::{Arc, Mutex, Weak};
+use std::{
+    cell::RefCell, rc::Weak, sync::Arc
+};
 
 pub trait BindGroupBindable: BindGroupBindableMarker {}
 pub trait BindGroupBindableMarker {
-    fn add_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>);
+    fn add_binding(&mut self, bind_group: Weak<RefCell<BufferBinding>>);
     fn externref(&self) -> &BufferRef;
     fn size(&self) -> usize;
     fn externref_arc(&self) -> Arc<BufferRef>;
@@ -36,7 +38,7 @@ impl<
         QUERY_RESOLVE,
     >
 {
-    fn add_binding(&mut self, bind_group: Weak<Mutex<BufferBinding>>) {
+    fn add_binding(&mut self, bind_group: Weak<RefCell<BufferBinding>>) {
         self.buffer_bindings.push(bind_group);
     }
 

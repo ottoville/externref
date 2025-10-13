@@ -590,7 +590,7 @@ impl VectorMath<f32, 4> for [f32; 4] {
         todo!()
     }
     #[cfg(not(target_arch = "wasm32"))]
-    fn transform_to_ref(&self, matrix: &[[f32; 4]; 4], result: &mut Self) {
+    fn transform_to_ref(&self, _matrix: &[[f32; 4]; 4], result: &mut Self) {
         todo!()
     }
     #[cfg(target_arch = "wasm32")]

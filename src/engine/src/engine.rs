@@ -100,13 +100,13 @@ pub struct Engine {
     event_handler: ChannelEventCollector,
     pub character_controller: KinematicCharacterController,
     pub meshes: Mutex<ExplicitGenerationalFreeList<Mesh>>,
-    pub dropped_meshes: Mutex<Vec<ExplicitGenerationalFreeListIndex<MeshGPU>>>,
+    pub dropped_meshes: Mutex<Vec<ExplicitGenerationalFreeListIndex<fn() -> MeshGPU>>>,
     pub point_lights: Arc<Mutex<InnerLights>>,
     pub directional_lights: Arc<Mutex<InnerLights>>,
 }
 pub struct Engine2 {
     pub physic_pipeline: PhysicsPipeline,
-    pub rigid_bodies: HashMap<RigidBodyHandle, ExplicitGenerationalFreeListIndex<Mesh>>,
+    pub rigid_bodies: HashMap<RigidBodyHandle, ExplicitGenerationalFreeListIndex<fn() -> Mesh>>,
     pub gpu_allocated: FreeIndex,
     pub collider_set: ColliderSet,
     pub modified_colliders: Vec<ColliderHandle>,
@@ -119,7 +119,7 @@ pub struct Engine2 {
     pub multi_joint_set: MultibodyJointSet,
     pub rigid_body_set: RigidBodySet,
     pub query_pipeline: QueryPipeline,
-    pub camera_can_collide_meshes: Vec<ExplicitGenerationalFreeListIndex<Mesh>>,
+    pub camera_can_collide_meshes: Vec<ExplicitGenerationalFreeListIndex<fn() -> Mesh>>,
     pub collider: collider::Collider,
 }
 

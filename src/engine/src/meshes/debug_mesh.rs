@@ -8,9 +8,9 @@ use crate::{
 
 #[no_mangle]
 pub unsafe extern "C" fn create_debug_mesh_wireframe(
-    target_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
+    target_mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     gpu: *mut GPU,
-) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *const ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut meshes = ENGINE.meshes.lock().unwrap();
     let target_mesh = &meshes[&*target_mesh_id];
 
@@ -58,8 +58,8 @@ pub unsafe extern "C" fn create_debug_mesh_wireframe(
 
 #[no_mangle]
 pub unsafe extern "C" fn create_debug_mesh_normals(
-    target_mesh_id: *const ExplicitGenerationalFreeListIndex<Mesh>,
-) -> *const ExplicitGenerationalFreeListIndex<Mesh> {
+    target_mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
+) -> *const ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut meshes = ENGINE.meshes.lock().unwrap();
     let target_mesh = &meshes[&*target_mesh_id];
 

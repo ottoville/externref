@@ -1,6 +1,8 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
-use std::{num::NonZero, ptr, sync::Mutex};
+use std::{num::NonZero, ptr};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
@@ -230,9 +232,9 @@ pub struct Camera {
     pub on_update_position:
         Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>, &Resource<JSDevice>) + Send>>,
     projection_view_inverted_is_dirty: bool,
-    buffer: Arc<Mutex<GPUBuffer<false, false, false, true, false, false, true>>>,
+    buffer: Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>>,
     cluster_array_buffer:
-        Arc<Mutex<GPUBuffer<false, false, false, false, false, false, false, true>>>,
+        Rc<RefCell<GPUBuffer<false, false, false, false, false, false, false, true>>>,
     update_view_bind_group: Arc<BindGroup<2>>,
     pub update_clusters_bind_group: Arc<BindGroup<2>>,
     pub uniform_bindgroup: Arc<BindGroup<5>>,
@@ -247,7 +249,7 @@ impl Camera {
         renderpasses: Vec<usize>,
         gpu: &mut GPU,
     ) -> Camera {
-        let camerauniform_buffer = Arc::new(Mutex::new(GPUBuffer::<
+        let camerauniform_buffer = Rc::new(RefCell::new(GPUBuffer::<
             false,
             false,
             false,
@@ -265,7 +267,7 @@ impl Camera {
             0,
             NonZero::new(UNIFORM_BUFFER_SIZE),
         );
-        let cluster_array_buffer = Arc::new(Mutex::new(GPUBuffer::<
+        let cluster_array_buffer = Rc::new(RefCell::new(GPUBuffer::<
             false,
             false,
             false,
@@ -511,7 +513,7 @@ impl Camera {
                 buffer.set_mapped_range(&self.views, 0);
                 command_encoder.copy_buffer_to_buffer(
                     &**buffer,
-                    &(*self.buffer.lock().unwrap()),
+                    &(*self.buffer.borrow()),
                     0,
                     0,
                     128,

@@ -1,5 +1,5 @@
+use std::{cell::RefCell, rc::Weak};
 use std::sync::Arc;
-use std::sync::{Mutex, Weak};
 
 use crate::buffer::mapped_buffer::MappedGPUBuffer;
 use crate::bufferbinding::BufferBinding;
@@ -72,8 +72,8 @@ pub struct GPUBuffer<
     pub externref: Arc<BufferRef>,
     pub label: String,
     pub size: usize,
-    pub buffer_bindings: Vec<Weak<Mutex<BufferBinding>>>,
-    pub renderbundles: Vec<Weak<Mutex<Option<RenderBundle>>>>,
+    pub buffer_bindings: Vec<Weak<RefCell<BufferBinding>>>,
+    pub renderbundles: Vec<Weak<RefCell<Option<RenderBundle>>>>,
 }
 impl<
         const MAP_READ: bool,
@@ -197,12 +197,12 @@ impl<
     pub fn make_dirty(&self) {
         for some_buffer_binding in self.buffer_bindings.iter() {
             if let Some(buffer_binding) = some_buffer_binding.upgrade() {
-                buffer_binding.lock().unwrap().make_dirty();
+                buffer_binding.borrow_mut().make_dirty();
             }
         }
         for somerenderbundle in &self.renderbundles {
             if let Some(renderbundle) = somerenderbundle.upgrade() {
-                renderbundle.lock().unwrap().take();
+                renderbundle.borrow_mut().take();
             }
         }
     }

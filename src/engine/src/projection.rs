@@ -1,4 +1,6 @@
-use std::sync::{Arc, Mutex};
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::sync::Mutex;
 
 use externref::Resource;
 use terramath::MatrixMath;
@@ -20,7 +22,7 @@ pub struct InnerProjection {
 }
 pub struct Projection {
     pub inner_projection: InnerProjection,
-    pub buffer: Arc<Mutex<GPUBuffer<false, false, false, false, false, false, true>>>,
+    pub buffer: Rc<RefCell<GPUBuffer<false, false, false, false, false, false, true>>>,
 }
 impl InnerProjection {
     pub fn create_buffer(
@@ -83,7 +85,7 @@ impl Projection {
             },
             fow: 0.4,
         };
-        let buffer = Arc::new(Mutex::new(inner_projection.create_buffer(device, 1.0)));
+        let buffer = Rc::new(RefCell::new(inner_projection.create_buffer(device, 1.0)));
         Projection {
             inner_projection,
             buffer,
@@ -96,9 +98,9 @@ impl Projection {
 fn test_projection() {
     use externref::ExternRef;
     unsafe {
-        let projection = Arc::new(Projection::new(&Resource::new_non_null(
+        let projection = Projection::new(&Resource::new_non_null(
             std::mem::transmute::<usize, ExternRef>(0),
-        )));
+        ));
 
         assert_eq!(
             *projection

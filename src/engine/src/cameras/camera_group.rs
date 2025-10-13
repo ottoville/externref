@@ -1,7 +1,4 @@
-use std::{
-    num::NonZeroU32,
-    sync::{Arc, Mutex},
-};
+use std::{cell::RefCell, num::NonZeroU32, rc::Rc, sync::Arc};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
@@ -42,8 +39,8 @@ impl CameraGroup {
         screen_dimension_buffer.set_mapped_range(&data, 0);
         let bindgroup = self.bind_group.as_ref().unwrap();
         {
-            let mut b = bindgroup.bufferbindings[0].lock().unwrap();
-            b.replace_buffer(Arc::new(Mutex::new(screen_dimension_buffer.unmap())));
+            let mut b = bindgroup.bufferbindings[0].borrow_mut();
+            b.replace_buffer(Rc::new(RefCell::new(screen_dimension_buffer.unmap())));
         }
         (*computepass).set_bindgroup(&device, 0, bindgroup, &[]);
         for camera_id in &self.cameras {

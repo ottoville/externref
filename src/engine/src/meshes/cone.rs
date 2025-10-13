@@ -30,14 +30,14 @@ pub unsafe extern "C" fn create_cone_mesh(
     camera_can_collide_to: bool,
     bottom_faces: usize,
     gpu: *mut GPU,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut label = String::from("Cone");
     label.push_str(
         &ID.fetch_add(1, std::sync::atomic::Ordering::Release)
             .to_string(),
     );
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+    let mesh_id = Mesh::new(
         point_light,
         directional_light,
         scenes,
@@ -170,10 +170,7 @@ fn test_cone() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
         );
-        let geometry = create_cone_geometry(
-            4,
-            &mut (*gpu),
-        );
+        let geometry = create_cone_geometry(4, &mut (*gpu));
         assert_eq!(
             geometry.indices.as_ref().unwrap().indices,
             vec![

@@ -16,7 +16,7 @@ pub unsafe extern "C" fn create_tiled_mesh_geometry(
     camera_can_collide_to: bool,
     i: i32,
     gpu: *mut GPU,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut label = String::from("ring_");
     label.push_str(&i.to_string());
     Box::into_raw(Box::new(create_tiled_mesh_geometry2(
@@ -33,7 +33,7 @@ pub fn create_tiled_mesh_geometry2(
     camera_can_collide_to: bool,
     label: String,
     gpu: &mut GPU,
-) -> ExplicitGenerationalFreeListIndex<Mesh> {
+) -> ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let mut geometry = Geometry::new(camera_can_collide_to, false, false, label);
     let (positions, indices) = create_tiled_mesh(width, height);
 
@@ -42,7 +42,7 @@ pub fn create_tiled_mesh_geometry2(
 
     let label: String = String::from("quad_mesh");
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> = Mesh::new(
+    let mesh_id = Mesh::new(
         0.0,
         0.0,
         1.0,

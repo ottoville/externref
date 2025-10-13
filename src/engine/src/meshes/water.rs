@@ -8,12 +8,11 @@ use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListInde
 #[no_mangle]
 pub unsafe extern "C" fn create_water_mesh(
     scenes: f32,
-) -> *mut ExplicitGenerationalFreeListIndex<Mesh> {
+) -> *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh> {
     let label = String::from("Water");
 
     let mut meshes = ENGINE.meshes.lock().unwrap();
-    let mesh_id: ExplicitGenerationalFreeListIndex<Mesh> =
-        Mesh::new(0.0, 0.0, scenes, 0, label, None, None, &mut meshes, false);
+    let mesh_id = Mesh::new(0.0, 0.0, scenes, 0, label, None, None, &mut meshes, false);
     let geometry = create_water_geometry();
     let mesh = &mut meshes[&mesh_id];
     mesh.geometry = Some(Box::new(geometry));
