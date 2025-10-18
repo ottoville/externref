@@ -375,20 +375,22 @@ pub unsafe extern "C" fn init_gpu(
         NonZeroU32::new_unchecked(300),
         String::from("depthTexture_renderPassScreen2"),
     ));
-    let depth_render_target_view: TextureView<_, _, _, true, false, true, false, true> =
-        TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
-            depth_render_target,
-            String::from("depthTexture_renderPassScreen2_view"),
-            TextureViewDimension::D2,
-            TextureAspect::DepthOnly,
-        );
-    let screen_render_target_view: TextureView<_, _, _, false, false, true, false, true> =
-        TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
-            screen_render_target,
-            String::from("diffuseTextureView"),
-            TextureViewDimension::D2,
-            TextureAspect::All,
-        );
+    let depth_render_target_view: Rc<
+        RefCell<TextureView<_, _, _, true, false, true, false, true>>,
+    > = TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+        depth_render_target,
+        String::from("depthTexture_renderPassScreen2_view"),
+        TextureViewDimension::D2,
+        TextureAspect::DepthOnly,
+    );
+    let screen_render_target_view: Rc<
+        RefCell<TextureView<_, _, _, false, false, true, false, true>>,
+    > = TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+        screen_render_target,
+        String::from("diffuseTextureView"),
+        TextureViewDimension::D2,
+        TextureAspect::All,
+    );
     let resolve_target = Rc::new(Texture::<
         BGRA8UNORM,
         2,
@@ -481,13 +483,14 @@ pub unsafe extern "C" fn init_gpu(
         String::from("diffuseTextureWater"),
     ));
 
-    let water_render_target_view: TextureView<_, _, _, false, false, true, false, true> =
-        TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
-            water_render_target,
-            String::from("diffuseTextureWaterView"),
-            TextureViewDimension::D2,
-            TextureAspect::All,
-        );
+    let water_render_target_view: Rc<
+        RefCell<TextureView<_, _, _, false, false, true, false, true>>,
+    > = TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+        water_render_target,
+        String::from("diffuseTextureWaterView"),
+        TextureViewDimension::D2,
+        TextureAspect::All,
+    );
     let depth_render_target_water = Rc::new(Texture::<
         DEPTH32FLOAT,
         2,
@@ -505,13 +508,14 @@ pub unsafe extern "C" fn init_gpu(
         NonZeroU32::new_unchecked(300),
         String::from("depthTexture_renderPassWater"),
     ));
-    let depth_render_target_water_view: TextureView<_, _, _, true, false, false, false, true> =
-        TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
-            depth_render_target_water,
-            String::from("depthTexture_renderPassWater_view"),
-            TextureViewDimension::D2,
-            TextureAspect::DepthOnly,
-        );
+    let depth_render_target_water_view: Rc<
+        RefCell<TextureView<_, _, _, true, false, false, false, true>>,
+    > = TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+        depth_render_target_water,
+        String::from("depthTexture_renderPassWater_view"),
+        TextureViewDimension::D2,
+        TextureAspect::DepthOnly,
+    );
     let render_pass_water = Renderpass::new(
         String::from("renderPassWater"),
         [NonZeroU32::new_unchecked(1); 2],
@@ -570,7 +574,7 @@ pub unsafe extern "C" fn init_gpu(
         String::from("idTexture"),
     ));
 
-    let pick_render_target_view: TextureView<_, _, _, true, false, true, false, true> =
+    let pick_render_target_view: Rc<RefCell<TextureView<_, _, _, true, false, true, false, true>>> =
         TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
             pick_render_target,
             String::from("idTexture_view"),
@@ -715,11 +719,11 @@ pub struct GPU {
     pub queue: Queue,
     pub meshes: ExplicitGenerationalFreeList<MeshGPU>,
     pub gpu_buffer: Rc<RefCell<GPUBuffer<false, false, true, true, false, false, true, true>>>,
-    pub bind_group_position: Arc<BindGroup<1>>,
+    pub bind_group_position: Rc<BindGroup<1>>,
     pub projections: Vec<Arc<Projection>>,
     pub cameras: ExplicitGenerationalFreeList<Camera>,
     pub renderpasses: Vec<Box<dyn RenderPassTrait>>,
-    update_view_bindgroup: Arc<BindGroup<3>>,
+    update_view_bindgroup: Rc<BindGroup<3>>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
     pub swap_buffers: SwapBuffers,
@@ -1221,7 +1225,6 @@ fn test_bindgroup() {
         bindgroup::bindgroup_trait::BindGroupTrait,
         bindgroup_layout::BindGroupLayout,
         buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout},
-        color_attachment::color_attachment::JSRenderPassColorAttachment,
     };
 
     use crate::gpu::{

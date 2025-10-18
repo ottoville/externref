@@ -4,6 +4,8 @@ use std::marker::PhantomData;
 use std::num::NonZero;
 
 use crate::device::create_texture;
+use crate::texture::texture_view::TextureViewTrait;
+use crate::weakvec::WeakVec;
 use crate::{
     device::JSDevice,
     texture::texture_formats::{TextureFormat, TextureFormatSRGB},
@@ -80,6 +82,7 @@ pub struct Texture<
     pub externref: RefCell<Resource<JSTexture>>,
     pub label: Option<String>,
     pub format: PhantomData<F>,
+    pub views: RefCell<WeakVec<RefCell<dyn TextureViewTrait>>>,
 }
 
 pub trait TextureDimensionTrait {
@@ -238,7 +241,7 @@ where
     /// ```compile_fail
     /// use crate::webgpu::texture::{texture::Texture, texture_formats::BGRA8UNORM};
     /// use externref::{ExternRef, Resource};
-    /// use std::num::NonZeroU32
+    /// use std::num::NonZeroU32;
     /// unsafe {
     /// let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
     /// let texture = Texture::<BGRA8UNORM, 4, 1,1,1, false, false, true, false, true>::new(
@@ -278,6 +281,7 @@ where
             label: Some(label),
             externref: RefCell::new(externref),
             format: PhantomData,
+            views: RefCell::new(WeakVec::new()),
         }
     }
     pub fn new_with_srgb_multiview<VF: TextureFormat>(
@@ -325,6 +329,7 @@ where
             label: Some(label),
             externref: RefCell::new(externref),
             format: PhantomData,
+            views: RefCell::new(WeakVec::new()),
         }
     }
 }

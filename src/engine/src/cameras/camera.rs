@@ -235,9 +235,9 @@ pub struct Camera {
     buffer: Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>>,
     cluster_array_buffer:
         Rc<RefCell<GPUBuffer<false, false, false, false, false, false, false, true>>>,
-    update_view_bind_group: Arc<BindGroup<2>>,
-    pub update_clusters_bind_group: Arc<BindGroup<2>>,
-    pub uniform_bindgroup: Arc<BindGroup<5>>,
+    update_view_bind_group: Rc<BindGroup<2>>,
+    pub update_clusters_bind_group: Rc<BindGroup<2>>,
+    pub uniform_bindgroup: Rc<BindGroup<5>>,
     pub controller: Option<Box<dyn CameraController + Send>>,
 }
 impl Camera {

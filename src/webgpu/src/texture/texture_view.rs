@@ -1,5 +1,5 @@
 use externref::Resource;
-use std::{marker::PhantomData, num::NonZeroU32, rc::Rc};
+use std::{cell::RefCell, marker::PhantomData, num::NonZeroU32, rc::Rc};
 
 use crate::texture::{
     texture::{usages_from_bools, JSTexture, Texture, TextureAspect, TextureViewDimension},
@@ -44,7 +44,29 @@ extern "C" {
     ) -> Resource<JSTextureView>;
 }
 pub struct JSTextureView(());
-
+pub trait TextureViewTrait {}
+impl<
+        F: TextureFormat + Sync + Send,
+        const DIMENSION: u32,
+        const SAMPLE_COUNT: u32,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const TEXTURE_BINDING: bool,
+        const STORAGE_BINDING: bool,
+        const RENDER_ATTACHMENT: bool,
+    > TextureViewTrait
+    for TextureView<
+        F,
+        DIMENSION,
+        SAMPLE_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+    >
+{
+}
 pub struct TextureView<
     F: TextureFormat,
     const DIMENSION: u32,
@@ -62,7 +84,7 @@ pub struct TextureView<
     pub version: NonZeroU32,
 }
 impl<
-        F: TextureFormat + Sync + Send,
+        F: TextureFormat + Sync + Send + 'static,
         const DIMENSION: u32,
         const SAMPLE_COUNT: u32,
         const COPY_SRC: bool,
@@ -134,15 +156,19 @@ impl<
         label: String,
         dimension: TextureViewDimension,
         aspect: TextureAspect,
-    ) -> TextureView<
-        F,
-        DIMENSION,
-        SAMPLE_COUNT,
-        COPY_SRC,
-        COPY_DST,
-        TEXTURE_BINDING,
-        STORAGE_BINDING,
-        RENDER_ATTACHMENT,
+    ) -> Rc<
+        RefCell<
+            TextureView<
+                F,
+                DIMENSION,
+                SAMPLE_COUNT,
+                COPY_SRC,
+                COPY_DST,
+                TEXTURE_BINDING,
+                STORAGE_BINDING,
+                RENDER_ATTACHMENT,
+            >,
+        >,
     >
     where
         Texture<
@@ -202,13 +228,16 @@ impl<
                 ARRAY_LAYER_COUNT,
             )
         };
-        return TextureView {
+        let texture_view = Rc::new(RefCell::new(TextureView {
             externref,
             format: PhantomData,
             label,
-            texture,
+            texture: texture.clone(),
             version: unsafe { NonZeroU32::new_unchecked(1) },
-        };
+        }));
+        let weak = Rc::downgrade(&texture_view);
+        texture.views.borrow_mut().push(weak);
+        return texture_view;
     }
     pub fn new_srgb<
         const COPY_SRC2: bool,
@@ -242,15 +271,19 @@ impl<
         label: String,
         dimension: TextureViewDimension,
         aspect: TextureAspect,
-    ) -> TextureView<
-        F,
-        DIMENSION,
-        SAMPLE_COUNT,
-        COPY_SRC,
-        COPY_DST,
-        TEXTURE_BINDING,
-        STORAGE_BINDING,
-        RENDER_ATTACHMENT,
+    ) -> Rc<
+        RefCell<
+            TextureView<
+                F,
+                DIMENSION,
+                SAMPLE_COUNT,
+                COPY_SRC,
+                COPY_DST,
+                TEXTURE_BINDING,
+                STORAGE_BINDING,
+                RENDER_ATTACHMENT,
+            >,
+        >,
     >
     where
         Texture<
@@ -310,13 +343,16 @@ impl<
                 ARRAY_LAYER_COUNT,
             )
         };
-        return TextureView {
+        let texture_view = Rc::new(RefCell::new(TextureView {
             externref,
             format: PhantomData,
             label,
-            texture,
+            texture: texture.clone(),
             version: unsafe { NonZeroU32::new_unchecked(1) },
-        };
+        }));
+        let weak = Rc::downgrade(&texture_view);
+        texture.views.borrow_mut().push(weak);
+        return texture_view;
     }
 }
 

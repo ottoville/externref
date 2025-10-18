@@ -36,7 +36,7 @@ descriptor.dimension must be either "2d" or "3d".
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
 /// use std::rc::Rc;
-
+/// use std::cell::RefCell;
 /// unsafe {
 ///     let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
 ///     let texture = Rc::new(Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, false, true>::new(
@@ -45,12 +45,12 @@ descriptor.dimension must be either "2d" or "3d".
 ///         NonZeroU32::new_unchecked(300),
 ///         String::from("diffuseTexture"),
 ///     ));
-///     let multisampled_textureview: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(TextureView::<_, _, _, false, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///     let multisampled_textureview: Rc<RefCell<dyn RenderAttachmentTextureMultiSampled>> = TextureView::<_, _, _, false, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
 ///         texture,
 ///         String::from("test"),
 ///         TextureViewDimension::D2,
 ///         TextureAspect::All,
-///     ));
+///     );
 /// }
 /// ```
 /// ## Should panic, 3 sample count texture does not exist
@@ -64,6 +64,7 @@ descriptor.dimension must be either "2d" or "3d".
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
 /// use std::rc::Rc;
+/// use std::cell::RefCell;
 ///
 /// unsafe {
 ///     let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
@@ -73,12 +74,12 @@ descriptor.dimension must be either "2d" or "3d".
 ///         NonZeroU32::new_unchecked(300),
 ///         String::from("diffuseTexture"),
 ///     ));
-///     let multisampled_textureview: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(TextureView::<_, _, _, false, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///     let multisampled_textureview: Rc<RefCell<dyn RenderAttachmentTextureMultiSampled>> = TextureView::<_, _, _, false, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
 ///         texture,
 ///         String::from("test"),
 ///         TextureViewDimension::D2,
 ///         TextureAspect::All,
-///     ));
+///     );
 /// }
 /// ```
 /// ## 1d texture, should compile
@@ -147,6 +148,7 @@ descriptor.dimension must be either "2d" or "3d".
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
 /// use std::rc::Rc;
+/// use std::cell::RefCell;
 /// use crate::webgpu::texture::texture_view::TextureView;
 ///
 /// unsafe {
@@ -157,13 +159,13 @@ descriptor.dimension must be either "2d" or "3d".
 ///            NonZeroU32::new_unchecked(300),
 ///            String::from("diffuseTexture"),
 ///        ));
-///         let multisampled_textureview: Box<dyn RenderAttachmentTextureMultiSampled> = Box::new(
-///         TextureView::<_, _, _, false, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
-///            texture,
-///            String::from("test"),
-///            TextureViewDimension::D2,
-///            TextureAspect::All,
-///        ));
+///         let multisampled_textureview: Rc<RefCell<dyn RenderAttachmentTextureMultiSampled>> =
+///             TextureView::<_, _, _, false, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///             texture,
+///             String::from("test"),
+///             TextureViewDimension::D2,
+///             TextureAspect::All,
+///         );
 /// }
 /// ```
 /// ## Should panic, if samplecount > 1, descriptor.usage must include the RENDER_ATTACHMENT bit AND must not include the STORAGE_BINDING bit.
@@ -175,24 +177,23 @@ descriptor.dimension must be either "2d" or "3d".
 ///                             };
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
+/// use std::cell::RefCell;
 /// unsafe {
 ///     let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-///     let multisampled_texture_without_render_bit: Box<dyn ValidTexture> = Box::new(
+///     let multisampled_texture_without_render_bit: Rc<RefCell<dyn ValidTexture>> =
 ///        Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, false, false>::new(
 ///            &device,
 ///            NonZeroU32::new_unchecked(300),
 ///            NonZeroU32::new_unchecked(300),
 ///            String::from("diffuseTexture"),
-///        )
-///     );
-/// let multisampled_texture_with_storage_bit: Box<dyn ValidTexture> = Box::new(
+///        );
+/// let multisampled_texture_with_storage_bit: Rc<RefCell<dyn ValidTexture>> =
 ///        Texture::<BGRA8UNORM, 2, 4,1,1, false, false, true, true, true>::new(
 ///            &device,
 ///            NonZeroU32::new_unchecked(300),
 ///            NonZeroU32::new_unchecked(300),
 ///            String::from("diffuseTexture"),
-///        )
-///    );
+///        );
 /// }
 /// ```
 /// ## Should panic, If descriptor.usage includes the RENDER_ATTACHMENT bit: descriptor.format must be a renderable format.
@@ -206,6 +207,7 @@ descriptor.dimension must be either "2d" or "3d".
 /// use std::num::{NonZeroU32, NonZeroUsize};
 /// use std::rc::Rc;
 /// use crate::webgpu::texture::texture_view::TextureView;
+/// use std::cell::RefCell;
 ///
 /// unsafe {
 ///    let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
@@ -215,14 +217,13 @@ descriptor.dimension must be either "2d" or "3d".
 ///            NonZeroU32::new_unchecked(300),
 ///            String::from("diffuseTexture"),
 ///        ));
-///    let renderable_textureview: Box<dyn RenderAttachmentTexture> = Box::new(
+///    let renderable_textureview: Rc<RefCell<dyn RenderAttachmentTexture>> =
 ///        TextureView::<_, _, _, false, false, false, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
 ///            texture,
 ///            String::from("test"),
 ///            TextureViewDimension::D2,
 ///            TextureAspect::All,
-///        )
-///    );
+///        );
 /// }
 /// ```
 /// ## Should panic, If descriptor.usage includes the RENDER_ATTACHMENT bit: descriptor.dimension must be either "2d" or "3d".
@@ -235,6 +236,7 @@ descriptor.dimension must be either "2d" or "3d".
 /// use externref::{ExternRef, Resource};
 /// use std::num::{NonZeroU32, NonZeroUsize};
 /// use std::rc::Rc;
+/// use std::cell::RefCell;
 /// use crate::webgpu::texture::texture_view::TextureView;
 ///
 /// unsafe {
@@ -245,14 +247,13 @@ descriptor.dimension must be either "2d" or "3d".
 ///            NonZeroU32::new_unchecked(300),
 ///            String::from("diffuseTexture"),
 ///        ));
-///      let renderable_textureview: Box<dyn RenderAttachmentTexture> = Box::new(
+///      let renderable_textureview: Rc<RefCell<dyn RenderAttachmentTexture>> =
 ///        TextureView::<_, _, _, false, false, false, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
 ///            texture,
 ///            String::from("test"),
 ///            TextureViewDimension::D2,
 ///            TextureAspect::All,
-///        )
-///    );
+///        );
 /// }
 /// ```
 pub trait RenderAttachmentTexture {
@@ -288,7 +289,7 @@ impl<
     fn get_attachment(&self) -> &Resource<JSTextureView> {
         &self.externref
     }
- 
+
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
         self.texture.resize(device, width, height);
     }

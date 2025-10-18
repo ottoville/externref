@@ -1,14 +1,15 @@
-use std::{cell::RefCell, num::NonZeroUsize, rc::Rc, sync::Weak};
+use std::{cell::RefCell, num::NonZeroUsize, rc::Rc};
 
 use crate::bindgroup::bindgroup_trait::BindGroupTrait;
 
 use crate::buffer::bindable::BindGroupBindable;
+use crate::weakvec::WeakVec;
 
 pub struct BufferBinding {
     pub buffer: Rc<RefCell<dyn BindGroupBindable>>,
     pub offset: usize,
     pub size: Option<NonZeroUsize>,
-    pub bindgroups: Vec<Weak<dyn BindGroupTrait>>,
+    pub bindgroups: WeakVec<dyn BindGroupTrait>,
 }
 impl BufferBinding {
     pub fn new(
@@ -20,7 +21,7 @@ impl BufferBinding {
             buffer,
             offset,
             size,
-            bindgroups: Vec::new(),
+            bindgroups: WeakVec::new(),
         }))
     }
     pub fn replace_buffer(&mut self, buffer: Rc<RefCell<dyn BindGroupBindable>>) {
@@ -28,10 +29,8 @@ impl BufferBinding {
         self.make_dirty();
     }
     pub fn make_dirty(&mut self) {
-        for somebindgroup in self.bindgroups.iter() {
-            if let Some(bind_group) = somebindgroup.upgrade() {
-                bind_group.make_dirty();
-            }
-        }
+        self.bindgroups.iter_mut(|bind_group| {
+            bind_group.make_dirty();
+        });
     }
 }

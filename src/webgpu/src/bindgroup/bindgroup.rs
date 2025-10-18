@@ -1,12 +1,13 @@
 use std::cell::{Cell, RefCell};
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
+use std::sync::Arc;
 use std::sync::Mutex;
-use std::sync::{Arc};
 
 use crate::bindgroup::bindgroup_trait::BindGroupTrait;
 use crate::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
 use crate::buffer::buffer::BufferRef;
 use crate::device::{create_bind_group, JSDevice};
+use crate::weakvec::WeakVec;
 use externref::Resource;
 
 use crate::bindgroup::bindgroup_resources::BindGroupResources;
@@ -18,9 +19,7 @@ thread_local! {
 }
 pub type BindingsIteratorPtr<'a> = *mut std::slice::Iter<'a, Rc<RefCell<BufferBinding>>>;
 #[no_mangle]
-pub unsafe extern "C" fn iterate_bindings(
-    iterator: BindingsIteratorPtr<'_>,
-) -> *const [usize; 3] {
+pub unsafe extern "C" fn iterate_bindings(iterator: BindingsIteratorPtr<'_>) -> *const [usize; 3] {
     use std::ptr;
 
     let maybebinding = (*iterator).next();
@@ -53,17 +52,15 @@ pub struct BindGroup<const N: usize> {
     label: String,
     layout: Arc<Resource<JSBindGroupLayout>>,
     pub bufferbindings: [Rc<RefCell<BufferBinding>>; N],
-    pub renderbundles: RefCell<Vec<Weak<RefCell<Option<RenderBundle>>>>>,
+    pub renderbundles: RefCell<WeakVec<RefCell<Option<RenderBundle>>>>,
 }
 
 impl<const N: usize> BindGroupTrait for BindGroup<N> {
     fn make_dirty(&self) {
         self.resources.lock().unwrap().take();
-        for somerenderbundle in self.renderbundles.borrow().iter() {
-            if let Some(renderbundle) = somerenderbundle.upgrade() {
-                renderbundle.borrow_mut().take();
-            }
-        }
+        self.renderbundles.borrow_mut().iter_mut(|renderbundle| {
+            renderbundle.borrow_mut().take();
+        });
     }
 }
 
@@ -72,17 +69,17 @@ impl<const N: usize> BindGroup<N> {
         label: String,
         layout: &BindGroupLayout<N>,
         bufferbindings: [Rc<RefCell<BufferBinding>>; N],
-    ) -> Arc<BindGroup<N>> {
-        let bind_group = Arc::new(BindGroup {
+    ) -> Rc<BindGroup<N>> {
+        let bind_group = Rc::new(BindGroup {
             resources: Mutex::new(None),
             label,
             layout: layout.externref.clone(),
             bufferbindings,
-            renderbundles: RefCell::new(Vec::new()),
+            renderbundles: RefCell::new(WeakVec::new()),
         });
         for buffer_binding_mutex in bind_group.bufferbindings.iter() {
             let mut buffer_binding = buffer_binding_mutex.borrow_mut();
-            let weak = Arc::downgrade(&bind_group);
+            let weak = Rc::downgrade(&bind_group);
             buffer_binding.bindgroups.push(weak);
             buffer_binding
                 .buffer

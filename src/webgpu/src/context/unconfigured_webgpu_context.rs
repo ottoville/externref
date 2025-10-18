@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::{cell::RefCell, marker::PhantomData, rc::Rc, sync::Arc};
 
 use externref::Resource;
 
@@ -49,7 +49,7 @@ impl CanvasWithContext<UnconfiguredWebgpuContext> {
     > {
         unsafe {
             configure(
-                &self.context.context,
+                &self.context.borrow().context,
                 device,
                 F::to_number(),
                 usages_from_bools::<
@@ -72,12 +72,12 @@ impl CanvasWithContext<UnconfiguredWebgpuContext> {
         let canvas = self.canvas.clone();
         return CanvasWithContext {
             canvas: self.canvas,
-            context: ConfiguredWebgpuContext {
+            context: Rc::new(RefCell::new(ConfiguredWebgpuContext {
                 format: PhantomData,
-                context: self.context.context,
+                context: Rc::into_inner(self.context).unwrap().into_inner().context,
                 label: String::from("canvas_context_texture_view"),
                 canvas,
-            },
+            })),
         };
     }
     pub fn configure_with_srgb_multiview<
@@ -111,7 +111,7 @@ impl CanvasWithContext<UnconfiguredWebgpuContext> {
         let variants = [F::to_number(), F::to_srgb()];
         unsafe {
             configure(
-                &self.context.context,
+                &self.context.borrow().context,
                 device,
                 F::to_number(),
                 usages_from_bools::<
@@ -135,12 +135,12 @@ impl CanvasWithContext<UnconfiguredWebgpuContext> {
 
         return CanvasWithContext {
             canvas: self.canvas,
-            context: ConfiguredWebgpuContext {
+            context: Rc::new(RefCell::new(ConfiguredWebgpuContext {
                 format: PhantomData,
-                context: self.context.context,
+                context: Rc::into_inner(self.context).unwrap().into_inner().context,
                 label: String::from("canvas_context_texture_view"),
                 canvas,
-            },
+            })),
         };
     }
 }

@@ -26,13 +26,13 @@ use crate::cameras::{
 pub unsafe extern "C" fn renderbundle_make_dirty(renderbundle: *mut RenderBundleEncoder) {
     (*renderbundle).make_dirty();
 }
-
+type BindGroupType = *const Rc<BindGroup<1>>;
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn renderbundle_set_bindgroup(
     renderbundle: *mut RenderBundleEncoder,
     index: u32,
-    bindgroup: *const Arc<BindGroup<1>>,
+    bindgroup: BindGroupType,
     device: &Resource<JSDevice>,
 ) {
     (*renderbundle).set_bindgroup(device, index, &(*bindgroup), &[]);
@@ -43,7 +43,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup(
 pub unsafe extern "C" fn renderbundle_set_bindgroup_1(
     renderbundle: *mut RenderBundleEncoder,
     index: u32,
-    bindgroup: *const Arc<BindGroup<1>>,
+    bindgroup: BindGroupType,
     device: &Resource<JSDevice>,
     dynamic_offset: u32,
 ) {
@@ -54,7 +54,7 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup_1(
 pub unsafe extern "C" fn renderbundle_set_bindgroup_2(
     renderbundle: *mut RenderBundleEncoder,
     index: u32,
-    bindgroup: *const Arc<BindGroup<1>>,
+    bindgroup: BindGroupType,
     device: &Resource<JSDevice>,
     dynamic_offset1: u32,
     dynamic_offset2: u32,
@@ -94,7 +94,7 @@ unsafe fn do_record(
     _record: &Resource<JSFunction>,
     _encoder: &Resource<JSRenderBundleEncoder>,
     _gpu_buffer_externref: usize,
-    _bind_group_position: *const Arc<BindGroup<1>>,
+    _bind_group_position: BindGroupType,
     _bindgroup_start_index: u32,
 ) {
 }
@@ -137,7 +137,7 @@ extern "C" {
         record: &Resource<JSFunction>,
         encoder: &Resource<JSRenderBundleEncoder>,
         gpu_buffer_externref: usize,
-        bind_group_position: *const Arc<BindGroup<1>>,
+        bind_group_position: BindGroupType,
         bindgroup_start_index: u32,
     );
 }
@@ -197,7 +197,7 @@ impl RenderBundleEncoder {
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         gpu_buffer: usize,
-        bind_group_position: &Arc<BindGroup<1>>,
+        bind_group_position: &Rc<BindGroup<1>>,
         cb: F,
     ) where
         F: FnOnce(&RenderBundle),

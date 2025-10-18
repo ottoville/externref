@@ -18,3 +18,4 @@ pub mod renderpass;
 pub mod render_commands;
 pub mod queue;
 pub mod context;
+pub mod weakvec;

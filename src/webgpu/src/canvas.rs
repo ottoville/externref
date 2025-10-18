@@ -1,4 +1,4 @@
-use std::{num::NonZeroU32, sync::Arc};
+use std::{cell::RefCell, num::NonZeroU32, rc::Rc, sync::Arc};
 
 use externref::Resource;
 
@@ -13,12 +13,10 @@ pub unsafe fn get_webgpu_context(_canvas: &Resource<JSCanvas>) -> Resource<JSGPU
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 
-
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn set_width(_canvas: &Resource<JSCanvas>, _width: u32) {}
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn set_height(_canvas: &Resource<JSCanvas>, _width: u32) {}
-
 
 #[cfg(target_arch = "wasm32")]
 #[externref::externref]
@@ -36,7 +34,7 @@ pub struct CanvasNoContext {
 }
 pub struct CanvasWithContext<T: CanvasContextTrait> {
     pub canvas: Arc<CanvasNoContext>,
-    pub context: T,
+    pub context: Rc<RefCell<T>>,
 }
 
 pub trait Canvas {
@@ -64,10 +62,10 @@ impl CanvasNoContext {
     pub fn get_webgpu_context(self) -> CanvasWithContext<UnconfiguredWebgpuContext> {
         let context = unsafe { get_webgpu_context(&self.externref) };
         let aself = Arc::new(self);
-        let context = UnconfiguredWebgpuContext {
+        let context = Rc::new(RefCell::new(UnconfiguredWebgpuContext {
             context,
             canvas: aself.clone(),
-        };
+        }));
         CanvasWithContext::<UnconfiguredWebgpuContext> {
             context,
             canvas: aself,

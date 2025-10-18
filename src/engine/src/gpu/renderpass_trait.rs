@@ -1,4 +1,4 @@
-use std::{num::NonZeroU32, sync::Arc};
+use std::{num::NonZeroU32, rc::Rc};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
@@ -34,7 +34,7 @@ pub trait RenderPassTrait {
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         gpu_buffer: usize,
-        bind_group_position: &Arc<BindGroup<1>>,
+        bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder;
     fn jsrenderpass(&self) -> &Resource<JSRenderPass>;
     fn size(&self) -> [NonZeroU32; 2];

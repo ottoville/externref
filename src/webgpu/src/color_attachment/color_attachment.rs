@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use externref::Resource;
 
 use crate::texture::{
@@ -50,7 +52,7 @@ pub enum StoreOpt {
 }
 
 pub trait ColorAttachment {
-    fn texture_view(&self) -> &Box<dyn RenderAttachmentTexture>;
+    fn texture_view(&self) -> &Rc<RefCell<dyn RenderAttachmentTexture>>;
     fn get_attachment(&mut self) -> Resource<JSRenderPassColorAttachment>;
     fn is_dirty(&self) -> bool;
 }

@@ -1,10 +1,10 @@
-use std::{cell::RefCell, rc::Weak};
-use std::sync::Arc;
+use std::{cell::RefCell, sync::Arc};
 
 use crate::buffer::mapped_buffer::MappedGPUBuffer;
 use crate::bufferbinding::BufferBinding;
 use crate::device::JSDevice;
 use crate::renderbundle::RenderBundle;
+use crate::weakvec::WeakVec;
 use externref::{externref, Resource};
 
 pub struct JSBuffer(());
@@ -72,8 +72,8 @@ pub struct GPUBuffer<
     pub externref: Arc<BufferRef>,
     pub label: String,
     pub size: usize,
-    pub buffer_bindings: Vec<Weak<RefCell<BufferBinding>>>,
-    pub renderbundles: Vec<Weak<RefCell<Option<RenderBundle>>>>,
+    pub buffer_bindings: WeakVec<RefCell<BufferBinding>>,
+    pub renderbundles: WeakVec<RefCell<Option<RenderBundle>>>,
 }
 impl<
         const MAP_READ: bool,
@@ -149,8 +149,8 @@ impl<
             externref: Arc::new(BufferRef(externref)),
             label,
             size,
-            buffer_bindings: Vec::new(),
-            renderbundles: Vec::new(),
+            buffer_bindings: WeakVec::new(),
+            renderbundles: WeakVec::new(),
         }
     }
     pub fn new(device: &Resource<JSDevice>, size: usize, label: String) -> Self {
@@ -194,17 +194,13 @@ impl<
         #[cfg(not(target_arch = "wasm32"))]
         return 2;
     }
-    pub fn make_dirty(&self) {
-        for some_buffer_binding in self.buffer_bindings.iter() {
-            if let Some(buffer_binding) = some_buffer_binding.upgrade() {
-                buffer_binding.borrow_mut().make_dirty();
-            }
-        }
-        for somerenderbundle in &self.renderbundles {
-            if let Some(renderbundle) = somerenderbundle.upgrade() {
-                renderbundle.borrow_mut().take();
-            }
-        }
+    pub fn make_dirty(&mut self) {
+        self.buffer_bindings.iter_mut(|buffer_binding| {
+            buffer_binding.borrow_mut().make_dirty();
+        });
+        self.renderbundles.iter_mut(|renderbundle| {
+            renderbundle.borrow_mut().take();
+        });
     }
     pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: usize) {
         self.size = size;

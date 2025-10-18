@@ -1,4 +1,4 @@
-use std::num::NonZero;
+use std::{cell::RefCell, num::NonZero, rc::Rc};
 
 use externref::Resource;
 
@@ -32,30 +32,33 @@ extern "C" {
 pub struct JSRenderPassDepthStencilAttachment(());
 
 pub struct DepthStencilAttachment<const SAMPLE_COUNT: u32> {
-    pub texture_view: Box<dyn DepthTexture<SAMPLE_COUNT>>,
+    pub texture_view: Rc<RefCell<dyn DepthTexture<SAMPLE_COUNT>>>,
     pub externref: Resource<JSRenderPassDepthStencilAttachment>,
 }
 impl<const SAMPLE_COUNT: u32> DepthStencilAttachment<SAMPLE_COUNT> {
     pub fn new(
-        texture_view: impl DepthTexture<SAMPLE_COUNT> + 'static,
+        texture_view: Rc<RefCell<impl DepthTexture<SAMPLE_COUNT> + 'static>>,
         depth_clear_value: f32,
         depth_read_only: bool,
         depth_store_op_enum: StoreOpt,
     ) -> Self {
-        let externref = unsafe {
-            create_render_pass_depth_stencil_attachment(
-                texture_view.get_attachment(),
-                depth_clear_value,
-                depth_read_only,
-                depth_store_op_enum,
-            )
+        let externref = {
+            let borrowed = texture_view.borrow();
+            unsafe {
+                create_render_pass_depth_stencil_attachment(
+                    borrowed.get_attachment(),
+                    depth_clear_value,
+                    depth_read_only,
+                    depth_store_op_enum,
+                )
+            }
         };
         DepthStencilAttachment {
-            texture_view: Box::new(texture_view),
+            texture_view,
             externref,
         }
     }
     pub fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
-        self.texture_view.resize(device, width, height);
+        self.texture_view.borrow().resize(device, width, height);
     }
 }

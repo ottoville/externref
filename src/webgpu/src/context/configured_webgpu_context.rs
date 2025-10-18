@@ -2,6 +2,7 @@ use std::{
     cell::{Cell, RefCell},
     marker::PhantomData,
     num::{NonZero, NonZeroU32},
+    rc::Rc,
     sync::Arc,
 };
 
@@ -21,7 +22,7 @@ use crate::{
         render_attachment_texture::{
             RenderAttachmentTexture, RenderAttachmentTextureSingleSampled,
         },
-        texture::{usages_from_bools, Texture, TextureAspect, TextureViewDimension},
+        texture::{usages_from_bools, TextureAspect, TextureViewDimension},
         texture_formats::{TextureFormat, TextureFormatSRGB},
         texture_view::{create_texture_view, JSTextureView},
     },
@@ -88,10 +89,10 @@ impl<
         let canvas = self.canvas.clone();
         return CanvasWithContext {
             canvas: self.canvas,
-            context: UnconfiguredWebgpuContext {
+            context: Rc::new(RefCell::new(UnconfiguredWebgpuContext {
                 canvas,
-                context: self.context.context,
-            },
+                context: Rc::into_inner(self.context).unwrap().into_inner().context,
+            })),
         };
     }
     pub fn reconfigure<
@@ -119,7 +120,7 @@ impl<
     > {
         unsafe {
             configure(
-                &self.context.context,
+                &self.context.borrow().context,
                 device,
                 NF::to_number(),
                 usages_from_bools::<
@@ -143,12 +144,12 @@ impl<
 
         return CanvasWithContext {
             canvas: self.canvas,
-            context: ConfiguredWebgpuContext {
+            context: Rc::new(RefCell::new(ConfiguredWebgpuContext {
                 format: PhantomData,
-                context: self.context.context,
+                context: Rc::into_inner(self.context).unwrap().into_inner().context,
                 label: String::from("canvas_context_texture_view"),
                 canvas,
-            },
+            })),
         };
     }
     pub fn reconfigure_with_srgb_multiview<
@@ -182,7 +183,7 @@ impl<
         let variants = [NF::to_number(), NF::to_srgb()];
         unsafe {
             configure(
-                &self.context.context,
+                &self.context.borrow().context,
                 device,
                 F::to_number(),
                 usages_from_bools::<
@@ -206,34 +207,13 @@ impl<
 
         return CanvasWithContext {
             canvas: self.canvas,
-            context: ConfiguredWebgpuContext {
+            context: Rc::new(RefCell::new(ConfiguredWebgpuContext {
                 format: PhantomData,
-                context: self.context.context,
+                context: Rc::into_inner(self.context).unwrap().into_inner().context,
                 label: String::from("canvas_context_texture_view"),
                 canvas,
-            },
+            })),
         };
-    }
-    pub fn get_current_texture(
-        &self,
-    ) -> Texture<
-        F,
-        2,
-        1,
-        1,
-        1,
-        COPY_SRC,
-        COPY_DST,
-        TEXTURE_BINDING,
-        STORAGE_BINDING,
-        RENDER_ATTACHMENT,
-    > {
-        let texture = Texture {
-            externref: RefCell::new(unsafe { get_current_texture(&self.context.context) }),
-            label: None,
-            format: PhantomData,
-        };
-        return texture;
     }
 }
 impl<
@@ -292,7 +272,7 @@ impl<
     fn resize(&self, _device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
         self.canvas.resize(width, height);
     }
-    
+
     fn version(&self) -> Option<NonZeroU32> {
         None
     }

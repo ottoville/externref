@@ -1,6 +1,6 @@
 use std::{
     num::{NonZero, NonZeroU32},
-    sync::Arc,
+    rc::Rc,
 };
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
@@ -119,7 +119,7 @@ impl<const N: usize> Renderpass<N> {
     ) -> Self {
         let mut formats = [0; N];
         for n in 0..N {
-            formats[n] = render_targets[n].texture_view().to_number();
+            formats[n] = render_targets[n].texture_view().borrow().to_number();
         }
         let descriptor =
             create_render_pass_descriptor2(&mut render_targets, &depth_render_target, &label);
@@ -149,7 +149,7 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
         device: &Resource<JSDevice>,
         cameras: &ExplicitGenerationalFreeList<Camera>,
         gpu_buffer: usize,
-        bind_group_position: &Arc<BindGroup<1>>,
+        bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
         let dirty = self
@@ -252,7 +252,7 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
 
     fn depth_stencil_format(&self) -> Option<u32> {
         match &self.depth_render_target {
-            Some(format) => Some(format.texture_view.to_number()),
+            Some(format) => Some(format.texture_view.borrow().to_number()),
             None => None,
         }
     }

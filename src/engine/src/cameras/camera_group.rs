@@ -1,4 +1,4 @@
-use std::{cell::RefCell, num::NonZeroU32, rc::Rc, sync::Arc};
+use std::{cell::RefCell, num::NonZeroU32, rc::Rc};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
@@ -13,7 +13,7 @@ use super::camera::{Camera, CLUSTER_DISPATCH_SIZE};
 
 pub struct CameraGroup {
     pub cameras: Vec<usize>,
-    pub bind_group: Option<Arc<BindGroup<1>>>,
+    pub bind_group: Option<Rc<BindGroup<1>>>,
 }
 impl CameraGroup {
     pub fn update_size_bind_group(
