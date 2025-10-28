@@ -1,5 +1,5 @@
 use externref::Resource;
-use std::{cell::RefCell, marker::PhantomData, num::NonZeroU32, rc::Rc};
+use std::{cell::RefCell, marker::PhantomData, rc::Rc};
 
 use crate::texture::{
     texture::{usages_from_bools, JSTexture, Texture, TextureAspect, TextureViewDimension},
@@ -44,66 +44,81 @@ extern "C" {
     ) -> Resource<JSTextureView>;
 }
 pub struct JSTextureView(());
-pub trait TextureViewTrait {}
-impl<
-        F: TextureFormat + Sync + Send,
-        const DIMENSION: u32,
-        const SAMPLE_COUNT: u32,
-        const COPY_SRC: bool,
-        const COPY_DST: bool,
-        const TEXTURE_BINDING: bool,
-        const STORAGE_BINDING: bool,
-        const RENDER_ATTACHMENT: bool,
-    > TextureViewTrait
-    for TextureView<
-        F,
-        DIMENSION,
-        SAMPLE_COUNT,
-        COPY_SRC,
-        COPY_DST,
-        TEXTURE_BINDING,
-        STORAGE_BINDING,
-        RENDER_ATTACHMENT,
-    >
-{
-}
+
 pub struct TextureView<
     F: TextureFormat,
-    const DIMENSION: u32,
     const SAMPLE_COUNT: u32,
     const COPY_SRC: bool = false,
     const COPY_DST: bool = false,
     const TEXTURE_BINDING: bool = false,
     const STORAGE_BINDING: bool = false,
     const RENDER_ATTACHMENT: bool = false,
+    const BASE_MIP_LEVEL: u32 = 0,
+    const MIP_LEVEL_COUNT: u32 = 1,
+    const BASE_ARRAY_LAYER: u32 = 0,
+    const ARRAY_LAYER_COUNT: u32 = 1,
 > {
     pub externref: Resource<JSTextureView>,
     pub format: PhantomData<F>,
     pub label: String,
     pub texture: Rc<dyn ValidTexture>,
-    pub version: NonZeroU32,
+    dimension: TextureViewDimension,
+    aspect: TextureAspect,
+    pub version: u32,
 }
 impl<
-        F: TextureFormat + Sync + Send + 'static,
-        const DIMENSION: u32,
+        F: TextureFormat + 'static,
         const SAMPLE_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
         const RENDER_ATTACHMENT: bool,
+        const BASE_MIP_LEVEL: u32,
+        const MIP_LEVEL_COUNT: u32,
+        const BASE_ARRAY_LAYER: u32,
+        const ARRAY_LAYER_COUNT: u32,
     >
     TextureView<
         F,
-        DIMENSION,
         SAMPLE_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
         STORAGE_BINDING,
         RENDER_ATTACHMENT,
+        BASE_MIP_LEVEL,
+        MIP_LEVEL_COUNT,
+        BASE_ARRAY_LAYER,
+        ARRAY_LAYER_COUNT,
     >
 {
+    pub fn re_create(&mut self) {
+        self.externref = unsafe {
+            create_texture_view(
+                &self.texture.externref().borrow().0,
+                self.label.as_ptr() as usize,
+                self.label.len(),
+                F::to_number(),
+                self.dimension,
+                TextureView::<
+                    F,
+                    SAMPLE_COUNT,
+                    COPY_SRC,
+                    COPY_DST,
+                    TEXTURE_BINDING,
+                    STORAGE_BINDING,
+                    RENDER_ATTACHMENT,
+                >::usages(),
+                self.aspect,
+                BASE_MIP_LEVEL,
+                MIP_LEVEL_COUNT,
+                BASE_ARRAY_LAYER,
+                ARRAY_LAYER_COUNT,
+            )
+        };
+        self.version += 1;
+    }
     const fn usages() -> u32 {
         let mut usages = 0;
         if COPY_SRC {
@@ -125,23 +140,20 @@ impl<
     }
     /// # Creates new texture view
     pub fn new<
+        const TEXTURE_DIMENSION: u32,
         const COPY_SRC2: bool,
         const COPY_DST2: bool,
         const TEXTURE_BINDING2: bool,
         const STORAGE_BINDING2: bool,
         const RENDER_ATTACHMENT2: bool,
         const SRGB_MULTIVIEW: bool,
-        const ARRAY_LAYER_COUNT: u32,
-        const BASE_ARRAY_LAYER: u32,
         const TEXTURE_DEPTH_OR_ARRAY_LAYERS: u32,
         const TEXTURE_MIP_LEVEL_COUNT: u32,
-        const BASE_MIP_LEVEL: u32,
-        const MIP_LEVEL_COUNT: u32,
     >(
         texture: Rc<
             Texture<
                 F,
-                DIMENSION,
+                TEXTURE_DIMENSION,
                 SAMPLE_COUNT,
                 TEXTURE_DEPTH_OR_ARRAY_LAYERS,
                 TEXTURE_MIP_LEVEL_COUNT,
@@ -160,7 +172,6 @@ impl<
         RefCell<
             TextureView<
                 F,
-                DIMENSION,
                 SAMPLE_COUNT,
                 COPY_SRC,
                 COPY_DST,
@@ -173,7 +184,7 @@ impl<
     where
         Texture<
             F,
-            DIMENSION,
+            TEXTURE_DIMENSION,
             SAMPLE_COUNT,
             TEXTURE_DEPTH_OR_ARRAY_LAYERS,
             TEXTURE_MIP_LEVEL_COUNT,
@@ -212,10 +223,9 @@ impl<
             },
             texture_usages
         );
-
         let externref = unsafe {
             create_texture_view(
-                &texture.externref.borrow(),
+                &texture.externref.borrow().0,
                 label.as_ptr() as usize,
                 label.len(),
                 F::to_number(),
@@ -233,30 +243,27 @@ impl<
             format: PhantomData,
             label,
             texture: texture.clone(),
-            version: unsafe { NonZeroU32::new_unchecked(1) },
+            dimension,
+            aspect,
+            version: 0,
         }));
-        let weak = Rc::downgrade(&texture_view);
-        texture.views.borrow_mut().push(weak);
         return texture_view;
     }
     pub fn new_srgb<
+        const TEXTURE_DIMENSION: u32,
         const COPY_SRC2: bool,
         const COPY_DST2: bool,
         const TEXTURE_BINDING2: bool,
         const STORAGE_BINDING2: bool,
         const RENDER_ATTACHMENT2: bool,
         VF: TextureFormatSRGB<F> + Send + Sync,
-        const ARRAY_LAYER_COUNT: u32,
-        const BASE_ARRAY_LAYER: u32,
         const TEXTURE_DEPTH_OR_ARRAY_LAYERS: u32,
         const TEXTURE_MIP_LEVEL_COUNT: u32,
-        const BASE_MIP_LEVEL: u32,
-        const MIP_LEVEL_COUNT: u32,
     >(
         texture: Rc<
             Texture<
                 VF,
-                DIMENSION,
+                TEXTURE_DIMENSION,
                 SAMPLE_COUNT,
                 TEXTURE_DEPTH_OR_ARRAY_LAYERS,
                 TEXTURE_MIP_LEVEL_COUNT,
@@ -275,7 +282,6 @@ impl<
         RefCell<
             TextureView<
                 F,
-                DIMENSION,
                 SAMPLE_COUNT,
                 COPY_SRC,
                 COPY_DST,
@@ -288,7 +294,7 @@ impl<
     where
         Texture<
             VF,
-            DIMENSION,
+            TEXTURE_DIMENSION,
             SAMPLE_COUNT,
             TEXTURE_DEPTH_OR_ARRAY_LAYERS,
             TEXTURE_MIP_LEVEL_COUNT,
@@ -330,7 +336,7 @@ impl<
 
         let externref = unsafe {
             create_texture_view(
-                &texture.externref.borrow(),
+                &texture.externref.borrow().0,
                 label.as_ptr() as usize,
                 label.len(),
                 VF::to_srgb(),
@@ -348,10 +354,10 @@ impl<
             format: PhantomData,
             label,
             texture: texture.clone(),
-            version: unsafe { NonZeroU32::new_unchecked(1) },
+            dimension,
+            aspect,
+            version: 0,
         }));
-        let weak = Rc::downgrade(&texture_view);
-        texture.views.borrow_mut().push(weak);
         return texture_view;
     }
 }
@@ -384,7 +390,7 @@ fn texture_view_usages() {
         String::from("testtexture"),
     ));
 
-    TextureView::<_, _, _, true, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+    TextureView::<_, _, true, false, true, false, true>::new(
         texture,
         String::from("testtextureview"),
         TextureViewDimension::D2,
@@ -420,20 +426,7 @@ fn test_create_texture_view() {
             NonZeroU32::new_unchecked(300),
             String::from("diffuseTexture"),
         ));
-        TextureView::<_, _, _, false, false, true, false, false>::new::<
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            1,
-            0,
-            _,
-            _,
-            0,
-            1,
-        >(
+        TextureView::<_, _, false, false, true, false, false>::new(
             texture,
             String::from("test"),
             TextureViewDimension::D2,

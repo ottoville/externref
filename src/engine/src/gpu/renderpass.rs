@@ -156,6 +156,7 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
             .render_targets
             .iter()
             .any(|render_target| render_target.is_dirty());
+
         if dirty {
             self.descriptor = create_render_pass_descriptor2(
                 &mut self.render_targets,

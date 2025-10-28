@@ -29,7 +29,7 @@ webgpu = { path = "../webgpu" }
 allocators = { path = "../allocators" }
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.53"
+wasm-bindgen-test = "0.3.55"
 
 [profile.release]
 opt-level = 3

@@ -1,7 +1,7 @@
 use std::{
     cell::{Cell, RefCell},
     marker::PhantomData,
-    num::{NonZero, NonZeroU32},
+    num::NonZero,
     rc::Rc,
     sync::Arc,
 };
@@ -238,7 +238,7 @@ impl<
     fn to_number(&self) -> u32 {
         F::to_number()
     }
-    fn get_attachment(&self) -> &Resource<JSTextureView> {
+    fn get_attachment(&mut self) -> &Resource<JSTextureView> {
         let texture = unsafe { get_current_texture(&self.context) };
 
         let view: Resource<JSTextureView> = unsafe {
@@ -273,8 +273,8 @@ impl<
         self.canvas.resize(width, height);
     }
 
-    fn version(&self) -> Option<NonZeroU32> {
-        None
+    fn is_dirty(&self) -> bool {
+        return true;
     }
 }
 impl<

@@ -478,7 +478,7 @@ impl Collider {
         self.lowest_root = 1.0;
         let mut collided_point_in_triangle = false;
         if !embedded_in_plane {
-            let t0 = unsafe { f32x4_extract_lane::<N>(t0_vec) };
+            let t0 = f32x4_extract_lane::<N>(t0_vec);
             let plane_collider: v128 =
                 unsafe { v128_load(plane_position as *const Plane as *const v128) };
             //planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
@@ -648,7 +648,6 @@ impl Collider {
 #[wasm_bindgen_test::wasm_bindgen_test]
 fn test_check_for_lowest_root() {
     use std::arch::wasm32::f32x4;
-    use std::arch::wasm32::i32x4;
     use std::arch::wasm32::u32x4;
 
     let mut collider = Box::new(Collider::new());

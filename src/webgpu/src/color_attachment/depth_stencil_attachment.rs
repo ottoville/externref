@@ -43,7 +43,7 @@ impl<const SAMPLE_COUNT: u32> DepthStencilAttachment<SAMPLE_COUNT> {
         depth_store_op_enum: StoreOpt,
     ) -> Self {
         let externref = {
-            let borrowed = texture_view.borrow();
+            let mut borrowed = texture_view.borrow_mut();
             unsafe {
                 create_render_pass_depth_stencil_attachment(
                     borrowed.get_attachment(),

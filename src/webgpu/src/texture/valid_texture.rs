@@ -1,6 +1,9 @@
-use crate::texture::{texture::{Texture, TextureDimensionTrait}, texture_formats::TextureFormat};
+use crate::texture::{
+    texture::{Texture, TextureDimensionTrait},
+    texture_formats::TextureFormat,
+};
 
-pub trait ValidTexture : TextureDimensionTrait {
+pub trait ValidTexture: TextureDimensionTrait {
     fn to_number(&self) -> u32;
 }
 
@@ -29,7 +32,9 @@ impl<
         STORAGE_BINDING,
         RENDER_ATTACHMENT,
         SRGB_MULTIVIEW,
-    > where Texture<
+    >
+where
+    Texture<
         F,
         DIMENSION,
         1,
@@ -41,7 +46,7 @@ impl<
         STORAGE_BINDING,
         RENDER_ATTACHMENT,
         SRGB_MULTIVIEW,
-    >: TextureDimensionTrait
+    >: TextureDimensionTrait,
 {
     fn to_number(&self) -> u32 {
         F::to_number()
@@ -67,19 +72,7 @@ impl<
         const TEXTURE_BINDING: bool,
         const SRGB_MULTIVIEW: bool,
     > ValidTexture
-    for Texture<
-        F,
-        2,
-        4,
-        1,
-        1,
-        COPY_SRC,
-        COPY_DST,
-        TEXTURE_BINDING,
-        false,
-        true,
-        SRGB_MULTIVIEW,
-    >
+    for Texture<F, 2, 4, 1, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, false, true, SRGB_MULTIVIEW>
 {
     fn to_number(&self) -> u32 {
         F::to_number()

@@ -4,8 +4,6 @@ use std::marker::PhantomData;
 use std::num::NonZero;
 
 use crate::device::create_texture;
-use crate::texture::texture_view::TextureViewTrait;
-use crate::weakvec::WeakVec;
 use crate::{
     device::JSDevice,
     texture::texture_formats::{TextureFormat, TextureFormatSRGB},
@@ -16,6 +14,7 @@ pub enum TextureDimension {
     D2,
     D3,
 }
+#[derive(Clone, Copy)]
 pub enum TextureViewDimension {
     D1,
     D2,
@@ -24,6 +23,7 @@ pub enum TextureViewDimension {
     CubeArray,
     D3,
 }
+#[derive(Clone, Copy)]
 pub enum TextureAspect {
     All,
     StencilOnly,
@@ -79,13 +79,45 @@ pub struct Texture<
     const RENDER_ATTACHMENT: bool = false,
     const SRGB_MULTIVIEW: bool = false,
 > {
-    pub externref: RefCell<Resource<JSTexture>>,
+    pub externref: RefCell<(Resource<JSTexture>, u32)>,
     pub label: Option<String>,
     pub format: PhantomData<F>,
-    pub views: RefCell<WeakVec<RefCell<dyn TextureViewTrait>>>,
 }
-
-pub trait TextureDimensionTrait {
+pub trait TextureTrait {
+    fn externref(&self) -> &RefCell<(Resource<JSTexture>, u32)>;
+}
+impl<
+        F: TextureFormat,
+        const DIMENSION: u32,
+        const SAMPLE_COUNT: u32,
+        const DEPTH_OR_ARRAY_LAYERS: u32,
+        const MIP_LEVEL_COUNT: u32,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const TEXTURE_BINDING: bool,
+        const STORAGE_BINDING: bool,
+        const RENDER_ATTACHMENT: bool,
+        const SRGB_MULTIVIEW: bool,
+    > TextureTrait
+    for Texture<
+        F,
+        DIMENSION,
+        SAMPLE_COUNT,
+        DEPTH_OR_ARRAY_LAYERS,
+        MIP_LEVEL_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+        SRGB_MULTIVIEW,
+    >
+{
+    fn externref(&self) -> &RefCell<(Resource<JSTexture>, u32)> {
+        &self.externref
+    }
+}
+pub trait TextureDimensionTrait: TextureTrait {
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>);
 }
 
@@ -219,22 +251,28 @@ where
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
         let mut externref = self.externref.borrow_mut();
         *externref = unsafe {
-            create_texture(
-                device,
-                width.get(),
-                height.get(),
-                DEPTH_OR_ARRAY_LAYERS,
-                self.label.as_ref().unwrap().as_ptr() as usize,
-                self.label.as_ref().unwrap().len(),
-                Self::usages(),
-                MIP_LEVEL_COUNT,
-                SAMPLE_COUNT,
-                DIMENSION,
-                F::to_number(),
-                0,
-                0,
+            (
+                create_texture(
+                    device,
+                    width.get(),
+                    height.get(),
+                    DEPTH_OR_ARRAY_LAYERS,
+                    self.label.as_ref().unwrap().as_ptr() as usize,
+                    self.label.as_ref().unwrap().len(),
+                    Self::usages(),
+                    MIP_LEVEL_COUNT,
+                    SAMPLE_COUNT,
+                    DIMENSION,
+                    F::to_number(),
+                    0,
+                    0,
+                ),
+                externref.1 + 1,
             )
         };
+        /*self.views.borrow_mut().iter_mut(|view| {
+            let texture_view = view.borrow_mut();
+        });*/
     }
     /// # Creates new texture
     /// ## Should panic, 4 dimension texture does not exist
@@ -279,9 +317,8 @@ where
         };
         Texture {
             label: Some(label),
-            externref: RefCell::new(externref),
+            externref: RefCell::new((externref, 0)),
             format: PhantomData,
-            views: RefCell::new(WeakVec::new()),
         }
     }
     pub fn new_with_srgb_multiview<VF: TextureFormat>(
@@ -327,9 +364,8 @@ where
         };
         Texture {
             label: Some(label),
-            externref: RefCell::new(externref),
+            externref: RefCell::new((externref, 0)),
             format: PhantomData,
-            views: RefCell::new(WeakVec::new()),
         }
     }
 }
@@ -362,7 +398,7 @@ impl<
     >
 {
     fn drop(&mut self) {
-        unsafe { destroy(&self.externref.borrow()) };
+        unsafe { destroy(&self.externref.borrow().0) };
     }
 }
 

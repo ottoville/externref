@@ -1,4 +1,4 @@
-use std::num::{NonZero, NonZeroU32};
+use std::num::NonZero;
 
 use externref::Resource;
 
@@ -45,7 +45,7 @@ descriptor.dimension must be either "2d" or "3d".
 ///         NonZeroU32::new_unchecked(300),
 ///         String::from("diffuseTexture"),
 ///     ));
-///     let multisampled_textureview: Rc<RefCell<dyn RenderAttachmentTextureMultiSampled>> = TextureView::<_, _, _, false, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///     let multisampled_textureview: Rc<RefCell<dyn RenderAttachmentTextureMultiSampled>> = TextureView::<_, _, false, false, true, false, true>::new(
 ///         texture,
 ///         String::from("test"),
 ///         TextureViewDimension::D2,
@@ -74,7 +74,7 @@ descriptor.dimension must be either "2d" or "3d".
 ///         NonZeroU32::new_unchecked(300),
 ///         String::from("diffuseTexture"),
 ///     ));
-///     let multisampled_textureview: Rc<RefCell<dyn RenderAttachmentTextureMultiSampled>> = TextureView::<_, _, _, false, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///     let multisampled_textureview: Rc<RefCell<dyn RenderAttachmentTextureMultiSampled>> = TextureView::<_, _, false, false, true, false, true>::new(
 ///         texture,
 ///         String::from("test"),
 ///         TextureViewDimension::D2,
@@ -102,7 +102,7 @@ descriptor.dimension must be either "2d" or "3d".
 ///            NonZeroU32::new_unchecked(300),
 ///            String::from("diffuseTexture"),
 ///        ));
-///       TextureView::<_, _, _, false, false, true, false, false>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///       TextureView::<_, _, false, false, true, false, false>::new(
 ///            texture,
 ///            String::from("test"),
 ///            TextureViewDimension::D2,
@@ -130,7 +130,7 @@ descriptor.dimension must be either "2d" or "3d".
 ///            NonZeroU32::new_unchecked(300),
 ///            String::from("diffuseTexture"),
 ///        ));
-///       TextureView::<_, _, _, false, false, true, false, false>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///       TextureView::<_, _, false, false, true, false, false>::new(
 ///            texture,
 ///            String::from("test"),
 ///            TextureViewDimension::D2,
@@ -160,7 +160,7 @@ descriptor.dimension must be either "2d" or "3d".
 ///            String::from("diffuseTexture"),
 ///        ));
 ///         let multisampled_textureview: Rc<RefCell<dyn RenderAttachmentTextureMultiSampled>> =
-///             TextureView::<_, _, _, false, false, true, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///             TextureView::<_, _, false, false, true, false, true>::new(
 ///             texture,
 ///             String::from("test"),
 ///             TextureViewDimension::D2,
@@ -218,7 +218,7 @@ descriptor.dimension must be either "2d" or "3d".
 ///            String::from("diffuseTexture"),
 ///        ));
 ///    let renderable_textureview: Rc<RefCell<dyn RenderAttachmentTexture>> =
-///        TextureView::<_, _, _, false, false, false, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///        TextureView::<_, _, false, false, false, false, true>::new(
 ///            texture,
 ///            String::from("test"),
 ///            TextureViewDimension::D2,
@@ -248,7 +248,7 @@ descriptor.dimension must be either "2d" or "3d".
 ///            String::from("diffuseTexture"),
 ///        ));
 ///      let renderable_textureview: Rc<RefCell<dyn RenderAttachmentTexture>> =
-///        TextureView::<_, _, _, false, false, false, false, true>::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+///        TextureView::<_, _, false, false, false, false, true>::new(
 ///            texture,
 ///            String::from("test"),
 ///            TextureViewDimension::D2,
@@ -258,35 +258,47 @@ descriptor.dimension must be either "2d" or "3d".
 /// ```
 pub trait RenderAttachmentTexture {
     fn to_number(&self) -> u32;
-    fn get_attachment(&self) -> &Resource<JSTextureView>;
+    fn get_attachment(&mut self) -> &Resource<JSTextureView>;
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>);
-    fn version(&self) -> Option<NonZeroU32>;
+    fn is_dirty(&self) -> bool;
 }
 impl<
-        F: RenderAttachmentFormat,
-        const DIMENSION: u32,
+        F: RenderAttachmentFormat + 'static,
         const SAMPLE_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
+        const BASE_MIP_LEVEL: u32,
+        const MIP_LEVEL_COUNT: u32,
+        const BASE_ARRAY_LAYER: u32,
+        const ARRAY_LAYER_COUNT: u32,
     > RenderAttachmentTexture
     for TextureView<
         F,
-        DIMENSION,
         SAMPLE_COUNT,
         COPY_SRC,
         COPY_DST,
         TEXTURE_BINDING,
         STORAGE_BINDING,
         true,
+        BASE_MIP_LEVEL,
+        MIP_LEVEL_COUNT,
+        BASE_ARRAY_LAYER,
+        ARRAY_LAYER_COUNT,
     >
 {
     fn to_number(&self) -> u32 {
         F::to_number()
     }
 
-    fn get_attachment(&self) -> &Resource<JSTextureView> {
+    fn get_attachment(&mut self) -> &Resource<JSTextureView> {
+        let texture_version = { self.texture.externref().borrow().1 };
+        let dirty = texture_version != self.version;
+        if dirty {
+            self.re_create();
+            self.version = texture_version;
+        }
         &self.externref
     }
 
@@ -294,8 +306,9 @@ impl<
         self.texture.resize(device, width, height);
     }
 
-    fn version(&self) -> Option<NonZeroU32> {
-        Some(self.version)
+    fn is_dirty(&self) -> bool {
+        let texture_version = { self.texture.externref().borrow().1 };
+        return texture_version != self.version;
     }
 }
 
@@ -311,20 +324,20 @@ impl<
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
     > RenderAttachmentTextureMultiSampled
-    for TextureView<F, 2, 4, COPY_SRC, COPY_DST, TEXTURE_BINDING, false, true>
+    for TextureView<F, 4, COPY_SRC, COPY_DST, TEXTURE_BINDING, false, true>
 where
-    TextureView<F, 2, 4, COPY_SRC, COPY_DST, TEXTURE_BINDING, false, true>: RenderAttachmentTexture,
+    TextureView<F, 4, COPY_SRC, COPY_DST, TEXTURE_BINDING, false, true>: RenderAttachmentTexture,
 {
 }
 pub trait RenderAttachmentTextureSingleSampled: RenderAttachmentTexture {}
 // 2-dimensioned texture, singlesampled
 impl<
-        F: RenderAttachmentFormat,
+        F: RenderAttachmentFormat + Sync + Send + 'static,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
         const STORAGE_BINDING: bool,
     > RenderAttachmentTextureSingleSampled
-    for TextureView<F, 2, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, true>
+    for TextureView<F, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, true>
 {
 }

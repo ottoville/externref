@@ -375,17 +375,13 @@ pub unsafe extern "C" fn init_gpu(
         NonZeroU32::new_unchecked(300),
         String::from("depthTexture_renderPassScreen2"),
     ));
-    let depth_render_target_view: Rc<
-        RefCell<TextureView<_, _, _, true, false, true, false, true>>,
-    > = TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+    let depth_render_target_view = TextureView::<_, _, true, false, true, false, true, 0>::new(
         depth_render_target,
         String::from("depthTexture_renderPassScreen2_view"),
         TextureViewDimension::D2,
         TextureAspect::DepthOnly,
     );
-    let screen_render_target_view: Rc<
-        RefCell<TextureView<_, _, _, false, false, true, false, true>>,
-    > = TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+    let screen_render_target_view = TextureView::<_, _, false, false, true, false, true, 0>::new(
         screen_render_target,
         String::from("diffuseTextureView"),
         TextureViewDimension::D2,
@@ -427,20 +423,7 @@ pub unsafe extern "C" fn init_gpu(
         }],
         [ColorAttachmentMultiSampled::new(
             screen_render_target_view,
-            TextureView::<_, _, _, false, false, true, false, true>::new::<
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                1,
-                0,
-                _,
-                _,
-                0,
-                1,
-            >(
+            TextureView::<_, _, false, false, true, false, true>::new(
                 resolve_target,
                 String::from("diffusetexturetarget"),
                 TextureViewDimension::D2,
@@ -483,9 +466,7 @@ pub unsafe extern "C" fn init_gpu(
         String::from("diffuseTextureWater"),
     ));
 
-    let water_render_target_view: Rc<
-        RefCell<TextureView<_, _, _, false, false, true, false, true>>,
-    > = TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
+    let water_render_target_view = TextureView::<_, _, false, false, true, false, true, 0>::new(
         water_render_target,
         String::from("diffuseTextureWaterView"),
         TextureViewDimension::D2,
@@ -508,14 +489,13 @@ pub unsafe extern "C" fn init_gpu(
         NonZeroU32::new_unchecked(300),
         String::from("depthTexture_renderPassWater"),
     ));
-    let depth_render_target_water_view: Rc<
-        RefCell<TextureView<_, _, _, true, false, false, false, true>>,
-    > = TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
-        depth_render_target_water,
-        String::from("depthTexture_renderPassWater_view"),
-        TextureViewDimension::D2,
-        TextureAspect::DepthOnly,
-    );
+    let depth_render_target_water_view =
+        TextureView::<_, _, true, false, false, false, true, 0>::new(
+            depth_render_target_water,
+            String::from("depthTexture_renderPassWater_view"),
+            TextureViewDimension::D2,
+            TextureAspect::DepthOnly,
+        );
     let render_pass_water = Renderpass::new(
         String::from("renderPassWater"),
         [NonZeroU32::new_unchecked(1); 2],
@@ -574,13 +554,12 @@ pub unsafe extern "C" fn init_gpu(
         String::from("idTexture"),
     ));
 
-    let pick_render_target_view: Rc<RefCell<TextureView<_, _, _, true, false, true, false, true>>> =
-        TextureView::new::<_, _, _, _, _, _, 1, 0, _, _, 0, 1>(
-            pick_render_target,
-            String::from("idTexture_view"),
-            TextureViewDimension::D2,
-            TextureAspect::All,
-        );
+    let pick_render_target_view = TextureView::<_, _, true, false, true, false, true>::new(
+        pick_render_target,
+        String::from("idTexture_view"),
+        TextureViewDimension::D2,
+        TextureAspect::All,
+    );
     let pick_render_pass = Renderpass::new(
         String::from("pickRenderPass"),
         [NonZeroU32::new_unchecked(1); 2],

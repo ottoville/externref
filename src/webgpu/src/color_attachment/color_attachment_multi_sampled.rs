@@ -1,10 +1,4 @@
-use std::{
-    cell::RefCell,
-    num::{NonZero, NonZeroU32},
-    rc::Rc,
-};
-
-use externref::Resource;
+use std::{cell::RefCell, num::NonZero, rc::Rc};
 
 use crate::{
     color_attachment::{
@@ -22,17 +16,16 @@ use crate::{
         texture_view::TextureView,
     },
 };
+use externref::Resource;
 
 pub struct ColorAttachmentMultiSampled {
     pub attachment: ColorAttachmentSingleSampled,
     pub resolve_target: Rc<RefCell<dyn RenderAttachmentTextureSingleSampled + 'static>>,
-    version: NonZeroU32,
-    version_resolve_target: NonZeroU32,
 }
 
 impl ColorAttachmentMultiSampled {
     pub fn new<
-        F: RenderAttachmentFormat + 'static,
+        F: RenderAttachmentFormat + Send + Sync + 'static,
         const COPY_SRC: bool,
         const COPY_DST: bool,
         const TEXTURE_BINDING: bool,
@@ -40,9 +33,7 @@ impl ColorAttachmentMultiSampled {
     >(
         texture_view: Rc<RefCell<impl RenderAttachmentTextureMultiSampled + 'static>>,
         resolve_target: Rc<
-            RefCell<
-                TextureView<F, 2, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, true>,
-            >,
+            RefCell<TextureView<F, 1, COPY_SRC, COPY_DST, TEXTURE_BINDING, STORAGE_BINDING, true>>,
         >,
         clear_value_r: f64,
         clear_value_g: f64,
@@ -58,8 +49,6 @@ impl ColorAttachmentMultiSampled {
                 clear_value_a,
             ),
             resolve_target,
-            version: unsafe { NonZeroU32::new_unchecked(9999) },
-            version_resolve_target: unsafe { NonZeroU32::new_unchecked(9999) },
         }
     }
 
@@ -76,21 +65,19 @@ impl ColorAttachment for ColorAttachmentMultiSampled {
         &self.attachment.texture_view
     }
     fn get_attachment(&mut self) -> Resource<JSRenderPassColorAttachment> {
-        let borrowed = self.attachment.texture_view.borrow();
-        let some_new_version = borrowed.version();
-        if let Some(new_version) = some_new_version {
-            self.version = new_version;
-        }
-        let borrowed2 = self.resolve_target.borrow();
-        let some_new_version = borrowed2.version();
-        if let Some(new_version) = some_new_version {
-            self.version_resolve_target = new_version;
-        }
+        //"get attachment color_Attachment_multi_sampled.rs".log();
+
+        let mut borrowed = self.attachment.texture_view.borrow_mut();
+        let view1 = borrowed.get_attachment();
+        let mut borrowed2 = self.resolve_target.borrow_mut();
+
+        let view2 = borrowed2.get_attachment();
+
         unsafe {
             create_render_pass_color_attachment_clear(
-                borrowed.get_attachment(),
+                view1,
                 -1,
-                Some(borrowed2.get_attachment()),
+                Some(view2),
                 self.attachment.clear_value_r,
                 self.attachment.clear_value_g,
                 self.attachment.clear_value_b,
@@ -100,16 +87,11 @@ impl ColorAttachment for ColorAttachmentMultiSampled {
         }
     }
     fn is_dirty(&self) -> bool {
-        let dirty = match self.attachment.texture_view.borrow().version() {
-            Some(version) => version != self.version,
-            None => false,
-        };
-        if dirty {
-            return false;
+        let borrowed = self.attachment.texture_view.borrow();
+        if borrowed.is_dirty() {
+            return true;
         }
-        return match self.resolve_target.borrow().version() {
-            Some(version) => version != self.version_resolve_target,
-            None => false,
-        };
+        let borrowed2 = self.resolve_target.borrow();
+        return borrowed2.is_dirty();
     }
 }
