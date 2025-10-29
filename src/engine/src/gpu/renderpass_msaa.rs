@@ -5,6 +5,7 @@ use std::{
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
+use logger::LoggerArray;
 use terramath::VectorMath;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
@@ -39,7 +40,7 @@ pub struct RenderpassMSAA<const N: usize> {
     pub size: [NonZeroU32; 2],
     pub size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
     pub render_targets: [ColorAttachmentMultiSampled; N],
-    pub depth_render_target: Option<DepthStencilAttachment<4>>,
+    pub depth_render_target: Option<DepthStencilAttachment<4, false>>,
     formats: Vec<u32>,
     descriptor: Resource<JSRenderPassDescriptor>,
 }
@@ -51,14 +52,14 @@ impl<const N: usize> RenderpassMSAA<N> {
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
         mut render_targets: [ColorAttachmentMultiSampled; N],
-        depth_render_target: Option<DepthStencilAttachment<4>>,
+        mut depth_render_target: Option<DepthStencilAttachment<4, false>>,
     ) -> Self {
         let mut formats = [0; N];
         for n in 0..N {
             formats[n] = render_targets[n].texture_view().borrow().to_number();
         }
         let descriptor =
-            create_render_pass_descriptor2(&mut render_targets, &depth_render_target, &label);
+            create_render_pass_descriptor2(&mut render_targets, &mut depth_render_target, &label);
 
         RenderpassMSAA {
             label,
@@ -88,14 +89,20 @@ impl<const N: usize> RenderPassTrait for RenderpassMSAA<N> {
         bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
-        let dirty = self
+        let mut dirty = self
             .render_targets
             .iter()
             .any(|render_target| render_target.is_dirty());
+        if !dirty {
+            if let Some(depth_render_target) = &self.depth_render_target {
+                dirty = depth_render_target.is_dirty();
+            }
+        }
         if dirty {
+            ["dirty", &self.label].log();
             self.descriptor = create_render_pass_descriptor2(
                 &mut self.render_targets,
-                &self.depth_render_target,
+                &mut self.depth_render_target,
                 &self.label,
             );
         }
@@ -140,6 +147,12 @@ impl<const N: usize> RenderPassTrait for RenderpassMSAA<N> {
             render_target.resize(device, width, height);
         }
         if let Some(depth_render_target) = &self.depth_render_target {
+            [
+                "Resize depth_render_target",
+                &width.to_string(),
+                &height.to_string(),
+            ]
+            .log();
             depth_render_target.resize(device, width, height);
         }
     }

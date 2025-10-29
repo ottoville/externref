@@ -261,6 +261,7 @@ pub trait RenderAttachmentTexture {
     fn get_attachment(&mut self) -> &Resource<JSTextureView>;
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>);
     fn is_dirty(&self) -> bool;
+    fn label(&self) -> &String;
 }
 impl<
         F: RenderAttachmentFormat + 'static,
@@ -309,6 +310,10 @@ impl<
     fn is_dirty(&self) -> bool {
         let texture_version = { self.texture.externref().borrow().1 };
         return texture_version != self.version;
+    }
+    
+    fn label(&self) -> &String {
+        &self.label
     }
 }
 

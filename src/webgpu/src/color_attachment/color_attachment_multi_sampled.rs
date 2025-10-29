@@ -3,7 +3,8 @@ use std::{cell::RefCell, num::NonZero, rc::Rc};
 use crate::{
     color_attachment::{
         color_attachment::{
-            create_render_pass_color_attachment_clear, ColorAttachment, JSRenderPassColorAttachment,
+            create_render_pass_color_attachment_clear, ColorAttachment,
+            JSRenderPassColorAttachment, StoreOpt,
         },
         color_attachment_single_sampled::ColorAttachmentSingleSampled,
     },
@@ -21,6 +22,7 @@ use externref::Resource;
 pub struct ColorAttachmentMultiSampled {
     pub attachment: ColorAttachmentSingleSampled,
     pub resolve_target: Rc<RefCell<dyn RenderAttachmentTextureSingleSampled + 'static>>,
+    externref: Resource<JSRenderPassColorAttachment>,
 }
 
 impl ColorAttachmentMultiSampled {
@@ -40,6 +42,24 @@ impl ColorAttachmentMultiSampled {
         clear_value_b: f64,
         clear_value_a: f64,
     ) -> Self {
+        let externref = {
+            let mut borrowed = texture_view.borrow_mut();
+            let view1 = borrowed.get_attachment();
+            let mut borrowed2 = resolve_target.borrow_mut();
+            let view2 = borrowed2.get_attachment();
+            unsafe {
+                create_render_pass_color_attachment_clear(
+                    view1,
+                    -1,
+                    Some(view2),
+                    clear_value_r,
+                    clear_value_g,
+                    clear_value_b,
+                    clear_value_a,
+                    StoreOpt::Store,
+                )
+            }
+        };
         ColorAttachmentMultiSampled {
             attachment: ColorAttachmentSingleSampled::new(
                 texture_view,
@@ -49,6 +69,7 @@ impl ColorAttachmentMultiSampled {
                 clear_value_a,
             ),
             resolve_target,
+            externref,
         }
     }
 
@@ -64,27 +85,27 @@ impl ColorAttachment for ColorAttachmentMultiSampled {
     fn texture_view(&self) -> &Rc<RefCell<dyn RenderAttachmentTexture>> {
         &self.attachment.texture_view
     }
-    fn get_attachment(&mut self) -> Resource<JSRenderPassColorAttachment> {
-        //"get attachment color_Attachment_multi_sampled.rs".log();
-
+    fn get_attachment(&mut self) -> &Resource<JSRenderPassColorAttachment> {
         let mut borrowed = self.attachment.texture_view.borrow_mut();
-        let view1 = borrowed.get_attachment();
         let mut borrowed2 = self.resolve_target.borrow_mut();
+        if borrowed.is_dirty() || borrowed2.is_dirty() {
+            let view1 = borrowed.get_attachment();
+            let view2 = borrowed2.get_attachment();
 
-        let view2 = borrowed2.get_attachment();
-
-        unsafe {
-            create_render_pass_color_attachment_clear(
-                view1,
-                -1,
-                Some(view2),
-                self.attachment.clear_value_r,
-                self.attachment.clear_value_g,
-                self.attachment.clear_value_b,
-                self.attachment.clear_value_a,
-                self.attachment.storeopt,
-            )
+            self.externref = unsafe {
+                create_render_pass_color_attachment_clear(
+                    view1,
+                    -1,
+                    Some(view2),
+                    self.attachment.clear_value_r,
+                    self.attachment.clear_value_g,
+                    self.attachment.clear_value_b,
+                    self.attachment.clear_value_a,
+                    self.attachment.storeopt,
+                )
+            }
         }
+        return &self.externref;
     }
     fn is_dirty(&self) -> bool {
         let borrowed = self.attachment.texture_view.borrow();

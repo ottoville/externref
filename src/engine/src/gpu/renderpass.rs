@@ -9,7 +9,7 @@ use terramath::VectorMath;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
     color_attachment::{
-        color_attachment::{ColorAttachment, JSRenderPassColorAttachment},
+        color_attachment::ColorAttachment,
         color_attachment_single_sampled::ColorAttachmentSingleSampled,
         depth_stencil_attachment::DepthStencilAttachment,
     },
@@ -18,7 +18,10 @@ use webgpu::{
     device::JSDevice,
     queue::Queue,
     renderbundle::JSFunction,
-    renderpass::renderpass_descriptor::{create_render_pass_descriptor, JSRenderPassDescriptor},
+    renderpass::renderpass_descriptor::{
+        create_render_pass_descriptor, push_color_attachment_to_render_pass_descriptor,
+        JSRenderPassDescriptor,
+    },
 };
 
 use crate::{
@@ -80,32 +83,37 @@ pub struct Renderpass<const N: usize> {
     size: [NonZeroU32; 2],
     size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
     render_targets: [ColorAttachmentSingleSampled; N],
-    depth_render_target: Option<DepthStencilAttachment<1>>,
+    depth_render_target: Option<DepthStencilAttachment<1, false>>,
     formats: Vec<u32>,
     descriptor: Resource<JSRenderPassDescriptor>,
 }
-pub fn create_render_pass_descriptor2<const N: usize, const D: u32, T: ColorAttachment>(
+pub fn create_render_pass_descriptor2<
+    const N: usize,
+    const D: u32,
+    const DEPTH_READ_ONLY: bool,
+    T: ColorAttachment,
+>(
     render_targets: &mut [T; N],
-    depth_render_target: &Option<DepthStencilAttachment<D>>,
+    depth_render_target: &mut Option<DepthStencilAttachment<D, DEPTH_READ_ONLY>>,
     label: &String,
 ) -> Resource<JSRenderPassDescriptor> {
-    let mut attachments = render_targets
-        .iter_mut()
-        .map(|rendertarget| rendertarget.get_attachment());
-    let b: Box<&mut dyn Iterator<Item = Resource<JSRenderPassColorAttachment>>> =
-        Box::new(&mut attachments);
     let depth_externref = match depth_render_target {
-        Some(depth_render_target2) => Some(&depth_render_target2.externref),
+        Some(depth_render_target2) => Some(depth_render_target2.get_attachment()),
         None => None,
     };
-    unsafe {
-        create_render_pass_descriptor(
-            label.as_ptr() as usize,
-            label.len(),
-            Box::into_raw(b),
-            depth_externref,
-        )
+
+    let descriptor = unsafe {
+        create_render_pass_descriptor(label.as_ptr() as usize, label.len(), depth_externref)
+    };
+    for attachment in render_targets.iter_mut() {
+        unsafe {
+            push_color_attachment_to_render_pass_descriptor(
+                &descriptor,
+                attachment.get_attachment(),
+            )
+        };
     }
+    return descriptor;
 }
 impl<const N: usize> Renderpass<N> {
     pub fn new(
@@ -115,14 +123,14 @@ impl<const N: usize> Renderpass<N> {
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
         mut render_targets: [ColorAttachmentSingleSampled; N],
-        depth_render_target: Option<DepthStencilAttachment<1>>,
+        mut depth_render_target: Option<DepthStencilAttachment<1, false>>,
     ) -> Self {
         let mut formats = [0; N];
         for n in 0..N {
             formats[n] = render_targets[n].texture_view().borrow().to_number();
         }
         let descriptor =
-            create_render_pass_descriptor2(&mut render_targets, &depth_render_target, &label);
+            create_render_pass_descriptor2(&mut render_targets, &mut depth_render_target, &label);
         Renderpass {
             label,
             size,
@@ -152,15 +160,20 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
         bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
         let descriptor = unsafe { get_renderpass_descriptor(&self.jsrenderpass) };
-        let dirty = self
+        let mut dirty = self
             .render_targets
             .iter()
             .any(|render_target| render_target.is_dirty());
+        if !dirty {
+            if let Some(depth_render_target) = &self.depth_render_target {
+                dirty = depth_render_target.is_dirty();
+            }
+        }
 
         if dirty {
             self.descriptor = create_render_pass_descriptor2(
                 &mut self.render_targets,
-                &self.depth_render_target,
+                &mut self.depth_render_target,
                 &self.label,
             );
         }

@@ -18,7 +18,7 @@ pub struct ColorAttachmentSingleSampled {
     pub clear_value_g: f64,
     pub clear_value_b: f64,
     pub clear_value_a: f64,
-    pub externref: Resource<JSRenderPassColorAttachment>,
+    externref: Resource<JSRenderPassColorAttachment>,
 }
 impl ColorAttachmentSingleSampled {
     pub fn new(
@@ -63,22 +63,24 @@ impl ColorAttachment for ColorAttachmentSingleSampled {
     fn texture_view(&self) -> &Rc<RefCell<dyn RenderAttachmentTexture>> {
         &self.texture_view
     }
-    fn get_attachment(&mut self) -> Resource<JSRenderPassColorAttachment> {
-        //"get attachment color_Attachment_single_sampled.rs".log();
+    fn get_attachment(&mut self) -> &Resource<JSRenderPassColorAttachment> {
         let mut borrowed = self.texture_view.borrow_mut();
-        let view = borrowed.get_attachment();
-        unsafe {
-            create_render_pass_color_attachment_clear(
-                view,
-                -1,
-                None,
-                self.clear_value_r,
-                self.clear_value_g,
-                self.clear_value_b,
-                self.clear_value_a,
-                self.storeopt,
-            )
-        }
+        if borrowed.is_dirty() {
+            let view = borrowed.get_attachment();
+            self.externref = unsafe {
+                create_render_pass_color_attachment_clear(
+                    view,
+                    -1,
+                    None,
+                    self.clear_value_r,
+                    self.clear_value_g,
+                    self.clear_value_b,
+                    self.clear_value_a,
+                    self.storeopt,
+                )
+            }
+        };
+        return &self.externref;
     }
     fn is_dirty(&self) -> bool {
         let borrowed = self.texture_view.borrow();

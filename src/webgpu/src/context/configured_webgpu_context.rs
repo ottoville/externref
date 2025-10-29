@@ -276,6 +276,9 @@ impl<
     fn is_dirty(&self) -> bool {
         return true;
     }
+    fn label(&self) -> &String {
+        &self.label
+    }
 }
 impl<
         F: TextureFormat + Sync + Send + 'static,

@@ -1,5 +1,4 @@
 import type { Engine } from '../engine.js';
-import { Rust_Iterator, rust_iterator_to_js } from '../utils.js';
 
 declare const engine: Engine;
 const textDecoder = new TextDecoder();
@@ -41,19 +40,17 @@ export const CommandEncoderInterface = {
   create_render_pass_descriptor(
     label_ptr: number,
     label_len: number,
-    iterator: Rust_Iterator<GPURenderPassColorAttachment | null>,
     depthStencilAttachment: GPURenderPassDepthStencilAttachment | null,
-  ): GPURenderPassDescriptor {
+  ): GPURenderPassDescriptor & {
+    colorAttachments: GPURenderPassColorAttachment[];
+  } {
     const label = textDecoder.decode(
       new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
     );
-    const attachmentsIterator = rust_iterator_to_js(
-      iterator,
-      null,
-      engine.rust.iterate_colorattachments,
-    );
-    const descriptor: GPURenderPassDescriptor = {
-      colorAttachments: [...attachmentsIterator],
+    const descriptor: GPURenderPassDescriptor & {
+      colorAttachments: GPURenderPassColorAttachment[];
+    } = {
+      colorAttachments: [],
       label,
     };
     if (depthStencilAttachment) {
@@ -61,6 +58,7 @@ export const CommandEncoderInterface = {
     }
     return descriptor;
   },
+
   finish(
     commandEncoder: GPUCommandEncoder,
     label_ptr: number,
@@ -70,5 +68,13 @@ export const CommandEncoderInterface = {
       new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
     );
     return commandEncoder.finish({ label });
+  },
+  push_color_attachment_to_render_pass_descriptor(
+    renderpassdescriptor: GPURenderPassDescriptor & {
+      colorAttachments: GPURenderPassColorAttachment[];
+    },
+    colorAttachment: GPURenderPassColorAttachment,
+  ) {
+    renderpassdescriptor.colorAttachments.push(colorAttachment);
   },
 };

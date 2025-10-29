@@ -437,7 +437,6 @@ pub unsafe extern "C" fn init_gpu(
         Some(DepthStencilAttachment::new(
             depth_render_target_view,
             0.0,
-            false,
             StoreOpt::Store,
         )),
     );
@@ -526,7 +525,6 @@ pub unsafe extern "C" fn init_gpu(
         Some(DepthStencilAttachment::new(
             depth_render_target_water_view,
             0.0,
-            false,
             StoreOpt::Store,
         )),
     );

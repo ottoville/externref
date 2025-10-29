@@ -31,15 +31,18 @@ extern "C" {
 }
 pub struct JSRenderPassDepthStencilAttachment(());
 
-pub struct DepthStencilAttachment<const SAMPLE_COUNT: u32> {
+pub struct DepthStencilAttachment<const SAMPLE_COUNT: u32, const DEPTH_READ_ONLY: bool> {
     pub texture_view: Rc<RefCell<dyn DepthTexture<SAMPLE_COUNT>>>,
-    pub externref: Resource<JSRenderPassDepthStencilAttachment>,
+    externref: Resource<JSRenderPassDepthStencilAttachment>,
+    depth_clear_value: f32,
+    depth_store_op_enum: StoreOpt,
 }
-impl<const SAMPLE_COUNT: u32> DepthStencilAttachment<SAMPLE_COUNT> {
+impl<const SAMPLE_COUNT: u32, const DEPTH_READ_ONLY: bool>
+    DepthStencilAttachment<SAMPLE_COUNT, DEPTH_READ_ONLY>
+{
     pub fn new(
         texture_view: Rc<RefCell<impl DepthTexture<SAMPLE_COUNT> + 'static>>,
         depth_clear_value: f32,
-        depth_read_only: bool,
         depth_store_op_enum: StoreOpt,
     ) -> Self {
         let externref = {
@@ -48,7 +51,7 @@ impl<const SAMPLE_COUNT: u32> DepthStencilAttachment<SAMPLE_COUNT> {
                 create_render_pass_depth_stencil_attachment(
                     borrowed.get_attachment(),
                     depth_clear_value,
-                    depth_read_only,
+                    DEPTH_READ_ONLY,
                     depth_store_op_enum,
                 )
             }
@@ -56,9 +59,29 @@ impl<const SAMPLE_COUNT: u32> DepthStencilAttachment<SAMPLE_COUNT> {
         DepthStencilAttachment {
             texture_view,
             externref,
+            depth_clear_value,
+            depth_store_op_enum,
         }
     }
     pub fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
         self.texture_view.borrow().resize(device, width, height);
+    }
+    pub fn is_dirty(&self) -> bool {
+        let borrowed = self.texture_view.borrow();
+        return borrowed.is_dirty();
+    }
+    pub fn get_attachment(&mut self) -> &Resource<JSRenderPassDepthStencilAttachment> {
+        let mut borrowed = self.texture_view.borrow_mut();
+        if borrowed.is_dirty() {
+            self.externref =unsafe {
+                create_render_pass_depth_stencil_attachment(
+                    borrowed.get_attachment(),
+                    self.depth_clear_value,
+                    DEPTH_READ_ONLY,
+                    self.depth_store_op_enum,
+                )
+            };
+        }
+        return &self.externref
     }
 }

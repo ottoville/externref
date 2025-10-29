@@ -11,23 +11,25 @@ steps:
   inputs:
     key: 'cargoregistry'
     path: /home/vsts/.cargo/registry
-- task: Cargo@1
+- task: PowerShell@2
   displayName: Rust unit test
   inputs:
-    cargoCommand: 'test'
-    cargoWorkingDir: './src/engine'
-    cargoCommandOptions: '--lib --workspace'
-    verbose: false
+    targetType: 'inline'
+    script: 'cargo test --lib --workspace'
+    workingDirectory: './src/engine'
+    pwsh: true
 - task: PowerShell@2
   displayName: Install wasm-bindgen-cli
   inputs:
     targetType: 'inline'
     script: 'cargo install wasm-bindgen-cli'
     pwsh: true
-- task: Rustup@1
+- task: PowerShell@2
   displayName: Add wasm32-unknown-unknown target
   inputs:
-    rustupCommand: target add wasm32-unknown-unknown
+    targetType: 'inline'
+    script: 'rustup target add wasm32-unknown-unknown'
+    pwsh: true
 - task: Cache@2
   displayName: Restore rust terramath cache
   inputs:

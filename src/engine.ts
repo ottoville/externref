@@ -375,10 +375,6 @@ export type rustWasm = {
   drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
   ): GPUCommandBuffer | null;
-  iterate_colorattachments(
-    iterator_ptr: Rust_Iterator<GPURenderPassColorAttachment | null>,
-  ): GPURenderPassColorAttachment | null;
-
   add_camera(
     camera: TerraCamera,
     label_ptr: number,

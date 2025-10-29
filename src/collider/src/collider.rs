@@ -615,6 +615,7 @@ impl Collider {
         };
         return false;
     }
+    #[cfg(target_arch = "wasm32")]
     fn collision_found(
         &mut self,
         t: f32,

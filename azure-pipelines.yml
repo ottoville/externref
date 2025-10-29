@@ -86,10 +86,12 @@ stages:
       inputs:
         key: 'rustbuildscript'
         path: './buildscript/target'
-    - task: Rustup@1
+    - task: PowerShell@2
       displayName: Add wasm32-unknown-unknown target
       inputs:
-        rustupCommand: target add wasm32-unknown-unknown
+        targetType: 'inline'
+        script: 'rustup target add wasm32-unknown-unknown'
+        pwsh: true
     - task: Npm@1
       displayName: npm build
       inputs:
