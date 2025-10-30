@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::BTreeMap, rc::Rc, sync::Arc};
+use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
 
 use externref::Resource;
 use webgpu::{
@@ -55,7 +55,7 @@ impl SwapBuffers {
     pub fn queue_submited(&mut self) {
         let mut i = 0;
         while i < self.onqueue.len() {
-            if Arc::strong_count(&self.onqueue[i].externref) == 1 {
+            if Rc::strong_count(&self.onqueue[i].externref) == 1 {
                 let mappadle_buffer = self.onqueue.remove(i);
                 let mappedrc = self.mapped.clone();
                 mappadle_buffer.map_write_async(

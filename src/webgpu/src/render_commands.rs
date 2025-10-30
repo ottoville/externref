@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 use std::ptr;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::buffer::buffer::BufferRef;
 use crate::buffer::buffer::GPUBuffer;
@@ -51,7 +51,7 @@ extern "C" {
 }
 
 pub trait RenderCommands<T>: HaveExternref<T> {
-    fn buffers(&mut self) -> &mut Vec<Arc<BufferRef>>;
+    fn buffers(&mut self) -> &mut Vec<Rc<BufferRef>>;
     fn after_set_buffer(&mut self, buffer: &mut GPUBuffer<false, false, false, false, true>);
     fn draw_indexed(
         &self,

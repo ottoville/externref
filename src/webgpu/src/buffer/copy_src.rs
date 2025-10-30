@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::buffer::buffer::BufferRef;
 use crate::command_encoder::copy_buffer_to_buffer;
@@ -62,7 +62,7 @@ impl<
             self.size = size;
             command_encoder
                 .buffers
-                .push(self.replace_externref(Arc::new(BufferRef(new_externref))));
+                .push(self.replace_externref(Rc::new(BufferRef(new_externref))));
         }
     }
 }

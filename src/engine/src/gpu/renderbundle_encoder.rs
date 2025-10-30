@@ -152,7 +152,7 @@ pub struct RenderBundleEncoder {
     pub renderbundle: Rc<RefCell<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
     pub bindgroups: Vec<Rc<BindGroupResources>>,
-    pub buffers: Vec<Arc<BufferRef>>,
+    pub buffers: Vec<Rc<BufferRef>>,
     record: Resource<JSFunction>,
 }
 impl RenderBundleEncoder {
@@ -283,7 +283,7 @@ impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
     }
 }
 impl RenderCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
-    fn buffers(&mut self) -> &mut Vec<Arc<BufferRef>> {
+    fn buffers(&mut self) -> &mut Vec<Rc<BufferRef>> {
         &mut self.buffers
     }
 

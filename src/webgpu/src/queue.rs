@@ -1,5 +1,6 @@
 use std::{
-    cell::{Cell, RefCell}, rc::Rc, sync::Arc
+    cell::{Cell, RefCell},
+    rc::Rc,
 };
 
 use crate::{
@@ -41,7 +42,7 @@ extern "C" {
 }
 thread_local! {
     static COMMAND_BUFFER_EXTERNREF: Cell<Option<Resource<JSCommandBuffer>>> = const { Cell::new(None) };
-    static BUFFERS_AND_BINDGROUPS: RefCell<(Vec<Vec<Arc<BufferRef>>>, Vec<Vec<Rc<BindGroupResources>>>)> = const { RefCell::new((Vec::new(),Vec::new())) };
+    static BUFFERS_AND_BINDGROUPS: RefCell<(Vec<Vec<Rc<BufferRef>>>, Vec<Vec<Rc<BindGroupResources>>>)> = const { RefCell::new((Vec::new(),Vec::new())) };
 }
 #[externref]
 #[no_mangle]

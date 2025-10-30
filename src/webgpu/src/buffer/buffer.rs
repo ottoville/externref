@@ -1,4 +1,4 @@
-use std::{cell::RefCell, sync::Arc};
+use std::{cell::RefCell, rc::Rc};
 
 use crate::buffer::mapped_buffer::MappedGPUBuffer;
 use crate::bufferbinding::BufferBinding;
@@ -69,7 +69,7 @@ pub struct GPUBuffer<
     const INDIRECT: bool = false,
     const QUERY_RESOLVE: bool = false,
 > {
-    pub externref: Arc<BufferRef>,
+    pub externref: Rc<BufferRef>,
     pub label: String,
     pub size: usize,
     pub buffer_bindings: WeakVec<RefCell<BufferBinding>>,
@@ -146,7 +146,7 @@ impl<
             )
         };
         GPUBuffer {
-            externref: Arc::new(BufferRef(externref)),
+            externref: Rc::new(BufferRef(externref)),
             label,
             size,
             buffer_bindings: WeakVec::new(),
@@ -204,7 +204,7 @@ impl<
     }
     pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: usize) {
         self.size = size;
-        self.externref = Arc::new(BufferRef(unsafe {
+        self.externref = Rc::new(BufferRef(unsafe {
             create_buffer(
                 device,
                 size,
@@ -216,10 +216,10 @@ impl<
         }));
         self.make_dirty();
     }
-    pub fn take_externref(self) -> Arc<BufferRef> {
+    pub fn take_externref(self) -> Rc<BufferRef> {
         self.externref
     }
-    pub fn replace_externref(&mut self, externref: Arc<BufferRef>) -> Arc<BufferRef> {
+    pub fn replace_externref(&mut self, externref: Rc<BufferRef>) -> Rc<BufferRef> {
         self.make_dirty();
         return std::mem::replace(&mut self.externref, externref);
     }

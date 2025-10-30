@@ -52,10 +52,9 @@ use webgpu::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSC
 pub const GPU_MEMORY_INDEX_SIZE: usize = 256;
 pub const DEFAULT_MAX_INSTANCES: usize = 10;
 
-pub static TEMP_GPU_BUFFERS: Mutex<StackAllocator<Arc<BufferRef>, 16>> =
-    Mutex::new(StackAllocator::new());
 thread_local! {
     static GPU_QUEUE:RefCell<Vec<Arc<Mutex<MeshProperty>>    >> = const { RefCell::new(Vec::new()) };
+    static TEMP_GPU_BUFFERS: RefCell<StackAllocator<Rc<BufferRef>, 16>> = RefCell::new(StackAllocator::new());
 }
 
 #[cfg(test)]
@@ -118,7 +117,9 @@ extern "C" {
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn push_to_temp_gpu_buffers(buffer: Box<GPUBuffer<false, false, true>>) {
-    TEMP_GPU_BUFFERS.lock().unwrap().push((*buffer).externref);
+    TEMP_GPU_BUFFERS.with_borrow_mut(|allocator| {
+        allocator.push((*buffer).externref);
+    })
 }
 /**
  * Called on window resize
@@ -962,7 +963,10 @@ impl GPU {
         // Draw commands last so everything is up to date
         self.queue
             .submit([renderloop_command_encoder.finish(String::from("renderloop_renderencoder"))]);
-        TEMP_GPU_BUFFERS.lock().unwrap().clear();
+        TEMP_GPU_BUFFERS.with_borrow_mut(|allocator| {
+            allocator.clear();
+        });
+
         #[cfg(not(test))]
         self.swap_buffers.queue_submited();
         {
@@ -1117,7 +1121,7 @@ fn test_bindgroup_buffer_resize() {
             //Externref is not set yet, as it is set lazily
             assert_eq!(bindgroup.resources.borrow().is_none(), true);
             //buffer ref count is 2, one from test and other from bindgroup
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            assert_eq!(Rc::strong_count(&rawbuffer), 2);
         }
 
         renderbundle_encoder.set_bindgroup(&device, 0, &bindgroup, &[]);
@@ -1131,18 +1135,18 @@ fn test_bindgroup_buffer_resize() {
             //bindgroup 2 ref: test, renderbundle_encoder
             assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder and rawbindgroup
-            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+            assert_eq!(Rc::strong_count(&rawbuffer), 3);
         }
         bindgroup.make_dirty();
         {
             //bindgroup 2 ref: test, renderbundle_encoder
             assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder and rawbindgroup
-            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+            assert_eq!(Rc::strong_count(&rawbuffer), 3);
         }
 
         //buffer ref count is 3: test, command_encoder, rawbindgroup
-        assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        assert_eq!(Rc::strong_count(&rawbuffer), 3);
         let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
 
         let mut renderpass_encoder = command_encoder.begin_render_pass(
@@ -1165,13 +1169,13 @@ fn test_bindgroup_buffer_resize() {
             //bindgroup 2 ref: test, renderpass_encoder
             assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder, rawbindgroup
-            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+            assert_eq!(Rc::strong_count(&rawbuffer), 3);
         }
         let command_encoder = renderpass_encoder.end();
         {
             let command_buffer = command_encoder.finish(String::from("test"));
             //buffer ref count is 3: test, command_encoder, rawbindgroup
-            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+            assert_eq!(Rc::strong_count(&rawbuffer), 3);
 
             let queue = Queue {
                 externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -1184,7 +1188,7 @@ fn test_bindgroup_buffer_resize() {
         {
             //bindgroup 1 ref: test
             assert_eq!(Rc::strong_count(&rawbindgroup), 1);
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            assert_eq!(Rc::strong_count(&rawbuffer), 2);
         }
     }
 }
@@ -1255,7 +1259,7 @@ fn test_bindgroup() {
             //Externref is not set yet, as it is set lazily
             assert_eq!(bindgroup.resources.borrow().is_none(), true);
             //buffer ref count is 2, one from test and other from bindgroup
-            assert_eq!(Arc::strong_count(&rawbuffer), 2);
+            assert_eq!(Rc::strong_count(&rawbuffer), 2);
         }
 
         renderbundle_encoder.set_bindgroup(&device, 0, &bindgroup, &[]);
@@ -1263,16 +1267,16 @@ fn test_bindgroup() {
         {
             //bindgroup 3 ref: test, bindgroup, renderbundle_encoder
             assert_eq!(Rc::strong_count(&rawbindgroup), 3);
-            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+            assert_eq!(Rc::strong_count(&rawbuffer), 3);
         }
         bindgroup.make_dirty();
         {
             //bindgroup 2 ref: test, renderbundle_encoder
             assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder and rawbindgroup
-            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+            assert_eq!(Rc::strong_count(&rawbuffer), 3);
         }
-        assert_eq!(Arc::strong_count(&rawbuffer), 3);
+        assert_eq!(Rc::strong_count(&rawbuffer), 3);
         let command_encoder = GPUCommandEncoder::new(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),
@@ -1297,12 +1301,12 @@ fn test_bindgroup() {
             //bindgroup 2 ref: test, renderpass_encoder
             assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder, rawbindgroup
-            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+            assert_eq!(Rc::strong_count(&rawbuffer), 3);
         }
         let command_encoder = renderpass_encoder.end();
         {
             let command_buffer = command_encoder.finish(String::from("test"));
-            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+            assert_eq!(Rc::strong_count(&rawbuffer), 3);
 
             let queue = Queue {
                 externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -1315,7 +1319,7 @@ fn test_bindgroup() {
         {
             //bindgroup 1 ref: test
             assert_eq!(Rc::strong_count(&rawbindgroup), 1);
-            assert_eq!(Arc::strong_count(&rawbuffer), 3);
+            assert_eq!(Rc::strong_count(&rawbuffer), 3);
         }
     }
 }

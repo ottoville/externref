@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::rc::Rc;
 
 use externref::Resource;
 
@@ -10,6 +10,6 @@ pub struct JSRenderBundle(());
 
 pub struct RenderBundle {
     pub bindgroups: Vec<Rc<BindGroupResources>>,
-    pub buffers: Vec<Arc<BufferRef>>,
+    pub buffers: Vec<Rc<BufferRef>>,
     pub externref: Resource<JSRenderBundle>,
 }

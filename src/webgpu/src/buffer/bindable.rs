@@ -3,7 +3,8 @@ use crate::{
     bufferbinding::BufferBinding,
 };
 use std::{
-    cell::RefCell, rc::Weak, sync::Arc
+    cell::RefCell,
+    rc::{Rc, Weak},
 };
 
 pub trait BindGroupBindable: BindGroupBindableMarker {}
@@ -11,7 +12,7 @@ pub trait BindGroupBindableMarker {
     fn add_binding(&mut self, bind_group: Weak<RefCell<BufferBinding>>);
     fn externref(&self) -> &BufferRef;
     fn size(&self) -> usize;
-    fn externref_arc(&self) -> Arc<BufferRef>;
+    fn externref_arc(&self) -> Rc<BufferRef>;
 }
 impl<
         const MAP_READ: bool,
@@ -49,7 +50,7 @@ impl<
     fn size(&self) -> usize {
         self.size
     }
-    fn externref_arc(&self) -> Arc<BufferRef> {
+    fn externref_arc(&self) -> Rc<BufferRef> {
         self.externref.clone()
     }
 }

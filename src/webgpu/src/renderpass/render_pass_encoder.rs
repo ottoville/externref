@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::rc::Rc;
 
 use externref::Resource;
 
@@ -75,7 +75,7 @@ impl BindingCommands<JSRenderPassEncoder> for RenderPassEncoder {
     }
 }
 impl RenderCommands<JSRenderPassEncoder> for RenderPassEncoder {
-    fn buffers(&mut self) -> &mut Vec<Arc<BufferRef>> {
+    fn buffers(&mut self) -> &mut Vec<Rc<BufferRef>> {
         // TODO: is it really necessary to save buffer reference in renderpassencoder
         todo!()
     }
