@@ -1,7 +1,6 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::Arc;
-use std::sync::Mutex;
 
 use crate::bindgroup::bindgroup_trait::BindGroupTrait;
 use crate::bindgroup_layout::{BindGroupLayout, JSBindGroupLayout};
@@ -48,7 +47,7 @@ pub unsafe extern "C" fn iterate_bindings(iterator: BindingsIteratorPtr<'_>) -> 
 pub struct JSBindGroup(());
 
 pub struct BindGroup<const N: usize> {
-    pub resources: Mutex<Option<Arc<BindGroupResources>>>,
+    pub resources: RefCell<Option<Rc<BindGroupResources>>>,
     label: String,
     layout: Arc<Resource<JSBindGroupLayout>>,
     pub bufferbindings: [Rc<RefCell<BufferBinding>>; N],
@@ -57,7 +56,7 @@ pub struct BindGroup<const N: usize> {
 
 impl<const N: usize> BindGroupTrait for BindGroup<N> {
     fn make_dirty(&self) {
-        self.resources.lock().unwrap().take();
+        self.resources.borrow_mut().take();
         self.renderbundles.borrow_mut().iter_mut(|renderbundle| {
             renderbundle.borrow_mut().take();
         });
@@ -71,7 +70,7 @@ impl<const N: usize> BindGroup<N> {
         bufferbindings: [Rc<RefCell<BufferBinding>>; N],
     ) -> Rc<BindGroup<N>> {
         let bind_group = Rc::new(BindGroup {
-            resources: Mutex::new(None),
+            resources: RefCell::new(None),
             label,
             layout: layout.externref.clone(),
             bufferbindings,
@@ -88,8 +87,8 @@ impl<const N: usize> BindGroup<N> {
         }
         return bind_group;
     }
-    pub fn get_bindgroup(&self, device: &Resource<JSDevice>) -> Arc<BindGroupResources> {
-        let mut resources = self.resources.lock().unwrap();
+    pub fn get_bindgroup(&self, device: &Resource<JSDevice>) -> Rc<BindGroupResources> {
+        let mut resources = self.resources.borrow_mut();
         let extenref_resources = resources.get_or_insert_with(|| {
             let mut rawbuffers = Vec::with_capacity(self.bufferbindings.len());
             for binding in self.bufferbindings.iter() {
@@ -108,7 +107,7 @@ impl<const N: usize> BindGroup<N> {
                     Box::into_raw(bindings_iterator),
                 )
             };
-            Arc::new(BindGroupResources {
+            Rc::new(BindGroupResources {
                 externref,
                 rawbuffers,
             })

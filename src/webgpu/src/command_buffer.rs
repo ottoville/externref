@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{rc::Rc, sync::Arc};
 
 use externref::Resource;
 
@@ -10,5 +10,5 @@ pub struct CommandBuffer {
     pub externref: Resource<JSCommandBuffer>,
     // Hold references to prevent buffer being CG't before command encoder has been executed
     pub buffers: Vec<Arc<BufferRef>>,
-    pub bindgroups: Vec<Arc<BindGroupResources>>,
+    pub bindgroups: Vec<Rc<BindGroupResources>>,
 }

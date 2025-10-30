@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 
 use externref::Resource;
 
@@ -58,7 +58,7 @@ impl HaveExternref<JSComputePassEncoder> for ComputePassEncoder {
 impl BindingCommands<JSComputePassEncoder> for ComputePassEncoder {
     fn after_set_bindgroup<const N: usize>(&mut self, _bindgroup: &BindGroup<N>) {}
 
-    fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {
+    fn bindgroups(&mut self) -> &mut Vec<Rc<BindGroupResources>> {
         &mut self.command_encoder.bindgroups
     }
 }

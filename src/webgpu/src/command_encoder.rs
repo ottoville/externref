@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{rc::Rc, sync::Arc};
 
 use crate::{
     buffer::buffer::{BufferRef, JSBuffer},
@@ -90,7 +90,7 @@ pub struct GPUCommandEncoder {
     pub externref: Resource<JSCommandEncoder>,
     // Hold references to prevent buffer being CG't before command encoder has been executed
     pub buffers: Vec<Arc<BufferRef>>,
-    pub bindgroups: Vec<Arc<BindGroupResources>>,
+    pub bindgroups: Vec<Rc<BindGroupResources>>,
 }
 impl GPUCommandEncoder {
     pub fn new(device: &Resource<JSDevice>, label: String) -> GPUCommandEncoder {

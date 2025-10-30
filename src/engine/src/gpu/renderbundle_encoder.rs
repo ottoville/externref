@@ -151,7 +151,7 @@ pub struct RenderBundleEncoder {
     pub externref: Arc<Resource<JSRenderBundleEncoder>>,
     pub renderbundle: Rc<RefCell<Option<RenderBundle>>>,
     descriptor: Resource<JSRenderBundleDescriptor>,
-    pub bindgroups: Vec<Arc<BindGroupResources>>,
+    pub bindgroups: Vec<Rc<BindGroupResources>>,
     pub buffers: Vec<Arc<BufferRef>>,
     record: Resource<JSFunction>,
 }
@@ -278,7 +278,7 @@ impl BindingCommands<JSRenderBundleEncoder> for RenderBundleEncoder {
             .push(Rc::downgrade(&self.renderbundle));
     }
 
-    fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {
+    fn bindgroups(&mut self) -> &mut Vec<Rc<BindGroupResources>> {
         &mut self.bindgroups
     }
 }

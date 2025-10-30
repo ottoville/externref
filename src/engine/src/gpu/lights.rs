@@ -125,7 +125,7 @@ fn test_lights() {
         );
         bindgroup.get_bindgroup(&device);
 
-        assert_eq!(bindgroup.resources.lock().unwrap().is_none(), false);
+        assert_eq!(bindgroup.resources.borrow().is_none(), false);
         let mut swapbuffers = SwapBuffers::new();
 
         swapbuffers.queue_submited();
@@ -161,7 +161,7 @@ fn test_lights() {
 
         lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.buffer.borrow().size, 32);
-        assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
+        assert_eq!(bindgroup.resources.borrow().is_none(), true);
         let queue = Queue {
             externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             pending_command_buffers: Vec::new(),

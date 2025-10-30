@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{rc::Rc, sync::Arc};
 
 use externref::Resource;
 
@@ -70,7 +70,7 @@ impl BindingCommands<JSRenderPassEncoder> for RenderPassEncoder {
         todo!()
     }
 
-    fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>> {
+    fn bindgroups(&mut self) -> &mut Vec<Rc<BindGroupResources>> {
         todo!()
     }
 }

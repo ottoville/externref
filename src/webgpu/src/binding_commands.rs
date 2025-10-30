@@ -1,7 +1,8 @@
-use std::{ptr, sync::Arc};
+use std::ptr;
+use std::rc::Rc;
 
-use externref::{Resource};
 use crate::device::JSDevice;
+use externref::Resource;
 
 use crate::{
     bindgroup::{
@@ -37,7 +38,7 @@ extern "C" {
 pub trait BindingCommands<T>: HaveExternref<T> {
     fn after_set_bindgroup<const N: usize>(&mut self, bindgroup: &BindGroup<N>);
     // Hold references to prevent buffer being CG't before command encoder has been executed
-    fn bindgroups(&mut self) -> &mut Vec<Arc<BindGroupResources>>;
+    fn bindgroups(&mut self) -> &mut Vec<Rc<BindGroupResources>>;
     fn set_bindgroup<const N: usize>(
         &mut self,
         device: &Resource<JSDevice>,

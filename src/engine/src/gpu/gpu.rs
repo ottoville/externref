@@ -1115,20 +1115,13 @@ fn test_bindgroup_buffer_resize() {
         );
         {
             //Externref is not set yet, as it is set lazily
-            assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
+            assert_eq!(bindgroup.resources.borrow().is_none(), true);
             //buffer ref count is 2, one from test and other from bindgroup
             assert_eq!(Arc::strong_count(&rawbuffer), 2);
         }
 
         renderbundle_encoder.set_bindgroup(&device, 0, &bindgroup, &[]);
-        let rawbindgroup = bindgroup
-            .resources
-            .lock()
-            .as_ref()
-            .unwrap()
-            .as_ref()
-            .unwrap()
-            .clone();
+        let rawbindgroup = bindgroup.resources.borrow().as_ref().unwrap().clone();
         buffer_arc
             .borrow_mut()
             .resize(&device, &mut command_encoder, 64);
@@ -1136,14 +1129,14 @@ fn test_bindgroup_buffer_resize() {
 
         {
             //bindgroup 2 ref: test, renderbundle_encoder
-            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder and rawbindgroup
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
         bindgroup.make_dirty();
         {
             //bindgroup 2 ref: test, renderbundle_encoder
-            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder and rawbindgroup
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
@@ -1170,7 +1163,7 @@ fn test_bindgroup_buffer_resize() {
 
         {
             //bindgroup 2 ref: test, renderpass_encoder
-            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder, rawbindgroup
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
@@ -1185,12 +1178,12 @@ fn test_bindgroup_buffer_resize() {
                 pending_command_buffers: Vec::new(),
             };
             //bindgroup 2 ref: test, command_buffer
-            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             queue.submit([command_buffer]);
         }
         {
             //bindgroup 1 ref: test
-            assert_eq!(Arc::strong_count(&rawbindgroup), 1);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 1);
             assert_eq!(Arc::strong_count(&rawbuffer), 2);
         }
     }
@@ -1260,29 +1253,22 @@ fn test_bindgroup() {
         );
         {
             //Externref is not set yet, as it is set lazily
-            assert_eq!(bindgroup.resources.lock().unwrap().is_none(), true);
+            assert_eq!(bindgroup.resources.borrow().is_none(), true);
             //buffer ref count is 2, one from test and other from bindgroup
             assert_eq!(Arc::strong_count(&rawbuffer), 2);
         }
 
         renderbundle_encoder.set_bindgroup(&device, 0, &bindgroup, &[]);
-        let rawbindgroup = bindgroup
-            .resources
-            .lock()
-            .as_ref()
-            .unwrap()
-            .as_ref()
-            .unwrap()
-            .clone();
+        let rawbindgroup = bindgroup.resources.borrow().as_ref().unwrap().clone();
         {
             //bindgroup 3 ref: test, bindgroup, renderbundle_encoder
-            assert_eq!(Arc::strong_count(&rawbindgroup), 3);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 3);
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
         bindgroup.make_dirty();
         {
             //bindgroup 2 ref: test, renderbundle_encoder
-            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder and rawbindgroup
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
@@ -1309,7 +1295,7 @@ fn test_bindgroup() {
 
         {
             //bindgroup 2 ref: test, renderpass_encoder
-            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             //buffer ref count is 3: test, command_encoder, rawbindgroup
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
@@ -1323,12 +1309,12 @@ fn test_bindgroup() {
                 pending_command_buffers: Vec::new(),
             };
             //bindgroup 2 ref: test, command_buffer
-            assert_eq!(Arc::strong_count(&rawbindgroup), 2);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             queue.submit([command_buffer]);
         }
         {
             //bindgroup 1 ref: test
-            assert_eq!(Arc::strong_count(&rawbindgroup), 1);
+            assert_eq!(Rc::strong_count(&rawbindgroup), 1);
             assert_eq!(Arc::strong_count(&rawbuffer), 3);
         }
     }
