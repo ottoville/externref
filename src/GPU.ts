@@ -496,20 +496,17 @@ export class GPU {
       this.pickRenderPass,
       canvas,
     );
-    const bindGroup_index = engine.rust.get_bindgroup_index(this.gpu);
     this.renderPassScreen.link_renderpass(this);
     this.renderPassWater.link_renderpass(this);
     this.renderPassCanvas.link_renderpass(this);
     this.pickRenderPass.link_renderpass(this);
     this.shaders = createShaderBuilders(this);
     this.updateViewShader = createUpdateViewShader(this);
-
-    const bindGroup = engine.rust.externrefs.get(
-      bindGroup_index,
-    ) as GPUBindGroup;
-
     this.BindGroupPosition = {
-      bindGroup,
+      //@ts-expect-error rust hax
+      bindGroup: {
+        label: 'remove me',
+      },
       destroy: function (): void {
         throw new Error('Function not implemented.');
       },
@@ -519,7 +516,6 @@ export class GPU {
       ): GPUBindGroup {
         throw new Error('Function not implemented.');
       },
-      //@ts-expect-error rust hax
       getForRenderBundle2: (
         rust_renderbundle_encoder: rust_pointer<'renderbundleencoder'>,
         bindGroupStartIndex: number,

@@ -367,7 +367,6 @@ export type rustWasm = {
     pickRenderPass: RenderPass,
     canvas: HTMLCanvasElement,
   ): rust_pointer<'GPU'>;
-  get_bindgroup_index(gpu: rust_pointer<'GPU'>): number;
   push_to_pending_command_buffers(
     buffer: GPUCommandBuffer,
     gpu: rust_pointer<'GPU'>,

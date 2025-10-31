@@ -659,12 +659,6 @@ pub unsafe extern "C" fn init_gpu(
     };
     return Box::into_raw(Box::new(gpu));
 }
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn get_bindgroup_index(gpu: *const GPU) -> usize {
-    let externref = &(*gpu).gpu_buffer.borrow().externref.0;
-    return ptr::read(externref as *const Resource<JSBuffer> as *const usize);
-}
 
 #[externref]
 #[no_mangle]
