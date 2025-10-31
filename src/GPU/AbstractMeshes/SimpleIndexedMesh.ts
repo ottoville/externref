@@ -41,7 +41,7 @@ interface GPUProps<
 export class SimpleIndexedMesh extends IndexedDataNode {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: rust_pointer<'mesh_id'>,
+    mesh_pointer: rust_pointer<'mesh_id'>,
     gpuProps?: GPUProps,
     {
       vBufferGPU,
@@ -52,7 +52,7 @@ export class SimpleIndexedMesh extends IndexedDataNode {
       topology: 'triangle-list',
     },
   ) {
-    super(dataNodeProps, mainNodeProps);
+    super(dataNodeProps, mesh_pointer);
     if (gpuProps) {
       if (!vBufferGPU) {
         let usages:

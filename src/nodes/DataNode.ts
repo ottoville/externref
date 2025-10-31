@@ -188,8 +188,8 @@ export class DataNode extends MainNode {
   }
   frontFace: GPUFrontFace;
   geometry: rust_pointer<'geometry'>;
-  constructor(props: DataNodeProps, mainNodeProps: rust_pointer<'mesh_id'>) {
-    super(mainNodeProps);
+  constructor(props: DataNodeProps, mesh_pointer: rust_pointer<'mesh_id'>) {
+    super(mesh_pointer);
     this.#props = Object.freeze(props);
 
     const { can_collide = false, frontFace = 'cw' } = props;

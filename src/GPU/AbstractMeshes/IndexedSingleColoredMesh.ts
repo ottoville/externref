@@ -12,12 +12,12 @@ declare const engine: Engine;
 export class IndexedSingleColoredMesh extends SimpleIndexedMesh {
   constructor(
     dataNodeProps: DataNodeProps,
-    mainNodeProps: rust_pointer<'mesh_id'>,
+    mesh_pointer: rust_pointer<'mesh_id'>,
     simpleIndexedMeshProps?: SimpleIndexedMeshProps,
   ) {
     super(
       dataNodeProps,
-      mainNodeProps,
+      mesh_pointer,
       engine.gpu
         ? {
             createRenderPipeline: {

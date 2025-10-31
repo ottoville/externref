@@ -11,3 +11,4 @@ pub mod plants;
 pub mod terraintool;
 pub mod zones;
 pub mod sun;
+mod ui_rectangle;
