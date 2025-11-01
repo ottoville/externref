@@ -24,7 +24,6 @@ pub unsafe fn configure(
 #[cfg(target_arch = "wasm32")]
 #[externref::externref]
 #[link(wasm_import_module = "webgpucontext")]
-#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn get_current_texture(context: &Resource<JSGPUCanvasContext>) -> Resource<JSTexture>;
     pub fn configure(

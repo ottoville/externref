@@ -1,3 +1,4 @@
+use std::num::NonZeroUsize;
 use std::ops::Deref;
 
 use externref::{externref, Resource};
@@ -16,7 +17,7 @@ pub unsafe fn set_mapped_range(
 unsafe fn get_mapped_range(
     _buffer: &Resource<JSBuffer>,
     _offset: usize,
-    _size: usize,
+    _size: NonZeroUsize,
     _buffer_offset: usize,
 ) {
 }
@@ -31,7 +32,7 @@ extern "C" {
     pub fn get_mapped_range(
         buffer: &Resource<JSBuffer>,
         offset: usize,
-        size: usize,
+        size: NonZeroUsize,
         buffer_offset: usize,
     );
     pub fn set_mapped_range(
@@ -73,13 +74,13 @@ pub struct MappedGPUBuffer<
 #[externref]
 pub unsafe extern "C" fn create_mapped_gpu_buffer_copysrc(
     device: &Resource<JSDevice>,
-    length: usize,
+    size: NonZeroUsize,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
 ) -> *const MappedGPUBuffer<false, false, true> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new_mapped(device, length, label)))
+    Box::into_raw(Box::new(GPUBuffer::new_mapped(device, size, label)))
 }
 
 impl<
@@ -123,7 +124,7 @@ impl<
     ) -> Self {
         MappedGPUBuffer(buffer)
     }
-    pub fn get_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
+    pub fn get_mapped_range_raw(&self, ptr: usize, size: NonZeroUsize, buffer_offset: usize) {
         unsafe {
             get_mapped_range(&self.0.externref.0, ptr, size, buffer_offset);
         }
@@ -133,7 +134,7 @@ impl<
             get_mapped_range(
                 &self.0.externref.0,
                 data as *const T as usize,
-                size_of::<T>(),
+                NonZeroUsize::new_unchecked(size_of::<T>()),
                 buffer_offset,
             );
         }

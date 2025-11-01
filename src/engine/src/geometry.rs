@@ -114,7 +114,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
         None,
         Box::into_raw(Box::new(
             move |buffer: MappedGPUBuffer<true, false, false, true>| {
-                let mut indices: Vec<usize> = vec![0; buffer.size / 4];
+                let mut indices: Vec<usize> = vec![0; buffer.size.get() / 4];
                 buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
                 let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
                 let geometry = mesh.geometry.as_mut().unwrap();
@@ -130,9 +130,9 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
         Box::into_raw(Box::new(
             move |buffer: MappedGPUBuffer<true, false, false, true>| {
                 let mut vertices: Vec<PositionAndNormalAndUV> =
-                    Vec::with_capacity(buffer.size / size_of::<PositionAndNormalAndUV>());
+                    Vec::with_capacity(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
                 buffer.get_mapped_range_raw(vertices.as_mut_ptr() as usize, buffer.size, 0);
-                vertices.set_len(buffer.size / size_of::<PositionAndNormalAndUV>());
+                vertices.set_len(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
                 let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
                 let geometry = mesh.geometry.as_mut().unwrap();
                 geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
@@ -543,7 +543,7 @@ impl<'vert> Geometry {
 
         let mapped = GPUBuffer::<false, false, false, false, true>::new_mapped(
             &gpu.device,
-            indices.len() * 4,
+            NonZeroUsize::new(indices.len() * 4).unwrap(),
             label,
         );
         mapped.set_mapped_range_raw(indices.as_ptr() as usize, indices.len() * 4, 0);

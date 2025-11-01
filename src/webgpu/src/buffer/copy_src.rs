@@ -1,3 +1,4 @@
+use std::num::NonZeroUsize;
 use std::rc::Rc;
 
 use crate::buffer::buffer::BufferRef;
@@ -40,7 +41,7 @@ impl<
         &mut self,
         device: &Resource<JSDevice>,
         command_encoder: &mut GPUCommandEncoder,
-        size: usize,
+        size: NonZeroUsize,
     ) {
         unsafe {
             let new_externref = create_buffer(

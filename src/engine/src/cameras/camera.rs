@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::num::NonZeroUsize;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -259,7 +260,7 @@ impl Camera {
             true,
         >::new(
             &gpu.device,
-            UNIFORM_BUFFER_SIZE,
+            unsafe { NonZeroUsize::new_unchecked(UNIFORM_BUFFER_SIZE) },
             String::from("camerauniformBuffer"),
         )));
         let buffer_binding = BufferBinding::new(
@@ -278,7 +279,7 @@ impl Camera {
             true,
         >::new(
             &gpu.device,
-            CLUSTER_SIZE_IN_BYTES as usize,
+            unsafe { NonZeroUsize::new_unchecked(CLUSTER_SIZE_IN_BYTES as usize) },
             String::from("clusterArrayBuffer"),
         )));
 
@@ -509,16 +510,20 @@ impl Camera {
                     .lock()
                     .unwrap(),
             );
-            swap_buffer.get(device, 128, |buffer| {
-                buffer.set_mapped_range(&self.views, 0);
-                command_encoder.copy_buffer_to_buffer(
-                    &**buffer,
-                    &(*self.buffer.borrow()),
-                    0,
-                    0,
-                    128,
-                );
-            });
+            swap_buffer.get(
+                device,
+                unsafe { NonZeroUsize::new_unchecked(128) },
+                |buffer| {
+                    buffer.set_mapped_range(&self.views, 0);
+                    command_encoder.copy_buffer_to_buffer(
+                        &**buffer,
+                        &(*self.buffer.borrow()),
+                        0,
+                        0,
+                        unsafe { NonZeroUsize::new_unchecked(128) },
+                    );
+                },
+            );
             self.do_update_view = 0;
             self.updated = true;
         } else {

@@ -32,7 +32,7 @@ pub unsafe extern "C" fn iterate_bindings(iterator: BindingsIteratorPtr<'_>) -> 
                     binding.offset,
                     match binding.size {
                         Some(size) => size.get(),
-                        None => buffer.size() - binding.offset,
+                        None => buffer.size().get() - binding.offset,
                     },
                 ]);
                 return buffer_binding.as_ptr();

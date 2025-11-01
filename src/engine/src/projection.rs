@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::num::NonZeroUsize;
 use std::rc::Rc;
 use std::sync::Mutex;
 
@@ -52,7 +53,7 @@ impl InnerProjection {
         ];
         let buffer = GPUBuffer::<false, false, false, false, false, false, true>::new_mapped(
             device,
-            PROJECTION_BUFFER_SIZE,
+            unsafe { NonZeroUsize::new_unchecked(PROJECTION_BUFFER_SIZE) },
             String::from("uniform_projection"),
         );
         let mut inverted = [[0.0; 4]; 4];
@@ -98,9 +99,10 @@ impl Projection {
 fn test_projection() {
     use externref::ExternRef;
     unsafe {
-        let projection = Projection::new(&Resource::new_non_null(
-            std::mem::transmute::<usize, ExternRef>(0),
-        ));
+        let projection = Projection::new(&Resource::new_non_null(std::mem::transmute::<
+            usize,
+            ExternRef,
+        >(0)));
 
         assert_eq!(
             *projection

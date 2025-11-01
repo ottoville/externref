@@ -15,7 +15,7 @@ pub unsafe fn set_indexbuffer(
     _buffer: &Resource<JSBuffer>,
     _index_format: u32,
     _offset: u32,
-    _size: usize,
+    _size: NonZeroUsize,
 ) {
 }
 #[cfg(not(target_arch = "wasm32"))]
@@ -46,7 +46,7 @@ extern "C" {
         buffer: &Resource<JSBuffer>,
         index_format: u32,
         offset: u32,
-        size: usize,
+        size: NonZeroUsize,
     );
 }
 
@@ -98,7 +98,7 @@ pub trait RenderCommands<T>: HaveExternref<T> {
         ["set indexBuffer", &buffer.label].debug();
         let ptr = unsafe { ptr::read(self.externref() as *const Resource<T> as *const usize) };
         let buffer_size = match size {
-            Some(s) => s.get(),
+            Some(s) => s,
             None => buffer.size,
         };
         unsafe { set_indexbuffer(ptr, &buffer.externref.0, index_format, offset, buffer_size) };

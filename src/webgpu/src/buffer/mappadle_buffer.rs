@@ -11,13 +11,13 @@ use crate::device::JSDevice;
 #[externref]
 pub unsafe extern "C" fn create_mappadle_gpu_buffer_copydst_mapread(
     device: &Resource<JSDevice>,
-    length: usize,
+    size: NonZeroUsize,
     label_ptr: *mut u8,
     label_len: usize,
     label_cap: usize,
 ) -> *const GPUBuffer<true, false, false, true> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new(device, length, label)))
+    Box::into_raw(Box::new(GPUBuffer::new(device, size, label)))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -81,7 +81,7 @@ impl GPUBuffer<true, false, false, true> {
     ) {
         let actual_size = match size {
             Some(size) => size.get(),
-            None => self.size - offset,
+            None => self.size.get() - offset,
         };
         unsafe {
             map_read_async(
@@ -104,7 +104,7 @@ impl GPUBuffer<false, true, true> {
     ) {
         let actual_size = match size {
             Some(size) => size.get(),
-            None => self.size - offset,
+            None => self.size.get() - offset,
         };
         unsafe {
             map_write_async(

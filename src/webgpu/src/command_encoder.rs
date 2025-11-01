@@ -11,6 +11,7 @@ use crate::{
     },
 };
 use externref::Resource;
+use std::num::NonZeroUsize;
 
 use crate::{bindgroup::bindgroup_resources::BindGroupResources, buffer::buffer::GPUBuffer};
 
@@ -23,7 +24,7 @@ pub unsafe fn copy_buffer_to_buffer(
     _destination: &Resource<JSBuffer>,
     _source_offset: usize,
     _destination_offset: usize,
-    _copy_size: usize,
+    _copy_size: NonZeroUsize,
 ) {
 }
 
@@ -82,7 +83,7 @@ extern "C" {
         destination: &Resource<JSBuffer>,
         sourceOffset: usize,
         destinationOffset: usize,
-        copySize: usize,
+        copySize: NonZeroUsize,
     );
 }
 
@@ -184,7 +185,7 @@ impl GPUCommandEncoder {
         >,
         source_offset: usize,
         destination_offset: usize,
-        copy_size: usize,
+        copy_size: NonZeroUsize,
     ) {
         self.buffers.push(source.externref.clone());
         self.buffers.push(destination.externref.clone());

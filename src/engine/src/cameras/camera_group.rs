@@ -1,4 +1,8 @@
-use std::{cell::RefCell, num::NonZeroU32, rc::Rc};
+use std::{
+    cell::RefCell,
+    num::{NonZeroU32, NonZeroUsize},
+    rc::Rc,
+};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
@@ -27,7 +31,7 @@ impl CameraGroup {
         let screen_dimension_buffer =
             GPUBuffer::<false, false, false, false, false, false, true>::new_mapped(
                 device,
-                16,
+                unsafe { NonZeroUsize::new_unchecked(16) },
                 String::from("screen_buffer"),
             );
         let data = [

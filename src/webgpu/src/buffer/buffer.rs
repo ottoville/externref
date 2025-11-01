@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, num::NonZeroUsize, rc::Rc};
 
 use crate::buffer::mapped_buffer::MappedGPUBuffer;
 use crate::bufferbinding::BufferBinding;
@@ -13,7 +13,7 @@ pub struct BufferRef(pub Resource<JSBuffer>);
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_buffer(
     _device: &Resource<JSDevice>,
-    _length: usize,
+    _size: NonZeroUsize,
     _label_ptr: usize,
     _label_len: usize,
     _usages: u32,
@@ -32,7 +32,7 @@ unsafe fn destroy(_buffer: &Resource<JSBuffer>) {}
 extern "C" {
     pub fn create_buffer(
         device: &Resource<JSDevice>,
-        length: usize,
+        size: NonZeroUsize,
         label_ptr: usize,
         label_len: usize,
         usages: u32,
@@ -71,7 +71,7 @@ pub struct GPUBuffer<
 > {
     pub externref: Rc<BufferRef>,
     pub label: String,
-    pub size: usize,
+    pub size: NonZeroUsize,
     pub buffer_bindings: WeakVec<RefCell<BufferBinding>>,
     pub renderbundles: WeakVec<RefCell<Option<RenderBundle>>>,
 }
@@ -134,7 +134,7 @@ impl<
         }
         return usages;
     }
-    fn inner_new(device: &Resource<JSDevice>, size: usize, label: String, mapped: bool) -> Self {
+    fn inner_new(device: &Resource<JSDevice>, size: NonZeroUsize, label: String, mapped: bool) -> Self {
         let externref = unsafe {
             create_buffer(
                 device,
@@ -153,7 +153,7 @@ impl<
             renderbundles: WeakVec::new(),
         }
     }
-    pub fn new(device: &Resource<JSDevice>, size: usize, label: String) -> Self {
+    pub fn new(device: &Resource<JSDevice>, size: NonZeroUsize, label: String) -> Self {
         return GPUBuffer::<
             MAP_READ,
             MAP_WRITE,
@@ -169,7 +169,7 @@ impl<
     }
     pub fn new_mapped(
         device: &Resource<JSDevice>,
-        size: usize,
+        size: NonZeroUsize,
         label: String,
     ) -> MappedGPUBuffer<
         MAP_READ,
@@ -202,7 +202,7 @@ impl<
             renderbundle.borrow_mut().take();
         });
     }
-    pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: usize) {
+    pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: NonZeroUsize) {
         self.size = size;
         self.externref = Rc::new(BufferRef(unsafe {
             create_buffer(

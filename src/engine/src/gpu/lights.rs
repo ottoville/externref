@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::num::NonZeroUsize;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
@@ -43,7 +44,11 @@ impl Lights {
     ) -> Lights {
         Lights {
             lights: inner_lights,
-            buffer: Rc::new(RefCell::new(GPUBuffer::new(device, 16, label.to_string()))),
+            buffer: Rc::new(RefCell::new(GPUBuffer::new(
+                device,
+                unsafe { NonZeroUsize::new_unchecked(16) },
+                label.to_string(),
+            ))),
             label,
         }
     }
@@ -61,8 +66,11 @@ impl Lights {
         inner_lights.dirty = false;
         inner_lights.lights[0] = FreeIndexIndex(inner_lights.lights.len() - 1);
         let mut buffer = self.buffer.borrow_mut();
-        if inner_lights.lights.capacity() * 4 > buffer.size {
-            buffer.resize_zeroed(device, inner_lights.lights.capacity() * 4);
+        if inner_lights.lights.capacity() * 4 > buffer.size.get() {
+            buffer.resize_zeroed(
+                device,
+                NonZeroUsize::new(inner_lights.lights.capacity() * 4).unwrap(),
+            );
         }
         swap_buffer.get(device, buffer.size, |mapped_buffer| {
             mapped_buffer.set_mapped_range_raw(
@@ -151,7 +159,7 @@ fn test_lights() {
             let inner_lights = lights.lights.lock().unwrap();
             assert_eq!(inner_lights.dirty, false);
         }
-        assert_eq!(lights.buffer.borrow().size, 16);
+        assert_eq!(lights.buffer.borrow().size.get(), 16);
         {
             let mut inner_lights = lights.lights.lock().unwrap();
             inner_lights.push(FreeIndexIndex(2));
@@ -160,7 +168,7 @@ fn test_lights() {
         }
 
         lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
-        assert_eq!(lights.buffer.borrow().size, 32);
+        assert_eq!(lights.buffer.borrow().size.get(), 32);
         assert_eq!(bindgroup.resources.borrow().is_none(), true);
         let queue = Queue {
             externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),

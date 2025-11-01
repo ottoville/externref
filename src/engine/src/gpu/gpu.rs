@@ -290,7 +290,7 @@ pub unsafe extern "C" fn init_gpu(
     let gpu_buffer: Rc<RefCell<GPUBuffer<false, false, true, true, false, false, true, true>>> =
         Rc::new(RefCell::new(GPUBuffer::new(
             &device,
-            GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES,
+            NonZeroUsize::new_unchecked(GPU_MEMORY_INDEX_SIZE * DEFAULT_MAX_INSTANCES),
             String::from("GPUMeshes"),
         )));
 
@@ -333,13 +333,13 @@ pub unsafe extern "C" fn init_gpu(
     );
     let timebuffer = Rc::new(RefCell::new(GPUBuffer::new(
         &device,
-        8,
+        NonZeroUsize::new_unchecked(8),
         String::from("timeBuffer"),
     )));
     let screen_dimension_buffer_screen =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
             &device,
-            16,
+            NonZeroUsize::new_unchecked(16),
             String::from("screen_dimension_buffer"),
         );
     let screen_render_target = Rc::new(Texture::<
@@ -444,7 +444,7 @@ pub unsafe extern "C" fn init_gpu(
     let screen_dimension_buffer_screen_water =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
             &device,
-            16,
+            NonZeroUsize::new_unchecked(16),
             String::from("screen_buffer_water"),
         );
 
@@ -532,7 +532,7 @@ pub unsafe extern "C" fn init_gpu(
     let screen_dimension_buffer_screen_pick =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
             &device,
-            16,
+            NonZeroUsize::new_unchecked(16),
             String::from("screen_buffer_pick"),
         );
     let pick_render_target = Rc::new(Texture::<
@@ -814,16 +814,20 @@ impl GPU {
         self.time = time;
         let mut command_encoder =
             GPUCommandEncoder::new(&self.device, String::from("handle_gpu_queue_encoder"));
-        self.swap_buffers.get(&self.device, 8, |temp_buffer| {
-            temp_buffer.set_mapped_range(&self.time, 0);
-            command_encoder.copy_buffer_to_buffer(
-                &**temp_buffer,
-                &*self.timebuffer.borrow(),
-                0,
-                0,
-                4,
-            );
-        });
+        self.swap_buffers.get(
+            &self.device,
+            unsafe { NonZeroUsize::new_unchecked(8) },
+            |temp_buffer| {
+                temp_buffer.set_mapped_range(&self.time, 0);
+                command_encoder.copy_buffer_to_buffer(
+                    &**temp_buffer,
+                    &*self.timebuffer.borrow(),
+                    0,
+                    0,
+                    unsafe { NonZeroUsize::new_unchecked(4) },
+                );
+            },
+        );
 
         // TODO: reuse already allocated memory from previous iteration, thus allowing constant string
         let mut renderloop_command_encoder =
@@ -877,7 +881,11 @@ impl GPU {
                 if queue.len() > 0 {
                     self.swap_buffers.get(
                         &self.device,
-                        std::mem::size_of::<GPUMesh>() * queue.len(),
+                        unsafe {
+                            NonZeroUsize::new_unchecked(
+                                std::mem::size_of::<GPUMesh>() * queue.len(),
+                            )
+                        },
                         |temp_buffer| {
                             let mut wanted_size = { self.gpu_buffer.borrow().size };
 
@@ -892,10 +900,12 @@ impl GPU {
                                 if mesh_property.gpu_memory.point_light_squared > 0.0 {
                                     update_lights = true;
                                 }
-                                wanted_size = wanted_size.max(
-                                    GPU_MEMORY_INDEX_SIZE
-                                        * (mesh_property.gpu_mesh_alignment.0 + 16),
-                                );
+                                wanted_size = wanted_size.max(unsafe {
+                                    NonZeroUsize::new_unchecked(
+                                        GPU_MEMORY_INDEX_SIZE
+                                            * (mesh_property.gpu_mesh_alignment.0 + 16),
+                                    )
+                                });
 
                                 temp_buffer.set_mapped_range(
                                     &mesh_property.gpu_memory,
@@ -914,7 +924,9 @@ impl GPU {
                                     &*gpu_buffer,
                                     i * std::mem::size_of::<GPUMesh>(),
                                     mesh_property.gpu_mesh_alignment.0 * GPU_MEMORY_INDEX_SIZE,
-                                    std::mem::size_of::<GPUMesh>(),
+                                    unsafe {
+                                        NonZeroUsize::new_unchecked(std::mem::size_of::<GPUMesh>())
+                                    },
                                 );
                             }
                         },
@@ -1089,7 +1101,7 @@ fn test_bindgroup_buffer_resize() {
         );
         let buffer = GPUBuffer::<false, false, true, true, false, false, true, true>::new(
             &device,
-            4,
+            NonZeroUsize::new_unchecked(4),
             String::from("test"),
         );
         let rawbuffer = buffer.externref.clone();
@@ -1122,7 +1134,7 @@ fn test_bindgroup_buffer_resize() {
         let rawbindgroup = bindgroup.resources.borrow().as_ref().unwrap().clone();
         buffer_arc
             .borrow_mut()
-            .resize(&device, &mut command_encoder, 64);
+            .resize(&device, &mut command_encoder, NonZeroUsize::new_unchecked(64));
         drop(buffer_arc);
 
         {
@@ -1228,7 +1240,7 @@ fn test_bindgroup() {
         );
         let buffer = GPUBuffer::<false, false, false, true, false, false, true>::new(
             &device,
-            4,
+            NonZeroUsize::new_unchecked(4),
             String::from("test"),
         );
         let rawbuffer = buffer.externref.clone();

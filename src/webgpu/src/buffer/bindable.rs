@@ -3,15 +3,14 @@ use crate::{
     bufferbinding::BufferBinding,
 };
 use std::{
-    cell::RefCell,
-    rc::{Rc, Weak},
+    cell::RefCell, num::NonZeroUsize, rc::{Rc, Weak}
 };
 
 pub trait BindGroupBindable: BindGroupBindableMarker {}
 pub trait BindGroupBindableMarker {
     fn add_binding(&mut self, bind_group: Weak<RefCell<BufferBinding>>);
     fn externref(&self) -> &BufferRef;
-    fn size(&self) -> usize;
+    fn size(&self) -> NonZeroUsize;
     fn externref_arc(&self) -> Rc<BufferRef>;
 }
 impl<
@@ -47,7 +46,7 @@ impl<
         &self.externref
     }
 
-    fn size(&self) -> usize {
+    fn size(&self) -> NonZeroUsize {
         self.size
     }
     fn externref_arc(&self) -> Rc<BufferRef> {

@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
+use std::{cell::RefCell, collections::BTreeMap, num::NonZeroUsize, rc::Rc};
 
 use externref::Resource;
 use webgpu::{
@@ -39,10 +39,10 @@ impl SwapBuffers {
     pub fn get<F: FnOnce(&MappedGPUBuffer<false, true, true>)>(
         &mut self,
         device: &Resource<JSDevice>,
-        size: usize,
+        size: NonZeroUsize,
         cb: F,
     ) {
-        let mapped_buffer = self.get_existing(size).unwrap_or_else(|| {
+        let mapped_buffer = self.get_existing(size.get()).unwrap_or_else(|| {
             GPUBuffer::new_mapped(
                 device,
                 size,
@@ -64,7 +64,7 @@ impl SwapBuffers {
                     Box::into_raw(Box::new(
                         move |buffer: MappedGPUBuffer<false, true, true>| {
                             let mut borrowed = mappedrc.borrow_mut();
-                            let mapped = borrowed.entry(buffer.size).or_insert(Vec::new());
+                            let mapped = borrowed.entry(buffer.size.get()).or_insert(Vec::new());
                             //["push to mapped", &buffer.size.to_string()].log();
                             mapped.push(buffer);
                         },
@@ -84,8 +84,8 @@ fn test_swap_buffers() {
         let device: Resource<JSDevice> =
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
         let mut swap = SwapBuffers::new();
-        swap.get(&device, 110, |_buffer| {});
-        swap.get(&device, 110, |_buffer| {});
+        swap.get(&device, NonZeroUsize::new_unchecked(110), |_buffer| {});
+        swap.get(&device, NonZeroUsize::new_unchecked(110), |_buffer| {});
         assert_eq!(swap.onqueue.len(), 2);
         swap.queue_submited();
         assert_eq!(swap.onqueue.len(), 0);
@@ -94,7 +94,7 @@ fn test_swap_buffers() {
             let buffers = borrowed.get(&110usize).unwrap();
             assert_eq!(buffers.len(), 2);
         }
-        swap.get(&device, 105, |_buffer| {});
+        swap.get(&device, NonZeroUsize::new_unchecked(105), |_buffer| {});
         let borrowed = swap.mapped.borrow();
         let buffers = borrowed.get(&110usize).unwrap();
         assert_eq!(buffers.len(), 1);
