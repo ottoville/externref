@@ -7,8 +7,11 @@ use std::{
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
 use webgpu::{
-    bindgroup::bindgroup::BindGroup, binding_commands::BindingCommands, buffer::buffer::GPUBuffer,
-    compute_pass_encoder::ComputePassEncoder, device::JSDevice,
+    bindgroup::{bindgroup::BindGroup, bufferbinding::BufferBinding},
+    binding_commands::BindingCommands,
+    buffer::buffer::GPUBuffer,
+    compute_pass_encoder::ComputePassEncoder,
+    device::JSDevice,
 };
 
 use crate::{cameras::camera::get_camera_by_id, projection::TILE_COUNT};
@@ -18,6 +21,7 @@ use super::camera::{Camera, CLUSTER_DISPATCH_SIZE};
 pub struct CameraGroup {
     pub cameras: Vec<usize>,
     pub bind_group: Option<Rc<BindGroup<1>>>,
+    pub bufferbinding: Rc<RefCell<BufferBinding>>,
 }
 impl CameraGroup {
     pub fn update_size_bind_group(
@@ -43,7 +47,7 @@ impl CameraGroup {
         screen_dimension_buffer.set_mapped_range(&data, 0);
         let bindgroup = self.bind_group.as_ref().unwrap();
         {
-            let mut b = bindgroup.bufferbindings[0].borrow_mut();
+            let mut b = self.bufferbinding.borrow_mut();
             b.replace_buffer(Rc::new(RefCell::new(screen_dimension_buffer.unmap())));
         }
         (*computepass).set_bindgroup(&device, 0, bindgroup, &[]);

@@ -8,7 +8,7 @@ use std::{num::NonZero, ptr};
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use terramath::MatrixMath;
-use webgpu::bufferbinding::BufferBinding;
+use webgpu::bindgroup::bufferbinding::BufferBinding;
 use webgpu::command_encoder::GPUCommandEncoder;
 use webgpu::compute_pass_encoder::ComputePassEncoder;
 use webgpu::device::JSDevice;

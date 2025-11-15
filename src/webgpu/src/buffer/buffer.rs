@@ -1,7 +1,7 @@
 use std::{cell::RefCell, num::NonZeroUsize, rc::Rc};
 
+use crate::bindgroup::{bindgroup::Bindable, bindgroup_entry::BindGroupBinding};
 use crate::buffer::mapped_buffer::MappedGPUBuffer;
-use crate::bufferbinding::BufferBinding;
 use crate::device::JSDevice;
 use crate::renderbundle::RenderBundle;
 use crate::weakvec::WeakVec;
@@ -9,7 +9,7 @@ use externref::{externref, Resource};
 
 pub struct JSBuffer(());
 pub struct BufferRef(pub Resource<JSBuffer>);
-
+impl Bindable for BufferRef {}
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_buffer(
     _device: &Resource<JSDevice>,
@@ -72,7 +72,7 @@ pub struct GPUBuffer<
     pub externref: Rc<BufferRef>,
     pub label: String,
     pub size: NonZeroUsize,
-    pub buffer_bindings: WeakVec<RefCell<BufferBinding>>,
+    pub bindings: WeakVec<RefCell<dyn BindGroupBinding>>,
     pub renderbundles: WeakVec<RefCell<Option<RenderBundle>>>,
 }
 impl<
@@ -134,7 +134,12 @@ impl<
         }
         return usages;
     }
-    fn inner_new(device: &Resource<JSDevice>, size: NonZeroUsize, label: String, mapped: bool) -> Self {
+    fn inner_new(
+        device: &Resource<JSDevice>,
+        size: NonZeroUsize,
+        label: String,
+        mapped: bool,
+    ) -> Self {
         let externref = unsafe {
             create_buffer(
                 device,
@@ -149,7 +154,7 @@ impl<
             externref: Rc::new(BufferRef(externref)),
             label,
             size,
-            buffer_bindings: WeakVec::new(),
+            bindings: WeakVec::new(),
             renderbundles: WeakVec::new(),
         }
     }
@@ -195,7 +200,7 @@ impl<
         return 2;
     }
     pub fn make_dirty(&mut self) {
-        self.buffer_bindings.iter_mut(|buffer_binding| {
+        self.bindings.iter_mut(|buffer_binding| {
             buffer_binding.borrow_mut().make_dirty();
         });
         self.renderbundles.iter_mut(|renderbundle| {

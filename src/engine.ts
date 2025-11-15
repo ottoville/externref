@@ -32,6 +32,7 @@ import { TextureInterface } from './wasm-interfaces/TextureInterface.js';
 import { CanvasInterface } from './wasm-interfaces/CanvasInterface.js';
 import { GPUInterface } from './wasm-interfaces/GPUInterface.js';
 import { CanvasContextInterface } from './wasm-interfaces/CanvasContextInterface.js';
+import { BindGroupExports } from './wasm-interfaces/BindGroupInterface.js';
 
 const textDecoder = new TextDecoder();
 
@@ -444,7 +445,6 @@ export type rustWasm = {
   get_raw_computepassencoder(
     computepass: rust_pointer<'computepass'>,
   ): GPUComputePassEncoder;
-  iterate_bindings(iterator: Rust_Iterator<number>): number;
   iterate_binding_layouts(iterator: Rust_Iterator<number>): number;
   move_character(
     character_mesh_id: rust_pointer<'mesh_id'>,
@@ -808,6 +808,7 @@ export class Engine {
     let rust: WebAssembly.WebAssemblyInstantiatedSource;
     const exportObj: WebAssembly.Imports = {
       bindcommands: BindCommandsInterface,
+      bindgroup: BindGroupExports,
       buffer: BufferExports,
       camera: CameraInterface,
       canvas: CanvasInterface,

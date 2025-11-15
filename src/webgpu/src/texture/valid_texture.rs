@@ -1,10 +1,56 @@
-use crate::texture::{
-    texture::{Texture, TextureDimensionTrait},
-    texture_formats::TextureFormat,
+use crate::{
+    bindgroup::bindgroup::Bindable,
+    texture::{
+        texture::{Texture, TextureDimensionTrait},
+        texture_formats::TextureFormat,
+    },
 };
 
-pub trait ValidTexture: TextureDimensionTrait {
+pub trait ValidTexture: TextureDimensionTrait + Bindable {
     fn to_number(&self) -> u32;
+}
+
+impl<
+        F: TextureFormat,
+        const DIMENSION: u32,
+        const SAMPLE_COUNT: u32,
+        const DEPTH_OR_ARRAY_LAYERS: u32,
+        const MIP_LEVEL_COUNT: u32,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const TEXTURE_BINDING: bool,
+        const STORAGE_BINDING: bool,
+        const RENDER_ATTACHMENT: bool,
+        const SRGB_MULTIVIEW: bool,
+    > Bindable
+    for Texture<
+        F,
+        DIMENSION,
+        SAMPLE_COUNT,
+        DEPTH_OR_ARRAY_LAYERS,
+        MIP_LEVEL_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+        SRGB_MULTIVIEW,
+    >
+where
+    Texture<
+        F,
+        DIMENSION,
+        1,
+        DEPTH_OR_ARRAY_LAYERS,
+        MIP_LEVEL_COUNT,
+        COPY_SRC,
+        COPY_DST,
+        TEXTURE_BINDING,
+        STORAGE_BINDING,
+        RENDER_ATTACHMENT,
+        SRGB_MULTIVIEW,
+    >: TextureDimensionTrait,
+{
 }
 
 // Single sampled

@@ -1,5 +1,5 @@
-use crate::bindgroup::bindgroup::BindingsIteratorPtr;
 use crate::bindgroup::bindgroup::JSBindGroup;
+use crate::bindgroup::bindgroup_descriptor::JSBindGroupDescriptor;
 use crate::bindgroup_layout::JSBindGroupLayout;
 use crate::binding_layout::BindingLayout;
 use crate::command_encoder::JSCommandEncoder;
@@ -49,10 +49,7 @@ pub unsafe fn create_gpu_command_encoder(
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_bind_group(
     _device: &Resource<JSDevice>,
-    _layout: &Resource<JSBindGroupLayout>,
-    _label_ptr: usize,
-    _label_len: usize,
-    _entries: BindingsIteratorPtr<'_>,
+    _descriptor: &Resource<JSBindGroupDescriptor>,
 ) -> Resource<JSBindGroup> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
@@ -85,10 +82,7 @@ extern "C" {
     ) -> Resource<JSTexture>;
     pub fn create_bind_group(
         device: &Resource<JSDevice>,
-        layout: &Resource<JSBindGroupLayout>,
-        label_ptr: usize,
-        label_len: usize,
-        entries: BindingsIteratorPtr<'_>,
+        descriptor: &Resource<JSBindGroupDescriptor>,
     ) -> Resource<JSBindGroup>;
     pub fn create_gpu_command_encoder(
         device: &Resource<JSDevice>,

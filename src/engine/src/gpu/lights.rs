@@ -92,7 +92,7 @@ fn test_lights() {
     use crate::gpu::gpu::init_gpu;
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use externref::ExternRef;
-    use webgpu::{bindgroup::bindgroup::BindGroup, bufferbinding::BufferBinding, queue::Queue};
+    use webgpu::{bindgroup::{bindgroup::BindGroup, bufferbinding::BufferBinding}, queue::Queue};
     unsafe {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),

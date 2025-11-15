@@ -7,7 +7,6 @@ pub mod buffer_binding_layout;
 pub mod color_attachment;
 pub mod bindgroup;
 pub mod buffer;
-pub mod bufferbinding;
 pub mod renderbundle;
 pub mod command_encoder;
 pub mod command_buffer;

@@ -1,10 +1,14 @@
 use externref::Resource;
 use std::{cell::RefCell, marker::PhantomData, rc::Rc};
 
-use crate::texture::{
-    texture::{usages_from_bools, JSTexture, Texture, TextureAspect, TextureViewDimension},
-    texture_formats::{TextureFormat, TextureFormatSRGB},
-    valid_texture::ValidTexture,
+use crate::{
+    bindgroup::bindgroup_entry::BindGroupBinding,
+    texture::{
+        texture::{usages_from_bools, JSTexture, Texture, TextureAspect, TextureViewDimension},
+        texture_formats::{TextureFormat, TextureFormatSRGB},
+        valid_texture::ValidTexture,
+    },
+    weakvec::WeakVec,
 };
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -65,9 +69,10 @@ pub struct TextureView<
     dimension: TextureViewDimension,
     aspect: TextureAspect,
     pub version: u32,
+    pub bindings: WeakVec<RefCell<dyn BindGroupBinding>>,
 }
 impl<
-        F: TextureFormat + 'static,
+        F: TextureFormat,
         const SAMPLE_COUNT: u32,
         const COPY_SRC: bool,
         const COPY_DST: bool,
@@ -246,6 +251,7 @@ impl<
             dimension,
             aspect,
             version: 0,
+            bindings: WeakVec::new(),
         }));
         return texture_view;
     }
@@ -357,6 +363,7 @@ impl<
             dimension,
             aspect,
             version: 0,
+            bindings: WeakVec::new(),
         }));
         return texture_view;
     }

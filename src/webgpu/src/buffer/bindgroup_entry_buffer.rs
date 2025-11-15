@@ -1,18 +1,19 @@
 use crate::{
+    bindgroup::{bindgroup::Bindable, bindgroup_entry::{BindGroupBinding, BindgroupEntry}},
     buffer::buffer::{BufferRef, GPUBuffer},
-    bufferbinding::BufferBinding,
 };
 use std::{
-    cell::RefCell, num::NonZeroUsize, rc::{Rc, Weak}
+    cell::RefCell,
+    num::NonZeroUsize,
+    rc::{Rc, Weak},
 };
 
-pub trait BindGroupBindable: BindGroupBindableMarker {}
-pub trait BindGroupBindableMarker {
-    fn add_binding(&mut self, bind_group: Weak<RefCell<BufferBinding>>);
+pub trait AbstractBindGroupEntryBuffer: BindgroupEntry {
     fn externref(&self) -> &BufferRef;
-    fn size(&self) -> NonZeroUsize;
-    fn externref_arc(&self) -> Rc<BufferRef>;
+    fn externref_arc(&self) -> Rc<dyn Bindable>;
 }
+
+pub trait BindGroupEntryBuffer: AbstractBindGroupEntryBuffer {}
 impl<
         const MAP_READ: bool,
         const MAP_WRITE: bool,
@@ -24,7 +25,7 @@ impl<
         const STORAGE: bool,
         const INDIRECT: bool,
         const QUERY_RESOLVE: bool,
-    > BindGroupBindableMarker
+    > AbstractBindGroupEntryBuffer
     for GPUBuffer<
         MAP_READ,
         MAP_WRITE,
@@ -38,19 +39,44 @@ impl<
         QUERY_RESOLVE,
     >
 {
-    fn add_binding(&mut self, bind_group: Weak<RefCell<BufferBinding>>) {
-        self.buffer_bindings.push(bind_group);
-    }
-
     fn externref(&self) -> &BufferRef {
         &self.externref
     }
 
+    fn externref_arc(&self) -> Rc<dyn Bindable> {
+        self.externref.clone()
+    }
+}
+impl<
+        const MAP_READ: bool,
+        const MAP_WRITE: bool,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const INDEX: bool,
+        const VERTEX: bool,
+        const UNIFORM: bool,
+        const STORAGE: bool,
+        const INDIRECT: bool,
+        const QUERY_RESOLVE: bool,
+    > BindgroupEntry
+    for GPUBuffer<
+        MAP_READ,
+        MAP_WRITE,
+        COPY_SRC,
+        COPY_DST,
+        INDEX,
+        VERTEX,
+        UNIFORM,
+        STORAGE,
+        INDIRECT,
+        QUERY_RESOLVE,
+    >
+{
+    fn add_binding(&mut self, bind_group: Weak<RefCell<dyn BindGroupBinding>>) {
+        self.bindings.push(bind_group);
+    }
     fn size(&self) -> NonZeroUsize {
         self.size
-    }
-    fn externref_arc(&self) -> Rc<BufferRef> {
-        self.externref.clone()
     }
 }
 impl<
@@ -63,7 +89,7 @@ impl<
         const STORAGE: bool,
         const INDIRECT: bool,
         const QUERY_RESOLVE: bool,
-    > BindGroupBindable
+    > BindGroupEntryBuffer
     for GPUBuffer<
         MAP_READ,
         MAP_WRITE,
@@ -87,7 +113,7 @@ impl<
         const VERTEX: bool,
         const INDIRECT: bool,
         const QUERY_RESOLVE: bool,
-    > BindGroupBindable
+    > BindGroupEntryBuffer
     for GPUBuffer<
         MAP_READ,
         MAP_WRITE,

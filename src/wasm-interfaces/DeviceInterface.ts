@@ -1,6 +1,6 @@
 import { Rust_Iterator, rust_iterator_to_js } from '../utils.js';
 import type { Engine } from '../engine.js';
-import { BGLayout, ShaderStage } from '../webgpu-ts/index.js';
+import { ShaderStage } from '../webgpu-ts/index.js';
 import {
   textureFormatMapping,
   viewDimensionMapping,
@@ -23,45 +23,9 @@ const bufferBindingTypeMapping = [
   'read-only-storage',
 ] as const;
 export const DeviceExports = {
-  create_bind_group(
-    device: GPUDevice,
-    layout: BGLayout | GPUBindGroupLayout,
-    label_ptr: number,
-    label_len: number,
-    iterator: Rust_Iterator<number>,
-  ) {
-    const label = textDecoder.decode(
-      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
-    );
-    const groupIterator = rust_iterator_to_js(
-      iterator,
-      0,
-      engine.rust.iterate_bindings,
-    );
-    const entries = Iterator.from(groupIterator).map<GPUBindGroupEntry>(
-      (ptr, i) => {
-        const [index, offset, size] = new Uint32Array(
-          engine.rust.memory.buffer,
-          ptr,
-          3,
-        );
-        return {
-          binding: i,
-          resource: {
-            buffer: engine.rust.externrefs.get(index!) as GPUBuffer,
-            offset: offset!,
-            size: size!,
-          },
-        };
-      },
-    );
-    return device.createBindGroup({
-      entries,
-      label,
-      layout: layout instanceof BGLayout ? layout.layout : layout,
-    });
+  create_bind_group(device: GPUDevice, descriptor: GPUBindGroupDescriptor) {
+    return device.createBindGroup(descriptor);
   },
-
   create_bind_group_layout(
     device: GPUDevice,
     label_ptr: number,

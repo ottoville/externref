@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
+use webgpu::bindgroup::bufferbinding::BufferBinding;
 use webgpu::bindgroup_layout::BindGroupLayout;
 use webgpu::canvas::{CanvasNoContext, CanvasWithContext, JSCanvas};
 use webgpu::color_attachment::color_attachment::StoreOpt;
@@ -45,7 +46,6 @@ use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
 use super::lights::Lights;
 use webgpu::binding_commands::BindingCommands;
 use webgpu::buffer::buffer::JSBuffer;
-use webgpu::bufferbinding::BufferBinding;
 use webgpu::command_buffer::{CommandBuffer, JSCommandBuffer};
 use webgpu::command_encoder::GPUCommandEncoder;
 use webgpu::compute_pass_encoder::{ComputePassEncoder, JSComputePassEncoder, JSComputePipeline};
@@ -405,6 +405,11 @@ pub unsafe extern "C" fn init_gpu(
         NonZeroU32::new_unchecked(300),
         String::from("diffuseTexture"),
     ));
+    let bufferbinding = BufferBinding::new(
+        Rc::new(RefCell::new(screen_dimension_buffer_screen)),
+        0,
+        None,
+    );
     let render_pass_screen = RenderpassMSAA::new(
         String::from("renderPassScreen"),
         [NonZeroU32::new_unchecked(1); 2],
@@ -412,14 +417,11 @@ pub unsafe extern "C" fn init_gpu(
         js_render_pass_screen,
         vec![CameraGroup {
             cameras: Vec::with_capacity(2),
+            bufferbinding: bufferbinding.clone(),
             bind_group: Some(BindGroup::new(
                 String::from("sizeBindGroup"),
                 &size_bindgroup_layout,
-                [BufferBinding::new(
-                    Rc::new(RefCell::new(screen_dimension_buffer_screen)),
-                    0,
-                    None,
-                )],
+                [bufferbinding],
             )),
         }],
         [ColorAttachmentMultiSampled::new(
@@ -496,6 +498,11 @@ pub unsafe extern "C" fn init_gpu(
             TextureViewDimension::D2,
             TextureAspect::DepthOnly,
         );
+    let bufferbinding = BufferBinding::new(
+        Rc::new(RefCell::new(screen_dimension_buffer_screen_water)),
+        0,
+        None,
+    );
     let render_pass_water = Renderpass::new(
         String::from("renderPassWater"),
         [NonZeroU32::new_unchecked(1); 2],
@@ -506,14 +513,11 @@ pub unsafe extern "C" fn init_gpu(
         js_render_pass_water,
         vec![CameraGroup {
             cameras: Vec::with_capacity(2),
+            bufferbinding: bufferbinding.clone(),
             bind_group: Some(BindGroup::new(
                 String::from("sizeBindGroup"),
                 &size_bindgroup_layout,
-                [BufferBinding::new(
-                    Rc::new(RefCell::new(screen_dimension_buffer_screen_water)),
-                    0,
-                    None,
-                )],
+                [bufferbinding],
             )),
         }],
         [ColorAttachmentSingleSampled::new(
@@ -559,6 +563,11 @@ pub unsafe extern "C" fn init_gpu(
         TextureViewDimension::D2,
         TextureAspect::All,
     );
+    let bufferbinding = BufferBinding::new(
+        Rc::new(RefCell::new(screen_dimension_buffer_screen_pick)),
+        0,
+        None,
+    );
     let pick_render_pass = Renderpass::new(
         String::from("pickRenderPass"),
         [NonZeroU32::new_unchecked(1); 2],
@@ -566,14 +575,11 @@ pub unsafe extern "C" fn init_gpu(
         js_pick_render_pass,
         vec![CameraGroup {
             cameras: Vec::with_capacity(2),
+            bufferbinding: bufferbinding.clone(),
             bind_group: Some(BindGroup::new(
                 String::from("sizeBindGroup"),
                 &size_bindgroup_layout,
-                [BufferBinding::new(
-                    Rc::new(RefCell::new(screen_dimension_buffer_screen_pick)),
-                    0,
-                    None,
-                )],
+                [bufferbinding],
             )),
         }],
         [ColorAttachmentSingleSampled::new(
@@ -1132,9 +1138,11 @@ fn test_bindgroup_buffer_resize() {
 
         renderbundle_encoder.set_bindgroup(&device, 0, &bindgroup, &[]);
         let rawbindgroup = bindgroup.resources.borrow().as_ref().unwrap().clone();
-        buffer_arc
-            .borrow_mut()
-            .resize(&device, &mut command_encoder, NonZeroUsize::new_unchecked(64));
+        buffer_arc.borrow_mut().resize(
+            &device,
+            &mut command_encoder,
+            NonZeroUsize::new_unchecked(64),
+        );
         drop(buffer_arc);
 
         {

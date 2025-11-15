@@ -18,8 +18,8 @@ pub unsafe fn create_render_pass_descriptor(
 }
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn push_color_attachment_to_render_pass_descriptor(
-    descriptor: &Resource<JSRenderPassDescriptor>,
-    color_attachment: &Resource<JSRenderPassColorAttachment>,
+    _descriptor: &Resource<JSRenderPassDescriptor>,
+    _color_attachment: &Resource<JSRenderPassColorAttachment>,
 ) {
 }
 
