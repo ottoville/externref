@@ -7,7 +7,6 @@ import {
   type WaterVertShader,
 } from '../GPU/Shaders/Water.vert.js';
 declare const engine: Engine;
-import { BindGroup } from '../webgpu-ts/index.js';
 import { createWaterFragShader } from '../GPU/Shaders/Water.frag.js';
 import { DataNode } from '../nodes/DataNode.js';
 
@@ -45,25 +44,33 @@ export class Sea extends DataNode {
         },
         'uint16',
       );
-      //TODO: Reuse sampler with terrain.ts?
-      const sampler = engine.gpu.device.createSampler({
-        magFilter: 'nearest',
-        minFilter: 'nearest',
-        mipmapFilter: 'nearest',
-      });
+      const bindgroup = engine.rust.create_water_bindgroup(engine.gpu.gpu);
       this.drawable = new DrawableSimple({
         bindGroups: [
           {
-            bindGroup: new BindGroup(
-              engine.gpu.pipelineLayouts.waterTextureLayot,
-              'waterTexture',
-              () => ({
-                diffuseTexture:
-                  engine.gpu!.renderPassWater.props.colorRenderTargets.diffuse
-                    .renderTarget,
-                mySampler: sampler,
-              }),
-            ),
+            bindGroup: {
+              //@ts-expect-error rust hax
+              bindGroup: {
+                label: 'waterTextureBindgroup',
+              },
+              destroy: function (): void {
+                throw new Error('Function not implemented.');
+              },
+              getForRenderBundle2: function (
+                rust_renderbundle_encoder: rust_pointer<'renderbundleencoder'>,
+                bindGroupStartIndex: number,
+                _offsets?: readonly number[] | undefined,
+              ) {
+                engine.rust.renderbundle_set_bindgroup2_1(
+                  rust_renderbundle_encoder,
+                  bindGroupStartIndex,
+                  bindgroup,
+                  engine.gpu!.device,
+                );
+              },
+              layout: engine.gpu.pipelineLayouts.waterTextureLayot,
+            },
+            offsets: [],
           },
         ],
         node: this,

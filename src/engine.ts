@@ -489,6 +489,12 @@ export type rustWasm = {
     device: GPUDevice,
     dynamic_offset: number,
   ): void;
+  renderbundle_set_bindgroup2_1(
+    renderbundle: rust_pointer<'renderbundleencoder'>,
+    index: number,
+    bindgroup: rust_pointer<'bindgroup'>,
+    device: GPUDevice,
+  ): void;
   renderbundle_set_bindgroup_2(
     renderbundle: rust_pointer<'renderbundleencoder'>,
     index: number,
@@ -603,6 +609,30 @@ export type rustWasm = {
     rust_buffer: rust_pointer<'buffer'>,
     cb: rust_pointer<'fn'>,
   ): void;
+  create_ui_texture(
+    device: GPUDevice,
+    width: number,
+    height: number,
+  ): rust_pointer<'texture'>;
+  get_resolve_target(gpu: rust_pointer<'GPU'>): rust_pointer<'texture'>;
+  create_buffer_uniform_copydst(
+    device: GPUDevice,
+    size: number,
+    x: number,
+    y: number,
+  ): rust_pointer<'buffer'>;
+  write_gpu_buffer_uniform_copydst(
+    gpu: rust_pointer<'GPU'>,
+    buffer: rust_pointer<'buffer'>,
+    a: number,
+    b: number,
+  ): void;
+  create_ui_bindgroup(
+    device: GPUDevice,
+    uniform_buffer: rust_pointer<'buffer'>,
+    texture: rust_pointer<'texture'>,
+  ): rust_pointer<'bindgroup'>;
+  create_water_bindgroup(gpu: rust_pointer<'GPU'>): rust_pointer<'bindgroup'>;
 } & BufferInterface &
   DevToolsInterface;
 const ObjectStores = {
@@ -860,10 +890,6 @@ export class Engine {
             ref.externref.destroy();
           }
         },
-
-        get_renderpass_descriptor(renderpass: RenderPass) {
-          return renderpass.GPURenderPassDescriptor;
-        },
         mesh_on_change(mesh: Externref<false, MainNode>) {
           mesh.externref.onMeshChange.forEach((cb) => cb());
         },
@@ -886,13 +912,6 @@ export class Engine {
           height: number,
         ) {
           renderpass.onResize.forEach((cb) => cb(width, height));
-        },
-        resize_renderpass(
-          renderpass: RenderPass,
-          width: number,
-          height: number,
-        ) {
-          renderpass.resize(width, height);
         },
         serialize_terrain(
           vertices_ptr: number,

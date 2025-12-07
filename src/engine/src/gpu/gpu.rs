@@ -55,21 +55,7 @@ thread_local! {
 }
 
 #[cfg(test)]
-pub unsafe fn get_renderpass_descriptor(
-    _renderpass: &Resource<JSRenderPass>,
-) -> Resource<JSRenderPassDescriptor> {
-    use externref::ExternRef;
-    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
-}
-#[cfg(test)]
 pub unsafe fn renderpass_on_resize(
-    _renderpass: &Resource<JSRenderPass>,
-    _width: NonZeroU32,
-    _height: NonZeroU32,
-) {
-}
-#[cfg(test)]
-pub unsafe fn resize_renderpass(
     _renderpass: &Resource<JSRenderPass>,
     _width: NonZeroU32,
     _height: NonZeroU32,
@@ -90,14 +76,6 @@ pub fn serialize_terrain(
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn mesh_on_change(mesh: Option<&Resource<crate::mesh::JSMesh>>);
-    pub fn get_renderpass_descriptor(
-        renderpass: &Resource<JSRenderPass>,
-    ) -> Resource<JSRenderPassDescriptor>;
-    pub fn resize_renderpass(
-        renderpass: &Resource<JSRenderPass>,
-        width: NonZeroU32,
-        height: NonZeroU32,
-    );
     pub fn renderpass_on_resize(
         renderpass: &Resource<JSRenderPass>,
         width: NonZeroU32,
@@ -132,7 +110,25 @@ unsafe extern "C" fn on_resize(
 ) {
     (*gpu).on_resize(width, height, pipeline, device_pixel_ratio);
 }
-
+#[externref]
+#[no_mangle]
+unsafe extern "C" fn get_resolve_target(
+    gpu: *mut GPU,
+) -> *mut Rc<Texture<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>> {
+    Box::into_raw(Box::new((*gpu).resolve_target.clone()))
+}
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn write_gpu_buffer_uniform_copydst(
+    gpu: *const GPU,
+    buffer: *const Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>>,
+    a: f32,
+    b: f32,
+) {
+    let data = Box::new([a, b]);
+    let b = (*buffer).borrow();
+    (*gpu).queue.write_buffer(&b, data.as_ptr() as usize, 8, 0);
+}
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn get_raw_computepassencoder(
@@ -205,7 +201,7 @@ pub unsafe extern "C" fn init_gpu(
     );
     let size_bindgroup_layout = BindGroupLayout::new(
         &device,
-        String::from("sizeBindGroupLayout"),
+        String::from("sizeBindGroupLayout2"),
         [&screen_dimensions],
     );
 
@@ -404,7 +400,7 @@ pub unsafe extern "C" fn init_gpu(
         &device,
         NonZeroU32::new_unchecked(300),
         NonZeroU32::new_unchecked(300),
-        String::from("diffuseTexture"),
+        String::from("diffuseTexture_resolvetarget"),
     ));
     let bufferbinding = BufferBinding::new(
         Rc::new(RefCell::new(screen_dimension_buffer_screen)),
@@ -428,7 +424,7 @@ pub unsafe extern "C" fn init_gpu(
         [ColorAttachmentMultiSampled::new(
             screen_render_target_view,
             TextureView::<_, _, false, false, true, false, true>::new(
-                resolve_target,
+                resolve_target.clone(),
                 String::from("diffusetexturetarget"),
                 TextureViewDimension::D2,
                 TextureAspect::All,
@@ -466,7 +462,7 @@ pub unsafe extern "C" fn init_gpu(
     ));
 
     let water_render_target_view = TextureView::<_, _, false, false, true, false, true, 0>::new(
-        water_render_target,
+        water_render_target.clone(),
         String::from("diffuseTextureWaterView"),
         TextureViewDimension::D2,
         TextureAspect::All,
@@ -651,6 +647,8 @@ pub unsafe extern "C" fn init_gpu(
         clusters_layout,
         uniform_bind_group_layout_with_time,
         meshes: ExplicitGenerationalFreeList::new(2),
+        resolve_target,
+        water_render_target,
     };
     return Box::into_raw(Box::new(gpu));
 }
@@ -701,6 +699,8 @@ pub struct GPU {
     pub update_clusters_layout: BindGroupLayout<2>,
     pub uniform_bind_group_layout_with_time: BindGroupLayout<5>,
     pub clusters_layout: BindGroupLayout<2>,
+    pub resolve_target: Rc<Texture<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>>,
+    pub water_render_target: Rc<Texture<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>>,
 }
 const MAX_RESOLUTION: [u32; 2] = [1920, 1080];
 pub enum Renderpassenum<'a> {
@@ -774,14 +774,12 @@ impl GPU {
             renderpass.resize(width, height, &self.device, &mut computepassencoder);
             unsafe {
                 let size = renderpass.inner_renderpass.size;
-                resize_renderpass(&renderpass.inner_renderpass.jsrenderpass, size[0], size[1]);
             }
         }
         for renderpass in &mut self.renderpasses_sampled {
             renderpass.resize(width, height, &self.device, &mut computepassencoder);
             unsafe {
                 let size = renderpass.inner_renderpass.size;
-                resize_renderpass(&renderpass.inner_renderpass.jsrenderpass, size[0], size[1]);
             }
         }
         // Call onResize after all renderPasses have resizes so callbacks
@@ -1187,10 +1185,11 @@ fn test_bindgroup_buffer_resize() {
         //buffer ref count is 3: test, command_encoder, rawbindgroup
         assert_eq!(Rc::strong_count(&rawbuffer), 3);
 
-        let mut renderpass_encoder = command_encoder.begin_render_pass(
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-        );
+        let mut renderpass_encoder =
+            command_encoder.begin_render_pass(&Resource::new_non_null(std::mem::transmute::<
+                usize,
+                ExternRef,
+            >(3)));
         renderbundle_encoder.record_renderbundle(
             &mut gpu.renderpasses[0].inner_renderpass.cameragroups,
             &gpu.device,
@@ -1317,10 +1316,11 @@ fn test_bindgroup() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),
         );
-        let mut renderpass_encoder = command_encoder.begin_render_pass(
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-        );
+        let mut renderpass_encoder =
+            command_encoder.begin_render_pass(&Resource::new_non_null(std::mem::transmute::<
+                usize,
+                ExternRef,
+            >(3)));
         renderbundle_encoder.record_renderbundle(
             &mut gpu.renderpasses[0].inner_renderpass.cameragroups,
             &gpu.device,

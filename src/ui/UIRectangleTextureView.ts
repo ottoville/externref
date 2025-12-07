@@ -11,7 +11,8 @@ declare const engine: Engine;
 export class UIRectangleTextureView extends UIRectangle {
   createTexture():
     | TextureView<Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>>
-    | GPUTextureView {
+    | GPUTextureView
+    | rust_pointer<'texture'> {
     return this.textureView;
   }
 

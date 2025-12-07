@@ -107,11 +107,14 @@ export abstract class UIRectangle<
     top: 0,
   };
   #texture?: RectangleTexture | undefined;
-  uniformBuffer: Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>;
+  uniformBuffer:
+    | Buffer<(typeof BufferUsageEnums)['UNIFORM|COPY_DST']>
+    | rust_pointer<'buffer'>;
   textureView:
     | TextureView<
         Texture<TEXTURE_BINDING_TEXTURE, GPUTextureFormat, Texture2dSize>
       >
+    | rust_pointer<'texture'>
     | GPUTextureView;
 
   protected createTextureView(
@@ -136,7 +139,16 @@ export abstract class UIRectangle<
           this.props.translate.y.value[1] === NumericUnit.px
         ) {
           this.updatePosition(size.width, size.height);
-          this.uniformBuffer.write(0, this.screenPosition);
+          if (typeof this.uniformBuffer === 'number') {
+            engine.rust.write_gpu_buffer_uniform_copydst(
+              engine.gpu!.gpu,
+              this.uniformBuffer,
+              this.screenPosition[0]!,
+              this.screenPosition[1]!,
+            );
+          } else {
+            this.uniformBuffer.write(0, this.screenPosition);
+          }
         }
         this.#updateBoundingBoxAndVerticesSuper(
           size.width,
@@ -157,6 +169,12 @@ export abstract class UIRectangle<
           frag.props.pipelineLayouts[0].bindGroupLayouts[0].entries.texture
             .structName;
       }
+      /*this.#texture = engine.rust.create_ui_texture(
+        this.props.canvaspipeline.builder.vertexShader.props.pipelineLayouts[0]
+          .gpu,
+        copySource.width,
+        copySource.height,
+      );*/
       this.#texture = new Texture({
         format: 'bgra8unorm',
         gpu: this.props.canvaspipeline.builder.vertexShader.props
@@ -200,7 +218,8 @@ export abstract class UIRectangle<
     ],
   ):
     | TextureView<Texture<TextureUsageEnums, GPUTextureFormat, Texture2dSize>>
-    | GPUTextureView;
+    | GPUTextureView
+    | rust_pointer<'texture'>;
   screenPosition = new Float32Array(2);
   protected updatePosition(width: number, height: number) {
     if (this.props.translate.x.value[1] === NumericUnit['%']) {
@@ -377,9 +396,7 @@ export abstract class UIRectangle<
   constructor(
     protected props: UIRectangleProps<P>,
     texture:
-      | TextureView<
-          Texture<TEXTURE_BINDING_TEXTURE, GPUTextureFormat, Texture2dSize>
-        >
+      | rust_pointer<'texture'>
       | GPUTextureView
       | ImageBitmap
       | OffscreenCanvas,
@@ -400,17 +417,8 @@ export abstract class UIRectangle<
 
     const gpu =
       canvaspipeline.builder.vertexShader.props.pipelineLayouts[0].gpu;
-    const uniformBuffer = new Buffer({
-      gpu: gpu,
-      label: 'UI_transform',
-      mappedAtCreation: true,
-      size: 8,
-      usages: BufferUsageEnums['UNIFORM|COPY_DST'],
-    });
     const size = renderPass.size;
     this.updatePosition(size.width, size.height);
-    new Float32Array(uniformBuffer.getMappedRange()).set(this.screenPosition);
-    this.uniformBuffer = uniformBuffer.unmap();
 
     if (events) {
       const { onClick, onPointerEnter, onPointerLeave } = events;
@@ -489,39 +497,120 @@ export abstract class UIRectangle<
     this.#node.positions_count = positionsCount;
 
     this.#updateBoundingBoxAndVerticesSuper(size.width, size.height, textUV);
+    if (typeof this.textureView == 'number') {
+      this.uniformBuffer = engine.rust.create_buffer_uniform_copydst(
+        gpu,
+        8,
+        this.screenPosition[0]!,
+        this.screenPosition[1]!,
+      );
+      const bindgroup = engine.rust.create_ui_bindgroup(
+        gpu,
+        this.uniformBuffer,
+        this.textureView,
+      );
 
-    const drawable = new DrawableSimple(
-      {
-        bindGroups: [
-          {
-            bindGroup: new BindGroup(
-              engine.gpu!.pipelineLayouts.BindGroupLayoutCanvas,
-              'UI_bindgroup_' + label,
-              (bindGroup) => {
-                return {
-                  texture: this.textureView,
-                  uniforms: this.uniformBuffer.getUniformBinding(bindGroup),
-                };
+      var drawable = new DrawableSimple(
+        {
+          bindGroups: [
+            {
+              bindGroup: {
+                //@ts-expect-error rust hax
+                bindGroup: {
+                  label: 'UI_bindgroup_' + label,
+                },
+                destroy: function (): void {
+                  throw new Error('Function not implemented.');
+                },
+                getForRenderBundle2: function (
+                  rust_renderbundle_encoder: rust_pointer<'renderbundleencoder'>,
+                  _bindGroupStartIndex: number,
+                  _offsets?: readonly number[] | undefined,
+                ) {
+                  engine.rust.renderbundle_set_bindgroup2_1(
+                    rust_renderbundle_encoder,
+                    0,
+                    bindgroup,
+                    engine.gpu!.device,
+                  );
+                },
+                layout: engine.gpu!.pipelineLayouts.BindGroupLayoutCanvas,
               },
-            ),
-            offsets: [],
-          },
-        ],
-        node: this.#node,
-        renderPasses: new Set([renderPass]),
-        renderPipeline: canvaspipeline as GPU['UIPipeline'],
-        vertexBuffers: [
-          [engine.rust.vertices_pointer(geometry, false), positionsCount * 4],
-        ],
-      },
-      {
-        firstInstance: 0,
-        instanceCount: 1,
-      },
-      {
-        firstVertex: 0,
-      },
-    );
+              offsets: [],
+            },
+          ],
+          node: this.#node,
+          renderPasses: new Set([renderPass]),
+          renderPipeline: canvaspipeline as GPU['UIPipeline'],
+          vertexBuffers: [
+            [engine.rust.vertices_pointer(geometry, false), positionsCount * 4],
+          ],
+        },
+        {
+          firstInstance: 0,
+          instanceCount: 1,
+        },
+        {
+          firstVertex: 0,
+        },
+      );
+    } else {
+      const uniformBuffer = new Buffer({
+        gpu: gpu,
+        label: 'UI_transform',
+        mappedAtCreation: true,
+        size: 8,
+        usages: BufferUsageEnums['UNIFORM|COPY_DST'],
+      });
+      new Float32Array(uniformBuffer.getMappedRange()).set(this.screenPosition);
+      this.uniformBuffer = uniformBuffer.unmap();
+
+      var drawable = new DrawableSimple(
+        {
+          bindGroups: [
+            {
+              bindGroup: new BindGroup(
+                engine.gpu!.pipelineLayouts.BindGroupLayoutCanvas,
+                'UI_bindgroup_' + label,
+                (bindGroup) => {
+                  return {
+                    texture: this.textureView as
+                      | TextureView<
+                          Texture<
+                            TEXTURE_BINDING_TEXTURE,
+                            GPUTextureFormat,
+                            Texture2dSize
+                          >
+                        >
+                      | GPUTextureView,
+                    uniforms: (
+                      this.uniformBuffer as Buffer<
+                        (typeof BufferUsageEnums)['UNIFORM|COPY_DST']
+                      >
+                    ).getUniformBinding(bindGroup),
+                  };
+                },
+              ),
+              offsets: [],
+            },
+          ],
+          node: this.#node,
+          renderPasses: new Set([renderPass]),
+          renderPipeline: canvaspipeline as GPU['UIPipeline'],
+          vertexBuffers: [
+            [engine.rust.vertices_pointer(geometry, false), positionsCount * 4],
+          ],
+        },
+        {
+          firstInstance: 0,
+          instanceCount: 1,
+        },
+        {
+          firstVertex: 0,
+        },
+      );
+    }
+
     this.#node.drawable = drawable;
     renderPass.onResize.set(this, (width, height) => {
       if (
@@ -529,7 +618,16 @@ export abstract class UIRectangle<
         this.props.translate.y.value[1] === NumericUnit.px
       ) {
         this.updatePosition(width, height);
-        this.uniformBuffer.write(0, this.screenPosition);
+        if (typeof this.uniformBuffer === 'number') {
+          engine.rust.write_gpu_buffer_uniform_copydst(
+            engine.gpu!.gpu,
+            this.uniformBuffer,
+            this.screenPosition[0]!,
+            this.screenPosition[1]!,
+          );
+        } else {
+          this.uniformBuffer.write(0, this.screenPosition);
+        }
       }
       this.#updateBoundingBoxAndVerticesSuper(width, height, textUV);
       drawable.setVertexBuffer(0, [

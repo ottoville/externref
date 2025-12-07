@@ -118,7 +118,6 @@ pub struct GPUBindingLayout<const VISIBILITY: u32> {
     binding: u32,
     externref: Resource<JSGPUBindGroupLayoutEntry>,
 }
-
 impl<const VISIBILITY: u32> BindingLayout for GPUBindingLayout<VISIBILITY> {
     fn externref(&self) -> &Resource<JSGPUBindGroupLayoutEntry> {
         &self.externref

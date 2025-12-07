@@ -23,6 +23,7 @@ pub unsafe extern "C" fn renderbundle_make_dirty(renderbundle: *mut RenderBundle
     (*renderbundle).make_dirty();
 }
 type BindGroupType = *const Rc<BindGroup<1>>;
+pub type BindGroupType2 = *mut Rc<BindGroup<2>>;
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn renderbundle_set_bindgroup(
@@ -44,6 +45,16 @@ pub unsafe extern "C" fn renderbundle_set_bindgroup_1(
     dynamic_offset: u32,
 ) {
     (*renderbundle).set_bindgroup(device, index, &(*bindgroup), &[dynamic_offset]);
+}
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn renderbundle_set_bindgroup2_1(
+    renderbundle: *mut RenderBundleEncoder,
+    index: u32,
+    bindgroup: BindGroupType2,
+    device: &Resource<JSDevice>,
+) {
+    (*renderbundle).set_bindgroup(device, index, &(*bindgroup), &[]);
 }
 #[no_mangle]
 #[externref]

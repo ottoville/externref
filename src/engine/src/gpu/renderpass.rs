@@ -33,7 +33,6 @@ use crate::{
     MULTIVALUE_F32,
 };
 
-use super::gpu::get_renderpass_descriptor;
 #[externref]
 #[no_mangle]
 pub unsafe extern "C" fn link_renderpass(
@@ -222,7 +221,6 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
         gpu_buffer: usize,
         bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
-        let descriptor = unsafe { get_renderpass_descriptor(&self.inner_renderpass.jsrenderpass) };
         let mut dirty = self.inner_renderpass
             .render_targets
             .iter()
@@ -236,7 +234,7 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
             self.descriptor=self.inner_renderpass.create_render_pass_descriptor();
         }
         let mut renderpass_encoder = command_encoder
-            .begin_render_pass(&descriptor,  &self.descriptor);
+            .begin_render_pass(&self.descriptor);
         if let Some(bundle) = self.inner_renderpass.bundle.as_mut() {
             bundle.record_renderbundle(
                 &mut self.inner_renderpass.cameragroups,

@@ -292,7 +292,7 @@ export class Canvas {
               },
             },
           },
-          gpu.renderPassScreen.props.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.renderTarget,
+          engine.rust.get_resolve_target(engine.gpu!.gpu),
         );
         this.setProgress(45);
 

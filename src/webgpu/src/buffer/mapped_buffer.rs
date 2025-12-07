@@ -1,5 +1,7 @@
+use std::cell::RefCell;
 use std::num::NonZeroUsize;
 use std::ops::Deref;
+use std::rc::Rc;
 
 use externref::{externref, Resource};
 
@@ -81,6 +83,20 @@ pub unsafe extern "C" fn create_mapped_gpu_buffer_copysrc(
 ) -> *const MappedGPUBuffer<false, false, true> {
     let label = String::from_raw_parts(label_ptr, label_len, label_cap);
     Box::into_raw(Box::new(GPUBuffer::new_mapped(device, size, label)))
+}
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn create_buffer_uniform_copydst(
+    device: &Resource<JSDevice>,
+    size: NonZeroUsize,
+    x: f32,
+    y: f32,
+) -> *const Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>> {
+    let label = String::from("UI_transform");
+    let buffer = GPUBuffer::new_mapped(device, size, label);
+    let data = [x, y];
+    buffer.set_mapped_range(&data, 0);
+    Box::into_raw(Box::new(Rc::new(RefCell::new(buffer.unmap()))))
 }
 
 impl<

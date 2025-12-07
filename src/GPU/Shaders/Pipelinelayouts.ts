@@ -1,7 +1,6 @@
 import {
   BGLayout,
   BufLayout,
-  RenderPipelineLayout,
   SampLayout,
   ShaderStage,
   TextLayout,
@@ -92,7 +91,7 @@ export function createPipelineLayouts(gpu: GPU) {
       ),
     },
   );
-  const sizeBindGroupLayout = new BGLayout(gpu.device, 'sizeBindGroupLayout', {
+  const sizeBindGroupLayout = new BGLayout(gpu.device, 'sizeBindGroupLayout1', {
     screen_dimensions: new BufLayout(
       {
         buffer: {
@@ -141,7 +140,7 @@ export function createPipelineLayouts(gpu: GPU) {
       float2f32,
     ),
   });
-  const canvasRootLayout = new RenderPipelineLayout({
+  const canvasRootLayout = new RustRenderPipelineLayout({
     bindGroupLayouts: [BindGroupLayoutCanvas],
     label: 'canvasRootLayout',
   });
@@ -179,7 +178,7 @@ export function createPipelineLayouts(gpu: GPU) {
   );
   const waterTextureLayot = new BGLayout(
     gpu.device,
-    'lightsBindGroupTexture2water',
+    'lightsBindGroupTexture2water1',
     {
       diffuseTexture: new TextLayout(
         {
@@ -197,7 +196,6 @@ export function createPipelineLayouts(gpu: GPU) {
       ),
     },
   );
-
   const clustersLayout = new BGLayout(gpu.device, 'CreateClustersLayout2', {
     clusters: UpdateClustersBufferLayout,
     screentoview: new BufLayout(

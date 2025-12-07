@@ -17,7 +17,6 @@ export const CommandEncoderInterface = {
   begin_render_pass(
     commandEncoder: GPUCommandEncoder,
     renderpass: GPURenderPassDescriptor,
-    _renderpass: GPURenderPassDescriptor,
   ): GPURenderPassEncoder {
     return commandEncoder.beginRenderPass(renderpass);
   },

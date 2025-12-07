@@ -41,7 +41,6 @@ unsafe fn begin_compute_pass(
 unsafe fn begin_render_pass(
     _command_encoder: &Resource<JSCommandEncoder>,
     _descriptor: &Resource<JSRenderPassDescriptor>,
-    _descriptor2: &Resource<JSRenderPassDescriptor>,
 ) -> Resource<JSRenderPassEncoder> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
@@ -75,7 +74,6 @@ extern "C" {
     fn begin_render_pass(
         command_encoder: &Resource<JSCommandEncoder>,
         descriptor: &Resource<JSRenderPassDescriptor>,
-        descriptor2: &Resource<JSRenderPassDescriptor>,
     ) -> Resource<JSRenderPassEncoder>;
     pub fn copy_buffer_to_buffer(
         command_encoder: &Resource<JSCommandEncoder>,
@@ -125,10 +123,9 @@ impl GPUCommandEncoder {
     pub fn begin_render_pass(
         self,
         descriptor: &Resource<JSRenderPassDescriptor>,
-        descriptor2: &Resource<JSRenderPassDescriptor>,
     ) -> RenderPassEncoder {
         unsafe {
-            let externref = begin_render_pass(&self.externref, descriptor, descriptor2);
+            let externref = begin_render_pass(&self.externref, descriptor);
             RenderPassEncoder {
                 command_encoder: self,
                 externref,

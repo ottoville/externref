@@ -51,8 +51,7 @@ export class UIRectangleTextOnly extends UIRectangleText {
       this.textUV,
       this.props.originalAspectRatio,
     );
-    this.createTextureView(copySource, this.textUV);
-    return this.textureView;
+    return this.createTextureView(copySource, this.textUV);
   }
   textUV: [
     topLeft: [number, number],
