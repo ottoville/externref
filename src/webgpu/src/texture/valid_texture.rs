@@ -1,13 +1,17 @@
+use std::cell::RefCell;
+
 use crate::{
-    bindgroup::bindgroup::Bindable,
+    bindgroup::{bindgroup::Bindable, bindgroup_entry::BindGroupBinding},
     texture::{
         texture::{Texture, TextureDimensionTrait},
         texture_formats::TextureFormat,
     },
+    weakvec::WeakVec,
 };
 
 pub trait ValidTexture: TextureDimensionTrait + Bindable {
     fn to_number(&self) -> u32;
+    fn bindings(&self) -> &RefCell<WeakVec<RefCell<dyn BindGroupBinding>>>;
 }
 
 impl<
@@ -97,6 +101,9 @@ where
     fn to_number(&self) -> u32 {
         F::to_number()
     }
+    fn bindings(&self) -> &RefCell<WeakVec<RefCell<dyn BindGroupBinding>>> {
+        &self.bindings
+    }
 }
 
 // Multi sampled
@@ -122,5 +129,8 @@ impl<
 {
     fn to_number(&self) -> u32 {
         F::to_number()
+    }
+    fn bindings(&self) -> &RefCell<WeakVec<RefCell<dyn BindGroupBinding>>> {
+        &self.bindings
     }
 }

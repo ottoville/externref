@@ -1,4 +1,4 @@
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 use std::sync::Arc;
 
@@ -6,7 +6,7 @@ use crate::bindgroup::bindgroup_descriptor::{
     create_bind_group_descriptor, push_to_bind_group_descriptor, JSBindGroupDescriptor,
 };
 
-use crate::bindgroup::bindgroup_entry::{BindGroupBinding, BindgroupEntry};
+use crate::bindgroup::bindgroup_entry::BindGroupBinding;
 use crate::bindgroup::bindgroup_trait::BindGroupTrait;
 use crate::bindgroup::bufferbinding::BufferBinding;
 
@@ -29,15 +29,13 @@ impl BindGroupBinding for BufferBinding {
         descriptor: &Resource<JSBindGroupDescriptor>,
         i: u32,
     ) {
-        unsafe {
-            push_to_bind_group_descriptor(descriptor, i, &self.get_binding().upcast_ref())
-        };
+        unsafe { push_to_bind_group_descriptor(descriptor, i, &self.get_binding().upcast_ref()) };
     }
     fn make_dirty(&mut self) {
         self.make_dirty();
     }
-    fn get_entity(&'_ self) -> RefMut<'_, dyn BindgroupEntry> {
-        self.buffer.borrow_mut()
+    fn add_binding(&'_ self, binding_refcell: Weak<RefCell<dyn BindGroupBinding>>) {
+        self.buffer.borrow_mut().add_binding(binding_refcell);
     }
 
     fn add_bindable(&self, vec: &mut Vec<Rc<dyn Bindable>>) {
@@ -82,9 +80,7 @@ impl<const N: usize> BindGroup<N> {
             //buffer_binding.bindgroups.push(weak);
             binding.add_bindgroup(weak);
             // Add bind group reference to buffer
-            binding
-                .get_entity()
-                .add_binding(Rc::downgrade(binding_refcell));
+            binding.add_binding(Rc::downgrade(binding_refcell));
         }
         return bind_group;
     }

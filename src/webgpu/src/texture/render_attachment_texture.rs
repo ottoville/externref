@@ -294,13 +294,7 @@ impl<
     }
 
     fn get_attachment(&mut self) -> &Resource<JSTextureView> {
-        let texture_version = { self.texture.externref().borrow().1 };
-        let dirty = texture_version != self.version;
-        if dirty {
-            self.re_create();
-            self.version = texture_version;
-        }
-        &self.externref
+        self.extenref()
     }
 
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
@@ -311,7 +305,7 @@ impl<
         let texture_version = { self.texture.externref().borrow().1 };
         return texture_version != self.version;
     }
-    
+
     fn label(&self) -> &String {
         &self.label
     }

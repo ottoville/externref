@@ -1,5 +1,5 @@
 use std::{
-    cell::{RefCell, RefMut},
+    cell::RefCell,
     num::NonZeroUsize,
     rc::{Rc, Weak},
 };
@@ -15,13 +15,13 @@ pub trait BindgroupEntry {
     fn size(&self) -> NonZeroUsize;
 }
 pub trait BindGroupBinding {
-    fn add_bindgroup(&mut self, bindgroup: Weak<dyn BindGroupTrait>);
+    fn add_bindgroup(&mut self, _bindgroup: Weak<dyn BindGroupTrait>) {}
     fn push_bindgroup_entry_to_bindgroup(
         &mut self,
         descriptor: &Resource<JSBindGroupDescriptor>,
         i: u32,
     );
-    fn get_entity(&'_ self) -> RefMut<'_, dyn BindgroupEntry>;
-    fn add_bindable(&self, vec: &mut Vec<Rc<dyn Bindable>>);
-    fn make_dirty(&mut self);
+    fn add_binding(&'_ self, _binding_refcell: Weak<RefCell<dyn BindGroupBinding>>) {}
+    fn add_bindable(&self, _vec: &mut Vec<Rc<dyn Bindable>>) {}
+    fn make_dirty(&mut self) {}
 }

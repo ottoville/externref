@@ -41,7 +41,7 @@ use crate::swapbuffers::SwapBuffers;
 use crate::GPUMesh;
 use webgpu::bindgroup::bindgroup::BindGroup;
 use webgpu::buffer::buffer::{BufferRef, GPUBuffer};
-use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
+use webgpu::buffer_binding_layout::{BufferBindingType, GPUBindingLayout};
 
 use super::lights::Lights;
 use webgpu::binding_commands::BindingCommands;
@@ -174,19 +174,19 @@ pub unsafe extern "C" fn init_gpu(
     let canvas: CanvasWithContext<UnconfiguredWebgpuContext> = canvas.get_webgpu_context();
 
     // LAYOUT UpdateViewLayout2
-    let directional_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+    let directional_lights = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
         0,
         BufferBindingType::ReadOnlyStorage,
         false,
         16,
     );
-    let meshes = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+    let meshes = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
         1,
         BufferBindingType::ReadOnlyStorage,
         false,
         512,
     );
-    let point_lights = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+    let point_lights = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
         2,
         BufferBindingType::ReadOnlyStorage,
         false,
@@ -200,7 +200,7 @@ pub unsafe extern "C" fn init_gpu(
     );
 
     // LAYOUT sizeBindGroupLayout
-    let screen_dimensions = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+    let screen_dimensions = GPUBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new_buffer(
         0,
         BufferBindingType::Uniform,
         false,
@@ -213,7 +213,7 @@ pub unsafe extern "C" fn init_gpu(
     );
 
     // LAYOUT BindGroupLayoutPosition
-    let world = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new(
+    let world = GPUBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new_buffer(
         0,
         BufferBindingType::Uniform,
         true,
@@ -223,13 +223,13 @@ pub unsafe extern "C" fn init_gpu(
         BindGroupLayout::new(&device, String::from("BindGroupLayoutPosition"), [&world]);
 
     // LAYOUT UpdateClustersLayout
-    let clusters = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+    let clusters = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
         0,
         BufferBindingType::Storage,
         false,
         7962624,
     );
-    let view_uniforms = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+    let view_uniforms = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
         1,
         BufferBindingType::Uniform,
         false,
@@ -242,32 +242,36 @@ pub unsafe extern "C" fn init_gpu(
     );
 
     // LAYOUT uniformBindGroupLayoutWithTime
-    let clusters_array = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(
+    let clusters_array = GPUBindingLayout::<SHADER_STAGE_FRAGMENT>::new_buffer(
         0,
         BufferBindingType::ReadOnlyStorage,
         false,
         7962624,
     );
-    let meshes = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(
+    let meshes = GPUBindingLayout::<SHADER_STAGE_FRAGMENT>::new_buffer(
         1,
         BufferBindingType::ReadOnlyStorage,
         false,
         512,
     );
-    let projection = GPUBufferBindingLayout::<SHADER_STAGE_FRAGMENT>::new(
+    let projection = GPUBindingLayout::<SHADER_STAGE_FRAGMENT>::new_buffer(
         2,
         BufferBindingType::Uniform,
         false,
         PROJECTION_BUFFER_SIZE as u32,
     );
-    let scene = GPUBufferBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new(
+    let scene = GPUBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new_buffer(
         3,
         BufferBindingType::Uniform,
         false,
         144,
     );
-    let time =
-        GPUBufferBindingLayout::<SHADER_STAGE_VERTEX>::new(4, BufferBindingType::Uniform, false, 4);
+    let time = GPUBindingLayout::<SHADER_STAGE_VERTEX>::new_buffer(
+        4,
+        BufferBindingType::Uniform,
+        false,
+        4,
+    );
     let uniform_bind_group_layout_with_time = BindGroupLayout::new(
         &device,
         String::from("uniformBindGroupLayoutWithTime"),
@@ -275,7 +279,7 @@ pub unsafe extern "C" fn init_gpu(
     );
 
     // LAYOUT clustersLayout
-    let screentoview = GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE>::new(
+    let screentoview = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
         1,
         BufferBindingType::Uniform,
         false,
@@ -1073,7 +1077,7 @@ fn test_bindgroup_buffer_resize() {
         bindgroup_layout::BindGroupLayout,
         binding_commands::BindingCommands,
         buffer::buffer::GPUBuffer,
-        buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout},
+        buffer_binding_layout::{BufferBindingType, GPUBindingLayout},
         color_attachment::color_attachment::JSRenderPassColorAttachment,
         command_encoder::GPUCommandEncoder,
         queue::Queue,
@@ -1116,7 +1120,7 @@ fn test_bindgroup_buffer_resize() {
             &device,
             String::from("test"),
             [
-                &GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+                &GPUBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new_buffer(
                     0,
                     BufferBindingType::Uniform,
                     false,
@@ -1212,7 +1216,7 @@ fn test_bindgroup() {
     use webgpu::{
         bindgroup::bindgroup_trait::BindGroupTrait,
         bindgroup_layout::BindGroupLayout,
-        buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout},
+        buffer_binding_layout::{BufferBindingType, GPUBindingLayout},
     };
 
     use crate::gpu::{
@@ -1256,7 +1260,7 @@ fn test_bindgroup() {
             &device,
             String::from("test"),
             [
-                &GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+                &GPUBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new_buffer(
                     0,
                     BufferBindingType::Uniform,
                     false,

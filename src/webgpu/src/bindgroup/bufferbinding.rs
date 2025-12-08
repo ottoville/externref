@@ -12,7 +12,7 @@ pub struct BufferBinding {
     pub buffer: Rc<RefCell<dyn BindGroupEntryBuffer>>,
     binding: Option<Resource<JSBufferBinding>>,
     pub offset: usize,
-    pub size: Option<NonZeroUsize>,
+    size: Option<NonZeroUsize>,
     pub bindgroups: WeakVec<dyn BindGroupTrait>,
 }
 impl BufferBinding {

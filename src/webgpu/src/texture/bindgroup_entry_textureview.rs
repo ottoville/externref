@@ -1,5 +1,5 @@
 use std::{
-    cell::{RefCell, RefMut},
+    cell::RefCell,
     rc::{Rc, Weak},
 };
 
@@ -9,6 +9,7 @@ use crate::{
     bindgroup::{
         bindgroup::Bindable,
         bindgroup_entry::{BindGroupBinding, BindgroupEntry},
+        texturebinding::TextureBinding,
     },
     texture::texture_view::JSTextureView,
 };
@@ -18,18 +19,12 @@ use crate::{
         bindgroup_trait::BindGroupTrait,
     },
     texture::{texture_formats::TextureFormat, texture_view::TextureView},
-    weakvec::WeakVec,
 };
 pub trait AbstractBindGroupEntryTextureView: BindgroupEntry {
-    fn externref(&self) -> &Resource<JSTextureView>;
+    fn externref(&mut self) -> &Resource<JSTextureView>;
     fn externref_arc(&self) -> Rc<dyn Bindable>;
 }
 pub trait BindGroupEntryTextureView: AbstractBindGroupEntryTextureView {}
-
-struct TextureBinding {
-    pub textureview: Rc<RefCell<dyn BindGroupEntryTextureView>>,
-    pub bindgroups: WeakVec<dyn BindGroupTrait>,
-}
 
 impl BindGroupBinding for TextureBinding {
     fn add_bindgroup(&mut self, bindgroup: Weak<dyn BindGroupTrait>) {
@@ -45,15 +40,17 @@ impl BindGroupBinding for TextureBinding {
             push_to_bind_group_descriptor(
                 descriptor,
                 i,
-                &self.textureview.borrow().externref().upcast_ref(),
+                &self.textureview.borrow_mut().externref().upcast_ref(),
             )
         };
     }
     fn make_dirty(&mut self) {
-        todo!()
+        self.bindgroups.iter_mut(|bind_group| {
+            bind_group.make_dirty();
+        });
     }
-    fn get_entity(&'_ self) -> RefMut<'_, dyn BindgroupEntry> {
-        self.textureview.borrow_mut()
+    fn add_binding(&'_ self, binding_refcell: Weak<RefCell<dyn BindGroupBinding>>) {
+        self.textureview.borrow_mut().add_binding(binding_refcell);
     }
 
     fn add_bindable(&self, vec: &mut Vec<Rc<dyn Bindable>>) {
@@ -88,8 +85,8 @@ impl<
         ARRAY_LAYER_COUNT,
     >
 {
-    fn externref(&self) -> &Resource<JSTextureView> {
-        &self.externref
+    fn externref(&mut self) -> &Resource<JSTextureView> {
+        self.extenref()
     }
 
     fn externref_arc(&self) -> Rc<dyn Bindable> {
@@ -124,7 +121,7 @@ impl<
     >
 {
     fn add_binding(&mut self, bind_group: Weak<RefCell<dyn BindGroupBinding>>) {
-        self.bindings.push(bind_group);
+        self.texture.bindings().borrow_mut().push(bind_group);
     }
     fn size(&self) -> std::num::NonZeroUsize {
         todo!()

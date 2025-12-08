@@ -3,7 +3,9 @@ use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::num::NonZero;
 
+use crate::bindgroup::bindgroup_entry::BindGroupBinding;
 use crate::device::create_texture;
+use crate::weakvec::WeakVec;
 use crate::{
     device::JSDevice,
     texture::texture_formats::{TextureFormat, TextureFormatSRGB},
@@ -82,6 +84,7 @@ pub struct Texture<
     pub externref: RefCell<(Resource<JSTexture>, u32)>,
     pub label: Option<String>,
     pub format: PhantomData<F>,
+    pub bindings: RefCell<WeakVec<RefCell<dyn BindGroupBinding>>>,
 }
 pub trait TextureTrait {
     fn externref(&self) -> &RefCell<(Resource<JSTexture>, u32)>;
@@ -239,6 +242,11 @@ impl<
 where
     Self: TextureDimensionTrait,
 {
+    fn make_dirty(&self) {
+        self.bindings.borrow_mut().iter_mut(|binding| {
+            binding.borrow_mut().make_dirty();
+        });
+    }
     pub const fn usages() -> u32 {
         return usages_from_bools::<
             COPY_SRC,
@@ -270,9 +278,7 @@ where
                 externref.1 + 1,
             )
         };
-        /*self.views.borrow_mut().iter_mut(|view| {
-            let texture_view = view.borrow_mut();
-        });*/
+        self.make_dirty();
     }
     /// # Creates new texture
     /// ## Should panic, 4 dimension texture does not exist
@@ -319,6 +325,7 @@ where
             label: Some(label),
             externref: RefCell::new((externref, 0)),
             format: PhantomData,
+            bindings: RefCell::new(WeakVec::new()),
         }
     }
     pub fn new_with_srgb_multiview<VF: TextureFormat>(
@@ -366,6 +373,7 @@ where
             label: Some(label),
             externref: RefCell::new((externref, 0)),
             format: PhantomData,
+            bindings: RefCell::new(WeakVec::new()),
         }
     }
 }

@@ -33,7 +33,7 @@ export const BindGroupExports = {
   push_to_bind_group_descriptor(
     descriptor: GPUBindGroupDescriptor & { entries: GPUBindGroupEntry[] },
     binding: number,
-    resource: GPUBufferBinding,
+    resource: GPUBindingResource,
   ) {
     descriptor.entries.push({
       binding,

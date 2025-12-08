@@ -199,7 +199,7 @@ impl<
         #[cfg(not(target_arch = "wasm32"))]
         return 2;
     }
-    pub fn make_dirty(&mut self) {
+    fn make_dirty(&mut self) {
         self.bindings.iter_mut(|buffer_binding| {
             buffer_binding.borrow_mut().make_dirty();
         });

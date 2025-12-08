@@ -106,7 +106,7 @@ impl Queue {
         const QUERY_RESOLVE: bool,
     >(
         &self,
-        buffer: GPUBuffer<
+        buffer: &GPUBuffer<
             MAP_READ,
             MAP_WRITE,
             COPY_SRC,

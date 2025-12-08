@@ -1,5 +1,6 @@
 use crate::{
     binding_layout::{BindingLayout, JSGPUBindGroupLayoutEntry},
+    sampler::sampler::create_bind_group_layout_entry_sampler,
     texture::texture::TextureViewDimension,
 };
 use externref::Resource;
@@ -72,8 +73,8 @@ pub unsafe extern "C" fn iterate_binding_layouts(
     }
 }
 
-impl<const VISIBILITY: u32> GPUBufferBindingLayout<VISIBILITY> {
-    pub fn new(
+impl<const VISIBILITY: u32> GPUBindingLayout<VISIBILITY> {
+    pub fn new_buffer(
         binding: u32,
         bindingtype: BufferBindingType,
         has_dynamic_offset: bool,
@@ -88,11 +89,9 @@ impl<const VISIBILITY: u32> GPUBufferBindingLayout<VISIBILITY> {
                 min_binding_size,
             )
         };
-        GPUBufferBindingLayout { binding, externref }
+        GPUBindingLayout { binding, externref }
     }
-}
-impl<const VISIBILITY: u32> GPUTextureBindingLayout<VISIBILITY> {
-    pub fn new(
+    pub fn new_texture(
         binding: u32,
         sample_type: u32,
         view_dimension: TextureViewDimension,
@@ -107,24 +106,21 @@ impl<const VISIBILITY: u32> GPUTextureBindingLayout<VISIBILITY> {
                 multisampled,
             )
         };
-        GPUTextureBindingLayout { binding, externref }
+        GPUBindingLayout { binding, externref }
+    }
+    pub fn new_sampler(binding: u32, binding_type: u32) -> Self {
+        let externref =
+            unsafe { create_bind_group_layout_entry_sampler(binding, VISIBILITY, binding_type) };
+        GPUBindingLayout { binding, externref }
     }
 }
-pub struct GPUBufferBindingLayout<const VISIBILITY: u32> {
+pub struct GPUBindingLayout<const VISIBILITY: u32> {
     binding: u32,
     externref: Resource<JSGPUBindGroupLayoutEntry>,
 }
 
-impl<const VISIBILITY: u32> BindingLayout for GPUBufferBindingLayout<VISIBILITY> {
+impl<const VISIBILITY: u32> BindingLayout for GPUBindingLayout<VISIBILITY> {
     fn externref(&self) -> &Resource<JSGPUBindGroupLayoutEntry> {
         &self.externref
     }
 }
-
-pub struct GPUSamplerBindingLayout {}
-pub struct GPUTextureBindingLayout<const VISIBILITY: u32> {
-    binding: u32,
-    externref: Resource<JSGPUBindGroupLayoutEntry>,
-}
-pub struct GPUStorageTextureBindingLayout {}
-pub struct GPUExternalTextureBindingLayout {}

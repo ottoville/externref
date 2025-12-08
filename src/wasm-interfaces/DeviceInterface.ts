@@ -22,6 +22,28 @@ const bufferBindingTypeMapping = [
   'storage',
   'read-only-storage',
 ] as const;
+
+const addressModeMapping = [
+  'clamp-to-edge',
+  'repeat',
+  'mirror-repeat',
+] as const;
+const compareFunctionMapping = [
+  'never',
+  'less',
+  'equal',
+  'less-equal',
+  'greater',
+  'not-equal',
+  'greater-equal',
+  'always',
+] as const;
+const samplerBindingTypeMapping = [
+  'filtering',
+  'non-filtering',
+  'comparison',
+] as const;
+const filterModeMapping = ['nearest', 'linear'] as const;
 export const DeviceExports = {
   create_bind_group(device: GPUDevice, descriptor: GPUBindGroupDescriptor) {
     return device.createBindGroup(descriptor);
@@ -60,6 +82,19 @@ export const DeviceExports = {
         hasDynamicOffset: hasDynamicOffset > 0 ? true : false,
         minBindingSize,
         type: bufferBindingTypeMapping[type]!,
+      },
+      visibility,
+    };
+  },
+  create_bind_group_layout_entry_sampler(
+    binding: number,
+    visibility: ShaderStage,
+    type: number,
+  ): GPUBindGroupLayoutEntry {
+    return {
+      binding,
+      sampler: {
+        type: samplerBindingTypeMapping[type]!,
       },
       visibility,
     };
@@ -108,6 +143,68 @@ export const DeviceExports = {
       new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
     );
     return device.createCommandEncoder({ label });
+  },
+  create_sampler(
+    device: GPUDevice,
+    label_ptr: number,
+    label_len: number,
+    addressModeU: number,
+    addressModeV: number,
+    addressModeW: number,
+    magFilter: number,
+    minFilter: number,
+    mipmapFilter: number,
+    lodMinClamp: number,
+    lodMaxClamp: number,
+    maxAnisotropy: number,
+  ): GPUSampler {
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
+    return device.createSampler({
+      addressModeU: addressModeMapping[addressModeU]!,
+      addressModeV: addressModeMapping[addressModeV]!,
+      addressModeW: addressModeMapping[addressModeW]!,
+      label,
+      lodMaxClamp,
+      lodMinClamp,
+      magFilter: filterModeMapping[magFilter]!,
+      maxAnisotropy,
+      minFilter: filterModeMapping[minFilter]!,
+      mipmapFilter: filterModeMapping[mipmapFilter]!,
+    });
+  },
+  create_sampler_compare(
+    device: GPUDevice,
+    label_ptr: number,
+    label_len: number,
+    addressModeU: number,
+    addressModeV: number,
+    addressModeW: number,
+    magFilter: number,
+    minFilter: number,
+    mipmapFilter: number,
+    lodMinClamp: number,
+    lodMaxClamp: number,
+    compare: number,
+    maxAnisotropy: number,
+  ): GPUSampler {
+    const label = textDecoder.decode(
+      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
+    );
+    return device.createSampler({
+      addressModeU: addressModeMapping[addressModeU]!,
+      addressModeV: addressModeMapping[addressModeV]!,
+      addressModeW: addressModeMapping[addressModeW]!,
+      compare: compareFunctionMapping[compare]!,
+      label,
+      lodMaxClamp,
+      lodMinClamp,
+      magFilter: filterModeMapping[magFilter]!,
+      maxAnisotropy,
+      minFilter: filterModeMapping[minFilter]!,
+      mipmapFilter: filterModeMapping[mipmapFilter]!,
+    });
   },
   create_texture(
     device: GPUDevice,

@@ -1,14 +1,10 @@
 use externref::Resource;
 use std::{cell::RefCell, marker::PhantomData, rc::Rc};
 
-use crate::{
-    bindgroup::bindgroup_entry::BindGroupBinding,
-    texture::{
-        texture::{usages_from_bools, JSTexture, Texture, TextureAspect, TextureViewDimension},
-        texture_formats::{TextureFormat, TextureFormatSRGB},
-        valid_texture::ValidTexture,
-    },
-    weakvec::WeakVec,
+use crate::texture::{
+    texture::{usages_from_bools, JSTexture, Texture, TextureAspect, TextureViewDimension},
+    texture_formats::{TextureFormat, TextureFormatSRGB},
+    valid_texture::ValidTexture,
 };
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -62,14 +58,13 @@ pub struct TextureView<
     const BASE_ARRAY_LAYER: u32 = 0,
     const ARRAY_LAYER_COUNT: u32 = 1,
 > {
-    pub externref: Resource<JSTextureView>,
+    externref: Resource<JSTextureView>,
     pub format: PhantomData<F>,
     pub label: String,
     pub texture: Rc<dyn ValidTexture>,
     dimension: TextureViewDimension,
     aspect: TextureAspect,
     pub version: u32,
-    pub bindings: WeakVec<RefCell<dyn BindGroupBinding>>,
 }
 impl<
         F: TextureFormat,
@@ -98,6 +93,15 @@ impl<
         ARRAY_LAYER_COUNT,
     >
 {
+    pub fn extenref(&mut self) -> &Resource<JSTextureView> {
+        let texture_version = { self.texture.externref().borrow().1 };
+        let dirty = texture_version != self.version;
+        if dirty {
+            self.re_create();
+            self.version = texture_version;
+        }
+        &self.externref
+    }
     pub fn re_create(&mut self) {
         self.externref = unsafe {
             create_texture_view(
@@ -251,7 +255,6 @@ impl<
             dimension,
             aspect,
             version: 0,
-            bindings: WeakVec::new(),
         }));
         return texture_view;
     }
@@ -363,7 +366,6 @@ impl<
             dimension,
             aspect,
             version: 0,
-            bindings: WeakVec::new(),
         }));
         return texture_view;
     }

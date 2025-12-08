@@ -87,7 +87,7 @@ impl Lights {
 #[test]
 fn test_lights() {
     use webgpu::bindgroup_layout::BindGroupLayout;
-    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBufferBindingLayout};
+    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBindingLayout};
 
     use crate::gpu::gpu::init_gpu;
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
@@ -117,7 +117,7 @@ fn test_lights() {
             &device,
             String::from("test"),
             [
-                &GPUBufferBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new(
+                &GPUBindingLayout::<SHADER_STAGE_COMPUTE_AND_FRAGMENT>::new_buffer(
                     0,
                     BufferBindingType::Uniform,
                     false,
