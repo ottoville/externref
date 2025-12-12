@@ -54,12 +54,12 @@ impl ColorAttachmentSingleSampled {
             externref,
         }
     }
-    pub fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
-        self.texture_view.borrow().resize(device, width, height);
-    }
 }
 
-impl ColorAttachment for ColorAttachmentSingleSampled {
+impl ColorAttachment<1> for ColorAttachmentSingleSampled {
+    fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
+        self.texture_view.borrow().resize(device, width, height);
+    }
     fn texture_view(&self) -> &Rc<RefCell<dyn RenderAttachmentTexture>> {
         &self.texture_view
     }

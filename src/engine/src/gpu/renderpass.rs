@@ -9,9 +9,7 @@ use terramath::VectorMath;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
     color_attachment::{
-        color_attachment::ColorAttachment,
-        color_attachment_single_sampled::ColorAttachmentSingleSampled,
-        depth_stencil_attachment::DepthStencilAttachment,
+        color_attachment::ColorAttachment, depth_stencil_attachment::DepthStencilAttachment,
     },
     command_encoder::GPUCommandEncoder,
     compute_pass_encoder::{ComputePassEncoder, JSComputePipeline},
@@ -75,26 +73,26 @@ pub unsafe extern "C" fn get_renderpass_size(id: usize, gpu_ptr: *mut GPU) -> *c
 }
 pub struct JSRenderPass(());
 
-pub struct Renderpass<const N: usize> {
+pub struct Renderpass<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> {
     bundle: Option<RenderBundleEncoder>,
     cameragroups: Vec<CameraGroup>,
     jsrenderpass: Resource<JSRenderPass>,
     label: String,
     size: [NonZeroU32; 2],
     size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
-    render_targets: [ColorAttachmentSingleSampled; N],
-    depth_render_target: Option<DepthStencilAttachment<1, false>>,
+    render_targets: [T; N],
+    depth_render_target: Option<DepthStencilAttachment<SAMPLE_COUNT, false>>,
     formats: Vec<u32>,
     descriptor: Resource<JSRenderPassDescriptor>,
 }
 pub fn create_render_pass_descriptor2<
     const N: usize,
-    const D: u32,
+    const SAMPLE_COUNT: u32,
     const DEPTH_READ_ONLY: bool,
-    T: ColorAttachment,
+    T: ColorAttachment<SAMPLE_COUNT>,
 >(
     render_targets: &mut [T; N],
-    depth_render_target: &mut Option<DepthStencilAttachment<D, DEPTH_READ_ONLY>>,
+    depth_render_target: &mut Option<DepthStencilAttachment<SAMPLE_COUNT, DEPTH_READ_ONLY>>,
     label: &String,
 ) -> Resource<JSRenderPassDescriptor> {
     let depth_externref = match depth_render_target {
@@ -115,15 +113,17 @@ pub fn create_render_pass_descriptor2<
     }
     return descriptor;
 }
-impl<const N: usize> Renderpass<N> {
+impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>>
+    Renderpass<N, SAMPLE_COUNT, T>
+{
     pub fn new(
         label: String,
         size: [NonZero<u32>; 2],
         size_modifier: Option<fn(&mut NonZero<u32>, &mut NonZero<u32>)>,
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
-        mut render_targets: [ColorAttachmentSingleSampled; N],
-        mut depth_render_target: Option<DepthStencilAttachment<1, false>>,
+        mut render_targets: [T; N],
+        mut depth_render_target: Option<DepthStencilAttachment<SAMPLE_COUNT, false>>,
     ) -> Self {
         let mut formats = [0; N];
         for n in 0..N {
@@ -146,7 +146,9 @@ impl<const N: usize> Renderpass<N> {
     }
 }
 
-impl<const N: usize> RenderPassTrait for Renderpass<N> {
+impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> RenderPassTrait
+    for Renderpass<N, SAMPLE_COUNT, T>
+{
     fn jsrenderpass(&self) -> &Resource<JSRenderPass> {
         &self.jsrenderpass
     }
@@ -169,7 +171,6 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
                 dirty = depth_render_target.is_dirty();
             }
         }
-
         if dirty {
             self.descriptor = create_render_pass_descriptor2(
                 &mut self.render_targets,
@@ -261,7 +262,7 @@ impl<const N: usize> RenderPassTrait for Renderpass<N> {
         todo!()
     }
     fn sample_count(&self) -> u32 {
-        1
+        SAMPLE_COUNT
     }
 
     fn depth_stencil_format(&self) -> Option<u32> {

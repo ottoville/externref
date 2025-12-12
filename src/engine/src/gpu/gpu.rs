@@ -28,7 +28,6 @@ use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
 use crate::engine::get_preferred_canvas_format;
 use crate::gpu::renderpass::{JSRenderPass, Renderpass};
-use crate::gpu::renderpass_msaa::RenderpassMSAA;
 use crate::gpu::renderpass_trait::RenderPassTrait;
 use crate::gpu::shader::{
     SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
@@ -414,7 +413,7 @@ pub unsafe extern "C" fn init_gpu(
         0,
         None,
     );
-    let render_pass_screen = RenderpassMSAA::new(
+    let render_pass_screen = Renderpass::new(
         String::from("renderPassScreen"),
         [NonZeroU32::new_unchecked(1); 2],
         None,

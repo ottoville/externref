@@ -273,7 +273,7 @@ impl Collider {
     #[cfg(target_arch = "wasm32")]
     pub fn test_triangles(
         &mut self,
-        plane_position: &Vec<ColliderPlane>,
+        plane_positions: &Vec<ColliderPlane>,
         plane_positions_horizontal: &Vec<[[f32; 4]; 4]>,
         last_collider_world_vertices: &Vec<Vec3wgslF32>,
     ) {
@@ -382,7 +382,7 @@ impl Collider {
                     self.test_triangle::<0>(
                         returnvalue,
                         embedded_in_plane,
-                        &plane_position,
+                        &plane_positions,
                         plane_index,
                         t0,
                         scaled_velocity,
@@ -393,7 +393,7 @@ impl Collider {
                     self.test_triangle::<1>(
                         returnvalue,
                         embedded_in_plane,
-                        &plane_position,
+                        &plane_positions,
                         plane_index,
                         t0,
                         scaled_velocity,
@@ -405,7 +405,7 @@ impl Collider {
                     self.test_triangle::<2>(
                         returnvalue,
                         embedded_in_plane,
-                        &plane_position,
+                        &plane_positions,
                         plane_index,
                         t0,
                         scaled_velocity,
@@ -417,7 +417,7 @@ impl Collider {
                     self.test_triangle::<3>(
                         returnvalue,
                         embedded_in_plane,
-                        &plane_position,
+                        &plane_positions,
                         plane_index,
                         t0,
                         scaled_velocity,

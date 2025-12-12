@@ -72,16 +72,15 @@ impl ColorAttachmentMultiSampled {
             externref,
         }
     }
-
-    pub fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
+}
+impl ColorAttachment<4> for ColorAttachmentMultiSampled {
+    fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
         self.attachment
             .texture_view
             .borrow()
             .resize(device, width, height);
         self.resolve_target.borrow().resize(device, width, height);
     }
-}
-impl ColorAttachment for ColorAttachmentMultiSampled {
     fn texture_view(&self) -> &Rc<RefCell<dyn RenderAttachmentTexture>> {
         &self.attachment.texture_view
     }

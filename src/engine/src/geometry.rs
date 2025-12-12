@@ -69,6 +69,7 @@ pub unsafe extern "C" fn set_faces(
     geometry.collider_planes.collider_planes = Vec::with_capacity(planes.len());
     geometry.collider_planes_parallel = vec![[[0.0; 4]; 4]; planes.len() / 4];
     geometry.planes.planes = planes;
+    geometry.rebuild_triangle_planes();
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry) -> usize {

@@ -1,10 +1,10 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, num::NonZero, rc::Rc};
 
 use externref::Resource;
 
-use crate::texture::{
+use crate::{device::JSDevice, texture::{
     render_attachment_texture::RenderAttachmentTexture, texture_view::JSTextureView,
-};
+}};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_render_pass_color_attachment_clear(
@@ -51,8 +51,9 @@ pub enum StoreOpt {
     Discard,
 }
 
-pub trait ColorAttachment {
+pub trait ColorAttachment<const SAMPLE_COUNT: u32> {
     fn texture_view(&self) -> &Rc<RefCell<dyn RenderAttachmentTexture>>;
     fn get_attachment(&mut self) -> &Resource<JSRenderPassColorAttachment>;
     fn is_dirty(&self) -> bool;
+    fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>);
 }
