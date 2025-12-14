@@ -6,9 +6,15 @@ use std::{
 };
 
 use externref::{externref, Resource};
+use logger::LoggerArray;
 use terramath::VectorMath;
 use webgpu::{
-    bindgroup::bindgroup::BindGroup,
+    bindgroup::{
+        bindgroup::BindGroup, bufferbinding::BufferBinding, texturebinding::TextureBinding,
+    },
+    bindgroup_layout::BindGroupLayout,
+    binding_commands::BindingCommands,
+    buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer},
     color_attachment::{
         color_attachment::{ColorAttachment, ColorAttachmentWithSample, StoreOpt},
         depth_stencil_attachment::DepthStencilAttachment,
@@ -48,27 +54,33 @@ pub unsafe extern "C" fn link_renderpass(
     match r {
         Renderpassenum::Singlesampled(renderpass) => {
             let label = renderpass.inner_renderpass.label.to_string();
-            renderpass.inner_renderpass.bundle.insert(RenderBundleEncoder::new::<1>(
-                label,
-                &(*gpu_ptr).device,
-                &renderpass.inner_renderpass.formats,
-                record,
-                depth_read_only,
-                stencil_read_only,
-                renderpass.depth_stencil_format(),
-            ))
+            renderpass
+                .inner_renderpass
+                .bundle
+                .insert(RenderBundleEncoder::new::<1>(
+                    label,
+                    &(*gpu_ptr).device,
+                    &renderpass.inner_renderpass.formats,
+                    record,
+                    depth_read_only,
+                    stencil_read_only,
+                    renderpass.depth_stencil_format(),
+                ))
         }
         Renderpassenum::Multisampled(renderpass) => {
             let label = renderpass.inner_renderpass.label.to_string();
-            renderpass.inner_renderpass.bundle.insert(RenderBundleEncoder::new::<4>(
-                label,
-                &(*gpu_ptr).device,
-                &renderpass.inner_renderpass.formats,
-                record,
-                depth_read_only,
-                stencil_read_only,
-                renderpass.depth_stencil_format(),
-            ))
+            renderpass
+                .inner_renderpass
+                .bundle
+                .insert(RenderBundleEncoder::new::<4>(
+                    label,
+                    &(*gpu_ptr).device,
+                    &renderpass.inner_renderpass.formats,
+                    record,
+                    depth_read_only,
+                    stencil_read_only,
+                    renderpass.depth_stencil_format(),
+                ))
         }
     }
 }
@@ -87,6 +99,28 @@ pub unsafe extern "C" fn pick_position(
         Renderpassenum::Multisampled(renderpass) => renderpass.pick_position(mouse_x, mouse_y, z),
     }
 }
+#[externref]
+#[no_mangle]
+pub unsafe extern "C" fn do_pick(
+    id: usize,
+    pickpipeline: &Resource<JSComputePipeline>,
+    gpu_ptr: *mut GPU,
+) {
+    let gpu = &mut (*gpu_ptr);
+
+    let camera_id = {
+        let renderpass = &mut gpu.renderpasses[id];
+        renderpass.cameragroups()[0].cameras[0]
+    };
+    gpu.renderpasses[id].do_pick(
+        &gpu.device,
+        gpu.device_pixel_ratio,
+        &mut gpu.swap_buffers,
+        &gpu.queue,
+        pickpipeline,
+        gpu.get_camera_by_id(camera_id),
+    );
+}
 #[no_mangle]
 pub unsafe extern "C" fn get_renderpass_size(id: usize, gpu_ptr: *mut GPU) -> *const NonZero<u32> {
     let gpu = &mut (*gpu_ptr);
@@ -98,6 +132,23 @@ pub unsafe extern "C" fn get_renderpass_size(id: usize, gpu_ptr: *mut GPU) -> *c
 }
 pub struct JSRenderPass(());
 static NEXT_RENDERPASS_ID: AtomicU32 = AtomicU32::new(0);
+#[repr(C)]
+struct PickData {
+    z: f32,
+    mesh_id: u32,
+    generation: u32,
+}
+pub struct PickableProperties {
+    pub pick_bglayout: BindGroupLayout<4>,
+    pub pick_render_target_view:
+        Rc<RefCell<TextureView<RG32UINT, 1, true, false, true, false, true>>>,
+}
+struct Pickable {
+    pickbuffer: Rc<RefCell<GPUBuffer<false, false, true, false, false, false, false, true>>>,
+    pickbuffer_read: Rc<RefCell<Option<GPUBuffer<true, false, false, true>>>>,
+    mouse_position_buffer: Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>>,
+    pick_position_bind_group0: Rc<BindGroup<4>>,
+}
 pub struct InnerRenderpass<const SAMPLE_COUNT: u32, T: ColorAttachment> {
     pub bundle: Option<RenderBundleEncoder>,
     pub cameragroups: Vec<CameraGroup>,
@@ -106,8 +157,10 @@ pub struct InnerRenderpass<const SAMPLE_COUNT: u32, T: ColorAttachment> {
     pub size: [NonZeroU32; 2],
     size_modifier: Option<fn(&mut NonZeroU32, &mut NonZeroU32)>,
     render_targets: Box<[T]>,
-    depth_render_target: Option<DepthStencilAttachment<false>>,
+    depth: Option<DepthStencilAttachment<false>>,
     formats: Vec<u32>,
+    // Only for picking
+    pickable: Option<Pickable>,
 }
 pub struct Renderpass<const SAMPLE_COUNT: u32, T: ColorAttachment> {
     pub inner_renderpass: InnerRenderpass<SAMPLE_COUNT, T>,
@@ -152,6 +205,7 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
         jsrenderpass: Resource<JSRenderPass>,
         cameragroups: Vec<CameraGroup>,
         render_targets: [T; N],
+        pickable_properties: Option<PickableProperties>,
     ) -> Self {
         let mut formats = [0; N];
         for n in 0..N {
@@ -166,8 +220,56 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
             bundle: None,
             cameragroups,
             render_targets: boxed_targets,
-            depth_render_target: None,
+            depth: None,
             formats: Vec::from(formats),
+            pickable: match pickable_properties {
+                Some(pickable) => {
+                    if let Some(depth_view) = &depth_render_view_opt {
+                        let pickbuffer = Rc::new(RefCell::new(GPUBuffer::<
+                            false,
+                            false,
+                            true,
+                            false,
+                            false,
+                            false,
+                            false,
+                            true,
+                        >::new(
+                            &device,
+                            unsafe { NonZeroUsize::new_unchecked(16) },
+                            String::from("pickBuffer"),
+                        )));
+                        let pickbuffer_read = Rc::new(RefCell::new(Some(GPUBuffer::new(
+                            &device,
+                            unsafe { NonZeroUsize::new_unchecked(12) },
+                            String::from("pickBufferRead"),
+                        ))));
+                        let binding = TextureBinding::new(depth_view.clone());
+                        let pick_render_target_binding = TextureBinding::new(
+                            pickable_properties.pick_render_target_view.clone(),
+                        );
+                        let pick_position_bind_group0 = BindGroup::new(
+                            String::from("pickPositionBindGroup0"),
+                            &pickable_properties.pick_bglayout,
+                            [
+                                BufferBinding::new(pickbuffer.clone(), 0, None),
+                                Rc::new(RefCell::new(binding)),
+                                Rc::new(RefCell::new(pick_render_target_binding)),
+                                BufferBinding::new(mouse_position_buffer.clone(), 0, None),
+                            ],
+                        );
+                        Some(Pickable {
+                            pickbuffer: pickbuffer,
+                            pickbuffer_read,
+                            mouse_position_buffer: mouse_position_buffer,
+                            pick_position_bind_group0,
+                        })
+                    } else {
+                        panic!("Pickable renderpass without depth buffer is not supported yet")
+                    }
+                }
+                None => None,
+            },
         };
         let descriptor = inner_renderpass.create_render_pass_descriptor();
         Renderpass {
@@ -184,6 +286,7 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
         cameragroups: Vec<CameraGroup>,
         render_targets: [T; N],
         depth_render_target: Rc<RefCell<impl DepthTexture2<SAMPLE_COUNT> + 'static>>,
+        pickable_properties: Option<PickableProperties>,
     ) -> Self {
         let dattachment = Some(DepthStencilAttachment::new(
             depth_render_target,
@@ -203,8 +306,56 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
             bundle: None,
             cameragroups,
             render_targets: boxed_targets,
-            depth_render_target: dattachment,
+            depth: dattachment,
             formats: Vec::from(formats),
+            pickable: match pickable_properties {
+                Some(pickable) => {
+                    if let Some(depth_view) = &depth_render_view_opt {
+                        let pickbuffer = Rc::new(RefCell::new(GPUBuffer::<
+                            false,
+                            false,
+                            true,
+                            false,
+                            false,
+                            false,
+                            false,
+                            true,
+                        >::new(
+                            &device,
+                            unsafe { NonZeroUsize::new_unchecked(16) },
+                            String::from("pickBuffer"),
+                        )));
+                        let pickbuffer_read = Rc::new(RefCell::new(Some(GPUBuffer::new(
+                            &device,
+                            unsafe { NonZeroUsize::new_unchecked(12) },
+                            String::from("pickBufferRead"),
+                        ))));
+                        let binding = TextureBinding::new(depth_view.clone());
+                        let pick_render_target_binding = TextureBinding::new(
+                            pickable_properties.pick_render_target_view.clone(),
+                        );
+                        let pick_position_bind_group0 = BindGroup::new(
+                            String::from("pickPositionBindGroup0"),
+                            &pickable_properties.pick_bglayout,
+                            [
+                                BufferBinding::new(pickbuffer.clone(), 0, None),
+                                Rc::new(RefCell::new(binding)),
+                                Rc::new(RefCell::new(pick_render_target_binding)),
+                                BufferBinding::new(mouse_position_buffer.clone(), 0, None),
+                            ],
+                        );
+                        Some(Pickable {
+                            pickbuffer: pickbuffer,
+                            pickbuffer_read,
+                            mouse_position_buffer: mouse_position_buffer,
+                            pick_position_bind_group0,
+                        })
+                    } else {
+                        panic!("Pickable renderpass without depth buffer is not supported yet")
+                    }
+                }
+                None => None,
+            },
         };
         let descriptor = inner_renderpass.create_render_pass_descriptor();
 
@@ -221,7 +372,8 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
         gpu_buffer: usize,
         bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
-        let mut dirty = self.inner_renderpass
+        let mut dirty = self
+            .inner_renderpass
             .render_targets
             .iter()
             .any(|render_target| render_target.is_dirty());
@@ -231,10 +383,9 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
             }
         }
         if dirty {
-            self.descriptor=self.inner_renderpass.create_render_pass_descriptor();
+            self.descriptor = self.inner_renderpass.create_render_pass_descriptor();
         }
-        let mut renderpass_encoder = command_encoder
-            .begin_render_pass(&self.descriptor);
+        let mut renderpass_encoder = command_encoder.begin_render_pass(&self.descriptor);
         if let Some(bundle) = self.inner_renderpass.bundle.as_mut() {
             bundle.record_renderbundle(
                 &mut self.inner_renderpass.cameragroups,

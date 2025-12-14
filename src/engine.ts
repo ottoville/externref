@@ -559,6 +559,11 @@ export type rustWasm = {
     z: number,
     gpu: rust_pointer<'GPU'>,
   ): number;
+  do_pick(
+    id: number,
+    pickpipeline: GPUComputePipeline,
+    gpu: rust_pointer<'GPU'>,
+  ): void;
   get_renderpass_size(
     id: number,
     gpu: rust_pointer<'GPU'>,

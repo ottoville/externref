@@ -41,6 +41,7 @@ use webgpu::buffer::buffer::{BufferRef, GPUBuffer};
 use webgpu::buffer_binding_layout::{BufferBindingType, GPUBindingLayout};
 
 use super::lights::Lights;
+use crate::gpu::renderpass::PickableProperties;
 use webgpu::binding_commands::BindingCommands;
 use webgpu::buffer::buffer::JSBuffer;
 use webgpu::command_buffer::{CommandBuffer, JSCommandBuffer};
@@ -270,7 +271,32 @@ pub unsafe extern "C" fn init_gpu(
         String::from("uniformBindGroupLayoutWithTime"),
         [&clusters_array, &meshes, &projection, &scene, &time],
     );
+    let depth_and_mesh = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
+        0,
+        BufferBindingType::Storage,
+        false,
+        16,
+    );
+    let depth_texture =
+        GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_texture(1, 2, TextureViewDimension::D2, true);
+    let mesh_texture = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_texture(
+        2,
+        4,
+        TextureViewDimension::D2,
+        false,
+    );
+    let mouse = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
+        3,
+        BufferBindingType::Uniform,
+        false,
+        8,
+    );
 
+    let pick_bglayout = BindGroupLayout::new(
+        &device,
+        String::from("DepthAndMeshLayout"),
+        [&depth_and_mesh, &depth_texture, &mesh_texture, &mouse],
+    );
     // LAYOUT clustersLayout
     let screentoview = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
         1,
@@ -407,6 +433,30 @@ pub unsafe extern "C" fn init_gpu(
         0,
         None,
     );
+    let pick_render_target = Rc::new(Texture::<
+        RG32UINT,
+        2,
+        1,
+        1,
+        1,
+        true,
+        false,
+        true,
+        false,
+        true,
+    >::new(
+        &device,
+        NonZeroU32::new_unchecked(300),
+        NonZeroU32::new_unchecked(300),
+        String::from("idTexture"),
+    ));
+
+    let pick_render_target_view = TextureView::<_, _, true, false, true, false, true>::new(
+        pick_render_target,
+        String::from("idTexture_view"),
+        TextureViewDimension::D2,
+        TextureAspect::All,
+    );
     let render_pass_screen = Renderpass::width_depth(
         String::from("renderPassScreen"),
         [NonZeroU32::new_unchecked(1); 2],
@@ -435,6 +485,10 @@ pub unsafe extern "C" fn init_gpu(
             0.0,
         )],
         depth_render_target_view,
+        Some(PickableProperties {
+            pick_bglayout,
+            pick_render_target_view: pick_render_target_view.clone(),
+        }),
     );
     let screen_dimension_buffer_screen_water =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -521,6 +575,7 @@ pub unsafe extern "C" fn init_gpu(
             1.0,
         )],
         depth_render_target_water_view,
+        None,
     );
     let screen_dimension_buffer_screen_pick =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -528,30 +583,7 @@ pub unsafe extern "C" fn init_gpu(
             NonZeroUsize::new_unchecked(16),
             String::from("screen_buffer_pick"),
         );
-    let pick_render_target = Rc::new(Texture::<
-        RG32UINT,
-        2,
-        1,
-        1,
-        1,
-        true,
-        false,
-        true,
-        false,
-        true,
-    >::new(
-        &device,
-        NonZeroU32::new_unchecked(300),
-        NonZeroU32::new_unchecked(300),
-        String::from("idTexture"),
-    ));
 
-    let pick_render_target_view = TextureView::<_, _, true, false, true, false, true>::new(
-        pick_render_target,
-        String::from("idTexture_view"),
-        TextureViewDimension::D2,
-        TextureAspect::All,
-    );
     let bufferbinding = BufferBinding::new(
         Rc::new(RefCell::new(screen_dimension_buffer_screen_pick)),
         0,
@@ -578,6 +610,7 @@ pub unsafe extern "C" fn init_gpu(
             0.0,
             1.0,
         )],
+        None,
     );
 
     let format_num = get_preferred_canvas_format();
@@ -619,6 +652,7 @@ pub unsafe extern "C" fn init_gpu(
         js_render_pass_canvas,
         Vec::new(),
         [render_target],
+        None,
     );
 
     let renderpasses_multisampled = vec![render_pass_screen];

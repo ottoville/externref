@@ -70,7 +70,7 @@ export class PickableRenderPassMSAA<
     });
     this.#mousePositionBuffer = new Buffer({
       gpu: gpu.device,
-      label: 'mousePositionBuffer',
+      label: 'mousePositionBuffer1',
       size: 8,
       usages: BufferUsageEnums['UNIFORM|COPY_DST'],
     });
@@ -98,6 +98,11 @@ export class PickableRenderPassMSAA<
     const encoder = gpu.createCommandEncoder({
       label: 'pickPosition_encoder',
     });
+    engine.rust.do_pick(
+      this.props.id,
+      this.#pickPositionPipeline,
+      engine.gpu!.gpu,
+    );
 
     const mousePositionSwapBuffer = new Buffer({
       gpu,
@@ -138,6 +143,7 @@ export class PickableRenderPassMSAA<
         const meshID = new DataView(b).getUint32(4, true);
         const generation = new DataView(b).getUint32(8, true);
         this.#pickBufferRead.unmap();
+        console.log('js', [z, meshID, generation]);
         return [z, meshID, generation] as const;
       }) as Promise<[z: number, id: number, generation: number]>;
   }
