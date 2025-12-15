@@ -37,7 +37,6 @@ export class PickableRenderPassMSAA<
     (typeof BufferUsageEnums)['UNIFORM|COPY_DST']
   >;
   readonly #pickPositionBindGroup0: BindGroup;
-  readonly #pickPositionBindGroup1: BindGroup;
 
   constructor(
     renderPassProps: RenderPassProps<T, E>,
@@ -58,7 +57,7 @@ export class PickableRenderPassMSAA<
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
     const readDepthShader = createReadDepth(gpu);
-    readDepthShader[1]
+    readDepthShader
       .createComputePipeline('main')
       .then((pickPositionPipeline) => {
         this.#pickPositionPipeline = pickPositionPipeline;
@@ -77,18 +76,12 @@ export class PickableRenderPassMSAA<
     });
 
     this.#pickPositionBindGroup0 = new BindGroup(
-      readDepthShader[0][0],
+      gpu.pickBGLayout,
       'pickPositionBindGroup0',
-      () => ({
+      (bindGroup) => ({
         depth_and_mesh: {
           buffer: this.pickBuffer,
         },
-      }),
-    );
-    this.#pickPositionBindGroup1 = new BindGroup(
-      readDepthShader[0][1],
-      'pickPositionBindGroup1',
-      (bindGroup) => ({
         depth_texture: depthRenderTarget.renderTarget,
         mesh_texture:
           gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId
@@ -129,7 +122,6 @@ export class PickableRenderPassMSAA<
       pickPass.setPipeline(this.#pickPositionPipeline);
 
       pickPass.setBindGroup(0, this.#pickPositionBindGroup0.bindGroup);
-      pickPass.setBindGroup(1, this.#pickPositionBindGroup1.bindGroup);
       pickPass.dispatchWorkgroups(1);
       pickPass.end();
       encoder.copyBufferToBuffer(

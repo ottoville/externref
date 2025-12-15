@@ -38,6 +38,7 @@ import {
   PipelineIntersection,
   type IRenderBundleEncoder,
   type IBindGroup,
+  BGLayout,
 } from './webgpu-ts/index.js';
 import {
   createShaderBuilders,
@@ -47,6 +48,12 @@ import { StructProperty } from './webgpu-ts/index.js';
 import { createPipelineLayouts } from './GPU/Shaders/Pipelinelayouts.js';
 import { createUI } from './GPU/UI.js';
 import { PickableRenderPassMSAA } from './GPU/RenderPasses/PickableRenderPassMSAA.js';
+import {
+  depth_and_mesh_buflayout,
+  depth_texture_buflayout,
+  mesh_texture_layout,
+  mouseBuffLayout,
+} from './GPU/Shaders/ReadDepth.comp.js';
 
 declare const engine: Engine;
 let curSecond = 0;
@@ -160,6 +167,12 @@ export class GPU {
   gpu_buffer?: number;
   bind_group_position?: rust_pointer<'bind_group_position'>;
   gpu: rust_pointer<'GPU'>;
+  pickBGLayout: BGLayout<{
+    depth_and_mesh: typeof depth_and_mesh_buflayout;
+    depth_texture: typeof depth_texture_buflayout;
+    mesh_texture: typeof mesh_texture_layout;
+    mouse: typeof mouseBuffLayout;
+  }>;
   /**
    * Create render pipeline. The function calculates hash and checks if existing render pipeline exists with same parameters.
    * @param desc
@@ -384,6 +397,12 @@ export class GPU {
     ) as unknown as GPUCanvasContext; // unknown for jest
     if (!context) throw new Error('Unable to get webgpu context');
 
+    this.pickBGLayout = new BGLayout(device, 'DepthAndMeshLayout', {
+      depth_and_mesh: depth_and_mesh_buflayout,
+      depth_texture: depth_texture_buflayout,
+      mesh_texture: mesh_texture_layout,
+      mouse: mouseBuffLayout,
+    });
     this.renderPassScreen = new PickableRenderPassMSAA(
       {
         colorRenderTargets: screenRenderTargets,
