@@ -155,9 +155,8 @@ export class PickableRenderPass<
           const z = new DataView(b).getFloat32(missOffsetDepth, true);
           let meshId = 0;
           if (mesh) {
-            this.pickPromiseMesh = null;
             meshId = new DataView(b).getUint32(8 + 32, true);
-          } else this.pickPromise = null;
+          }
           this.zAndIDPromise = null;
           const generation = new DataView(b).getUint32(8 + 32 + 4, true);
           this.pickBuffer.unmap();

@@ -31,13 +31,6 @@ export abstract class AbstractPickableRenderPass<
     x: number,
     y: number,
   ): Promise<[z: number, id: number, generation: number]> | null;
-  pickPromise: Promise<{
-    position: readonly [number, number, number];
-  } | null> | null = null;
-  pickPromiseMesh: Promise<{
-    position: readonly [number, number, number];
-    meshId: number;
-  } | null> | null = null;
   zAndIDPromise: Promise<[z: number, id: number, generation: number]> | null =
     null;
   pickBuffer: GPUBuffer;
@@ -75,11 +68,6 @@ export abstract class AbstractPickableRenderPass<
     | { position: readonly [number, number, number]; meshId: number }
     | null
   > | null {
-    if (mesh && this.pickPromiseMesh) {
-      return this.pickPromiseMesh;
-    } else if (!mesh && this.pickPromise) {
-      return this.pickPromise;
-    }
     const mouse_position = engine.rust.get_mouse_position(engine.gpu!.gpu);
     const mouse_x = mouse_position & 0xffff;
     const mouse_y = mouse_position >> 16;
@@ -90,8 +78,6 @@ export abstract class AbstractPickableRenderPass<
     const promise = pickPromise.then((zAndID) => {
       if (zAndID[0] === 0) {
         // Z is 0 when did not hit anything, far plane value
-        this.pickPromise = null;
-        this.pickPromiseMesh = null;
         return null;
       }
       const ptr = engine.rust.pick_position(
@@ -105,13 +91,12 @@ export abstract class AbstractPickableRenderPass<
         ...new Float32Array(engine.rust.memory.buffer, ptr, 3),
       ] as [number, number, number];
       if (mesh) {
-        this.pickPromiseMesh = null;
         return {
           generation: zAndID[2],
           meshId: zAndID[1],
           position,
         };
-      } else this.pickPromise = null;
+      }
       return {
         position,
       };
@@ -122,15 +107,6 @@ export abstract class AbstractPickableRenderPass<
     }
     //Calculate inverted matrix while buffer is mapping
     camera.update_camera_projection_view_inverted();
-    if (mesh) {
-      this.pickPromiseMesh = promise as Promise<{
-        position: readonly [number, number, number];
-        meshId: number;
-      }>;
-      return this.pickPromiseMesh;
-    } else {
-      this.pickPromise = promise;
-      return this.pickPromise;
-    }
+    return promise;
   }
 }
