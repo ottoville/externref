@@ -90,62 +90,56 @@ export class PickableRenderPassMSAA<
       }),
     );
   }
-  #zAndIDPromise: Promise<[z: number, id: number, generation: number]> | null =
-    null;
   doPick(_mesh: boolean, mouse_x: number, mouse_y: number) {
     if (!this.#pickPositionPipeline) {
       return null;
     }
-    if (!this.#zAndIDPromise) {
-      const gpu = this.depthRenderTarget.renderTarget.texture.props.gpu;
-      const encoder = gpu.createCommandEncoder({
-        label: 'pickPosition_encoder',
-      });
+    const gpu = this.depthRenderTarget.renderTarget.texture.props.gpu;
+    const encoder = gpu.createCommandEncoder({
+      label: 'pickPosition_encoder',
+    });
 
-      const mousePositionSwapBuffer = new Buffer({
-        gpu,
-        label: 'mousePositionSwapBuffer',
-        mappedAtCreation: true,
-        size: 8,
-        usages: BufferUsageEnums.COPY_SRC,
-      });
-      new Uint32Array(mousePositionSwapBuffer.getMappedRange(0, 8)).set([
-        mouse_x,
-        mouse_y,
-      ]);
-      mousePositionSwapBuffer
-        .unmap()
-        .copyTo(encoder, this.#mousePositionBuffer, 0, 0, 8);
-      const pickPass = encoder.beginComputePass({
-        label: 'pickPass',
-      });
-      pickPass.setPipeline(this.#pickPositionPipeline);
+    const mousePositionSwapBuffer = new Buffer({
+      gpu,
+      label: 'mousePositionSwapBuffer',
+      mappedAtCreation: true,
+      size: 8,
+      usages: BufferUsageEnums.COPY_SRC,
+    });
+    new Uint32Array(mousePositionSwapBuffer.getMappedRange(0, 8)).set([
+      mouse_x,
+      mouse_y,
+    ]);
+    mousePositionSwapBuffer
+      .unmap()
+      .copyTo(encoder, this.#mousePositionBuffer, 0, 0, 8);
+    const pickPass = encoder.beginComputePass({
+      label: 'pickPass',
+    });
+    pickPass.setPipeline(this.#pickPositionPipeline);
 
-      pickPass.setBindGroup(0, this.#pickPositionBindGroup0.bindGroup);
-      pickPass.dispatchWorkgroups(1);
-      pickPass.end();
-      encoder.copyBufferToBuffer(
-        this.pickBuffer,
-        0,
-        this.#pickBufferRead,
-        0,
-        4 + 4 + 4,
-      );
-      gpu.queue.submit([encoder.finish()]);
+    pickPass.setBindGroup(0, this.#pickPositionBindGroup0.bindGroup);
+    pickPass.dispatchWorkgroups(1);
+    pickPass.end();
+    encoder.copyBufferToBuffer(
+      this.pickBuffer,
+      0,
+      this.#pickBufferRead,
+      0,
+      4 + 4 + 4,
+    );
+    gpu.queue.submit([encoder.finish()]);
 
-      this.#zAndIDPromise = this.#pickBufferRead
-        .mapAsync(GPUMapMode.READ, 0, 4 + 4 + 4)
-        .then(() => {
-          const b = this.#pickBufferRead.getMappedRange(0, 4 + 4 + 4);
-          const z = new DataView(b).getFloat32(0, true);
-          const meshID = new DataView(b).getUint32(4, true);
-          const generation = new DataView(b).getUint32(8, true);
-          this.#pickBufferRead.unmap();
-          this.#zAndIDPromise = null;
-          return [z, meshID, generation];
-        });
-    }
-    return this.#zAndIDPromise;
+    return this.#pickBufferRead
+      .mapAsync(GPUMapMode.READ, 0, 4 + 4 + 4)
+      .then(() => {
+        const b = this.#pickBufferRead.getMappedRange(0, 4 + 4 + 4);
+        const z = new DataView(b).getFloat32(0, true);
+        const meshID = new DataView(b).getUint32(4, true);
+        const generation = new DataView(b).getUint32(8, true);
+        this.#pickBufferRead.unmap();
+        return [z, meshID, generation] as const;
+      }) as Promise<[z: number, id: number, generation: number]>;
   }
   /**
    *
