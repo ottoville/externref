@@ -1,5 +1,7 @@
+use crate::cameras::camera::CameraPtr;
+
 use super::{
-    camera::{Camera, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
+    camera::{VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
     cameracontroller::CameraController,
 };
 
@@ -28,10 +30,10 @@ pub unsafe extern "C" fn new_position_camera() -> *mut PositionCamera {
 }
 #[no_mangle]
 pub unsafe extern "C" fn attach_positioncamera_camera_controller(
-    camera: *mut &mut Camera,
+    camera: CameraPtr,
     controller: *mut PositionCamera,
 ) {
-    (*camera).controller = Some(Box::from_raw(controller));
+    (&(*camera)).camera.borrow_mut().controller = Some(Box::from_raw(controller));
 }
 #[no_mangle]
 pub unsafe extern "C" fn keyfunction(
@@ -107,7 +109,7 @@ impl CameraController for PositionCamera {
 
         if self.elevation != 0 {
             position[1] += self.elevation as f32 * VELOCITY;
-            view_updated = VIEW_UPDATED_POSITION; 
+            view_updated = VIEW_UPDATED_POSITION;
         }
 
         if self.arrow_keys_down != 0 {
@@ -135,8 +137,7 @@ impl CameraController for PositionCamera {
                 direction[0] = self.angle.cos() * vsin;
                 direction[1] = self.v_angle.cos();
                 direction[2] = self.angle.sin() * vsin;
-                view_updated |= VIEW_UPDATED_DIRECTION; 
-
+                view_updated |= VIEW_UPDATED_DIRECTION;
             } else {
                 if self.arrow_keys_down & ARROW_KEYS_UP_OR_DOWN > 0 {
                     if (self.arrow_keys_down & ARROW_KEYS_UP) == ARROW_KEYS_UP {
@@ -146,8 +147,7 @@ impl CameraController for PositionCamera {
                         position[0] += direction[0] * VELOCITY;
                         position[2] += direction[2] * VELOCITY;
                     }
-                }
-                else {
+                } else {
                     if (self.arrow_keys_down & ARROW_KEYS_RIGHT) == ARROW_KEYS_RIGHT {
                         position[0] += direction[2] * VELOCITY;
                         position[2] -= direction[0] * VELOCITY;
@@ -157,7 +157,7 @@ impl CameraController for PositionCamera {
                     }
                 }
                 self.position = position.clone();
-                view_updated |= VIEW_UPDATED_POSITION; 
+                view_updated |= VIEW_UPDATED_POSITION;
             }
         }
 

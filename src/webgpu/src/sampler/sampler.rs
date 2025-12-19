@@ -10,24 +10,24 @@ pub unsafe fn create_sampler(
     _device: &Resource<JSDevice>,
     _label_ptr: usize,
     _label_len: usize,
-    _addressModeU: GPUAddressMode,
-    _addressModeV: GPUAddressMode,
-    _addressModeW: GPUAddressMode,
-    _magFilter: GPUFilterMode,
-    _minFilter: GPUFilterMode,
-    _mipmapFilter: GPUFilterMode,
-    _lodMinClamp: f32,
-    _lodMaxClamp: f32,
-    _maxAnisotropy: u16,
+    _address_mode_u: GPUAddressMode,
+    _address_mode_v: GPUAddressMode,
+    _address_mode_w: GPUAddressMode,
+    _mag_filter: GPUFilterMode,
+    _min_filter: GPUFilterMode,
+    _mipmap_filter: GPUFilterMode,
+    _lod_min_clamp: f32,
+    _lod_max_clamp: f32,
+    _max_anisotropy: u16,
 ) -> Resource<JSSampler> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn create_bind_group_layout_entry_sampler(
-    binding: u32,
-    visibility: u32,
-    binding_type: u32,
+    _binding: u32,
+    _visibility: u32,
+    _binding_type: u32,
 ) -> Resource<JSGPUBindGroupLayoutEntry> {
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))

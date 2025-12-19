@@ -3,7 +3,6 @@ use std::{
     rc::Rc,
 };
 
-use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use terramath::VectorMath;
 use webgpu::{
@@ -157,7 +156,7 @@ impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> 
         &mut self,
         command_encoder: GPUCommandEncoder,
         device: &Resource<JSDevice>,
-        cameras: &ExplicitGenerationalFreeList<Camera>,
+        cameras: &Vec<Rc<Camera>>,
         gpu_buffer: usize,
         bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
@@ -204,7 +203,7 @@ impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> 
         mut width: NonZeroU32,
         mut height: NonZeroU32,
         device: &Resource<JSDevice>,
-        cameras: &ExplicitGenerationalFreeList<Camera>,
+        cameras: &Vec<Rc<Camera>>,
         computepass: &mut ComputePassEncoder,
     ) {
         if let Some(size_modifier) = self.size_modifier {
@@ -212,7 +211,7 @@ impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> 
         }
         self.size = [width, height];
         for cameragroup in &mut self.cameragroups {
-            cameragroup.update_size_bind_group(device, width, height, &(*cameras), computepass);
+            cameragroup.update_size_bind_group(device, width, height, cameras, computepass);
         }
         for render_target in self.render_targets.iter_mut() {
             render_target.resize(device, width, height);
@@ -237,7 +236,8 @@ impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> 
         let x = (mouse_x as f32 / self.size[0].get() as f32) * 2.0 - 1.0;
         let y = -((mouse_y as f32 / self.size[1].get() as f32) * 2.0 - 1.0);
         let camera_id = self.cameragroups[0].cameras[0];
-        let camera = gpu.get_camera_by_id(camera_id);
+        let camera_rc = gpu.get_camera_by_id(camera_id);
+        let camera = camera_rc.camera.borrow();
         let result = [x, y, z].transform(&camera.projection_view_inverted);
         unsafe {
             MULTIVALUE_F32[0] = result[0];

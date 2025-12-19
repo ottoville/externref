@@ -1,6 +1,5 @@
 use std::{num::NonZeroU32, rc::Rc};
 
-use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
 use webgpu::{
     bindgroup::bindgroup::BindGroup,
@@ -25,14 +24,14 @@ pub trait RenderPassTrait {
         _width: NonZeroU32,
         _height: NonZeroU32,
         _device: &Resource<JSDevice>,
-        _cameras: &ExplicitGenerationalFreeList<Camera>,
+        _cameras: &Vec<Rc<Camera>>,
         _computepass: &mut ComputePassEncoder,
     );
     fn render(
         &mut self,
         command_encoder: GPUCommandEncoder,
         device: &Resource<JSDevice>,
-        cameras: &ExplicitGenerationalFreeList<Camera>,
+        cameras: &Vec<Rc<Camera>>,
         gpu_buffer: usize,
         bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder;

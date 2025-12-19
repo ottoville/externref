@@ -5,7 +5,6 @@ use std::{
     sync::Arc,
 };
 
-use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
 use webgpu::{
     bindgroup::{bindgroup::BindGroup, bindgroup_resources::BindGroupResources},
@@ -195,7 +194,7 @@ impl RenderBundleEncoder {
         &mut self,
         cameragroups: &Vec<CameraGroup>,
         device: &Resource<JSDevice>,
-        cameras: &ExplicitGenerationalFreeList<Camera>,
+        cameras: &Vec<Rc<Camera>>,
         gpu_buffer: usize,
         bind_group_position: &Rc<BindGroup<1>>,
         cb: F,
@@ -216,7 +215,8 @@ impl RenderBundleEncoder {
                     self.set_bindgroup(device, 0, bind_group, &[]);
                 }
                 for camera_id in &camera_group.cameras {
-                    let camera = get_camera_by_id(cameras, *camera_id);
+                    let camera_rc = get_camera_by_id(cameras, *camera_id);
+                    let camera = camera_rc.camera.borrow();
                     self.set_bindgroup(device, 1, &camera.uniform_bindgroup, &[]);
                     unsafe {
                         do_record(

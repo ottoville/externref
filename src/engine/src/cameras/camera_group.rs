@@ -4,7 +4,6 @@ use std::{
     rc::Rc,
 };
 
-use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::Resource;
 use webgpu::{
     bindgroup::{bindgroup::BindGroup, bufferbinding::BufferBinding},
@@ -14,9 +13,12 @@ use webgpu::{
     device::JSDevice,
 };
 
-use crate::{cameras::camera::get_camera_by_id, projection::TILE_COUNT};
+use crate::{
+    cameras::camera::{get_camera_by_id, Camera},
+    projection::TILE_COUNT,
+};
 
-use super::camera::{Camera, CLUSTER_DISPATCH_SIZE};
+use super::camera::CLUSTER_DISPATCH_SIZE;
 
 pub struct CameraGroup {
     pub cameras: Vec<usize>,
@@ -29,7 +31,7 @@ impl CameraGroup {
         device: &Resource<JSDevice>,
         width: NonZeroU32,
         height: NonZeroU32,
-        cameras: &ExplicitGenerationalFreeList<Camera>,
+        cameras: &Vec<Rc<Camera>>,
         computepass: &mut ComputePassEncoder,
     ) {
         let screen_dimension_buffer =
@@ -52,7 +54,8 @@ impl CameraGroup {
         }
         (*computepass).set_bindgroup(&device, 0, bindgroup, &[]);
         for camera_id in &self.cameras {
-            let camera = get_camera_by_id(cameras, *camera_id);
+            let camera_rc = get_camera_by_id(cameras, *camera_id);
+            let camera = camera_rc.camera.borrow();
             computepass.set_bindgroup(device, 1, &camera.update_clusters_bind_group, &[]);
             computepass.dispatch_workgroups(
                 CLUSTER_DISPATCH_SIZE[0],

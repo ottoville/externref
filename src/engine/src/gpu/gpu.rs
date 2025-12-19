@@ -652,7 +652,7 @@ pub unsafe extern "C" fn init_gpu(
         gpu_buffer,
         bind_group_position,
         projections: vec![Arc::new(projection)],
-        cameras: ExplicitGenerationalFreeList::new(4),
+        cameras: Vec::with_capacity(4),
         renderpasses,
         update_view_bindgroup,
         point_lights,
@@ -702,7 +702,7 @@ pub struct GPU {
     pub gpu_buffer: Rc<RefCell<GPUBuffer<false, false, true, true, false, false, true, true>>>,
     pub bind_group_position: Rc<BindGroup<1>>,
     pub projections: Vec<Arc<Projection>>,
-    pub cameras: ExplicitGenerationalFreeList<Camera>,
+    pub cameras: Vec<Rc<Camera>>,
     pub renderpasses: Vec<Box<dyn RenderPassTrait>>,
     update_view_bindgroup: Rc<BindGroup<3>>,
     pub point_lights: Lights,
@@ -749,7 +749,7 @@ impl GPU {
             }
         }
         for camera in self.cameras.iter_mut() {
-            camera.update_view(
+            camera.camera.borrow_mut().update_view(
                 &mut self.queue.pending_command_buffers,
                 &self.device,
                 &mut command_encoder,
@@ -788,24 +788,12 @@ impl GPU {
         self.queue
             .submit([computepassencoder.end().finish(String::from("resize"))]);
     }
-    pub fn get_camera_by_id(&self, camera_id: usize) -> &Camera {
-        for camera in self.cameras.iter() {
-            if camera.id == camera_id {
-                return camera;
+    pub fn get_camera_by_id(&self, camera_id: usize) -> Rc<Camera> {
+        for camera_cell in self.cameras.iter() {
+            if camera_cell.id == camera_id {
+                return camera_cell.clone();
             } else {
-                if let Some(child_camera) = camera.find_child(camera_id) {
-                    return child_camera;
-                }
-            }
-        }
-        panic!("Camera not found");
-    }
-    pub fn get_camera_by_id_mut(&mut self, camera_id: usize) -> &mut Camera {
-        for camera in self.cameras.iter_mut() {
-            if camera.id == camera_id {
-                return camera;
-            } else {
-                if let Some(child_camera) = camera.find_child_mut(camera_id) {
+                if let Some(child_camera) = camera_cell.find_child(camera_id) {
                     return child_camera;
                 }
             }
@@ -818,7 +806,7 @@ impl GPU {
         update_view_pipeline: &Resource<JSComputePipeline>,
     ) {
         for camera in self.cameras.iter_mut() {
-            camera.check_inputs();
+            camera.camera.borrow_mut().check_inputs();
         }
         self.time = time;
         let mut command_encoder =
@@ -855,7 +843,7 @@ impl GPU {
         let mut some_camera_updated = false;
         //Cameras
         for camera in self.cameras.iter_mut() {
-            if camera.update_view(
+            if camera.camera.borrow_mut().update_view(
                 &mut self.queue.pending_command_buffers,
                 &self.device,
                 &mut command_encoder,
@@ -952,7 +940,11 @@ impl GPU {
             lights_pass.set_bindgroup(&self.device, 0, &self.update_view_bindgroup, &[]);
             //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
             for camera in self.cameras.iter_mut() {
-                camera.update_camera(&self.device, update_lights, &mut lights_pass);
+                camera.camera.borrow_mut().update_camera(
+                    &self.device,
+                    update_lights,
+                    &mut lights_pass,
+                );
             }
             command_encoder = lights_pass.end();
         }
@@ -1077,7 +1069,6 @@ fn test_bindgroup_buffer_resize() {
         binding_commands::BindingCommands,
         buffer::buffer::GPUBuffer,
         buffer_binding_layout::{BufferBindingType, GPUBindingLayout},
-        color_attachment::color_attachment::JSRenderPassColorAttachment,
         command_encoder::GPUCommandEncoder,
         queue::Queue,
     };
@@ -1164,7 +1155,6 @@ fn test_bindgroup_buffer_resize() {
 
         //buffer ref count is 3: test, command_encoder, rawbindgroup
         assert_eq!(Rc::strong_count(&rawbuffer), 3);
-        let attachments = Vec::<Resource<JSRenderPassColorAttachment>>::new();
 
         let mut renderpass_encoder = command_encoder.begin_render_pass(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),

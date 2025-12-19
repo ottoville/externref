@@ -5,9 +5,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::{num::NonZero, ptr};
 
-use allocators::explicit_generational_freelist::ExplicitGenerationalFreeList;
 use externref::{externref, Resource};
-use terramath::MatrixMath;
+use terramath::{MatrixMath, VectorMath, VectorMathF32};
 use webgpu::bindgroup::bufferbinding::BufferBinding;
 use webgpu::command_encoder::GPUCommandEncoder;
 use webgpu::compute_pass_encoder::ComputePassEncoder;
@@ -23,17 +22,16 @@ use webgpu::command_buffer::CommandBuffer;
 
 use super::cameracontroller::CameraController;
 
+pub type CameraPtr = *mut Rc<Camera>;
+
 #[no_mangle]
 #[externref]
-pub unsafe extern "C" fn get_camera_by_id_mut(
-    gpu_ptr: *mut GPU,
-    camera_id: usize,
-) -> *mut &'static Camera {
+pub unsafe extern "C" fn get_camera_by_id_mut(gpu_ptr: *mut GPU, camera_id: usize) -> CameraPtr {
     let gpu = &mut (*gpu_ptr);
-    Box::into_raw(Box::new(gpu.get_camera_by_id_mut(camera_id)))
+    Box::into_raw(Box::new(gpu.get_camera_by_id(camera_id)))
 }
 #[no_mangle]
-pub unsafe extern "C" fn drop_camera_lock(camera: *mut &Camera) {
+pub unsafe extern "C" fn drop_camera_lock(camera: CameraPtr) {
     let camera = Box::from_raw(camera);
     drop(camera);
 }
@@ -46,25 +44,33 @@ pub unsafe extern "C" fn get_cameras_count() -> usize {
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn get_camera_externref(camera_id: usize, gpu: *mut GPU) -> usize {
-    let camera = (*gpu).get_camera_by_id(camera_id);
+    let camera_rc = (*gpu).get_camera_by_id(camera_id);
+    let camera = camera_rc.camera.borrow();
     let externref = &camera.externref;
     ptr::read(externref as *const Resource<JSCamera> as *const usize)
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_label(camera_id: usize, gpu: *mut GPU) -> *const usize {
-    let label = &(*gpu).get_camera_by_id(camera_id).label;
+    let camera_rc = &(*gpu).get_camera_by_id(camera_id);
+    let label = &camera_rc.label;
     MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
     MULTIVALUE_USIZE[1] = label.len();
     MULTIVALUE_USIZE[2] = label.capacity();
     return MULTIVALUE_USIZE.as_ptr();
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_camera_position(camera: *mut &mut Camera, x: f32, y: f32, z: f32) {
-    (*camera).update_position([x, y, z, 0.0]);
+pub unsafe extern "C" fn update_camera_position(camera: CameraPtr, x: f32, y: f32, z: f32) {
+    (&(*camera))
+        .camera
+        .borrow_mut()
+        .update_position([x, y, z, 0.0]);
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_camera_direction(camera: *mut &mut Camera, x: f32, y: f32, z: f32) {
-    (*camera).update_direction([x, y, z, 0.0]);
+pub unsafe extern "C" fn update_camera_direction(camera: CameraPtr, x: f32, y: f32, z: f32) {
+    (&(*camera))
+        .camera
+        .borrow_mut()
+        .update_direction([x, y, z, 0.0]);
 }
 
 #[externref]
@@ -88,7 +94,9 @@ pub unsafe extern "C" fn add_child_to_camera(
     let projection = gpu.projections[0].clone();
     let camera = Camera::new(None, externref, label, projection, renderpasses, gpu);
     let id = camera.id;
-    gpu.get_camera_by_id_mut(camera_id).children.push(camera);
+    let pcamera_rc = (*gpu).get_camera_by_id(camera_id);
+    let mut pcamera = pcamera_rc.camera.borrow_mut();
+    pcamera.children.push(Rc::new(camera));
     return id;
 }
 #[externref]
@@ -126,7 +134,9 @@ pub unsafe extern "C" fn add_child_to_camera_water(
         gpu,
     );
     let id = camera.id;
-    (*gpu).get_camera_by_id_mut(camera_id).children.push(camera);
+    let pcamera_rc = (*gpu).get_camera_by_id(camera_id);
+    let mut pcamera = pcamera_rc.camera.borrow_mut();
+    pcamera.children.push(Rc::new(camera));
     return id;
 }
 #[externref]
@@ -148,35 +158,33 @@ pub unsafe extern "C" fn add_camera(
     let camera = Camera::new(None, externref, label, projection, renderpasses, gpu);
 
     let id = camera.id;
-    gpu.cameras.insert(camera);
+    gpu.cameras.push(Rc::new(camera));
     return id;
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_direction_ptr(camera: *mut &Camera) -> *const f32 {
-    (*camera).direction.as_ptr()
+pub unsafe extern "C" fn get_camera_direction_ptr(camera: CameraPtr) -> *const f32 {
+    (&(*camera)).camera.borrow().direction.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_position_ptr(camera: *mut &Camera) -> *const f32 {
-    (*camera).position.as_ptr()
+pub unsafe extern "C" fn get_camera_position_ptr(camera: CameraPtr) -> *const f32 {
+    (&(*camera)).camera.borrow().position.as_ptr()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_id: usize, gpu: *mut GPU) {
-    let camera = (*gpu).get_camera_by_id_mut(camera_id);
+    let camera_rc = (*gpu).get_camera_by_id(camera_id);
+    let mut camera = camera_rc.camera.borrow_mut();
     if camera.projection_view_inverted_is_dirty {
         camera.projection_view_inverted = camera.views.projection_view.invert();
         camera.projection_view_inverted_is_dirty = false;
     }
 }
-pub fn get_camera_by_id(
-    cameras: &ExplicitGenerationalFreeList<Camera>,
-    camera_id: usize,
-) -> &Camera {
-    for camera in cameras.iter() {
-        if camera.id == camera_id {
-            return camera;
+pub fn get_camera_by_id(cameras: &Vec<Rc<Camera>>, camera_id: usize) -> Rc<Camera> {
+    for camera_cell in cameras.iter() {
+        if camera_cell.id == camera_id {
+            return camera_cell.clone();
         } else {
-            if let Some(child_camera) = camera.find_child(camera_id) {
+            if let Some(child_camera) = camera_cell.find_child(camera_id) {
                 return child_camera;
             }
         }
@@ -216,30 +224,10 @@ struct Views {
     pub projection_view: [[f32; 4]; 4],
     pub view: [[f32; 4]; 4],
 }
-#[repr(C, align(4))]
 pub struct Camera {
-    pub projection: Arc<Projection>,
-    views: Views,
-    pub projection_view_inverted: [[f32; 4]; 4],
-    pub direction: [f32; 4],
-    pub position: [f32; 4],
-    externref: Resource<JSCamera>,
-    pub updated: bool,
-    pub label: String,
-    pub children: Vec<Camera>,
-    pub do_update_view: u32,
     pub id: usize,
-    before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
-    pub on_update_position:
-        Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>, &Resource<JSDevice>) + Send>>,
-    projection_view_inverted_is_dirty: bool,
-    buffer: Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>>,
-    cluster_array_buffer:
-        Rc<RefCell<GPUBuffer<false, false, false, false, false, false, false, true>>>,
-    update_view_bind_group: Rc<BindGroup<2>>,
-    pub update_clusters_bind_group: Rc<BindGroup<2>>,
-    pub uniform_bindgroup: Rc<BindGroup<5>>,
-    pub controller: Option<Box<dyn CameraController + Send>>,
+    pub label: String,
+    pub camera: RefCell<InnerCamera>,
 }
 impl Camera {
     pub fn new(
@@ -249,7 +237,7 @@ impl Camera {
         projection: Arc<Projection>,
         renderpasses: Vec<usize>,
         gpu: &mut GPU,
-    ) -> Camera {
+    ) -> Self {
         let camerauniform_buffer = Rc::new(RefCell::new(GPUBuffer::<
             false,
             false,
@@ -319,34 +307,36 @@ impl Camera {
             ],
         );
         let camera = Camera {
-            projection,
-            views: Views {
-                projection_view: [[0.0; 4]; 4],
-                view: [
-                    [0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 1.0],
-                ],
-            },
-            projection_view_inverted: [[0.0; 4]; 4],
-            position: [0.0; 4],
-            direction: [1.0, 0.0, 0.0, 0.0],
-            externref,
-            updated: false,
-            label,
-            children: Vec::new(),
-            do_update_view: 0,
             id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
-            before_view_update,
-            projection_view_inverted_is_dirty: false,
-            buffer: camerauniform_buffer,
-            cluster_array_buffer,
-            update_view_bind_group,
-            update_clusters_bind_group,
-            on_update_position: Vec::new(),
-            uniform_bindgroup,
-            controller: None,
+            label,
+            camera: RefCell::new(InnerCamera {
+                projection,
+                views: Views {
+                    projection_view: [[0.0; 4]; 4],
+                    view: [
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 1.0],
+                    ],
+                },
+                projection_view_inverted: [[0.0; 4]; 4],
+                position: [0.0; 4],
+                direction: [1.0, 0.0, 0.0, 0.0],
+                externref,
+                updated: false,
+                children: Vec::new(),
+                do_update_view: 0,
+                before_view_update,
+                projection_view_inverted_is_dirty: false,
+                buffer: camerauniform_buffer,
+                cluster_array_buffer,
+                update_view_bind_group,
+                update_clusters_bind_group,
+                on_update_position: Vec::new(),
+                uniform_bindgroup,
+                controller: None,
+            }),
         };
         for renderpass_id in renderpasses {
             gpu.renderpasses[renderpass_id].cameragroups()[0]
@@ -355,6 +345,41 @@ impl Camera {
         }
         return camera;
     }
+    pub fn find_child(&self, camera_id: usize) -> Option<Rc<Camera>> {
+        for camera_cell in self.camera.borrow().children.iter() {
+            if camera_cell.id == camera_id {
+                return Some(camera_cell.clone());
+            } else if let Some(child_camera) = camera_cell.find_child(camera_id) {
+                return Some(child_camera);
+            }
+        }
+        return None;
+    }
+}
+#[repr(C, align(4))]
+pub struct InnerCamera {
+    pub projection: Arc<Projection>,
+    views: Views,
+    pub projection_view_inverted: [[f32; 4]; 4],
+    pub direction: [f32; 4],
+    pub position: [f32; 4],
+    externref: Resource<JSCamera>,
+    pub updated: bool,
+    pub children: Vec<Rc<Camera>>,
+    pub do_update_view: u32,
+    before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
+    pub on_update_position:
+        Vec<Box<dyn Fn(&[f32; 4], &mut Vec<CommandBuffer>, &Resource<JSDevice>) + Send>>,
+    projection_view_inverted_is_dirty: bool,
+    buffer: Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>>,
+    cluster_array_buffer:
+        Rc<RefCell<GPUBuffer<false, false, false, false, false, false, false, true>>>,
+    update_view_bind_group: Rc<BindGroup<2>>,
+    pub update_clusters_bind_group: Rc<BindGroup<2>>,
+    pub uniform_bindgroup: Rc<BindGroup<5>>,
+    pub controller: Option<Box<dyn CameraController + Send>>,
+}
+impl InnerCamera {
     pub fn check_inputs(&mut self) {
         if let Some(controller) = &mut self.controller {
             self.do_update_view |= controller.check_inputs(
@@ -365,28 +390,8 @@ impl Camera {
             );
         }
         for camera in &mut self.children {
-            camera.check_inputs();
+            camera.camera.borrow_mut().check_inputs();
         }
-    }
-    pub fn find_child(&self, camera_id: usize) -> Option<&Camera> {
-        for camera in self.children.iter() {
-            if camera.id == camera_id {
-                return Some(camera);
-            } else if let Some(child_camera) = camera.find_child(camera_id) {
-                return Some(child_camera);
-            }
-        }
-        return None;
-    }
-    pub fn find_child_mut(&mut self, camera_id: usize) -> Option<&mut Camera> {
-        for camera in self.children.iter_mut() {
-            if camera.id == camera_id {
-                return Some(camera);
-            } else if let Some(child_camera) = camera.find_child_mut(camera_id) {
-                return Some(child_camera);
-            }
-        }
-        return None;
     }
     fn on_update_position(&self) {
         #[cfg(feature = "webgpu")]
@@ -399,6 +404,10 @@ impl Camera {
                 self.position[2],
             );
         }
+    }
+    pub fn set_direction_from_target(&mut self, target: &[f32; 4]) {
+        self.position.sub_vec_to_ref(target, &mut self.direction);
+        self.direction.normalize_in_place();
     }
     pub fn update_position(&mut self, position: [f32; 4]) {
         if position[0] != self.position[0]
@@ -444,17 +453,23 @@ impl Camera {
             }
             for child in self.children.iter_mut() {
                 if (self.do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
-                    child.update_position(self.position.clone());
+                    child
+                        .camera
+                        .borrow_mut()
+                        .update_position(self.position.clone());
                 }
                 if (self.do_update_view & VIEW_UPDATED_DIRECTION) == VIEW_UPDATED_DIRECTION {
-                    child.update_direction(self.direction.clone());
+                    child
+                        .camera
+                        .borrow_mut()
+                        .update_direction(self.direction.clone());
                 }
             }
         }
 
         if projection_changed || self.do_update_view != 0 {
             for child in self.children.iter_mut() {
-                child.update_view(
+                child.camera.borrow_mut().update_view(
                     pending_command_buffers,
                     device,
                     command_encoder,
@@ -546,7 +561,10 @@ impl Camera {
             );
         }
         for child in self.children.iter() {
-            child.update_camera(device, force, lights_pass);
+            child
+                .camera
+                .borrow_mut()
+                .update_camera(device, force, lights_pass);
         }
     }
 }
@@ -588,70 +606,83 @@ fn test_child_camera() {
             Vec::new(),
             gpu,
         );
-        camera.update_position([1.0, 2.0, 3.0, 0.0]);
-        camera.children.push(child_1);
+        let mut swap_buffers = SwapBuffers::new();
         let mut command_encoder = GPUCommandEncoder::new(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),
         );
+        {
+            let mut innercamera = camera.camera.borrow_mut();
+            innercamera.update_position([1.0, 2.0, 3.0, 0.0]);
+            innercamera.children.push(Rc::new(child_1));
 
-        let mut swap_buffers = SwapBuffers::new();
+            innercamera.update_view(
+                &mut Vec::new(),
+                &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+                &mut command_encoder,
+                &mut swap_buffers,
+                false,
+            );
+            assert_eq!(
+                innercamera.children[0].camera.borrow().position,
+                [1.0, 2.0, 3.0, 0.0]
+            );
 
-        camera.update_view(
-            &mut Vec::new(),
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-            &mut command_encoder,
-            &mut swap_buffers,
-            false,
-        );
-        assert_eq!(camera.children[0].position, [1.0, 2.0, 3.0, 0.0]);
-        camera.update_view(
-            &mut Vec::new(),
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-            &mut command_encoder,
-            &mut swap_buffers,
-            false,
-        );
-        assert_eq!(camera.children[0].position, [1.0, 2.0, 3.0, 0.0]);
+            innercamera.update_view(
+                &mut Vec::new(),
+                &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+                &mut command_encoder,
+                &mut swap_buffers,
+                false,
+            );
+            assert_eq!(
+                innercamera.children[0].camera.borrow().position,
+                [1.0, 2.0, 3.0, 0.0]
+            );
 
-        assert_eq!(
-            camera.views.view,
-            [
-                [0.0, -0.0, 1.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [-1.0, -0.0, 0.0, 0.0],
-                [3.0, -2.0, -1.0, 1.0]
-            ]
-        );
-        assert_eq!(
-            camera.views.projection_view,
-            [
-                [0.0, 0.0, 0.0, -1.0],
-                [0.0, 4.933155, 0.0, 0.0],
-                [-4.933155, 0.0, 0.0, 0.0],
-                [14.799465, -9.86631, 1.0, 1.0]
-            ]
-        );
+            assert_eq!(
+                innercamera.views.view,
+                [
+                    [0.0, -0.0, 1.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0],
+                    [-1.0, -0.0, 0.0, 0.0],
+                    [3.0, -2.0, -1.0, 1.0]
+                ]
+            );
+            assert_eq!(
+                innercamera.views.projection_view,
+                [
+                    [0.0, 0.0, 0.0, -1.0],
+                    [0.0, 4.933155, 0.0, 0.0],
+                    [-4.933155, 0.0, 0.0, 0.0],
+                    [14.799465, -9.86631, 1.0, 1.0]
+                ]
+            );
+        }
 
         projection.inner_projection.create_buffer(
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             2.0,
         );
-        camera.update_view(
-            &mut Vec::new(),
-            &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-            &mut command_encoder,
-            &mut swap_buffers,
-            true,
-        );
-        assert_eq!(
-            camera.views.projection_view,
-            [
-                [0.0, 0.0, 0.0, -1.0],
-                [0.0, 4.933155, 0.0, 0.0],
-                [-2.4665775, 0.0, 0.0, 0.0],
-                [7.3997326, -9.86631, 1.0, 1.0]
-            ]
-        );
+
+        {
+            let mut innercamera = camera.camera.borrow_mut();
+            innercamera.update_view(
+                &mut Vec::new(),
+                &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
+                &mut command_encoder,
+                &mut swap_buffers,
+                true,
+            );
+            assert_eq!(
+                innercamera.views.projection_view,
+                [
+                    [0.0, 0.0, 0.0, -1.0],
+                    [0.0, 4.933155, 0.0, 0.0],
+                    [-2.4665775, 0.0, 0.0, 0.0],
+                    [7.3997326, -9.86631, 1.0, 1.0]
+                ]
+            );
+        }
     }
 }

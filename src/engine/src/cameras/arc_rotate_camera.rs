@@ -2,12 +2,12 @@ use collider::{ColliderSphere, CLOSE_DISTANCE};
 use terramath::{MatrixMath, VectorMath, VectorMathF32};
 
 use crate::{
-    cameras::camera::{VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
+    cameras::camera::{CameraPtr, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
     gpu::gpu::GPU,
     mesh::ENGINE,
 };
 
-use super::{camera::Camera, cameracontroller::CameraController};
+use super::cameracontroller::CameraController;
 const EPSILON: f32 = 0.001;
 const PANNING_SENSIBILITY: f32 = 20.0;
 const ANGULAR_SENSIBILITY_X: f32 = 3000.0;
@@ -75,10 +75,10 @@ pub unsafe extern "C" fn get_target_ptr(
 }
 #[no_mangle]
 pub unsafe extern "C" fn attach_archrotate_camera_controller(
-    camera: *mut &mut Camera,
+    camera: CameraPtr,
     controller: *mut ArcRotateCamera,
 ) {
-    (*camera).controller = Some(Box::from_raw(controller));
+    (&(*camera)).camera.borrow_mut().controller = Some(Box::from_raw(controller));
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_movement(
@@ -309,7 +309,8 @@ impl ArcRotateCamera {
             lower_target_ylimit: f32::NEG_INFINITY,
         };
         if !initial {
-            let camera = gpu.get_camera_by_id(camera_id);
+            let camera_rc = gpu.get_camera_by_id(camera_id);
+            let camera = camera_rc.camera.borrow();
             controller.target = camera.position.sub_vec(&camera.direction.multiply(100.0));
             controller.rebuild_angles_and_radius(&camera.position);
         }
@@ -352,10 +353,10 @@ impl ArcRotateCamera {
         self.radius = radius;
         self.target = [target_x, target_y, target_z, 0.0];
 
-        let camera = gpu.get_camera_by_id_mut(camera_id);
-
+        let camera_rc = gpu.get_camera_by_id(camera_id);
+        let mut camera = camera_rc.camera.borrow_mut();
         camera.update_position([position_x, position_y, position_z, 0.0]);
-        self.calculate_direction(&camera.position, &mut camera.direction);
+        camera.set_direction_from_target(&self.target);
     }
     /// Rebuilds angles (alpha, beta) and radius from the give position and target
     fn rebuild_angles_and_radius(&mut self, current_position: &[f32; 4]) {

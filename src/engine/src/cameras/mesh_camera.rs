@@ -1,9 +1,12 @@
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 
-use crate::mesh::{Mesh, ENGINE};
+use crate::{
+    cameras::camera::CameraPtr,
+    mesh::{Mesh, ENGINE},
+};
 
 use super::{
-    camera::{Camera, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
+    camera::{VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
     cameracontroller::CameraController,
     position_camera::{ARROW_KEYS_DOWN, ARROW_KEYS_LEFT, ARROW_KEYS_RIGHT, ARROW_KEYS_UP},
 };
@@ -23,10 +26,10 @@ pub unsafe extern "C" fn new_mesh_camera(
 }
 #[no_mangle]
 pub unsafe extern "C" fn attach_meshcamera_camera_controller(
-    camera: *mut &mut Camera,
+    camera: CameraPtr,
     controller: *mut MeshCamera,
 ) {
-    (*camera).controller = Some(Box::from_raw(controller));
+    (&(*camera)).camera.borrow_mut().controller = Some(Box::from_raw(controller));
 }
 #[no_mangle]
 pub unsafe extern "C" fn keyfunctionmeshcamera(
