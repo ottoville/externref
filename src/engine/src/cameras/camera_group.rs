@@ -11,17 +11,15 @@ use webgpu::{
     buffer::buffer::GPUBuffer,
     compute_pass_encoder::ComputePassEncoder,
     device::JSDevice,
+    weakvec::WeakVec,
 };
 
-use crate::{
-    cameras::camera::{get_camera_by_id, Camera},
-    projection::TILE_COUNT,
-};
+use crate::{cameras::camera::Camera, projection::TILE_COUNT};
 
 use super::camera::CLUSTER_DISPATCH_SIZE;
 
 pub struct CameraGroup {
-    pub cameras: Vec<usize>,
+    pub cameras: WeakVec<Camera>,
     pub bind_group: Option<Rc<BindGroup<1>>>,
     pub bufferbinding: Rc<RefCell<BufferBinding>>,
 }
@@ -31,7 +29,6 @@ impl CameraGroup {
         device: &Resource<JSDevice>,
         width: NonZeroU32,
         height: NonZeroU32,
-        cameras: &Vec<Rc<Camera>>,
         computepass: &mut ComputePassEncoder,
     ) {
         let screen_dimension_buffer =
@@ -53,8 +50,7 @@ impl CameraGroup {
             b.replace_buffer(Rc::new(RefCell::new(screen_dimension_buffer.unmap())));
         }
         (*computepass).set_bindgroup(&device, 0, bindgroup, &[]);
-        for camera_id in &self.cameras {
-            let camera_rc = get_camera_by_id(cameras, *camera_id);
+        self.cameras.iter_mut(|camera_rc| {
             let camera = camera_rc.camera.borrow();
             computepass.set_bindgroup(device, 1, &camera.update_clusters_bind_group, &[]);
             computepass.dispatch_workgroups(
@@ -62,6 +58,6 @@ impl CameraGroup {
                 CLUSTER_DISPATCH_SIZE[1],
                 CLUSTER_DISPATCH_SIZE[2],
             );
-        }
+        });
     }
 }

@@ -200,10 +200,10 @@ impl<
         return 2;
     }
     fn make_dirty(&mut self) {
-        self.bindings.iter_mut(|buffer_binding| {
+        self.bindings.iter(|buffer_binding| {
             buffer_binding.borrow_mut().make_dirty();
         });
-        self.renderbundles.iter_mut(|renderbundle| {
+        self.renderbundles.iter(|renderbundle| {
             renderbundle.borrow_mut().take();
         });
     }

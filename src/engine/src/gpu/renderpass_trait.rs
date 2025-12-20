@@ -10,8 +10,8 @@ use webgpu::{
 };
 
 use crate::{
-    cameras::{camera::Camera, camera_group::CameraGroup},
-    gpu::{gpu::GPU, renderbundle_encoder::RenderBundleEncoder, renderpass::JSRenderPass},
+    cameras::camera_group::CameraGroup,
+    gpu::{renderbundle_encoder::RenderBundleEncoder, renderpass::JSRenderPass},
     swapbuffers::SwapBuffers,
 };
 
@@ -24,14 +24,12 @@ pub trait RenderPassTrait {
         _width: NonZeroU32,
         _height: NonZeroU32,
         _device: &Resource<JSDevice>,
-        _cameras: &Vec<Rc<Camera>>,
         _computepass: &mut ComputePassEncoder,
     );
     fn render(
         &mut self,
         command_encoder: GPUCommandEncoder,
         device: &Resource<JSDevice>,
-        cameras: &Vec<Rc<Camera>>,
         gpu_buffer: usize,
         bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder;
@@ -42,7 +40,7 @@ pub trait RenderPassTrait {
     fn get_bundle(&self) -> &RenderBundleEncoder;
     fn label(&self) -> &str;
 
-    fn pick_position(&self, gpu: &GPU, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32;
+    fn pick_position(&self, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32;
     fn do_pick(
         &mut self,
         device: &Resource<JSDevice>,

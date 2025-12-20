@@ -352,12 +352,7 @@ export type rustWasm = {
   add_onchange_callback(mesh_id: rust_pointer<'mesh_id'>): number;
   remove_onchange_callback(mesh_id: rust_pointer<'mesh_id'>, cb: number): void;
   get_engine(): rust_mutex<'locked', 'enginelock'>;
-  get_camera_by_id_mut(
-    gpu: rust_pointer<'GPU'>,
-    camera_id: number,
-  ): rust_mutex<'locked', 'camera'>;
   drop_engine_lock(engine: rust_mutex<'locked', 'enginelock'>): void;
-  drop_camera_lock(camera: rust_mutex<'locked', 'camera'>): void;
 
   init_gpu(
     device: GPUDevice,
@@ -384,9 +379,9 @@ export type rustWasm = {
     renderpasses_len: number,
     renderpasses_cap: number,
     gpu: rust_pointer<'GPU'>,
-  ): number;
+  ): rust_pointer<'camera'>;
   add_child_to_camera(
-    camera_id: number,
+    parent: rust_pointer<'camera'>,
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -395,9 +390,9 @@ export type rustWasm = {
     renderpasses_len: number,
     renderpasses_cap: number,
     gpu: rust_pointer<'GPU'>,
-  ): number;
+  ): rust_pointer<'camera'>;
   add_child_to_camera_water(
-    camera_id: number,
+    parent: rust_pointer<'camera'>,
     camera: TerraCamera,
     label_ptr: number,
     label_len: number,
@@ -406,31 +401,27 @@ export type rustWasm = {
     renderpasses_len: number,
     renderpasses_cap: number,
     gpu: rust_pointer<'GPU'>,
-  ): number;
+  ): rust_pointer<'camera'>;
   get_camera_label(
-    camera_id: number,
-    gpu: rust_pointer<'GPU'>,
+    camera: rust_pointer<'camera'>,
   ): rust_pointer<'camera_label'>;
   get_camera_externref(camera_id: number, gpu: rust_pointer<'GPU'>): number;
   get_cameras_count(): number;
   get_camera_direction_ptr(
-    camera: rust_mutex<'locked', 'camera'>,
+    camera: rust_pointer<'camera'>,
   ): rust_pointer<'direction'>;
   get_camera_position_ptr(
-    camera: rust_mutex<'locked', 'camera'>,
+    camera: rust_pointer<'camera'>,
   ): rust_pointer<'position'>;
-  update_camera_projection_view_inverted(
-    camera_id: number,
-    gpu: rust_pointer<'GPU'>,
-  ): void;
+  update_camera_projection_view_inverted(camera: rust_pointer<'camera'>): void;
   update_camera_position(
-    camera: rust_mutex<'locked', 'camera'>,
+    camera: rust_pointer<'camera'>,
     x: number,
     y: number,
     z: number,
   ): void;
   update_camera_direction(
-    camera: rust_mutex<'locked', 'camera'>,
+    camera: rust_pointer<'camera'>,
     x: number,
     y: number,
     z: number,
@@ -514,8 +505,7 @@ export type rustWasm = {
   ): rust_pointer<'collider_sphere'>;
   new_arc_rotate_camera(
     initial: boolean,
-    camera_id: number,
-    gpu: rust_pointer<'GPU'>,
+    camera: rust_pointer<'camera'>,
   ): rust_pointer<'ArcRotateCamera'>;
   restore_arc_rotate_camera(
     controller: rust_pointer<'ArcRotateCamera'>,
@@ -528,8 +518,7 @@ export type rustWasm = {
     position_x: number,
     position_y: number,
     position_z: number,
-    camera_id: number,
-    gpu: rust_pointer<'GPU'>,
+    camera: rust_pointer<'camera'>,
   ): void;
   camera_wheel(
     controller: rust_pointer<'ArcRotateCamera'>,
@@ -569,15 +558,15 @@ export type rustWasm = {
     gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'array'>;
   attach_archrotate_camera_controller(
-    camera: rust_mutex<'locked', 'camera'>,
+    camera: rust_pointer<'camera'>,
     controller: rust_pointer<'ArcRotateCamera'>,
   ): void;
   attach_positioncamera_camera_controller(
-    camera: rust_mutex<'locked', 'camera'>,
+    camera: rust_pointer<'camera'>,
     controller: rust_pointer<'positioncamera'>,
   ): void;
   attach_meshcamera_camera_controller(
-    camera: rust_mutex<'locked', 'camera'>,
+    camera: rust_pointer<'camera'>,
     controller: rust_pointer<'meshcamera'>,
   ): void;
   keyfunction(

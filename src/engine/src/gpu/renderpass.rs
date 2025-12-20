@@ -63,7 +63,7 @@ pub unsafe extern "C" fn pick_position(
     gpu_ptr: *mut GPU,
 ) -> *const f32 {
     let gpu = &mut (*gpu_ptr);
-    gpu.renderpasses[id].pick_position(gpu, mouse_x, mouse_y, z)
+    gpu.renderpasses[id].pick_position(mouse_x, mouse_y, z)
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_renderpass_size(id: usize, gpu_ptr: *mut GPU) -> *const NonZero<u32> {
@@ -156,7 +156,6 @@ impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> 
         &mut self,
         command_encoder: GPUCommandEncoder,
         device: &Resource<JSDevice>,
-        cameras: &Vec<Rc<Camera>>,
         gpu_buffer: usize,
         bind_group_position: &Rc<BindGroup<1>>,
     ) -> GPUCommandEncoder {
@@ -181,9 +180,8 @@ impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> 
             command_encoder.begin_render_pass(&descriptor, &self.descriptor);
         if let Some(bundle) = self.bundle.as_mut() {
             bundle.record_renderbundle(
-                &self.cameragroups,
+                &mut self.cameragroups,
                 device,
-                cameras,
                 gpu_buffer,
                 bind_group_position,
                 |renderbundle| {
@@ -203,7 +201,6 @@ impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> 
         mut width: NonZeroU32,
         mut height: NonZeroU32,
         device: &Resource<JSDevice>,
-        cameras: &Vec<Rc<Camera>>,
         computepass: &mut ComputePassEncoder,
     ) {
         if let Some(size_modifier) = self.size_modifier {
@@ -211,7 +208,7 @@ impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> 
         }
         self.size = [width, height];
         for cameragroup in &mut self.cameragroups {
-            cameragroup.update_size_bind_group(device, width, height, cameras, computepass);
+            cameragroup.update_size_bind_group(device, width, height, computepass);
         }
         for render_target in self.render_targets.iter_mut() {
             render_target.resize(device, width, height);
@@ -232,12 +229,12 @@ impl<const N: usize, const SAMPLE_COUNT: u32, T: ColorAttachment<SAMPLE_COUNT>> 
     fn label(&self) -> &str {
         &self.label
     }
-    fn pick_position(&self, gpu: &GPU, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32 {
+    fn pick_position(&self, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32 {
         let x = (mouse_x as f32 / self.size[0].get() as f32) * 2.0 - 1.0;
         let y = -((mouse_y as f32 / self.size[1].get() as f32) * 2.0 - 1.0);
-        let camera_id = self.cameragroups[0].cameras[0];
-        let camera_rc = gpu.get_camera_by_id(camera_id);
-        let camera = camera_rc.camera.borrow();
+        let camera_rc = &self.cameragroups[0].cameras.vec[0];
+        let updated = camera_rc.upgrade().unwrap();
+        let camera = updated.camera.borrow();
         let result = [x, y, z].transform(&camera.projection_view_inverted);
         unsafe {
             MULTIVALUE_F32[0] = result[0];

@@ -53,7 +53,7 @@ pub struct BindGroup<const N: usize> {
 impl<const N: usize> BindGroupTrait for BindGroup<N> {
     fn make_dirty(&self) {
         self.resources.borrow_mut().take();
-        self.renderbundles.borrow_mut().iter_mut(|renderbundle| {
+        self.renderbundles.borrow_mut().iter(|renderbundle| {
             renderbundle.borrow_mut().take();
         });
     }

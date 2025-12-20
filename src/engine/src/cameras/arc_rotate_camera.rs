@@ -1,9 +1,10 @@
+use std::rc::Rc;
+
 use collider::{ColliderSphere, CLOSE_DISTANCE};
 use terramath::{MatrixMath, VectorMath, VectorMathF32};
 
 use crate::{
-    cameras::camera::{CameraPtr, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
-    gpu::gpu::GPU,
+    cameras::camera::{Camera, CameraPtr, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
     mesh::ENGINE,
 };
 
@@ -33,10 +34,9 @@ impl CameraMovement {
 #[no_mangle]
 pub unsafe extern "C" fn new_arc_rotate_camera(
     initial: bool,
-    camera_id: usize,
-    gpu: *mut GPU,
+    camera: *mut Rc<Camera>,
 ) -> *mut ArcRotateCamera {
-    Box::into_raw(Box::new(ArcRotateCamera::new(initial, camera_id, &*gpu)))
+    Box::into_raw(Box::new(ArcRotateCamera::new(initial, (*camera).clone())))
 }
 #[no_mangle]
 pub unsafe extern "C" fn camera_move(
@@ -112,12 +112,19 @@ pub unsafe extern "C" fn restore_arc_rotate_camera(
     position_x: f32,
     position_y: f32,
     position_z: f32,
-    camera_id: usize,
-    gpu: *mut GPU,
+    camera: CameraPtr,
 ) {
     (*arc_rotate_camera).restore(
-        alpha, beta, radius, target_x, target_y, target_z, position_x, position_y, position_z,
-        camera_id, &mut *gpu,
+        alpha,
+        beta,
+        radius,
+        target_x,
+        target_y,
+        target_z,
+        position_x,
+        position_y,
+        position_z,
+        &(*camera),
     );
 }
 pub struct ArcRotateCamera {
@@ -273,7 +280,7 @@ impl CameraController for ArcRotateCamera {
     }
 }
 impl ArcRotateCamera {
-    pub fn new(initial: bool, camera_id: usize, gpu: &GPU) -> Self {
+    pub fn new(initial: bool, camera: Rc<Camera>) -> Self {
         let collision_radius = 2.0;
         let mut controller = ArcRotateCamera {
             alpha: 0.0,
@@ -309,8 +316,7 @@ impl ArcRotateCamera {
             lower_target_ylimit: f32::NEG_INFINITY,
         };
         if !initial {
-            let camera_rc = gpu.get_camera_by_id(camera_id);
-            let camera = camera_rc.camera.borrow();
+            let camera = camera.camera.borrow();
             controller.target = camera.position.sub_vec(&camera.direction.multiply(100.0));
             controller.rebuild_angles_and_radius(&camera.position);
         }
@@ -345,15 +351,13 @@ impl ArcRotateCamera {
         position_x: f32,
         position_y: f32,
         position_z: f32,
-        camera_id: usize,
-        gpu: &mut GPU,
+        camera_rc: &Rc<Camera>,
     ) {
         self.alpha = alpha;
         self.beta = beta;
         self.radius = radius;
         self.target = [target_x, target_y, target_z, 0.0];
 
-        let camera_rc = gpu.get_camera_by_id(camera_id);
         let mut camera = camera_rc.camera.borrow_mut();
         camera.update_position([position_x, position_y, position_z, 0.0]);
         camera.set_direction_from_target(&self.target);

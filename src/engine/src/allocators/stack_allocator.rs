@@ -40,7 +40,7 @@ impl<T, const N: usize> StackAllocator<T, N> {
         }
         self.next_free = 0;
     }
-    pub fn drain(&mut self) -> StackAllocatorDrain<T, N> {
+    pub fn drain(&'_ mut self) -> StackAllocatorDrain<'_, T, N> {
         StackAllocatorDrain {
             stack_allocator: self,
         }

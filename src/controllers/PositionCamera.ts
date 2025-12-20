@@ -22,20 +22,15 @@ export class PositionCamera extends CameraController {
     super();
     this.id = engine.rust.new_position_camera();
 
-    const cameralock = engine.rust.get_camera_by_id_mut(
-      engine.gpu!.gpu,
-      this.camera.id,
-    );
-
     const syncCamera = () => {
       engine.rust.update_camera_position(
-        cameralock,
+        this.camera.id,
         this.#position[0],
         this.#position[1],
         this.#position[2],
       );
       engine.rust.update_camera_direction(
-        cameralock,
+        this.camera.id,
         Math.cos(this.#angle),
         0,
         Math.sin(this.#angle),
@@ -60,19 +55,18 @@ export class PositionCamera extends CameraController {
     } else {
       const position = new Float32Array(
         engine.rust.memory.buffer,
-        engine.rust.get_camera_position_ptr(cameralock),
+        engine.rust.get_camera_position_ptr(this.camera.id),
         3,
       ) as unknown as readonly [number, number, number];
 
       this.#position = [...position];
       const direction = new Float32Array(
         engine.rust.memory.buffer,
-        engine.rust.get_camera_direction_ptr(cameralock),
+        engine.rust.get_camera_direction_ptr(this.camera.id),
         3,
       );
       this.#angle = Math.acos(direction[0]!);
     }
-    engine.rust.drop_camera_lock(cameralock);
   }
   attachCameraController() {
     document?.addEventListener('keydown', this.#keydownfunction);

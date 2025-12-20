@@ -136,7 +136,6 @@ export class Canvas {
           new Sea([terrascene]);
           gpu.mainCamera.attachControllerForCamera(
             new ArcRotateCamera(gpu.mainCamera, true),
-            gpu.gpu,
           );
           const human = new Human({
             scenes: [terrascene],
@@ -154,13 +153,11 @@ export class Canvas {
               if (engine.inputManager instanceof MeshCamera) {
                 gpu.mainCamera.attachControllerForCamera(
                   new ArcRotateCamera(gpu.mainCamera, false),
-                  gpu.gpu,
                 );
               } else {
                 human.haveControl = true;
                 gpu.mainCamera.attachControllerForCamera(
                   new MeshCamera(engine.gpu!.mainCamera, human.id),
-                  gpu.gpu,
                 );
               }
             }

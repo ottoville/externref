@@ -243,7 +243,7 @@ where
     Self: TextureDimensionTrait,
 {
     fn make_dirty(&self) {
-        self.bindings.borrow_mut().iter_mut(|binding| {
+        self.bindings.borrow_mut().iter(|binding| {
             binding.borrow_mut().make_dirty();
         });
     }

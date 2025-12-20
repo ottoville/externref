@@ -45,7 +45,7 @@ impl BindGroupBinding for TextureBinding {
         };
     }
     fn make_dirty(&mut self) {
-        self.bindgroups.iter_mut(|bind_group| {
+        self.bindgroups.iter(|bind_group| {
             bind_group.make_dirty();
         });
     }

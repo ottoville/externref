@@ -9,13 +9,13 @@ import { PositionCamera } from './controllers/PositionCamera.js';
 declare const engine: Engine;
 export class TerraCamera {
   update_camera_projection_view_inverted() {
-    engine.rust.update_camera_projection_view_inverted(this.id, this.gpu!.gpu);
+    engine.rust.update_camera_projection_view_inverted(this.id);
   }
   #inputController?: CameraController;
   public gpu?: GPU;
 
   onUpdatePosition: Set<(x: number, y: number, z: number) => void> = new Set();
-  id: number;
+  id: rust_pointer<'camera'>;
   constructor(
     label: string,
     renderPasses: RenderPass[],
@@ -67,29 +67,17 @@ export class TerraCamera {
       this.gpu = gpu2;
     });
   }
-  attachControllerForCamera(
-    controller: CameraController,
-    gpu: rust_pointer<'GPU'>,
-  ) {
-    const cameralock = engine.rust.get_camera_by_id_mut(gpu, this.id);
-
+  attachControllerForCamera(controller: CameraController) {
     if (controller instanceof ArcRotateCamera) {
-      engine.rust.attach_archrotate_camera_controller(
-        cameralock,
-        controller.id,
-      );
+      engine.rust.attach_archrotate_camera_controller(this.id, controller.id);
     } else if (controller instanceof MeshCamera) {
-      engine.rust.attach_meshcamera_camera_controller(
-        cameralock,
-        controller.id,
-      );
+      engine.rust.attach_meshcamera_camera_controller(this.id, controller.id);
     } else if (controller instanceof PositionCamera) {
       engine.rust.attach_positioncamera_camera_controller(
-        cameralock,
+        this.id,
         controller.id,
       );
     }
-    engine.rust.drop_camera_lock(cameralock);
 
     if (this.#inputController) {
       if (this.#inputController !== controller) {

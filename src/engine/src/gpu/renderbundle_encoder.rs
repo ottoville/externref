@@ -16,10 +16,7 @@ use webgpu::{
     renderbundle::{JSFunction, JSRenderBundle, JSRenderBundleDescriptor, RenderBundle},
 };
 
-use crate::cameras::{
-    camera::{get_camera_by_id, Camera},
-    camera_group::CameraGroup,
-};
+use crate::cameras::camera_group::CameraGroup;
 
 #[no_mangle]
 pub unsafe extern "C" fn renderbundle_make_dirty(renderbundle: *mut RenderBundleEncoder) {
@@ -192,9 +189,8 @@ impl RenderBundleEncoder {
     }
     pub fn record_renderbundle<F>(
         &mut self,
-        cameragroups: &Vec<CameraGroup>,
+        cameragroups: &mut Vec<CameraGroup>,
         device: &Resource<JSDevice>,
-        cameras: &Vec<Rc<Camera>>,
         gpu_buffer: usize,
         bind_group_position: &Rc<BindGroup<1>>,
         cb: F,
@@ -214,8 +210,7 @@ impl RenderBundleEncoder {
                 if let Some(bind_group) = &camera_group.bind_group {
                     self.set_bindgroup(device, 0, bind_group, &[]);
                 }
-                for camera_id in &camera_group.cameras {
-                    let camera_rc = get_camera_by_id(cameras, *camera_id);
+                camera_group.cameras.iter_mut(|camera_rc| {
                     let camera = camera_rc.camera.borrow();
                     self.set_bindgroup(device, 1, &camera.uniform_bindgroup, &[]);
                     unsafe {
@@ -227,7 +222,7 @@ impl RenderBundleEncoder {
                             2,
                         );
                     }
-                }
+                });
             }
         } else {
             // Draw UI

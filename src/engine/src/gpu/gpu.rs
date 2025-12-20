@@ -22,6 +22,7 @@ use webgpu::renderpass::renderpass_descriptor::JSRenderPassDescriptor;
 use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
 use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT, RGBA8UNORM};
 use webgpu::texture::texture_view::TextureView;
+use webgpu::weakvec::WeakVec;
 
 use crate::allocators::stack_allocator::StackAllocator;
 use crate::cameras::camera::Camera;
@@ -419,7 +420,7 @@ pub unsafe extern "C" fn init_gpu(
         None,
         js_render_pass_screen,
         vec![CameraGroup {
-            cameras: Vec::with_capacity(2),
+            cameras: WeakVec::with_capacity(2),
             bufferbinding: bufferbinding.clone(),
             bind_group: Some(BindGroup::new(
                 String::from("sizeBindGroup"),
@@ -515,7 +516,7 @@ pub unsafe extern "C" fn init_gpu(
         }),
         js_render_pass_water,
         vec![CameraGroup {
-            cameras: Vec::with_capacity(2),
+            cameras: WeakVec::with_capacity(2),
             bufferbinding: bufferbinding.clone(),
             bind_group: Some(BindGroup::new(
                 String::from("sizeBindGroup"),
@@ -577,7 +578,7 @@ pub unsafe extern "C" fn init_gpu(
         None,
         js_pick_render_pass,
         vec![CameraGroup {
-            cameras: Vec::with_capacity(2),
+            cameras: WeakVec::with_capacity(2),
             bufferbinding: bufferbinding.clone(),
             bind_group: Some(BindGroup::new(
                 String::from("sizeBindGroup"),
@@ -764,13 +765,7 @@ impl GPU {
         for renderpass in &mut self.renderpasses {
             let width = NonZeroU32::new(width).unwrap();
             let height = NonZeroU32::new(height).unwrap();
-            renderpass.resize(
-                width,
-                height,
-                &self.device,
-                &self.cameras,
-                &mut computepassencoder,
-            );
+            renderpass.resize(width, height, &self.device, &mut computepassencoder);
             unsafe {
                 let size = renderpass.size();
                 resize_renderpass(&renderpass.jsrenderpass(), size[0], size[1]);
@@ -957,7 +952,6 @@ impl GPU {
             renderloop_command_encoder = renderpass.render(
                 renderloop_command_encoder,
                 &self.device,
-                &self.cameras,
                 gpu_buffer_id,
                 &self.bind_group_position,
             );
@@ -1161,9 +1155,8 @@ fn test_bindgroup_buffer_resize() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderbundle_encoder.record_renderbundle(
-            &gpu.renderpasses[0].cameragroups(),
+            &mut gpu.renderpasses[0].cameragroups(),
             &gpu.device,
-            &gpu.cameras,
             1,
             &bindgroup,
             |renderbundle| {
@@ -1293,9 +1286,8 @@ fn test_bindgroup() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderbundle_encoder.record_renderbundle(
-            &gpu.renderpasses[0].cameragroups(),
+            &mut gpu.renderpasses[0].cameragroups(),
             &gpu.device,
-            &gpu.cameras,
             1,
             &bindgroup,
             |renderbundle| {
