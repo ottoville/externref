@@ -1,12 +1,8 @@
 import { MainNode } from '../../MainNode.js';
 import { RenderPassProps } from './RenderPass.js';
-import { createReadDepth } from '../../GPU/Shaders/ReadDepth.comp.js';
 import {
   type ColorRenderTarget,
   type DEPTH_FORMATS,
-  Buffer,
-  BufferUsageEnums,
-  BindGroup,
   type DepthRenderTarget,
   type RENDER_TARGET_TEXTURE,
   type STORAGE_BINDING_TEXTURE,
@@ -31,13 +27,6 @@ export class PickableRenderPassMSAA<
   },
   E extends string = string,
 > extends AbstractPickableRenderPass<T, E> {
-  readonly #pickBufferRead: GPUBuffer;
-  #pickPositionPipeline?: GPUComputePipeline;
-  readonly #mousePositionBuffer: Buffer<
-    (typeof BufferUsageEnums)['UNIFORM|COPY_DST']
-  >;
-  readonly #pickPositionBindGroup0: BindGroup;
-
   constructor(
     renderPassProps: RenderPassProps<T, E>,
     depthRenderTarget: DepthRenderTarget<
@@ -56,96 +45,6 @@ export class PickableRenderPassMSAA<
       size: 4 * 4, //depth + meshID (four pixel)
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
-    const readDepthShader = createReadDepth(gpu);
-    readDepthShader
-      .createComputePipeline('main')
-      .then((pickPositionPipeline) => {
-        this.#pickPositionPipeline = pickPositionPipeline;
-      })
-      .catch((err) => engine.showError(err));
-    this.#pickBufferRead = gpu.device.createBuffer({
-      label: 'pickBufferRead',
-      size: 4 + 4 + 4, //depth + meshID + generation (four pixel)
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    });
-    this.#mousePositionBuffer = new Buffer({
-      gpu: gpu.device,
-      label: 'mousePositionBuffer1',
-      size: 8,
-      usages: BufferUsageEnums['UNIFORM|COPY_DST'],
-    });
-
-    this.#pickPositionBindGroup0 = new BindGroup(
-      gpu.pickBGLayout,
-      'pickPositionBindGroup0',
-      (bindGroup) => ({
-        depth_and_mesh: {
-          buffer: this.pickBuffer,
-        },
-        depth_texture: depthRenderTarget.renderTarget,
-        mesh_texture:
-          gpu.pickRenderPass.props.colorRenderTargets.gRenderTargetId
-            .renderTarget,
-        mouse: this.#mousePositionBuffer.getUniformBinding(bindGroup),
-      }),
-    );
-  }
-  doPick(_mesh: boolean, mouse_x: number, mouse_y: number) {
-    if (!this.#pickPositionPipeline) {
-      return null;
-    }
-    const gpu = this.depthRenderTarget.renderTarget.texture.props.gpu;
-    const encoder = gpu.createCommandEncoder({
-      label: 'pickPosition_encoder',
-    });
-    engine.rust.do_pick(
-      this.props.id,
-      this.#pickPositionPipeline,
-      engine.gpu!.gpu,
-    );
-
-    const mousePositionSwapBuffer = new Buffer({
-      gpu,
-      label: 'mousePositionSwapBuffer',
-      mappedAtCreation: true,
-      size: 8,
-      usages: BufferUsageEnums.COPY_SRC,
-    });
-    new Uint32Array(mousePositionSwapBuffer.getMappedRange(0, 8)).set([
-      mouse_x,
-      mouse_y,
-    ]);
-    mousePositionSwapBuffer
-      .unmap()
-      .copyTo(encoder, this.#mousePositionBuffer, 0, 0, 8);
-    const pickPass = encoder.beginComputePass({
-      label: 'pickPass',
-    });
-    pickPass.setPipeline(this.#pickPositionPipeline);
-
-    pickPass.setBindGroup(0, this.#pickPositionBindGroup0.bindGroup);
-    pickPass.dispatchWorkgroups(1);
-    pickPass.end();
-    encoder.copyBufferToBuffer(
-      this.pickBuffer,
-      0,
-      this.#pickBufferRead,
-      0,
-      4 + 4 + 4,
-    );
-    gpu.queue.submit([encoder.finish()]);
-
-    return this.#pickBufferRead
-      .mapAsync(GPUMapMode.READ, 0, 4 + 4 + 4)
-      .then(() => {
-        const b = this.#pickBufferRead.getMappedRange(0, 4 + 4 + 4);
-        const z = new DataView(b).getFloat32(0, true);
-        const meshID = new DataView(b).getUint32(4, true);
-        const generation = new DataView(b).getUint32(8, true);
-        this.#pickBufferRead.unmap();
-        console.log('js', [z, meshID, generation]);
-        return [z, meshID, generation] as const;
-      }) as Promise<[z: number, id: number, generation: number]>;
   }
   /**
    *

@@ -322,7 +322,6 @@ export type rustWasm = {
   init_engine2(): number;
   physic_tick(delta: number): void;
   set_mouse_position(x: number, y: number): void;
-  get_mouse_position(gpu: rust_pointer<'GPU'>): number;
   create_ball_collider(radius: number): rust_pointer<'collider'>;
   create_capsule_collider(
     half_height: number,
@@ -552,17 +551,11 @@ export type rustWasm = {
   ): rust_pointer<'target'>;
   new_mesh_camera(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'meshcamera'>;
   new_position_camera(): rust_pointer<'positioncamera'>;
-  pick_position(
-    id: number,
-    mouse_x: number,
-    mouse_y: number,
-    z: number,
-    gpu: rust_pointer<'GPU'>,
-  ): number;
   do_pick(
     id: number,
     pickpipeline: GPUComputePipeline,
     gpu: rust_pointer<'GPU'>,
+    cb: (x: number, y: number, z: number, mesh_id: number) => void,
   ): void;
   get_renderpass_size(
     id: number,
@@ -910,6 +903,15 @@ export class Engine {
         },
         now() {
           return performance.now();
+        },
+        pick_cb(
+          cb: (x: number, y: number, z: number, mesh_id: number) => void,
+          x: number,
+          y: number,
+          z: number,
+          mesh_id: number,
+        ) {
+          cb(x, y, z, mesh_id);
         },
         renderpass_on_resize(
           renderpass: RenderPass,

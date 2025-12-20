@@ -16,7 +16,6 @@ use webgpu::context::canvas_context::{AlphaMode, ColorSpace};
 use webgpu::context::unconfigured_webgpu_context::UnconfiguredWebgpuContext;
 use webgpu::device::JSDevice;
 use webgpu::queue::{JSQueue, Queue};
-use webgpu::renderpass::renderpass_descriptor::JSRenderPassDescriptor;
 use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
 use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT, RGBA8UNORM};
 use webgpu::texture::texture_view::TextureView;
@@ -457,7 +456,8 @@ pub unsafe extern "C" fn init_gpu(
         TextureViewDimension::D2,
         TextureAspect::All,
     );
-    let render_pass_screen = Renderpass::width_depth(
+    let render_pass_screen = Renderpass::width_depth_pick(
+        &device,
         String::from("renderPassScreen"),
         [NonZeroU32::new_unchecked(1); 2],
         None,
@@ -485,10 +485,10 @@ pub unsafe extern "C" fn init_gpu(
             0.0,
         )],
         depth_render_target_view,
-        Some(PickableProperties {
+        PickableProperties {
             pick_bglayout,
             pick_render_target_view: pick_render_target_view.clone(),
-        }),
+        },
     );
     let screen_dimension_buffer_screen_water =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -575,7 +575,6 @@ pub unsafe extern "C" fn init_gpu(
             1.0,
         )],
         depth_render_target_water_view,
-        None,
     );
     let screen_dimension_buffer_screen_pick =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -610,7 +609,6 @@ pub unsafe extern "C" fn init_gpu(
             0.0,
             1.0,
         )],
-        None,
     );
 
     let format_num = get_preferred_canvas_format();
@@ -652,7 +650,6 @@ pub unsafe extern "C" fn init_gpu(
         js_render_pass_canvas,
         Vec::new(),
         [render_target],
-        None,
     );
 
     let renderpasses_multisampled = vec![render_pass_screen];
@@ -737,25 +734,46 @@ pub struct GPU {
     pub water_render_target: Rc<Texture<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>>,
 }
 const MAX_RESOLUTION: [u32; 2] = [1920, 1080];
-pub enum Renderpassenum<'a> {
+pub enum Renderpassenum_mut<'a> {
     Singlesampled(&'a mut Renderpass<1, ColorAttachmentSingleSampled>),
     Multisampled(&'a mut Renderpass<4, ColorAttachmentMultiSampled>),
 }
+pub enum Renderpassenum<'a> {
+    Singlesampled(&'a Renderpass<1, ColorAttachmentSingleSampled>),
+    Multisampled(&'a Renderpass<4, ColorAttachmentMultiSampled>),
+}
 impl GPU {
-    pub fn get_renderpass(&'_ mut self, id: u32) -> Renderpassenum<'_> {
+    pub fn get_renderpass(&'_ self, id: u32) -> Renderpassenum<'_> {
         let renderpass_opt = self
             .renderpasses
-            .iter_mut()
+            .iter()
             .find(|renderpass| return renderpass.id == id);
         if let Some(renderpass) = renderpass_opt {
             return Renderpassenum::Singlesampled(renderpass);
         }
         let renderpass_opt2 = self
             .renderpasses_sampled
-            .iter_mut()
+            .iter()
             .find(|renderpass| return renderpass.id == id);
         if let Some(renderpass) = renderpass_opt2 {
             return Renderpassenum::Multisampled(renderpass);
+        }
+        panic!("Cant find renderpass {}", id.to_string());
+    }
+    pub fn get_renderpass_mut(&'_ mut self, id: u32) -> Renderpassenum_mut<'_> {
+        let renderpass_opt = self
+            .renderpasses
+            .iter_mut()
+            .find(|renderpass| return renderpass.id == id);
+        if let Some(renderpass) = renderpass_opt {
+            return Renderpassenum_mut::Singlesampled(renderpass);
+        }
+        let renderpass_opt2 = self
+            .renderpasses_sampled
+            .iter_mut()
+            .find(|renderpass| return renderpass.id == id);
+        if let Some(renderpass) = renderpass_opt2 {
+            return Renderpassenum_mut::Multisampled(renderpass);
         }
         panic!("Cant find renderpass {}", id.to_string());
     }

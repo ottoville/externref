@@ -12,7 +12,7 @@ use webgpu::command_encoder::GPUCommandEncoder;
 use webgpu::compute_pass_encoder::ComputePassEncoder;
 use webgpu::device::JSDevice;
 
-use crate::gpu::gpu::{Renderpassenum, GPU};
+use crate::gpu::gpu::{Renderpassenum_mut, GPU};
 use crate::projection::Projection;
 use crate::{swapbuffers::SwapBuffers, MULTIVALUE_USIZE};
 use webgpu::bindgroup::bindgroup::BindGroup;
@@ -308,15 +308,15 @@ impl Camera {
             }),
         });
         for renderpass_id in renderpasses {
-            let r = gpu.get_renderpass(renderpass_id as u32);
+            let r = gpu.get_renderpass_mut(renderpass_id as u32);
             let weakcamera = Rc::downgrade(&camera);
             match r {
-                Renderpassenum::Singlesampled(renderpass) => {
+                Renderpassenum_mut::Singlesampled(renderpass) => {
                     renderpass.inner_renderpass.cameragroups[0]
                         .cameras
                         .push(weakcamera);
                 }
-                Renderpassenum::Multisampled(renderpass) => {
+                Renderpassenum_mut::Multisampled(renderpass) => {
                     renderpass.inner_renderpass.cameragroups[0]
                         .cameras
                         .push(weakcamera);

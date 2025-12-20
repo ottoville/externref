@@ -12,6 +12,7 @@ import { DepthRenderPass } from './DepthRenderPass.js';
 import { RenderPassProps } from './RenderPass.js';
 import type { GPU } from '../../GPU.js';
 import type { Engine } from '../../engine.js';
+import { createReadDepth } from 'GPU/Shaders/ReadDepth.comp.js';
 declare const engine: Engine;
 
 export abstract class AbstractPickableRenderPass<
@@ -26,11 +27,7 @@ export abstract class AbstractPickableRenderPass<
   },
   E extends string = string,
 > extends DepthRenderPass<T, E> {
-  abstract doPick(
-    mesh: boolean,
-    x: number,
-    y: number,
-  ): Promise<[z: number, id: number, generation: number]> | null;
+  #pickPositionPipeline?: GPUComputePipeline;
   zAndIDPromise: Promise<[z: number, id: number, generation: number]> | null =
     null;
   pickBuffer: GPUBuffer;
@@ -50,6 +47,13 @@ export abstract class AbstractPickableRenderPass<
     pickBufferDesc: GPUBufferDescriptor,
   ) {
     super(renderPassProps, depthRenderTarget);
+    const readDepthShader = createReadDepth(gpu);
+    readDepthShader
+      .createComputePipeline('main')
+      .then((pickPositionPipeline) => {
+        this.#pickPositionPipeline = pickPositionPipeline;
+      })
+      .catch((err) => engine.showError(err));
 
     this.pickBuffer = gpu.device.createBuffer(pickBufferDesc);
   }
@@ -62,12 +66,33 @@ export abstract class AbstractPickableRenderPass<
     generation: number;
   } | null> | null;
   pickPosition(
-    mesh = false,
+    _mesh = false,
   ): Promise<
     | { position: readonly [number, number, number] }
     | { position: readonly [number, number, number]; meshId: number }
     | null
   > | null {
+    const camera = this.perspectiveCameras[0];
+    if (!camera) {
+      throw new Error('There are no perspective cameras on this renderpass');
+    }
+    //Calculate inverted matrix while buffer is mapping
+    camera.update_camera_projection_view_inverted();
+
+    return new Promise((resolve) => {
+      engine.rust.do_pick(
+        this.props.id,
+        this.#pickPositionPipeline!,
+        engine.gpu!.gpu,
+        (x, y, z, mesh_id) => {
+          resolve({
+            meshId: mesh_id,
+            position: [x, y, z],
+          });
+        },
+      );
+    });
+    /*
     const mouse_position = engine.rust.get_mouse_position(engine.gpu!.gpu);
     const mouse_x = mouse_position & 0xffff;
     const mouse_y = mouse_position >> 16;
@@ -107,6 +132,6 @@ export abstract class AbstractPickableRenderPass<
     }
     //Calculate inverted matrix while buffer is mapping
     camera.update_camera_projection_view_inverted();
-    return promise;
+    return promise;*/
   }
 }

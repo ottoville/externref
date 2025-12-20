@@ -81,13 +81,6 @@ pub unsafe extern "C" fn set_mouse_position(x: f32, y: f32) {
         Ordering::Relaxed,
     );
 }
-#[no_mangle]
-pub unsafe extern "C" fn get_mouse_position(gpu: *mut GPU) -> u32 {
-    let mouse_position = MOUSE_POSITION.load(Ordering::Relaxed);
-    let mouse_x = f32::from_bits((mouse_position & 0xFFFF_FFFF) as u32) * (*gpu).device_pixel_ratio;
-    let mouse_y = f32::from_bits((mouse_position >> 32) as u32) * (*gpu).device_pixel_ratio;
-    return ((mouse_y as u32) << 16) | (mouse_x as u32);
-}
 const GRAVITY: nalgebra::Matrix<
     f32,
     nalgebra::Const<3>,
