@@ -4,8 +4,8 @@ use externref::Resource;
 
 use crate::{
     color_attachment::color_attachment::{
-        create_render_pass_color_attachment_clear, ColorAttachment, JSRenderPassColorAttachment,
-        StoreOpt,
+        create_render_pass_color_attachment_clear, ColorAttachment, ColorAttachmentWithSample,
+        JSRenderPassColorAttachment, StoreOpt,
     },
     device::JSDevice,
     texture::render_attachment_texture::RenderAttachmentTexture,
@@ -56,7 +56,8 @@ impl ColorAttachmentSingleSampled {
     }
 }
 
-impl ColorAttachment<1> for ColorAttachmentSingleSampled {
+impl ColorAttachmentWithSample<1> for ColorAttachmentSingleSampled {}
+impl ColorAttachment for ColorAttachmentSingleSampled {
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
         self.texture_view.borrow().resize(device, width, height);
     }

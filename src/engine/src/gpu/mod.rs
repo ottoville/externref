@@ -3,4 +3,3 @@ pub mod lights;
 pub mod renderbundle_encoder;
 pub mod renderpass;
 pub mod shader;
-pub mod renderpass_trait;

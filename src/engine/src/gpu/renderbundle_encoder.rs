@@ -152,12 +152,11 @@ pub struct RenderBundleEncoder {
     record: Resource<JSFunction>,
 }
 impl RenderBundleEncoder {
-    pub fn new(
+    pub fn new<const SAMPLE_COUNT: u32>(
         label: String,
         device: &Resource<JSDevice>,
         color_formats: &Vec<u32>,
         record: Resource<JSFunction>,
-        samplecount: u32,
         depth_read_only: bool,
         stencil_read_only: bool,
         depth_stencil_format: Option<u32>,
@@ -168,7 +167,7 @@ impl RenderBundleEncoder {
                 color_formats.len(),
                 label.as_ptr() as usize,
                 label.len(),
-                samplecount,
+                SAMPLE_COUNT,
                 depth_read_only,
                 stencil_read_only,
                 match depth_stencil_format {

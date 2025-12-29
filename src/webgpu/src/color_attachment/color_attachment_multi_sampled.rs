@@ -3,7 +3,7 @@ use std::{cell::RefCell, num::NonZero, rc::Rc};
 use crate::{
     color_attachment::{
         color_attachment::{
-            create_render_pass_color_attachment_clear, ColorAttachment,
+            create_render_pass_color_attachment_clear, ColorAttachment, ColorAttachmentWithSample,
             JSRenderPassColorAttachment, StoreOpt,
         },
         color_attachment_single_sampled::ColorAttachmentSingleSampled,
@@ -73,7 +73,8 @@ impl ColorAttachmentMultiSampled {
         }
     }
 }
-impl ColorAttachment<4> for ColorAttachmentMultiSampled {
+impl ColorAttachmentWithSample<4> for ColorAttachmentMultiSampled {}
+impl ColorAttachment for ColorAttachmentMultiSampled {
     fn resize(&self, device: &Resource<JSDevice>, width: NonZero<u32>, height: NonZero<u32>) {
         self.attachment
             .texture_view

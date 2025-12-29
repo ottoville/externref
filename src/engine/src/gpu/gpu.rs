@@ -10,10 +10,8 @@ use externref::{externref, Resource};
 use webgpu::bindgroup::bufferbinding::BufferBinding;
 use webgpu::bindgroup_layout::BindGroupLayout;
 use webgpu::canvas::{CanvasNoContext, CanvasWithContext, JSCanvas};
-use webgpu::color_attachment::color_attachment::StoreOpt;
 use webgpu::color_attachment::color_attachment_multi_sampled::ColorAttachmentMultiSampled;
 use webgpu::color_attachment::color_attachment_single_sampled::ColorAttachmentSingleSampled;
-use webgpu::color_attachment::depth_stencil_attachment::DepthStencilAttachment;
 use webgpu::context::canvas_context::{AlphaMode, ColorSpace};
 use webgpu::context::unconfigured_webgpu_context::UnconfiguredWebgpuContext;
 use webgpu::device::JSDevice;
@@ -29,7 +27,6 @@ use crate::cameras::camera::Camera;
 use crate::cameras::camera_group::CameraGroup;
 use crate::engine::get_preferred_canvas_format;
 use crate::gpu::renderpass::{JSRenderPass, Renderpass};
-use crate::gpu::renderpass_trait::RenderPassTrait;
 use crate::gpu::shader::{
     SHADER_STAGE_COMPUTE, SHADER_STAGE_COMPUTE_AND_FRAGMENT, SHADER_STAGE_FRAGMENT,
     SHADER_STAGE_VERTEX, SHADER_STAGE_VERTEX_AND_FRAGMENT,
@@ -414,7 +411,7 @@ pub unsafe extern "C" fn init_gpu(
         0,
         None,
     );
-    let render_pass_screen = Renderpass::new(
+    let render_pass_screen = Renderpass::width_depth(
         String::from("renderPassScreen"),
         [NonZeroU32::new_unchecked(1); 2],
         None,
@@ -441,11 +438,7 @@ pub unsafe extern "C" fn init_gpu(
             0.92,
             0.0,
         )],
-        Some(DepthStencilAttachment::new(
-            depth_render_target_view,
-            0.0,
-            StoreOpt::Store,
-        )),
+        depth_render_target_view,
     );
     let screen_dimension_buffer_screen_water =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -507,7 +500,7 @@ pub unsafe extern "C" fn init_gpu(
         0,
         None,
     );
-    let render_pass_water = Renderpass::new(
+    let render_pass_water = Renderpass::width_depth(
         String::from("renderPassWater"),
         [NonZeroU32::new_unchecked(1); 2],
         Some(|w, h| {
@@ -531,11 +524,7 @@ pub unsafe extern "C" fn init_gpu(
             0.45,
             1.0,
         )],
-        Some(DepthStencilAttachment::new(
-            depth_render_target_water_view,
-            0.0,
-            StoreOpt::Store,
-        )),
+        depth_render_target_water_view,
     );
     let screen_dimension_buffer_screen_pick =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
@@ -593,7 +582,6 @@ pub unsafe extern "C" fn init_gpu(
             0.0,
             1.0,
         )],
-        None,
     );
 
     let format_num = get_preferred_canvas_format();
@@ -635,14 +623,10 @@ pub unsafe extern "C" fn init_gpu(
         js_render_pass_canvas,
         Vec::new(),
         [render_target],
-        None,
     );
-    let renderpasses: Vec<Box<dyn RenderPassTrait>> = vec![
-        Box::new(render_pass_screen),
-        Box::new(render_pass_water),
-        Box::new(pick_render_pass),
-        Box::new(render_pass_canvas),
-    ];
+
+    let renderpasses_multisampled = vec![render_pass_screen];
+    let renderpasses_singlesampled = vec![render_pass_water, pick_render_pass, render_pass_canvas];
 
     let gpu = GPU {
         device,
@@ -654,7 +638,8 @@ pub unsafe extern "C" fn init_gpu(
         bind_group_position,
         projections: vec![Arc::new(projection)],
         cameras: Vec::with_capacity(4),
-        renderpasses,
+        renderpasses: renderpasses_singlesampled,
+        renderpasses_sampled: renderpasses_multisampled,
         update_view_bindgroup,
         point_lights,
         directional_lights,
@@ -704,7 +689,8 @@ pub struct GPU {
     pub bind_group_position: Rc<BindGroup<1>>,
     pub projections: Vec<Arc<Projection>>,
     pub cameras: Vec<Rc<Camera>>,
-    pub renderpasses: Vec<Box<dyn RenderPassTrait>>,
+    renderpasses: Vec<Renderpass<1, ColorAttachmentSingleSampled>>,
+    renderpasses_sampled: Vec<Renderpass<4, ColorAttachmentMultiSampled>>,
     update_view_bindgroup: Rc<BindGroup<3>>,
     pub point_lights: Lights,
     pub directional_lights: Lights,
@@ -717,7 +703,28 @@ pub struct GPU {
     pub clusters_layout: BindGroupLayout<2>,
 }
 const MAX_RESOLUTION: [u32; 2] = [1920, 1080];
+pub enum Renderpassenum<'a> {
+    Singlesampled(&'a mut Renderpass<1, ColorAttachmentSingleSampled>),
+    Multisampled(&'a mut Renderpass<4, ColorAttachmentMultiSampled>),
+}
 impl GPU {
+    pub fn get_renderpass(&'_ mut self, id: u32) -> Renderpassenum<'_> {
+        let renderpass_opt = self
+            .renderpasses
+            .iter_mut()
+            .find(|renderpass| return renderpass.id == id);
+        if let Some(renderpass) = renderpass_opt {
+            return Renderpassenum::Singlesampled(renderpass);
+        }
+        let renderpass_opt2 = self
+            .renderpasses_sampled
+            .iter_mut()
+            .find(|renderpass| return renderpass.id == id);
+        if let Some(renderpass) = renderpass_opt2 {
+            return Renderpassenum::Multisampled(renderpass);
+        }
+        panic!("Cant find renderpass {}", id.to_string());
+    }
     fn on_resize(
         &mut self,
         mut width: u32,
@@ -761,23 +768,34 @@ impl GPU {
         let mut computepassencoder =
             command_encoder.begin_compute_pass(String::from("resizePassEncoder"));
         computepassencoder.set_pipeline(pipeline);
-
+        let width = NonZeroU32::new(width).unwrap();
+        let height = NonZeroU32::new(height).unwrap();
         for renderpass in &mut self.renderpasses {
-            let width = NonZeroU32::new(width).unwrap();
-            let height = NonZeroU32::new(height).unwrap();
             renderpass.resize(width, height, &self.device, &mut computepassencoder);
             unsafe {
-                let size = renderpass.size();
-                resize_renderpass(&renderpass.jsrenderpass(), size[0], size[1]);
+                let size = renderpass.inner_renderpass.size;
+                resize_renderpass(&renderpass.inner_renderpass.jsrenderpass, size[0], size[1]);
+            }
+        }
+        for renderpass in &mut self.renderpasses_sampled {
+            renderpass.resize(width, height, &self.device, &mut computepassencoder);
+            unsafe {
+                let size = renderpass.inner_renderpass.size;
+                resize_renderpass(&renderpass.inner_renderpass.jsrenderpass, size[0], size[1]);
             }
         }
         // Call onResize after all renderPasses have resizes so callbacks
         // can refer updated render target of other renderpasses.
         for renderpass in &self.renderpasses {
             unsafe {
-                let size = renderpass.size();
-
-                renderpass_on_resize(&renderpass.jsrenderpass(), size[0], size[1]);
+                let size = renderpass.inner_renderpass.size;
+                renderpass_on_resize(&renderpass.inner_renderpass.jsrenderpass, size[0], size[1]);
+            }
+        }
+        for renderpass in &self.renderpasses_sampled {
+            unsafe {
+                let size = renderpass.inner_renderpass.size;
+                renderpass_on_resize(&renderpass.inner_renderpass.jsrenderpass, size[0], size[1]);
             }
         }
         self.queue
@@ -956,6 +974,14 @@ impl GPU {
                 &self.bind_group_position,
             );
         }
+        for renderpass in &mut self.renderpasses_sampled {
+            renderloop_command_encoder = renderpass.render(
+                renderloop_command_encoder,
+                &self.device,
+                gpu_buffer_id,
+                &self.bind_group_position,
+            );
+        }
         // Update mesh positions etc
         self.queue
             .submit([command_encoder.finish(String::from("renderloop"))]);
@@ -985,6 +1011,7 @@ fn test_gpu_queue() {
     use crate::gpu::renderbundle_encoder::RenderBundleEncoder;
     use crate::mesh::Mesh;
     use externref::ExternRef;
+
     unsafe {
         let gpu = &mut *init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
@@ -996,17 +1023,28 @@ fn test_gpu_queue() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         for id in 0..4 {
-            gpu.renderpasses[id].set_bundle(RenderBundleEncoder::new(
-                String::from("test"),
-                &gpu.device,
-                &Vec::new(),
-                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-                1,
-                false,
-                false,
-                None,
-            ));
-            gpu.renderpasses[id].get_bundle();
+            for renderpass in gpu.renderpasses.iter_mut() {
+                renderpass.inner_renderpass.bundle = Some(RenderBundleEncoder::new::<1>(
+                    String::from("test"),
+                    &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                    &Vec::new(),
+                    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                    false,
+                    false,
+                    None,
+                ));
+            }
+            for renderpass in gpu.renderpasses_sampled.iter_mut() {
+                renderpass.inner_renderpass.bundle = Some(RenderBundleEncoder::new::<4>(
+                    String::from("test"),
+                    &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                    &Vec::new(),
+                    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                    false,
+                    false,
+                    None,
+                ));
+            }
         }
         process_gpu_queue(
             0.0,
@@ -1083,12 +1121,11 @@ fn test_bindgroup_buffer_resize() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
 
-        let mut renderbundle_encoder = RenderBundleEncoder::new(
+        let mut renderbundle_encoder = RenderBundleEncoder::new::<1>(
             String::from("test"),
             &device,
             &Vec::new(),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            1,
             false,
             false,
             None,
@@ -1155,7 +1192,7 @@ fn test_bindgroup_buffer_resize() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderbundle_encoder.record_renderbundle(
-            &mut gpu.renderpasses[0].cameragroups(),
+            &mut gpu.renderpasses[0].inner_renderpass.cameragroups,
             &gpu.device,
             1,
             &bindgroup,
@@ -1222,12 +1259,11 @@ fn test_bindgroup() {
         );
 
         let device = Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1));
-        let mut renderbundle_encoder = RenderBundleEncoder::new(
+        let mut renderbundle_encoder = RenderBundleEncoder::new::<1>(
             String::from("test"),
             &device,
             &Vec::new(),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-            1,
             false,
             false,
             None,
@@ -1286,7 +1322,7 @@ fn test_bindgroup() {
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
         renderbundle_encoder.record_renderbundle(
-            &mut gpu.renderpasses[0].cameragroups(),
+            &mut gpu.renderpasses[0].inner_renderpass.cameragroups,
             &gpu.device,
             1,
             &bindgroup,

@@ -12,7 +12,7 @@ use webgpu::command_encoder::GPUCommandEncoder;
 use webgpu::compute_pass_encoder::ComputePassEncoder;
 use webgpu::device::JSDevice;
 
-use crate::gpu::gpu::GPU;
+use crate::gpu::gpu::{Renderpassenum, GPU};
 use crate::projection::Projection;
 use crate::{swapbuffers::SwapBuffers, MULTIVALUE_USIZE};
 use webgpu::bindgroup::bindgroup::BindGroup;
@@ -308,9 +308,20 @@ impl Camera {
             }),
         });
         for renderpass_id in renderpasses {
-            gpu.renderpasses[renderpass_id].cameragroups()[0]
-                .cameras
-                .push(Rc::downgrade(&camera));
+            let r = gpu.get_renderpass(renderpass_id as u32);
+            let weakcamera = Rc::downgrade(&camera);
+            match r {
+                Renderpassenum::Singlesampled(renderpass) => {
+                    renderpass.inner_renderpass.cameragroups[0]
+                        .cameras
+                        .push(weakcamera);
+                }
+                Renderpassenum::Multisampled(renderpass) => {
+                    renderpass.inner_renderpass.cameragroups[0]
+                        .cameras
+                        .push(weakcamera);
+                }
+            }
         }
         return camera;
     }
@@ -557,7 +568,7 @@ fn test_child_camera() {
         let projection = Arc::new(Projection::new(&Resource::new_non_null(
             std::mem::transmute::<usize, ExternRef>(0),
         )));
-        let mut camera = Camera::new(
+        let camera = Camera::new(
             None,
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("test"),

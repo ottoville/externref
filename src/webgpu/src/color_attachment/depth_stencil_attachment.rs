@@ -31,17 +31,17 @@ extern "C" {
 }
 pub struct JSRenderPassDepthStencilAttachment(());
 
-pub struct DepthStencilAttachment<const SAMPLE_COUNT: u32, const DEPTH_READ_ONLY: bool> {
-    pub texture_view: Rc<RefCell<dyn DepthTexture<SAMPLE_COUNT>>>,
+pub struct DepthStencilAttachment<const DEPTH_READ_ONLY: bool> {
+    pub texture_view: Rc<RefCell<dyn DepthTexture>>,
     externref: Resource<JSRenderPassDepthStencilAttachment>,
     depth_clear_value: f32,
     depth_store_op_enum: StoreOpt,
 }
-impl<const SAMPLE_COUNT: u32, const DEPTH_READ_ONLY: bool>
-    DepthStencilAttachment<SAMPLE_COUNT, DEPTH_READ_ONLY>
+impl<const DEPTH_READ_ONLY: bool>
+    DepthStencilAttachment<DEPTH_READ_ONLY>
 {
     pub fn new(
-        texture_view: Rc<RefCell<impl DepthTexture<SAMPLE_COUNT> + 'static>>,
+        texture_view: Rc<RefCell<impl DepthTexture + 'static>>,
         depth_clear_value: f32,
         depth_store_op_enum: StoreOpt,
     ) -> Self {
@@ -73,7 +73,7 @@ impl<const SAMPLE_COUNT: u32, const DEPTH_READ_ONLY: bool>
     pub fn get_attachment(&mut self) -> &Resource<JSRenderPassDepthStencilAttachment> {
         let mut borrowed = self.texture_view.borrow_mut();
         if borrowed.is_dirty() {
-            self.externref =unsafe {
+            self.externref = unsafe {
                 create_render_pass_depth_stencil_attachment(
                     borrowed.get_attachment(),
                     self.depth_clear_value,
@@ -82,6 +82,6 @@ impl<const SAMPLE_COUNT: u32, const DEPTH_READ_ONLY: bool>
                 )
             };
         }
-        return &self.externref
+        return &self.externref;
     }
 }
