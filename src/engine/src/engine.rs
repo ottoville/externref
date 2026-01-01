@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 
 use crate::allocators::freeindex::{FreeIndex, FreeIndexIndex};
-use crate::gpu::gpu::{MeshGPU, GPU};
+use crate::gpu::gpu::MeshGPU;
 use crate::gpu::lights::InnerLights;
 use allocators::explicit_generational_freelist::{
     ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,

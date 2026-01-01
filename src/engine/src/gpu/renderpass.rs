@@ -6,7 +6,6 @@ use std::{
 };
 
 use externref::{externref, Resource};
-use logger::LoggerArray;
 use terramath::VectorMath;
 use webgpu::{
     bindgroup::{
@@ -38,20 +37,21 @@ use crate::{
     cameras::{camera::Camera, camera_group::CameraGroup},
     engine::MOUSE_POSITION,
     gpu::{
-        gpu::{Renderpassenum, Renderpassenum_mut, GPU},
+        gpu::{Renderpassenum, RenderpassenumMut, GPU},
         renderbundle_encoder::RenderBundleEncoder,
     },
     swapbuffers::SwapBuffers,
-    MULTIVALUE_F32,
 };
 pub struct JSFunctionPick(());
 
-#[externref]
+#[cfg(not(target_arch = "wasm32"))]
+fn pick_cb(_cb: &Resource<JSFunctionPick>, _x: f32, _y: f32, _z: f32, _mesh_id: u32) {}
+
 #[cfg(target_arch = "wasm32")]
+#[externref]
 #[link(wasm_import_module = "env")]
-#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
-    fn pick_cb(cb: Resource<JSFunctionPick>, x: f32, y: f32, z: f32, mesh_id: u32);
+    fn pick_cb(cb: &Resource<JSFunctionPick>, x: f32, y: f32, z: f32, mesh_id: u32);
 }
 
 #[externref]
@@ -67,7 +67,7 @@ pub unsafe extern "C" fn link_renderpass(
 
     let r = gpu.get_renderpass_mut(renderpass_id);
     match r {
-        Renderpassenum_mut::Singlesampled(renderpass) => {
+        RenderpassenumMut::Singlesampled(renderpass) => {
             let label = renderpass.inner_renderpass.label.to_string();
             renderpass
                 .inner_renderpass
@@ -82,7 +82,7 @@ pub unsafe extern "C" fn link_renderpass(
                     renderpass.depth_stencil_format(),
                 ))
         }
-        Renderpassenum_mut::Multisampled(renderpass) => {
+        RenderpassenumMut::Multisampled(renderpass) => {
             let label = renderpass.inner_renderpass.label.to_string();
             renderpass
                 .inner_renderpass
@@ -134,8 +134,8 @@ pub unsafe extern "C" fn get_renderpass_size(id: usize, gpu_ptr: *mut GPU) -> *c
     let gpu = &mut (*gpu_ptr);
     let r = gpu.get_renderpass_mut(id as u32);
     match r {
-        Renderpassenum_mut::Singlesampled(renderpass) => renderpass.inner_renderpass.size.as_ptr(),
-        Renderpassenum_mut::Multisampled(renderpass) => renderpass.inner_renderpass.size.as_ptr(),
+        RenderpassenumMut::Singlesampled(renderpass) => renderpass.inner_renderpass.size.as_ptr(),
+        RenderpassenumMut::Multisampled(renderpass) => renderpass.inner_renderpass.size.as_ptr(),
     }
 }
 pub struct JSRenderPass(());
@@ -427,20 +427,6 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
             depth_render_target.resize(device, width, height);
         }
     }
-    fn pick_position(&self, mouse_x: f32, mouse_y: f32, z: f32) -> *const f32 {
-        let x = (mouse_x as f32 / self.inner_renderpass.size[0].get() as f32) * 2.0 - 1.0;
-        let y = -((mouse_y as f32 / self.inner_renderpass.size[1].get() as f32) * 2.0 - 1.0);
-        let camera_rc = &self.inner_renderpass.cameragroups[0].cameras.vec[0];
-        let updated = camera_rc.upgrade().unwrap();
-        let camera = updated.camera.borrow();
-        let result = [x, y, z].transform(&camera.projection_view_inverted);
-        unsafe {
-            MULTIVALUE_F32[0] = result[0];
-            MULTIVALUE_F32[1] = result[1];
-            MULTIVALUE_F32[2] = result[2];
-            return MULTIVALUE_F32.as_ptr();
-        }
-    }
     fn do_pick(
         &self,
         device: &Resource<JSDevice>,
@@ -455,6 +441,11 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
         let mouse_y = f32::from_bits((mouse_position >> 32) as u32) * device_pixel_ratio;
         match &self.inner_renderpass.pickable {
             Some(pickable) => {
+                pickable
+                    .camera
+                    .camera
+                    .borrow_mut()
+                    .update_camera_projection_view_inverted();
                 let pickbuffer_read_opt = pickable.pickbuffer_read.take();
                 if let Some(pickbuffer_read) = pickbuffer_read_opt {
                     let mut encoder =
@@ -506,17 +497,14 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
                                     generation: 0,
                                 };
                                 buffer.get_mapped_range(&mut data, 0);
-                                [data.z, data.mesh_id as f32, data.generation as f32].log();
-                                pickbuffer_rc_read.borrow_mut().insert(buffer.unmap());
-
+                                *pickbuffer_rc_read.borrow_mut() = Some(buffer.unmap());
                                 // Z is 0 when did not hit anything, far plane value
                                 if data.z != 0.0 {
-                                    //self.pick_position(camera_rc, mouse_x, mouse_y, data.z);
                                     let camera = camera_rc.camera.borrow();
                                     let result =
                                         [x, y, data.z].transform(&camera.projection_view_inverted);
                                     unsafe {
-                                        pick_cb(cb, result[0], result[1], result[2], data.mesh_id)
+                                        pick_cb(&cb, result[0], result[1], result[2], data.mesh_id)
                                     };
                                 }
                             },

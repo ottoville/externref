@@ -12,7 +12,7 @@ import { DepthRenderPass } from './DepthRenderPass.js';
 import { RenderPassProps } from './RenderPass.js';
 import type { GPU } from '../../GPU.js';
 import type { Engine } from '../../engine.js';
-import { createReadDepth } from 'GPU/Shaders/ReadDepth.comp.js';
+import { createReadDepth } from '../Shaders/ReadDepth.comp.js';
 declare const engine: Engine;
 
 export abstract class AbstractPickableRenderPass<
@@ -72,13 +72,6 @@ export abstract class AbstractPickableRenderPass<
     | { position: readonly [number, number, number]; meshId: number }
     | null
   > | null {
-    const camera = this.perspectiveCameras[0];
-    if (!camera) {
-      throw new Error('There are no perspective cameras on this renderpass');
-    }
-    //Calculate inverted matrix while buffer is mapping
-    camera.update_camera_projection_view_inverted();
-
     return new Promise((resolve) => {
       engine.rust.do_pick(
         this.props.id,
@@ -92,46 +85,5 @@ export abstract class AbstractPickableRenderPass<
         },
       );
     });
-    /*
-    const mouse_position = engine.rust.get_mouse_position(engine.gpu!.gpu);
-    const mouse_x = mouse_position & 0xffff;
-    const mouse_y = mouse_position >> 16;
-    const pickPromise = this.doPick(mesh, mouse_x, mouse_y);
-    if (pickPromise === null) {
-      return null;
-    }
-    const promise = pickPromise.then((zAndID) => {
-      if (zAndID[0] === 0) {
-        // Z is 0 when did not hit anything, far plane value
-        return null;
-      }
-      const ptr = engine.rust.pick_position(
-        this.props.id,
-        mouse_x,
-        mouse_y,
-        zAndID[0],
-        engine.gpu!.gpu,
-      );
-      const position = [
-        ...new Float32Array(engine.rust.memory.buffer, ptr, 3),
-      ] as [number, number, number];
-      if (mesh) {
-        return {
-          generation: zAndID[2],
-          meshId: zAndID[1],
-          position,
-        };
-      }
-      return {
-        position,
-      };
-    });
-    const camera = this.perspectiveCameras[0];
-    if (!camera) {
-      throw new Error('There are no perspective cameras on this renderpass');
-    }
-    //Calculate inverted matrix while buffer is mapping
-    camera.update_camera_projection_view_inverted();
-    return promise;*/
   }
 }

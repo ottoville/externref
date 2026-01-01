@@ -86,15 +86,6 @@ pub unsafe extern "C" fn get_camera_position_ptr(camera: CameraPtr) -> *const f3
         .as_ptr()
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_ptr: CameraPtr) {
-    let unwrapped = (&mut (*camera_ptr)).upgrade().unwrap();
-    let mut camera = unwrapped.camera.borrow_mut();
-    if camera.projection_view_inverted_is_dirty {
-        camera.projection_view_inverted = camera.views.projection_view.invert();
-        camera.projection_view_inverted_is_dirty = false;
-    }
-}
 pub struct JSCamera(());
 static NEXT_CAMERA_ID: AtomicU32 = AtomicU32::new(0);
 
@@ -294,6 +285,12 @@ pub struct InnerCamera {
     pub controller: Option<Box<dyn CameraController + Send>>,
 }
 impl InnerCamera {
+    pub fn update_camera_projection_view_inverted(&mut self) {
+        if self.projection_view_inverted_is_dirty {
+            self.projection_view_inverted = self.views.projection_view.invert();
+            self.projection_view_inverted_is_dirty = false;
+        }
+    }
     pub fn check_inputs(&mut self) {
         if let Some(controller) = &mut self.controller {
             self.do_update_view |= controller.check_inputs(
@@ -487,8 +484,13 @@ impl InnerCamera {
 #[test]
 fn test_child_camera() {
     use crate::gpu::gpu::init_gpu;
+    use crate::gpu::shader::{
+        SHADER_STAGE_COMPUTE, SHADER_STAGE_FRAGMENT, SHADER_STAGE_VERTEX,
+        SHADER_STAGE_VERTEX_AND_FRAGMENT,
+    };
     use crate::projection::Projection;
     use externref::ExternRef;
+    use webgpu::buffer_binding_layout::{BufferBindingType, GPUBindingLayout};
     unsafe {
         let gpu = &mut *init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
@@ -499,14 +501,67 @@ fn test_child_camera() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
+
+        let clusters = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
+            0,
+            BufferBindingType::Storage,
+            false,
+            7962624,
+        );
+        let view_uniforms = GPUBindingLayout::<SHADER_STAGE_COMPUTE>::new_buffer(
+            1,
+            BufferBindingType::Uniform,
+            false,
+            144,
+        );
+        let update_clusters_layout = BindGroupLayout::new(
+            &gpu.device,
+            String::from("UpdateClustersLayout"),
+            [&clusters, &view_uniforms],
+        );
+        let clusters_array = GPUBindingLayout::<SHADER_STAGE_FRAGMENT>::new_buffer(
+            0,
+            BufferBindingType::ReadOnlyStorage,
+            false,
+            7962624,
+        );
+        let meshes = GPUBindingLayout::<SHADER_STAGE_FRAGMENT>::new_buffer(
+            1,
+            BufferBindingType::ReadOnlyStorage,
+            false,
+            512,
+        );
+        let scene = GPUBindingLayout::<SHADER_STAGE_VERTEX_AND_FRAGMENT>::new_buffer(
+            3,
+            BufferBindingType::Uniform,
+            false,
+            144,
+        );
+        let time = GPUBindingLayout::<SHADER_STAGE_VERTEX>::new_buffer(
+            4,
+            BufferBindingType::Uniform,
+            false,
+            4,
+        );
+        let projection = GPUBindingLayout::<SHADER_STAGE_FRAGMENT>::new_buffer(
+            2,
+            BufferBindingType::Uniform,
+            false,
+            224,
+        );
+        let uniform_bind_group_layout_with_time = BindGroupLayout::new(
+            &gpu.device,
+            String::from("uniformBindGroupLayoutWithTime"),
+            [&clusters_array, &meshes, &projection, &scene, &time],
+        );
+        let clusters_layout = BindGroupLayout::new(
+            &gpu.device,
+            String::from("clusters_layout"),
+            [&clusters, &view_uniforms],
+        );
         let projection = Arc::new(Projection::new(&Resource::new_non_null(
             std::mem::transmute::<usize, ExternRef>(0),
         )));
-        let update_clusters_layout =
-            BindGroupLayout::new(&gpu.device, String::from("UpdateClustersLayout"), []);
-        let uniform_bind_group_layout_with_time =
-            BindGroupLayout::new(&device, String::from("uniformBindGroupLayoutWithTime"), []);
-        let clusters_layout = BindGroupLayout::new(&device, String::from("clusters_layout"), []);
         let camera = Camera::new(
             None,
             String::from("test"),

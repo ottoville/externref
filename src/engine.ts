@@ -379,7 +379,6 @@ export type rustWasm = {
   get_camera_position_ptr(
     camera: rust_pointer<'camera'>,
   ): rust_pointer<'position'>;
-  update_camera_projection_view_inverted(camera: rust_pointer<'camera'>): void;
   update_camera_position(
     camera: rust_pointer<'camera'>,
     x: number,

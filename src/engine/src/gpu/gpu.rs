@@ -769,7 +769,7 @@ pub struct GPU {
     pub water_render_target: Rc<Texture<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>>,
 }
 const MAX_RESOLUTION: [u32; 2] = [1920, 1080];
-pub enum Renderpassenum_mut<'a> {
+pub enum RenderpassenumMut<'a> {
     Singlesampled(&'a mut Renderpass<1, ColorAttachmentSingleSampled>),
     Multisampled(&'a mut Renderpass<4, ColorAttachmentMultiSampled>),
 }
@@ -777,6 +777,7 @@ pub enum Renderpassenum<'a> {
     Singlesampled(&'a Renderpass<1, ColorAttachmentSingleSampled>),
     Multisampled(&'a Renderpass<4, ColorAttachmentMultiSampled>),
 }
+
 impl GPU {
     pub fn get_renderpass(&'_ self, id: u32) -> Renderpassenum<'_> {
         let renderpass_opt = self
@@ -795,20 +796,20 @@ impl GPU {
         }
         panic!("Cant find renderpass {}", id.to_string());
     }
-    pub fn get_renderpass_mut(&'_ mut self, id: u32) -> Renderpassenum_mut<'_> {
+    pub fn get_renderpass_mut(&'_ mut self, id: u32) -> RenderpassenumMut<'_> {
         let renderpass_opt = self
             .renderpasses
             .iter_mut()
             .find(|renderpass| return renderpass.id == id);
         if let Some(renderpass) = renderpass_opt {
-            return Renderpassenum_mut::Singlesampled(renderpass);
+            return RenderpassenumMut::Singlesampled(renderpass);
         }
         let renderpass_opt2 = self
             .renderpasses_sampled
             .iter_mut()
             .find(|renderpass| return renderpass.id == id);
         if let Some(renderpass) = renderpass_opt2 {
-            return Renderpassenum_mut::Multisampled(renderpass);
+            return RenderpassenumMut::Multisampled(renderpass);
         }
         panic!("Cant find renderpass {}", id.to_string());
     }
@@ -859,15 +860,9 @@ impl GPU {
         let height = NonZeroU32::new(height).unwrap();
         for renderpass in &mut self.renderpasses {
             renderpass.resize(width, height, &self.device, &mut computepassencoder);
-            unsafe {
-                let size = renderpass.inner_renderpass.size;
-            }
         }
         for renderpass in &mut self.renderpasses_sampled {
             renderpass.resize(width, height, &self.device, &mut computepassencoder);
-            unsafe {
-                let size = renderpass.inner_renderpass.size;
-            }
         }
         // Call onResize after all renderPasses have resizes so callbacks
         // can refer updated render target of other renderpasses.
