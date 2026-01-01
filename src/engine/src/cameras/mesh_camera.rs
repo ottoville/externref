@@ -29,7 +29,12 @@ pub unsafe extern "C" fn attach_meshcamera_camera_controller(
     camera: CameraPtr,
     controller: *mut MeshCamera,
 ) {
-    (&(*camera)).camera.borrow_mut().controller = Some(Box::from_raw(controller));
+    (&(*camera))
+        .upgrade()
+        .unwrap()
+        .camera
+        .borrow_mut()
+        .controller = Some(Box::from_raw(controller));
 }
 #[no_mangle]
 pub unsafe extern "C" fn keyfunctionmeshcamera(

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 
 use collider::{ColliderSphere, CLOSE_DISTANCE};
 use terramath::{MatrixMath, VectorMath, VectorMathF32};
@@ -34,9 +34,12 @@ impl CameraMovement {
 #[no_mangle]
 pub unsafe extern "C" fn new_arc_rotate_camera(
     initial: bool,
-    camera: *mut Rc<Camera>,
+    camera: CameraPtr,
 ) -> *mut ArcRotateCamera {
-    Box::into_raw(Box::new(ArcRotateCamera::new(initial, (*camera).clone())))
+    Box::into_raw(Box::new(ArcRotateCamera::new(
+        initial,
+        (*camera).upgrade().unwrap().clone(),
+    )))
 }
 #[no_mangle]
 pub unsafe extern "C" fn camera_move(
@@ -78,7 +81,12 @@ pub unsafe extern "C" fn attach_archrotate_camera_controller(
     camera: CameraPtr,
     controller: *mut ArcRotateCamera,
 ) {
-    (&(*camera)).camera.borrow_mut().controller = Some(Box::from_raw(controller));
+    (&(*camera))
+        .upgrade()
+        .unwrap()
+        .camera
+        .borrow_mut()
+        .controller = Some(Box::from_raw(controller));
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_movement(
@@ -351,14 +359,15 @@ impl ArcRotateCamera {
         position_x: f32,
         position_y: f32,
         position_z: f32,
-        camera_rc: &Rc<Camera>,
+        camera_rc: &Weak<Camera>,
     ) {
         self.alpha = alpha;
         self.beta = beta;
         self.radius = radius;
         self.target = [target_x, target_y, target_z, 0.0];
-
-        let mut camera = camera_rc.camera.borrow_mut();
+        let upgraded = camera_rc.upgrade();
+        let unwrapped = upgraded.unwrap();
+        let mut camera = unwrapped.camera.borrow_mut();
         camera.update_position([position_x, position_y, position_z, 0.0]);
         camera.set_direction_from_target(&self.target);
     }

@@ -22,7 +22,7 @@ use webgpu::texture::texture_view::TextureView;
 use webgpu::weakvec::WeakVec;
 
 use crate::allocators::stack_allocator::StackAllocator;
-use crate::cameras::camera::Camera;
+use crate::cameras::camera::{Camera, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION};
 use crate::cameras::camera_group::CameraGroup;
 use crate::engine::get_preferred_canvas_format;
 use crate::gpu::renderpass::{JSRenderPass, Renderpass};
@@ -328,7 +328,7 @@ pub unsafe extern "C" fn init_gpu(
         [positions_buffer_binding],
     );
 
-    let projection = Projection::new(&device);
+    let projection = Arc::new(Projection::new(&device));
     let point_lights = Lights::new(
         &device,
         String::from("GPUPointLights"),
@@ -576,6 +576,7 @@ pub unsafe extern "C" fn init_gpu(
         )],
         depth_render_target_water_view,
     );
+
     let screen_dimension_buffer_screen_pick =
         GPUBuffer::<false, false, false, false, false, false, true>::new(
             &device,
@@ -655,7 +656,7 @@ pub unsafe extern "C" fn init_gpu(
     let renderpasses_multisampled = vec![render_pass_screen];
     let renderpasses_singlesampled = vec![render_pass_water, pick_render_pass, render_pass_canvas];
 
-    let gpu = GPU {
+    let mut gpu = GPU {
         device,
         queue: Queue {
             externref: queue,
@@ -663,7 +664,7 @@ pub unsafe extern "C" fn init_gpu(
         },
         gpu_buffer,
         bind_group_position,
-        projections: vec![Arc::new(projection)],
+        projections: vec![projection],
         cameras: Vec::with_capacity(4),
         renderpasses: renderpasses_singlesampled,
         renderpasses_sampled: renderpasses_multisampled,
@@ -681,6 +682,35 @@ pub unsafe extern "C" fn init_gpu(
         resolve_target,
         water_render_target,
     };
+    let maincamera = Camera::new(
+        None,
+        String::from("mainCamera"),
+        gpu.projections[0].clone(),
+        &gpu,
+    );
+
+    let watercamera = Camera::new(
+        Some(Box::new(|do_update_view, direction, position| {
+            if (do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
+                position[1] -= (position[1] - 3.0) * 2.0;
+            }
+            if (do_update_view & VIEW_UPDATED_DIRECTION) == VIEW_UPDATED_DIRECTION {
+                direction[1] = -direction[1];
+            }
+            return do_update_view;
+        })),
+        String::from("waterCamera"),
+        gpu.projections[0].clone(),
+        &gpu,
+    );
+    gpu.cameras.push(maincamera.clone());
+    gpu.renderpasses[1].add_camera(maincamera.clone());
+    gpu.renderpasses_sampled[0].add_camera(maincamera.clone());
+
+    gpu.cameras.push(watercamera.clone());
+    gpu.renderpasses[0].add_camera(watercamera.clone());
+    maincamera.camera.borrow_mut().children.push(watercamera);
+
     return Box::into_raw(Box::new(gpu));
 }
 
@@ -851,7 +881,7 @@ impl GPU {
         self.queue
             .submit([computepassencoder.end().finish(String::from("resize"))]);
     }
-    pub fn get_camera_by_id(&self, camera_id: usize) -> Rc<Camera> {
+    pub fn get_camera_by_id(&self, camera_id: u32) -> Rc<Camera> {
         for camera_cell in self.cameras.iter() {
             if camera_cell.id == camera_id {
                 return camera_cell.clone();
@@ -1072,30 +1102,29 @@ fn test_gpu_queue() {
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
         );
-        for id in 0..4 {
-            for renderpass in gpu.renderpasses.iter_mut() {
-                renderpass.inner_renderpass.bundle = Some(RenderBundleEncoder::new::<1>(
-                    String::from("test"),
-                    &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-                    &Vec::new(),
-                    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-                    false,
-                    false,
-                    None,
-                ));
-            }
-            for renderpass in gpu.renderpasses_sampled.iter_mut() {
-                renderpass.inner_renderpass.bundle = Some(RenderBundleEncoder::new::<4>(
-                    String::from("test"),
-                    &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-                    &Vec::new(),
-                    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-                    false,
-                    false,
-                    None,
-                ));
-            }
+        for renderpass in gpu.renderpasses.iter_mut() {
+            renderpass.inner_renderpass.bundle = Some(RenderBundleEncoder::new::<1>(
+                String::from("test"),
+                &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                &Vec::new(),
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                false,
+                false,
+                None,
+            ));
         }
+        for renderpass in gpu.renderpasses_sampled.iter_mut() {
+            renderpass.inner_renderpass.bundle = Some(RenderBundleEncoder::new::<4>(
+                String::from("test"),
+                &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                &Vec::new(),
+                Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
+                false,
+                false,
+                None,
+            ));
+        }
+
         process_gpu_queue(
             0.0,
             &Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),

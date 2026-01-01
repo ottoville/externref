@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
-use std::rc::Rc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::rc::{Rc, Weak};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use std::{num::NonZero, ptr};
 
@@ -22,16 +22,16 @@ use webgpu::command_buffer::CommandBuffer;
 
 use super::cameracontroller::CameraController;
 
-pub type CameraPtr = *mut Rc<Camera>;
+pub type CameraPtr = *mut Weak<Camera>;
 
 #[no_mangle]
-pub unsafe extern "C" fn get_cameras_count() -> usize {
+pub unsafe extern "C" fn get_cameras_count() -> u32 {
     //TODO: return actual count not just used space
     NEXT_CAMERA_ID.load(Ordering::Relaxed)
 }
 #[no_mangle]
 #[externref]
-pub unsafe extern "C" fn get_camera_externref(camera_id: usize, gpu: *mut GPU) -> usize {
+pub unsafe extern "C" fn get_camera_externref(camera_id: u32, gpu: *mut GPU) -> usize {
     let camera_rc = (*gpu).get_camera_by_id(camera_id);
     let camera = camera_rc.camera.borrow();
     let externref = &camera.externref;
@@ -39,7 +39,7 @@ pub unsafe extern "C" fn get_camera_externref(camera_id: usize, gpu: *mut GPU) -
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_label(camera: CameraPtr) -> *const usize {
-    let label = &(&(*camera)).label;
+    let label = &(&(*camera)).upgrade().unwrap().label;
     MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
     MULTIVALUE_USIZE[1] = label.len();
     MULTIVALUE_USIZE[2] = label.capacity();
@@ -48,6 +48,8 @@ pub unsafe extern "C" fn get_camera_label(camera: CameraPtr) -> *const usize {
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_position(camera: CameraPtr, x: f32, y: f32, z: f32) {
     (&(*camera))
+        .upgrade()
+        .unwrap()
         .camera
         .borrow_mut()
         .update_position([x, y, z, 0.0]);
@@ -55,113 +57,51 @@ pub unsafe extern "C" fn update_camera_position(camera: CameraPtr, x: f32, y: f3
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_direction(camera: CameraPtr, x: f32, y: f32, z: f32) {
     (&(*camera))
+        .upgrade()
+        .unwrap()
         .camera
         .borrow_mut()
         .update_direction([x, y, z, 0.0]);
 }
 
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn add_child_to_camera(
-    parent: *mut Rc<Camera>,
-    externref: Resource<JSCamera>,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
-    renderpasses_ptr: *mut usize,
-    renderpasses_len: usize,
-    renderpasses_cap: usize,
-    gpu_ptr: *mut GPU,
-) -> *mut Rc<Camera> {
-    let gpu = &mut (*gpu_ptr);
-
-    let renderpasses = Vec::from_raw_parts(renderpasses_ptr, renderpasses_len, renderpasses_cap);
-
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let projection = gpu.projections[0].clone();
-    let camera = Camera::new(None, externref, label, projection, renderpasses, gpu);
-    let mut pcamera = (&(*parent)).camera.borrow_mut();
-    pcamera.children.push(camera.clone());
-    return Box::into_raw(Box::new(camera));
-}
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn add_child_to_camera_water(
-    parent: *mut Rc<Camera>,
-    externref: Resource<JSCamera>,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
-    renderpasses_ptr: *mut usize,
-    renderpasses_len: usize,
-    renderpasses_cap: usize,
-    gpu_ptr: *mut GPU,
-) -> *mut Rc<Camera> {
-    let gpu = &mut (*gpu_ptr);
-
-    let renderpasses = Vec::from_raw_parts(renderpasses_ptr, renderpasses_len, renderpasses_cap);
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let projection = gpu.projections[0].clone();
-    let camera = Camera::new(
-        Some(Box::new(|do_update_view, direction, position| {
-            if (do_update_view & VIEW_UPDATED_POSITION) == VIEW_UPDATED_POSITION {
-                position[1] -= (position[1] - 3.0) * 2.0;
-            }
-            if (do_update_view & VIEW_UPDATED_DIRECTION) == VIEW_UPDATED_DIRECTION {
-                direction[1] = -direction[1];
-            }
-            return do_update_view;
-        })),
-        externref,
-        label,
-        projection,
-        renderpasses,
-        gpu,
-    );
-    let mut pcamera = (&(*parent)).camera.borrow_mut();
-    pcamera.children.push(camera.clone());
-    return Box::into_raw(Box::new(camera));
-}
-#[externref]
-#[no_mangle]
-pub unsafe extern "C" fn add_camera(
-    externref: Resource<JSCamera>,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
-    renderpasses_ptr: *mut usize,
-    renderpasses_len: usize,
-    renderpasses_cap: usize,
-    gpu_ptr: *mut GPU,
-) -> *mut Rc<Camera> {
-    let gpu = &mut (*gpu_ptr);
-    let renderpasses = Vec::from_raw_parts(renderpasses_ptr, renderpasses_len, renderpasses_cap);
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    let projection = (*gpu).projections[0].clone();
-    let camera = Camera::new(None, externref, label, projection, renderpasses, gpu);
-
-    gpu.cameras.push(camera.clone());
-    return Box::into_raw(Box::new(camera));
-}
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_direction_ptr(camera: CameraPtr) -> *const f32 {
-    (&(*camera)).camera.borrow().direction.as_ptr()
+    (&(*camera))
+        .upgrade()
+        .unwrap()
+        .camera
+        .borrow()
+        .direction
+        .as_ptr()
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_position_ptr(camera: CameraPtr) -> *const f32 {
-    (&(*camera)).camera.borrow().position.as_ptr()
+    (&(*camera))
+        .upgrade()
+        .unwrap()
+        .camera
+        .borrow()
+        .position
+        .as_ptr()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_ptr: *mut Rc<Camera>) {
-    let mut camera = (&mut (*camera_ptr)).camera.borrow_mut();
+pub unsafe extern "C" fn update_camera_projection_view_inverted(camera_ptr: CameraPtr) {
+    let unwrapped = (&mut (*camera_ptr)).upgrade().unwrap();
+    let mut camera = unwrapped.camera.borrow_mut();
     if camera.projection_view_inverted_is_dirty {
         camera.projection_view_inverted = camera.views.projection_view.invert();
         camera.projection_view_inverted_is_dirty = false;
     }
 }
 pub struct JSCamera(());
-static NEXT_CAMERA_ID: AtomicUsize = AtomicUsize::new(0);
+static NEXT_CAMERA_ID: AtomicU32 = AtomicU32::new(0);
+
+#[cfg(not(target_arch = "wasm32"))]
+unsafe fn create_camera(_id: CameraPtr, _maincamera: bool) -> Resource<JSCamera> {
+    use externref::ExternRef;
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
+}
 
 #[cfg(target_arch = "wasm32")]
 #[cfg(feature = "webgpu")]
@@ -170,7 +110,7 @@ static NEXT_CAMERA_ID: AtomicUsize = AtomicUsize::new(0);
 #[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     fn on_update_position(externref: &Resource<JSCamera>, x: f32, y: f32, z: f32);
-
+    fn create_camera(id: CameraPtr, maincamera: bool) -> Resource<JSCamera>;
 }
 static TILE_COUNT: [u32; 3] = [32, 18, 48];
 static CLUSTER_WORKGROUP_SIZE: [u32; 3] = [4, 2, 4];
@@ -194,18 +134,16 @@ struct Views {
     pub view: [[f32; 4]; 4],
 }
 pub struct Camera {
-    pub id: usize,
+    pub id: u32,
     pub label: String,
     pub camera: RefCell<InnerCamera>,
 }
 impl Camera {
     pub fn new(
         before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
-        externref: Resource<JSCamera>,
         label: String,
         projection: Arc<Projection>,
-        renderpasses: Vec<usize>,
-        gpu: &mut GPU,
+        gpu: &GPU,
     ) -> Rc<Self> {
         let camerauniform_buffer = Rc::new(RefCell::new(GPUBuffer::<
             false,
@@ -275,57 +213,47 @@ impl Camera {
                 BufferBinding::new(gpu.timebuffer.clone(), 0, None),
             ],
         );
-        let camera = Rc::new(Camera {
-            id: NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed),
-            label,
-            camera: RefCell::new(InnerCamera {
-                projection,
-                views: Views {
-                    projection_view: [[0.0; 4]; 4],
-                    view: [
-                        [0.0, 0.0, 0.0, 0.0],
-                        [0.0, 0.0, 0.0, 0.0],
-                        [0.0, 0.0, 0.0, 0.0],
-                        [0.0, 0.0, 0.0, 1.0],
-                    ],
-                },
-                projection_view_inverted: [[0.0; 4]; 4],
-                position: [0.0; 4],
-                direction: [1.0, 0.0, 0.0, 0.0],
-                externref,
-                updated: false,
-                children: Vec::new(),
-                do_update_view: 0,
-                before_view_update,
-                projection_view_inverted_is_dirty: false,
-                buffer: camerauniform_buffer,
-                cluster_array_buffer,
-                update_view_bind_group,
-                update_clusters_bind_group,
-                on_update_position: Vec::new(),
-                uniform_bindgroup,
-                controller: None,
-            }),
-        });
-        for renderpass_id in renderpasses {
-            let r = gpu.get_renderpass_mut(renderpass_id as u32);
-            let weakcamera = Rc::downgrade(&camera);
-            match r {
-                Renderpassenum_mut::Singlesampled(renderpass) => {
-                    renderpass.inner_renderpass.cameragroups[0]
-                        .cameras
-                        .push(weakcamera);
-                }
-                Renderpassenum_mut::Multisampled(renderpass) => {
-                    renderpass.inner_renderpass.cameragroups[0]
-                        .cameras
-                        .push(weakcamera);
-                }
+        let id = NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed);
+        let camera = Rc::new_cyclic(|weak| {
+            let externref = unsafe {
+                create_camera(Box::into_raw(Box::new(weak.clone())), label == "mainCamera")
+            };
+            Camera {
+                id,
+                label,
+                camera: RefCell::new(InnerCamera {
+                    projection,
+                    views: Views {
+                        projection_view: [[0.0; 4]; 4],
+                        view: [
+                            [0.0, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 1.0],
+                        ],
+                    },
+                    projection_view_inverted: [[0.0; 4]; 4],
+                    position: [0.0; 4],
+                    direction: [1.0, 0.0, 0.0, 0.0],
+                    externref,
+                    updated: false,
+                    children: Vec::new(),
+                    do_update_view: 0,
+                    before_view_update,
+                    projection_view_inverted_is_dirty: false,
+                    buffer: camerauniform_buffer,
+                    cluster_array_buffer,
+                    update_view_bind_group,
+                    update_clusters_bind_group,
+                    on_update_position: Vec::new(),
+                    uniform_bindgroup,
+                    controller: None,
+                }),
             }
-        }
+        });
         return camera;
     }
-    pub fn find_child(&self, camera_id: usize) -> Option<Rc<Camera>> {
+    pub fn find_child(&self, camera_id: u32) -> Option<Rc<Camera>> {
         for camera_cell in self.camera.borrow().children.iter() {
             if camera_cell.id == camera_id {
                 return Some(camera_cell.clone());
@@ -568,22 +496,13 @@ fn test_child_camera() {
         let projection = Arc::new(Projection::new(&Resource::new_non_null(
             std::mem::transmute::<usize, ExternRef>(0),
         )));
-        let camera = Camera::new(
-            None,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-            String::from("test"),
-            projection.clone(),
-            Vec::new(),
-            gpu,
-        );
+        let camera = Camera::new(None, String::from("test"), projection.clone(), gpu);
         let child_1 = Camera::new(
             None,
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
             String::from("camera1.0"),
             Arc::new(Projection::new(&Resource::new_non_null(
                 std::mem::transmute::<usize, ExternRef>(0),
             ))),
-            Vec::new(),
             gpu,
         );
         let mut swap_buffers = SwapBuffers::new();

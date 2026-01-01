@@ -1,7 +1,6 @@
 ﻿import type { Engine } from './engine.js';
 import type { GPU } from './GPU.js';
 import type { CameraController } from './controllers/CameraController.js';
-import { create_rust_label, create_rust_vec_ptr } from './utils.js';
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
 import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
 import { MeshCamera } from './controllers/MeshCamera.js';
@@ -16,53 +15,11 @@ export class TerraCamera {
 
   onUpdatePosition: Set<(x: number, y: number, z: number) => void> = new Set();
   id: rust_pointer<'camera'>;
-  constructor(
-    label: string,
-    renderPasses: RenderPass[],
-    gpu: rust_pointer<'GPU'>,
-    parent?: TerraCamera,
-  ) {
+  constructor(renderPasses: RenderPass[], id: rust_pointer<'camera'>) {
     renderPasses.forEach((renderPass) => {
       renderPass.perspectiveCameras.push(this);
     });
-    const [ptr, len, cap] = create_rust_vec_ptr(
-      engine.rust.alloc_vector_usize(renderPasses.length),
-    );
-    new Uint32Array(engine.rust.memory.buffer, ptr, len).set(
-      renderPasses.map((renderpass) => renderpass.props.id),
-    );
-    if (parent) {
-      if (label === 'waterCamera') {
-        this.id = engine.rust.add_child_to_camera_water(
-          parent.id,
-          this,
-          ...create_rust_label(label),
-          ptr,
-          len,
-          cap,
-          gpu,
-        );
-      } else {
-        this.id = engine.rust.add_child_to_camera(
-          parent.id,
-          this,
-          ...create_rust_label(label),
-          ptr,
-          len,
-          cap,
-          gpu,
-        );
-      }
-    } else {
-      this.id = engine.rust.add_camera(
-        this,
-        ...create_rust_label(label),
-        ptr,
-        len,
-        cap,
-        gpu,
-      );
-    }
+    this.id = id;
     engine.getGPU((gpu2) => {
       this.gpu = gpu2;
     });

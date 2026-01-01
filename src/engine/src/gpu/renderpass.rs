@@ -208,6 +208,12 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
 impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
     Renderpass<SAMPLE_COUNT, T>
 {
+    pub fn add_camera(&mut self, camera: Rc<Camera>) {
+        let weakcamera = Rc::downgrade(&camera);
+        self.inner_renderpass.cameragroups[0]
+            .cameras
+            .push(weakcamera);
+    }
     pub fn new<const N: usize>(
         label: String,
         size: [NonZero<u32>; 2],

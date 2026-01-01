@@ -163,7 +163,7 @@ export class GPU {
      */
     readonly z: StructProperty<'f32'>;
   }>;
-  mainCamera: TerraCamera;
+  mainCamera!: TerraCamera;
   gpu_buffer?: number;
   bind_group_position?: rust_pointer<'bind_group_position'>;
   gpu: rust_pointer<'GPU'>;
@@ -583,19 +583,6 @@ export class GPU {
           this.pipelineLayouts.BindGroupLayoutPosition,
         ],
       );
-
-    this.mainCamera = new TerraCamera(
-      'mainCamera',
-      [this.renderPassScreen, this.pickRenderPass],
-      this.gpu,
-    );
-
-    new TerraCamera(
-      'waterCamera',
-      [this.renderPassWater],
-      this.gpu,
-      this.mainCamera,
-    );
     //TODO: this does not need to be canvas size
     /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
             (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');

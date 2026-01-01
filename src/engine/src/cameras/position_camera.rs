@@ -33,7 +33,12 @@ pub unsafe extern "C" fn attach_positioncamera_camera_controller(
     camera: CameraPtr,
     controller: *mut PositionCamera,
 ) {
-    (&(*camera)).camera.borrow_mut().controller = Some(Box::from_raw(controller));
+    (&(*camera))
+        .upgrade()
+        .unwrap()
+        .camera
+        .borrow_mut()
+        .controller = Some(Box::from_raw(controller));
 }
 #[no_mangle]
 pub unsafe extern "C" fn keyfunction(

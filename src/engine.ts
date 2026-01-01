@@ -1,7 +1,6 @@
 import { Physics } from './physics.js';
 import { GPU } from './GPU.js';
 import type { Scene } from './Scene.js';
-import { TerraCamera } from './TerraCamera.js';
 //@ts-expect-error todo
 import { ArcRotateCamera } from './controllers/ArcRotateCamera.js';
 //@ts-expect-error todo
@@ -369,38 +368,6 @@ export type rustWasm = {
   drain_command_buffers(
     iterator_ptr: Rust_Iterator<GPUCommandBuffer>,
   ): GPUCommandBuffer | null;
-  add_camera(
-    camera: TerraCamera,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
-    renderpasses_ptr: number,
-    renderpasses_len: number,
-    renderpasses_cap: number,
-    gpu: rust_pointer<'GPU'>,
-  ): rust_pointer<'camera'>;
-  add_child_to_camera(
-    parent: rust_pointer<'camera'>,
-    camera: TerraCamera,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
-    renderpasses_ptr: number,
-    renderpasses_len: number,
-    renderpasses_cap: number,
-    gpu: rust_pointer<'GPU'>,
-  ): rust_pointer<'camera'>;
-  add_child_to_camera_water(
-    parent: rust_pointer<'camera'>,
-    camera: TerraCamera,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
-    renderpasses_ptr: number,
-    renderpasses_len: number,
-    renderpasses_cap: number,
-    gpu: rust_pointer<'GPU'>,
-  ): rust_pointer<'camera'>;
   get_camera_label(
     camera: rust_pointer<'camera'>,
   ): rust_pointer<'camera_label'>;
