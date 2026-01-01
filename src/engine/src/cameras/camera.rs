@@ -8,11 +8,12 @@ use std::{num::NonZero, ptr};
 use externref::{externref, Resource};
 use terramath::{MatrixMath, VectorMath, VectorMathF32};
 use webgpu::bindgroup::bufferbinding::BufferBinding;
+use webgpu::bindgroup_layout::BindGroupLayout;
 use webgpu::command_encoder::GPUCommandEncoder;
 use webgpu::compute_pass_encoder::ComputePassEncoder;
 use webgpu::device::JSDevice;
 
-use crate::gpu::gpu::{Renderpassenum_mut, GPU};
+use crate::gpu::gpu::GPU;
 use crate::projection::Projection;
 use crate::{swapbuffers::SwapBuffers, MULTIVALUE_USIZE};
 use webgpu::bindgroup::bindgroup::BindGroup;
@@ -143,7 +144,12 @@ impl Camera {
         before_view_update: Option<Box<dyn Fn(u32, &mut [f32; 4], &mut [f32; 4]) -> u32 + Send>>,
         label: String,
         projection: Arc<Projection>,
-        gpu: &GPU,
+        device: &Resource<JSDevice>,
+        update_clusters_layout: &BindGroupLayout<2>,
+        timebuffer: Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>>,
+        uniform_bind_group_layout_with_time: &BindGroupLayout<5>,
+        gpu_buffer: Rc<RefCell<GPUBuffer<false, false, true, true, false, false, true, true>>>,
+        clusters_layout: &BindGroupLayout<2>,
     ) -> Rc<Self> {
         let camerauniform_buffer = Rc::new(RefCell::new(GPUBuffer::<
             false,
@@ -154,7 +160,7 @@ impl Camera {
             false,
             true,
         >::new(
-            &gpu.device,
+            device,
             unsafe { NonZeroUsize::new_unchecked(UNIFORM_BUFFER_SIZE) },
             String::from("camerauniformBuffer"),
         )));
@@ -173,7 +179,7 @@ impl Camera {
             false,
             true,
         >::new(
-            &gpu.device,
+            device,
             unsafe { NonZeroUsize::new_unchecked(CLUSTER_SIZE_IN_BYTES as usize) },
             String::from("clusterArrayBuffer"),
         )));
@@ -185,7 +191,7 @@ impl Camera {
         );
         let update_view_bind_group = BindGroup::new(
             String::from("updateViewBindGroup2"),
-            &gpu.update_clusters_layout,
+            &update_clusters_layout,
             [cluster_array_buffer_binding.clone(), buffer_binding.clone()],
         );
 
@@ -193,24 +199,24 @@ impl Camera {
 
         let update_clusters_bind_group = BindGroup::new(
             String::from("update_clusters_bind_group"),
-            &gpu.clusters_layout,
+            clusters_layout,
             [
                 cluster_array_buffer_binding.clone(),
                 projection_binding.clone(),
             ],
         );
 
-        let gpu_buffer_binding = BufferBinding::new(gpu.gpu_buffer.clone(), 0, None);
+        let gpu_buffer_binding = BufferBinding::new(gpu_buffer, 0, None);
 
         let uniform_bindgroup = BindGroup::new(
             String::from("uniformBindGroup"),
-            &gpu.uniform_bind_group_layout_with_time,
+            uniform_bind_group_layout_with_time,
             [
                 cluster_array_buffer_binding,
                 gpu_buffer_binding,
                 projection_binding,
                 buffer_binding,
-                BufferBinding::new(gpu.timebuffer.clone(), 0, None),
+                BufferBinding::new(timebuffer, 0, None),
             ],
         );
         let id = NEXT_CAMERA_ID.fetch_add(1, Ordering::Relaxed);
@@ -496,14 +502,34 @@ fn test_child_camera() {
         let projection = Arc::new(Projection::new(&Resource::new_non_null(
             std::mem::transmute::<usize, ExternRef>(0),
         )));
-        let camera = Camera::new(None, String::from("test"), projection.clone(), gpu);
+        let update_clusters_layout =
+            BindGroupLayout::new(&gpu.device, String::from("UpdateClustersLayout"), []);
+        let uniform_bind_group_layout_with_time =
+            BindGroupLayout::new(&device, String::from("uniformBindGroupLayoutWithTime"), []);
+        let clusters_layout = BindGroupLayout::new(&device, String::from("clusters_layout"), []);
+        let camera = Camera::new(
+            None,
+            String::from("test"),
+            projection.clone(),
+            &gpu.device,
+            &update_clusters_layout,
+            gpu.timebuffer.clone(),
+            &uniform_bind_group_layout_with_time,
+            gpu.gpu_buffer.clone(),
+            &clusters_layout,
+        );
         let child_1 = Camera::new(
             None,
             String::from("camera1.0"),
             Arc::new(Projection::new(&Resource::new_non_null(
                 std::mem::transmute::<usize, ExternRef>(0),
             ))),
-            gpu,
+            &gpu.device,
+            &update_clusters_layout,
+            gpu.timebuffer.clone(),
+            &uniform_bind_group_layout_with_time,
+            gpu.gpu_buffer.clone(),
+            &clusters_layout,
         );
         let mut swap_buffers = SwapBuffers::new();
         let mut command_encoder = GPUCommandEncoder::new(

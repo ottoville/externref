@@ -456,6 +456,24 @@ pub unsafe extern "C" fn init_gpu(
         TextureViewDimension::D2,
         TextureAspect::All,
     );
+
+    let screen_dimension_buffer_screen_water =
+        GPUBuffer::<false, false, false, false, false, false, true>::new(
+            &device,
+            NonZeroUsize::new_unchecked(16),
+            String::from("screen_buffer_water"),
+        );
+    let maincamera = Camera::new(
+        None,
+        String::from("mainCamera"),
+        projection.clone(),
+        &device,
+        &update_clusters_layout,
+        timebuffer.clone(),
+        &uniform_bind_group_layout_with_time,
+        gpu_buffer.clone(),
+        &clusters_layout,
+    );
     let render_pass_screen = Renderpass::width_depth_pick(
         &device,
         String::from("renderPassScreen"),
@@ -488,15 +506,9 @@ pub unsafe extern "C" fn init_gpu(
         PickableProperties {
             pick_bglayout,
             pick_render_target_view: pick_render_target_view.clone(),
+            camera: maincamera.clone(),
         },
     );
-    let screen_dimension_buffer_screen_water =
-        GPUBuffer::<false, false, false, false, false, false, true>::new(
-            &device,
-            NonZeroUsize::new_unchecked(16),
-            String::from("screen_buffer_water"),
-        );
-
     let water_render_target = Rc::new(Texture::<
         BGRA8UNORM,
         2,
@@ -675,19 +687,10 @@ pub unsafe extern "C" fn init_gpu(
         timebuffer,
         time: 0.0,
         device_pixel_ratio: 1.0,
-        update_clusters_layout,
-        clusters_layout,
-        uniform_bind_group_layout_with_time,
         meshes: ExplicitGenerationalFreeList::new(2),
         resolve_target,
         water_render_target,
     };
-    let maincamera = Camera::new(
-        None,
-        String::from("mainCamera"),
-        gpu.projections[0].clone(),
-        &gpu,
-    );
 
     let watercamera = Camera::new(
         Some(Box::new(|do_update_view, direction, position| {
@@ -701,7 +704,12 @@ pub unsafe extern "C" fn init_gpu(
         })),
         String::from("waterCamera"),
         gpu.projections[0].clone(),
-        &gpu,
+        &gpu.device,
+        &update_clusters_layout,
+        gpu.timebuffer.clone(),
+        &uniform_bind_group_layout_with_time,
+        gpu.gpu_buffer.clone(),
+        &clusters_layout,
     );
     gpu.cameras.push(maincamera.clone());
     gpu.renderpasses[1].add_camera(maincamera.clone());
@@ -757,9 +765,6 @@ pub struct GPU {
     pub timebuffer: Rc<RefCell<GPUBuffer<false, false, false, true, false, false, true>>>,
     pub time: f32,
     pub device_pixel_ratio: f32,
-    pub update_clusters_layout: BindGroupLayout<2>,
-    pub uniform_bind_group_layout_with_time: BindGroupLayout<5>,
-    pub clusters_layout: BindGroupLayout<2>,
     pub resolve_target: Rc<Texture<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>>,
     pub water_render_target: Rc<Texture<BGRA8UNORM, 2, 1, 1, 1, false, false, true, false, true>>,
 }
