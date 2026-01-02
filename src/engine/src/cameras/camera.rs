@@ -15,7 +15,7 @@ use webgpu::device::JSDevice;
 
 use crate::gpu::gpu::GPU;
 use crate::projection::Projection;
-use crate::{swapbuffers::SwapBuffers, MULTIVALUE_USIZE};
+use crate::swapbuffers::SwapBuffers;
 use webgpu::bindgroup::bindgroup::BindGroup;
 use webgpu::binding_commands::BindingCommands;
 use webgpu::buffer::buffer::GPUBuffer;
@@ -38,13 +38,14 @@ pub unsafe extern "C" fn get_camera_externref(camera_id: u32, gpu: *mut GPU) -> 
     let externref = &camera.externref;
     ptr::read(externref as *const Resource<JSCamera> as *const usize)
 }
+thread_local! {
+    static CAMERA_LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };
+}
 #[no_mangle]
-pub unsafe extern "C" fn get_camera_label(camera: CameraPtr) -> *const usize {
+pub unsafe extern "C" fn get_camera_label(camera: CameraPtr) -> *mut [usize; 3] {
     let label = &(&(*camera)).upgrade().unwrap().label;
-    MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = label.len();
-    MULTIVALUE_USIZE[2] = label.capacity();
-    return MULTIVALUE_USIZE.as_ptr();
+    CAMERA_LABEL.set([label.as_ptr() as usize, label.len(), label.capacity()]);
+    CAMERA_LABEL.with(|camera_label| camera_label.as_ptr())
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_position(camera: CameraPtr, x: f32, y: f32, z: f32) {
