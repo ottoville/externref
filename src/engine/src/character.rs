@@ -101,23 +101,20 @@ impl Engine2 {
         );
         let desired_translation = Vector3::from([x, y, z]);
         let filter = QueryFilter::default();
-        self.query_pipeline.update_incremental(
+        let query_pipeline = self.broad_phase.as_query_pipeline(
+            self.narrow_phase.query_dispatcher(),
+            &self.rigid_body_set,
             &self.collider_set,
-            &self.modified_colliders,
-            &self.removed_colliders,
-            true,
+            filter,
         );
         self.modified_colliders.clear();
         self.removed_colliders.clear();
         let corrected_movement = ENGINE.character_controller.move_shape(
             dt,
-            &self.rigid_body_set,
-            &self.collider_set,
-            &self.query_pipeline,
+            &query_pipeline,
             &(*mesh.character.as_ref().unwrap().shape),
             &character_pos,
             desired_translation,
-            filter,
             |_collision| {},
         );
         mesh.update_translation_vec(

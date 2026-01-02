@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
+use std::sync::{Arc, LazyLock, Mutex, MutexGuard, mpsc};
 
 use crate::allocators::freeindex::{FreeIndex, FreeIndexIndex};
 use crate::gpu::gpu::MeshGPU;
@@ -17,7 +17,7 @@ use externref::externref;
 use externref::Resource;
 use logger::Logger;
 use rapier3d::control::KinematicCharacterController;
-use rapier3d::{crossbeam, prelude::*};
+use rapier3d::prelude::*;
 use terramath::VectorMathF32;
 
 #[cfg(test)]
@@ -111,15 +111,14 @@ pub struct Engine2 {
     pub narrow_phase: NarrowPhase,
     pub multi_joint_set: MultibodyJointSet,
     pub rigid_body_set: RigidBodySet,
-    pub query_pipeline: QueryPipeline,
     pub camera_can_collide_meshes: Vec<ExplicitGenerationalFreeListIndex<fn() -> Mesh>>,
     pub collider: collider::Collider,
 }
 
 pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
     // Initialize the event collector.
-    let (contact_send, _contact_recv) = crossbeam::channel::unbounded();
-    let (collision_send, _collision_recv) = crossbeam::channel::unbounded();
+    let (contact_send, _contact_recv) = mpsc::channel();
+    let (collision_send, _collision_recv) = mpsc::channel();
 
     return Engine {
         engine2: Mutex::new(Engine2 {
@@ -136,7 +135,6 @@ pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
             narrow_phase: NarrowPhase::new(),
             multi_joint_set: MultibodyJointSet::new(),
             rigid_body_set: RigidBodySet::new(),
-            query_pipeline: QueryPipeline::new(),
             camera_can_collide_meshes: Vec::new(),
             collider: collider::Collider::new(),
         }),
@@ -196,15 +194,12 @@ impl Engine2 {
         let integration_parameters: IntegrationParameters = IntegrationParameters {
             dt,
             min_ccd_dt: 1.0 / 60.0 / 100.0,
-            contact_natural_frequency: 30.0,
-            contact_damping_ratio: 5.0,
-            joint_natural_frequency: 1.0e6,
-            joint_damping_ratio: 1.0,
+            contact_softness: SpringCoefficients::contact_defaults(),
+            friction_model: FrictionModel::default(),
             warmstart_coefficient: 1.0,
             num_internal_pgs_iterations: 1,
             num_internal_stabilization_iterations: 2,
-            num_additional_friction_iterations: 0,
-            num_solver_iterations: unsafe { NonZeroUsize::new_unchecked(4) },
+            num_solver_iterations: 4,
             // TODO: what is the optimal value for min_island_size?
             // It should not be too big so that we don't end up with
             // huge islands that don't fit in cache.
@@ -229,7 +224,6 @@ impl Engine2 {
             &mut self.joint_set,
             &mut self.multi_joint_set,
             &mut self.ccd_solver,
-            None,
             &physics_hooks,
             &ENGINE.event_handler,
         );
@@ -250,7 +244,7 @@ impl Engine2 {
             }
         };*/
         // Iter on each dynamic rigid-bodies that moved.
-        for rigid_body_handle in self.island_manager.active_dynamic_bodies() {
+        for rigid_body_handle in self.island_manager.active_bodies() {
             let mesh = self.rigid_bodies.get_mut(rigid_body_handle);
             match mesh {
                 Some(m_id) => {
