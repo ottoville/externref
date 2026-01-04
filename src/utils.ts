@@ -3,7 +3,7 @@ declare const engine: Engine;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-export function create_rust_label(label: string) {
+export function create_rust_string(label: string) {
   const vec = create_rust_vec_ptr(engine.rust.alloc_vector_u8(label.length));
   textEncoder.encodeInto(
     label,

@@ -52,7 +52,6 @@ unsafe fn map_write_async(
 }
 #[cfg(target_arch = "wasm32")]
 #[link(wasm_import_module = "buffer")]
-#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     fn map_write_async(
         buffer: usize,
@@ -77,7 +76,7 @@ impl GPUBuffer<true, false, false, true> {
         self,
         offset: usize,
         size: Option<NonZeroUsize>,
-        cb: *mut dyn FnOnce(MappedGPUBuffer<true, false, false, true>),
+        cb: Box<dyn FnOnce(MappedGPUBuffer<true, false, false, true>)>,
     ) {
         let actual_size = match size {
             Some(size) => size.get(),
@@ -89,7 +88,7 @@ impl GPUBuffer<true, false, false, true> {
                 offset,
                 actual_size,
                 Box::into_raw(Box::new(self)) as usize,
-                Box::into_raw(Box::new(cb)) as usize,
+                Box::into_raw(Box::new(Box::into_raw(cb))) as usize,
             );
         }
     }
@@ -100,7 +99,7 @@ impl GPUBuffer<false, true, true> {
         self,
         offset: usize,
         size: Option<NonZeroUsize>,
-        cb: *mut dyn FnOnce(MappedGPUBuffer<false, true, true>),
+        cb: Box<dyn FnOnce(MappedGPUBuffer<false, true, true>)>,
     ) {
         let actual_size = match size {
             Some(size) => size.get(),
@@ -112,7 +111,7 @@ impl GPUBuffer<false, true, true> {
                 offset,
                 actual_size,
                 Box::into_raw(Box::new(self)) as usize,
-                Box::into_raw(Box::new(cb)) as usize,
+                Box::into_raw(Box::new(Box::into_raw(cb))) as usize,
             );
         }
     }

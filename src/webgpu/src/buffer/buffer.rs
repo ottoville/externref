@@ -28,7 +28,6 @@ unsafe fn destroy(_buffer: &Resource<JSBuffer>) {}
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "device")]
-#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn create_buffer(
         device: &Resource<JSDevice>,

@@ -1,7 +1,7 @@
 import type { Engine } from '../engine.js';
 import type { TerraCamera } from '../TerraCamera.js';
 import { CameraController } from './CameraController.js';
-import { create_rust_label } from '../utils.js';
+import { create_rust_string } from '../utils.js';
 
 declare const engine: Engine;
 
@@ -103,7 +103,7 @@ export class PositionCamera extends CameraController {
       this.id,
       false,
       e.ctrlKey,
-      ...create_rust_label(e.key),
+      ...create_rust_string(e.key),
     );
   };
   #keyupfunction = (e: KeyboardEvent) => {
@@ -111,7 +111,7 @@ export class PositionCamera extends CameraController {
       this.id,
       true,
       e.ctrlKey,
-      ...create_rust_label(e.key),
+      ...create_rust_string(e.key),
     );
   };
 }

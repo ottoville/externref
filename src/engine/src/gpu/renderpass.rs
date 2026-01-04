@@ -489,26 +489,24 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
                     pickbuffer_read.map_read_async(
                         0,
                         Some(size),
-                        Box::into_raw(Box::new(
-                            move |buffer: MappedGPUBuffer<true, false, false, true>| {
-                                let mut data = PickData {
-                                    z: 0.0,
-                                    mesh_id: 0,
-                                    generation: 0,
+                        Box::new(move |buffer: MappedGPUBuffer<true, false, false, true>| {
+                            let mut data = PickData {
+                                z: 0.0,
+                                mesh_id: 0,
+                                generation: 0,
+                            };
+                            buffer.get_mapped_range(&mut data, 0);
+                            *pickbuffer_rc_read.borrow_mut() = Some(buffer.unmap());
+                            // Z is 0 when did not hit anything, far plane value
+                            if data.z != 0.0 {
+                                let camera = camera_rc.camera.borrow();
+                                let result =
+                                    [x, y, data.z].transform(&camera.projection_view_inverted);
+                                unsafe {
+                                    pick_cb(&cb, result[0], result[1], result[2], data.mesh_id)
                                 };
-                                buffer.get_mapped_range(&mut data, 0);
-                                *pickbuffer_rc_read.borrow_mut() = Some(buffer.unmap());
-                                // Z is 0 when did not hit anything, far plane value
-                                if data.z != 0.0 {
-                                    let camera = camera_rc.camera.borrow();
-                                    let result =
-                                        [x, y, data.z].transform(&camera.projection_view_inverted);
-                                    unsafe {
-                                        pick_cb(&cb, result[0], result[1], result[2], data.mesh_id)
-                                    };
-                                }
-                            },
-                        )),
+                            }
+                        }),
                     );
                 }
             }

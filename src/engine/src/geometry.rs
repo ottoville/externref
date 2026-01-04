@@ -113,35 +113,31 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
     Box::from_raw(indices_buffer).map_read_async(
         0,
         None,
-        Box::into_raw(Box::new(
-            move |buffer: MappedGPUBuffer<true, false, false, true>| {
-                let mut indices: Vec<usize> = vec![0; buffer.size.get() / 4];
-                buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
-                let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
-                let geometry = mesh.geometry.as_mut().unwrap();
-                geometry.set_indices(indices, &mut (*gpu));
-                // Execute callback if gate was "true", set it to "true" if it was "false"
-                gate.set(gate.get().then(|| then(mesh)).is_none());
-            },
-        )),
+        Box::new(move |buffer: MappedGPUBuffer<true, false, false, true>| {
+            let mut indices: Vec<usize> = vec![0; buffer.size.get() / 4];
+            buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
+            let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+            let geometry = mesh.geometry.as_mut().unwrap();
+            geometry.set_indices(indices, &mut (*gpu));
+            // Execute callback if gate was "true", set it to "true" if it was "false"
+            gate.set(gate.get().then(|| then(mesh)).is_none());
+        }),
     );
     Box::from_raw(vertices_buffer).map_read_async(
         0,
         None,
-        Box::into_raw(Box::new(
-            move |buffer: MappedGPUBuffer<true, false, false, true>| {
-                let mut vertices: Vec<PositionAndNormalAndUV> =
-                    Vec::with_capacity(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
-                buffer.get_mapped_range_raw(vertices.as_mut_ptr() as usize, buffer.size, 0);
-                vertices.set_len(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
-                let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
-                let geometry = mesh.geometry.as_mut().unwrap();
-                geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
-                geometry.faces_dirty = true;
-                // Execute callback if gate was "true", set it to "true" if it was "false"
-                gate2.set(gate2.get().then(|| then(mesh)).is_none());
-            },
-        )),
+        Box::new(move |buffer: MappedGPUBuffer<true, false, false, true>| {
+            let mut vertices: Vec<PositionAndNormalAndUV> =
+                Vec::with_capacity(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
+            buffer.get_mapped_range_raw(vertices.as_mut_ptr() as usize, buffer.size, 0);
+            vertices.set_len(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
+            let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+            let geometry = mesh.geometry.as_mut().unwrap();
+            geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
+            geometry.faces_dirty = true;
+            // Execute callback if gate was "true", set it to "true" if it was "false"
+            gate2.set(gate2.get().then(|| then(mesh)).is_none());
+        }),
     );
 }
 #[no_mangle]

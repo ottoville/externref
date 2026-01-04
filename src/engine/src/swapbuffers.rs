@@ -61,14 +61,12 @@ impl SwapBuffers {
                 mappadle_buffer.map_write_async(
                     0,
                     None,
-                    Box::into_raw(Box::new(
-                        move |buffer: MappedGPUBuffer<false, true, true>| {
-                            let mut borrowed = mappedrc.borrow_mut();
-                            let mapped = borrowed.entry(buffer.size.get()).or_insert(Vec::new());
-                            //["push to mapped", &buffer.size.to_string()].log();
-                            mapped.push(buffer);
-                        },
-                    )),
+                    Box::new(move |buffer: MappedGPUBuffer<false, true, true>| {
+                        let mut borrowed = mappedrc.borrow_mut();
+                        let mapped = borrowed.entry(buffer.size.get()).or_insert(Vec::new());
+                        //["push to mapped", &buffer.size.to_string()].log();
+                        mapped.push(buffer);
+                    }),
                 );
             } else {
                 i = i + 1;
