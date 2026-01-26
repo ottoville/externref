@@ -27,9 +27,10 @@ collider = { path = "../collider" }
 logger = { path = "../logger" }
 webgpu = { path = "../webgpu" }
 allocators = { path = "../allocators" }
+IDB = { path = "../IDB" }
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.56"
+wasm-bindgen-test = "0.3.58"
 
 [profile.release]
 opt-level = 3

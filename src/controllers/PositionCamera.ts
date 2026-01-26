@@ -37,8 +37,8 @@ export class PositionCamera extends CameraController {
       );
     };
     if (initial && engine.DB) {
-      engine.DB.transaction('save')
-        .objectStore('save')
+      engine.DB.transaction('2')
+        .objectStore('2')
         .get(['camera', 'PositionCamera']).onsuccess = (evt) => {
         if ((evt.target as IDBRequest).result) {
           const restored = (evt.target as IDBRequest).result as {
@@ -80,8 +80,8 @@ export class PositionCamera extends CameraController {
   serialize = () => {
     if (this.#serializeRequested || !engine.DB) return;
     this.#serializeRequested = true;
-    const request = engine.DB.transaction('save', 'readwrite')
-      .objectStore('save')
+    const request = engine.DB.transaction('2', 'readwrite')
+      .objectStore('2')
       .put({
         data: {
           angle: this.#angle,

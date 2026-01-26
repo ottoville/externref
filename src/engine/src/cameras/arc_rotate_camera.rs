@@ -1,11 +1,14 @@
-use std::rc::{Rc, Weak};
+use std::{cell::RefCell, rc::Rc};
 
 use collider::{ColliderSphere, CLOSE_DISTANCE};
+use logger::{Logger, LoggerArray};
 use terramath::{MatrixMath, VectorMath, VectorMathF32};
 
 use crate::{
     cameras::camera::{Camera, CameraPtr, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
+    engine::DB,
     mesh::ENGINE,
+    objectstores::SAVE_STORE,
 };
 
 use super::cameracontroller::CameraController;
@@ -42,6 +45,10 @@ pub unsafe extern "C" fn new_arc_rotate_camera(
     )))
 }
 #[no_mangle]
+pub unsafe extern "C" fn serialize_arcrotatecamera(arc_rotate_camera: *mut ArcRotateCamera) {
+    (*arc_rotate_camera).serialize();
+}
+#[no_mangle]
 pub unsafe extern "C" fn camera_move(
     arc_rotate_camera: *mut ArcRotateCamera,
     pointer_down_button: u32,
@@ -57,24 +64,6 @@ pub unsafe extern "C" fn camera_wheel(
     ctrl_key: bool,
 ) {
     (*arc_rotate_camera).camera_wheel(delta_y, ctrl_key);
-}
-#[no_mangle]
-pub unsafe extern "C" fn get_alpha(arc_rotate_camera: *mut ArcRotateCamera) -> f32 {
-    (*arc_rotate_camera).alpha
-}
-#[no_mangle]
-pub unsafe extern "C" fn get_beta(arc_rotate_camera: *mut ArcRotateCamera) -> f32 {
-    (*arc_rotate_camera).beta
-}
-#[no_mangle]
-pub unsafe extern "C" fn get_radius(arc_rotate_camera: *mut ArcRotateCamera) -> f32 {
-    (*arc_rotate_camera).radius
-}
-#[no_mangle]
-pub unsafe extern "C" fn get_target_ptr(
-    arc_rotate_camera: *mut ArcRotateCamera,
-) -> *const [f32; 4] {
-    &(*arc_rotate_camera).target
 }
 #[no_mangle]
 pub unsafe extern "C" fn attach_archrotate_camera_controller(
@@ -98,7 +87,7 @@ pub unsafe extern "C" fn set_movement(
 ) {
     (*arc_rotate_camera).movement = Some(CameraMovement {
         kinematic,
-        target_moving_from: (*arc_rotate_camera).target,
+        target_moving_from: (*arc_rotate_camera).state.borrow().target,
         target_moving_to: [
             target_moving_to_x,
             target_moving_to_y,
@@ -108,37 +97,14 @@ pub unsafe extern "C" fn set_movement(
         target_lerp_position: 0.0,
     })
 }
-#[no_mangle]
-pub unsafe extern "C" fn restore_arc_rotate_camera(
-    arc_rotate_camera: *mut ArcRotateCamera,
+pub struct ArcRotateCameraState {
     alpha: f32,
     beta: f32,
     radius: f32,
-    target_x: f32,
-    target_y: f32,
-    target_z: f32,
-    position_x: f32,
-    position_y: f32,
-    position_z: f32,
-    camera: CameraPtr,
-) {
-    (*arc_rotate_camera).restore(
-        alpha,
-        beta,
-        radius,
-        target_x,
-        target_y,
-        target_z,
-        position_x,
-        position_y,
-        position_z,
-        &(*camera),
-    );
+    target: [f32; 4],
 }
 pub struct ArcRotateCamera {
-    alpha: f32,
-    beta: f32,
-    radius: f32,
+    state: Rc<RefCell<ArcRotateCameraState>>,
 
     // Minimum allowed angle on the latitudinal axis.
     // This can help limiting how the Camera is able to move in the scene.
@@ -181,10 +147,10 @@ pub struct ArcRotateCamera {
     inertia: f32,
     speed: f32,
     inertial_panning: [f32; 3],
-    target: [f32; 4],
     transformed_direction: [f32; 3],
     movement: Option<CameraMovement>,
     collider_sphere: ColliderSphere,
+    camera: Rc<Camera>,
 }
 
 impl CameraController for ArcRotateCamera {
@@ -198,7 +164,7 @@ impl CameraController for ArcRotateCamera {
         if let Some(movement) = &mut self.movement {
             if movement.kinematic {
                 //Todo: use delta as t increase
-                if movement.move_to_place(&mut self.target) {
+                if movement.move_to_place(&mut self.state.borrow_mut().target) {
                     self.movement = None;
                 }
                 self.calculate_camera_position_and_target(position, direction);
@@ -211,19 +177,21 @@ impl CameraController for ArcRotateCamera {
             || self.inertial_beta_offset != 0.0
             || self.inertial_radius_offset != 0.0
         {
+            let mut state = self.state.borrow_mut();
+
             if let Some(movement) = &mut self.movement {
-                if movement.move_to_place(&mut self.target) {
+                if movement.move_to_place(&mut state.target) {
                     self.movement = None;
                 }
             }
             let mut inertial_alpha_offset = self.inertial_alpha_offset;
-            if self.beta <= 0.0 {
+            if state.beta <= 0.0 {
                 inertial_alpha_offset *= -1.0;
             }
-            self.alpha += inertial_alpha_offset;
+            state.alpha += inertial_alpha_offset;
 
-            self.beta += self.inertial_beta_offset;
-            self.radius -= self.inertial_radius_offset;
+            state.beta += self.inertial_beta_offset;
+            state.radius -= self.inertial_radius_offset;
             self.inertial_alpha_offset *= self.inertia;
             self.inertial_beta_offset *= self.inertia;
             self.inertial_radius_offset *= self.inertia;
@@ -254,14 +222,16 @@ impl CameraController for ArcRotateCamera {
             self.transformed_direction.multiply_in_place(scale_x);
             // panning on Y axis
             // this.#transformedDirection[1] += panningAxis[1] * this.#inertialPanningY;
-
-            // panning on Z axis
-            self.transformed_direction[0] -= self.alpha.cos() * scale_z;
-            self.transformed_direction[2] -= self.alpha.sin() * scale_z;
-            //this._target.addInPlace(this._transformedDirection);
-            self.target[0] += self.transformed_direction[0];
-            self.target[1] += self.transformed_direction[1];
-            self.target[2] += self.transformed_direction[2];
+            {
+                let mut state = self.state.borrow_mut();
+                // panning on Z axis
+                self.transformed_direction[0] -= state.alpha.cos() * scale_z;
+                self.transformed_direction[2] -= state.alpha.sin() * scale_z;
+                //this._target.addInPlace(this._transformedDirection);
+                state.target[0] += self.transformed_direction[0];
+                state.target[1] += self.transformed_direction[1];
+                state.target[2] += self.transformed_direction[2];
+            }
             //Camera direction
             //for LHW this is target - position
             self.calculate_direction(position, direction);
@@ -287,13 +257,25 @@ impl CameraController for ArcRotateCamera {
         return 0;
     }
 }
+pub struct IDBGetResultCamera {
+    alpha: f32,
+    beta: f32,
+    position: [f32; 4],
+    radius: f32,
+    target: [f32; 4],
+}
+
 impl ArcRotateCamera {
     pub fn new(initial: bool, camera: Rc<Camera>) -> Self {
         let collision_radius = 2.0;
-        let mut controller = ArcRotateCamera {
+        let state = Rc::new(RefCell::new(ArcRotateCameraState {
             alpha: 0.0,
             beta: 0.0,
             radius: 10.0,
+            target: [100.0, 0.0, 1000.0, 0.0],
+        }));
+        let mut controller = ArcRotateCamera {
+            state: state.clone(),
             inertial_alpha_offset: 0.0,
             inertial_beta_offset: 0.0,
             inertial_radius_offset: 0.0,
@@ -302,7 +284,6 @@ impl ArcRotateCamera {
             inertia: 0.9,
             speed: 2.0,
             inertial_panning: [0.0; 3],
-            target: [100.0, 0.0, 1000.0, 0.0],
             transformed_direction: [0.0; 3],
             movement: None,
             collider_sphere: ColliderSphere {
@@ -322,11 +303,44 @@ impl ArcRotateCamera {
             lower_radius_limit: f32::NEG_INFINITY,
             upper_radius_limit: f32::INFINITY,
             lower_target_ylimit: f32::NEG_INFINITY,
+            camera: camera.clone(),
         };
         if !initial {
             let camera = camera.camera.borrow();
-            controller.target = camera.position.sub_vec(&camera.direction.multiply(100.0));
+            state.borrow_mut().target = camera.position.sub_vec(&camera.direction.multiply(100.0));
             controller.rebuild_angles_and_radius(&camera.position);
+        } else {
+            DB.with(|db_request| {
+                db_request.onready(move |db| {
+                    let transaction = db.transaction::<false, false, _>([&SAVE_STORE]);
+                    let objectstore = transaction.object_store(&SAVE_STORE);
+
+                    let result = objectstore.get::<IDBGetResultCamera>(&[
+                        String::from("camera"),
+                        String::from("ArchRotateCamera"),
+                    ]);
+                    result.on_success(move |maybe_res, _| {
+                        let mut borrowed = state.borrow_mut();
+                        let mut borrowed_camera = camera.camera.borrow_mut();
+
+                        if let Some(res) = maybe_res {
+                            borrowed.alpha = res.alpha;
+                            borrowed.beta = res.beta;
+                            borrowed.radius = res.radius;
+                            borrowed.target = res.target;
+                            borrowed_camera.update_position(res.position);
+                            borrowed_camera.set_direction_from_target(&res.target);
+                        } else {
+                            borrowed.alpha = 0.4614110368395256;
+                            borrowed.beta = 1.4816457152012938;
+                            borrowed.radius = 457.55058783756886;
+                            borrowed.target = [544.716, 258.727, 384.33, 0.0];
+                            borrowed_camera.update_position([952.791, 299.464, 587.233, 0.0]);
+                            borrowed_camera.set_direction_from_target(&borrowed.target);
+                        }
+                    });
+                })
+            })
         }
         return controller;
     }
@@ -348,72 +362,88 @@ impl ArcRotateCamera {
             self.inertial_radius_offset += delta;
         }
     }
-    fn restore(
-        &mut self,
-        alpha: f32,
-        beta: f32,
-        radius: f32,
-        target_x: f32,
-        target_y: f32,
-        target_z: f32,
-        position_x: f32,
-        position_y: f32,
-        position_z: f32,
-        camera_rc: &Weak<Camera>,
-    ) {
-        self.alpha = alpha;
-        self.beta = beta;
-        self.radius = radius;
-        self.target = [target_x, target_y, target_z, 0.0];
-        let upgraded = camera_rc.upgrade();
-        let unwrapped = upgraded.unwrap();
-        let mut camera = unwrapped.camera.borrow_mut();
-        camera.update_position([position_x, position_y, position_z, 0.0]);
-        camera.set_direction_from_target(&self.target);
+    fn serialize(&self) {
+        DB.with(|db_request| {
+            let position = self.camera.camera.borrow().position;
+            let state = self.state.borrow();
+            let serialized = IDBGetResultCamera {
+                alpha: state.alpha,
+                beta: state.beta,
+                radius: state.radius,
+                position,
+                target: state.target,
+            };
+            db_request.onready(move |db| {
+                let transaction = db.transaction::<true, false, _>([&SAVE_STORE]);
+                transaction.on_error(|k, e| {
+                    &"camera serialization transaction error".error();
+                });
+                transaction.on_abort(|k, e| {
+                    &"camera serialization transaction abort".error();
+                });
+                transaction.on_complete(|e| {
+                    &"camera serialization transaction complete".log();
+                });
+                let objectstore = transaction.object_store(&SAVE_STORE);
+                let req = objectstore.put(
+                    &serialized,
+                    &[String::from("camera"), String::from("ArchRotateCamera")],
+                );
+                req.on_error(|k, e| {
+                    &"camera serialization error".error();
+                });
+                req.on_success(|s,e| {});
+            });
+        })
     }
     /// Rebuilds angles (alpha, beta) and radius from the give position and target
     fn rebuild_angles_and_radius(&mut self, current_position: &[f32; 4]) {
-        let direction = current_position.sub_vec(&self.target);
-        let length = direction.length();
-        if length > 0.0 {
-            self.radius = length;
-        } else {
-            self.radius = 0.0001; // Just to avoid division by zero
-        }
-        // Alpha
+        {
+            let mut state = self.state.borrow_mut();
+            let direction = current_position.sub_vec(&state.target);
+            let length = direction.length();
+            if length > 0.0 {
+                state.radius = length;
+            } else {
+                state.radius = 0.0001; // Just to avoid division by zero
+            }
+            // Alpha
 
-        self.alpha = if direction[0] == 0.0 && direction[2] == 0.0 {
-            std::f32::consts::FRAC_PI_2 // avoid division by zero when looking along up axis, and set to acos(0)
-        } else {
-            (direction[0] / (direction[0].powf(2.0) + direction[2].powf(2.0)).sqrt()).acos()
+            state.alpha = if direction[0] == 0.0 && direction[2] == 0.0 {
+                std::f32::consts::FRAC_PI_2 // avoid division by zero when looking along up axis, and set to acos(0)
+            } else {
+                (direction[0] / (direction[0].powf(2.0) + direction[2].powf(2.0)).sqrt()).acos()
+            };
+            if direction[2] < 0.0 {
+                state.alpha = std::f32::consts::TAU - state.alpha;
+            }
+            state.beta = (direction[1] / state.radius).acos();
         };
-        if direction[2] < 0.0 {
-            self.alpha = std::f32::consts::TAU - self.alpha;
-        }
-        self.beta = (direction[1] / self.radius).acos();
         self.check_limits();
     }
     fn check_limits(&mut self) {
-        if self.beta < self.lower_beta_limit {
-            self.beta = self.lower_beta_limit;
-        } else if self.beta > self.upper_beta_limit {
-            self.beta = self.upper_beta_limit;
+        let mut state = self.state.borrow_mut();
+
+        if state.beta < self.lower_beta_limit {
+            state.beta = self.lower_beta_limit;
+        } else if state.beta > self.upper_beta_limit {
+            state.beta = self.upper_beta_limit;
         }
-        if self.alpha < self.lower_alpha_limit {
-            self.alpha = self.lower_alpha_limit;
-        } else if self.alpha > self.upper_alpha_limit {
-            self.alpha = self.upper_alpha_limit;
+        if state.alpha < self.lower_alpha_limit {
+            state.alpha = self.lower_alpha_limit;
+        } else if state.alpha > self.upper_alpha_limit {
+            state.alpha = self.upper_alpha_limit;
         }
 
-        if self.radius < self.lower_radius_limit {
-            self.radius = self.lower_radius_limit;
+        if state.radius < self.lower_radius_limit {
+            state.radius = self.lower_radius_limit;
             self.inertial_radius_offset = 0.0;
-        } else if self.radius > self.upper_radius_limit {
-            self.radius = self.upper_radius_limit;
+        } else if state.radius > self.upper_radius_limit {
+            state.radius = self.upper_radius_limit;
             self.inertial_radius_offset = 0.0;
         }
 
-        self.target[1] = self.target[1].max(self.lower_target_ylimit);
+        state.target[1] = state.target[1].max(self.lower_target_ylimit);
     }
 
     fn calculate_camera_position_and_target(
@@ -437,17 +467,19 @@ impl ArcRotateCamera {
         self.calculate_direction(camera_position, camera_direction);
     }
     fn calculate_direction(&mut self, camera_position: &[f32; 4], camera_direction: &mut [f32; 4]) {
-        camera_position.sub_vec_to_ref(&self.target, camera_direction);
+        camera_position.sub_vec_to_ref(&self.state.borrow().target, camera_direction);
         camera_direction.normalize_in_place();
     }
     fn calculate_position(&mut self, result: &mut [f32; 4]) {
-        let mut sinb = self.beta.sin();
+        let mut state = self.state.borrow_mut();
+
+        let mut sinb = state.beta.sin();
         if sinb == 0.0 {
             sinb = 0.0001;
         }
         //this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
-        result[0] = self.target[0] + self.radius * self.alpha.cos() * sinb;
-        result[1] = self.target[1] + self.radius * self.beta.cos();
-        result[2] = self.target[2] + self.radius * self.alpha.sin() * sinb;
+        result[0] = state.target[0] + state.radius * state.alpha.cos() * sinb;
+        result[1] = state.target[1] + state.radius * state.beta.cos();
+        result[2] = state.target[2] + state.radius * state.alpha.sin() * sinb;
     }
 }

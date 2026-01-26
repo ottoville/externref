@@ -1,21 +1,29 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
-use std::num::NonZeroUsize;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, LazyLock, Mutex, MutexGuard, mpsc};
+use std::sync::{mpsc, Arc, LazyLock, Mutex, MutexGuard};
 
 use crate::allocators::freeindex::{FreeIndex, FreeIndexIndex};
 use crate::gpu::gpu::MeshGPU;
 use crate::gpu::lights::InnerLights;
+use crate::objectstores::{PLANTAE_STORE, SAVE_STORE, ZONES_STORE};
 use allocators::explicit_generational_freelist::{
     ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
 };
+use IDB::idb_database::IDBDatabase;
+use IDB::idb_factory::IDBFactory;
+use IDB::idb_object_store::IDBObjectStore;
+use IDB::storage_buckets::StorageBuckets;
+#[cfg(target_arch = "wasm32")]
+use IDB::stringarray::JSStringArray;
 
 use crate::mesh::JSMesh;
 pub use crate::mesh::Mesh;
 use collider::{ColliderSphere, CLOSE_DISTANCE_SQRT};
 use externref::externref;
 use externref::Resource;
-use logger::Logger;
+use logger::{Logger, LoggerArray};
 use rapier3d::control::KinematicCharacterController;
 use rapier3d::prelude::*;
 use terramath::VectorMathF32;
@@ -26,7 +34,6 @@ unsafe fn mesh_on_physic_tick(_mesh: *const Mesh, _delta: f32, _externref: &Reso
 pub unsafe fn get_preferred_canvas_format() -> u32 {
     1
 }
-
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "env")]
@@ -114,7 +121,79 @@ pub struct Engine2 {
     pub camera_can_collide_meshes: Vec<ExplicitGenerationalFreeListIndex<fn() -> Mesh>>,
     pub collider: collider::Collider,
 }
+enum DBStoreState {
+    Database(Rc<IDBDatabase>),
+    Cbs(Vec<Box<dyn FnOnce(&IDBDatabase) -> ()>>),
+}
+pub struct DBStore {
+    state: Rc<RefCell<DBStoreState>>,
+}
+impl DBStore {
+    pub fn onready(&self, cb: impl FnOnce(&IDBDatabase) -> () + 'static) {
+        match &mut *self.state.borrow_mut() {
+            DBStoreState::Database(db) => {
+                cb(db);
+            }
+            DBStoreState::Cbs(cbs) => {
+                cbs.push(Box::new(cb));
+            }
+        }
+    }
+}
+thread_local! {
+    pub static DB: DBStore = {
+        let state = Rc::new(RefCell::new(DBStoreState::Cbs(Vec::new())));
+        let teststruct = DBStore {
+            state: state.clone()
+        };
+        StorageBuckets::open(String::from("terrasim"),true, 100000, 2052766290000.0, move |storage_bucket| {
+            let open_request = IDBFactory::open_with_storage_bucket(String::from("TerraSim"), 6,&storage_bucket);
+            open_request.on_upgrade_needed(|db, old_version, new_version| {
+                db.create_object_store::<&[String;2]>(&SAVE_STORE);
+                let plantae = db.create_object_store_with_auto_increment(&PLANTAE_STORE);
+                plantae.create_index::<false, false, _>(String::from("family"), [String::from("family")]);
+                plantae.create_index::<false, false, _>(String::from("x"), [String::from("x")]);
+                let zones = db.create_object_store_with_auto_increment(&ZONES_STORE);
+            });
+            open_request.on_blocked(|_oldv, _newv| {
+                    &"DB on blocked".log();
+            });
+            open_request
+                .request
+                .on_error(|error, _| panic!("IndexDB error {}", error));
+            let result_copy = open_request.request.result.clone();
+            open_request.request.on_success(move |db,_| {
+                &"DB opened succesfully".log();
+                db.on_error(|e| {
+                    &"DB on error".error();
+                });
+                db.on_abort(|e| {
+                    &"DB on abort".error();
+                });
+                db.on_version_change(|event| {
+                    &"DB version change".log();
+                });
+                let mut borrowed = state.borrow_mut();
+                match &mut *borrowed {
+                    DBStoreState::Database(_) => {
+                        unsafe {
+                            std::hint::unreachable_unchecked();
+                        }
+                    },
+                    DBStoreState::Cbs(fn_onces) => {
+                        for fn_once in fn_onces.drain(..) {
+                            fn_once(db)
+                        }
+                    },
+                }
+                 (*borrowed) = DBStoreState::Database(result_copy)
+            });
 
+
+        });
+        return teststruct;
+    };
+}
 pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {
     // Initialize the event collector.
     let (contact_send, _contact_recv) = mpsc::channel();

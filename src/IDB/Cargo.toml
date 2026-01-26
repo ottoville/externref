@@ -1,0 +1,18 @@
+[package]
+name = "IDB"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["rlib"]
+path = "src/mod.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+externref = "0.3.0-beta.1"
+logger = { path = "../logger" }
+
+[dev-dependencies]
+
+

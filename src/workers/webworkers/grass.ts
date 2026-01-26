@@ -31,8 +31,8 @@ const methods = {
     grasspositions = new Float32Array(data.data.positions);
   },
   get: async () => {
-    const trans = (await DB).transaction(['plantae']);
-    trans.objectStore('plantae').getAll().onsuccess = (evt) => {
+    const trans = (await DB).transaction(['1']);
+    trans.objectStore('1').getAll().onsuccess = (evt) => {
       bladecount = Math.min(
         (<IDBRequest>evt.target).result.length,
         grasspositions.length,

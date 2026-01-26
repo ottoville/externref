@@ -79,8 +79,8 @@ export class Zones extends UIRectangleNodeHover {
         5120,
         this.#ratio,
         (response) => {
-          engine.DB?.transaction('zones', 'readwrite')
-            .objectStore('zones')
+          engine.DB?.transaction('3', 'readwrite')
+            .objectStore('3')
             .put(response);
         },
       );
@@ -113,38 +113,39 @@ export class Zones extends UIRectangleNodeHover {
         ctx.fillRect(0, 0, 5120, 5120);
         const centerX = this.#size / 2;
         const centerZ = this.#size / 2;
-        engine.DB.transaction('zones').objectStore('zones').getAll().onsuccess =
-          (evt) => {
-            ctx.strokeStyle = 'blue';
-            ctx.fillStyle = 'blue';
-            ctx.lineWidth = 1;
+        engine.DB.transaction('3').objectStore('3').getAll().onsuccess = (
+          evt,
+        ) => {
+          ctx.strokeStyle = 'blue';
+          ctx.fillStyle = 'blue';
+          ctx.lineWidth = 1;
 
-            (evt.target as IDBRequest<PTDresult[]>).result.forEach((z) => {
-              ctx.setTransform(1, 0, 0, 1, 0, 0);
-              ctx.translate(
-                centerX + z.coord[0] / this.#ratio,
-                centerZ + z.coord[1] / this.#ratio,
-              );
-              ctx.rotate(-z.rad);
-              ctx.fillRect(
-                0,
-                0,
-                -(z.size.height / this.#ratio),
-                -(z.size.width / this.#ratio),
-              );
-            });
-            ctx.stroke();
-            this.#zoneTexture?.copyFromExternalImage(
-              {
-                source: texture,
-              },
-              {},
-              {
-                height: 5120,
-                width: 5120,
-              },
+          (evt.target as IDBRequest<PTDresult[]>).result.forEach((z) => {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.translate(
+              centerX + z.coord[0] / this.#ratio,
+              centerZ + z.coord[1] / this.#ratio,
             );
-          };
+            ctx.rotate(-z.rad);
+            ctx.fillRect(
+              0,
+              0,
+              -(z.size.height / this.#ratio),
+              -(z.size.width / this.#ratio),
+            );
+          });
+          ctx.stroke();
+          this.#zoneTexture?.copyFromExternalImage(
+            {
+              source: texture,
+            },
+            {},
+            {
+              height: 5120,
+              width: 5120,
+            },
+          );
+        };
       }
       const staticScene = engine.scenes.get('static');
       if (!staticScene) {

@@ -32,6 +32,19 @@ import { CanvasInterface } from './wasm-interfaces/CanvasInterface.js';
 import { GPUInterface } from './wasm-interfaces/GPUInterface.js';
 import { CanvasContextInterface } from './wasm-interfaces/CanvasContextInterface.js';
 import { BindGroupExports } from './wasm-interfaces/BindGroupInterface.js';
+import { IDBFactoryInterface } from './wasm-interfaces/IDBFactory.js';
+import { IDBRequestInterface } from './wasm-interfaces/IDBRequest.js';
+import { IDBOpenDBRequestInterface } from './wasm-interfaces/IDBOpenDBRequest.js';
+import { IDBDatabaseInterface } from './wasm-interfaces/IDBDatabase.js';
+import { IDBTransactionInterface } from './wasm-interfaces/IDBTransaction.js';
+import { CharArrayInterface } from './wasm-interfaces/CharArray.js';
+import { IDBObjectStoreInterface } from './wasm-interfaces/IDBObjectStore.js';
+import { StringArrayInterface } from './wasm-interfaces/StringArray.js';
+import {
+  type NavigatorStorageBuckets,
+  StorageBucketsInterface,
+} from './wasm-interfaces/StorageBuckets.js';
+import { StringInterface } from './wasm-interfaces/String.js';
 
 const textDecoder = new TextDecoder();
 
@@ -496,15 +509,13 @@ export type rustWasm = {
     delta_y: number,
     ctrl_key: boolean,
   ): void;
+  serialize_arcrotatecamera(controller: rust_pointer<'ArcRotateCamera'>): void;
   camera_move(
     controller: rust_pointer<'ArcRotateCamera'>,
     pointer_down_button: number,
     movement_x: number,
     movement_y: number,
   ): void;
-  get_alpha(controller: rust_pointer<'ArcRotateCamera'>): number;
-  get_beta(controller: rust_pointer<'ArcRotateCamera'>): number;
-  get_radius(controller: rust_pointer<'ArcRotateCamera'>): number;
   set_movement(
     controller: rust_pointer<'ArcRotateCamera'>,
     kinematic: boolean,
@@ -512,9 +523,6 @@ export type rustWasm = {
     target_moving_to_y: number,
     target_moving_to_z: number,
   ): void;
-  get_target_ptr(
-    controller: rust_pointer<'ArcRotateCamera'>,
-  ): rust_pointer<'target'>;
   new_mesh_camera(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'meshcamera'>;
   new_position_camera(): rust_pointer<'positioncamera'>;
   do_pick(
@@ -597,92 +605,71 @@ export type rustWasm = {
     texture: rust_pointer<'texture'>,
   ): rust_pointer<'bindgroup'>;
   create_water_bindgroup(gpu: rust_pointer<'GPU'>): rust_pointer<'bindgroup'>;
+  idb_upgrade_needed(
+    cb: rust_pointer<'IDBVersionChangeEvent'>,
+    database: IDBDatabase,
+    oldVersion: number,
+    newVersion: number | null,
+  ): void;
+  idb_on_blocked(
+    cb: rust_pointer<'IDBVersionChangeEvent'>,
+    oldVersion: number,
+    newVersion: number | null,
+  ): void;
+  idb_request_onerror(
+    cb: rust_pointer<'IDBErrorEvent'>,
+    error_ptr: number,
+    error_len: number,
+    error_cap: number,
+    event: Event,
+  ): void;
+  idb_request_onsuccess(
+    cb: rust_pointer<'IDBSuccessEvent'>,
+    result: unknown,
+    event: Event,
+  ): void;
+  idb_request_onsuccess_put(
+    cb: rust_pointer<'IDBSuccessEvent'>,
+    result: number,
+    event: Event,
+  ): void;
+  idb_request_onsuccess_undefined_result(
+    cb: rust_pointer<'IDBSuccessEvent'>,
+    event: Event,
+  ): void;
+  idb_transaction_on_error(
+    cb: rust_pointer<'IDBErrorEvent'>,
+    error_ptr: number,
+    error_len: number,
+    error_cap: number,
+    event: Event,
+  ): void;
+  idb_transaction_on_abort(
+    cb: rust_pointer<'IDBAbortEvent'>,
+    error_ptr: number,
+    error_len: number,
+    error_cap: number,
+    event: Event,
+  ): void;
+  idb_transaction_on_complete(
+    cb: rust_pointer<'IDBCompleteEvent'>,
+    event: Event,
+  ): void;
+  idb_database_transaction_onerror_or_abort(
+    cb: rust_pointer<'IDBErrorEvent'>,
+    error: string,
+  ): void;
+  idb_database_version_change(
+    cb: rust_pointer<'IDBVersionChangeEvent'>,
+    e: Event,
+  ): void;
+  idb_database_onclose(cb: rust_pointer<'IDBDBCloseEvent'>): void;
+  storage_bucket_open(
+    cb: rust_pointer<'storagebucketopencb'>,
+    storageBucket: NavigatorStorageBuckets,
+  ): void;
 } & BufferInterface &
   DevToolsInterface;
-const ObjectStores = {
-  maps: <ObjStoreDetails>{
-    parameters: {
-      autoIncrement: true,
-      keyPath: 'id',
-    },
-    version: 4,
-  },
-  plantae: <ObjStoreDetails>{
-    indices: [
-      {
-        keyPath: 'family',
-        name: 'family',
-        options: {
-          unique: false,
-        },
-        version: 3,
-      },
-      {
-        keyPath: 'x',
-        name: 'x',
-        options: {
-          unique: false,
-        },
-        version: 6,
-      },
-      {
-        keyPath: 'grid',
-        name: 'grid',
-        options: {
-          unique: false,
-        },
-        version: 6,
-      },
-      {
-        keyPath: ['gridx', 'gridz'],
-        name: 'gridxz',
-        options: {
-          unique: false,
-        },
-        version: 6,
-      },
-    ],
-    parameters: {
-      autoIncrement: true,
-      keyPath: 'id',
-    },
-    version: 2,
-  },
-  save: <ObjStoreDetails>{
-    parameters: {
-      autoIncrement: false,
-      keyPath: ['type', 'name'],
-    },
-    version: 3,
-  },
-  zones: <ObjStoreDetails>{
-    parameters: {
-      autoIncrement: true,
-      keyPath: 'id',
-    },
-    version: 1,
-  },
-};
-
-type ObjectStore = keyof typeof ObjectStores;
-interface EarthTransaction extends IDBTransaction {
-  objectStore(name: ObjectStore): IDBObjectStore;
-}
-
-interface EarthDatabase extends IDBDatabase {
-  transaction<T extends ObjectStore>(
-    storeNames: T,
-    mode?: IDBTransactionMode,
-  ): EarthTransaction;
-  transaction<T extends ObjectStore[]>(
-    storeNames: T,
-    mode?: IDBTransactionMode,
-  ): EarthTransaction;
-  createObjectStore(
-    name: ObjectStore,
-    optionalParameters?: IDBObjectStoreParameters,
-  ): IDBObjectStore;
-}
 let deviceId = 0;
 type Events =
   | 'pointerdown'
@@ -695,6 +682,11 @@ type Events =
   | 'keyup';
 
 export class Engine {
+  /**
+   * @deprecated
+   */
+  public DB: IDBDatabase | undefined = undefined;
+
   /*
         This is the distance that collision response will set the object after collide.
         It is the constraint that keeps objects together. So when force is applied, the collision occurs.
@@ -740,54 +732,6 @@ export class Engine {
       rust: Response | PromiseLike<Response> | BufferSource;
     },
   ): Promise<Engine | void> {
-    let DB: Promise<EarthDatabase> | undefined = undefined;
-    if (typeof indexedDB === 'object') {
-      DB = new Promise<EarthDatabase>(function (res) {
-        const IDB = indexedDB.open('TerraSim', 6);
-        IDB.onerror = function (e) {
-          showError(createError(e));
-        };
-        IDB.onupgradeneeded = function (e) {
-          console.log('IDBVersionChangeEvent', e);
-          // Save the IDBDatabase interface
-          const db: EarthDatabase = this.result;
-
-          (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach(
-            (objstore) => {
-              let createdStore: IDBObjectStore;
-              if (ObjectStores[objstore].version > e.oldVersion) {
-                createdStore = db.createObjectStore(
-                  objstore,
-                  ObjectStores[objstore].parameters,
-                );
-              } else {
-                if (!this.transaction) throw new Error('No transaction');
-                createdStore = this.transaction.objectStore(objstore);
-              }
-              let indices: ObjStoreIndex[] | undefined;
-              if ((indices = ObjectStores[objstore].indices)) {
-                indices.forEach((index) => {
-                  if (e.oldVersion < index.version) {
-                    createdStore.createIndex(
-                      index.name,
-                      index.keyPath,
-                      index.options,
-                    );
-                  }
-                });
-              }
-            },
-          );
-        };
-        IDB.onsuccess = function () {
-          this.result.onerror = function (e) {
-            console.log(e, (<IDBRequest>e.target).error!.message);
-          };
-          res(this.result);
-        };
-      });
-    }
-
     let rust: WebAssembly.WebAssemblyInstantiatedSource;
     const exportObj: WebAssembly.Imports = {
       bindcommands: BindCommandsInterface,
@@ -795,6 +739,7 @@ export class Engine {
       buffer: BufferExports,
       camera: CameraInterface,
       canvas: CanvasInterface,
+      chararray: CharArrayInterface,
       commandencoder: CommandEncoderInterface,
       computepassencoder: ComputePassEncoderInterface,
       console: {
@@ -910,10 +855,19 @@ export class Engine {
         },
       },
       gpu: GPUInterface,
+      idb_database: IDBDatabaseInterface,
+      idb_factory: IDBFactoryInterface,
+      idb_objectStore: IDBObjectStoreInterface,
+      idb_openDBRequest: IDBOpenDBRequestInterface,
+      idb_request: IDBRequestInterface,
+      idb_transaction: IDBTransactionInterface,
       queue: QueueInterface,
       renderbundleencoder: RenderbundleEncoderInterface,
       rendercommands: RenderCommandsInterface,
       renderpassencoder: RenderPassEncoderInterface,
+      storage_buckets: StorageBucketsInterface,
+      string: StringInterface,
+      stringarray: StringArrayInterface,
       texture: TextureInterface,
       webgpucontext: CanvasContextInterface,
     };
@@ -922,11 +876,20 @@ export class Engine {
         wasmBinaries.rust instanceof ArrayBuffer ||
         ArrayBuffer.isView(wasmBinaries.rust)
       ) {
-        rust = await WebAssembly.instantiate(wasmBinaries.rust, exportObj);
+        rust = await WebAssembly.instantiate(
+          wasmBinaries.rust,
+          exportObj,
+          //@ts-expect-error TODO in TS
+          {
+            builtins: ['js-string'],
+          },
+        );
       } else {
         rust = await WebAssembly.instantiateStreaming(
           wasmBinaries.rust,
           exportObj,
+          //@ts-expect-error TODO in TS
+          { builtins: ['js-string'] },
         );
       }
       if (!rust.instance.exports.memory) {
@@ -941,7 +904,7 @@ export class Engine {
     } catch (e) {
       return showError(createError(e));
     }
-    return new Engine(DB ? await DB : undefined, nodes, rustWasm, showError);
+    return new Engine(nodes, rustWasm, showError);
   }
 
   showError(e: unknown) {
@@ -1106,7 +1069,6 @@ export class Engine {
     });
   }
   constructor(
-    public DB: EarthDatabase | undefined,
     nodes:
       | {
           canvas: HTMLCanvasElement;
@@ -1204,7 +1166,9 @@ export class Engine {
       const saveControllerState = () => {
         this.inputManager?.serialize();
       };
-      document.addEventListener('visibilitychange', saveControllerState);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) saveControllerState();
+      });
       window.addEventListener('beforeunload', saveControllerState);
     } else {
       this.GPUReady = new Promise(() => {

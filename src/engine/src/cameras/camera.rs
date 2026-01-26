@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::num::NonZeroUsize;
 use std::rc::{Rc, Weak};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -39,13 +39,15 @@ pub unsafe extern "C" fn get_camera_externref(camera_id: u32, gpu: *mut GPU) -> 
     ptr::read(externref as *const Resource<JSCamera> as *const usize)
 }
 thread_local! {
-    static CAMERA_LABEL:RefCell<[usize; 3]> = const { RefCell::new([0;3]) };
+    static CAMERA_LABEL:Cell<[usize; 3]> = const { Cell::new([0;3]) };
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_camera_label(camera: CameraPtr) -> *mut [usize; 3] {
     let label = &(&(*camera)).upgrade().unwrap().label;
-    CAMERA_LABEL.set([label.as_ptr() as usize, label.len(), label.capacity()]);
-    CAMERA_LABEL.with(|camera_label| camera_label.as_ptr())
+    CAMERA_LABEL.with(|camera_label| {
+        camera_label.set([label.as_ptr() as usize, label.len(), label.capacity()]);
+        camera_label.as_ptr()
+    })
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_camera_position(camera: CameraPtr, x: f32, y: f32, z: f32) {
@@ -283,7 +285,7 @@ pub struct InnerCamera {
     update_view_bind_group: Rc<BindGroup<2>>,
     pub update_clusters_bind_group: Rc<BindGroup<2>>,
     pub uniform_bindgroup: Rc<BindGroup<5>>,
-    pub controller: Option<Box<dyn CameraController + Send>>,
+    pub controller: Option<Box<dyn CameraController>>,
 }
 impl InnerCamera {
     pub fn update_camera_projection_view_inverted(&mut self) {

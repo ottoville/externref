@@ -17,6 +17,7 @@ pub mod projection;
 mod swapbuffers;
 mod terrain;
 mod vertices;
+pub mod objectstores;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
