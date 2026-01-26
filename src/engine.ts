@@ -529,7 +529,13 @@ export type rustWasm = {
     id: number,
     pickpipeline: GPUComputePipeline,
     gpu: rust_pointer<'GPU'>,
-    cb: (x: number, y: number, z: number, mesh_id: number) => void,
+    cb: (
+      x: number,
+      y: number,
+      z: number,
+      mesh_id: number,
+      generation: number,
+    ) => void,
   ): void;
   get_renderpass_size(
     id: number,
@@ -816,13 +822,20 @@ export class Engine {
           return performance.now();
         },
         pick_cb(
-          cb: (x: number, y: number, z: number, mesh_id: number) => void,
+          cb: (
+            x: number,
+            y: number,
+            z: number,
+            mesh_id: number,
+            generation: number,
+          ) => void,
           x: number,
           y: number,
           z: number,
           mesh_id: number,
+          generation: number,
         ) {
-          cb(x, y, z, mesh_id);
+          cb(x, y, z, mesh_id, generation);
         },
         renderpass_on_resize(
           renderpass: RenderPass,

@@ -65,11 +65,13 @@ export abstract class AbstractPickableRenderPass<
     meshId: number;
     generation: number;
   } | null> | null;
-  pickPosition(
-    _mesh = false,
-  ): Promise<
+  pickPosition(_mesh = false): Promise<
     | { position: readonly [number, number, number] }
-    | { position: readonly [number, number, number]; meshId: number }
+    | {
+        position: readonly [number, number, number];
+        meshId: number;
+        generation: number;
+      }
     | null
   > | null {
     return new Promise((resolve) => {
@@ -77,8 +79,9 @@ export abstract class AbstractPickableRenderPass<
         this.props.id,
         this.#pickPositionPipeline!,
         engine.gpu!.gpu,
-        (x, y, z, mesh_id) => {
+        (x, y, z, mesh_id, generation) => {
           resolve({
+            generation,
             meshId: mesh_id,
             position: [x, y, z],
           });

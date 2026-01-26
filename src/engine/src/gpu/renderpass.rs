@@ -45,13 +45,28 @@ use crate::{
 pub struct JSFunctionPick(());
 
 #[cfg(not(target_arch = "wasm32"))]
-fn pick_cb(_cb: &Resource<JSFunctionPick>, _x: f32, _y: f32, _z: f32, _mesh_id: u32) {}
+fn pick_cb(
+    _cb: &Resource<JSFunctionPick>,
+    _x: f32,
+    _y: f32,
+    _z: f32,
+    _mesh_id: u32,
+    generation: u32,
+) {
+}
 
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "env")]
 extern "C" {
-    fn pick_cb(cb: &Resource<JSFunctionPick>, x: f32, y: f32, z: f32, mesh_id: u32);
+    fn pick_cb(
+        cb: &Resource<JSFunctionPick>,
+        x: f32,
+        y: f32,
+        z: f32,
+        mesh_id: u32,
+        generation: u32,
+    );
 }
 
 #[externref]
@@ -503,7 +518,14 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
                                 let result =
                                     [x, y, data.z].transform(&camera.projection_view_inverted);
                                 unsafe {
-                                    pick_cb(&cb, result[0], result[1], result[2], data.mesh_id)
+                                    pick_cb(
+                                        &cb,
+                                        result[0],
+                                        result[1],
+                                        result[2],
+                                        data.mesh_id,
+                                        data.generation,
+                                    )
                                 };
                             }
                         }),
