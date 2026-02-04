@@ -132,7 +132,16 @@ impl From<&str> for JSString {
     fn from(value: &str) -> Self {
         JSString {
             externref: unsafe { create_string(value.as_ptr() as usize, value.len()) },
-            string: Some(value.to_owned()),
+            string: None,
+        }
+    }
+}
+
+impl From<&String> for JSString {
+    fn from(value: &String) -> Self {
+        JSString {
+            externref: unsafe { create_string(value.as_ptr() as usize, value.len()) },
+            string: None,
         }
     }
 }

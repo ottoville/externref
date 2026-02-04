@@ -7,6 +7,7 @@ use std::{
 
 use externref::{externref, Resource};
 use terramath::VectorMath;
+use web::console::console::Console;
 use webgpu::{
     bindgroup::{
         bindgroup::BindGroup, bufferbinding::BufferBinding, texturebinding::TextureBinding,
@@ -501,35 +502,39 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
                     let y = -((mouse_y as f32 / self.inner_renderpass.size[1].get() as f32) * 2.0
                         - 1.0);
 
-                    pickbuffer_read.map_read_async(
-                        0,
-                        Some(size),
-                        Box::new(move |buffer: MappedGPUBuffer<true, false, false, true>| {
-                            let mut data = PickData {
-                                z: 0.0,
-                                mesh_id: 0,
-                                generation: 0,
-                            };
-                            buffer.get_mapped_range(&mut data, 0);
-                            *pickbuffer_rc_read.borrow_mut() = Some(buffer.unmap());
-                            // Z is 0 when did not hit anything, far plane value
-                            if data.z != 0.0 {
-                                let camera = camera_rc.camera.borrow();
-                                let result =
-                                    [x, y, data.z].transform(&camera.projection_view_inverted);
-                                unsafe {
-                                    pick_cb(
-                                        &cb,
-                                        result[0],
-                                        result[1],
-                                        result[2],
-                                        data.mesh_id,
-                                        data.generation,
-                                    )
+                    pickbuffer_read.map_read_async(0, Some(size), move |buffer_res| {
+                        match buffer_res {
+                            Ok(buffer) => {
+                                let mut data = PickData {
+                                    z: 0.0,
+                                    mesh_id: 0,
+                                    generation: 0,
                                 };
+                                buffer.get_mapped_range(&mut data, 0);
+                                *pickbuffer_rc_read.borrow_mut() = Some(buffer.unmap());
+                                // Z is 0 when did not hit anything, far plane value
+                                if data.z != 0.0 {
+                                    let camera = camera_rc.camera.borrow();
+                                    let result =
+                                        [x, y, data.z].transform(&camera.projection_view_inverted);
+                                    unsafe {
+                                        pick_cb(
+                                            &cb,
+                                            result[0],
+                                            result[1],
+                                            result[2],
+                                            data.mesh_id,
+                                            data.generation,
+                                        )
+                                    };
+                                }
                             }
-                        }),
-                    );
+                            Err((buffer, error)) => {
+                                Console::error(&error);
+                                *pickbuffer_rc_read.borrow_mut() = Some(buffer);
+                            }
+                        }
+                    });
                 }
             }
             None => todo!(),

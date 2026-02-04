@@ -12,39 +12,55 @@ import { MainNode, type RigidBody } from './MainNode.js';
 import {
   BufferExports,
   type BufferInterface,
-} from './wasm-interfaces/BufferInterface.js';
+} from './wasm-interfaces/WebGPU/BufferInterface.js';
 import { Rust_Iterator } from './utils.js';
-import { CommandEncoderInterface } from './wasm-interfaces/CommandEncoderInterface.js';
+import { CommandEncoderInterface } from './wasm-interfaces/WebGPU/CommandEncoderInterface.js';
 import { Externref } from './externref.js';
-import { ComputePassEncoderInterface } from './wasm-interfaces/ComputePassEncoder.js';
+import { ComputePassEncoderInterface } from './wasm-interfaces/WebGPU/ComputePassEncoder.js';
 import { CameraInterface } from './wasm-interfaces/CameraInterface.js';
-import { QueueInterface } from './wasm-interfaces/QueueInterface.js';
-import { DeviceExports } from './wasm-interfaces/DeviceInterface.js';
+import { QueueInterface } from './wasm-interfaces/WebGPU/QueueInterface.js';
+import { DeviceExports } from './wasm-interfaces/WebGPU/DeviceInterface.js';
 import { DevToolsInterface } from './wasm-interfaces/DevToolsInterface.js';
-import { RenderbundleEncoderInterface } from './wasm-interfaces/RenderBundleEncoderInterface.js';
-import { BindCommandsInterface } from './wasm-interfaces/BindCommandsInterface.js';
+import { RenderbundleEncoderInterface } from './wasm-interfaces/WebGPU/RenderBundleEncoderInterface.js';
+import { BindCommandsInterface } from './wasm-interfaces/WebGPU/BindCommandsInterface.js';
 import { RenderPass } from 'GPU/RenderPasses/RenderPass.js';
-import { RenderPassEncoderInterface } from './wasm-interfaces/RenderPassEncoder.js';
-import { RenderCommandsInterface } from './wasm-interfaces/RenderCommandsInterface.js';
-import { serialize_terrain } from './world/Terrain.js';
-import { TextureInterface } from './wasm-interfaces/TextureInterface.js';
+import { RenderPassEncoderInterface } from './wasm-interfaces/WebGPU/RenderPassEncoder.js';
+import { RenderCommandsInterface } from './wasm-interfaces/WebGPU/RenderCommandsInterface.js';
+import { TextureInterface } from './wasm-interfaces/WebGPU/TextureInterface.js';
 import { CanvasInterface } from './wasm-interfaces/CanvasInterface.js';
-import { GPUInterface } from './wasm-interfaces/GPUInterface.js';
-import { CanvasContextInterface } from './wasm-interfaces/CanvasContextInterface.js';
-import { BindGroupExports } from './wasm-interfaces/BindGroupInterface.js';
-import { IDBFactoryInterface } from './wasm-interfaces/IDBFactory.js';
-import { IDBRequestInterface } from './wasm-interfaces/IDBRequest.js';
-import { IDBOpenDBRequestInterface } from './wasm-interfaces/IDBOpenDBRequest.js';
-import { IDBDatabaseInterface } from './wasm-interfaces/IDBDatabase.js';
-import { IDBTransactionInterface } from './wasm-interfaces/IDBTransaction.js';
+import { GPUInterface } from './wasm-interfaces/WebGPU/GPUInterface.js';
+import { CanvasContextInterface } from './wasm-interfaces/WebGPU/CanvasContextInterface.js';
+import { BindGroupExports } from './wasm-interfaces/WebGPU/BindGroupInterface.js';
+import { IDBFactoryInterface } from './wasm-interfaces/IDB/IDBFactory.js';
+import {
+  IDBRequestImports,
+  IDBRequestInterface,
+} from './wasm-interfaces/IDB/IDBRequest.js';
+import { IDBOpenDBRequestInterface } from './wasm-interfaces/IDB/IDBOpenDBRequest.js';
+import { IDBDatabaseInterface } from './wasm-interfaces/IDB/IDBDatabase.js';
+import { IDBTransactionInterface } from './wasm-interfaces/IDB/IDBTransaction.js';
 import { CharArrayInterface } from './wasm-interfaces/CharArray.js';
-import { IDBObjectStoreInterface } from './wasm-interfaces/IDBObjectStore.js';
+import { IDBObjectStoreInterface } from './wasm-interfaces/IDB/IDBObjectStore.js';
 import { StringArrayInterface } from './wasm-interfaces/StringArray.js';
 import {
   type NavigatorStorageBuckets,
   StorageBucketsInterface,
 } from './wasm-interfaces/StorageBuckets.js';
 import { StringInterface } from './wasm-interfaces/String.js';
+import {
+  FileSystemDirectoryHandleImports,
+  FileSystemDirectoryHandleInterface,
+} from './wasm-interfaces/FileSystem/FileSystemDirectoryHandle.js';
+import {
+  FileSystemFileHandleImports,
+  FileSystemFileHandleInterface,
+} from './wasm-interfaces/FileSystem/FileSystemFileHandle.js';
+import {
+  FileSystemWritableFileStreamImports,
+  FileSystemWritableFileStreamInterface,
+} from './wasm-interfaces/FileSystem/FileSystemWritableFileStream.js';
+import { consoleInterface } from './wasm-interfaces/console/console.js';
+import { WritableStreamInterface } from './wasm-interfaces/WritableStream.js';
 
 const textDecoder = new TextDecoder();
 
@@ -201,6 +217,7 @@ export type rustWasm = {
     indices: rust_pointer<'GPUBuffer'>,
     vertices: rust_pointer<'GPUBuffer'>,
     gpu: rust_pointer<'GPU'>,
+    serialize: boolean,
   ): void;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
@@ -579,14 +596,6 @@ export type rustWasm = {
     id: number,
     generation: number,
   ): boolean;
-  buffer_mapped_write(
-    rust_buffer: rust_pointer<'buffer'>,
-    cb: rust_pointer<'fn'>,
-  ): void;
-  buffer_mapped_read(
-    rust_buffer: rust_pointer<'buffer'>,
-    cb: rust_pointer<'fn'>,
-  ): void;
   create_ui_texture(
     device: GPUDevice,
     width: number,
@@ -622,27 +631,6 @@ export type rustWasm = {
     oldVersion: number,
     newVersion: number | null,
   ): void;
-  idb_request_onerror(
-    cb: rust_pointer<'IDBErrorEvent'>,
-    error_ptr: number,
-    error_len: number,
-    error_cap: number,
-    event: Event,
-  ): void;
-  idb_request_onsuccess(
-    cb: rust_pointer<'IDBSuccessEvent'>,
-    result: unknown,
-    event: Event,
-  ): void;
-  idb_request_onsuccess_put(
-    cb: rust_pointer<'IDBSuccessEvent'>,
-    result: number,
-    event: Event,
-  ): void;
-  idb_request_onsuccess_undefined_result(
-    cb: rust_pointer<'IDBSuccessEvent'>,
-    event: Event,
-  ): void;
   idb_transaction_on_error(
     cb: rust_pointer<'IDBErrorEvent'>,
     error_ptr: number,
@@ -674,8 +662,13 @@ export type rustWasm = {
     cb: rust_pointer<'storagebucketopencb'>,
     storageBucket: NavigatorStorageBuckets,
   ): void;
+  serialize_terrain(mesh_id: rust_pointer<'mesh_id'>): void;
 } & BufferInterface &
-  DevToolsInterface;
+  DevToolsInterface &
+  IDBRequestImports &
+  FileSystemDirectoryHandleImports &
+  FileSystemFileHandleImports &
+  FileSystemWritableFileStreamImports;
 let deviceId = 0;
 type Events =
   | 'pointerdown'
@@ -740,6 +733,10 @@ export class Engine {
   ): Promise<Engine | void> {
     let rust: WebAssembly.WebAssemblyInstantiatedSource;
     const exportObj: WebAssembly.Imports = {
+      FSDirectoryHandle: FileSystemDirectoryHandleInterface,
+      FSFileHandle: FileSystemFileHandleInterface,
+      FSWritableStream: FileSystemWritableFileStreamInterface,
+      WritableStream: WritableStreamInterface,
       bindcommands: BindCommandsInterface,
       bindgroup: BindGroupExports,
       buffer: BufferExports,
@@ -748,7 +745,8 @@ export class Engine {
       chararray: CharArrayInterface,
       commandencoder: CommandEncoderInterface,
       computepassencoder: ComputePassEncoderInterface,
-      console: {
+      console: consoleInterface,
+      console_legacy: {
         debug_str(ptr: number, length: number) {
           console.debug(
             textDecoder.decode(
@@ -843,25 +841,6 @@ export class Engine {
           height: number,
         ) {
           renderpass.onResize.forEach((cb) => cb(width, height));
-        },
-        serialize_terrain(
-          vertices_ptr: number,
-          vertices_bytelen: number,
-          indices_ptr: number,
-          indices_len: number,
-        ) {
-          serialize_terrain(
-            new Float32Array(
-              engine.rust.memory.buffer,
-              vertices_ptr,
-              vertices_bytelen / Float32Array.BYTES_PER_ELEMENT,
-            ),
-            new Uint32Array(
-              engine.rust.memory.buffer,
-              indices_ptr,
-              indices_len,
-            ),
-          );
         },
         vertices_change({ externref: mesh }: Externref<false, DataNode>) {
           mesh.onVerticesChange();

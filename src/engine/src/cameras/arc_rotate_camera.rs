@@ -6,7 +6,7 @@ use terramath::{MatrixMath, VectorMath, VectorMathF32};
 
 use crate::{
     cameras::camera::{Camera, CameraPtr, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
-    engine::DB,
+    engine::STORAGE,
     mesh::ENGINE,
     objectstores::SAVE_STORE,
 };
@@ -310,8 +310,8 @@ impl ArcRotateCamera {
             state.borrow_mut().target = camera.position.sub_vec(&camera.direction.multiply(100.0));
             controller.rebuild_angles_and_radius(&camera.position);
         } else {
-            DB.with(|db_request| {
-                db_request.onready(move |db| {
+            STORAGE.with(|storage| {
+                storage.get_indexed_db(|db| {
                     let transaction = db.transaction::<false, false, _>([&SAVE_STORE]);
                     let objectstore = transaction.object_store(&SAVE_STORE);
 
@@ -363,7 +363,7 @@ impl ArcRotateCamera {
         }
     }
     fn serialize(&self) {
-        DB.with(|db_request| {
+        STORAGE.with(|db_request| {
             let position = self.camera.camera.borrow().position;
             let state = self.state.borrow();
             let serialized = IDBGetResultCamera {
@@ -373,7 +373,7 @@ impl ArcRotateCamera {
                 position,
                 target: state.target,
             };
-            db_request.onready(move |db| {
+            db_request.get_indexed_db(move |db| {
                 let transaction = db.transaction::<true, false, _>([&SAVE_STORE]);
                 transaction.on_error(|k, e| {
                     &"camera serialization transaction error".error();

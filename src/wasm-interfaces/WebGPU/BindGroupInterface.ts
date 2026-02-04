@@ -1,5 +1,5 @@
-import { BGLayout } from '../webgpu-ts/index.js';
-import type { Engine } from '../engine.js';
+import { BGLayout } from '../../webgpu-ts/index.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 const textDecoder = new TextDecoder();

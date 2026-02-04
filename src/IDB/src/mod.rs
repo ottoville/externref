@@ -12,6 +12,4 @@ pub mod idb_index;
 pub mod stringarray;
 pub mod idb_get_result;
 pub mod idb_key;
-pub mod storage_buckets;
-pub mod jsstring;
 pub mod idb_key_result;

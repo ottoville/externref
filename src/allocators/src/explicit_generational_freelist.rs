@@ -17,6 +17,7 @@ struct Slot<T> {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
 struct InnerIndex {
     idx: u32,
     generation: NonZeroU32,
@@ -24,6 +25,7 @@ struct InnerIndex {
 
 // Guard for not referencing index with only type that was returned from allocator.
 #[repr(transparent)]
+#[derive(Copy, Clone)]
 pub struct ExplicitGenerationalFreeListIndex<T> {
     idx: InnerIndex,
     phantom: PhantomData<T>,
@@ -32,17 +34,6 @@ pub struct ExplicitGenerationalFreeListIndex<T> {
 impl<T> ExplicitGenerationalFreeListIndex<T> {
     pub fn compare_with_raw(&self, id: u32, generation: NonZeroU32) -> bool {
         self.idx.idx == id && self.idx.generation == generation
-    }
-}
-impl<T> Clone for ExplicitGenerationalFreeListIndex<T> {
-    fn clone(&self) -> Self {
-        Self {
-            idx: InnerIndex {
-                idx: self.idx.idx,
-                generation: self.idx.generation,
-            },
-            phantom: PhantomData,
-        }
     }
 }
 
@@ -62,7 +53,7 @@ impl<T> ExplicitGenerationalFreeList<T> {
             next_free: 0,
         }
     }
-    pub fn insert(&mut self, value: T) -> ExplicitGenerationalFreeListIndex<fn() ->T> {
+    pub fn insert(&mut self, value: T) -> (ExplicitGenerationalFreeListIndex<fn() -> T>, &mut T) {
         let idx = self.next_free;
         let generation = if idx == self.entries.len() as u32 {
             self.next_free += 1;
@@ -81,17 +72,20 @@ impl<T> ExplicitGenerationalFreeList<T> {
                     Some(generation) => generation,
                     None => NonZeroU32::new_unchecked(1),
                 };
-                self.next_free = freeslot.next_free.take().unwrap();
+                self.next_free = freeslot.next_free.take().unwrap_unchecked();
                 freeslot.data = ManuallyDrop::new(value);
                 freeslot.generation
             }
         };
-        return ExplicitGenerationalFreeListIndex::<fn() ->T> {
-            idx: InnerIndex { idx, generation },
-            phantom: PhantomData,
-        };
+        return (
+            ExplicitGenerationalFreeListIndex::<fn() -> T> {
+                idx: InnerIndex { idx, generation },
+                phantom: PhantomData,
+            },
+            unsafe { &mut self.entries.last_mut().unwrap_unchecked().data },
+        );
     }
-    pub fn remove(&mut self, index: ExplicitGenerationalFreeListIndex<fn() ->T>) -> bool {
+    pub fn remove(&mut self, index: ExplicitGenerationalFreeListIndex<fn() -> T>) -> bool {
         let entry = unsafe { self.entries.get_unchecked_mut(index.idx.idx as usize) };
         if entry.generation == index.idx.generation {
             entry.next_free = Some(self.next_free);
@@ -117,7 +111,7 @@ impl<T> ExplicitGenerationalFreeList<T> {
             return Some(&mut *entry.data);
         })
     }
-    pub fn get(&self, index: &ExplicitGenerationalFreeListIndex<fn() ->T>) -> Option<&T> {
+    pub fn get(&self, index: &ExplicitGenerationalFreeListIndex<fn() -> T>) -> Option<&T> {
         unsafe {
             let entry = self.entries.get_unchecked(index.idx.idx as usize);
             if entry.generation == index.idx.generation {
@@ -126,7 +120,10 @@ impl<T> ExplicitGenerationalFreeList<T> {
             return None;
         }
     }
-    pub fn get_mut(&mut self, index: &ExplicitGenerationalFreeListIndex<fn() ->T>) -> Option<&mut T> {
+    pub fn get_mut(
+        &mut self,
+        index: &ExplicitGenerationalFreeListIndex<fn() -> T>,
+    ) -> Option<&mut T> {
         unsafe {
             let entry = self.entries.get_unchecked_mut(index.idx.idx as usize);
             if entry.generation == index.idx.generation {
@@ -139,14 +136,19 @@ impl<T> ExplicitGenerationalFreeList<T> {
         self.entries.len()
     }
 }
-impl<T> Index<&ExplicitGenerationalFreeListIndex<fn() ->T>> for ExplicitGenerationalFreeList<T> {
+impl<T> Index<&ExplicitGenerationalFreeListIndex<fn() -> T>> for ExplicitGenerationalFreeList<T> {
     type Output = T;
-    fn index(&self, index: &ExplicitGenerationalFreeListIndex<fn() ->T>) -> &Self::Output {
+    fn index(&self, index: &ExplicitGenerationalFreeListIndex<fn() -> T>) -> &Self::Output {
         self.get(index).unwrap()
     }
 }
-impl<T> IndexMut<&ExplicitGenerationalFreeListIndex<fn() ->T>> for ExplicitGenerationalFreeList<T> {
-    fn index_mut(&mut self, index: &ExplicitGenerationalFreeListIndex<fn() ->T>) -> &mut Self::Output {
+impl<T> IndexMut<&ExplicitGenerationalFreeListIndex<fn() -> T>>
+    for ExplicitGenerationalFreeList<T>
+{
+    fn index_mut(
+        &mut self,
+        index: &ExplicitGenerationalFreeListIndex<fn() -> T>,
+    ) -> &mut Self::Output {
         self.get_mut(index).unwrap()
     }
 }
@@ -178,25 +180,25 @@ fn test_generational_explicit_freelist() {
     {
         let mut freelist: ExplicitGenerationalFreeList<TestEntry> =
             ExplicitGenerationalFreeList::new(2);
-        let first_6 = freelist.insert(TestEntry(6)); // 6
+        let (first_6, _) = freelist.insert(TestEntry(6)); // 6
         freelist.remove(first_6); // empty
-        let first_0 = freelist.insert(TestEntry(0)); //0
-        let second_1 = freelist.insert(TestEntry(1)); //0,1
+        let first_0 = freelist.insert(TestEntry(0)).0; //0
+        let (second_1, _) = freelist.insert(TestEntry(1)); //0,1
         let second_idx = second_1.idx.idx;
-        let third_2 = freelist.insert(TestEntry(2)); //0,1,2
+        let third_2 = freelist.insert(TestEntry(2)).0; //0,1,2
         assert_eq!(freelist.used_space(), 3);
         freelist.remove(second_1.clone()); //0,empty,2
 
         assert_ne!(freelist.get(&second_1).is_none(), true);
 
         assert_eq!(freelist.used_space(), 3);
-        let forth_3 = freelist.insert(TestEntry(3)); //0,3,2
+        let (forth_3, _) = freelist.insert(TestEntry(3)); //0,3,2
         assert_eq!(freelist.used_space(), 3);
         assert_eq!(second_idx, forth_3.idx.idx);
         assert_eq!(freelist.get(&forth_3).is_some(), true);
         assert_eq!(freelist.get(&second_1).is_some(), false);
 
-        let fifth_4 = freelist.insert(TestEntry(4)); //0,3,2,4
+        let fifth_4 = freelist.insert(TestEntry(4)).0; //0,3,2,4
         assert_eq!(freelist.used_space(), 4);
         assert_eq!(freelist[&first_0].0, 0);
         assert_eq!(freelist[&third_2].0, 2);

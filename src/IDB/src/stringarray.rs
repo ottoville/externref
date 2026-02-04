@@ -1,6 +1,5 @@
 use externref::Resource;
-
-use crate::jsstring::{JSString, JSStringExtern};
+use web::primitives::jsstring::{JSString, JSStringExtern};
 
 #[cfg(not(target_arch = "wasm32"))]
 unsafe fn create_string_array(_value: &Resource<JSStringExtern>) -> Resource<JSStringArray> {
@@ -8,7 +7,10 @@ unsafe fn create_string_array(_value: &Resource<JSStringExtern>) -> Resource<JSS
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
 #[cfg(not(target_arch = "wasm32"))]
-unsafe fn push_to_string_array(_string: &Resource<JSStringArray>, _value: &Resource<JSStringExtern>) {
+unsafe fn push_to_string_array(
+    _string: &Resource<JSStringArray>,
+    _value: &Resource<JSStringExtern>,
+) {
 }
 #[cfg(target_arch = "wasm32")]
 #[externref::externref]

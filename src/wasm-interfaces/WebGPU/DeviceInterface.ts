@@ -1,6 +1,6 @@
-import { Rust_Iterator, rust_iterator_to_js } from '../utils.js';
-import type { Engine } from '../engine.js';
-import { ShaderStage } from '../webgpu-ts/index.js';
+import { Rust_Iterator, rust_iterator_to_js } from '../../utils.js';
+import type { Engine } from '../../engine.js';
+import { ShaderStage } from '../../webgpu-ts/index.js';
 import {
   textureFormatMapping,
   viewDimensionMapping,

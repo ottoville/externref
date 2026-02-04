@@ -1,7 +1,10 @@
 use externref::{externref, Resource};
 
-use crate::jsstring::JSString;
-use crate::jsstring::JSStringExtern;
+use crate::{
+    file_system::fs_directory_handle::{FSDirectoryCb, FSDirectoryHandle},
+    primitives::jsstring::{JSString, JSStringExtern},
+};
+
 #[no_mangle]
 #[externref]
 pub unsafe extern "C" fn storage_bucket_open(
@@ -20,7 +23,9 @@ unsafe fn open(
     _cb: StorageBucketOpenCB,
 ) {
 }
-
+#[cfg(not(target_arch = "wasm32"))]
+unsafe fn get_directory(_storage_manager: &Resource<()>, _cb: FSDirectoryCb) {
+}
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "storage_buckets")]
@@ -32,6 +37,8 @@ extern "C" {
         expires: f32,
         cb: StorageBucketOpenCB,
     );
+    pub fn get_directory(storage_manager: &Resource<()>, cb: FSDirectoryCb);
+
 }
 pub struct JSStorageBucket();
 type StorageBucketOpenCB = *mut *mut dyn FnOnce(NavigatorStorageBuckets);
@@ -39,6 +46,22 @@ type StorageBucketOpenCB = *mut *mut dyn FnOnce(NavigatorStorageBuckets);
 pub struct StorageBuckets {}
 pub struct NavigatorStorageBuckets {
     pub externref: Resource<JSStorageBucket>,
+}
+impl NavigatorStorageBuckets {
+    pub fn get_directory(&self, cb: impl FnOnce(Result<FSDirectoryHandle, JSString>) + 'static) {
+        unsafe {
+            get_directory(
+                self.externref.upcast_ref(),
+                Box::into_raw(Box::new(Box::into_raw(Box::new(move |value| {
+                    cb(value
+                        .map(|(directory, name)| {
+                            FSDirectoryHandle::new(JSString::new(name), directory)
+                        })
+                        .map_err(|err| JSString::new(err)))
+                })))),
+            )
+        }
+    }
 }
 impl StorageBuckets {
     pub fn open(

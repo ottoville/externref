@@ -3,11 +3,11 @@ use crate::event::{Event, JSEVent};
 use crate::idb_object_store::ObjectStoreTrait;
 use crate::idb_transaction::IDBTransactionCbComplete;
 use crate::idb_transaction::{IDBTransactionCbAbort, IDBTransactionCbError, JSIDBTransaction};
-use crate::jsstring::{JSString, JSStringExtern};
 use crate::stringarray::JSStringArray;
 use crate::{idb_result::IDBResult, idb_transaction::IDBTransaction};
 use externref::externref;
 use externref::Resource;
+use web::primitives::jsstring::{JSString, JSStringExtern};
 use std::cell::{Cell, OnceCell, RefCell};
 use std::rc::Rc;
 

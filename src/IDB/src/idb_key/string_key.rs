@@ -1,10 +1,10 @@
 use externref::Resource;
+use web::primitives::jsstring::JSString;
 
 use crate::{
     idb_key::idb_key::{IDBKey, IDBKeyNoAutoIncrement, IDBReturnKeyOutput},
     idb_object_store::{get, put_with_key, JSIDBObjectStore},
     idb_request::JSIDBRequest,
-    jsstring::JSString,
 };
 
 impl IDBKeyNoAutoIncrement for &String {

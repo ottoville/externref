@@ -5,8 +5,6 @@ version = 4
 [[package]]
 name = "externref"
 version = "0.3.0-beta.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8018c56bcc62fc4d0d732489a0d399cae2158db04c40e6969a9fad02bb456a79"
 dependencies = [
  "externref-macro",
 ]
@@ -14,8 +12,6 @@ dependencies = [
 [[package]]
 name = "externref-macro"
 version = "0.3.0-beta.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "756cabe9a20e9db3727abeb7ce42c8659a1acceb351c6f8dcc75473475116bf3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -62,9 +58,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a5f39404a5da50712a4c1eecf25e90dd62b613502b7e925fd4e4d19b5c96512"
 
 [[package]]
+name = "web"
+version = "0.1.0"
+dependencies = [
+ "externref",
+]
+
+[[package]]
 name = "webgpu"
 version = "0.1.0"
 dependencies = [
  "externref",
  "logger",
+ "web",
 ]

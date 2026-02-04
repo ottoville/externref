@@ -9,3 +9,6 @@
 	path = src/parry3d
 	url = https://terraSim@dev.azure.com/terraSim/terrasim/_git/parry3d
 	branch = terrasim
+[submodule "src/externref"]
+	path = src/externref
+	url = https://terraSim@dev.azure.com/terraSim/terrasim/_git/externref

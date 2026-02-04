@@ -1,6 +1,6 @@
-import { create_rust_string } from '../utils.js';
+import { create_rust_string } from '../../utils.js';
 
-import type { Engine } from '../engine.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 export const IDBDatabaseInterface = {
   close(database: IDBDatabase) {

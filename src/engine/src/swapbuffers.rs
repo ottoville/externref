@@ -1,6 +1,7 @@
 use std::{cell::RefCell, collections::BTreeMap, num::NonZeroUsize, rc::Rc};
 
 use externref::Resource;
+use web::console::console::Console;
 use webgpu::{
     buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer},
     device::JSDevice,
@@ -58,16 +59,16 @@ impl SwapBuffers {
             if Rc::strong_count(&self.onqueue[i].externref) == 1 {
                 let mappadle_buffer = self.onqueue.remove(i);
                 let mappedrc = self.mapped.clone();
-                mappadle_buffer.map_write_async(
-                    0,
-                    None,
-                    Box::new(move |buffer: MappedGPUBuffer<false, true, true>| {
+                mappadle_buffer.map_write_async(0, None, move |buffer_opt| match buffer_opt {
+                    Ok(buffer) => {
                         let mut borrowed = mappedrc.borrow_mut();
                         let mapped = borrowed.entry(buffer.size.get()).or_insert(Vec::new());
-                        //["push to mapped", &buffer.size.to_string()].log();
                         mapped.push(buffer);
-                    }),
-                );
+                    }
+                    Err((_, error)) => {
+                        Console::error(&error);
+                    }
+                });
             } else {
                 i = i + 1;
             }

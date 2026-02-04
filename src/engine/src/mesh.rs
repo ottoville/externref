@@ -47,6 +47,7 @@ pub struct Mesh {
     pub on_gpu_queue: bool,
     pub externref: Option<Resource<JSMesh>>,
     pub character: Option<Character>,
+    pub id: Option<ExplicitGenerationalFreeListIndex<fn() -> Mesh>>,
 }
 #[no_mangle]
 pub unsafe extern "C" fn compare_mesh_id(
@@ -57,9 +58,14 @@ pub unsafe extern "C" fn compare_mesh_id(
     (*id).compare_with_raw(idx, generation)
 }
 #[no_mangle]
-pub unsafe extern "C" fn destroy_mesh(mesh_id_ptr: *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh>) {
-    let mesh = Box::from_raw(mesh_id_ptr);
-    ENGINE.meshes.lock().unwrap().remove(*mesh);
+pub unsafe extern "C" fn destroy_mesh(
+    mesh_id_ptr: *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
+) {
+    let mesh_id = Box::from_raw(mesh_id_ptr);
+    let mut binding = ENGINE.meshes.lock().unwrap();
+    //let mesh = binding.get_mut(&mesh_id);
+    //mesh.unwrap().id = None;
+    binding.remove(*mesh_id);
 }
 #[no_mangle]
 pub unsafe extern "C" fn get_geometry(
@@ -178,7 +184,9 @@ pub unsafe extern "C" fn set_positions_count(
     mesh.positions_count = Some(positions_count);
 }
 #[no_mangle]
-pub unsafe extern "C" fn strip(mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>) -> bool {
+pub unsafe extern "C" fn strip(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
+) -> bool {
     let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
 
     mesh.get_geometry().strip
@@ -265,7 +273,9 @@ pub unsafe extern "C" fn create_convex_collider(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn scale_x(mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>) -> f32 {
+pub unsafe extern "C" fn scale_x(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
+) -> f32 {
     ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
@@ -273,7 +283,9 @@ pub unsafe extern "C" fn scale_x(mesh_id: *const ExplicitGenerationalFreeListInd
         .scaling[0]
 }
 #[no_mangle]
-pub unsafe extern "C" fn scale_y(mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>) -> f32 {
+pub unsafe extern "C" fn scale_y(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
+) -> f32 {
     ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
@@ -281,7 +293,9 @@ pub unsafe extern "C" fn scale_y(mesh_id: *const ExplicitGenerationalFreeListInd
         .scaling[1]
 }
 #[no_mangle]
-pub unsafe extern "C" fn scale_z(mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>) -> f32 {
+pub unsafe extern "C" fn scale_z(
+    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
+) -> f32 {
     ENGINE.meshes.lock().unwrap()[&*mesh_id]
         .mesh_property
         .lock()
@@ -552,13 +566,15 @@ impl Mesh {
             on_gpu_queue: false,
             externref,
             character: None,
+            id: None,
         };
-        let id = meshes.insert(m);
+        let (id, mesh) = meshes.insert(m);
+        mesh.id = Some(id.clone());
         mesh_property.lock().unwrap().gpu_memory.id = Some(id.clone());
         if camera_can_collide_to {
             engine.camera_can_collide_meshes.push(id.clone());
         }
-        meshes[&id].update_dynamic_buffer();
+        mesh.update_dynamic_buffer();
         if rigid_body > 0 {
             let rigid_body_builder: RigidBodyBuilder;
             if rigid_body == 2 {
@@ -569,7 +585,7 @@ impl Mesh {
             let rigid_body = rigid_body_builder.build();
 
             let rigid_body_handle = engine.rigid_body_set.insert(rigid_body);
-            meshes[&id].rigid_body_handle = Some(rigid_body_handle);
+            mesh.rigid_body_handle = Some(rigid_body_handle);
             engine.rigid_bodies.insert(rigid_body_handle, id.clone());
         }
         return id;

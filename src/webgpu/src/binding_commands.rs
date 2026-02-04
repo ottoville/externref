@@ -25,7 +25,6 @@ pub unsafe fn set_bindgroup(
 #[cfg(target_arch = "wasm32")]
 #[externref::externref]
 #[link(wasm_import_module = "bindcommands")]
-#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn set_bindgroup(
         resource: usize,

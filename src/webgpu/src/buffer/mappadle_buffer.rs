@@ -2,6 +2,7 @@ use std::num::NonZeroUsize;
 use std::ptr;
 
 use externref::{externref, Resource};
+use web::primitives::jsstring::{JSString, JSStringExtern};
 
 use crate::buffer::buffer::{BufferRef, GPUBuffer};
 use crate::buffer::mapped_buffer::MappedGPUBuffer;
@@ -26,17 +27,38 @@ unsafe fn map_read_async(
     _offset: usize,
     _size: usize,
     _gpubuffer: usize,
-    _callback: usize,
+    _callback: MapReadAsyncCB,
 ) {
 }
-type MapWriteCallback = *mut *mut dyn FnOnce(MappedGPUBuffer<false, true>);
+type MapReadAsyncCB = *mut *mut dyn FnOnce(
+    Result<
+        MappedGPUBuffer<true, false, false, true>,
+        (GPUBuffer<true, false, false, true>, JSString),
+    >,
+);
+type MapWriteCallback = *mut *mut dyn FnOnce(
+    Result<MappedGPUBuffer<false, true, true>, (GPUBuffer<false, true, true>, JSString)>,
+);
 
 #[no_mangle]
 pub unsafe extern "C" fn buffer_mapped_write(
-    buffer: *mut GPUBuffer<false, true>,
+    buffer: *mut GPUBuffer<false, true, true>,
     callback: MapWriteCallback,
 ) {
-    Box::from_raw(*Box::from_raw(callback))(MappedGPUBuffer::new(*Box::from_raw(buffer)));
+    Box::from_raw(*Box::from_raw(callback))(Result::Ok(MappedGPUBuffer::new(*Box::from_raw(
+        buffer,
+    ))));
+}
+#[no_mangle]
+pub unsafe extern "C" fn buffer_mapped_write_error(
+    buffer: *mut GPUBuffer<false, true, true>,
+    callback: MapWriteCallback,
+    error: Resource<JSStringExtern>,
+) {
+    Box::from_raw(*Box::from_raw(callback))(Result::Err((
+        *Box::from_raw(buffer),
+        JSString::new(error),
+    )));
 }
 #[cfg(not(target_arch = "wasm32"))]
 unsafe fn map_write_async(
@@ -44,11 +66,11 @@ unsafe fn map_write_async(
     _offset: usize,
     _size: usize,
     gpubuffer: usize,
-    callback: usize,
+    callback: MapWriteCallback,
 ) {
-    Box::from_raw(*Box::from_raw(callback as MapWriteCallback))(MappedGPUBuffer::new(
-        *Box::from_raw(gpubuffer as *mut GPUBuffer<false, true>),
-    ));
+    Box::from_raw(*Box::from_raw(callback as MapWriteCallback))(Result::Ok(MappedGPUBuffer::new(
+        *Box::from_raw(gpubuffer as *mut GPUBuffer<false, true, true>),
+    )));
 }
 #[cfg(target_arch = "wasm32")]
 #[link(wasm_import_module = "buffer")]
@@ -58,17 +80,36 @@ extern "C" {
         offset: usize,
         size: usize,
         gpubuffer: usize,
-        callback: usize,
+        callback: MapWriteCallback,
     );
-    fn map_read_async(buffer: usize, offset: usize, size: usize, gpubuffer: usize, callback: usize);
+    fn map_read_async(
+        buffer: usize,
+        offset: usize,
+        size: usize,
+        gpubuffer: usize,
+        callback: MapReadAsyncCB,
+    );
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn buffer_mapped_read(
-    buffer: *mut GPUBuffer<true>,
-    callback: *mut *mut dyn FnOnce(MappedGPUBuffer<true>),
+    buffer: *mut GPUBuffer<true, false, false, true>,
+    callback: MapReadAsyncCB,
 ) {
-    Box::from_raw(*Box::from_raw(callback))(MappedGPUBuffer::new(*Box::from_raw(buffer)));
+    Box::from_raw(*Box::from_raw(callback))(Result::Ok(MappedGPUBuffer::new(*Box::from_raw(
+        buffer,
+    ))));
+}
+#[no_mangle]
+pub unsafe extern "C" fn buffer_mapped_read_error(
+    buffer: *mut GPUBuffer<true, false, false, true>,
+    callback: MapReadAsyncCB,
+    error: Resource<JSStringExtern>,
+) {
+    Box::from_raw(*Box::from_raw(callback))(Result::Err((
+        *Box::from_raw(buffer),
+        JSString::new(error),
+    )));
 }
 
 impl GPUBuffer<true, false, false, true> {
@@ -76,7 +117,12 @@ impl GPUBuffer<true, false, false, true> {
         self,
         offset: usize,
         size: Option<NonZeroUsize>,
-        cb: Box<dyn FnOnce(MappedGPUBuffer<true, false, false, true>)>,
+        cb: impl FnOnce(
+                Result<
+                    MappedGPUBuffer<true, false, false, true>,
+                    (GPUBuffer<true, false, false, true>, JSString),
+                >,
+            ) + 'static,
     ) {
         let actual_size = match size {
             Some(size) => size.get(),
@@ -88,7 +134,7 @@ impl GPUBuffer<true, false, false, true> {
                 offset,
                 actual_size,
                 Box::into_raw(Box::new(self)) as usize,
-                Box::into_raw(Box::new(Box::into_raw(cb))) as usize,
+                Box::into_raw(Box::new(Box::into_raw(Box::new(cb)))),
             );
         }
     }
@@ -99,7 +145,9 @@ impl GPUBuffer<false, true, true> {
         self,
         offset: usize,
         size: Option<NonZeroUsize>,
-        cb: Box<dyn FnOnce(MappedGPUBuffer<false, true, true>)>,
+        cb: impl FnOnce(
+                Result<MappedGPUBuffer<false, true, true>, (GPUBuffer<false, true, true>, JSString)>,
+            ) + 'static,
     ) {
         let actual_size = match size {
             Some(size) => size.get(),
@@ -111,7 +159,7 @@ impl GPUBuffer<false, true, true> {
                 offset,
                 actual_size,
                 Box::into_raw(Box::new(self)) as usize,
-                Box::into_raw(Box::new(Box::into_raw(cb))) as usize,
+                Box::into_raw(Box::new(Box::into_raw(Box::new(cb)))),
             );
         }
     }

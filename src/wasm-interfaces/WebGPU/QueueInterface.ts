@@ -1,5 +1,5 @@
-import { type Rust_Iterator, rust_iterator_to_js } from '../utils.js';
-import type { Engine } from '../engine.js';
+import { type Rust_Iterator, rust_iterator_to_js } from '../../utils.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 export const QueueInterface = {

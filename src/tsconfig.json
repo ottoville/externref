@@ -21,7 +21,7 @@
     //"strict": true,
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["dom", "esnext", "ES2017.SharedMemory", "DOM.Iterable"],
+    "lib": ["dom", "esnext", "ES2017.SharedMemory", "DOM.Iterable", "DOM.AsyncIterable"],
     "typeRoots": ["../node_modules/", "../node_modules/@types/"],
     "types": ["@webgpu/types"],
     "resolveJsonModule": true,

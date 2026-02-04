@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "externref",
  "logger",
+ "web",
 ]
 
 [[package]]
@@ -156,14 +157,13 @@ dependencies = [
  "rapier3d",
  "terramath",
  "wasm-bindgen-test",
+ "web",
  "webgpu",
 ]
 
 [[package]]
 name = "externref"
 version = "0.3.0-beta.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8018c56bcc62fc4d0d732489a0d399cae2158db04c40e6969a9fad02bb456a79"
 dependencies = [
  "externref-macro",
 ]
@@ -171,8 +171,6 @@ dependencies = [
 [[package]]
 name = "externref-macro"
 version = "0.3.0-beta.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "756cabe9a20e9db3727abeb7ce42c8659a1acceb351c6f8dcc75473475116bf3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -962,6 +960,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8145dd1593bf0fb137dbfa85b8be79ec560a447298955877804640e40c2d6ea"
 
 [[package]]
+name = "web"
+version = "0.1.0"
+dependencies = [
+ "externref",
+]
+
+[[package]]
 name = "web-sys"
 version = "0.3.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -977,6 +982,7 @@ version = "0.1.0"
 dependencies = [
  "externref",
  "logger",
+ "web",
 ]
 
 [[package]]

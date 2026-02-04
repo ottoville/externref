@@ -1,5 +1,5 @@
-import { create_rust_string } from '../utils.js';
-import type { Engine } from '../engine.js';
+import { create_rust_string } from '../../utils.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 export const IDBRequestInterface = {
@@ -27,4 +27,27 @@ export const IDBRequestInterface = {
       }
     };
   },
+};
+export type IDBRequestImports = {
+  idb_request_onerror(
+    cb: rust_pointer<'IDBErrorEvent'>,
+    error_ptr: number,
+    error_len: number,
+    error_cap: number,
+    event: Event,
+  ): void;
+  idb_request_onsuccess(
+    cb: rust_pointer<'IDBSuccessEvent'>,
+    result: unknown,
+    event: Event,
+  ): void;
+  idb_request_onsuccess_put(
+    cb: rust_pointer<'IDBSuccessEvent'>,
+    result: number,
+    event: Event,
+  ): void;
+  idb_request_onsuccess_undefined_result(
+    cb: rust_pointer<'IDBSuccessEvent'>,
+    event: Event,
+  ): void;
 };

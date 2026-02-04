@@ -1,7 +1,7 @@
 use std::{cell::Cell, num::NonZeroUsize, rc::Rc, sync::atomic::AtomicU32};
 
 use collider::ColliderPlane;
-use logger::LoggerArray;
+use logger::{Logger, LoggerArray};
 use rapier3d::{
     geometry::{Collider, ColliderBuilder},
     math::Point,
@@ -9,16 +9,18 @@ use rapier3d::{
     pipeline::ActiveEvents,
 };
 use terramath::{CrossProduct, Plane, Vec3wgslF32, VectorMath, VectorMathF32};
-use webgpu::buffer::{buffer::GPUBuffer, mapped_buffer::MappedGPUBuffer};
+use web::console::console::Console;
+use webgpu::buffer::buffer::GPUBuffer;
 
 pub use crate::boundingbox::BoundingBox;
 use allocators::explicit_generational_freelist::ExplicitGenerationalFreeListIndex;
 
 use crate::{
-    gpu::gpu::{serialize_terrain, MeshGPU, GPU},
+    gpu::gpu::{MeshGPU, GPU},
     indices::Indices,
     math2::Vec2wgslF32,
     mesh::{Mesh, ENGINE},
+    terrain::legacyterrain::serialize_terrain2,
     vertices::{PositionAndNormalAndUV, VertexKind},
     MULTIVALUE_USIZE,
 };
@@ -83,26 +85,23 @@ pub unsafe extern "C" fn have_vertices(
     let mesh = &ENGINE.meshes.lock().unwrap()[&*mesh_id];
     mesh.get_geometry().vertices.is_some()
 }
+
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
     mesh_id: *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     indices_buffer: *mut GPUBuffer<true, false, false, true>,
     vertices_buffer: *mut GPUBuffer<true, false, false, true>,
     gpu: *mut GPU,
+    serialize: bool,
 ) {
     let gate = Rc::new(Cell::new(false));
-    let gate2 = gate.clone();
-    let then = |mesh: &mut Mesh| {
-        let geometry = mesh.geometry.as_mut().unwrap();
-        let vertices = geometry.vertices.as_ref().unwrap();
-        let indices = &geometry.indices.as_ref().unwrap().indices;
+    let gate_clone = gate.clone();
 
-        serialize_terrain(
-            vertices.as_ptr(),
-            vertices.length() * vertices.stride(),
-            indices.as_ptr() as usize,
-            indices.len(),
-        );
+    let then = move |mesh: &mut Mesh| {
+        let unwrapped = mesh.id.as_ref().unwrap();
+        if serialize {
+            serialize_terrain2(unwrapped.clone());
+        }
         let collider = mesh.create_trimesh_collider();
         ENGINE
             .engine2
@@ -110,35 +109,40 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
             .unwrap()
             .add_collider_to_mesh(collider, mesh);
     };
-    Box::from_raw(indices_buffer).map_read_async(
-        0,
-        None,
-        Box::new(move |buffer: MappedGPUBuffer<true, false, false, true>| {
-            let mut indices: Vec<usize> = vec![0; buffer.size.get() / 4];
-            buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
-            let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
-            let geometry = mesh.geometry.as_mut().unwrap();
-            geometry.set_indices(indices, &mut (*gpu));
-            // Execute callback if gate was "true", set it to "true" if it was "false"
-            gate.set(gate.get().then(|| then(mesh)).is_none());
-        }),
-    );
-    Box::from_raw(vertices_buffer).map_read_async(
-        0,
-        None,
-        Box::new(move |buffer: MappedGPUBuffer<true, false, false, true>| {
-            let mut vertices: Vec<PositionAndNormalAndUV> =
-                Vec::with_capacity(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
-            buffer.get_mapped_range_raw(vertices.as_mut_ptr() as usize, buffer.size, 0);
-            vertices.set_len(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
-            let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
-            let geometry = mesh.geometry.as_mut().unwrap();
-            geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
-            geometry.faces_dirty = true;
-            // Execute callback if gate was "true", set it to "true" if it was "false"
-            gate2.set(gate2.get().then(|| then(mesh)).is_none());
-        }),
-    );
+    Box::from_raw(indices_buffer).map_read_async(0, None, move |buffer_opt| {
+        match buffer_opt {
+            Ok(buffer) => {
+                let mut indices: Vec<usize> = vec![0; buffer.size.get() / 4];
+                buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
+                let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+                let geometry = mesh.geometry.as_mut().unwrap();
+                geometry.set_indices(indices, &mut (*gpu));
+                // Execute callback if gate was "true", set it to "true" if it was "false"
+                gate.set(gate.get().then(|| then(mesh)).is_none());
+            }
+            Err((_, error)) => {
+                Console::error(&error);
+            }
+        }
+    });
+
+    Box::from_raw(vertices_buffer).map_read_async(0, None, move |buffer_opt| {
+        match buffer_opt {
+            Ok(buffer) => {
+                let mut vertices: Vec<PositionAndNormalAndUV> =
+                    Vec::with_capacity(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
+                buffer.get_mapped_range_raw(vertices.as_mut_ptr() as usize, buffer.size, 0);
+                vertices.set_len(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
+                let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+                let geometry = mesh.geometry.as_mut().unwrap();
+                geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
+                geometry.faces_dirty = true;
+                // Execute callback if gate was "true", set it to "true" if it was "false"
+                gate_clone.set(gate_clone.get().then(|| then(mesh)).is_none());
+            }
+            Err((_, error)) => Console::error(&error),
+        }
+    });
 }
 #[no_mangle]
 pub unsafe extern "C" fn dedup_positions(geometry_ptr: *mut Geometry) {
@@ -551,9 +555,13 @@ impl<'vert> Geometry {
                 mesh_gpu.indices.replace(mapped.unmap());
             }
             None => {
-                self.mesh_gpu = Some(gpu.meshes.insert(MeshGPU {
-                    indices: mapped.unmap(),
-                }));
+                self.mesh_gpu = Some(
+                    gpu.meshes
+                        .insert(MeshGPU {
+                            indices: mapped.unmap(),
+                        })
+                        .0,
+                );
             }
         }
         match &mut self.indices {

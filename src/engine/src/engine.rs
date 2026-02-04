@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{OnceCell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -11,19 +11,18 @@ use crate::objectstores::{PLANTAE_STORE, SAVE_STORE, ZONES_STORE};
 use allocators::explicit_generational_freelist::{
     ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
 };
+use web::file_system::fs_directory_handle::FSDirectoryHandle;
+use web::primitives::jsstring::JSString;
+use web::storage_buckets::storage_buckets::{NavigatorStorageBuckets, StorageBuckets};
 use IDB::idb_database::IDBDatabase;
 use IDB::idb_factory::IDBFactory;
-use IDB::idb_object_store::IDBObjectStore;
-use IDB::storage_buckets::StorageBuckets;
-#[cfg(target_arch = "wasm32")]
-use IDB::stringarray::JSStringArray;
 
 use crate::mesh::JSMesh;
 pub use crate::mesh::Mesh;
 use collider::{ColliderSphere, CLOSE_DISTANCE_SQRT};
 use externref::externref;
 use externref::Resource;
-use logger::{Logger, LoggerArray};
+use logger::Logger;
 use rapier3d::control::KinematicCharacterController;
 use rapier3d::prelude::*;
 use terramath::VectorMathF32;
@@ -121,77 +120,122 @@ pub struct Engine2 {
     pub camera_can_collide_meshes: Vec<ExplicitGenerationalFreeListIndex<fn() -> Mesh>>,
     pub collider: collider::Collider,
 }
-enum DBStoreState {
-    Database(Rc<IDBDatabase>),
-    Cbs(Vec<Box<dyn FnOnce(&IDBDatabase) -> ()>>),
+struct StorageResouceState<T> {
+    resource: OnceCell<T>,
+    cbs: RefCell<Vec<Box<dyn FnOnce(&T) -> ()>>>,
 }
-pub struct DBStore {
-    state: Rc<RefCell<DBStoreState>>,
-}
-impl DBStore {
-    pub fn onready(&self, cb: impl FnOnce(&IDBDatabase) -> () + 'static) {
-        match &mut *self.state.borrow_mut() {
-            DBStoreState::Database(db) => {
-                cb(db);
+impl<T> StorageResouceState<T> {
+    pub fn new() -> Self {
+        StorageResouceState {
+            resource: OnceCell::new(),
+            cbs: RefCell::new(Vec::new()),
+        }
+    }
+    fn get_or_init(&self, cb: impl FnOnce(&T) + 'static, init_cb: impl FnOnce()) {
+        if let Some(storage_bucket) = self.resource.get() {
+            cb(storage_bucket);
+        } else {
+            let mut cbs = self.cbs.borrow_mut();
+            if cbs.len() == 0 {
+                init_cb()
             }
-            DBStoreState::Cbs(cbs) => {
-                cbs.push(Box::new(cb));
-            }
+            cbs.push(Box::new(cb));
+        }
+    }
+    fn run_cbs(&self, is_ok: bool, resource: T) {
+        let mut cbs = self.cbs.borrow_mut();
+        for fn_once in cbs.drain(..) {
+            fn_once(&resource)
+        }
+        if is_ok {
+            self.resource.set(resource);
         }
     }
 }
-thread_local! {
-    pub static DB: DBStore = {
-        let state = Rc::new(RefCell::new(DBStoreState::Cbs(Vec::new())));
-        let teststruct = DBStore {
-            state: state.clone()
-        };
-        StorageBuckets::open(String::from("terrasim"),true, 100000, 2052766290000.0, move |storage_bucket| {
-            let open_request = IDBFactory::open_with_storage_bucket(String::from("TerraSim"), 6,&storage_bucket);
-            open_request.on_upgrade_needed(|db, old_version, new_version| {
-                db.create_object_store::<&[String;2]>(&SAVE_STORE);
-                let plantae = db.create_object_store_with_auto_increment(&PLANTAE_STORE);
-                plantae.create_index::<false, false, _>(String::from("family"), [String::from("family")]);
-                plantae.create_index::<false, false, _>(String::from("x"), [String::from("x")]);
-                let zones = db.create_object_store_with_auto_increment(&ZONES_STORE);
-            });
-            open_request.on_blocked(|_oldv, _newv| {
-                    &"DB on blocked".log();
-            });
-            open_request
-                .request
-                .on_error(|error, _| panic!("IndexDB error {}", error));
-            let result_copy = open_request.request.result.clone();
-            open_request.request.on_success(move |db,_| {
-                &"DB opened succesfully".log();
-                db.on_error(|e| {
-                    &"DB on error".error();
-                });
-                db.on_abort(|e| {
-                    &"DB on abort".error();
-                });
-                db.on_version_change(|event| {
-                    &"DB version change".log();
-                });
-                let mut borrowed = state.borrow_mut();
-                match &mut *borrowed {
-                    DBStoreState::Database(_) => {
-                        unsafe {
-                            std::hint::unreachable_unchecked();
-                        }
-                    },
-                    DBStoreState::Cbs(fn_onces) => {
-                        for fn_once in fn_onces.drain(..) {
-                            fn_once(db)
-                        }
-                    },
-                }
-                 (*borrowed) = DBStoreState::Database(result_copy)
-            });
-
-
+pub struct StorageState {
+    indexed_db: Rc<StorageResouceState<Rc<IDBDatabase>>>,
+    directory: Rc<StorageResouceState<Result<FSDirectoryHandle, JSString>>>,
+    storage_bucket: Rc<StorageResouceState<NavigatorStorageBuckets>>,
+}
+impl StorageState {
+    pub fn onready_storagebucket(&self, cb: impl FnOnce(&NavigatorStorageBuckets) -> () + 'static) {
+        self.storage_bucket.get_or_init(cb, || {
+            let storage_bucket_clone = self.storage_bucket.clone();
+            StorageBuckets::open(
+                String::from("terrasim"),
+                true,
+                1000000,
+                2052766290000.0,
+                move |storage_bucket| {
+                    storage_bucket_clone.run_cbs(true, storage_bucket);
+                },
+            );
         });
-        return teststruct;
+    }
+    pub fn get_directory(
+        &self,
+        cb: impl FnOnce(&Result<FSDirectoryHandle, JSString>) -> () + 'static,
+    ) {
+        self.directory.get_or_init(cb, || {
+            let directory_clone = self.directory.clone();
+            self.onready_storagebucket(|storage_bucket| {
+                storage_bucket.get_directory(move |directory| {
+                    directory_clone.run_cbs(directory.is_ok(), directory);
+                });
+            })
+        });
+    }
+    pub fn get_indexed_db(&self, cb: impl FnOnce(&Rc<IDBDatabase>) -> () + 'static) {
+        self.indexed_db.get_or_init(cb, || {
+            let indexed_db_clone = self.indexed_db.clone();
+            self.onready_storagebucket(|storage_bucket| {
+                let open_request = IDBFactory::open_with_storage_bucket(
+                    String::from("TerraSim"),
+                    6,
+                    storage_bucket,
+                );
+                open_request.on_upgrade_needed(|db, old_version, new_version| {
+                    db.create_object_store::<&[String; 2]>(&SAVE_STORE);
+                    let plantae = db.create_object_store_with_auto_increment(&PLANTAE_STORE);
+                    plantae.create_index::<false, false, _>(
+                        String::from("family"),
+                        [String::from("family")],
+                    );
+                    plantae.create_index::<false, false, _>(String::from("x"), [String::from("x")]);
+                    let zones = db.create_object_store_with_auto_increment(&ZONES_STORE);
+                });
+                open_request.on_blocked(|_oldv, _newv| {
+                    &"DB on blocked".log();
+                });
+                open_request
+                    .request
+                    .on_error(|error, _| panic!("IndexDB error {}", error));
+                let result_copy = open_request.request.result.clone();
+                open_request.request.on_success(move |db, _| {
+                    &"DB opened succesfully".log();
+                    db.on_error(|e| {
+                        &"DB on error".error();
+                    });
+                    db.on_abort(|e| {
+                        &"DB on abort".error();
+                    });
+                    db.on_version_change(|event| {
+                        &"DB version change".log();
+                    });
+                    indexed_db_clone.run_cbs(true, result_copy);
+                });
+            });
+        });
+    }
+}
+thread_local! {
+    pub static STORAGE: StorageState = {
+        let dbstore = StorageState {
+            directory: Rc::new(StorageResouceState::new()),
+            indexed_db: Rc::new(StorageResouceState::new()),
+            storage_bucket: Rc::new(StorageResouceState::new())
+        };
+        return dbstore;
     };
 }
 pub static ENGINE: LazyLock<Engine> = LazyLock::new(|| {

@@ -1,4 +1,4 @@
-import type { Engine } from '../engine.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 export type BufferInterface = {
@@ -18,6 +18,25 @@ export type BufferInterface = {
   ): rust_pointer<'GPUBuffer'>;
 
   get_raw_buffer(buffer: rust_pointer<'GPUBuffer'>): GPUBuffer;
+
+  buffer_mapped_write(
+    rust_buffer: rust_pointer<'buffer'>,
+    cb: rust_pointer<'fn'>,
+  ): void;
+  buffer_mapped_write_error(
+    rust_buffer: rust_pointer<'buffer'>,
+    cb: rust_pointer<'fn'>,
+    error: string,
+  ): void;
+  buffer_mapped_read(
+    rust_buffer: rust_pointer<'buffer'>,
+    cb: rust_pointer<'fn'>,
+  ): void;
+  buffer_mapped_read_error(
+    rust_buffer: rust_pointer<'buffer'>,
+    cb: rust_pointer<'fn'>,
+    error: string,
+  ): void;
 };
 
 export const BufferExports = {
@@ -45,14 +64,16 @@ export const BufferExports = {
     buffer
       .mapAsync(GPUMapMode.READ, offset, size)
       .then(() => {
-        engine.rust.buffer_mapped_read(rust_buffer, cb);
-      })
-      .catch((err) => {
-        if (err instanceof Error && err.name === 'AbortError') {
-          console.warn(err);
-        } else {
-          engine.showError(err);
+        try {
+          engine.rust.buffer_mapped_read(rust_buffer, cb);
+        } catch (err) {
+          // Catch possible error in rust to avoid exception leaking
+          // into outer catch which is reserved only for "getFileHandle" throws.
+          console.error(err);
         }
+      })
+      .catch((err: RangeError | DOMException) => {
+        engine.rust.buffer_mapped_read_error(rust_buffer, cb, err.message);
       });
   },
   map_state(buffer: GPUBuffer) {
@@ -73,14 +94,16 @@ export const BufferExports = {
     buffer
       .mapAsync(GPUMapMode.WRITE, offset, size)
       .then(() => {
-        engine.rust.buffer_mapped_write(rust_buffer, cb);
+        try {
+          engine.rust.buffer_mapped_write(rust_buffer, cb);
+        } catch (err) {
+          // Catch possible error in rust to avoid exception leaking
+          // into outer catch which is reserved only for "getFileHandle" throws.
+          console.error(err);
+        }
       })
       .catch((err) => {
-        if (err instanceof Error && err.name === 'AbortError') {
-          console.warn(err);
-        } else {
-          engine.showError(err);
-        }
+        engine.rust.buffer_mapped_write_error(rust_buffer, cb, err.message);
       });
   },
   set_mapped_range(

@@ -1,5 +1,5 @@
 import { textureFormatMapping } from './TextureInterface.js';
-import type { Engine } from '../engine.js';
+import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 const colorSpaceMapping = ['display-p3', 'srgb'] as const;

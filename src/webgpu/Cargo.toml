@@ -10,8 +10,9 @@ path = "src/mod.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-externref = "0.3.0-beta.1"
+externref ={ path = "../externref/crates/lib" }
 logger = { path = "../logger" }
+web = { path = "../web" }
 
 [dev-dependencies]
 

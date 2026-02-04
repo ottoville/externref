@@ -20,7 +20,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(rust_analyzer)'] }
 
 
 [dependencies]
-externref = "0.3.0-beta.1"
+externref ={ path = "../externref/crates/lib" }
 rapier3d = { path = "../rapier/crates/rapier3d" }
 terramath = { path = "../terramath" }
 collider = { path = "../collider" }
@@ -28,6 +28,7 @@ logger = { path = "../logger" }
 webgpu = { path = "../webgpu" }
 allocators = { path = "../allocators" }
 IDB = { path = "../IDB" }
+web = { path = "../web" }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.58"

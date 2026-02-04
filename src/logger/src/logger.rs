@@ -9,7 +9,7 @@ pub unsafe fn warn_str(_prt: usize, _len: usize) {}
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn debug_str(_prt: usize, _len: usize) {}
 
-#[link(wasm_import_module = "console")]
+#[link(wasm_import_module = "console_legacy")]
 #[cfg(target_arch = "wasm32")]
 extern "C" {
     fn error_str(prt: usize, len: usize);

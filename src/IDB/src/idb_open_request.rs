@@ -1,11 +1,11 @@
 use externref::Resource;
+use web::{storage_buckets::storage_buckets::NavigatorStorageBuckets, primitives::jsstring::JSString};
 
 use crate::{
     idb_database::{IDBDatabase, JSIDBDatabase},
-    idb_factory::{open, open_with_storage_bucket},
+    idb_factory::open,
     idb_request::{IDBRequest, JSIDBRequest},
     idb_update_needed_database::IDBUpdateNeededDatabase,
-    storage_buckets::NavigatorStorageBuckets,
 };
 
 type OnUpgradeneededCb = *mut *mut dyn FnOnce(IDBUpdateNeededDatabase, u32, u32);
@@ -60,9 +60,11 @@ pub struct IDBOpenRequest {
     pub request: IDBRequest<IDBDatabase>,
 }
 impl IDBOpenRequest {
-    pub fn new(name: String, version: u32) -> Self {
+    pub fn new(name: String, version: u32, window: Resource<()>) -> Self {
         let request = IDBOpenRequest {
-            request: IDBRequest::new(unsafe { open(name.as_ptr() as usize, name.len(), version) }),
+            request: IDBRequest::new(unsafe {
+                open(&JSString::from(name).externref, version, &window)
+            }),
         };
         return request;
     }
@@ -73,11 +75,10 @@ impl IDBOpenRequest {
     ) -> Self {
         let request = IDBOpenRequest {
             request: IDBRequest::new(unsafe {
-                open_with_storage_bucket(
-                    name.as_ptr() as usize,
-                    name.len(),
+                open(
+                    &JSString::from(name).externref,
                     version,
-                    &storage_bucket.externref,
+                    storage_bucket.externref.upcast_ref(),
                 )
             }),
         };

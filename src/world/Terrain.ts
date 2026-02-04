@@ -40,42 +40,6 @@ declare const engine: Engine;
 
 const terrainSize = [10000, 10000] as const;
 const subdivisions = [64, 64] as const;
-export function serialize_terrain(
-  vertices: Float32Array<ArrayBuffer>,
-  indices: Uint32Array<ArrayBuffer>,
-  compress = false,
-) {
-  const cacheP = caches.open('save');
-  if (!compress) {
-    const response = new Response(vertices);
-    response.headers.set('content-length', vertices.byteLength.toString());
-    response.headers.set('content-type', 'application/octet-stream');
-
-    const response2 = new Response(indices);
-    response2.headers.set('content-length', indices.byteLength.toString());
-    response2.headers.set('content-type', 'application/octet-stream');
-    void cacheP.then((cache) => {
-      cache.put(new Request('/terrain'), response).catch((err) => {
-        engine.showError(err);
-      });
-      cache.put(new Request('/indices'), response2).catch((err) => {
-        engine.showError(err);
-      });
-    });
-  } else {
-    /* const c = new OffscreenCanvas((Terrain.subdivisions[0] + 1) * 3, (Terrain.subdivisions[1] + 1));
-             const ctx = c.getContext("2d");
-             if (!ctx)
-                 throw ('get 2d context failed');
-             //disabled for now
-
-             ctx.putImageData(new ImageData(new Uint8ClampedArray(this.#vertices.buffer), c.width, c.height), 0, 0);
-             let blob = await c.convertToBlob({ type: "image/webp", quality: 1 });
-             const response = new Response(blob);
-             response.headers.set('content-length', blob.size.toString());
-             (await cacheP).put(new Request('/terrain.webp'), response);*/
-  }
-}
 export class Terrain {
   /*
 TODO
@@ -112,18 +76,6 @@ TODO
 
   #autosave?: ReturnType<typeof setTimeout>;
 
-  public static fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
-    return cachedvertices.arrayBuffer();
-    /* const cacheimg = new Image();
-         cacheimg.src = URL.createObjectURL(await cachedvertices.blob());
-         await cacheimg.decode();
-         const canvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
-         const context = canvas.getContext('2d');
-         if (!context)
-             throw (new Error('Unable to get 2D contect of vertices data'));
-         context.drawImage(cacheimg, 0, 0);
-         return context.getImageData(0, 0, cacheimg.width, cacheimg.height).data.buffer;*/
-  }
   updateSwap2(offset = 0, byteLength: number, nofaces = false) {
     if (!engine.gpu) return;
     const b1 = new Buffer({
@@ -180,7 +132,7 @@ TODO
     b1.destroy();
     clearTimeout(this.#autosave);
     this.#autosave = setTimeout(
-      () => serialize_terrain(this.mesh.vertices, this.mesh.indices),
+      () => engine.rust.serialize_terrain(this.mesh.id),
       10000,
     );
   }
@@ -195,148 +147,153 @@ TODO
     const uvsLength = Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
     const normalsLength = Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
     const verticesBufferSize = positionsLength + uvsLength + normalsLength;
-    const t = await caches
-      .match(new Request('/terrain'))
+    const directory = await (
+      await navigator.storageBuckets.open('terrasim')
+    ).getDirectory();
+    let terrainPositionAndUvsAndNormalsGPU: Buffer<
+      (typeof BufferUsageEnums)['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
+      false
+    >;
+    let serialize = true;
+    await directory
+      .getFileHandle('terrainvertices', { create: false })
       .then(async (cachedvertices) => {
-        if (cachedvertices) {
-          const cachedBuffer = await Terrain.fromSave(cachedvertices);
-          var terrainPositionAndUvsAndNormalsGPUMapped = new Buffer({
-            gpu: gpu.device,
-            label: 'terrainPositionAndUvsAndNormalsGPU0',
-            mappedAtCreation: true,
-            size: verticesBufferSize,
-            usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
-          });
-          new Uint8Array(
-            terrainPositionAndUvsAndNormalsGPUMapped.getMappedRange(),
-          ).set(new Uint8Array(cachedBuffer));
-          var terrainPositionAndUvsAndNormalsGPU =
-            terrainPositionAndUvsAndNormalsGPUMapped.unmap();
-        } else {
-          const b = await (await fetch('/images/tenerife250.webp')).blob();
-          const bitmap = await createImageBitmap(b);
+        const file = await cachedvertices.getFile();
+        const cachedBuffer = await file.arrayBuffer();
+        var terrainPositionAndUvsAndNormalsGPUMapped = new Buffer({
+          gpu: gpu.device,
+          label: 'terrainPositionAndUvsAndNormalsGPU0',
+          mappedAtCreation: true,
+          size: verticesBufferSize,
+          usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
+        });
+        new Uint8Array(
+          terrainPositionAndUvsAndNormalsGPUMapped.getMappedRange(),
+        ).set(new Uint8Array(cachedBuffer));
+        terrainPositionAndUvsAndNormalsGPU =
+          terrainPositionAndUvsAndNormalsGPUMapped.unmap();
+        serialize = false;
+      })
+      .catch(async () => {
+        const b = await (await fetch('/images/tenerife250.webp')).blob();
+        const bitmap = await createImageBitmap(b);
 
-          const [bindLayouts, GroundFromHeightMapShader] =
-            CreateGroundFromHeightMap(gpu, this.settings, bitmap);
-          const CreateGroundFromHeightMapPipelineP =
-            GroundFromHeightMapShader.createComputePipeline('main');
+        const [bindLayouts, GroundFromHeightMapShader] =
+          CreateGroundFromHeightMap(gpu, this.settings, bitmap);
+        const CreateGroundFromHeightMapPipelineP =
+          GroundFromHeightMapShader.createComputePipeline('main');
 
-          const texture = new Texture({
-            format: 'rgba8unorm',
-            gpu: gpu.device,
-            label: 'TerrainTexture',
-            size: {
-              height: bitmap.height,
-              width: bitmap.width,
-            },
-            usages:
-              TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
-          });
-          texture.copyFromExternalImage(
-            {
-              source: bitmap,
-            },
-            {},
-            {
-              height: bitmap.height,
-              width: bitmap.width,
-            },
-          );
-
-          const commandEncoder = gpu.device.createCommandEncoder({
-            label: 'loadFromTexture_encoder',
-          });
-          const passEncoder = commandEncoder.beginComputePass({
-            label: 'loadFromTexture_encoder_pass_encoder',
-          });
-          var terrainPositionAndUvsAndNormalsGPU = new Buffer({
-            gpu: gpu.device,
-            label: 'terrainPositionAndUvsAndNormalsGPU1',
-            size: verticesBufferSize,
-            usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
-          });
-          const view = new TextureView(texture, texture.props.format);
-          const sourceBindGroup = new BindGroup(
-            bindLayouts[0],
-            'sourceBindGroup',
-            (bindGroup) => ({
-              pixels: view,
-              positions:
-                terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
-            }),
-          );
-          passEncoder.setPipeline(await CreateGroundFromHeightMapPipelineP);
-          passEncoder.setBindGroup(0, sourceBindGroup.bindGroup);
-          passEncoder.dispatchWorkgroups(
-            TerrainSubdivisions[0] + 1,
-            TerrainSubdivisions[1] + 1,
-          );
-          passEncoder.end();
-          gpu.device.queue.submit([commandEncoder.finish()]);
-        }
-
-        const slopesLayout = new BGLayout(
-          gpu.device,
-          'slopesAndFacesBindGroupLayoutReadOnly',
+        const texture = new Texture({
+          format: 'rgba8unorm',
+          gpu: gpu.device,
+          label: 'TerrainTexture',
+          size: {
+            height: bitmap.height,
+            width: bitmap.width,
+          },
+          usages:
+            TextureUsageEnums['RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST'],
+        });
+        texture.copyFromExternalImage(
           {
-            facet12: new BufLayout(
-              {
-                buffer: {
-                  hasDynamicOffset: false,
-                  minBindingSize: 32,
-                  type: 'read-only-storage',
-                },
-                visibility: ShaderStage.COMPUTE,
-              },
-              PlaneArray,
-            ),
-            slopes: new BufLayout(
-              {
-                buffer: {
-                  hasDynamicOffset: false,
-                  minBindingSize: 32,
-                  type: 'read-only-storage',
-                },
-                visibility: ShaderStage.COMPUTE,
-              },
-              IntArray,
-            ),
+            source: bitmap,
+          },
+          {},
+          {
+            height: bitmap.height,
+            width: bitmap.width,
           },
         );
 
-        const shaders = {
-          calculateNormals: createCalculateNormals(this.settings, slopesLayout),
-          calculatePlaneIndices: createCalculatePlaneIndices(
-            gpu,
-            this.settings,
-          ),
-          computePlaneHeights: createCalculatePlaneHeights(gpu, this.settings),
-          createTexture: CreateTerrainTexture(this.settings, slopesLayout),
-        };
-
-        const pipelines: [
-          Indices: GPUComputePipeline,
-          Heights: GPUComputePipeline,
-          Normals: GPUComputePipeline,
-          Texture: GPUComputePipeline,
-        ] = await Promise.all([
-          shaders.calculatePlaneIndices[1].createComputePipeline('main'),
-          shaders.computePlaneHeights[1].createComputePipeline('main'),
-          shaders.calculateNormals[1].createComputePipeline('main'),
-          shaders.createTexture[1].createComputePipeline('main'),
-        ]);
-
-        const terrain = new Terrain(
-          gpu,
-          scenes,
-          slopesLayout,
-          shaders,
-          terrainPositionAndUvsAndNormalsGPU,
-          pipelines,
+        const commandEncoder = gpu.device.createCommandEncoder({
+          label: 'loadFromTexture_encoder',
+        });
+        const passEncoder = commandEncoder.beginComputePass({
+          label: 'loadFromTexture_encoder_pass_encoder',
+        });
+        terrainPositionAndUvsAndNormalsGPU = new Buffer({
+          gpu: gpu.device,
+          label: 'terrainPositionAndUvsAndNormalsGPU1',
+          size: verticesBufferSize,
+          usages: BufferUsageEnums['VERTEX|STORAGE|COPY_SRC|COPY_DST'],
+        });
+        const view = new TextureView(texture, texture.props.format);
+        const sourceBindGroup = new BindGroup(
+          bindLayouts[0],
+          'sourceBindGroup',
+          (bindGroup) => ({
+            pixels: view,
+            positions:
+              terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup),
+          }),
         );
-        await terrain.#ready;
-        return terrain;
+        passEncoder.setPipeline(await CreateGroundFromHeightMapPipelineP);
+        passEncoder.setBindGroup(0, sourceBindGroup.bindGroup);
+        passEncoder.dispatchWorkgroups(
+          TerrainSubdivisions[0] + 1,
+          TerrainSubdivisions[1] + 1,
+        );
+        passEncoder.end();
+        gpu.device.queue.submit([commandEncoder.finish()]);
       });
+    const slopesLayout = new BGLayout(
+      gpu.device,
+      'slopesAndFacesBindGroupLayoutReadOnly',
+      {
+        facet12: new BufLayout(
+          {
+            buffer: {
+              hasDynamicOffset: false,
+              minBindingSize: 32,
+              type: 'read-only-storage',
+            },
+            visibility: ShaderStage.COMPUTE,
+          },
+          PlaneArray,
+        ),
+        slopes: new BufLayout(
+          {
+            buffer: {
+              hasDynamicOffset: false,
+              minBindingSize: 32,
+              type: 'read-only-storage',
+            },
+            visibility: ShaderStage.COMPUTE,
+          },
+          IntArray,
+        ),
+      },
+    );
+
+    const shaders = {
+      calculateNormals: createCalculateNormals(this.settings, slopesLayout),
+      calculatePlaneIndices: createCalculatePlaneIndices(gpu, this.settings),
+      computePlaneHeights: createCalculatePlaneHeights(gpu, this.settings),
+      createTexture: CreateTerrainTexture(this.settings, slopesLayout),
+    };
+
+    const pipelines: [
+      Indices: GPUComputePipeline,
+      Heights: GPUComputePipeline,
+      Normals: GPUComputePipeline,
+      Texture: GPUComputePipeline,
+    ] = await Promise.all([
+      shaders.calculatePlaneIndices[1].createComputePipeline('main'),
+      shaders.computePlaneHeights[1].createComputePipeline('main'),
+      shaders.calculateNormals[1].createComputePipeline('main'),
+      shaders.createTexture[1].createComputePipeline('main'),
+    ]);
+
+    const t = new Terrain(
+      gpu,
+      scenes,
+      slopesLayout,
+      shaders,
+      terrainPositionAndUvsAndNormalsGPU!,
+      pipelines,
+      serialize,
+    );
+    await t.#ready;
     return t;
   }
 
@@ -369,6 +326,7 @@ TODO
       Normals: GPUComputePipeline,
       Texture: GPUComputePipeline,
     ],
+    serialize: boolean,
   ) {
     this.texture = new Texture({
       format: 'rgba8unorm',
@@ -624,6 +582,7 @@ TODO
           gpuReadBufferIndices,
           gpuReadBufferPositions,
           gpu.gpu,
+          serialize,
         );
       })
       .catch((err) => engine.showError(err));
