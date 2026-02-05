@@ -268,9 +268,7 @@ export type rustWasm = {
     positions_count: number,
   ): number;
   strip(mesh_id: rust_pointer<'mesh_id'>): number;
-  label_field_pointer(
-    mesh_id: rust_pointer<'mesh_id'>,
-  ): rust_pointer<'label_field'>;
+  mesh_label(mesh_id: rust_pointer<'mesh_id'>): string;
   translation_pointer(mesh: rust_pointer<'mesh'>): rust_pointer<'translation'>;
   translation_pointer_from_id(
     mesh_id: rust_pointer<'mesh_id'>,

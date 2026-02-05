@@ -12,3 +12,4 @@
 [submodule "src/externref"]
 	path = src/externref
 	url = https://terraSim@dev.azure.com/terraSim/terrasim/_git/externref
+	branch = terrasim

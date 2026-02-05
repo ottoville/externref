@@ -2,7 +2,6 @@
 import type { Engine } from './engine.js';
 import type { Drawable } from './GPU/Drawables/Drawable.js';
 import { Destroyable } from 'webgpu-ts/index.js';
-import { stringFromPtr } from './utils.js';
 import { Externref } from './externref.js';
 declare const engine: Engine;
 export const enum RigidBody {
@@ -23,8 +22,7 @@ export abstract class MainNode implements Destroyable {
   abstract drawable?: Drawable | undefined;
 
   get label(): string {
-    const label_field_pointer = engine.rust.label_field_pointer(this.id);
-    return stringFromPtr(engine.rust.memory, label_field_pointer);
+    return engine.rust.mesh_label(this.id);
   }
   setColorFromId(data: [number, number, number, number]) {
     engine.rust.set_color_from_id(this.id, data[0], data[1], data[2], data[3]);

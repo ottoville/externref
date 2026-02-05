@@ -9,7 +9,6 @@ use crate::math2::Mat3wgslF32;
 use crate::mesh_property::MeshProperty;
 pub use crate::GPUMesh;
 use crate::MULTIVALUE_F32;
-use crate::MULTIVALUE_USIZE;
 use allocators::explicit_generational_freelist::{
     ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
 };
@@ -26,6 +25,8 @@ use terramath::MatrixMath;
 use terramath::Plane;
 use terramath::Quaternion;
 use terramath::Vec3wgslF32;
+use web::primitives::jsstring::JSString;
+use web::primitives::jsstring::JSStringExtern;
 
 pub struct JSMesh(());
 pub struct Mesh {
@@ -149,14 +150,12 @@ pub unsafe extern "C" fn update_translation(
     mesh.update_translation(x, y, z, true);
 }
 #[no_mangle]
+#[externref::externref]
 pub unsafe extern "C" fn label_field_pointer(
     mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
-) -> *const usize {
+) -> Resource<JSStringExtern> {
     let label = &ENGINE.meshes.lock().unwrap()[&*mesh_id].label;
-    MULTIVALUE_USIZE[0] = label.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = label.len();
-    MULTIVALUE_USIZE[2] = label.capacity();
-    MULTIVALUE_USIZE.as_ptr()
+    JSString::from(label).externref
 }
 #[no_mangle]
 pub unsafe extern "C" fn gpu_alignment(
