@@ -221,7 +221,8 @@ export type rustWasm = {
   ): void;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
-  ): rust_pointer<rust_vec_ptr<'usize'>>;
+  ): rust_pointer<'indices'>;
+  indices_lenght(geometry: rust_pointer<'geometry'>): number;
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: rust_pointer<'mesh_id'>): boolean;
   faces_count(mesh_id: rust_pointer<'mesh_id'>): number;

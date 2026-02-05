@@ -15,12 +15,12 @@ struct Patch {
     patch_points_b: Vec<usize>,
     patch_points_c: Vec<usize>,
 }
-struct OctasphereHeap {
+struct OctasphereAlloc {
     points_left_cell: RefCell<Vec<usize>>,
     points_right_cell: RefCell<Vec<usize>>,
 }
 thread_local! {
-    static OSTASPHERE_HEAP:OctasphereHeap = OctasphereHeap{
+    static OSTASPHERE_ALLOC:OctasphereAlloc = OctasphereAlloc{
         points_left_cell: RefCell::new(Vec::new()),
         points_right_cell: RefCell::new(Vec::new()),
     }
@@ -349,7 +349,7 @@ pub fn create_octasphere_geometry(
             vertices_and_normals[j].position.0.add_vec_in_place(&half);
         }
     }
-    OSTASPHERE_HEAP.with(|oc| {
+    OSTASPHERE_ALLOC.with(|oc| {
         let mut points_left = oc.points_left_cell.borrow_mut();
         let mut points_right = oc.points_right_cell.borrow_mut();
 
@@ -524,7 +524,7 @@ fn draw_connection(
 fn test_draw_connection() {
     let mut indices = vec![0usize; 42];
     let mut indices_count = 0;
-    OSTASPHERE_HEAP.with(|oc| {
+    OSTASPHERE_ALLOC.with(|oc| {
         let mut points_left = oc.points_left_cell.borrow_mut();
         let mut points_right = oc.points_right_cell.borrow_mut();
         points_left.append(&mut vec![251, 249, 246, 242, 237, 231, 224, 216]);

@@ -22,17 +22,19 @@ use crate::{
     mesh::{Mesh, ENGINE},
     terrain::legacyterrain::serialize_terrain2,
     vertices::{PositionAndNormalAndUV, VertexKind},
-    MULTIVALUE_USIZE,
 };
 
 #[no_mangle]
 pub unsafe extern "C" fn indices_field_pointer(geometry_ptr: *const Geometry) -> *const usize {
     let geometry = &(*geometry_ptr);
     let indices = &geometry.indices.as_ref().unwrap();
-    MULTIVALUE_USIZE[0] = indices.indices.as_ptr() as usize;
-    MULTIVALUE_USIZE[1] = indices.indices.len();
-    MULTIVALUE_USIZE[2] = indices.indices.capacity();
-    MULTIVALUE_USIZE.as_ptr()
+    return indices.indices.as_ptr();
+}
+#[no_mangle]
+pub unsafe extern "C" fn indices_lenght(geometry_ptr: *const Geometry) -> usize {
+    let geometry = &(*geometry_ptr);
+    let indices = &geometry.indices.as_ref().unwrap();
+    return indices.indices.len();
 }
 #[no_mangle]
 pub unsafe extern "C" fn vertices_pointer(
