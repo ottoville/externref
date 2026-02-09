@@ -43,42 +43,6 @@ unsafe fn create_multivalue_vector<T>(vector: Vec<T>) -> *const usize {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn alloc_vector_f32(size: usize) -> *const usize {
-    let mut vec: Vec<f32> = Vec::with_capacity(size);
-    vec.set_len(size);
-    return create_multivalue_vector(vec);
-}
-#[no_mangle]
-pub unsafe extern "C" fn alloc_vector_positions(size: usize) -> *const usize {
-    let mut vec: Vec<Position> = Vec::with_capacity(size);
-    vec.set_len(size);
-    return create_multivalue_vector(vec);
-}
-#[no_mangle]
-pub unsafe extern "C" fn alloc_vector_positions_and_normal(size: usize) -> *const usize {
-    let mut vec: Vec<PositionAndNormal> = Vec::with_capacity(size);
-    vec.set_len(size);
-    return create_multivalue_vector(vec);
-}
-#[no_mangle]
-pub unsafe extern "C" fn alloc_vector_positions2d_and_uv(size: usize) -> *const usize {
-    let mut vec: Vec<Position2DAndUV> = Vec::with_capacity(size);
-    vec.set_len(size);
-    return create_multivalue_vector(vec);
-}
-#[no_mangle]
-pub unsafe extern "C" fn alloc_vector_position_and_normal_and_UV(size: usize) -> *const usize {
-    let mut vec: Vec<PositionAndNormalAndUV> = Vec::with_capacity(size);
-    vec.set_len(size);
-    return create_multivalue_vector(vec);
-}
-#[no_mangle]
-pub unsafe extern "C" fn alloc_vector_usize(size: usize) -> *const usize {
-    let mut vec: Vec<usize> = Vec::with_capacity(size);
-    vec.set_len(size);
-    return create_multivalue_vector(vec);
-}
-#[no_mangle]
 pub unsafe extern "C" fn alloc_vector_u8(size: usize) -> *const usize {
     let mut vec: Vec<u8> = Vec::with_capacity(size);
     vec.set_len(size);

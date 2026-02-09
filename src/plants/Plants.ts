@@ -7,7 +7,6 @@ import type { Engine } from '../engine.js';
 import { DrawableIndirect } from '../GPU/Drawables/DrawableIndirect.js';
 import { createGrassHeightAtCoordinates } from '../GPU/Shaders/grass/GrassHeightAtCoordinates.comp.js';
 import { MainNode } from '../MainNode.js';
-import { allocate_vec } from '../nodes/DataNode.js';
 import { BindGroup, Buffer, BufferUsageEnums } from '../webgpu-ts/index.js';
 import type { PTDresult } from 'paintGround/paintGround.js';
 import { createGrassVertShader } from '../GPU/Shaders/Grass.vert.js';
@@ -103,30 +102,13 @@ export class Plants extends MainNode {
         },
         'uint16',
       );
-      const vertices = allocate_vec(
-        Float32Array.of(
-          0.02,
-          0.0,
-          -0.02,
-          0.0,
-          0.014,
-          0.29,
-          -0.014,
-          0.29,
-          0.007,
-          0.57,
-          -0.007,
-          0.57,
-          0.0,
-          1.0,
-        ),
-      );
+      const vertices = engine.rust.create_plants_vertices(engine.gpu.gpu);
       this.drawable = new DrawableIndirect(
         {
           bindGroups: [],
           node: this,
           renderPipeline,
-          vertexBuffers: [positionGPU, shapeGPU, [vertices[0], vertices[1]]],
+          vertexBuffers: [positionGPU, shapeGPU, vertices],
         },
         indirectBuffer,
       );

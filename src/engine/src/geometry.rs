@@ -570,7 +570,7 @@ impl<'vert> Geometry {
             NonZeroUsize::new(indices.len() * 4).unwrap(),
             label,
         );
-        mapped.set_mapped_range_raw(indices.as_ptr() as usize, indices.len() * 4, 0);
+        mapped.set_mapped_range_raw(&indices, 0);
 
         match &mut self.mesh_gpu {
             Some(mesh_gpu_index) => {

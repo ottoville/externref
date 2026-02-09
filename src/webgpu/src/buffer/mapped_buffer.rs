@@ -199,9 +199,14 @@ impl<
             );
         }
     }
-    pub fn set_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
+    pub fn set_mapped_range_raw<T>(&self, data: &[T], buffer_offset: usize) {
         unsafe {
-            set_mapped_range(&self.buffer.externref.0, ptr, size, buffer_offset);
+            set_mapped_range(
+                &self.buffer.externref.0,
+                data.as_ptr() as usize,
+                data.len() * size_of::<T>(),
+                buffer_offset,
+            );
         }
     }
     pub fn set_mapped_range<T>(&self, data: &T, buffer_offset: usize) {

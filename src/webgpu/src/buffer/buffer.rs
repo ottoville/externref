@@ -223,3 +223,38 @@ impl Drop for BufferRef {
         unsafe { destroy(&self.0) };
     }
 }
+impl<
+        const MAP_READ: bool,
+        const MAP_WRITE: bool,
+        const COPY_SRC: bool,
+        const COPY_DST: bool,
+        const INDEX: bool,
+        const VERTEX: bool,
+        const UNIFORM: bool,
+        const STORAGE: bool,
+        const INDIRECT: bool,
+        const QUERY_RESOLVE: bool,
+    > From<(&Resource<JSDevice>, &[f32])>
+    for GPUBuffer<
+        MAP_READ,
+        MAP_WRITE,
+        COPY_SRC,
+        COPY_DST,
+        INDEX,
+        VERTEX,
+        UNIFORM,
+        STORAGE,
+        INDIRECT,
+        QUERY_RESOLVE,
+    >
+{
+    fn from(value: (&Resource<JSDevice>, &[f32])) -> Self {
+        let buffer = GPUBuffer::new_mapped(
+            value.0,
+            NonZeroUsize::new(value.1.len() * 4).unwrap(),
+            String::from("TODO"),
+        );
+        buffer.set_mapped_range_raw(value.1, 0);
+        buffer.unmap()
+    }
+}

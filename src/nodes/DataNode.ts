@@ -1,7 +1,6 @@
 import { MainNode } from '../MainNode.js';
 import type { Engine } from '../engine.js';
 import { Drawable } from '../GPU/Drawables/Drawable.js';
-import { create_rust_vec_ptr } from '../utils.js';
 declare const engine: Engine;
 
 class pickInfo {
@@ -24,61 +23,6 @@ export type DataNodeProps = {
     TODO: Calculate closeDistance on every collision to take account angle between upVector and collided slope,
     so it is always small enought for gravity to hit on next tick.
 */
-
-export function allocate_vec_f32(length: Word<'dword'>) {
-  return create_rust_vec_ptr(engine.rust.alloc_vector_f32(length));
-}
-export function allocate_vec_positions(length: number) {
-  return create_rust_vec_ptr(engine.rust.alloc_vector_positions(length));
-}
-export function allocate_vec_positions_and_normals(length: number) {
-  return create_rust_vec_ptr(
-    engine.rust.alloc_vector_positions_and_normal(length),
-  );
-}
-export function allocate_vec_positions_and_normals_and_uv(length: number) {
-  return create_rust_vec_ptr(
-    engine.rust.alloc_vector_position_and_normal_and_UV(length),
-  );
-}
-export function allocate_vec_positions2d_and_uv(length: number) {
-  return create_rust_vec_ptr(
-    engine.rust.alloc_vector_positions2d_and_uv(length),
-  );
-}
-export function allocate_vec_usize(length: number) {
-  return create_rust_vec_ptr(engine.rust.alloc_vector_usize(length));
-}
-
-export function allocate_vec(array: Uint32Array): rust_vec_ptr<'usize'>;
-export function allocate_vec(array: Float32Array): rust_vec_ptr<'f32'>;
-export function allocate_vec(
-  array: Uint32Array | Float32Array,
-): readonly [
-  ptr: rust_pointer<'usize'> | rust_pointer<'f32'>,
-  len: number,
-  cap: number,
-] {
-  if (array.buffer.byteLength === 0) {
-    throw new Error('Cannot allocate deattached or empty buffer');
-  }
-  if (array.buffer === engine.rust.memory.buffer) {
-    throw new Error('Source buffer is already in rust');
-  }
-  if (array instanceof Float32Array) {
-    const ptr = allocate_vec_f32(array.length as Word<'dword'>);
-    new Float32Array(engine.rust.memory.buffer, ptr[0], ptr[1]).set(array);
-    return ptr;
-  } else {
-    const vec_ptr = create_rust_vec_ptr(
-      engine.rust.alloc_vector_usize(array.length),
-    );
-    new Uint32Array(engine.rust.memory.buffer, vec_ptr[0], vec_ptr[1]).set(
-      array,
-    );
-    return vec_ptr;
-  }
-}
 
 export class DataNode extends MainNode {
   override drawable?: Drawable<MainNode> | undefined;

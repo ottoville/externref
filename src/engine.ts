@@ -132,6 +132,7 @@ export type rustWasm = {
     gpu: rust_pointer<'GPU'>,
   ): rust_pointer<'mesh_id'>;
   create_plane_mesh(gpu: rust_pointer<'GPU'>): rust_pointer<'mesh_id'>;
+  create_plants_vertices(gpu: rust_pointer<'GPU'>): rust_pointer<'GPUBuffer'>;
   create_plants_mesh(): rust_pointer<'mesh_id'>;
   create_terraintool_mesh(): rust_pointer<'mesh_id'>;
   create_zones_light_mesh(scene: number): rust_pointer<'mesh_id'>;
@@ -227,19 +228,7 @@ export type rustWasm = {
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: rust_pointer<'mesh_id'>): boolean;
   faces_count(mesh_id: rust_pointer<'mesh_id'>): number;
-  alloc_vector_f32(size: Word<'dword'>): rust_pointer<rust_vec_ptr<'f32'>>;
   alloc_vector_u8(size: number): rust_pointer<rust_vec_ptr<'u8'>>;
-  alloc_vector_usize(size: number): rust_pointer<rust_vec_ptr<'usize'>>;
-  alloc_vector_positions(size: number): rust_pointer<rust_vec_ptr<'position'>>;
-  alloc_vector_positions_and_normal(
-    size: number,
-  ): rust_pointer<rust_vec_ptr<'position_and_normal'>>;
-  alloc_vector_position_and_normal_and_UV(
-    size: number,
-  ): rust_pointer<rust_vec_ptr<'position_and_normal_and_uv'>>;
-  alloc_vector_positions2d_and_uv(
-    size: number,
-  ): rust_pointer<rust_vec_ptr<'position2d_and_uv'>>;
   update_scale(mesh_id: number, x: number, y: number, z: number): void;
   update_euler_angles(
     mesh_id: rust_pointer<'mesh_id'>,
