@@ -1,4 +1,4 @@
-use std::mem;
+use std::{fmt::Display, mem};
 
 use externref::Resource;
 

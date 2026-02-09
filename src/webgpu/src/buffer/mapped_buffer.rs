@@ -29,7 +29,6 @@ pub unsafe fn unmap(_buffer: &Resource<JSBuffer>) {}
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "buffer")]
-#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn get_mapped_range(
         buffer: &Resource<JSBuffer>,
@@ -57,8 +56,10 @@ pub struct MappedGPUBuffer<
     const STORAGE: bool = false,
     const INDIRECT: bool = false,
     const QUERY_RESOLVE: bool = false,
->(
-    GPUBuffer<
+> {
+    size: NonZeroUsize,
+    offset: usize,
+    buffer: GPUBuffer<
         MAP_READ,
         MAP_WRITE,
         COPY_SRC,
@@ -70,7 +71,7 @@ pub struct MappedGPUBuffer<
         INDIRECT,
         QUERY_RESOLVE,
     >,
-);
+}
 
 #[no_mangle]
 #[externref]
@@ -98,7 +99,30 @@ pub unsafe extern "C" fn create_buffer_uniform_copydst(
     buffer.set_mapped_range(&data, 0);
     Box::into_raw(Box::new(Rc::new(RefCell::new(buffer.unmap()))))
 }
-
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn create_mappadle_gpu_buffer_copydst_mapread(
+    device: &Resource<JSDevice>,
+    size: NonZeroUsize,
+    label_ptr: *mut u8,
+    label_len: usize,
+    label_cap: usize,
+) -> *const GPUBuffer<true, false, false, true> {
+    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
+    Box::into_raw(Box::new(GPUBuffer::new(device, size, label)))
+}
+#[no_mangle]
+#[externref]
+pub unsafe extern "C" fn create_copysrc_storage_copydst_buffer(
+    device: &Resource<JSDevice>,
+    size: NonZeroUsize,
+) -> *const GPUBuffer<false, false, true, true, false, false, false, true> {
+    Box::into_raw(Box::new(GPUBuffer::new(
+        device,
+        size,
+        String::from("facet12ArrGPUBuffer"),
+    )))
+}
 impl<
         const MAP_READ: bool,
         const MAP_WRITE: bool,
@@ -125,6 +149,8 @@ impl<
     >
 {
     pub fn new(
+        size: NonZeroUsize,
+        offset: usize,
         buffer: GPUBuffer<
             MAP_READ,
             MAP_WRITE,
@@ -138,17 +164,35 @@ impl<
             QUERY_RESOLVE,
         >,
     ) -> Self {
-        MappedGPUBuffer(buffer)
+        MappedGPUBuffer {
+            size,
+            offset,
+            buffer,
+        }
     }
-    pub fn get_mapped_range_raw(&self, ptr: usize, size: NonZeroUsize, buffer_offset: usize) {
+    pub fn get_mapped_range_raw<T>(&self, ptr: *mut T, size: NonZeroUsize, buffer_offset: usize) {
         unsafe {
-            get_mapped_range(&self.0.externref.0, ptr, size, buffer_offset);
+            get_mapped_range(&self.buffer.externref.0, ptr as usize, size, buffer_offset);
+        }
+    }
+    pub fn get_mapped_range_vec<T>(&self, data: &mut Vec<T>, buffer_offset: usize) {
+        data.clear();
+        let new_size = self.size.get() / size_of::<T>();
+        let _ = data.try_reserve_exact(new_size);
+        unsafe {
+            data.set_len(new_size);
+            get_mapped_range(
+                &self.buffer.externref.0,
+                data.as_ptr() as usize,
+                self.size,
+                buffer_offset,
+            );
         }
     }
     pub fn get_mapped_range<T>(&self, data: &mut T, buffer_offset: usize) {
         unsafe {
             get_mapped_range(
-                &self.0.externref.0,
+                &self.buffer.externref.0,
                 data as *const T as usize,
                 NonZeroUsize::new_unchecked(size_of::<T>()),
                 buffer_offset,
@@ -157,13 +201,13 @@ impl<
     }
     pub fn set_mapped_range_raw(&self, ptr: usize, size: usize, buffer_offset: usize) {
         unsafe {
-            set_mapped_range(&self.0.externref.0, ptr, size, buffer_offset);
+            set_mapped_range(&self.buffer.externref.0, ptr, size, buffer_offset);
         }
     }
     pub fn set_mapped_range<T>(&self, data: &T, buffer_offset: usize) {
         unsafe {
             set_mapped_range(
-                &self.0.externref.0,
+                &self.buffer.externref.0,
                 data as *const T as usize,
                 size_of::<T>(),
                 buffer_offset,
@@ -185,9 +229,9 @@ impl<
         QUERY_RESOLVE,
     > {
         unsafe {
-            unmap(&self.0.externref.0);
+            unmap(&self.buffer.externref.0);
         }
-        self.0
+        self.buffer
     }
 }
 
@@ -229,6 +273,6 @@ impl<
         QUERY_RESOLVE,
     >;
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.buffer
     }
 }

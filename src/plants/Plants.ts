@@ -254,10 +254,11 @@ export class Plants extends MainNode {
           bindLayouts[0],
           'bindGroup1',
           (bindGroup1) => ({
-            facet12:
-              terrain.gpu.shaders.facet12ArrGPUBuffer.getStorageBinding(
-                bindGroup1,
+            facet12: {
+              buffer: engine.rust.get_raw_buffer(
+                terrain.gpu.shaders.facet12ArrGPUBuffer,
               ),
+            },
             positionAndRotate: positionGPUSwap.getStorageBinding(bindGroup1),
             shapes: shapeGPUSwap.getStorageBinding(bindGroup1),
             slopes:

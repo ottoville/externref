@@ -508,7 +508,6 @@ export class GPU {
     });
     this.gpu = engine.rust.init_gpu(
       device,
-      device.queue,
       this.renderPassScreen,
       this.renderPassWater,
       this.renderPassCanvas,

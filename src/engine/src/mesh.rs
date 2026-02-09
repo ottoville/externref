@@ -151,7 +151,7 @@ pub unsafe extern "C" fn update_translation(
 }
 #[no_mangle]
 #[externref::externref]
-pub unsafe extern "C" fn label_field_pointer(
+pub unsafe extern "C" fn mesh_label(
     mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> Resource<JSStringExtern> {
     let label = &ENGINE.meshes.lock().unwrap()[&*mesh_id].label;

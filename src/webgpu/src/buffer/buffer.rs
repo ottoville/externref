@@ -6,6 +6,8 @@ use crate::device::JSDevice;
 use crate::renderbundle::RenderBundle;
 use crate::weakvec::WeakVec;
 use externref::{externref, Resource};
+use web::primitives::jsstring::JSString;
+use web::primitives::jsstring::JSStringExtern;
 
 pub struct JSBuffer(());
 pub struct BufferRef(pub Resource<JSBuffer>);
@@ -14,8 +16,7 @@ impl Bindable for BufferRef {}
 pub unsafe fn create_buffer(
     _device: &Resource<JSDevice>,
     _size: NonZeroUsize,
-    _label_ptr: usize,
-    _label_len: usize,
+    _label: &Resource<JSStringExtern>,
     _usages: u32,
     _mapped: bool,
 ) -> Resource<JSBuffer> {
@@ -32,8 +33,7 @@ extern "C" {
     pub fn create_buffer(
         device: &Resource<JSDevice>,
         size: NonZeroUsize,
-        label_ptr: usize,
-        label_len: usize,
+        label: &Resource<JSStringExtern>,
         usages: u32,
         mapped: bool,
     ) -> Resource<JSBuffer>;
@@ -42,7 +42,6 @@ extern "C" {
 #[cfg(target_arch = "wasm32")]
 #[externref]
 #[link(wasm_import_module = "buffer")]
-#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn map_state(buffer: &Resource<JSBuffer>) -> u32;
     fn destroy(buffer: &Resource<JSBuffer>);
@@ -69,7 +68,7 @@ pub struct GPUBuffer<
     const QUERY_RESOLVE: bool = false,
 > {
     pub externref: Rc<BufferRef>,
-    pub label: String,
+    pub label: JSString,
     pub size: NonZeroUsize,
     pub bindings: WeakVec<RefCell<dyn BindGroupBinding>>,
     pub renderbundles: WeakVec<RefCell<Option<RenderBundle>>>,
@@ -139,19 +138,12 @@ impl<
         label: String,
         mapped: bool,
     ) -> Self {
-        let externref = unsafe {
-            create_buffer(
-                device,
-                size,
-                label.as_ptr() as usize,
-                label.len(),
-                Self::usages(),
-                mapped,
-            )
-        };
+        let jslabel = JSString::from(label);
+        let externref =
+            unsafe { create_buffer(device, size, &jslabel.externref, Self::usages(), mapped) };
         GPUBuffer {
             externref: Rc::new(BufferRef(externref)),
-            label,
+            label: jslabel,
             size,
             bindings: WeakVec::new(),
             renderbundles: WeakVec::new(),
@@ -187,7 +179,7 @@ impl<
         INDIRECT,
         QUERY_RESOLVE,
     > {
-        return MappedGPUBuffer::new(Self::inner_new(device, size, label, true));
+        return MappedGPUBuffer::new(size, 0, Self::inner_new(device, size, label, true));
     }
     pub fn map_state(&self) -> u32 {
         #[cfg(target_arch = "wasm32")]
@@ -209,14 +201,7 @@ impl<
     pub fn resize_zeroed(&mut self, device: &Resource<JSDevice>, size: NonZeroUsize) {
         self.size = size;
         self.externref = Rc::new(BufferRef(unsafe {
-            create_buffer(
-                device,
-                size,
-                self.label.as_ptr() as usize,
-                self.label.len(),
-                Self::usages(),
-                false,
-            )
+            create_buffer(device, size, &self.label.externref, Self::usages(), false)
         }));
         self.make_dirty();
     }

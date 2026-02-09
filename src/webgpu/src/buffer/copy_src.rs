@@ -44,14 +44,8 @@ impl<
         size: NonZeroUsize,
     ) {
         unsafe {
-            let new_externref = create_buffer(
-                device,
-                size,
-                self.label.as_ptr() as usize,
-                self.label.len(),
-                Self::usages(),
-                false,
-            );
+            let new_externref =
+                create_buffer(device, size, &self.label.externref, Self::usages(), false);
             copy_buffer_to_buffer(
                 &command_encoder.externref,
                 &self.externref.0,

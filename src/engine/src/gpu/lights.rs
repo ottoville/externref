@@ -92,11 +92,13 @@ fn test_lights() {
     use crate::gpu::gpu::init_gpu;
     use crate::gpu::shader::SHADER_STAGE_COMPUTE_AND_FRAGMENT;
     use externref::ExternRef;
-    use webgpu::{bindgroup::{bindgroup::BindGroup, bufferbinding::BufferBinding}, queue::Queue};
+    use webgpu::{
+        bindgroup::{bindgroup::BindGroup, bufferbinding::BufferBinding},
+        queue::Queue,
+    };
     unsafe {
         init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -170,10 +172,10 @@ fn test_lights() {
         lights.update_buffer(&device, &mut command_encoder, &mut swapbuffers);
         assert_eq!(lights.buffer.borrow().size.get(), 32);
         assert_eq!(bindgroup.resources.borrow().is_none(), true);
-        let queue = Queue {
-            externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(0)),
-            pending_command_buffers: Vec::new(),
-        };
+        let queue = Queue::new(Resource::new_non_null(std::mem::transmute::<
+            usize,
+            ExternRef,
+        >(0)));
         queue.submit([command_encoder.finish(String::from("test"))]);
         swapbuffers.queue_submited();
     }

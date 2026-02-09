@@ -16,10 +16,16 @@ export type BufferInterface = {
     label_len: number,
     label_cap: number,
   ): rust_pointer<'GPUBuffer'>;
+  create_copysrc_storage_copydst_buffer(
+    device: GPUDevice,
+    length: number,
+  ): rust_pointer<'GPUBuffer'>;
 
   get_raw_buffer(buffer: rust_pointer<'GPUBuffer'>): GPUBuffer;
 
   buffer_mapped_write(
+    size: number,
+    offset: number,
     rust_buffer: rust_pointer<'buffer'>,
     cb: rust_pointer<'fn'>,
   ): void;
@@ -29,6 +35,8 @@ export type BufferInterface = {
     error: string,
   ): void;
   buffer_mapped_read(
+    size: number,
+    offset: number,
     rust_buffer: rust_pointer<'buffer'>,
     cb: rust_pointer<'fn'>,
   ): void;
@@ -65,7 +73,7 @@ export const BufferExports = {
       .mapAsync(GPUMapMode.READ, offset, size)
       .then(() => {
         try {
-          engine.rust.buffer_mapped_read(rust_buffer, cb);
+          engine.rust.buffer_mapped_read(size, offset, rust_buffer, cb);
         } catch (err) {
           // Catch possible error in rust to avoid exception leaking
           // into outer catch which is reserved only for "getFileHandle" throws.
@@ -95,7 +103,7 @@ export const BufferExports = {
       .mapAsync(GPUMapMode.WRITE, offset, size)
       .then(() => {
         try {
-          engine.rust.buffer_mapped_write(rust_buffer, cb);
+          engine.rust.buffer_mapped_write(size, offset, rust_buffer, cb);
         } catch (err) {
           // Catch possible error in rust to avoid exception leaking
           // into outer catch which is reserved only for "getFileHandle" throws.

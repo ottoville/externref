@@ -119,14 +119,10 @@ export const DeviceExports = {
   create_buffer(
     device: GPUDevice,
     size: number,
-    label_ptr: number,
-    label_len: number,
+    label: string,
     usage: number,
     mappedAtCreation: boolean,
   ) {
-    const label = textDecoder.decode(
-      new Uint8Array(engine.rust.memory.buffer, label_ptr, label_len),
-    );
     return device.createBuffer({
       label,
       mappedAtCreation,
@@ -248,5 +244,8 @@ export const DeviceExports = {
   },
   destroy(device: GPUDevice) {
     device.destroy();
+  },
+  get_queue(device: GPUDevice): GPUQueue {
+    return device.queue;
   },
 };

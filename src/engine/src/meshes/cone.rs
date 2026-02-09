@@ -163,7 +163,6 @@ fn test_cone() {
     unsafe {
         let gpu = init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(4)),

@@ -119,10 +119,11 @@ TODO
           facesCount * 4,
         ),
       );
-      b2.unmap().copyTo(
-        commandEncoder,
-        this.gpu.shaders.facet12ArrGPUBuffer,
+      const unmapped = b2.unmap();
+      commandEncoder.copyBufferToBuffer(
+        unmapped.buffer, // source buffer
         0,
+        engine.rust.get_raw_buffer(this.gpu.shaders.facet12ArrGPUBuffer), //destination buffer
         0,
         facesByteLength,
       );
@@ -338,9 +339,12 @@ TODO
           'RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING'
         ],
     });
-    const _heightsBindGroupEntries = (bindGroup: BindGroup) => ({
-      facet12:
-        this.gpu.shaders.facet12ArrGPUBuffer.getStorageBinding(bindGroup),
+    const heightsBindGroupEntries = (bindGroup: BindGroup) => ({
+      facet12: {
+        buffer: engine.rust.get_raw_buffer(
+          this.gpu.shaders.facet12ArrGPUBuffer,
+        ),
+      },
       slopes: this.gpu.shaders.slopeArrGPUBuffer.getStorageBinding(bindGroup),
     });
     const commandEncoder = gpu.device.createCommandEncoder({
@@ -392,7 +396,7 @@ TODO
       new BindGroup(
         shaders.computePlaneHeights[0][1],
         '_heightsBindGroupEntries',
-        _heightsBindGroupEntries,
+        heightsBindGroupEntries,
       ).bindGroup,
     );
     passEncoder.dispatchWorkgroups(...TerrainSubdivisions);
@@ -412,7 +416,7 @@ TODO
       new BindGroup(
         slopesLayout,
         'bindGroupHeightsRead2',
-        _heightsBindGroupEntries,
+        heightsBindGroupEntries,
       ).bindGroup,
     );
     passEncoder.dispatchWorkgroups(
@@ -482,7 +486,7 @@ TODO
           const bindGroupHeightsRead = new BindGroup(
             slopesLayout,
             'bindGroupHeightsRead',
-            _heightsBindGroupEntries,
+            heightsBindGroupEntries,
           );
 
           passEncoder.setBindGroup(0, bindGroupHeightsRead.bindGroup);
@@ -563,26 +567,13 @@ TODO
             });
         }
 
-        const commandEncoder2 = gpu.device.createCommandEncoder({
-          label: 'terrain_encoder2',
-        });
-
-        const readBuffer2 =
-          this.gpu.shaders.facet12ArrGPUBuffer.createCopy(commandEncoder2);
-        gpu.device.queue.submit([commandEncoder2.finish()]);
-        readBuffer2
-          .readAndDestroy((buff) => {
-            this.mesh.faces = new Float32Array(buff);
-          })
-          .catch((err) => {
-            engine.showError(err);
-          });
         engine.rust.set_indices_and_vertices_PositionAndNormalAndUV(
           this.mesh.id,
           gpuReadBufferIndices,
           gpuReadBufferPositions,
           gpu.gpu,
           serialize,
+          this.gpu.shaders.facet12ArrGPUBuffer,
         );
       })
       .catch((err) => engine.showError(err));

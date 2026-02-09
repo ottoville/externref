@@ -61,13 +61,10 @@ pub unsafe extern "C" fn vertices_stride(geometry: *const Geometry) -> usize {
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_faces(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
-    ptr: *mut Plane,
-    length: usize,
-    cap: usize,
+    mesh_id: &ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
+    planes: Vec<Plane>,
 ) {
-    let planes = Vec::from_raw_parts(ptr, length / 4, cap / 4);
-    let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+    let mesh = &mut ENGINE.meshes.lock().unwrap()[mesh_id];
 
     let geometry = mesh.get_geometry_mut();
     geometry.collider_planes.collider_planes = Vec::with_capacity(planes.len());
@@ -75,6 +72,7 @@ pub unsafe extern "C" fn set_faces(
     geometry.planes.planes = planes;
     geometry.rebuild_triangle_planes();
 }
+
 #[no_mangle]
 pub unsafe extern "C" fn vertices_count(geometry_ptr: *const Geometry) -> usize {
     let geometry = &(*geometry_ptr);
@@ -90,12 +88,35 @@ pub unsafe extern "C" fn have_vertices(
 
 #[no_mangle]
 pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
-    mesh_id: *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
+    mesh_id_ptr: *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
     indices_buffer: *mut GPUBuffer<true, false, false, true>,
     vertices_buffer: *mut GPUBuffer<true, false, false, true>,
-    gpu: *mut GPU,
+    gpu_ptr: *mut GPU,
     serialize: bool,
+    facet12_arr_gpubuffer: *const GPUBuffer<
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+    >,
 ) {
+    let gpu = &mut (*gpu_ptr);
+    let mesh_id = *mesh_id_ptr;
+    let read_buffer2 = GPUBuffer::from((&gpu.device, &(*facet12_arr_gpubuffer)));
+    read_buffer2.map_read_async(0, None, move |mapped_opt| match mapped_opt {
+        Ok(mapped) => {
+            let mut planes: Vec<Plane> = Vec::new();
+            mapped.get_mapped_range_vec(&mut planes, 0);
+            set_faces(&mesh_id, planes);
+        }
+        Err(_) => todo!(),
+    });
     let gate = Rc::new(Cell::new(false));
     let gate_clone = gate.clone();
 
@@ -115,10 +136,10 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
         match buffer_opt {
             Ok(buffer) => {
                 let mut indices: Vec<usize> = vec![0; buffer.size.get() / 4];
-                buffer.get_mapped_range_raw(indices.as_mut_ptr() as usize, buffer.size, 0);
-                let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+                buffer.get_mapped_range_raw(indices.as_mut_ptr(), buffer.size, 0);
+                let mesh: &mut Mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
                 let geometry = mesh.geometry.as_mut().unwrap();
-                geometry.set_indices(indices, &mut (*gpu));
+                geometry.set_indices(indices, gpu);
                 // Execute callback if gate was "true", set it to "true" if it was "false"
                 gate.set(gate.get().then(|| then(mesh)).is_none());
             }
@@ -133,9 +154,9 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
             Ok(buffer) => {
                 let mut vertices: Vec<PositionAndNormalAndUV> =
                     Vec::with_capacity(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
-                buffer.get_mapped_range_raw(vertices.as_mut_ptr() as usize, buffer.size, 0);
+                buffer.get_mapped_range_raw(vertices.as_mut_ptr(), buffer.size, 0);
                 vertices.set_len(buffer.size.get() / size_of::<PositionAndNormalAndUV>());
-                let mesh = &mut ENGINE.meshes.lock().unwrap()[&*mesh_id];
+                let mesh = &mut ENGINE.meshes.lock().unwrap()[&mesh_id];
                 let geometry = mesh.geometry.as_mut().unwrap();
                 geometry.set_vertices(VertexKind::PositionAndNormalAndUV(vertices));
                 geometry.faces_dirty = true;
@@ -545,7 +566,7 @@ impl<'vert> Geometry {
         label.push_str(&self.label);
 
         let mapped = GPUBuffer::<false, false, false, false, true>::new_mapped(
-            &gpu.device,
+            &gpu.device.externref,
             NonZeroUsize::new(indices.len() * 4).unwrap(),
             label,
         );

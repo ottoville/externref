@@ -14,8 +14,7 @@ use webgpu::color_attachment::color_attachment_multi_sampled::ColorAttachmentMul
 use webgpu::color_attachment::color_attachment_single_sampled::ColorAttachmentSingleSampled;
 use webgpu::context::canvas_context::{AlphaMode, ColorSpace};
 use webgpu::context::unconfigured_webgpu_context::UnconfiguredWebgpuContext;
-use webgpu::device::JSDevice;
-use webgpu::queue::{JSQueue, Queue};
+use webgpu::device::{GPUDevice, JSDevice};
 use webgpu::texture::texture::{Texture, TextureAspect, TextureViewDimension};
 use webgpu::texture::texture_formats::{BGRA8UNORM, DEPTH32FLOAT, RG32UINT, RGBA8UNORM};
 use webgpu::texture::texture_view::TextureView;
@@ -112,7 +111,10 @@ pub unsafe extern "C" fn write_gpu_buffer_uniform_copydst(
 ) {
     let data = Box::new([a, b]);
     let b = (*buffer).borrow();
-    (*gpu).queue.write_buffer(&b, data.as_ptr() as usize, 8, 0);
+    (*gpu)
+        .device
+        .queue
+        .write_buffer(&b, data.as_ptr() as usize, 8, 0);
 }
 #[no_mangle]
 #[externref]
@@ -135,7 +137,6 @@ pub unsafe extern "C" fn drop_gpu_lock(gpu: *mut MutexGuard<'static, Option<GPU>
 #[externref]
 pub unsafe extern "C" fn init_gpu(
     device: Resource<JSDevice>,
-    queue: Resource<JSQueue>,
     js_render_pass_screen: Resource<JSRenderPass>,
     js_render_pass_water: Resource<JSRenderPass>,
     js_render_pass_canvas: Resource<JSRenderPass>,
@@ -654,11 +655,7 @@ pub unsafe extern "C" fn init_gpu(
     let renderpasses_singlesampled = vec![render_pass_water, pick_render_pass, render_pass_canvas];
 
     let mut gpu = GPU {
-        device,
-        queue: Queue {
-            externref: queue,
-            pending_command_buffers: Vec::with_capacity(8),
-        },
+        device: GPUDevice::new(device),
         gpu_buffer,
         bind_group_position,
         projections: vec![projection],
@@ -689,7 +686,7 @@ pub unsafe extern "C" fn init_gpu(
         })),
         String::from("waterCamera"),
         gpu.projections[0].clone(),
-        &gpu.device,
+        &gpu.device.externref,
         &update_clusters_layout,
         gpu.timebuffer.clone(),
         &uniform_bind_group_layout_with_time,
@@ -713,11 +710,15 @@ pub unsafe extern "C" fn push_to_pending_command_buffers(
     buffer: Resource<JSCommandBuffer>,
     gpu: *mut GPU,
 ) {
-    (*gpu).queue.pending_command_buffers.push(CommandBuffer {
-        externref: buffer,
-        buffers: Vec::new(),
-        bindgroups: Vec::new(),
-    });
+    (*gpu)
+        .device
+        .queue
+        .pending_command_buffers
+        .push(CommandBuffer {
+            externref: buffer,
+            buffers: Vec::new(),
+            bindgroups: Vec::new(),
+        });
 }
 #[no_mangle]
 #[externref]
@@ -734,8 +735,7 @@ pub struct MeshGPU {
 }
 
 pub struct GPU {
-    pub device: Resource<JSDevice>,
-    pub queue: Queue,
+    pub device: GPUDevice,
     pub meshes: ExplicitGenerationalFreeList<MeshGPU>,
     pub gpu_buffer: Rc<RefCell<GPUBuffer<false, false, true, true, false, false, true, true>>>,
     pub bind_group_position: Rc<BindGroup<1>>,
@@ -817,12 +817,12 @@ impl GPU {
 
         self.device_pixel_ratio = device_pixel_ratio;
         let mut command_encoder =
-            GPUCommandEncoder::new(&self.device, String::from("screen_resize"));
+            GPUCommandEncoder::new(&self.device.externref, String::from("screen_resize"));
         for projection in &self.projections {
             {
                 let new_projection_buffer = projection
                     .inner_projection
-                    .create_buffer(&self.device, aspect_ratio);
+                    .create_buffer(&self.device.externref, aspect_ratio);
                 projection
                     .buffer
                     .borrow_mut()
@@ -831,8 +831,8 @@ impl GPU {
         }
         for camera in self.cameras.iter_mut() {
             camera.camera.borrow_mut().update_view(
-                &mut self.queue.pending_command_buffers,
-                &self.device,
+                &mut self.device.queue.pending_command_buffers,
+                &self.device.externref,
                 &mut command_encoder,
                 &mut self.swap_buffers,
                 true,
@@ -844,10 +844,20 @@ impl GPU {
         let width = NonZeroU32::new(width).unwrap();
         let height = NonZeroU32::new(height).unwrap();
         for renderpass in &mut self.renderpasses {
-            renderpass.resize(width, height, &self.device, &mut computepassencoder);
+            renderpass.resize(
+                width,
+                height,
+                &self.device.externref,
+                &mut computepassencoder,
+            );
         }
         for renderpass in &mut self.renderpasses_sampled {
-            renderpass.resize(width, height, &self.device, &mut computepassencoder);
+            renderpass.resize(
+                width,
+                height,
+                &self.device.externref,
+                &mut computepassencoder,
+            );
         }
         // Call onResize after all renderPasses have resizes so callbacks
         // can refer updated render target of other renderpasses.
@@ -863,7 +873,8 @@ impl GPU {
                 renderpass_on_resize(&renderpass.inner_renderpass.jsrenderpass, size[0], size[1]);
             }
         }
-        self.queue
+        self.device
+            .queue
             .submit([computepassencoder.end().finish(String::from("resize"))]);
     }
     pub fn get_camera_by_id(&self, camera_id: u32) -> Rc<Camera> {
@@ -887,10 +898,12 @@ impl GPU {
             camera.camera.borrow_mut().check_inputs();
         }
         self.time = time;
-        let mut command_encoder =
-            GPUCommandEncoder::new(&self.device, String::from("handle_gpu_queue_encoder"));
+        let mut command_encoder = GPUCommandEncoder::new(
+            &self.device.externref,
+            String::from("handle_gpu_queue_encoder"),
+        );
         self.swap_buffers.get(
-            &self.device,
+            &self.device.externref,
             unsafe { NonZeroUsize::new_unchecked(8) },
             |temp_buffer| {
                 temp_buffer.set_mapped_range(&self.time, 0);
@@ -905,25 +918,30 @@ impl GPU {
         );
 
         // TODO: reuse already allocated memory from previous iteration, thus allowing constant string
-        let mut renderloop_command_encoder =
-            GPUCommandEncoder::new(&self.device, String::from("renderloop_commandEncoder"));
+        let mut renderloop_command_encoder = GPUCommandEncoder::new(
+            &self.device.externref,
+            String::from("renderloop_commandEncoder"),
+        );
 
         //Lights
         self.directional_lights.update_buffer(
-            &self.device,
+            &self.device.externref,
             &mut command_encoder,
             &mut self.swap_buffers,
         );
-        self.point_lights
-            .update_buffer(&self.device, &mut command_encoder, &mut self.swap_buffers);
+        self.point_lights.update_buffer(
+            &self.device.externref,
+            &mut command_encoder,
+            &mut self.swap_buffers,
+        );
 
         let mut update_lights = false;
         let mut some_camera_updated = false;
         //Cameras
         for camera in self.cameras.iter_mut() {
             if camera.camera.borrow_mut().update_view(
-                &mut self.queue.pending_command_buffers,
-                &self.device,
+                &mut self.device.queue.pending_command_buffers,
+                &self.device.externref,
                 &mut command_encoder,
                 &mut self.swap_buffers,
                 false,
@@ -955,7 +973,7 @@ impl GPU {
                 }
                 if queue.len() > 0 {
                     self.swap_buffers.get(
-                        &self.device,
+                        &self.device.externref,
                         unsafe {
                             NonZeroUsize::new_unchecked(
                                 std::mem::size_of::<GPUMesh>() * queue.len(),
@@ -990,7 +1008,11 @@ impl GPU {
                             let mut gpu_buffer = self.gpu_buffer.borrow_mut();
                             // if MAX_INSTANCES was increased, resize the buffer
                             if gpu_buffer.size < wanted_size {
-                                gpu_buffer.resize(&self.device, &mut command_encoder, wanted_size);
+                                gpu_buffer.resize(
+                                    &self.device.externref,
+                                    &mut command_encoder,
+                                    wanted_size,
+                                );
                             }
                             for (i, mesh_property_m) in queue.drain(..).enumerate() {
                                 let mesh_property = mesh_property_m.lock().unwrap();
@@ -1015,11 +1037,11 @@ impl GPU {
             let mut lights_pass =
                 command_encoder.begin_compute_pass(String::from("lightPassEncoder"));
             lights_pass.set_pipeline(update_view_pipeline);
-            lights_pass.set_bindgroup(&self.device, 0, &self.update_view_bindgroup, &[]);
+            lights_pass.set_bindgroup(&self.device.externref, 0, &self.update_view_bindgroup, &[]);
             //If light source has been moved, update all cameras. Otherwise update only cameras that has been moved.
             for camera in self.cameras.iter_mut() {
                 camera.camera.borrow_mut().update_camera(
-                    &self.device,
+                    &self.device.externref,
                     update_lights,
                     &mut lights_pass,
                 );
@@ -1034,7 +1056,7 @@ impl GPU {
         for renderpass in &mut self.renderpasses {
             renderloop_command_encoder = renderpass.render(
                 renderloop_command_encoder,
-                &self.device,
+                &self.device.externref,
                 gpu_buffer_id,
                 &self.bind_group_position,
             );
@@ -1042,18 +1064,20 @@ impl GPU {
         for renderpass in &mut self.renderpasses_sampled {
             renderloop_command_encoder = renderpass.render(
                 renderloop_command_encoder,
-                &self.device,
+                &self.device.externref,
                 gpu_buffer_id,
                 &self.bind_group_position,
             );
         }
         // Update mesh positions etc
-        self.queue
+        self.device
+            .queue
             .submit([command_encoder.finish(String::from("renderloop"))]);
         // Every other than depends on mesh positions etc
-        self.queue.drain_command_buffers();
+        self.device.queue.drain_command_buffers();
         // Draw commands last so everything is up to date
-        self.queue
+        self.device
+            .queue
             .submit([renderloop_command_encoder.finish(String::from("renderloop_renderencoder"))]);
         TEMP_GPU_BUFFERS.with_borrow_mut(|allocator| {
             allocator.clear();
@@ -1080,7 +1104,6 @@ fn test_gpu_queue() {
     unsafe {
         let gpu = &mut *init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -1177,7 +1200,6 @@ fn test_bindgroup_buffer_resize() {
 
         let gpu = &mut *init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -1258,7 +1280,7 @@ fn test_bindgroup_buffer_resize() {
             >(3)));
         renderbundle_encoder.record_renderbundle(
             &mut gpu.renderpasses[0].inner_renderpass.cameragroups,
-            &gpu.device,
+            &gpu.device.externref,
             1,
             &bindgroup,
             |renderbundle| {
@@ -1279,10 +1301,10 @@ fn test_bindgroup_buffer_resize() {
             //buffer ref count is 3: test, command_encoder, rawbindgroup
             assert_eq!(Rc::strong_count(&rawbuffer), 3);
 
-            let queue = Queue {
-                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-                pending_command_buffers: Vec::new(),
-            };
+            let queue = Queue::new(Resource::new_non_null(std::mem::transmute::<
+                usize,
+                ExternRef,
+            >(3)));
             //bindgroup 2 ref: test, command_buffer
             assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             queue.submit([command_buffer]);
@@ -1315,7 +1337,6 @@ fn test_bindgroup() {
     unsafe {
         let gpu = &mut *init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -1389,7 +1410,7 @@ fn test_bindgroup() {
             >(3)));
         renderbundle_encoder.record_renderbundle(
             &mut gpu.renderpasses[0].inner_renderpass.cameragroups,
-            &gpu.device,
+            &gpu.device.externref,
             1,
             &bindgroup,
             |renderbundle| {
@@ -1409,10 +1430,10 @@ fn test_bindgroup() {
             let command_buffer = command_encoder.finish(String::from("test"));
             assert_eq!(Rc::strong_count(&rawbuffer), 3);
 
-            let queue = Queue {
-                externref: Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
-                pending_command_buffers: Vec::new(),
-            };
+            let queue = Queue::new(Resource::new_non_null(std::mem::transmute::<
+                usize,
+                ExternRef,
+            >(3)));
             //bindgroup 2 ref: test, command_buffer
             assert_eq!(Rc::strong_count(&rawbindgroup), 2);
             queue.submit([command_buffer]);

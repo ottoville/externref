@@ -3,6 +3,7 @@ use crate::bindgroup::bindgroup_descriptor::JSBindGroupDescriptor;
 use crate::bindgroup_layout::JSBindGroupLayout;
 use crate::binding_layout::BindingLayout;
 use crate::command_encoder::JSCommandEncoder;
+use crate::queue::{JSQueue, Queue};
 use crate::texture::texture::JSTexture;
 use externref::Resource;
 
@@ -54,10 +55,14 @@ pub unsafe fn create_bind_group(
     use externref::ExternRef;
     Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
 }
+#[cfg(not(target_arch = "wasm32"))]
+pub unsafe fn get_queue(_device: &Resource<JSDevice>) -> Resource<JSQueue> {
+    use externref::ExternRef;
+    Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1))
+}
 #[cfg(target_arch = "wasm32")]
 #[externref::externref]
 #[link(wasm_import_module = "device")]
-#[cfg(any(not(test), rust_analyzer))]
 extern "C" {
     pub fn create_bind_group_layout(
         device: &Resource<JSDevice>,
@@ -89,6 +94,19 @@ extern "C" {
         label_ptr: usize,
         label_len: usize,
     ) -> Resource<JSCommandEncoder>;
-
+    pub fn get_queue(device: &Resource<JSDevice>) -> Resource<JSQueue>;
 }
 pub struct JSDevice();
+pub struct GPUDevice {
+    pub externref: Resource<JSDevice>,
+    pub queue: Queue,
+}
+impl GPUDevice {
+    pub fn new(externref: Resource<JSDevice>) -> Self {
+        let queue = unsafe { get_queue(&externref) };
+        GPUDevice {
+            externref,
+            queue: Queue::new(queue),
+        }
+    }
+}

@@ -497,7 +497,6 @@ fn test_child_camera() {
     unsafe {
         let gpu = &mut *init_gpu(
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(1)),
-            Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(2)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
             Resource::new_non_null(std::mem::transmute::<usize, ExternRef>(3)),
@@ -518,7 +517,7 @@ fn test_child_camera() {
             144,
         );
         let update_clusters_layout = BindGroupLayout::new(
-            &gpu.device,
+            &gpu.device.externref,
             String::from("UpdateClustersLayout"),
             [&clusters, &view_uniforms],
         );
@@ -553,12 +552,12 @@ fn test_child_camera() {
             224,
         );
         let uniform_bind_group_layout_with_time = BindGroupLayout::new(
-            &gpu.device,
+            &gpu.device.externref,
             String::from("uniformBindGroupLayoutWithTime"),
             [&clusters_array, &meshes, &projection, &scene, &time],
         );
         let clusters_layout = BindGroupLayout::new(
-            &gpu.device,
+            &gpu.device.externref,
             String::from("clusters_layout"),
             [&clusters, &view_uniforms],
         );
@@ -569,7 +568,7 @@ fn test_child_camera() {
             None,
             String::from("test"),
             projection.clone(),
-            &gpu.device,
+            &gpu.device.externref,
             &update_clusters_layout,
             gpu.timebuffer.clone(),
             &uniform_bind_group_layout_with_time,
@@ -582,7 +581,7 @@ fn test_child_camera() {
             Arc::new(Projection::new(&Resource::new_non_null(
                 std::mem::transmute::<usize, ExternRef>(0),
             ))),
-            &gpu.device,
+            &gpu.device.externref,
             &update_clusters_layout,
             gpu.timebuffer.clone(),
             &uniform_bind_group_layout_with_time,

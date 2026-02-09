@@ -194,7 +194,7 @@ impl StorageState {
                     6,
                     storage_bucket,
                 );
-                open_request.on_upgrade_needed(|db, old_version, new_version| {
+                open_request.on_upgrade_needed(|db, _old_version, _new_version| {
                     db.create_object_store::<&[String; 2]>(&SAVE_STORE);
                     let plantae = db.create_object_store_with_auto_increment(&PLANTAE_STORE);
                     plantae.create_index::<false, false, _>(
@@ -202,7 +202,7 @@ impl StorageState {
                         [String::from("family")],
                     );
                     plantae.create_index::<false, false, _>(String::from("x"), [String::from("x")]);
-                    let zones = db.create_object_store_with_auto_increment(&ZONES_STORE);
+                    let _zones = db.create_object_store_with_auto_increment(&ZONES_STORE);
                 });
                 open_request.on_blocked(|_oldv, _newv| {
                     &"DB on blocked".log();
@@ -213,13 +213,13 @@ impl StorageState {
                 let result_copy = open_request.request.result.clone();
                 open_request.request.on_success(move |db, _| {
                     &"DB opened succesfully".log();
-                    db.on_error(|e| {
+                    db.on_error(|_| {
                         &"DB on error".error();
                     });
-                    db.on_abort(|e| {
+                    db.on_abort(|_| {
                         &"DB on abort".error();
                     });
-                    db.on_version_change(|event| {
+                    db.on_version_change(|_| {
                         &"DB version change".log();
                     });
                     indexed_db_clone.run_cbs(true, result_copy);

@@ -126,15 +126,6 @@ export class DataNode extends MainNode {
   get_faces_count() {
     return engine.rust.faces_count(this.id);
   }
-  set faces(faces: Float32Array) {
-    const vec_ptr = create_rust_vec_ptr(
-      engine.rust.alloc_vector_f32(faces.length as Word<'dword'>),
-    );
-    new Float32Array(engine.rust.memory.buffer, vec_ptr[0], vec_ptr[1]).set(
-      faces,
-    );
-    engine.rust.set_faces(this.id, ...vec_ptr);
-  }
   /**
    * Get raw vertices data
    */

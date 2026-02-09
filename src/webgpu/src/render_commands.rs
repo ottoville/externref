@@ -95,7 +95,7 @@ pub trait RenderCommands<T>: HaveExternref<T> {
         offset: u32,
         size: Option<NonZeroUsize>,
     ) {
-        ["set indexBuffer", &buffer.label].debug();
+        ["set indexBuffer", &buffer.label.get_as_string()].debug();
         let ptr = unsafe { ptr::read(self.externref() as *const Resource<T> as *const usize) };
         let buffer_size = match size {
             Some(s) => s,

@@ -19,6 +19,9 @@ import { createSimpleVertShader } from './SingleColoredWithNormal.vert.js';
 import { createSimpleFragShader } from './Simple.frag.js';
 import { createVertexColorShader } from './VertexColoredWithNormal.vert.js';
 import { createGroundFragShader } from './Ground.frag.js';
+import type { Engine } from '../../engine.js';
+declare const engine: Engine;
+
 export const TerrainSubdivisions = [64, 64] as const;
 export const gpu_memory_index_size = 256;
 
@@ -32,17 +35,14 @@ export const colorFragmentFunction = new FragmentShaderFunction(
 );
 
 export function createShaderBuilders(gpu: GPU) {
-  const facet12ArrGPUBuffer = new Buffer({
-    gpu: gpu.device,
-    label: 'facet12ArrGPUBuffer',
-    size:
-      Float32Array.BYTES_PER_ELEMENT *
+  const facet12ArrGPUBuffer = engine.rust.create_copysrc_storage_copydst_buffer(
+    gpu.device,
+    Float32Array.BYTES_PER_ELEMENT *
       TerrainSubdivisions[0] *
       TerrainSubdivisions[1] *
       4 *
       2,
-    usages: BufferUsageEnums['STORAGE|COPY_SRC|COPY_DST'],
-  });
+  );
   const slopeArrGPUBuffer = new Buffer({
     gpu: gpu.device,
     label: 'slopeArrGPUBuffer',
@@ -83,7 +83,9 @@ export function createShaderBuilders(gpu: GPU) {
             heightsLayout,
             'TerrainHeightsbindGroupTree',
             (bindGroup) => ({
-              facet12: facet12ArrGPUBuffer.getStorageBinding(bindGroup),
+              facet12: {
+                buffer: engine.rust.get_raw_buffer(facet12ArrGPUBuffer),
+              },
               slopes: slopeArrGPUBuffer.getStorageBinding(bindGroup),
             }),
           ),

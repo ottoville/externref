@@ -60,10 +60,16 @@ pub unsafe extern "C" fn drain_command_buffers<'a>(
     return (*value).as_ref();
 }
 pub struct Queue {
-    pub externref: Resource<JSQueue>,
+    externref: Resource<JSQueue>,
     pub pending_command_buffers: Vec<CommandBuffer>,
 }
 impl Queue {
+    pub fn new(externref: Resource<JSQueue>) -> Self {
+        Queue {
+            externref,
+            pending_command_buffers: Vec::with_capacity(8),
+        }
+    }
     fn inner_submit<I: Iterator<Item = CommandBuffer>>(
         externref: &Resource<JSQueue>,
         command_buffers: I,

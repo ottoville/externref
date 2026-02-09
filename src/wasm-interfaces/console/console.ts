@@ -1,4 +1,7 @@
 export const consoleInterface = {
+  debug(object: unknown) {
+    console.debug(object);
+  },
   error(object: unknown) {
     console.error(object);
   },

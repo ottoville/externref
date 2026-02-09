@@ -1,25 +1,11 @@
 use std::num::NonZeroUsize;
 use std::ptr;
 
-use externref::{externref, Resource};
+use externref::Resource;
 use web::primitives::jsstring::{JSString, JSStringExtern};
 
 use crate::buffer::buffer::{BufferRef, GPUBuffer};
 use crate::buffer::mapped_buffer::MappedGPUBuffer;
-use crate::device::JSDevice;
-
-#[no_mangle]
-#[externref]
-pub unsafe extern "C" fn create_mappadle_gpu_buffer_copydst_mapread(
-    device: &Resource<JSDevice>,
-    size: NonZeroUsize,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
-) -> *const GPUBuffer<true, false, false, true> {
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new(device, size, label)))
-}
 
 #[cfg(not(target_arch = "wasm32"))]
 unsafe fn map_read_async(
@@ -42,12 +28,16 @@ type MapWriteCallback = *mut *mut dyn FnOnce(
 
 #[no_mangle]
 pub unsafe extern "C" fn buffer_mapped_write(
+    size: NonZeroUsize,
+    offset: usize,
     buffer: *mut GPUBuffer<false, true, true>,
     callback: MapWriteCallback,
 ) {
-    Box::from_raw(*Box::from_raw(callback))(Result::Ok(MappedGPUBuffer::new(*Box::from_raw(
-        buffer,
-    ))));
+    Box::from_raw(*Box::from_raw(callback))(Result::Ok(MappedGPUBuffer::new(
+        size,
+        offset,
+        *Box::from_raw(buffer),
+    )));
 }
 #[no_mangle]
 pub unsafe extern "C" fn buffer_mapped_write_error(
@@ -68,7 +58,7 @@ unsafe fn map_write_async(
     gpubuffer: usize,
     callback: MapWriteCallback,
 ) {
-    Box::from_raw(*Box::from_raw(callback as MapWriteCallback))(Result::Ok(MappedGPUBuffer::new(
+    Box::from_raw(*Box::from_raw(callback as MapWriteCallback))(Result::Ok(MappedGPUBuffer::new(NonZeroUsize::new(1).unwrap(),1,
         *Box::from_raw(gpubuffer as *mut GPUBuffer<false, true, true>),
     )));
 }
@@ -93,12 +83,16 @@ extern "C" {
 
 #[no_mangle]
 pub unsafe extern "C" fn buffer_mapped_read(
+    size: NonZeroUsize,
+    offset: usize,
     buffer: *mut GPUBuffer<true, false, false, true>,
     callback: MapReadAsyncCB,
 ) {
-    Box::from_raw(*Box::from_raw(callback))(Result::Ok(MappedGPUBuffer::new(*Box::from_raw(
-        buffer,
-    ))));
+    Box::from_raw(*Box::from_raw(callback))(Result::Ok(MappedGPUBuffer::new(
+        size,
+        offset,
+        *Box::from_raw(buffer),
+    )));
 }
 #[no_mangle]
 pub unsafe extern "C" fn buffer_mapped_read_error(

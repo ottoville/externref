@@ -218,6 +218,7 @@ export type rustWasm = {
     vertices: rust_pointer<'GPUBuffer'>,
     gpu: rust_pointer<'GPU'>,
     serialize: boolean,
+    facet12ArrGPUBuffer: rust_pointer<'GPUBuffer'>,
   ): void;
   indices_field_pointer(
     geometry: rust_pointer<'geometry'>,
@@ -283,12 +284,6 @@ export type rustWasm = {
   scale_y(mesh_id: rust_pointer<'mesh_id'>): number;
   scale_z(mesh_id: rust_pointer<'mesh_id'>): number;
   vertices_stride(geometry: rust_pointer<'geometry'>): Word<'dword'>;
-  set_faces(
-    mesh_id: rust_pointer<'mesh_id'>,
-    ptr: number,
-    length: number,
-    cap: number,
-  ): void;
   set_color(
     mesh: rust_pointer<'mesh'>,
     d0: number,
@@ -383,7 +378,6 @@ export type rustWasm = {
 
   init_gpu(
     device: GPUDevice,
-    queue: GPUQueue,
     renderPassScreen: RenderPass,
     renderPassWater: RenderPass,
     renderPassCanvas: RenderPass,

@@ -46,13 +46,13 @@ use crate::{
 pub struct JSFunctionPick(());
 
 #[cfg(not(target_arch = "wasm32"))]
-fn pick_cb(
+unsafe fn pick_cb(
     _cb: &Resource<JSFunctionPick>,
     _x: f32,
     _y: f32,
     _z: f32,
     _mesh_id: u32,
-    generation: u32,
+    _generation: u32,
 ) {
 }
 
@@ -90,7 +90,7 @@ pub unsafe extern "C" fn link_renderpass(
                 .bundle
                 .insert(RenderBundleEncoder::new::<1>(
                     label,
-                    &(*gpu_ptr).device,
+                    &(*gpu_ptr).device.externref,
                     &renderpass.inner_renderpass.formats,
                     record,
                     depth_read_only,
@@ -105,7 +105,7 @@ pub unsafe extern "C" fn link_renderpass(
                 .bundle
                 .insert(RenderBundleEncoder::new::<4>(
                     label,
-                    &(*gpu_ptr).device,
+                    &(*gpu_ptr).device.externref,
                     &renderpass.inner_renderpass.formats,
                     record,
                     depth_read_only,
@@ -128,18 +128,18 @@ pub unsafe extern "C" fn do_pick(
     let r = gpu.get_renderpass(id);
     match r {
         Renderpassenum::Singlesampled(renderpass) => renderpass.do_pick(
-            &gpu.device,
+            &gpu.device.externref,
             gpu.device_pixel_ratio,
             &mut (*gpu_ptr).swap_buffers,
-            &gpu.queue,
+            &gpu.device.queue,
             pickpipeline,
             cb,
         ),
         Renderpassenum::Multisampled(renderpass) => renderpass.do_pick(
-            &gpu.device,
+            &gpu.device.externref,
             gpu.device_pixel_ratio,
             &mut (*gpu_ptr).swap_buffers,
-            &gpu.queue,
+            &gpu.device.queue,
             pickpipeline,
             cb,
         ),

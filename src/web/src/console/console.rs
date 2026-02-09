@@ -1,3 +1,5 @@
+use std::fmt::{self, Formatter};
+
 use externref::Resource;
 
 use crate::primitives::jsstring::JSString;
@@ -5,6 +7,8 @@ use crate::primitives::jsstring::JSString;
 pub unsafe fn error(_resource: &Resource<()>) {}
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn log(_resource: &Resource<()>) {}
+#[cfg(not(target_arch = "wasm32"))]
+pub unsafe fn debug(_resource: &Resource<()>) {}
 
 #[cfg(target_arch = "wasm32")]
 #[externref::externref]
@@ -12,14 +16,18 @@ pub unsafe fn log(_resource: &Resource<()>) {}
 extern "C" {
     pub fn error(resource: &Resource<()>);
     pub fn log(resource: &Resource<()>);
+    pub fn debug(resource: &Resource<()>);
 }
 
 pub struct Console {}
 impl Console {
-    pub fn error(resource: &JSString) {
-        unsafe { error(resource.externref.upcast_ref()) }
+    pub fn error<'a>(resource: impl Into<&'a JSString>) {
+        unsafe { error(resource.into().externref.upcast_ref()) }
     }
-    pub fn log(resource: &JSString) {
-        unsafe { log(resource.externref.upcast_ref()) }
+    pub fn log<'a>(resource: impl Into<&'a JSString>) {
+        unsafe { log(resource.into().externref.upcast_ref()) }
+    }
+    pub fn debug<'a>(resource: impl Into<&'a JSString>) {
+        unsafe { debug(resource.into().externref.upcast_ref()) }
     }
 }

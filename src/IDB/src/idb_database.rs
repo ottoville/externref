@@ -46,7 +46,7 @@ unsafe fn on_abort(_database: &Resource<JSIDBDatabase>, _cb: IDBDatabaseCbErrorO
 #[cfg(not(target_arch = "wasm32"))]
 pub unsafe fn transaction(
     _database: &Resource<JSIDBDatabase>,
-    _storageNames: &Resource<JSStringArray>,
+    _storage_names: &Resource<JSStringArray>,
     _write: bool,
     _strict: bool,
     _on_abort: IDBTransactionCbAbort,
@@ -72,7 +72,7 @@ extern "C" {
     pub fn on_version_change(database: &Resource<JSIDBDatabase>, cb: IDBDatabaseCbVersionChange);
     pub fn transaction(
         database: &Resource<JSIDBDatabase>,
-        storageNames: &Resource<JSStringArray>,
+        storage_names: &Resource<JSStringArray>,
         write: bool,
         strict: bool,
         on_abort: IDBTransactionCbAbort,

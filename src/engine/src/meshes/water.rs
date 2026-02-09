@@ -27,7 +27,7 @@ pub unsafe extern "C" fn create_water_bindgroup(gpu_ptr: *const GPU) -> BindGrou
     let gpu = &*gpu_ptr;
 
     let layout = BindGroupLayout::new(
-        &gpu.device,
+        &gpu.device.externref,
         String::from("lightsBindGroupTexture2water2"),
         [
             &GPUBindingLayout::<SHADER_STAGE_FRAGMENT>::new_texture(
@@ -47,7 +47,7 @@ pub unsafe extern "C" fn create_water_bindgroup(gpu_ptr: *const GPU) -> BindGrou
     );
     //TODO: Reuse sampler with terrain.ts?
     let sampler = GPUSampler::new(
-        &gpu.device,
+        &gpu.device.externref,
         String::from("WaterTextureSampler"),
         GPUAddressMode::ClampToEdge,
         GPUAddressMode::ClampToEdge,
