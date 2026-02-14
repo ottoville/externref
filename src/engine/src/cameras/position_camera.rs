@@ -1,4 +1,18 @@
-use crate::cameras::camera::CameraPtr;
+use std::{cell::RefCell, rc::Rc, sync::atomic::Ordering};
+
+use web::{
+    console::console::Console,
+    document::event_listener::{
+        ARROW_KEYS_DOWN, ARROW_KEYS_LEFT, ARROW_KEYS_RIGHT, ARROW_KEYS_UP, ARROW_KEYS_UP_OR_DOWN,
+        CTRL, KEYSDOWN, PAGEDOWN, PAGEUP, PREVIOUS_KEYSDOWN, SOME_ARROW_KEY,
+    },
+};
+
+use crate::{
+    cameras::camera::{Camera, CameraPtr},
+    engine::STORAGE,
+    objectstores::SAVE_STORE,
+};
 
 use super::{
     camera::{VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
@@ -6,27 +20,15 @@ use super::{
 };
 
 pub const VELOCITY: f32 = 0.5;
-pub const ARROW_KEYS_UP: u32 = 1;
-pub const ARROW_KEYS_RIGHT: u32 = 2;
-pub const ARROW_KEYS_DOWN: u32 = 4;
-pub const ARROW_KEYS_LEFT: u32 = 8;
-/*const ARROW_KEYS_UP_RIGHT: u32 = ARROW_KEYS_UP | ARROW_KEYS_RIGHT;
-const ARROW_KEYS_UP_LEFT: u32 = ARROW_KEYS_UP | ARROW_KEYS_LEFT;
-const ARROW_KEYS_DOWN_RIGHT: u32 = ARROW_KEYS_DOWN | ARROW_KEYS_RIGHT;
-const ARROW_KEYS_DOWN_LEFT: u32 = ARROW_KEYS_DOWN | ARROW_KEYS_LEFT;
-const ARROW_KEYS_LEFT_OR_RIGHT: u32 = ARROW_KEYS_LEFT | ARROW_KEYS_RIGHT;*/
-const ARROW_KEYS_UP_OR_DOWN: u32 = ARROW_KEYS_UP | ARROW_KEYS_DOWN;
-
 #[no_mangle]
-pub unsafe extern "C" fn new_position_camera() -> *mut PositionCamera {
-    Box::into_raw(Box::new(PositionCamera {
-        arrow_keys_down: 0,
-        elevation: 0,
-        position: [0.0; 4],
-        ctrl: false,
-        angle: std::f32::consts::PI,
-        v_angle: std::f32::consts::FRAC_PI_2,
-    }))
+pub unsafe extern "C" fn new_position_camera(
+    initial: bool,
+    camera: CameraPtr,
+) -> *mut PositionCamera {
+    Box::into_raw(Box::new(PositionCamera::new(
+        initial,
+        (*camera).upgrade().unwrap().clone(),
+    )))
 }
 #[no_mangle]
 pub unsafe extern "C" fn attach_positioncamera_camera_controller(
@@ -41,62 +43,97 @@ pub unsafe extern "C" fn attach_positioncamera_camera_controller(
         .controller = Some(Box::from_raw(controller));
 }
 #[no_mangle]
-pub unsafe extern "C" fn keyfunction(
-    controller: *mut PositionCamera,
-    up: bool,
-    ctrl_key: bool,
-    key_ptr: *mut u8,
-    key_len: usize,
-    key_cap: usize,
-) {
-    if up {
-        (*controller).keyupfunction(ctrl_key, String::from_raw_parts(key_ptr, key_len, key_cap));
-    } else {
-        (*controller).keydownfunction(ctrl_key, String::from_raw_parts(key_ptr, key_len, key_cap));
-    }
+pub unsafe extern "C" fn serialize_positioncamera(position_camera: *mut PositionCamera) {
+    (*position_camera).serialize();
 }
+/**
+    This camera is used for camera that can be moved with keyboard
+    without being attached to any mesh
+*/
 pub struct PositionCamera {
-    arrow_keys_down: u32,
-    elevation: i32,
-    position: [f32; 4],
-    ctrl: bool,
+    moving: bool,
+    state: Rc<RefCell<PositionCameraState>>,
+}
+pub struct PositionCameraState {
     angle: f32,
     v_angle: f32,
+    position: [f32; 4],
 }
 impl PositionCamera {
-    fn keydownfunction(&mut self, ctrl_key: bool, key: String) {
-        self.ctrl = ctrl_key;
-        if key == "ArrowUp" {
-            self.arrow_keys_down |= ARROW_KEYS_UP;
-        } else if key == "ArrowDown" {
-            self.arrow_keys_down |= ARROW_KEYS_DOWN;
+    pub fn new(initial: bool, camera: Rc<Camera>) -> Self {
+        let position_camera = PositionCamera {
+            moving: false,
+            state: Rc::new(RefCell::new(PositionCameraState {
+                position: [0.0; 4],
+                angle: std::f32::consts::PI,
+                v_angle: std::f32::consts::FRAC_PI_2,
+            })),
+        };
+        if !initial {
+            let mut state = position_camera.state.borrow_mut();
+            let camera = camera.camera.borrow();
+            state.position = camera.position;
+            state.angle = camera.direction[2].atan2(camera.direction[0]);
+
+            state.v_angle = camera.direction[1].atan2(
+                (camera.direction[0] * camera.direction[0]
+                    + camera.direction[2] * camera.direction[2])
+                    .sqrt(),
+            ) * -1.0
+                + std::f32::consts::PI * 0.5;
+        } else {
+            let state = position_camera.state.clone();
+            STORAGE.with(|storage| {
+                storage.get_indexed_db(|db| {
+                    let transaction = db.transaction::<false, false, _>([&SAVE_STORE]);
+                    let objectstore = transaction.object_store(&SAVE_STORE);
+
+                    objectstore.get::<PositionCameraState>(
+                        &[String::from("camera"), String::from("ArchRotateCamera")],
+                        move |res_opt| match res_opt {
+                            Ok(maybe_res) => {
+                                if let Some(res) = maybe_res {
+                                    let mut borrowed_camera = camera.camera.borrow_mut();
+                                    borrowed_camera.update_position(res.position);
+                                    borrowed_camera.update_direction([
+                                        f32::cos(res.angle),
+                                        0.0,
+                                        f32::sin(res.angle),
+                                        0.0,
+                                    ]);
+                                    let mut borrowed = state.borrow_mut();
+                                    *borrowed = res;
+                                }
+                            }
+                            Err(_) => todo!(),
+                        },
+                    );
+                })
+            })
         }
-        if key == "ArrowLeft" {
-            self.arrow_keys_down |= ARROW_KEYS_LEFT;
-        } else if key == "ArrowRight" {
-            self.arrow_keys_down |= ARROW_KEYS_RIGHT;
-        }
-        if key == "PageUp" {
-            self.elevation = 1;
-        } else if key == "PageDown" {
-            self.elevation = -1;
-        }
+        return position_camera;
     }
-    fn keyupfunction(&mut self, ctrl_key: bool, key: String) {
-        self.ctrl = ctrl_key;
-        if key == "ArrowUp" {
-            self.arrow_keys_down &= !ARROW_KEYS_UP;
-        } else if key == "ArrowDown" {
-            self.arrow_keys_down &= !ARROW_KEYS_DOWN;
-        }
-        if key == "ArrowLeft" {
-            self.arrow_keys_down &= !ARROW_KEYS_LEFT;
-        } else if key == "ArrowRight" {
-            self.arrow_keys_down &= !ARROW_KEYS_RIGHT;
-        }
-        if key == "PageUp" || key == "PageDown" {
-            self.elevation = 0;
-        }
+    pub fn serialize(&self) {
+        let serialized = self.state.clone();
+        STORAGE.with(|db_request| {
+            db_request.get_indexed_db(move |db| {
+                let transaction = db.transaction::<true, false, _>([&SAVE_STORE]);
+                transaction.on_error(|k, e| {
+                    Console::error("camera serialization transaction error");
+                });
+                let objectstore = transaction.object_store(&SAVE_STORE);
+                let data = &**(&serialized.borrow());
+                objectstore.put(
+                    data,
+                    &[String::from("camera"), String::from("PositionCamera")],
+                    |res| {
+                        if res.is_err() {
+                            Console::error("camera serialization error");
+                        }
+                    },
+                );
+            })
+        })
     }
 }
 impl CameraController for PositionCamera {
@@ -107,45 +144,54 @@ impl CameraController for PositionCamera {
         direction: &mut [f32; 4],
         _view: &[[f32; 4]; 4],
     ) -> u32 {
-        if self.arrow_keys_down == 0 && self.elevation == 0 {
+        let keysdown = KEYSDOWN.load(Ordering::Relaxed);
+        if (!self.moving) && keysdown == PREVIOUS_KEYSDOWN.load(Ordering::Relaxed) {
             return 0;
         }
         let mut view_updated = 0;
-
-        if self.elevation != 0 {
-            position[1] += self.elevation as f32 * VELOCITY;
+        if (keysdown & PAGEUP) == PAGEUP {
+            position[1] += VELOCITY;
+            view_updated = VIEW_UPDATED_POSITION;
+        } else if (keysdown & PAGEDOWN) == PAGEDOWN {
+            position[1] -= VELOCITY;
             view_updated = VIEW_UPDATED_POSITION;
         }
+        if keysdown & SOME_ARROW_KEY != 0 {
+            let mut state = self.state.borrow_mut();
+            if (keysdown & CTRL) != 0 {
+                if (keysdown & ARROW_KEYS_RIGHT) == ARROW_KEYS_RIGHT {
+                    state.angle += 0.03;
+                    if state.angle > std::f32::consts::PI {
+                        state.angle = -std::f32::consts::PI - (state.angle % std::f32::consts::PI);
+                    }
+                }
+                if (keysdown & ARROW_KEYS_LEFT) == ARROW_KEYS_LEFT {
+                    state.angle -= 0.03;
+                    if state.angle < -std::f32::consts::PI {
+                        state.angle = std::f32::consts::PI - (state.angle % std::f32::consts::PI);
+                    }
+                }
+                if (keysdown & ARROW_KEYS_UP) == ARROW_KEYS_UP {
+                    state.v_angle += 0.02;
+                }
+                if (keysdown & ARROW_KEYS_DOWN) == ARROW_KEYS_DOWN {
+                    state.v_angle -= 0.02;
+                }
+                if state.v_angle > std::f32::consts::PI {
+                    state.v_angle = std::f32::consts::PI;
+                }
+                if state.v_angle < 0.0 {
+                    state.v_angle = 0.0;
+                }
+                let vsin = state.v_angle.sin();
+                direction[0] = state.angle.cos() * vsin;
+                direction[1] = state.v_angle.cos();
+                direction[2] = state.angle.sin() * vsin;
 
-        if self.arrow_keys_down != 0 {
-            if self.ctrl {
-                if (self.arrow_keys_down & ARROW_KEYS_RIGHT) == ARROW_KEYS_RIGHT {
-                    self.angle += 0.03;
-                    if self.angle > std::f32::consts::PI {
-                        self.angle = -std::f32::consts::PI - (self.angle % std::f32::consts::PI);
-                    }
-                }
-                if (self.arrow_keys_down & ARROW_KEYS_LEFT) == ARROW_KEYS_LEFT {
-                    self.angle -= 0.03;
-                    if self.angle < -std::f32::consts::PI {
-                        self.angle = std::f32::consts::PI - (self.angle % std::f32::consts::PI);
-                    }
-                }
-                if (self.arrow_keys_down & ARROW_KEYS_UP) == ARROW_KEYS_UP {
-                    self.v_angle += 0.02;
-                }
-                if (self.arrow_keys_down & ARROW_KEYS_DOWN) == ARROW_KEYS_DOWN {
-                    self.v_angle -= 0.02;
-                }
-                self.v_angle = self.v_angle % (std::f32::consts::TAU);
-                let vsin = self.v_angle.sin();
-                direction[0] = self.angle.cos() * vsin;
-                direction[1] = self.v_angle.cos();
-                direction[2] = self.angle.sin() * vsin;
                 view_updated |= VIEW_UPDATED_DIRECTION;
             } else {
-                if self.arrow_keys_down & ARROW_KEYS_UP_OR_DOWN > 0 {
-                    if (self.arrow_keys_down & ARROW_KEYS_UP) == ARROW_KEYS_UP {
+                if keysdown & ARROW_KEYS_UP_OR_DOWN > 0 {
+                    if (keysdown & ARROW_KEYS_UP) == ARROW_KEYS_UP {
                         position[0] -= direction[0] * VELOCITY;
                         position[2] -= direction[2] * VELOCITY;
                     } else {
@@ -153,7 +199,7 @@ impl CameraController for PositionCamera {
                         position[2] += direction[2] * VELOCITY;
                     }
                 } else {
-                    if (self.arrow_keys_down & ARROW_KEYS_RIGHT) == ARROW_KEYS_RIGHT {
+                    if (keysdown & ARROW_KEYS_RIGHT) == ARROW_KEYS_RIGHT {
                         position[0] += direction[2] * VELOCITY;
                         position[2] -= direction[0] * VELOCITY;
                     } else {
@@ -161,11 +207,11 @@ impl CameraController for PositionCamera {
                         position[2] += direction[0] * VELOCITY;
                     }
                 }
-                self.position = position.clone();
+                state.position = position.clone();
                 view_updated |= VIEW_UPDATED_POSITION;
             }
         }
-
+        self.moving = view_updated != 0;
         return view_updated;
     }
 }

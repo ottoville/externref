@@ -530,7 +530,7 @@ impl<const SAMPLE_COUNT: u32, T: ColorAttachmentWithSample<SAMPLE_COUNT>>
                                 }
                             }
                             Err((buffer, error)) => {
-                                Console::error(&error);
+                                Console::error(error);
                                 *pickbuffer_rc_read.borrow_mut() = Some(buffer);
                             }
                         }

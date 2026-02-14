@@ -1,5 +1,3 @@
-import { create_rust_string } from '../../utils.js';
-
 import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 export const IDBDatabaseInterface = {
@@ -64,14 +62,14 @@ export const IDBDatabaseInterface = {
     transaction.onerror = function (e) {
       engine.rust.idb_transaction_on_error(
         error_cb,
-        ...create_rust_string((e.target as IDBRequest).error!.message),
+        (e.target as IDBRequest).error!.message,
         e,
       );
     };
     transaction.onabort = function (e) {
       engine.rust.idb_transaction_on_abort(
         abort_cb,
-        ...create_rust_string(this.error?.message ?? ''),
+        this.error?.message ?? '',
         e,
       );
     };

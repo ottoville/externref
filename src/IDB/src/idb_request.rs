@@ -1,16 +1,12 @@
-use std::{
-    cell::{OnceCell, RefCell},
-    rc::Rc,
-};
+use std::{cell::OnceCell, marker::PhantomData, mem::MaybeUninit, rc::Rc};
 
 use externref::Resource;
+use web::event::event::{Event, JSEVent};
+use web::primitives::jsstring::{JSString, JSStringExtern};
 
-use crate::{
-    event::{Event, JSEVent},
-    idb_result::IDBResult,
-};
+use crate::idb_result::IDBResult;
 
-type IDBRequestCbError = *mut *mut dyn FnOnce(String, Event);
+type IDBRequestCbError = *mut MaybeUninit<*mut dyn FnOnce(JSString, Event)>;
 type IDBRequestCbSuccess = *mut *mut dyn FnOnce(Option<Resource<()>>, Event);
 type IDBPutRequestCbSuccess = *mut *mut dyn FnOnce(Option<u32>, Event);
 
@@ -19,13 +15,11 @@ pub struct JSIDBRequest();
 #[externref::externref]
 pub unsafe extern "C" fn idb_request_onerror(
     callback: IDBRequestCbError,
-    error_ptr: *mut u8,
-    error_len: usize,
-    error_cap: usize,
+    error: Resource<JSStringExtern>,
     event: Resource<JSEVent>,
 ) {
-    Box::from_raw(*Box::from_raw(callback))(
-        String::from_raw_parts(error_ptr, error_len, error_cap),
+    Box::from_raw((*Box::from_raw(callback)).assume_init())(
+        JSString::new(error),
         Event { externref: event },
     );
 }
@@ -69,62 +63,49 @@ extern "C" {
 }
 pub struct IDBRequest<T: IDBResult> {
     pub externref: Resource<JSIDBRequest>,
-    pub result: Rc<T>,
-    pub error: Rc<OnceCell<String>>,
-    cbs_success: Rc<RefCell<Vec<Box<dyn FnOnce(&T::Output<'_>, Option<&Event>)>>>>,
-    cbs_error: Rc<RefCell<Vec<Box<dyn FnOnce(&String, &Event)>>>>,
+    pub error: Rc<OnceCell<JSString>>,
+    phantom: PhantomData<T>,
 }
 impl<T: IDBResult + 'static> IDBRequest<T> {
-    pub fn new(externref: Resource<JSIDBRequest>) -> Self {
-        let result = Rc::new(T::new());
+    pub fn new(
+        externref: Resource<JSIDBRequest>,
+        cb: impl FnOnce(Result<T::Output, (&JSString, &Event)>) + 'static,
+    ) -> Self {
+        let result = T::new();
         let error = Rc::new(OnceCell::new());
-        let cbs_success = Rc::new(RefCell::new(Vec::new()));
-        let cbs_error = Rc::new(RefCell::new(Vec::new()));
+        let cb_rc = Rc::new(cb);
+        let cb_rc_clone = cb_rc.clone();
         let request = IDBRequest {
             externref,
-            result: result.clone(),
             error: error.clone(),
-            cbs_success: cbs_success.clone(),
-            cbs_error: cbs_error.clone(),
+            phantom: PhantomData,
         };
-        let cbs_success_clone: Rc<
-            RefCell<Vec<Box<dyn FnOnce(&<T as IDBResult>::Output<'_>, Option<&Event>) + 'static>>>,
-        > = cbs_success.clone();
+        let error_cb: *mut MaybeUninit<*mut (dyn FnOnce(JSString, Event) + 'static)> =
+            Box::into_raw(Box::new_uninit());
         let success_cb: *mut *mut dyn FnOnce(Option<T::Externref>, Event) = Box::into_raw(
             Box::new(Box::into_raw(Box::new(move |new_result, event| {
                 result.set_externref(new_result);
                 let output = result.output();
-                for cb in cbs_success_clone.borrow_mut().drain(..) {
-                    cb(&output, Some(&event))
-                }
+                // Drop on_error callback as it was newer consumed
+                drop(unsafe { Box::from_raw(*Box::from_raw(error_cb).assume_init()) });
+                Rc::into_inner(cb_rc).unwrap()(Result::Ok(output));
             }))),
         );
-        let error_cb: IDBRequestCbError = Box::into_raw(Box::new(Box::into_raw(Box::new(
-            move |new_error, event| {
+        //
+        unsafe {
+            (*error_cb).write(Box::into_raw(Box::new(move |new_error, event| {
                 _ = error.set(new_error);
                 let unwrapped_error = error.get().unwrap();
-                for cb in cbs_error.borrow_mut().drain(..) {
-                    cb(unwrapped_error, &event)
-                }
                 // Drop on_success callback as it was newer consumed
-                drop(unsafe { Box::from_raw(*Box::from_raw(success_cb)) });
-            },
-        ))));
-        cbs_success.borrow_mut().push(Box::new(move |_, _| {
-            // Drop on_error callback as it was newer consumed
-            drop(unsafe { Box::from_raw(*Box::from_raw(error_cb)) });
-        }));
+                drop(Box::from_raw(*Box::from_raw(success_cb)));
+                Rc::into_inner(cb_rc_clone).unwrap()(Result::Err((unwrapped_error, &event)));
+            })));
+        }
 
         unsafe {
             onsuccess(&request.externref, success_cb as usize);
             onerror(&request.externref, error_cb)
         }
         return request;
-    }
-    pub fn on_success(&self, cb: impl FnOnce(&T::Output<'_>, Option<&Event>) + 'static) {
-        self.cbs_success.borrow_mut().push(Box::new(cb));
-    }
-    pub fn on_error(&self, cb: impl FnOnce(&String, &Event) + 'static) {
-        self.cbs_error.borrow_mut().push(Box::new(cb));
     }
 }

@@ -17,6 +17,9 @@ pub struct Event {
     pub externref: Resource<JSEVent>,
 }
 impl Event {
+    pub fn new(externref: Resource<JSEVent>) -> Self {
+        Event { externref }
+    }
     pub fn prevent_default(&self) {
         unsafe { prevent_default(&self.externref) };
     }

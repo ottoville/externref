@@ -66,7 +66,7 @@ impl SwapBuffers {
                         mapped.push(buffer);
                     }
                     Err((_, error)) => {
-                        Console::error(&error);
+                        Console::error(error);
                     }
                 });
             } else {

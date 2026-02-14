@@ -40,7 +40,7 @@ pub fn serialize_terrain2(mesh_id: ExplicitGenerationalFreeListIndex<fn() -> Mes
                                             0,
                                             |error_opt| {
                                                 if let Some(error) = error_opt {
-                                                    Console::error(&error);
+                                                    Console::error(error);
                                                     return;
                                                 }
                                                 match Rc::try_unwrap(stream_rc) {
@@ -78,7 +78,7 @@ pub fn serialize_terrain2(mesh_id: ExplicitGenerationalFreeListIndex<fn() -> Mes
                                             0,
                                             |error_opt| {
                                                 if let Some(error) = error_opt {
-                                                    Console::error(&error);
+                                                    Console::error(error);
                                                     return;
                                                 }
                                                 match Rc::try_unwrap(stream_rc) {

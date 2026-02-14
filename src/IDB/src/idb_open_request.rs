@@ -1,10 +1,14 @@
 use externref::Resource;
-use web::{storage_buckets::storage_buckets::NavigatorStorageBuckets, primitives::jsstring::JSString};
+use web::event::event::Event;
+use web::{
+    primitives::jsstring::JSString, storage_buckets::storage_buckets::NavigatorStorageBuckets,
+};
 
 use crate::{
     idb_database::{IDBDatabase, JSIDBDatabase},
     idb_factory::open,
     idb_request::{IDBRequest, JSIDBRequest},
+    idb_result::IDBResult,
     idb_update_needed_database::IDBUpdateNeededDatabase,
 };
 
@@ -60,11 +64,17 @@ pub struct IDBOpenRequest {
     pub request: IDBRequest<IDBDatabase>,
 }
 impl IDBOpenRequest {
-    pub fn new(name: String, version: u32, window: Resource<()>) -> Self {
+    pub fn new(
+        name: String,
+        version: u32,
+        window: Resource<()>,
+        cb: impl FnOnce(Result<<IDBDatabase as IDBResult>::Output, (&JSString, &Event)>) + 'static,
+    ) -> Self {
         let request = IDBOpenRequest {
-            request: IDBRequest::new(unsafe {
-                open(&JSString::from(name).externref, version, &window)
-            }),
+            request: IDBRequest::new(
+                unsafe { open(&JSString::from(name).externref, version, &window) },
+                cb,
+            ),
         };
         return request;
     }
@@ -72,15 +82,19 @@ impl IDBOpenRequest {
         name: String,
         version: u32,
         storage_bucket: &NavigatorStorageBuckets,
+        cb: impl FnOnce(Result<<IDBDatabase as IDBResult>::Output, (&JSString, &Event)>) + 'static,
     ) -> Self {
         let request = IDBOpenRequest {
-            request: IDBRequest::new(unsafe {
-                open(
-                    &JSString::from(name).externref,
-                    version,
-                    storage_bucket.externref.upcast_ref(),
-                )
-            }),
+            request: IDBRequest::new(
+                unsafe {
+                    open(
+                        &JSString::from(name).externref,
+                        version,
+                        storage_bucket.externref.upcast_ref(),
+                    )
+                },
+                cb,
+            ),
         };
         return request;
     }

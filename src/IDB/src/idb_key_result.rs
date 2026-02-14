@@ -6,10 +6,7 @@ pub struct IDBValidKey<KeyType: IDBReturnKeyOutput> {
 }
 impl<KeyType: IDBReturnKeyOutput> IDBResult for IDBValidKey<KeyType> {
     type Externref = KeyType::InputType;
-    type Output<'a>
-        = &'a KeyType::OutputType
-    where
-        KeyType: 'a;
+    type Output = KeyType::OutputType;
     fn new() -> Self {
         Self {
             key: OnceCell::new(),
@@ -20,7 +17,7 @@ impl<KeyType: IDBReturnKeyOutput> IDBResult for IDBValidKey<KeyType> {
         let newkey = KeyType::key_from_externref(externref.unwrap());
         _ = self.key.set(newkey);
     }
-    fn output(&self) -> Self::Output<'_> {
-        self.key.get().unwrap()
+    fn output(mut self) -> Self::Output {
+        self.key.take().unwrap()
     }
 }

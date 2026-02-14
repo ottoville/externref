@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use externref::Resource;
+use web::primitives::jsstring::JSString;
 
 use crate::idb_get_result::IDBGetResult;
 use crate::idb_index::IDBIndex;
@@ -12,8 +13,10 @@ use crate::idb_key::idb_key::IDBReturnKeyOutput;
 use crate::idb_key_result::IDBValidKey;
 use crate::idb_request::IDBRequest;
 use crate::idb_request::JSIDBRequest;
+use crate::idb_result::IDBResult;
 use crate::stringarray::JSStringArray;
 use crate::stringarray::StringArray;
+use web::event::event::Event;
 
 #[cfg(not(target_arch = "wasm32"))]
 unsafe fn create_index(
@@ -171,18 +174,35 @@ impl<KeyType, const READ_WRITE: bool> IDBObjectStore<KeyType, true, READ_WRITE> 
 impl<const UPDATE_NEEDED: bool, T: IDBKey, const READ_WRITE: bool>
     IDBObjectStore<T, UPDATE_NEEDED, READ_WRITE>
 {
-    pub fn get<D: 'static>(&self, key: T) -> IDBRequest<IDBGetResult<D>> {
-        IDBRequest::new(key.get(&self.externref))
+    pub fn get<D: 'static>(
+        &self,
+        key: T,
+        cb: impl FnOnce(Result<<IDBGetResult<D> as IDBResult>::Output, (&JSString, &Event)>) + 'static,
+    ) -> IDBRequest<IDBGetResult<D>> {
+        IDBRequest::new(key.get(&self.externref), cb)
     }
 }
 impl<const UPDATE_NEEDED: bool, T: IDBKeyNoAutoIncrement + IDBKey>
     IDBObjectStore<T, UPDATE_NEEDED, true>
 {
-    pub fn put<D>(&self, data: &D, key: T) -> IDBRequest<IDBValidKey<<T as IDBKey>::OutputType>>
+    pub fn put<D>(
+        &self,
+        data: &D,
+        key: T,
+        cb: impl FnOnce(
+                Result<
+                    <IDBValidKey<<T as IDBKey>::OutputType> as IDBResult>::Output,
+                    (&JSString, &Event),
+                >,
+            ) + 'static,
+    ) -> IDBRequest<IDBValidKey<<T as IDBKey>::OutputType>>
     where
         <T as IDBKey>::OutputType: 'static + IDBReturnKeyOutput<InputType = Resource<()>>,
     {
-        IDBRequest::new(key.put(&self.externref, data as *const D as usize, size_of::<D>()))
+        IDBRequest::new(
+            key.put(&self.externref, data as *const D as usize, size_of::<D>()),
+            cb,
+        )
     }
 }
 impl<const UPDATE_NEEDED: bool, T: IDBKeyWithAutoIncrement + IDBKey + 'static>
@@ -193,7 +213,16 @@ where
     pub fn put_with_autoincrement<D>(
         &self,
         data: &D,
+        cb: impl FnOnce(
+                Result<
+                    <IDBValidKey<<T as IDBKey>::OutputType> as IDBResult>::Output,
+                    (&JSString, &Event),
+                >,
+            ) + 'static,
     ) -> IDBRequest<IDBValidKey<<T as IDBKey>::OutputType>> {
-        IDBRequest::new(unsafe { put(&self.externref, data as *const D as usize, size_of::<D>()) })
+        IDBRequest::new(
+            unsafe { put(&self.externref, data as *const D as usize, size_of::<D>()) },
+            cb,
+        )
     }
 }

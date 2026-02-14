@@ -5,7 +5,6 @@ pub mod idb_request;
 pub mod idb_result;
 pub mod idb_transaction;
 pub mod idb_object_store;
-pub mod event;
 pub mod idb_update_needed_database;
 pub mod chararray;
 pub mod idb_index;

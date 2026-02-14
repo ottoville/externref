@@ -1,8 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use collider::{ColliderSphere, CLOSE_DISTANCE};
-use logger::{Logger, LoggerArray};
 use terramath::{MatrixMath, VectorMath, VectorMathF32};
+use web::console::console::Console;
 
 use crate::{
     cameras::camera::{Camera, CameraPtr, VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
@@ -103,6 +103,11 @@ pub struct ArcRotateCameraState {
     radius: f32,
     target: [f32; 4],
 }
+pub struct ArcRotateCameraSerialized {
+    position: [f32; 4],
+    state: ArcRotateCameraState,
+}
+
 pub struct ArcRotateCamera {
     state: Rc<RefCell<ArcRotateCameraState>>,
 
@@ -257,13 +262,6 @@ impl CameraController for ArcRotateCamera {
         return 0;
     }
 }
-pub struct IDBGetResultCamera {
-    alpha: f32,
-    beta: f32,
-    position: [f32; 4],
-    radius: f32,
-    target: [f32; 4],
-}
 
 impl ArcRotateCamera {
     pub fn new(initial: bool, camera: Rc<Camera>) -> Self {
@@ -315,30 +313,30 @@ impl ArcRotateCamera {
                     let transaction = db.transaction::<false, false, _>([&SAVE_STORE]);
                     let objectstore = transaction.object_store(&SAVE_STORE);
 
-                    let result = objectstore.get::<IDBGetResultCamera>(&[
-                        String::from("camera"),
-                        String::from("ArchRotateCamera"),
-                    ]);
-                    result.on_success(move |maybe_res, _| {
-                        let mut borrowed = state.borrow_mut();
-                        let mut borrowed_camera = camera.camera.borrow_mut();
+                    objectstore.get::<ArcRotateCameraSerialized>(
+                        &[String::from("camera"), String::from("ArchRotateCamera")],
+                        move |maybe_res| match maybe_res {
+                            Ok(maybe_null_res) => {
+                                let mut borrowed = state.borrow_mut();
+                                let mut borrowed_camera = camera.camera.borrow_mut();
 
-                        if let Some(res) = maybe_res {
-                            borrowed.alpha = res.alpha;
-                            borrowed.beta = res.beta;
-                            borrowed.radius = res.radius;
-                            borrowed.target = res.target;
-                            borrowed_camera.update_position(res.position);
-                            borrowed_camera.set_direction_from_target(&res.target);
-                        } else {
-                            borrowed.alpha = 0.4614110368395256;
-                            borrowed.beta = 1.4816457152012938;
-                            borrowed.radius = 457.55058783756886;
-                            borrowed.target = [544.716, 258.727, 384.33, 0.0];
-                            borrowed_camera.update_position([952.791, 299.464, 587.233, 0.0]);
-                            borrowed_camera.set_direction_from_target(&borrowed.target);
-                        }
-                    });
+                                if let Some(res) = maybe_null_res {
+                                    borrowed_camera.update_position(res.position);
+                                    borrowed_camera.set_direction_from_target(&res.state.target);
+                                    *borrowed = res.state;
+                                } else {
+                                    borrowed.alpha = 0.4614110368395256;
+                                    borrowed.beta = 1.4816457152012938;
+                                    borrowed.radius = 457.55058783756886;
+                                    borrowed.target = [544.716, 258.727, 384.33, 0.0];
+                                    borrowed_camera
+                                        .update_position([952.791, 299.464, 587.233, 0.0]);
+                                    borrowed_camera.set_direction_from_target(&borrowed.target);
+                                }
+                            }
+                            Err(_) => todo!(),
+                        },
+                    );
                 })
             })
         }
@@ -366,33 +364,30 @@ impl ArcRotateCamera {
         STORAGE.with(|db_request| {
             let position = self.camera.camera.borrow().position;
             let state = self.state.borrow();
-            let serialized = IDBGetResultCamera {
-                alpha: state.alpha,
-                beta: state.beta,
-                radius: state.radius,
+            let serialized = ArcRotateCameraSerialized {
                 position,
-                target: state.target,
+                state: ArcRotateCameraState {
+                    alpha: state.alpha,
+                    beta: state.beta,
+                    radius: state.radius,
+                    target: state.target,
+                },
             };
             db_request.get_indexed_db(move |db| {
                 let transaction = db.transaction::<true, false, _>([&SAVE_STORE]);
                 transaction.on_error(|k, e| {
-                    &"camera serialization transaction error".error();
-                });
-                transaction.on_abort(|k, e| {
-                    &"camera serialization transaction abort".error();
-                });
-                transaction.on_complete(|e| {
-                    &"camera serialization transaction complete".log();
+                    Console::error("camera serialization transaction error");
                 });
                 let objectstore = transaction.object_store(&SAVE_STORE);
-                let req = objectstore.put(
+                objectstore.put(
                     &serialized,
                     &[String::from("camera"), String::from("ArchRotateCamera")],
+                    |res| {
+                        if res.is_err() {
+                            Console::error("camera serialization error");
+                        }
+                    },
                 );
-                req.on_error(|k, e| {
-                    &"camera serialization error".error();
-                });
-                req.on_success(|s,e| {});
             });
         })
     }

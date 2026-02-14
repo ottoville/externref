@@ -38,7 +38,10 @@ import {
 } from './wasm-interfaces/IDB/IDBRequest.js';
 import { IDBOpenDBRequestInterface } from './wasm-interfaces/IDB/IDBOpenDBRequest.js';
 import { IDBDatabaseInterface } from './wasm-interfaces/IDB/IDBDatabase.js';
-import { IDBTransactionInterface } from './wasm-interfaces/IDB/IDBTransaction.js';
+import {
+  IDBTransactionImports,
+  IDBTransactionInterface,
+} from './wasm-interfaces/IDB/IDBTransaction.js';
 import { CharArrayInterface } from './wasm-interfaces/CharArray.js';
 import { IDBObjectStoreInterface } from './wasm-interfaces/IDB/IDBObjectStore.js';
 import { StringArrayInterface } from './wasm-interfaces/StringArray.js';
@@ -61,6 +64,10 @@ import {
 } from './wasm-interfaces/FileSystem/FileSystemWritableFileStream.js';
 import { consoleInterface } from './wasm-interfaces/console/console.js';
 import { WritableStreamInterface } from './wasm-interfaces/WritableStream.js';
+import {
+  KeyboardEventImports,
+  KeyboardEventInterface,
+} from './wasm-interfaces/event/KeyboardEvent.js';
 
 const textDecoder = new TextDecoder();
 
@@ -391,18 +398,6 @@ export type rustWasm = {
   get_camera_position_ptr(
     camera: rust_pointer<'camera'>,
   ): rust_pointer<'position'>;
-  update_camera_position(
-    camera: rust_pointer<'camera'>,
-    x: number,
-    y: number,
-    z: number,
-  ): void;
-  update_camera_direction(
-    camera: rust_pointer<'camera'>,
-    x: number,
-    y: number,
-    z: number,
-  ): void;
   on_resize(
     width: number,
     height: number,
@@ -509,6 +504,7 @@ export type rustWasm = {
     ctrl_key: boolean,
   ): void;
   serialize_arcrotatecamera(controller: rust_pointer<'ArcRotateCamera'>): void;
+  serialize_positioncamera(controller: rust_pointer<'positioncamera'>): void;
   camera_move(
     controller: rust_pointer<'ArcRotateCamera'>,
     pointer_down_button: number,
@@ -523,7 +519,10 @@ export type rustWasm = {
     target_moving_to_z: number,
   ): void;
   new_mesh_camera(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'meshcamera'>;
-  new_position_camera(): rust_pointer<'positioncamera'>;
+  new_position_camera(
+    initial: boolean,
+    camera: rust_pointer<'camera'>,
+  ): rust_pointer<'positioncamera'>;
   do_pick(
     id: number,
     pickpipeline: GPUComputePipeline,
@@ -552,22 +551,6 @@ export type rustWasm = {
     camera: rust_pointer<'camera'>,
     controller: rust_pointer<'meshcamera'>,
   ): void;
-  keyfunction(
-    controller: rust_pointer<'positioncamera'>,
-    up: boolean,
-    ctrl_key: boolean,
-    key_ptr: number,
-    key_len: number,
-    key_cap: number,
-  ): void;
-  keyfunctionmeshcamera(
-    controller: rust_pointer<'meshcamera'>,
-    up: boolean,
-    key_ptr: number,
-    key_len: number,
-    key_cap: number,
-  ): void;
-  get_arrow_keys_down(controller: rust_pointer<'meshcamera'>): number;
   pointer_move_function(
     controller: rust_pointer<'meshcamera'>,
     movement_x: number,
@@ -613,24 +596,6 @@ export type rustWasm = {
     oldVersion: number,
     newVersion: number | null,
   ): void;
-  idb_transaction_on_error(
-    cb: rust_pointer<'IDBErrorEvent'>,
-    error_ptr: number,
-    error_len: number,
-    error_cap: number,
-    event: Event,
-  ): void;
-  idb_transaction_on_abort(
-    cb: rust_pointer<'IDBAbortEvent'>,
-    error_ptr: number,
-    error_len: number,
-    error_cap: number,
-    event: Event,
-  ): void;
-  idb_transaction_on_complete(
-    cb: rust_pointer<'IDBCompleteEvent'>,
-    event: Event,
-  ): void;
   idb_database_transaction_onerror_or_abort(
     cb: rust_pointer<'IDBErrorEvent'>,
     error: string,
@@ -650,7 +615,9 @@ export type rustWasm = {
   IDBRequestImports &
   FileSystemDirectoryHandleImports &
   FileSystemFileHandleImports &
-  FileSystemWritableFileStreamImports;
+  FileSystemWritableFileStreamImports &
+  KeyboardEventImports &
+  IDBTransactionImports;
 let deviceId = 0;
 type Events =
   | 'pointerdown'
@@ -835,6 +802,7 @@ export class Engine {
       idb_openDBRequest: IDBOpenDBRequestInterface,
       idb_request: IDBRequestInterface,
       idb_transaction: IDBTransactionInterface,
+      keyboard_events: KeyboardEventInterface,
       queue: QueueInterface,
       renderbundleencoder: RenderbundleEncoderInterface,
       rendercommands: RenderCommandsInterface,

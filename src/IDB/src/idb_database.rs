@@ -1,5 +1,4 @@
 use crate::chararray::CharArray;
-use crate::event::{Event, JSEVent};
 use crate::idb_object_store::ObjectStoreTrait;
 use crate::idb_transaction::IDBTransactionCbComplete;
 use crate::idb_transaction::{IDBTransactionCbAbort, IDBTransactionCbError, JSIDBTransaction};
@@ -7,9 +6,10 @@ use crate::stringarray::JSStringArray;
 use crate::{idb_result::IDBResult, idb_transaction::IDBTransaction};
 use externref::externref;
 use externref::Resource;
-use web::primitives::jsstring::{JSString, JSStringExtern};
 use std::cell::{Cell, OnceCell, RefCell};
 use std::rc::Rc;
+use web::event::event::{Event, JSEVent};
+use web::primitives::jsstring::{JSString, JSStringExtern};
 
 pub type IDBDatabaseCbErrorOrAbort = *mut *mut dyn Fn(Resource<JSStringExtern>);
 pub type IDBDatabaseCbClose = *mut *mut dyn FnOnce();
@@ -94,7 +94,7 @@ pub struct IDBDatabase {
 }
 impl IDBResult for IDBDatabase {
     type Externref = Resource<()>;
-    type Output<'a> = &'a IDBDatabase;
+    type Output = IDBDatabase;
 
     fn new() -> Self {
         Self::inner_new(OnceCell::new())
@@ -120,7 +120,7 @@ impl IDBResult for IDBDatabase {
         let _ = self.externref.set(unwrapped);
     }
 
-    fn output(&self) -> Self::Output<'_> {
+    fn output(self) -> Self::Output {
         self
     }
 }

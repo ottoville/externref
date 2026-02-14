@@ -144,7 +144,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
                 gate.set(gate.get().then(|| then(mesh)).is_none());
             }
             Err((_, error)) => {
-                Console::error(&error);
+                Console::error(error);
             }
         }
     });
@@ -163,7 +163,7 @@ pub unsafe extern "C" fn set_indices_and_vertices_PositionAndNormalAndUV(
                 // Execute callback if gate was "true", set it to "true" if it was "false"
                 gate_clone.set(gate_clone.get().then(|| then(mesh)).is_none());
             }
-            Err((_, error)) => Console::error(&error),
+            Err((_, error)) => Console::error(error),
         }
     });
 }

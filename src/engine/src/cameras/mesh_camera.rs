@@ -8,7 +8,6 @@ use crate::{
 use super::{
     camera::{VIEW_UPDATED_DIRECTION, VIEW_UPDATED_POSITION},
     cameracontroller::CameraController,
-    position_camera::{ARROW_KEYS_DOWN, ARROW_KEYS_LEFT, ARROW_KEYS_RIGHT, ARROW_KEYS_UP},
 };
 
 #[no_mangle]
@@ -16,7 +15,6 @@ pub unsafe extern "C" fn new_mesh_camera(
     mesh_id: *mut ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
 ) -> *mut MeshCamera {
     Box::into_raw(Box::new(MeshCamera {
-        arrow_keys_down: 0,
         pointer_movement_x: 0,
         pointer_movement_y: 0,
         angle: std::f32::consts::PI,
@@ -37,20 +35,6 @@ pub unsafe extern "C" fn attach_meshcamera_camera_controller(
         .controller = Some(Box::from_raw(controller));
 }
 #[no_mangle]
-pub unsafe extern "C" fn keyfunctionmeshcamera(
-    controller: *mut MeshCamera,
-    up: bool,
-    key_ptr: *mut u8,
-    key_len: usize,
-    key_cap: usize,
-) {
-    if up {
-        (*controller).keyupfunction(String::from_raw_parts(key_ptr, key_len, key_cap));
-    } else {
-        (*controller).keydownfunction(String::from_raw_parts(key_ptr, key_len, key_cap));
-    }
-}
-#[no_mangle]
 pub unsafe extern "C" fn pointer_move_function(
     controller: *mut MeshCamera,
     movement_x: i32,
@@ -59,43 +43,13 @@ pub unsafe extern "C" fn pointer_move_function(
     (*controller).pointer_movement_x = movement_x;
     (*controller).pointer_movement_y = movement_y;
 }
-#[no_mangle]
-pub unsafe extern "C" fn get_arrow_keys_down(controller: *mut MeshCamera) -> u32 {
-    return (*controller).arrow_keys_down;
-}
+
 pub struct MeshCamera {
-    arrow_keys_down: u32,
     pointer_movement_x: i32,
     pointer_movement_y: i32,
     angle: f32,
     v_angle: f32,
     mesh_id: ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
-}
-impl MeshCamera {
-    fn keydownfunction(&mut self, key: String) {
-        if key == "ArrowUp" {
-            self.arrow_keys_down |= ARROW_KEYS_UP;
-        } else if key == "ArrowDown" {
-            self.arrow_keys_down |= ARROW_KEYS_DOWN;
-        }
-        if key == "ArrowLeft" {
-            self.arrow_keys_down |= ARROW_KEYS_LEFT;
-        } else if key == "ArrowRight" {
-            self.arrow_keys_down |= ARROW_KEYS_RIGHT;
-        }
-    }
-    fn keyupfunction(&mut self, key: String) {
-        if key == "ArrowUp" {
-            self.arrow_keys_down &= !ARROW_KEYS_UP;
-        } else if key == "ArrowDown" {
-            self.arrow_keys_down &= !ARROW_KEYS_DOWN;
-        }
-        if key == "ArrowLeft" {
-            self.arrow_keys_down &= !ARROW_KEYS_LEFT;
-        } else if key == "ArrowRight" {
-            self.arrow_keys_down &= !ARROW_KEYS_RIGHT;
-        }
-    }
 }
 impl CameraController for MeshCamera {
     fn check_inputs(

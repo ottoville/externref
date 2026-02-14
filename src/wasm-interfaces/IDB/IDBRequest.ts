@@ -1,15 +1,10 @@
-import { create_rust_string } from '../../utils.js';
 import type { Engine } from '../../engine.js';
 declare const engine: Engine;
 
 export const IDBRequestInterface = {
   onerror(request: IDBRequest, cb: rust_pointer<'IDBErrorEvent'>) {
     request.onerror = function (e) {
-      engine.rust.idb_request_onerror(
-        cb,
-        ...create_rust_string(this.error!.message),
-        e,
-      );
+      engine.rust.idb_request_onerror(cb, this.error!.message, e);
     };
   },
   onsuccess(request: IDBRequest, cb: rust_pointer<'IDBSuccessEvent'>) {
@@ -31,9 +26,7 @@ export const IDBRequestInterface = {
 export type IDBRequestImports = {
   idb_request_onerror(
     cb: rust_pointer<'IDBErrorEvent'>,
-    error_ptr: number,
-    error_len: number,
-    error_cap: number,
+    error: string,
     event: Event,
   ): void;
   idb_request_onsuccess(

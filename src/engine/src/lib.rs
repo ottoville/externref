@@ -13,11 +13,11 @@ mod math2;
 mod mesh;
 mod mesh_property;
 mod meshes;
+pub mod objectstores;
 pub mod projection;
 mod swapbuffers;
 mod terrain;
 mod vertices;
-pub mod objectstores;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
@@ -29,7 +29,6 @@ use allocators::freeindex::FreeIndexIndex;
 use math2::Mat3wgslF32;
 use mesh::Mesh;
 use rapier3d::prelude::*;
-use vertices::{Position, Position2DAndUV, PositionAndNormal, PositionAndNormalAndUV};
 
 static mut MULTIVALUE_USIZE: [usize; 6] = [0; 6];
 static mut MULTIVALUE_F32: [f32; 6] = [0.0; 6];

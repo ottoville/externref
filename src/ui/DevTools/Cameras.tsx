@@ -80,17 +80,30 @@ export function Cameras() {
           Elevate/Lower: PgUp/PgDown
         </>
       ) : (
-        <button
-          type="button"
-          onClick={() => {
-            setDebugCamera(true);
-            engine.gpu!.mainCamera.attachControllerForCamera(
-              new PositionCamera(engine.gpu!.mainCamera, true),
-            );
-          }}
-        >
-          Switch to debug camera
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              setDebugCamera(true);
+              engine.gpu!.mainCamera.attachControllerForCamera(
+                new PositionCamera(engine.gpu!.mainCamera, true),
+              );
+            }}
+          >
+            Switch to debug camera
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDebugCamera(true);
+              engine.gpu!.mainCamera.attachControllerForCamera(
+                new PositionCamera(engine.gpu!.mainCamera, false),
+              );
+            }}
+          >
+            Switch current view to debug camera
+          </button>
+        </>
       )}
     </fieldset>
   );

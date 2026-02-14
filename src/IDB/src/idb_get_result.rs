@@ -18,10 +18,7 @@ pub struct IDBGetResult<D> {
 }
 impl<D> IDBResult for IDBGetResult<D> {
     type Externref = Resource<()>;
-    type Output<'a>
-        = Option<&'a D>
-    where
-        D: 'a;
+    type Output = Option<D>;
     fn new() -> Self {
         Self {
             data: OnceCell::new(),
@@ -36,7 +33,7 @@ impl<D> IDBResult for IDBGetResult<D> {
         }
     }
 
-    fn output(&self) -> Self::Output<'_> {
-        self.data.get()
+    fn output(mut self) -> Self::Output {
+        self.data.take()
     }
 }

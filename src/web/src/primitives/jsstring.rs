@@ -1,4 +1,4 @@
-use std::{fmt::Display, mem};
+use std::mem;
 
 use externref::Resource;
 
@@ -102,22 +102,34 @@ impl JSString {
     pub fn char_code_at(&self, i: u32) -> u32 {
         return unsafe { charCodeAt(&self.externref, i) };
     }
-    pub fn get_as_string(&mut self) -> &String {
-        self.string.get_or_insert_with(|| {
-            let len = unsafe { length(&self.externref) } as usize;
-            let s = String::with_capacity(len);
-            let mut s = mem::ManuallyDrop::new(s);
-
-            let ptr = s.as_mut_ptr();
-            let capacity = s.capacity();
-            unsafe { from_externref(&self.externref, ptr as usize, len) };
-            unsafe { String::from_raw_parts(ptr, len, capacity) }
-        })
+    fn create_string(externref: &Resource<JSStringExtern>) -> String {
+        let len = unsafe { length(&externref) } as usize;
+        let s = String::with_capacity(len);
+        let mut s = mem::ManuallyDrop::new(s);
+        let ptr = s.as_mut_ptr();
+        let capacity = s.capacity();
+        unsafe { from_externref(&externref, ptr as usize, len) };
+        unsafe { String::from_raw_parts(ptr, len, capacity) }
     }
 }
 impl PartialEq for JSString {
     fn eq(&self, other: &Self) -> bool {
         unsafe { equals(&self.externref, &other.externref) }
+    }
+}
+impl<'a> Into<&'a str> for &'a mut JSString {
+    fn into(self) -> &'a str {
+        self.string
+            .get_or_insert_with(|| JSString::create_string(&self.externref))
+    }
+}
+impl<'a> Into<String> for JSString {
+    fn into(mut self) -> String {
+        if let Some(string) = self.string.take() {
+            return string;
+        } else {
+            JSString::create_string(&self.externref)
+        }
     }
 }
 impl From<String> for JSString {

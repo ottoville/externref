@@ -59,13 +59,17 @@ pub unsafe extern "C" fn drop_engine_lock(engine: *mut MutexGuard<'static, Engin
 }
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
+/// Run only from main thread
 pub extern "C" fn init_engine2() -> usize {
+    use web::document::event_listener::EventListener;
+
     pub use crate::GPUMesh;
     use std::panic;
     String::from("Init engine").log();
     panic::set_hook(Box::new(|panic_info| {
         panic_info.to_string().error();
     }));
+    EventListener::new();
     debug_assert!(std::mem::size_of::<GPUMesh>() % 8 == 0, "GPUMesh offset must be multiple of 8 https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange");
     std::mem::size_of::<GPUMesh>()
 }
@@ -153,7 +157,7 @@ impl<T> StorageResouceState<T> {
     }
 }
 pub struct StorageState {
-    indexed_db: Rc<StorageResouceState<Rc<IDBDatabase>>>,
+    indexed_db: Rc<StorageResouceState<IDBDatabase>>,
     directory: Rc<StorageResouceState<Result<FSDirectoryHandle, JSString>>>,
     storage_bucket: Rc<StorageResouceState<NavigatorStorageBuckets>>,
 }
@@ -185,14 +189,32 @@ impl StorageState {
             })
         });
     }
-    pub fn get_indexed_db(&self, cb: impl FnOnce(&Rc<IDBDatabase>) -> () + 'static) {
+    pub fn get_indexed_db(&self, cb: impl FnOnce(&IDBDatabase) -> () + 'static) {
         self.indexed_db.get_or_init(cb, || {
             let indexed_db_clone = self.indexed_db.clone();
-            self.onready_storagebucket(|storage_bucket| {
+            self.onready_storagebucket(move |storage_bucket| {
                 let open_request = IDBFactory::open_with_storage_bucket(
                     String::from("TerraSim"),
                     6,
                     storage_bucket,
+                    move |database_res| match database_res {
+                        Ok(db) => {
+                            &"DB opened succesfully".log();
+                            db.on_error(|_| {
+                                &"DB on error".error();
+                            });
+                            db.on_abort(|_| {
+                                &"DB on abort".error();
+                            });
+                            db.on_version_change(|_| {
+                                &"DB version change".log();
+                            });
+                            indexed_db_clone.run_cbs(true, db);
+                        }
+                        Err(error) => {
+                            //panic!("IndexDB error {}", error.0.get_as_string())
+                        }
+                    },
                 );
                 open_request.on_upgrade_needed(|db, _old_version, _new_version| {
                     db.create_object_store::<&[String; 2]>(&SAVE_STORE);
@@ -206,23 +228,6 @@ impl StorageState {
                 });
                 open_request.on_blocked(|_oldv, _newv| {
                     &"DB on blocked".log();
-                });
-                open_request
-                    .request
-                    .on_error(|error, _| panic!("IndexDB error {}", error));
-                let result_copy = open_request.request.result.clone();
-                open_request.request.on_success(move |db, _| {
-                    &"DB opened succesfully".log();
-                    db.on_error(|_| {
-                        &"DB on error".error();
-                    });
-                    db.on_abort(|_| {
-                        &"DB on abort".error();
-                    });
-                    db.on_version_change(|_| {
-                        &"DB version change".log();
-                    });
-                    indexed_db_clone.run_cbs(true, result_copy);
                 });
             });
         });

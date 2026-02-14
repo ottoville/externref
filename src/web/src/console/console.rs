@@ -1,5 +1,3 @@
-use std::fmt::{self, Formatter};
-
 use externref::Resource;
 
 use crate::primitives::jsstring::JSString;
@@ -21,13 +19,13 @@ extern "C" {
 
 pub struct Console {}
 impl Console {
-    pub fn error<'a>(resource: impl Into<&'a JSString>) {
+    pub fn error(resource: impl Into<JSString>) {
         unsafe { error(resource.into().externref.upcast_ref()) }
     }
-    pub fn log<'a>(resource: impl Into<&'a JSString>) {
+    pub fn log(resource: impl Into<JSString>) {
         unsafe { log(resource.into().externref.upcast_ref()) }
     }
-    pub fn debug<'a>(resource: impl Into<&'a JSString>) {
+    pub fn debug(resource: impl Into<JSString>) {
         unsafe { debug(resource.into().externref.upcast_ref()) }
     }
 }
