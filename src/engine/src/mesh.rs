@@ -8,7 +8,6 @@ pub use crate::geometry::Geometry;
 use crate::math2::Mat3wgslF32;
 use crate::mesh_property::MeshProperty;
 pub use crate::GPUMesh;
-use crate::MULTIVALUE_F32;
 use allocators::explicit_generational_freelist::{
     ExplicitGenerationalFreeList, ExplicitGenerationalFreeListIndex,
 };
@@ -204,22 +203,7 @@ pub unsafe extern "C" fn translation_pointer_from_id(
         .unwrap()
         .translation
 }
-#[no_mangle]
-pub unsafe extern "C" fn rotation_pointer_euler(
-    mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,
-) -> *const f32 {
-    let mut euler = [0.0, 0.0, 0.0];
-    ENGINE.meshes.lock().unwrap()[&*mesh_id]
-        .mesh_property
-        .lock()
-        .unwrap()
-        .rotation
-        .to_euler_angles(&mut euler);
-    MULTIVALUE_F32[0] = euler[0];
-    MULTIVALUE_F32[1] = euler[1];
-    MULTIVALUE_F32[2] = euler[2];
-    return MULTIVALUE_F32.as_ptr();
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn update_euler_angles(
     mesh_id: *const ExplicitGenerationalFreeListIndex<fn() -> Mesh>,

@@ -269,7 +269,6 @@ export type rustWasm = {
   translation_pointer_from_id(
     mesh_id: rust_pointer<'mesh_id'>,
   ): rust_pointer<'translation'>;
-  rotation_pointer_euler(mesh_id: rust_pointer<'mesh_id'>): rust_pointer<'f32'>;
   velocity_pointer(mesh: rust_pointer<'mesh'>): rust_pointer<'velocity'>;
   velocity_pointer_from_id(
     mesh_id: rust_pointer<'mesh_id'>,

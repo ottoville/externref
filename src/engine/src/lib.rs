@@ -30,8 +30,6 @@ use math2::Mat3wgslF32;
 use mesh::Mesh;
 use rapier3d::prelude::*;
 
-static mut MULTIVALUE_F32: [f32; 6] = [0.0; 6];
-
 #[no_mangle]
 pub extern "C" fn create_ball_collider(radius: f32) -> *mut Collider {
     let collider = Box::new(ColliderBuilder::ball(radius).restitution(0.0).build());

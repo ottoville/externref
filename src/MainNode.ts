@@ -48,13 +48,6 @@ export abstract class MainNode implements Destroyable {
   set euler_angles(values: [rad_x: number, rad_y: number, rad_z: number]) {
     engine.rust.update_euler_angles(this.id, ...values);
   }
-  /**
-   * Get rotation using euler angler
-   */
-  get euler_angles(): Float32Array {
-    const ptr = engine.rust.rotation_pointer_euler(this.id);
-    return new Float32Array(engine.rust.memory.buffer, ptr, 3);
-  }
   set_scenes(id: number) {
     engine.rust.set_scenes(this.id, id);
   }
