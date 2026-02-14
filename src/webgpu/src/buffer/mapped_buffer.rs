@@ -4,6 +4,7 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 use externref::{externref, Resource};
+use web::primitives::jsstring::{JSString, JSStringExtern};
 
 use crate::buffer::buffer::{GPUBuffer, JSBuffer};
 use crate::device::JSDevice;
@@ -78,12 +79,13 @@ pub struct MappedGPUBuffer<
 pub unsafe extern "C" fn create_mapped_gpu_buffer_copysrc(
     device: &Resource<JSDevice>,
     size: NonZeroUsize,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
+    label: Resource<JSStringExtern>,
 ) -> *const MappedGPUBuffer<false, false, true> {
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new_mapped(device, size, label)))
+    Box::into_raw(Box::new(GPUBuffer::new_mapped(
+        device,
+        size,
+        JSString::new(label).into(),
+    )))
 }
 #[no_mangle]
 #[externref]
@@ -104,12 +106,13 @@ pub unsafe extern "C" fn create_buffer_uniform_copydst(
 pub unsafe extern "C" fn create_mappadle_gpu_buffer_copydst_mapread(
     device: &Resource<JSDevice>,
     size: NonZeroUsize,
-    label_ptr: *mut u8,
-    label_len: usize,
-    label_cap: usize,
+    label: Resource<JSStringExtern>,
 ) -> *const GPUBuffer<true, false, false, true> {
-    let label = String::from_raw_parts(label_ptr, label_len, label_cap);
-    Box::into_raw(Box::new(GPUBuffer::new(device, size, label)))
+    Box::into_raw(Box::new(GPUBuffer::new(
+        device,
+        size,
+        JSString::new(label).into(),
+    )))
 }
 #[no_mangle]
 #[externref]

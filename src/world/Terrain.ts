@@ -35,7 +35,6 @@ import {
   type RenderTargetTexture,
 } from '../webgpu-ts/index.js';
 import { TerrainSubdivisions } from '../GPU/Shaders/ShaderBuilders.js';
-import { create_rust_string } from '../utils.js';
 declare const engine: Engine;
 
 const terrainSize = [10000, 10000] as const;
@@ -439,7 +438,7 @@ TODO
           engine.rust.create_mappadle_gpu_buffer_copydst_mapread(
             gpu.device,
             this.terrainPositionAndUvsAndNormalsGPU.props.size,
-            ...create_rust_string('terrainPositionAndUvsAndNormalsGPURead'),
+            'terrainPositionAndUvsAndNormalsGPURead',
           );
         const textureSizeBytes =
           Int32Array.BYTES_PER_ELEMENT *
@@ -456,7 +455,7 @@ TODO
             engine.rust.create_mappadle_gpu_buffer_copydst_mapread(
               gpu.device,
               terrainIndicesGPU.props.size,
-              ...create_rust_string(terrainIndicesGPU.props.label),
+              terrainIndicesGPU.props.label,
             );
           commandEncoder.copyBufferToBuffer(
             terrainIndicesGPU.buffer, // source buffer
@@ -526,7 +525,7 @@ TODO
             engine.rust.create_mappadle_gpu_buffer_copydst_mapread(
               gpu.device,
               terrainIndicesGPU.props.size,
-              ...create_rust_string(terrainIndicesGPU.props.label),
+              terrainIndicesGPU.props.label,
             );
           commandEncoder.copyBufferToBuffer(
             terrainIndicesGPU.buffer, // source buffer

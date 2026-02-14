@@ -5,16 +5,12 @@ export type BufferInterface = {
   create_mapped_gpu_buffer_copysrc(
     device: GPUDevice,
     length: number,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
+    label: string,
   ): rust_pointer<'GPUBuffer'>;
   create_mappadle_gpu_buffer_copydst_mapread(
     device: GPUDevice,
     length: number,
-    label_ptr: number,
-    label_len: number,
-    label_cap: number,
+    label: string,
   ): rust_pointer<'GPUBuffer'>;
   create_copysrc_storage_copydst_buffer(
     device: GPUDevice,

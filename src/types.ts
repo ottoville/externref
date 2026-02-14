@@ -17,11 +17,6 @@ type rust_pointer<T> = {
  */
 type rust_array_ptr<T> = readonly [ptr: rust_pointer<T>, len: number];
 
-/**
- * Pointer to vector with ptr, len and cap
- */
-type rust_vec_ptr<T> = readonly [...rust_array_ptr<T>, cap: number];
-
 type rust_mutex<L extends 'locked' | 'unlocked', T> = {
   __lock_status: L;
 } & rust_pointer<T>;

@@ -1,16 +1,7 @@
 import type { Engine } from './engine.js';
 declare const engine: Engine;
-const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-export function create_rust_string(label: string) {
-  const vec = create_rust_vec_ptr(engine.rust.alloc_vector_u8(label.length));
-  textEncoder.encodeInto(
-    label,
-    new Uint8Array(engine.rust.memory.buffer, vec[0], vec[1]),
-  );
-  return vec;
-}
 export function stringFromPtr(
   memory: WebAssembly.ExportValue | undefined,
   ptr: number,
@@ -20,11 +11,6 @@ export function stringFromPtr(
   }
   const [s_ptr, len] = new Uint32Array(memory.buffer, ptr, 2);
   return textDecoder.decode(new Uint8Array(memory.buffer, s_ptr, len));
-}
-export function create_rust_vec_ptr<T>(ptr: rust_pointer<rust_vec_ptr<T>>) {
-  return Array.from(
-    new Uint32Array(engine.rust.memory.buffer, ptr, 3),
-  ) as unknown as rust_vec_ptr<T>;
 }
 
 export type Rust_Iterator<T> = rust_pointer<'iterator'> & {

@@ -235,7 +235,6 @@ export type rustWasm = {
   vertices_count(geometry: rust_pointer<'geometry'>): number;
   have_vertices(mesh_id: rust_pointer<'mesh_id'>): boolean;
   faces_count(mesh_id: rust_pointer<'mesh_id'>): number;
-  alloc_vector_u8(size: number): rust_pointer<rust_vec_ptr<'u8'>>;
   update_scale(mesh_id: number, x: number, y: number, z: number): void;
   update_euler_angles(
     mesh_id: rust_pointer<'mesh_id'>,
